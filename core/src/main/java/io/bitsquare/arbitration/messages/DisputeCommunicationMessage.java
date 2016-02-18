@@ -32,10 +32,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-public final class DisputeDirectMessage extends DisputeMessage {
+public final class DisputeCommunicationMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(DisputeDirectMessage.class);
+    private static final Logger log = LoggerFactory.getLogger(DisputeCommunicationMessage.class);
 
     private final long date;
     private final String tradeId;
@@ -52,7 +52,7 @@ public final class DisputeDirectMessage extends DisputeMessage {
     transient private BooleanProperty arrivedProperty = new SimpleBooleanProperty();
     transient private BooleanProperty storedInMailboxProperty = new SimpleBooleanProperty();
 
-    public DisputeDirectMessage(String tradeId, int traderId, boolean senderIsTrader, String message, NodeAddress myNodeAddress) {
+    public DisputeCommunicationMessage(String tradeId, int traderId, boolean senderIsTrader, String message, NodeAddress myNodeAddress) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
@@ -137,9 +137,9 @@ public final class DisputeDirectMessage extends DisputeMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DisputeDirectMessage)) return false;
+        if (!(o instanceof DisputeCommunicationMessage)) return false;
 
-        DisputeDirectMessage that = (DisputeDirectMessage) o;
+        DisputeCommunicationMessage that = (DisputeCommunicationMessage) o;
 
         if (date != that.date) return false;
         if (traderId != that.traderId) return false;

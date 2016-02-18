@@ -22,7 +22,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.arbitration.messages.DisputeDirectMessage;
+import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -83,12 +83,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final ContractPopup contractPopup;
     private final TradeDetailsPopup tradeDetailsPopup;
 
-    private final List<DisputeDirectMessage.Attachment> tempAttachments = new ArrayList<>();
+    private final List<DisputeCommunicationMessage.Attachment> tempAttachments = new ArrayList<>();
 
     private TableView<Dispute> disputesTable;
     private Dispute selectedDispute;
     private ChangeListener<Dispute> disputeChangeListener;
-    private ListView<DisputeDirectMessage> messageListView;
+    private ListView<DisputeCommunicationMessage> messageListView;
     private TextArea inputTextArea;
     private AnchorPane messagesAnchorPane;
     private VBox messagesInputBox;
@@ -97,8 +97,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private ChangeListener<Boolean> arrivedPropertyListener;
     private ChangeListener<Boolean> storedInMailboxPropertyListener;
     @Nullable
-    private DisputeDirectMessage disputeDirectMessage;
-    private ListChangeListener<DisputeDirectMessage> disputeDirectMessageListListener;
+    private DisputeCommunicationMessage disputeCommunicationMessage;
+    private ListChangeListener<DisputeCommunicationMessage> disputeDirectMessageListListener;
     private ChangeListener<String> inputTextAreaListener;
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
 
@@ -169,16 +169,16 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         disputesTable.getSelectionModel().selectedItemProperty().removeListener(disputeChangeListener);
 
-        if (disputeDirectMessage != null) {
-            disputeDirectMessage.arrivedProperty().removeListener(arrivedPropertyListener);
-            disputeDirectMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+        if (disputeCommunicationMessage != null) {
+            disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+            disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
         }
 
         if (selectedDispute != null) {
             selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
-            ObservableList<DisputeDirectMessage> disputeDirectMessages = selectedDispute.getDisputeDirectMessagesAsObservableList();
-            if (disputeDirectMessages != null) {
-                disputeDirectMessages.removeListener(disputeDirectMessageListListener);
+            ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
+            if (disputeCommunicationMessages != null) {
+                disputeCommunicationMessages.removeListener(disputeDirectMessageListListener);
             }
         }
 
@@ -201,12 +201,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onSendMessage(String inputText, Dispute dispute) {
-        if (disputeDirectMessage != null) {
-            disputeDirectMessage.arrivedProperty().removeListener(arrivedPropertyListener);
-            disputeDirectMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+        if (disputeCommunicationMessage != null) {
+            disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+            disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
         }
 
-        disputeDirectMessage = disputeManager.sendDisputeDirectMessage(dispute, inputText, new ArrayList<>(tempAttachments));
+        disputeCommunicationMessage = disputeManager.sendDisputeDirectMessage(dispute, inputText, new ArrayList<>(tempAttachments));
         tempAttachments.clear();
         scrollToBottom();
 
@@ -228,8 +228,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 hideSendMsgInfo(timer);
             }
         };
-        if (disputeDirectMessage.arrivedProperty() != null)
-            disputeDirectMessage.arrivedProperty().addListener(arrivedPropertyListener);
+        if (disputeCommunicationMessage.arrivedProperty() != null)
+            disputeCommunicationMessage.arrivedProperty().addListener(arrivedPropertyListener);
         storedInMailboxPropertyListener = (observable, oldValue, newValue) -> {
             if (newValue) {
                 sendMsgInfoLabel.setVisible(true);
@@ -238,7 +238,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 hideSendMsgInfo(timer);
             }
         };
-        disputeDirectMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
+        disputeCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
     }
 
     private void hideSendMsgInfo(Timer timer) {
@@ -273,7 +273,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     try (InputStream inputStream = url.openStream()) {
                         byte[] filesAsBytes = ByteStreams.toByteArray(inputStream);
                         if (filesAsBytes.length <= Connection.getMaxMsgSize()) {
-                            tempAttachments.add(new DisputeDirectMessage.Attachment(result.getName(), filesAsBytes));
+                            tempAttachments.add(new DisputeCommunicationMessage.Attachment(result.getName(), filesAsBytes));
                             inputTextArea.setText(inputTextArea.getText() + "\n[Attachment " + result.getName() + "]");
                         } else {
                             new Popup().warning("The max. allowed file size is " + maxSizeInKB + " kB.").show();
@@ -292,7 +292,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void onOpenAttachment(DisputeDirectMessage.Attachment attachment) {
+    private void onOpenAttachment(DisputeCommunicationMessage.Attachment attachment) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save file to disk");
         fileChooser.setInitialFileName(attachment.getFileName());
@@ -312,9 +312,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private void onSelectDispute(Dispute dispute) {
         if (selectedDispute != null) {
             selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
-            ObservableList<DisputeDirectMessage> disputeDirectMessages = selectedDispute.getDisputeDirectMessagesAsObservableList();
-            if (disputeDirectMessages != null) {
-                disputeDirectMessages.removeListener(disputeDirectMessageListListener);
+            ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
+            if (disputeCommunicationMessages != null) {
+                disputeCommunicationMessages.removeListener(disputeDirectMessageListListener);
             }
         }
 
@@ -336,11 +336,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             AnchorPane.setBottomAnchor(tableGroupHeadline, 0d);
             AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
-            ObservableList<DisputeDirectMessage> disputeDirectMessages = selectedDispute.getDisputeDirectMessagesAsObservableList();
-            SortedList<DisputeDirectMessage> sortedList = new SortedList<>(disputeDirectMessages);
+            ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
+            SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
             sortedList.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
             disputeDirectMessageListListener = c -> scrollToBottom();
-            disputeDirectMessages.addListener(disputeDirectMessageListListener);
+            disputeCommunicationMessages.addListener(disputeDirectMessageListListener);
             messageListView = new ListView<>(sortedList);
             messageListView.setId("message-list-view");
             messageListView.prefWidthProperty().bind(root.widthProperty());
@@ -418,10 +418,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 messagesAnchorPane.getChildren().addAll(tableGroupHeadline, messageListView);
             }
 
-            messageListView.setCellFactory(new Callback<ListView<DisputeDirectMessage>, ListCell<DisputeDirectMessage>>() {
+            messageListView.setCellFactory(new Callback<ListView<DisputeCommunicationMessage>, ListCell<DisputeCommunicationMessage>>() {
                 @Override
-                public ListCell<DisputeDirectMessage> call(ListView<DisputeDirectMessage> list) {
-                    return new ListCell<DisputeDirectMessage>() {
+                public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
+                    return new ListCell<DisputeCommunicationMessage>() {
                         public ChangeListener<Number> sendMsgProgressIndicatorListener;
                         final Pane bg = new Pane();
                         final ImageView arrow = new ImageView();
@@ -446,7 +446,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         }
 
                         @Override
-                        public void updateItem(final DisputeDirectMessage item, boolean empty) {
+                        public void updateItem(final DisputeCommunicationMessage item, boolean empty) {
                             super.updateItem(item, empty);
 
                             if (item != null && !empty) {

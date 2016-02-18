@@ -160,8 +160,8 @@ public class DisputeManager {
             onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
         else if (message instanceof PeerOpenedDisputeMessage)
             onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-        else if (message instanceof DisputeDirectMessage)
-            onDisputeDirectMessage((DisputeDirectMessage) message);
+        else if (message instanceof DisputeCommunicationMessage)
+            onDisputeDirectMessage((DisputeCommunicationMessage) message);
         else if (message instanceof DisputeResultMessage)
             onDisputeResultMessage((DisputeResultMessage) message);
         else if (message instanceof PeerPublishedPayoutTxMessage)
@@ -172,15 +172,15 @@ public class DisputeManager {
 
     public void sendOpenNewDisputeMessage(Dispute dispute) {
         if (!disputes.contains(dispute)) {
-            DisputeDirectMessage disputeDirectMessage = new DisputeDirectMessage(dispute.getTradeId(),
+            DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     true,
                     "System message: " + (dispute.isSupportTicket() ?
                             "You opened a request for support."
                             : "You opened a request for a dispute.\n\n" + disputeInfo),
                     p2PService.getAddress());
-            disputeDirectMessage.setIsSystemMessage(true);
-            dispute.addDisputeMessage(disputeDirectMessage);
+            disputeCommunicationMessage.setIsSystemMessage(true);
+            dispute.addDisputeMessage(disputeCommunicationMessage);
             disputes.add(dispute);
             disputesObservableList.add(dispute);
 
@@ -190,12 +190,12 @@ public class DisputeManager {
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
-                            disputeDirectMessage.setArrived(true);
+                            disputeCommunicationMessage.setArrived(true);
                         }
 
                         @Override
                         public void onStoredInMailbox() {
-                            disputeDirectMessage.setStoredInMailbox(true);
+                            disputeCommunicationMessage.setStoredInMailbox(true);
                         }
 
                         @Override
@@ -234,15 +234,15 @@ public class DisputeManager {
                 disputeFromOpener.getArbitratorPubKeyRing(),
                 disputeFromOpener.isSupportTicket()
         );
-        DisputeDirectMessage disputeDirectMessage = new DisputeDirectMessage(dispute.getTradeId(),
+        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
                 keyRing.getPubKeyRing().hashCode(),
                 true,
                 "System message: " + (dispute.isSupportTicket() ?
                         "Your trading peer has requested support due technical problems. Please wait for further instructions."
                         : "Your trading peer has requested a dispute.\n\n" + disputeInfo),
                 p2PService.getAddress());
-        disputeDirectMessage.setIsSystemMessage(true);
-        dispute.addDisputeMessage(disputeDirectMessage);
+        disputeCommunicationMessage.setIsSystemMessage(true);
+        dispute.addDisputeMessage(disputeCommunicationMessage);
         disputes.add(dispute);
         disputesObservableList.add(dispute);
 
@@ -257,12 +257,12 @@ public class DisputeManager {
                 new SendMailboxMessageListener() {
                     @Override
                     public void onArrived() {
-                        disputeDirectMessage.setArrived(true);
+                        disputeCommunicationMessage.setArrived(true);
                     }
 
                     @Override
                     public void onStoredInMailbox() {
-                        disputeDirectMessage.setStoredInMailbox(true);
+                        disputeCommunicationMessage.setStoredInMailbox(true);
                     }
 
                     @Override
@@ -274,22 +274,22 @@ public class DisputeManager {
     }
 
     // traders send msg to the arbitrator or arbitrator to 1 trader (trader to trader is not allowed)
-    public DisputeDirectMessage sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<DisputeDirectMessage.Attachment> attachments) {
-        DisputeDirectMessage disputeDirectMessage = new DisputeDirectMessage(dispute.getTradeId(),
+    public DisputeCommunicationMessage sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<DisputeCommunicationMessage.Attachment> attachments) {
+        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 isTrader(dispute),
                 text,
                 p2PService.getAddress());
-        disputeDirectMessage.addAllAttachments(attachments);
+        disputeCommunicationMessage.addAllAttachments(attachments);
         PubKeyRing receiverPubKeyRing = null;
         NodeAddress peerNodeAddress = null;
         if (isTrader(dispute)) {
-            dispute.addDisputeMessage(disputeDirectMessage);
+            dispute.addDisputeMessage(disputeCommunicationMessage);
             receiverPubKeyRing = dispute.getArbitratorPubKeyRing();
             peerNodeAddress = dispute.getContract().arbitratorNodeAddress;
         } else if (isArbitrator(dispute)) {
-            if (!disputeDirectMessage.isSystemMessage())
-                dispute.addDisputeMessage(disputeDirectMessage);
+            if (!disputeCommunicationMessage.isSystemMessage())
+                dispute.addDisputeMessage(disputeCommunicationMessage);
             receiverPubKeyRing = dispute.getTraderPubKeyRing();
             Contract contract = dispute.getContract();
             if (contract.getBuyerPubKeyRing().equals(receiverPubKeyRing))
@@ -303,16 +303,16 @@ public class DisputeManager {
             log.trace("sendDisputeDirectMessage to peerAddress " + peerNodeAddress);
             p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
                     receiverPubKeyRing,
-                    disputeDirectMessage,
+                    disputeCommunicationMessage,
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
-                            disputeDirectMessage.setArrived(true);
+                            disputeCommunicationMessage.setArrived(true);
                         }
 
                         @Override
                         public void onStoredInMailbox() {
-                            disputeDirectMessage.setStoredInMailbox(true);
+                            disputeCommunicationMessage.setStoredInMailbox(true);
                         }
 
                         @Override
@@ -323,18 +323,18 @@ public class DisputeManager {
             );
         }
 
-        return disputeDirectMessage;
+        return disputeCommunicationMessage;
     }
 
     // arbitrator send result to trader
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
-        DisputeDirectMessage disputeDirectMessage = new DisputeDirectMessage(dispute.getTradeId(),
+        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
                 text,
                 p2PService.getAddress());
-        dispute.addDisputeMessage(disputeDirectMessage);
-        disputeResult.setDisputeDirectMessage(disputeDirectMessage);
+        dispute.addDisputeMessage(disputeCommunicationMessage);
+        disputeResult.setDisputeCommunicationMessage(disputeCommunicationMessage);
 
         NodeAddress peerNodeAddress;
         Contract contract = dispute.getContract();
@@ -348,12 +348,12 @@ public class DisputeManager {
                 new SendMailboxMessageListener() {
                     @Override
                     public void onArrived() {
-                        disputeDirectMessage.setArrived(true);
+                        disputeCommunicationMessage.setArrived(true);
                     }
 
                     @Override
                     public void onStoredInMailbox() {
-                        disputeDirectMessage.setStoredInMailbox(true);
+                        disputeCommunicationMessage.setStoredInMailbox(true);
                     }
 
                     @Override
@@ -434,17 +434,17 @@ public class DisputeManager {
     }
 
     // a trader can receive a msg from the arbitrator or the arbitrator form a trader. Trader to trader is not allowed.
-    private void onDisputeDirectMessage(DisputeDirectMessage disputeDirectMessage) {
-        Log.traceCall("disputeDirectMessage " + disputeDirectMessage);
-        Optional<Dispute> disputeOptional = findDispute(disputeDirectMessage.getTradeId(), disputeDirectMessage.getTraderId());
+    private void onDisputeDirectMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
+        Log.traceCall("disputeDirectMessage " + disputeCommunicationMessage);
+        Optional<Dispute> disputeOptional = findDispute(disputeCommunicationMessage.getTradeId(), disputeCommunicationMessage.getTraderId());
         if (disputeOptional.isPresent()) {
             Dispute dispute = disputeOptional.get();
-            if (!dispute.getDisputeDirectMessagesAsObservableList().contains(disputeDirectMessage))
-                dispute.addDisputeMessage(disputeDirectMessage);
+            if (!dispute.getDisputeCommunicationMessagesAsObservableList().contains(disputeCommunicationMessage))
+                dispute.addDisputeMessage(disputeCommunicationMessage);
             else
-                log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeDirectMessage.getTradeId());
+                log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeCommunicationMessage.getTradeId());
         } else {
-            log.warn("We got a dispute mail msg but we don't have a matching dispute. TradeId = " + disputeDirectMessage.getTradeId());
+            log.warn("We got a dispute mail msg but we don't have a matching dispute. TradeId = " + disputeCommunicationMessage.getTradeId());
         }
     }
 
@@ -456,11 +456,11 @@ public class DisputeManager {
             if (disputeOptional.isPresent()) {
                 Dispute dispute = disputeOptional.get();
 
-                DisputeDirectMessage disputeDirectMessage = disputeResult.getDisputeDirectMessage();
-                if (!dispute.getDisputeDirectMessagesAsObservableList().contains(disputeDirectMessage))
-                    dispute.addDisputeMessage(disputeDirectMessage);
+                DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
+                if (!dispute.getDisputeCommunicationMessagesAsObservableList().contains(disputeCommunicationMessage))
+                    dispute.addDisputeMessage(disputeCommunicationMessage);
                 else
-                    log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeDirectMessage.getTradeId());
+                    log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeCommunicationMessage.getTradeId());
 
                 dispute.setIsClosed(true);
                 if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())

@@ -18,7 +18,7 @@
 package io.bitsquare.arbitration;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.arbitration.messages.DisputeDirectMessage;
+import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
 import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class DisputeResult implements Serializable {
     private boolean idVerification;
     private boolean screenCast;
     private String summaryNotes;
-    private DisputeDirectMessage disputeDirectMessage;
+    private DisputeCommunicationMessage disputeCommunicationMessage;
     private byte[] arbitratorSignature;
     private long buyerPayoutAmount;
     private long sellerPayoutAmount;
@@ -142,12 +142,12 @@ public class DisputeResult implements Serializable {
         return summaryNotesProperty;
     }
 
-    public void setDisputeDirectMessage(DisputeDirectMessage disputeDirectMessage) {
-        this.disputeDirectMessage = disputeDirectMessage;
+    public void setDisputeCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
+        this.disputeCommunicationMessage = disputeCommunicationMessage;
     }
 
-    public DisputeDirectMessage getDisputeDirectMessage() {
-        return disputeDirectMessage;
+    public DisputeCommunicationMessage getDisputeCommunicationMessage() {
+        return disputeCommunicationMessage;
     }
 
     public void setArbitratorSignature(byte[] arbitratorSignature) {
@@ -232,7 +232,7 @@ public class DisputeResult implements Serializable {
         if (tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null) return false;
         if (feePaymentPolicy != that.feePaymentPolicy) return false;
         if (summaryNotes != null ? !summaryNotes.equals(that.summaryNotes) : that.summaryNotes != null) return false;
-        if (disputeDirectMessage != null ? !disputeDirectMessage.equals(that.disputeDirectMessage) : that.disputeDirectMessage != null)
+        if (disputeCommunicationMessage != null ? !disputeCommunicationMessage.equals(that.disputeCommunicationMessage) : that.disputeCommunicationMessage != null)
             return false;
         if (!Arrays.equals(arbitratorSignature, that.arbitratorSignature)) return false;
         if (arbitratorAddressAsString != null ? !arbitratorAddressAsString.equals(that.arbitratorAddressAsString) : that.arbitratorAddressAsString != null)
@@ -251,7 +251,7 @@ public class DisputeResult implements Serializable {
         result = 31 * result + (idVerification ? 1 : 0);
         result = 31 * result + (screenCast ? 1 : 0);
         result = 31 * result + (summaryNotes != null ? summaryNotes.hashCode() : 0);
-        result = 31 * result + (disputeDirectMessage != null ? disputeDirectMessage.hashCode() : 0);
+        result = 31 * result + (disputeCommunicationMessage != null ? disputeCommunicationMessage.hashCode() : 0);
         result = 31 * result + (arbitratorSignature != null ? Arrays.hashCode(arbitratorSignature) : 0);
         result = 31 * result + (int) (buyerPayoutAmount ^ (buyerPayoutAmount >>> 32));
         result = 31 * result + (int) (sellerPayoutAmount ^ (sellerPayoutAmount >>> 32));
