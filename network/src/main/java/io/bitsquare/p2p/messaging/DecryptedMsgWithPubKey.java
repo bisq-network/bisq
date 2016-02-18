@@ -22,6 +22,7 @@ import io.bitsquare.p2p.Message;
 
 import java.security.PublicKey;
 
+// TODO is that sent over wire????
 public final class DecryptedMsgWithPubKey implements DirectMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;

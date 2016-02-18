@@ -137,9 +137,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             map.values().stream()
                     .forEach(protectedData -> {
                         ExpirableMessage expirableMessage = protectedData.expirableMessage;
-                        if (expirableMessage instanceof RequiresOwnerIsOnlineMessage) {
-                            RequiresOwnerIsOnlineMessage requiresOwnerIsOnlineMessage = (RequiresOwnerIsOnlineMessage) expirableMessage;
-                            NodeAddress ownerNodeAddress = requiresOwnerIsOnlineMessage.getOwnerNodeAddress();
+                        if (expirableMessage instanceof RequiresOwnerIsOnlinePayload) {
+                            RequiresOwnerIsOnlinePayload requiresOwnerIsOnlinePayload = (RequiresOwnerIsOnlinePayload) expirableMessage;
+                            NodeAddress ownerNodeAddress = requiresOwnerIsOnlinePayload.getOwnerNodeAddress();
                             if (ownerNodeAddress.equals(connection.getPeersNodeAddressOptional().get())) {
                                 // We have a RequiresLiveOwnerData data object with the node address of the 
                                 // disconnected peer. We remove that data from our map.
