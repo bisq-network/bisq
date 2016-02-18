@@ -7,10 +7,10 @@ import java.io.Serializable;
  * <p>
  * Implementations:
  *
- * @see StorageMessage
- * @see MailboxMessage
+ * @see StoragePayload
+ * @see MailboxPayload
  */
-public interface ExpirableMessage extends Serializable {
+public interface ExpirablePayload extends Serializable {
     /**
      * @return Time to live in milli seconds
      */

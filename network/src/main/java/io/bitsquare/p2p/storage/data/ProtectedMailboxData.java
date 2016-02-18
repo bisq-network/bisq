@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.storage.data;
 
 import io.bitsquare.p2p.storage.P2PDataStorage;
-import io.bitsquare.p2p.storage.messages.MailboxMessage;
+import io.bitsquare.p2p.storage.messages.MailboxPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +15,7 @@ public class ProtectedMailboxData extends ProtectedData {
 
     public final PublicKey receiversPubKey;
 
-    public ProtectedMailboxData(MailboxMessage data, long ttl, PublicKey ownerStoragePubKey, int sequenceNumber, byte[] signature, PublicKey receiversPubKey) {
+    public ProtectedMailboxData(MailboxPayload data, long ttl, PublicKey ownerStoragePubKey, int sequenceNumber, byte[] signature, PublicKey receiversPubKey) {
         super(data, ttl, ownerStoragePubKey, sequenceNumber, signature);
 
         this.receiversPubKey = receiversPubKey;
@@ -24,7 +24,7 @@ public class ProtectedMailboxData extends ProtectedData {
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            ttl = expirableMessage.getTTL();
+            ttl = expirablePayload.getTTL();
 
             // in case the reported creation date is in the future 
             // we reset the date to the current time

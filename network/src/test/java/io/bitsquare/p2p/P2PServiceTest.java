@@ -6,7 +6,7 @@ import io.bitsquare.crypto.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
-import io.bitsquare.p2p.mocks.MockMailboxMessage;
+import io.bitsquare.p2p.mocks.MockMailboxPayload;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.seed.SeedNode;
@@ -163,16 +163,16 @@ public class P2PServiceTest {
                 .map(data -> (ProtectedData) data)
                 .collect(Collectors.toSet());
         ProtectedData origProtectedData = dataSet.stream().findFirst().get();
-        ProtectedData protectedDataManipulated = new ProtectedData(origProtectedData.expirableMessage, origProtectedData.ttl, origProtectedData.ownerPubKey, origProtectedData.sequenceNumber + 1, origProtectedData.signature);
-        Assert.assertFalse(p2PService3.removeData(protectedDataManipulated.expirableMessage));
+        ProtectedData protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, origProtectedData.ownerPubKey, origProtectedData.sequenceNumber + 1, origProtectedData.signature);
+        Assert.assertFalse(p2PService3.removeData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
         Assert.assertEquals(1, p2PService1.getDataMap().size());
         Assert.assertEquals(1, p2PService2.getDataMap().size());
         Assert.assertEquals(1, p2PService3.getDataMap().size());
 
         // try to manipulate seq nr. + pubKey -> fails
-        protectedDataManipulated = new ProtectedData(origProtectedData.expirableMessage, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), origProtectedData.sequenceNumber + 1, origProtectedData.signature);
-        Assert.assertFalse(p2PService3.removeData(protectedDataManipulated.expirableMessage));
+        protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), origProtectedData.sequenceNumber + 1, origProtectedData.signature);
+        Assert.assertFalse(p2PService3.removeData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
         Assert.assertEquals(1, p2PService1.getDataMap().size());
         Assert.assertEquals(1, p2PService2.getDataMap().size());
@@ -180,10 +180,10 @@ public class P2PServiceTest {
 
         // try to manipulate seq nr. + pubKey + sig -> fails
         int sequenceNumberManipulated = origProtectedData.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(origProtectedData.expirableMessage, sequenceNumberManipulated));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(origProtectedData.expirablePayload, sequenceNumberManipulated));
         byte[] signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
-        protectedDataManipulated = new ProtectedData(origProtectedData.expirableMessage, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
-        Assert.assertFalse(p2PService3.removeData(protectedDataManipulated.expirableMessage));
+        protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
+        Assert.assertFalse(p2PService3.removeData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
         Assert.assertEquals(1, p2PService1.getDataMap().size());
         Assert.assertEquals(1, p2PService2.getDataMap().size());
@@ -204,8 +204,8 @@ public class P2PServiceTest {
         sequenceNumberManipulated = 0;
         hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(manipulatedData, sequenceNumberManipulated));
         signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
-        protectedDataManipulated = new ProtectedData(origProtectedData.expirableMessage, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
-        Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirableMessage));
+        protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
+        Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
         Assert.assertEquals(0, p2PService1.getDataMap().size());
         Assert.assertEquals(0, p2PService2.getDataMap().size());
@@ -216,8 +216,8 @@ public class P2PServiceTest {
         sequenceNumberManipulated = 0;
         hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(manipulatedData, sequenceNumberManipulated));
         signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
-        protectedDataManipulated = new ProtectedData(origProtectedData.expirableMessage, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
-        Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirableMessage));
+        protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
+        Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
         Assert.assertEquals(0, p2PService1.getDataMap().size());
         Assert.assertEquals(0, p2PService2.getDataMap().size());
@@ -230,7 +230,7 @@ public class P2PServiceTest {
         hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(manipulatedData, sequenceNumberManipulated));
         signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(manipulatedData, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
-        Assert.assertTrue(p2PService3.addData(protectedDataManipulated.expirableMessage));
+        Assert.assertTrue(p2PService3.addData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
         Assert.assertEquals(1, p2PService1.getDataMap().size());
         Assert.assertEquals(1, p2PService2.getDataMap().size());
@@ -249,8 +249,8 @@ public class P2PServiceTest {
         sequenceNumberManipulated = 0;
         hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(manipulatedData, sequenceNumberManipulated));
         signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
-        protectedDataManipulated = new ProtectedData(origProtectedData.expirableMessage, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
-        Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirableMessage));
+        protectedDataManipulated = new ProtectedData(origProtectedData.expirablePayload, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
+        Assert.assertFalse(p2PService3.addData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
         Assert.assertEquals(0, p2PService1.getDataMap().size());
         Assert.assertEquals(0, p2PService2.getDataMap().size());
@@ -261,14 +261,14 @@ public class P2PServiceTest {
         hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(manipulatedData, sequenceNumberManipulated));
         signature = Sig.sign(msgSignatureKeyPairAdversary.getPrivate(), hashOfDataAndSeqNr);
         protectedDataManipulated = new ProtectedData(manipulatedData, origProtectedData.ttl, msgSignatureKeyPairAdversary.getPublic(), sequenceNumberManipulated, signature);
-        Assert.assertTrue(p2PService3.addData(protectedDataManipulated.expirableMessage));
+        Assert.assertTrue(p2PService3.addData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
         Assert.assertEquals(1, p2PService1.getDataMap().size());
         Assert.assertEquals(1, p2PService2.getDataMap().size());
         Assert.assertEquals(1, p2PService3.getDataMap().size());
 
         // lets reset map
-        Assert.assertTrue(p2PService3.removeData(protectedDataManipulated.expirableMessage));
+        Assert.assertTrue(p2PService3.removeData(protectedDataManipulated.expirablePayload));
         Thread.sleep(sleepTime);
         Assert.assertEquals(0, p2PService1.getDataMap().size());
         Assert.assertEquals(0, p2PService2.getDataMap().size());
@@ -289,7 +289,7 @@ public class P2PServiceTest {
 
         // send to online peer
         CountDownLatch latch2 = new CountDownLatch(2);
-        MockMailboxMessage mockMessage = new MockMailboxMessage("MockMailboxMessage", p2PService2.getAddress());
+        MockMailboxPayload mockMessage = new MockMailboxPayload("MockMailboxMessage", p2PService2.getAddress());
         p2PService2.getNetworkNode().addMessageListener((message, connection) -> {
             log.trace("message " + message);
             if (message instanceof PrefixedSealedAndSignedMessage) {
@@ -336,7 +336,7 @@ public class P2PServiceTest {
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
 
         // send msg to offline peer
-        MockMailboxMessage mockMessage = new MockMailboxMessage(
+        MockMailboxPayload mockMessage = new MockMailboxPayload(
                 "MockMailboxMessage",
                 p2PService2.getAddress()
         );

@@ -136,16 +136,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (connection.getPeersNodeAddressOptional().isPresent() && !closeConnectionReason.isIntended) {
             map.values().stream()
                     .forEach(protectedData -> {
-                        ExpirableMessage expirableMessage = protectedData.expirableMessage;
-                        if (expirableMessage instanceof RequiresOwnerIsOnlinePayload) {
-                            RequiresOwnerIsOnlinePayload requiresOwnerIsOnlinePayload = (RequiresOwnerIsOnlinePayload) expirableMessage;
+                        ExpirablePayload expirablePayload = protectedData.expirablePayload;
+                        if (expirablePayload instanceof RequiresOwnerIsOnlinePayload) {
+                            RequiresOwnerIsOnlinePayload requiresOwnerIsOnlinePayload = (RequiresOwnerIsOnlinePayload) expirablePayload;
                             NodeAddress ownerNodeAddress = requiresOwnerIsOnlinePayload.getOwnerNodeAddress();
                             if (ownerNodeAddress.equals(connection.getPeersNodeAddressOptional().get())) {
                                 // We have a RequiresLiveOwnerData data object with the node address of the 
                                 // disconnected peer. We remove that data from our map.
 
                                 // Check if we have the data (e.g. Offer)
-                                ByteArray hashOfPayload = getHashAsByteArray(expirableMessage);
+                                ByteArray hashOfPayload = getHashAsByteArray(expirablePayload);
                                 boolean containsKey = map.containsKey(hashOfPayload);
                                 if (containsKey) {
                                     doRemoveProtectedExpirableData(protectedData, hashOfPayload);
@@ -180,7 +180,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     public boolean add(ProtectedData protectedData, @Nullable NodeAddress sender, boolean forceBroadcast) {
         Log.traceCall();
 
-        ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirableMessage);
+        ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirablePayload);
         boolean result = checkPublicKeys(protectedData, true)
                 && checkSignature(protectedData)
                 && isSequenceNrValid(protectedData.sequenceNumber, hashOfPayload);
@@ -266,7 +266,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     public boolean remove(ProtectedData protectedData, @Nullable NodeAddress sender) {
         Log.traceCall();
-        ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirableMessage);
+        ByteArray hashOfPayload = getHashAsByteArray(protectedData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
         if (!containsKey) log.debug("Remove data ignored as we don't have an entry for that data.");
         boolean result = containsKey
@@ -291,7 +291,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     public boolean removeMailboxData(ProtectedMailboxData protectedMailboxData, @Nullable NodeAddress sender) {
         Log.traceCall();
-        ByteArray hashOfData = getHashAsByteArray(protectedMailboxData.expirableMessage);
+        ByteArray hashOfData = getHashAsByteArray(protectedMailboxData.expirablePayload);
         boolean containsKey = map.containsKey(hashOfData);
         if (!containsKey) log.debug("Remove data ignored as we don't have an entry for that data.");
         boolean result = containsKey
@@ -319,7 +319,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return map;
     }
 
-    public ProtectedData getProtectedData(ExpirableMessage payload, KeyPair ownerStoragePubKey)
+    public ProtectedData getProtectedData(ExpirablePayload payload, KeyPair ownerStoragePubKey)
             throws CryptoException {
         ByteArray hashOfData = getHashAsByteArray(payload);
         int sequenceNumber;
@@ -333,7 +333,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return new ProtectedData(payload, payload.getTTL(), ownerStoragePubKey.getPublic(), sequenceNumber, signature);
     }
 
-    public RefreshTTLBundle getRefreshTTLPackage(ExpirableMessage payload, KeyPair ownerStoragePubKey)
+    public RefreshTTLBundle getRefreshTTLPackage(ExpirablePayload payload, KeyPair ownerStoragePubKey)
             throws CryptoException {
         ByteArray hashOfPayload = getHashAsByteArray(payload);
         int sequenceNumber;
@@ -348,7 +348,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return new RefreshTTLBundle(ownerPubKey, hashOfDataAndSeqNr, signature, hashOfPayload.bytes, sequenceNumber);
     }
 
-    public ProtectedMailboxData getMailboxDataWithSignedSeqNr(MailboxMessage expirableMailboxPayload,
+    public ProtectedMailboxData getMailboxDataWithSignedSeqNr(MailboxPayload expirableMailboxPayload,
                                                               KeyPair storageSignaturePubKey, PublicKey receiversPublicKey)
             throws CryptoException {
         ByteArray hashOfData = getHashAsByteArray(expirableMailboxPayload);
@@ -416,20 +416,20 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean checkSignature(ProtectedData data) {
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(data.expirableMessage, data.sequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(data.expirablePayload, data.sequenceNumber));
         return checkSignature(data.ownerPubKey, hashOfDataAndSeqNr, data.signature);
     }
 
     private boolean checkPublicKeys(ProtectedData data, boolean isAddOperation) {
         boolean result = false;
-        if (data.expirableMessage instanceof MailboxMessage) {
-            MailboxMessage expirableMailboxPayload = (MailboxMessage) data.expirableMessage;
+        if (data.expirablePayload instanceof MailboxPayload) {
+            MailboxPayload expirableMailboxPayload = (MailboxPayload) data.expirablePayload;
             if (isAddOperation)
                 result = expirableMailboxPayload.senderPubKeyForAddOperation.equals(data.ownerPubKey);
             else
                 result = expirableMailboxPayload.receiverPubKeyForRemoveOperation.equals(data.ownerPubKey);
-        } else if (data.expirableMessage instanceof StorageMessage) {
-            result = ((StorageMessage) data.expirableMessage).getOwnerPubKey().equals(data.ownerPubKey);
+        } else if (data.expirablePayload instanceof StoragePayload) {
+            result = ((StoragePayload) data.expirablePayload).getOwnerPubKey().equals(data.ownerPubKey);
         }
 
         if (!result)
@@ -456,7 +456,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             ProtectedMailboxData storedMailboxData = (ProtectedMailboxData) storedData;
             // publicKey is not the same (stored: sender, new: receiver)
             boolean result = storedMailboxData.receiversPubKey.equals(receiversPubKey)
-                    && getHashAsByteArray(storedMailboxData.expirableMessage).equals(hashOfData);
+                    && getHashAsByteArray(storedMailboxData.expirablePayload).equals(hashOfData);
             if (!result)
                 log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
 
@@ -471,7 +471,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         broadcaster.broadcast(message, sender);
     }
 
-    private ByteArray getHashAsByteArray(ExpirableMessage data) {
+    private ByteArray getHashAsByteArray(ExpirablePayload data) {
         return new ByteArray(Hash.getHash(data));
     }
 

@@ -3,15 +3,15 @@ package io.bitsquare.p2p.mocks;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
-import io.bitsquare.p2p.storage.messages.ExpirableMessage;
+import io.bitsquare.p2p.storage.messages.ExpirablePayload;
 
-public final class MockMailboxMessage implements MailboxMessage, ExpirableMessage {
+public final class MockMailboxPayload implements MailboxMessage, ExpirablePayload {
     private final int messageVersion = Version.getP2PMessageVersion();
     public final String msg;
     public final NodeAddress senderNodeAddress;
     public long ttl;
 
-    public MockMailboxMessage(String msg, NodeAddress senderNodeAddress) {
+    public MockMailboxPayload(String msg, NodeAddress senderNodeAddress) {
         this.msg = msg;
         this.senderNodeAddress = senderNodeAddress;
     }
@@ -24,9 +24,9 @@ public final class MockMailboxMessage implements MailboxMessage, ExpirableMessag
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MockMailboxMessage)) return false;
+        if (!(o instanceof MockMailboxPayload)) return false;
 
-        MockMailboxMessage that = (MockMailboxMessage) o;
+        MockMailboxPayload that = (MockMailboxPayload) o;
 
         return !(msg != null ? !msg.equals(that.msg) : that.msg != null);
 

@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Typical payloads are trade or dispute messages to be stored when the peer is offline.
  */
-public final class MailboxMessage implements ExpirableMessage {
+public final class MailboxPayload implements ExpirablePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -45,7 +45,7 @@ public final class MailboxMessage implements ExpirableMessage {
      */
     public final PublicKey receiverPubKeyForRemoveOperation;
 
-    public MailboxMessage(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage, PublicKey senderPubKeyForAddOperation, PublicKey receiverPubKeyForRemoveOperation) {
+    public MailboxPayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage, PublicKey senderPubKeyForAddOperation, PublicKey receiverPubKeyForRemoveOperation) {
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperation = senderPubKeyForAddOperation;
         this.receiverPubKeyForRemoveOperation = receiverPubKeyForRemoveOperation;
@@ -59,9 +59,9 @@ public final class MailboxMessage implements ExpirableMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MailboxMessage)) return false;
+        if (!(o instanceof MailboxPayload)) return false;
 
-        MailboxMessage that = (MailboxMessage) o;
+        MailboxPayload that = (MailboxPayload) o;
 
         return !(prefixedSealedAndSignedMessage != null ? !prefixedSealedAndSignedMessage.equals(that.prefixedSealedAndSignedMessage) : that.prefixedSealedAndSignedMessage != null);
 

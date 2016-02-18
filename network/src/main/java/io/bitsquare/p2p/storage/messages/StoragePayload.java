@@ -13,7 +13,7 @@ import java.security.PublicKey;
  * io.bitsquare.arbitration.Arbitrator
  * io.bitsquare.trade.offer.Offer
  */
-public interface StorageMessage extends ExpirableMessage {
+public interface StoragePayload extends ExpirablePayload {
     /**
      * Used for check if the add or remove operation is permitted.
      * Only data owner can add or remove the data.

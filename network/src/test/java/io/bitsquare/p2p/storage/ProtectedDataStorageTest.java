@@ -105,9 +105,9 @@ public class ProtectedDataStorageTest {
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirableMessage, newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        ProtectedData dataToRemove = new ProtectedData(data.expirableMessage, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
+        ProtectedData dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
         Assert.assertEquals(0, dataStorage1.getMap().size());
     }

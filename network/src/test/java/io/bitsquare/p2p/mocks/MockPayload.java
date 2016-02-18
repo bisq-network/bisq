@@ -2,14 +2,14 @@ package io.bitsquare.p2p.mocks;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.storage.messages.ExpirableMessage;
+import io.bitsquare.p2p.storage.messages.ExpirablePayload;
 
-public final class MockMessage implements Message, ExpirableMessage {
+public final class MockPayload implements Message, ExpirablePayload {
     public final String msg;
     public long ttl;
     private final int messageVersion = Version.getP2PMessageVersion();
 
-    public MockMessage(String msg) {
+    public MockPayload(String msg) {
         this.msg = msg;
     }
 
@@ -21,9 +21,9 @@ public final class MockMessage implements Message, ExpirableMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MockMessage)) return false;
+        if (!(o instanceof MockPayload)) return false;
 
-        MockMessage that = (MockMessage) o;
+        MockPayload that = (MockPayload) o;
 
         return !(msg != null ? !msg.equals(that.msg) : that.msg != null);
 

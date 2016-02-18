@@ -61,8 +61,8 @@ public class AlertManager {
         alertService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedData data) {
-                if (data.expirableMessage instanceof Alert) {
-                    Alert alert = (Alert) data.expirableMessage;
+                if (data.expirablePayload instanceof Alert) {
+                    Alert alert = (Alert) data.expirablePayload;
                     if (verifySignature(alert))
                         alertMessageProperty.set(alert);
                 }
@@ -70,8 +70,8 @@ public class AlertManager {
 
             @Override
             public void onRemoved(ProtectedData data) {
-                if (data.expirableMessage instanceof Alert) {
-                    Alert alert = (Alert) data.expirableMessage;
+                if (data.expirablePayload instanceof Alert) {
+                    Alert alert = (Alert) data.expirablePayload;
                     if (verifySignature(alert))
                         alertMessageProperty.set(null);
                 }

@@ -60,16 +60,16 @@ public class OfferBookService {
             @Override
             public void onAdded(ProtectedData data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.expirableMessage instanceof Offer)
-                        listener.onAdded((Offer) data.expirableMessage);
+                    if (data.expirablePayload instanceof Offer)
+                        listener.onAdded((Offer) data.expirablePayload);
                 });
             }
 
             @Override
             public void onRemoved(ProtectedData data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.expirableMessage instanceof Offer)
-                        listener.onRemoved((Offer) data.expirableMessage);
+                    if (data.expirablePayload instanceof Offer)
+                        listener.onRemoved((Offer) data.expirablePayload);
                 });
             }
         });
@@ -126,8 +126,8 @@ public class OfferBookService {
 
     public List<Offer> getOffers() {
         return p2PService.getDataMap().values().stream()
-                .filter(data -> data.expirableMessage instanceof Offer)
-                .map(data -> (Offer) data.expirableMessage)
+                .filter(data -> data.expirablePayload instanceof Offer)
+                .map(data -> (Offer) data.expirablePayload)
                 .collect(Collectors.toList());
     }
 

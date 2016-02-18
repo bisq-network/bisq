@@ -26,7 +26,7 @@ import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.locale.Country;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.messages.RequiresOwnerIsOnlinePayload;
-import io.bitsquare.p2p.storage.messages.StorageMessage;
+import io.bitsquare.p2p.storage.messages.StoragePayload;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class Offer implements StorageMessage, RequiresOwnerIsOnlinePayload {
+public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;

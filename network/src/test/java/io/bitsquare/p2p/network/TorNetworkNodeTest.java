@@ -4,7 +4,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.mocks.MockMessage;
+import io.bitsquare.p2p.mocks.MockPayload;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -87,7 +87,7 @@ public class TorNetworkNodeTest {
                 latch.countDown();
             }
         });
-        SettableFuture<Connection> future = node2.sendMessage(node1.getNodeAddress(), new MockMessage("msg1"));
+        SettableFuture<Connection> future = node2.sendMessage(node1.getNodeAddress(), new MockPayload("msg1"));
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(Connection connection) {
@@ -166,7 +166,7 @@ public class TorNetworkNodeTest {
                 latch.countDown();
             }
         });
-        SettableFuture<Connection> future = node1.sendMessage(node2.getNodeAddress(), new MockMessage("msg1"));
+        SettableFuture<Connection> future = node1.sendMessage(node2.getNodeAddress(), new MockPayload("msg1"));
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(Connection connection) {
