@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @SuppressWarnings("WeakerAccess")
 @Immutable
-public class Contract implements Serializable {
+public final class Contract implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     @JsonExclude
     public static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
