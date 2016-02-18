@@ -1,4 +1,4 @@
-package io.bitsquare.p2p;
+package io.bitsquare.common;
 
 import java.io.Serializable;
 
