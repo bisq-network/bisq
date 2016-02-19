@@ -73,6 +73,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -206,7 +207,7 @@ public class MainViewModel implements ViewModel {
                     .closeButtonText("Shut down")
                     .onClose(BitsquareApp.shutDownHandler::run)
                     .show();
-        }, 3);
+        }, 3, TimeUnit.MINUTES);
         
         /*startupTimeout = FxTimer.runLater(Duration.ofMinutes(3), () -> {
             log.warn("startupTimeout called");
