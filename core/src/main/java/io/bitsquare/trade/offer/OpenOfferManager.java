@@ -183,6 +183,7 @@ public class OpenOfferManager {
                     // We have been idle for at least 5 sec.
                     //republishOffers();
                     // run again after 5 sec as it might be that the app needs a bit for getting all re-animated again
+                    allowRefreshOffers = false;
                     if (republishOffersTimer == null)
                         republishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers, 5);
                 }
@@ -204,6 +205,7 @@ public class OpenOfferManager {
                     //republishOffers();
                     // run again after 5 sec as it might be that the app needs a bit for getting all re-animated again
                     log.error("We got re-connected again after loss of all connection. We re-publish our offers now.");
+                    allowRefreshOffers = false;
                     republishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers, 5);
                 }
             }
