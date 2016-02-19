@@ -7,9 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class UITimer implements Timer {
     private final Logger log = LoggerFactory.getLogger(UITimer.class);
     private org.reactfx.util.Timer timer;
@@ -19,24 +16,31 @@ public class UITimer implements Timer {
 
     @Override
     public Timer runLater(Duration delay, Runnable runnable) {
-        checkArgument(timer == null, "runLater or runPeriodically already called on that timer");
-        timer = FxTimer.create(delay, runnable);
-        timer.restart();
+        if (timer != null) {
+            timer = FxTimer.create(delay, runnable);
+            timer.restart();
+        } else {
+            log.warn("runLater called on an already running timer.");
+        }
         return this;
     }
 
     @Override
     public Timer runPeriodically(Duration interval, Runnable runnable) {
-        checkArgument(timer == null, "runLater or runPeriodically already called on that timer");
-        timer = FxTimer.createPeriodic(interval, runnable);
-        timer.restart();
+        if (timer != null) {
+            timer = FxTimer.createPeriodic(interval, runnable);
+            timer.restart();
+        } else {
+            log.warn("runPeriodically called on an already running timer.");
+        }
         return this;
     }
 
     @Override
     public void stop() {
-        checkNotNull(timer, "Timer must not be null");
-        timer.stop();
-        timer = null;
+        if (timer != null) {
+            timer.stop();
+            timer = null;
+        }
     }
 }

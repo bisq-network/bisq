@@ -120,7 +120,7 @@ public class RequestDataHandshake implements MessageListener {
                     shutDown();
                     listener.onFault(errorMessage, null);
                 },
-                10, TimeUnit.SECONDS);
+                10);
     }
 
     public void onDataRequest(Message message, final Connection connection) {

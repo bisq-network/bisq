@@ -54,7 +54,6 @@ public class OfferBook {
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
             public void onAdded(Offer offer) {
-                log.debug("onAdded " + offer);
                 OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
                 if (!offerBookListItems.contains(offerBookListItem))
                     offerBookListItems.add(offerBookListItem);
@@ -62,7 +61,6 @@ public class OfferBook {
 
             @Override
             public void onRemoved(Offer offer) {
-                log.debug("onRemoved " + offer);
                 // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
                 offer.setState(Offer.State.REMOVED);
 

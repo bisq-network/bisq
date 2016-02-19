@@ -82,7 +82,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     .filter(entry -> entry.getValue().isExpired())
                     .forEach(entry -> {
                         ByteArray hashOfPayload = entry.getKey();
-                        toRemoveSet.add(map.get(hashOfPayload));
+                        ProtectedData protectedData = map.get(hashOfPayload);
+                        toRemoveSet.add(protectedData);
+                        log.trace("remove protectedData:\n\t" + protectedData);
                         map.remove(hashOfPayload);
                     });
 

@@ -61,8 +61,6 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class OpenOfferManager {
     private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
-    private static final int MAX_MSG_SIZE = 100 * 1024;
-
     private final KeyRing keyRing;
     private final User user;
     private final P2PService p2PService;
@@ -205,6 +203,7 @@ public class OpenOfferManager {
 
                     //republishOffers();
                     // run again after 5 sec as it might be that the app needs a bit for getting all re-animated again
+                    log.error("We got re-connected again after loss of all connection. We re-publish our offers now.");
                     republishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers, 5);
                 }
             }
@@ -212,8 +211,10 @@ public class OpenOfferManager {
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 lostAllConnections = networkNode.getAllConnections().isEmpty();
-                if (lostAllConnections)
+                if (lostAllConnections) {
                     allowRefreshOffers = false;
+                    log.error("We got disconnected from all peers");
+                }
             }
 
             @Override

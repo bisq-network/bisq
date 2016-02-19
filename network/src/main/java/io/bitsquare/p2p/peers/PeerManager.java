@@ -46,7 +46,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
     }
 
     static {
-        setMaxConnections(12);
+        setMaxConnections(1);
     }
 
     private static final int MAX_REPORTED_PEERS = 1000;
