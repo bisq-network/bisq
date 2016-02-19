@@ -27,6 +27,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.SystemTray;
+import io.bitsquare.gui.common.UITimer;
 import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewLoader;
@@ -105,6 +106,7 @@ public class BitsquareApp extends Application {
         Version.printVersion();
 
         UserThread.setExecutor(Platform::runLater);
+        UserThread.setTimerClass(UITimer.class);
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {

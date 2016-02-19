@@ -18,6 +18,7 @@
 package io.bitsquare.trade.offer;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Tradable;
@@ -36,7 +37,7 @@ public final class OpenOffer implements Tradable {
 
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state. 
     private static final long TIMEOUT_SEC = 30;
-    transient private java.util.Timer timeoutTimer;
+    transient private Timer timeoutTimer;
 
     public enum State {
         AVAILABLE,
@@ -118,7 +119,7 @@ public final class OpenOffer implements Tradable {
 
     private void stopTimeout() {
         if (timeoutTimer != null) {
-            timeoutTimer.cancel();
+            timeoutTimer.stop();
             timeoutTimer = null;
         }
     }

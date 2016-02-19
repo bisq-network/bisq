@@ -33,6 +33,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.MarketPriceFeed;
 import io.bitsquare.common.Clock;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -67,13 +68,10 @@ import org.bitcoinj.store.BlockStoreException;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
-import org.reactfx.util.FxTimer;
-import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -135,8 +133,8 @@ public class MainViewModel implements ViewModel {
     private final User user;
     private int numBTCPeers = 0;
     private ChangeListener<Number> numConnectedPeersListener, btcNumPeersListener;
-    private java.util.Timer numberOfBtcPeersTimer;
-    private java.util.Timer numberOfP2PNetworkPeersTimer;
+    private Timer numberOfBtcPeersTimer;
+    private Timer numberOfP2PNetworkPeersTimer;
     private Timer startupTimeout;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     private Subscription downloadPercentageSubscription;
@@ -199,7 +197,7 @@ public class MainViewModel implements ViewModel {
                 onAllServicesInitialized();
         });
 
-        startupTimeout = FxTimer.runLater(Duration.ofMinutes(3), () -> {
+        startupTimeout = UserThread.runAfter(() -> {
             log.warn("startupTimeout called");
             MainView.blur();
             new Popup().warning("The application could not startup after 3 minutes.\n" +
@@ -208,7 +206,18 @@ public class MainViewModel implements ViewModel {
                     .closeButtonText("Shut down")
                     .onClose(BitsquareApp.shutDownHandler::run)
                     .show();
-        });
+        }, 3);
+        
+        /*startupTimeout = FxTimer.runLater(Duration.ofMinutes(3), () -> {
+            log.warn("startupTimeout called");
+            MainView.blur();
+            new Popup().warning("The application could not startup after 3 minutes.\n" +
+                    "There might be some network connection problems or a unstable Tor path.\n\n" +
+                    "Please restart and try again.")
+                    .closeButtonText("Shut down")
+                    .onClose(BitsquareApp.shutDownHandler::run)
+                    .show();
+        });*/
     }
 
     public void shutDown() {
@@ -329,7 +338,7 @@ public class MainViewModel implements ViewModel {
             if ((int) oldValue > 0 && (int) newValue == 0) {
                 // give a bit of tolerance
                 if (numberOfBtcPeersTimer != null)
-                    numberOfBtcPeersTimer.cancel();
+                    numberOfBtcPeersTimer.stop();
                 numberOfBtcPeersTimer = UserThread.runAfter(() -> {
                     if (walletService.numPeersProperty().get() == 0) {
                         walletServiceErrorMsg.set("You lost the connection to all bitcoin network peers.\n" +
@@ -520,7 +529,7 @@ public class MainViewModel implements ViewModel {
             if ((int) oldValue > 0 && (int) newValue == 0) {
                 // give a bit of tolerance
                 if (numberOfP2PNetworkPeersTimer != null)
-                    numberOfP2PNetworkPeersTimer.cancel();
+                    numberOfP2PNetworkPeersTimer.stop();
                 numberOfP2PNetworkPeersTimer = UserThread.runAfter(() -> {
                     if (p2PService.getNumConnectedPeers().get() == 0) {
                         p2PNetworkWarnMsg.set("You lost the connection to all P2P network peers.\n" +

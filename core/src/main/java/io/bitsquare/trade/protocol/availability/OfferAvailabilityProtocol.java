@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.availability;
 
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -44,7 +45,7 @@ public class OfferAvailabilityProtocol {
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
 
     private TaskRunner<OfferAvailabilityModel> taskRunner;
-    private java.util.Timer timeoutTimer;
+    private Timer timeoutTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +146,7 @@ public class OfferAvailabilityProtocol {
 
     private void stopTimeout() {
         if (timeoutTimer != null) {
-            timeoutTimer.cancel();
+            timeoutTimer.stop();
             timeoutTimer = null;
         }
     }

@@ -21,6 +21,8 @@ import com.google.inject.Inject;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.Clock;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
@@ -30,6 +32,9 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.SendDirectMessageListener;
+import io.bitsquare.p2p.network.CloseConnectionReason;
+import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
@@ -48,8 +53,6 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 import java.io.File;
 import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.inject.internal.util.$Preconditions.checkNotNull;
@@ -67,17 +70,19 @@ public class OpenOfferManager {
     private final TradeWalletService tradeWalletService;
     private final OfferBookService offerBookService;
     private final ClosedTradableManager closedTradableManager;
+    private Clock clock;
 
     private final TradableList<OpenOffer> openOffers;
     private final Storage<TradableList<OpenOffer>> openOffersStorage;
     private boolean shutDownRequested;
     private BootstrapListener bootstrapListener;
-    private final Timer timer = new Timer();
-    private Timer republishOffersTime;
-    private boolean firstTimeConnection;
+    //private final Timer republishOffersTimer = new Timer();
+    private Timer refreshOffersTimer;
+    private Timer republishOffersTimer;
     private boolean allowRefreshOffers;
     private boolean lostAllConnections;
     private long refreshOffersPeriod;
+    private Clock.Listener listener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -92,6 +97,7 @@ public class OpenOfferManager {
                             TradeWalletService tradeWalletService,
                             OfferBookService offerBookService,
                             ClosedTradableManager closedTradableManager,
+                            Clock clock,
                             @Named("storage.dir") File storageDir) {
         this.keyRing = keyRing;
         this.user = user;
@@ -100,6 +106,7 @@ public class OpenOfferManager {
         this.tradeWalletService = tradeWalletService;
         this.offerBookService = offerBookService;
         this.closedTradableManager = closedTradableManager;
+        this.clock = clock;
 
         openOffersStorage = new Storage<>(storageDir);
         this.openOffers = new TradableList<>(openOffersStorage, "OpenOffers");
@@ -120,42 +127,6 @@ public class OpenOfferManager {
             if (message instanceof OfferAvailabilityRequest)
                 handleOfferAvailabilityRequest((OfferAvailabilityRequest) message, peersNodeAddress);
         });
-
-        NetworkNode networkNode = p2PService.getNetworkNode();
-
-        // TODO: Use check for detecting inactivity instead. run timer and check if elapsed time is in expected range, 
-        // if not we have been in standby and need a republish
-       /* networkNode.addConnectionListener(new ConnectionListener() {
-            @Override
-            public void onConnection(Connection connection) {
-                if (lostAllConnections) {
-                    lostAllConnections = false;
-                    allowRefreshOffers = false;
-
-                    // We repeat a rePublishOffers call after 10 seconds if we have more than 3 peers
-                    if (republishOffersTime == null) {
-                        republishOffersTime = UserThread.runAfter(() -> {
-                            if (networkNode.getAllConnections().size() > 3)
-                                republishOffers();
-
-                            allowRefreshOffers = true;
-                            republishOffersTime = null;
-                        }, 5);
-                    }
-                }
-            }
-
-            @Override
-            public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-                lostAllConnections = networkNode.getAllConnections().isEmpty();
-                if (lostAllConnections)
-                    allowRefreshOffers = false;
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-            }
-        });*/
     }
 
 
@@ -195,8 +166,62 @@ public class OpenOfferManager {
 
         //TODO should not be needed
         //startRepublishOffersThread();
-    }
 
+        // we check if app was idle for more then 5 sec.
+        listener = new Clock.Listener() {
+            @Override
+            public void onSecondTick() {
+            }
+
+            @Override
+            public void onMinuteTick() {
+            }
+
+            @Override
+            public void onMissedSecondTick(long missed) {
+                if (missed > 5000) {
+                    log.error("We have been idle for {} sec", missed / 1000);
+
+                    // We have been idle for at least 5 sec.
+                    //republishOffers();
+                    // run again after 5 sec as it might be that the app needs a bit for getting all re-animated again
+                    if (republishOffersTimer == null)
+                        republishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers, 5);
+                }
+            }
+        };
+        clock.addListener(listener);
+
+        // We also check if we got completely disconnected
+        NetworkNode networkNode = p2PService.getNetworkNode();
+        networkNode.addConnectionListener(new ConnectionListener() {
+            @Override
+            public void onConnection(Connection connection) {
+                if (lostAllConnections) {
+                    lostAllConnections = false;
+
+                    if (republishOffersTimer != null)
+                        republishOffersTimer.stop();
+
+                    //republishOffers();
+                    // run again after 5 sec as it might be that the app needs a bit for getting all re-animated again
+                    republishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers, 5);
+                }
+            }
+
+            @Override
+            public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+                lostAllConnections = networkNode.getAllConnections().isEmpty();
+                if (lostAllConnections)
+                    allowRefreshOffers = false;
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+            }
+        });
+    }
+/*
     private void startRepublishOffersThread() {
         long period = Offer.TTL * 10;
         TimerTask timerTask = new TimerTask() {
@@ -205,18 +230,27 @@ public class OpenOfferManager {
                 UserThread.execute(OpenOfferManager.this::republishOffers);
             }
         };
-        timer.scheduleAtFixedRate(timerTask, period, period);
-    }
+        republishOffersTimer.scheduleAtFixedRate(timerTask, period, period);
+    }*/
 
     private void republishOffers() {
         Log.traceCall("Number of offer for republish: " + openOffers.size());
+        allowRefreshOffers = false;
+        if (republishOffersTimer != null) {
+            republishOffersTimer.stop();
+            republishOffersTimer = null;
+        }
+
         for (OpenOffer openOffer : openOffers) {
             offerBookService.republishOffers(openOffer.getOffer(),
                     () -> {
                         log.debug("Successful added offer to P2P network");
                         allowRefreshOffers = true;
                     },
-                    errorMessage -> log.error("Add offer to P2P network failed. " + errorMessage));
+                    errorMessage -> {
+                        //TODO handle with retry
+                        log.error("Add offer to P2P network failed. " + errorMessage);
+                    });
             openOffer.setStorage(openOffersStorage);
         }
     }
@@ -224,13 +258,7 @@ public class OpenOfferManager {
     private void startRefreshOffersThread() {
         // refresh sufficiently before offer would expire
         refreshOffersPeriod = (long) (Offer.TTL * 0.7);
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                UserThread.execute(OpenOfferManager.this::refreshOffers);
-            }
-        };
-        timer.scheduleAtFixedRate(timerTask, refreshOffersPeriod, refreshOffersPeriod);
+        refreshOffersTimer = UserThread.runPeriodically(OpenOfferManager.this::refreshOffers, refreshOffersPeriod, TimeUnit.MILLISECONDS);
     }
 
     private void refreshOffers() {
@@ -251,8 +279,14 @@ public class OpenOfferManager {
     }
 
     public void shutDown(@Nullable Runnable completeHandler) {
-        if (timer != null)
-            timer.cancel();
+        if (republishOffersTimer != null)
+            republishOffersTimer.stop();
+
+        if (refreshOffersTimer != null)
+            refreshOffersTimer.stop();
+
+        if (listener != null)
+            clock.removeListener(listener);
 
         if (!shutDownRequested) {
             log.info("remove all open offers at shutDown");

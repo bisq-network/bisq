@@ -2,6 +2,7 @@ package io.bitsquare.p2p.peers.peerexchange;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import io.bitsquare.app.Log;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
@@ -101,7 +102,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
         if (lostAllConnections || connectToMorePeersTimer == null) {
             long delaySec = lostAllConnections ? RETRY_DELAY_AFTER_ALL_CON_LOST_SEC : RETRY_DELAY_SEC;
             if (lostAllConnections && connectToMorePeersTimer != null)
-                connectToMorePeersTimer.cancel();
+                connectToMorePeersTimer.stop();
             
             connectToMorePeersTimer = UserThread.runAfter(() -> {
                 log.trace("ConnectToMorePeersTimer called from onDisconnect code path");
@@ -292,7 +293,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener 
 
     private void stopConnectToMorePeersTimer() {
         if (connectToMorePeersTimer != null) {
-            connectToMorePeersTimer.cancel();
+            connectToMorePeersTimer.stop();
             connectToMorePeersTimer = null;
         }
     }

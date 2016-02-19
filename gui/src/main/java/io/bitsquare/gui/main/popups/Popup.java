@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.popups;
 
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.MainView;
@@ -42,7 +43,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.Timer;
 
 import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 
@@ -109,7 +109,7 @@ public class Popup {
             window.widthProperty().removeListener(positionListener);
 
             if (centerTime != null)
-                centerTime.cancel();
+                centerTime.stop();
 
             removeEffectFromBackground();
 
@@ -268,7 +268,7 @@ public class Popup {
             if (stage != null) {
                 layout();
                 if (centerTime != null)
-                    centerTime.cancel();
+                    centerTime.stop();
 
                 centerTime = UserThread.runAfter(this::layout, 3);
             }

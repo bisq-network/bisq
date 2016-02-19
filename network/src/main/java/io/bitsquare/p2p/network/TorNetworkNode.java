@@ -7,6 +7,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.bitsquare.app.Log;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.NodeAddress;
@@ -26,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -116,7 +116,7 @@ public class TorNetworkNode extends NetworkNode {
         allShutDown = EasyBind.combine(torNetworkNodeShutDown, networkNodeShutDown, shutDownTimerTriggered, (a, b, c) -> (a && b) || c);
         allShutDown.subscribe((observable, oldValue, newValue) -> {
             if (newValue) {
-                shutDownTimeoutTimer.cancel();
+                shutDownTimeoutTimer.stop();
                 long ts = System.currentTimeMillis();
                 log.debug("Shutdown executorService");
                 try {

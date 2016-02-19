@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.peers;
 
 import io.bitsquare.app.Log;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
@@ -507,7 +508,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
     private void stopCheckMaxConnectionsTimer() {
         if (checkMaxConnectionsTimer != null) {
-            checkMaxConnectionsTimer.cancel();
+            checkMaxConnectionsTimer.stop();
             checkMaxConnectionsTimer = null;
         }
     }

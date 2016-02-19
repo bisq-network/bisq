@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
@@ -24,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Random;
-import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -200,7 +200,7 @@ public class RequestDataHandshake implements MessageListener {
 
     private void stopTimeoutTimer() {
         if (timeoutTimer != null) {
-            timeoutTimer.cancel();
+            timeoutTimer.stop();
             timeoutTimer = null;
         }
     }

@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.ProgramArguments;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.KeyRing;
@@ -550,7 +551,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         if (message instanceof AddDataMessage &&
                                 ((AddDataMessage) message).data.equals(protectedMailboxData)) {
                             sendMailboxMessageListener.onStoredInMailbox();
-                            sendMailboxMessageTimeoutTimer.cancel();
+                            sendMailboxMessageTimeoutTimer.stop();
                         }
                     };
                     broadcaster.addListener(listener);
@@ -572,7 +573,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                     boolean result = p2PDataStorage.add(protectedMailboxData, networkNode.getNodeAddress());
                     if (!result) {
-                        sendMailboxMessageTimeoutTimer.cancel();
+                        sendMailboxMessageTimeoutTimer.stop();
                         broadcaster.removeListener(listener);
                         broadcaster.getNumOfBroadcastsProperty().removeListener(numOfBroadcastsChangeListener);
                         sendMailboxMessageListener.onFault("Data already exists in our local database");

@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade;
 
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.p2p.Message;
@@ -42,7 +43,7 @@ public abstract class TradeProtocol {
     protected final ProcessModel processModel;
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
     protected Trade trade;
-    private java.util.Timer timeoutTimer;
+    private Timer timeoutTimer;
 
     public TradeProtocol(Trade trade) {
         this.trade = trade;
@@ -116,7 +117,7 @@ public abstract class TradeProtocol {
 
     protected void stopTimeout() {
         if (timeoutTimer != null) {
-            timeoutTimer.cancel();
+            timeoutTimer.stop();
             timeoutTimer = null;
         }
     }

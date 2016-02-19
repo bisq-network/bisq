@@ -63,7 +63,10 @@ public class NetworkStatisticListItem {
 
             @Override
             public void onMinuteTick() {
+            }
 
+            @Override
+            public void onMissedSecondTick(long missed) {
             }
         };
         clock.addListener(listener);

@@ -13,5 +13,7 @@ public interface Clock {
         void onSecondTick();
 
         void onMinuteTick();
+
+        void onMissedSecondTick(long missed);
     }
 }

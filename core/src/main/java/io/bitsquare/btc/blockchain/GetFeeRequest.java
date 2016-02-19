@@ -2,6 +2,7 @@ package io.bitsquare.btc.blockchain;
 
 import com.google.common.util.concurrent.*;
 import io.bitsquare.btc.blockchain.providers.FeeProvider;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.http.HttpException;
@@ -11,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Timer;
 
 class GetFeeRequest {
     private static final Logger log = LoggerFactory.getLogger(GetFeeRequest.class);
@@ -72,7 +72,7 @@ class GetFeeRequest {
     }
 
     private void stopTimer() {
-        timer.cancel();
+        timer.stop();
         timer = null;
     }
 }

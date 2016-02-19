@@ -21,14 +21,15 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
+import java.time.Duration;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 public class UserThread {
     private static final Logger log = LoggerFactory.getLogger(UserThread.class);
+    private static Class<? extends Timer> timerClass;
 
     public static Executor getExecutor() {
         return executor;
@@ -38,9 +39,14 @@ public class UserThread {
         UserThread.executor = executor;
     }
 
+    public static void setTimerClass(Class<? extends Timer> timerClass) {
+        UserThread.timerClass = timerClass;
+    }
+
     static {
         // If not defined we use same thread as caller thread
         executor = MoreExecutors.directExecutor();
+        timerClass = DefaultJavaTimer.class;
     }
 
     private static Executor executor;
@@ -65,19 +71,25 @@ public class UserThread {
     }
 
     public static Timer runAfter(Runnable runnable, long delay, TimeUnit timeUnit) {
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("TimerTask-" + new Random().nextInt(10000));
-                try {
-                    UserThread.execute(runnable::run);
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    log.error("Executing timerTask failed. " + t.getMessage());
-                }
-            }
-        }, timeUnit.toMillis(delay));
-        return timer;
+        return getTimer().runLater(Duration.ofMillis(timeUnit.toMillis(delay)), runnable);
+    }
+
+    public static Timer runPeriodically(Runnable runnable, long interval) {
+        return UserThread.runPeriodically(runnable, interval, TimeUnit.SECONDS);
+    }
+
+    public static Timer runPeriodically(Runnable runnable, long interval, TimeUnit timeUnit) {
+        return getTimer().runPeriodically(Duration.ofMillis(timeUnit.toMillis(interval)), runnable);
+    }
+
+    private static Timer getTimer() {
+        try {
+            return timerClass.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            String message = "Could not instantiate timer bsTimerClass=" + timerClass;
+            log.error(message);
+            e.printStackTrace();
+            throw new RuntimeException(message);
+        }
     }
 }

@@ -25,6 +25,7 @@ import com.google.common.util.concurrent.Service;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
@@ -187,7 +188,7 @@ public class WalletService {
 
                 // set after wallet is ready
                 tradeWalletService.setWalletAppKit(walletAppKit);
-                timeoutTimer.cancel();
+                timeoutTimer.stop();
 
                 // onSetupCompleted in walletAppKit is not the called on the last invocations, so we add a bit of delay
                 UserThread.runAfter(resultHandler::handleResult, 100, TimeUnit.MILLISECONDS);
@@ -242,7 +243,7 @@ public class WalletService {
             public void failed(@NotNull Service.State from, @NotNull Throwable failure) {
                 walletAppKit = null;
                 log.error("walletAppKit failed");
-                timeoutTimer.cancel();
+                timeoutTimer.stop();
                 UserThread.execute(() -> exceptionHandler.handleException(failure));
             }
         }, Threading.USER_THREAD);
