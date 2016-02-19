@@ -17,7 +17,7 @@ public class DefaultJavaTimer implements Timer {
 
     @Override
     public Timer runLater(Duration delay, Runnable runnable) {
-        if (timer != null) {
+        if (timer == null) {
             timer = new java.util.Timer();
             timer.schedule(new TimerTask() {
                 @Override
@@ -39,7 +39,7 @@ public class DefaultJavaTimer implements Timer {
 
     @Override
     public Timer runPeriodically(java.time.Duration interval, Runnable runnable) {
-        if (timer != null) {
+        if (timer == null) {
             timer = new java.util.Timer();
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override

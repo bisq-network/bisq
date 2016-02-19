@@ -16,7 +16,7 @@ public class UITimer implements Timer {
 
     @Override
     public Timer runLater(Duration delay, Runnable runnable) {
-        if (timer != null) {
+        if (timer == null) {
             timer = FxTimer.create(delay, runnable);
             timer.restart();
         } else {
@@ -27,7 +27,7 @@ public class UITimer implements Timer {
 
     @Override
     public Timer runPeriodically(Duration interval, Runnable runnable) {
-        if (timer != null) {
+        if (timer == null) {
             timer = FxTimer.createPeriodic(interval, runnable);
             timer.restart();
         } else {
