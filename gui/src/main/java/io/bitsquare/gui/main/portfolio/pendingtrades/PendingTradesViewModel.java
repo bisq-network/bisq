@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades;
 import com.google.inject.Inject;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.common.Clock;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
@@ -69,6 +70,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public final P2PService p2PService;
     public final User user;
+    public final Clock clock;
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>();
     private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>();
@@ -85,14 +87,15 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   BSFormatter formatter,
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
-                                  User user
-    ) {
+                                  User user,
+                                  Clock clock) {
         super(dataModel);
 
         this.formatter = formatter;
         this.btcAddressValidator = btcAddressValidator;
         this.p2PService = p2PService;
         this.user = user;
+        this.clock = clock;
     }
 
     private ChangeListener<Trade.State> tradeStateChangeListener;

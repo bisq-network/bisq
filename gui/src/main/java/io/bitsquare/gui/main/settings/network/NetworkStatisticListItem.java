@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.settings.network;
 
-import io.bitsquare.common.UserThread;
+import io.bitsquare.common.Clock;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.OutboundConnection;
@@ -27,12 +27,8 @@ import javafx.beans.property.StringProperty;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.reactfx.util.FxTimer;
-import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
 
 public class NetworkStatisticListItem {
     private static final Logger log = LoggerFactory.getLogger(NetworkStatisticListItem.class);
@@ -40,15 +36,17 @@ public class NetworkStatisticListItem {
     private final Statistic statistic;
     private final Connection connection;
     private final Subscription sentBytesSubscription, receivedBytesSubscription;
-    private final Timer timer;
+    private final Clock clock;
     private final BSFormatter formatter;
 
     private final StringProperty lastActivity = new SimpleStringProperty();
     private final StringProperty sentBytes = new SimpleStringProperty();
     private final StringProperty receivedBytes = new SimpleStringProperty();
+    private final Clock.Listener listener;
 
-    public NetworkStatisticListItem(Connection connection, BSFormatter formatter) {
+    public NetworkStatisticListItem(Connection connection, Clock clock, BSFormatter formatter) {
         this.connection = connection;
+        this.clock = clock;
         this.formatter = formatter;
         this.statistic = connection.getStatistic();
 
@@ -57,8 +55,18 @@ public class NetworkStatisticListItem {
         receivedBytesSubscription = EasyBind.subscribe(statistic.receivedBytesProperty(),
                 e -> receivedBytes.set(formatter.formatBytes((int) e)));
 
-        timer = FxTimer.runPeriodically(Duration.ofMillis(1000),
-                () -> UserThread.execute(() -> onLastActivityChanged(statistic.getLastActivityTimestamp())));
+        listener = new Clock.Listener() {
+            @Override
+            public void onSecondTick() {
+                onLastActivityChanged(statistic.getLastActivityTimestamp());
+            }
+
+            @Override
+            public void onMinuteTick() {
+
+            }
+        };
+        clock.addListener(listener);
         onLastActivityChanged(statistic.getLastActivityTimestamp());
     }
 
@@ -69,7 +77,7 @@ public class NetworkStatisticListItem {
     public void cleanup() {
         sentBytesSubscription.unsubscribe();
         receivedBytesSubscription.unsubscribe();
-        timer.stop();
+        clock.removeListener(listener);
     }
 
     public String getOnionAddress() {

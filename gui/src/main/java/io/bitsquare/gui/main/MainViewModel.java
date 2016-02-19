@@ -32,6 +32,7 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.MarketPriceFeed;
+import io.bitsquare.common.Clock;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -93,6 +94,7 @@ public class MainViewModel implements ViewModel {
     private final WalletPasswordPopup walletPasswordPopup;
     private final NotificationCenter notificationCenter;
     private final TacPopup tacPopup;
+    private Clock clock;
     private final Navigation navigation;
     private final BSFormatter formatter;
 
@@ -132,12 +134,12 @@ public class MainViewModel implements ViewModel {
     private final MarketPriceFeed marketPriceFeed;
     private final User user;
     private int numBTCPeers = 0;
-    private Timer checkForBtcSyncStateTimer;
     private ChangeListener<Number> numConnectedPeersListener, btcNumPeersListener;
     private java.util.Timer numberOfBtcPeersTimer;
     private java.util.Timer numberOfP2PNetworkPeersTimer;
     private Timer startupTimeout;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
+    private Subscription downloadPercentageSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +152,7 @@ public class MainViewModel implements ViewModel {
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, WalletPasswordPopup walletPasswordPopup,
-                         NotificationCenter notificationCenter, TacPopup tacPopup,
+                         NotificationCenter notificationCenter, TacPopup tacPopup, Clock clock,
                          Navigation navigation, BSFormatter formatter) {
         this.marketPriceFeed = marketPriceFeed;
         this.user = user;
@@ -166,6 +168,7 @@ public class MainViewModel implements ViewModel {
         this.walletPasswordPopup = walletPasswordPopup;
         this.notificationCenter = notificationCenter;
         this.tacPopup = tacPopup;
+        this.clock = clock;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -215,9 +218,8 @@ public class MainViewModel implements ViewModel {
         if (btcNumPeersListener != null)
             walletService.numPeersProperty().removeListener(btcNumPeersListener);
 
-        if (checkForBtcSyncStateTimer != null)
-            checkForBtcSyncStateTimer.stop();
-
+        if (downloadPercentageSubscription != null)
+            downloadPercentageSubscription.unsubscribe();
     }
 
 
@@ -320,7 +322,8 @@ public class MainViewModel implements ViewModel {
     }
 
     private BooleanProperty initBitcoinWallet() {
-        EasyBind.subscribe(walletService.downloadPercentageProperty(), newValue -> setBitcoinNetworkSyncProgress((double) newValue));
+        downloadPercentageSubscription = EasyBind.subscribe(walletService.downloadPercentageProperty(),
+                percentage -> setBitcoinNetworkSyncProgress((double) percentage));
 
         btcNumPeersListener = (observable, oldValue, newValue) -> {
             if ((int) oldValue > 0 && (int) newValue == 0) {
@@ -340,8 +343,8 @@ public class MainViewModel implements ViewModel {
             }
 
             numBTCPeers = (int) newValue;
-            setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
         };
+
         walletService.numPeersProperty().addListener(btcNumPeersListener);
 
         final BooleanProperty walletInitialized = new SimpleBooleanProperty();
@@ -356,6 +359,8 @@ public class MainViewModel implements ViewModel {
 
     private void onAllServicesInitialized() {
         Log.traceCall();
+
+        clock.start();
 
         startupTimeout.stop();
 
@@ -395,9 +400,6 @@ public class MainViewModel implements ViewModel {
             }
         });
 
-        setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
-        checkPeriodicallyForBtcSyncState();
-
         openOfferManager.getOpenOffers().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
         openOfferManager.onAllServicesInitialized();
         arbitratorManager.onAllServicesInitialized();
@@ -427,7 +429,7 @@ public class MainViewModel implements ViewModel {
         // in MainView showAppScreen handler
         notificationCenter.onAllServicesAndViewsInitialized();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // States
@@ -555,19 +557,6 @@ public class MainViewModel implements ViewModel {
         typeProperty.bind(marketPriceFeed.typeProperty());
     }
 
-    private void checkPeriodicallyForBtcSyncState() {
-        if (walletService.downloadPercentageProperty().get() == -1) {
-            checkForBtcSyncStateTimer = FxTimer.runPeriodically(Duration.ofSeconds(10),
-                    () -> {
-                        log.info("Bitcoin blockchain sync still not started.");
-                        setBitcoinNetworkSyncProgress(walletService.downloadPercentageProperty().get());
-                    }
-            );
-        } else {
-            stopCheckForBtcSyncStateTimer();
-        }
-    }
-
     private void updateP2pNetworkInfoWithPeersChanged(int numPeers) {
         p2PNetworkInfo.set("Nr. of P2P network peers: " + numPeers);
     }
@@ -690,12 +679,12 @@ public class MainViewModel implements ViewModel {
             btcSplashInfo.set(numPeers + " / synchronized with " + btcNetworkAsString);
             btcFooterInfo.set(btcSplashInfo.get());
             btcSplashSyncIconId.set("image-connection-synced");
-            stopCheckForBtcSyncStateTimer();
+            if (downloadPercentageSubscription != null)
+                downloadPercentageSubscription.unsubscribe();
         } else if (value > 0.0) {
             String percentage = formatter.formatToPercent(value);
             btcSplashInfo.set(numPeers + " / synchronizing with " + btcNetworkAsString + ": " + percentage);
             btcFooterInfo.set(numPeers + " / synchronizing " + btcNetworkAsString + ": " + percentage);
-            stopCheckForBtcSyncStateTimer();
         } else if (value == -1) {
             btcSplashInfo.set(numPeers + " / connecting to " + btcNetworkAsString);
             btcFooterInfo.set(btcSplashInfo.get());
@@ -705,7 +694,6 @@ public class MainViewModel implements ViewModel {
     }
 
     private void setWalletServiceException(Throwable error) {
-        setBitcoinNetworkSyncProgress(0);
         btcSplashInfo.set("Nr. of Bitcoin network peers: " + numBTCPeers + " / connecting to " + btcNetworkAsString + " failed");
         btcFooterInfo.set(btcSplashInfo.get());
         if (error instanceof TimeoutException) {
@@ -719,13 +707,6 @@ public class MainViewModel implements ViewModel {
             walletServiceErrorMsg.set("Connection to the bitcoin network failed because of an error:" + error.getMessage());
         } else {
             walletServiceErrorMsg.set("Connection to the bitcoin network failed because of an error:" + error.toString());
-        }
-    }
-
-    private void stopCheckForBtcSyncStateTimer() {
-        if (checkForBtcSyncStateTimer != null) {
-            checkForBtcSyncStateTimer.stop();
-            checkForBtcSyncStateTimer = null;
         }
     }
 

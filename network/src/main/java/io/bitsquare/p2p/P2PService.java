@@ -24,8 +24,12 @@ import io.bitsquare.p2p.peers.peerexchange.PeerExchangeManager;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.P2PDataStorage;
-import io.bitsquare.p2p.storage.data.*;
+import io.bitsquare.p2p.storage.data.ExpirablePayload;
+import io.bitsquare.p2p.storage.data.MailboxPayload;
+import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.data.ProtectedMailboxData;
 import io.bitsquare.p2p.storage.messages.AddDataMessage;
+import io.bitsquare.p2p.storage.messages.RefreshTTLMessage;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import org.fxmisc.easybind.EasyBind;
@@ -651,8 +655,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
-                RefreshTTLBundle refreshTTLBundle = p2PDataStorage.getRefreshTTLPackage(expirablePayload, optionalKeyRing.get().getSignatureKeyPair());
-                return p2PDataStorage.refreshTTL(refreshTTLBundle, networkNode.getNodeAddress());
+                RefreshTTLMessage refreshTTLMessage = p2PDataStorage.getRefreshTTLMessage(expirablePayload, optionalKeyRing.get().getSignatureKeyPair());
+                return p2PDataStorage.refreshTTL(refreshTTLMessage, networkNode.getNodeAddress());
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;

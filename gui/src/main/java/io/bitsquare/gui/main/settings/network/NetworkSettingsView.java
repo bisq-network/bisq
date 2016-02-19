@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.settings.network;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.Clock;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -52,6 +53,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     private final WalletService walletService;
     private final Preferences preferences;
+    private Clock clock;
     private final BSFormatter formatter;
     private final P2PService p2PService;
 
@@ -79,11 +81,12 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private ChangeListener<List<Peer>> bitcoinPeersChangeListener;
 
     @Inject
-    public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences,
+    public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences, Clock clock,
                                BSFormatter formatter) {
         this.walletService = walletService;
         this.p2PService = p2PService;
         this.preferences = preferences;
+        this.clock = clock;
         this.formatter = formatter;
     }
 
@@ -214,7 +217,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         p2PPeerTable.getItems().forEach(NetworkStatisticListItem::cleanup);
 
         List<NetworkStatisticListItem> list = p2PService.getNetworkNode().getConfirmedConnections().stream()
-                .map(connection -> new NetworkStatisticListItem(connection, formatter))
+                .map(connection -> new NetworkStatisticListItem(connection, clock, formatter))
                 .collect(Collectors.toList());
         p2PPeerTable.setItems(FXCollections.observableArrayList(list));
         p2PPeerTable.sort();

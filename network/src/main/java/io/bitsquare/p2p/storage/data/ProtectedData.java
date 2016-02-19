@@ -2,7 +2,6 @@ package io.bitsquare.p2p.storage.data;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.bitsquare.common.wire.Payload;
-import io.bitsquare.p2p.storage.P2PDataStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +11,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 public class ProtectedData implements Payload {
-    private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
+    private static final Logger log = LoggerFactory.getLogger(ProtectedData.class);
 
     public final ExpirablePayload expirablePayload;
 
@@ -49,7 +48,7 @@ public class ProtectedData implements Payload {
     public void refreshDate() {
         date = new Date();
     }
-    
+
     public boolean isExpired() {
         return (new Date().getTime() - date.getTime()) > ttl;
     }

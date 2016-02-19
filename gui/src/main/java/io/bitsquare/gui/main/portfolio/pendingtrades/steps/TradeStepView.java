@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
 import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.Dispute;
+import io.bitsquare.common.Clock;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
@@ -34,12 +35,9 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.reactfx.util.FxTimer;
-import org.reactfx.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -56,7 +54,6 @@ public abstract class TradeStepView extends AnchorPane {
     private Subscription errorMessageSubscription;
     private Subscription disputeStateSubscription;
     private Subscription tradePeriodStateSubscription;
-    private Timer timer;
     protected int gridRow = 0;
     protected TitledGroupBg tradeInfoTitledGroupBg;
     private TextField timeLeftTextField;
@@ -64,6 +61,7 @@ public abstract class TradeStepView extends AnchorPane {
     private TxIdTextField txIdTextField;
     protected TradeSubView.NotificationGroup notificationGroup;
     private Subscription txIdSubscription;
+    private Clock.Listener clockListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +111,17 @@ public abstract class TradeStepView extends AnchorPane {
             }
         });
 
-        timer = FxTimer.runPeriodically(Duration.ofMinutes(1), this::updateTimeLeft);
+        clockListener = new Clock.Listener() {
+            @Override
+            public void onSecondTick() {
+            }
+
+            @Override
+            public void onMinuteTick() {
+                updateTimeLeft();
+            }
+        };
+        model.clock.addListener(clockListener);
     }
 
     public void deactivate() {
@@ -133,8 +141,8 @@ public abstract class TradeStepView extends AnchorPane {
         if (tradePeriodStateSubscription != null)
             tradePeriodStateSubscription.unsubscribe();
 
-        if (timer != null)
-            timer.stop();
+        if (clockListener != null)
+            model.clock.removeListener(clockListener);
 
         if (notificationGroup != null)
             notificationGroup.button.setOnAction(null);

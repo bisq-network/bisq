@@ -30,9 +30,6 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.SendDirectMessageListener;
-import io.bitsquare.p2p.network.CloseConnectionReason;
-import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
@@ -61,6 +58,8 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class OpenOfferManager {
     private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
+    private static final int MAX_MSG_SIZE = 100 * 1024;
+
     private final KeyRing keyRing;
     private final User user;
     private final P2PService p2PService;
@@ -78,6 +77,7 @@ public class OpenOfferManager {
     private boolean firstTimeConnection;
     private boolean allowRefreshOffers;
     private boolean lostAllConnections;
+    private long refreshOffersPeriod;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +125,7 @@ public class OpenOfferManager {
 
         // TODO: Use check for detecting inactivity instead. run timer and check if elapsed time is in expected range, 
         // if not we have been in standby and need a republish
-        networkNode.addConnectionListener(new ConnectionListener() {
+       /* networkNode.addConnectionListener(new ConnectionListener() {
             @Override
             public void onConnection(Connection connection) {
                 if (lostAllConnections) {
@@ -155,7 +155,7 @@ public class OpenOfferManager {
             @Override
             public void onError(Throwable throwable) {
             }
-        });
+        });*/
     }
 
 
@@ -194,22 +194,8 @@ public class OpenOfferManager {
         startRefreshOffersThread();
 
         //TODO should not be needed
-        // startRepublishOffersThread();
+        //startRepublishOffersThread();
     }
-
-    private void startRefreshOffersThread() {
-        allowRefreshOffers = true;
-        // refresh sufficiently before offer would expire
-        long period = (long) (Offer.TTL * 0.7);
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                UserThread.execute(OpenOfferManager.this::refreshOffers);
-            }
-        };
-        timer.scheduleAtFixedRate(timerTask, period, period);
-    }
-
 
     private void startRepublishOffersThread() {
         long period = Offer.TTL * 10;
@@ -226,10 +212,25 @@ public class OpenOfferManager {
         Log.traceCall("Number of offer for republish: " + openOffers.size());
         for (OpenOffer openOffer : openOffers) {
             offerBookService.republishOffers(openOffer.getOffer(),
-                    () -> log.debug("Successful added offer to P2P network"),
+                    () -> {
+                        log.debug("Successful added offer to P2P network");
+                        allowRefreshOffers = true;
+                    },
                     errorMessage -> log.error("Add offer to P2P network failed. " + errorMessage));
             openOffer.setStorage(openOffersStorage);
         }
+    }
+
+    private void startRefreshOffersThread() {
+        // refresh sufficiently before offer would expire
+        refreshOffersPeriod = (long) (Offer.TTL * 0.7);
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                UserThread.execute(OpenOfferManager.this::refreshOffers);
+            }
+        };
+        timer.scheduleAtFixedRate(timerTask, refreshOffersPeriod, refreshOffersPeriod);
     }
 
     private void refreshOffers() {
