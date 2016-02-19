@@ -258,7 +258,7 @@ public class OpenOfferManager {
 
     private void startRefreshOffersThread() {
         // refresh sufficiently before offer would expire
-        refreshOffersPeriod = (long) (Offer.TTL * 0.7);
+        refreshOffersPeriod = (long) (Offer.TTL * 0.5);
         refreshOffersTimer = UserThread.runPeriodically(OpenOfferManager.this::refreshOffers, refreshOffersPeriod, TimeUnit.MILLISECONDS);
     }
 

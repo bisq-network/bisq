@@ -61,14 +61,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         storage = new Storage<>(storageDir);
         removeExpiredEntriesExecutor = Utilities.getScheduledThreadPoolExecutor("removeExpiredEntries", 1, 10, 5);
 
-        init();
-    }
-
-    private void init() {
         HashMap<ByteArray, MapValue> persisted = storage.initAndGetPersisted("SequenceNumberMap");
         if (persisted != null)
             sequenceNumberMap = getPurgedSequenceNumberMap(persisted);
+    }
 
+    public void onBootstrapComplete() {
         removeExpiredEntriesExecutor.scheduleAtFixedRate(() -> UserThread.execute(() -> {
             log.trace("removeExpiredEntries");
             // The moment when an object becomes expired will not be synchronous in the network and we could 
@@ -84,7 +82,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                         ByteArray hashOfPayload = entry.getKey();
                         ProtectedData protectedData = map.get(hashOfPayload);
                         toRemoveSet.add(protectedData);
-                        log.trace("remove protectedData:\n\t" + protectedData);
+                        log.error("remove protectedData:\n\t" + protectedData);
                         map.remove(hashOfPayload);
                     });
 
@@ -240,6 +238,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                             checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload);
 
                     if (result) {
+                        log.error("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
                         storedData.refreshDate();
 
                         sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));

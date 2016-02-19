@@ -274,6 +274,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         isBootstrapped = true;
         p2pServiceListeners.stream().forEach(P2PServiceListener::onBootstrapComplete);
+
+        p2PDataStorage.onBootstrapComplete();
     }
 
     @Override
