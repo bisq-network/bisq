@@ -52,7 +52,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private final Collection<NodeAddress> seedNodeAddresses;
     private final Listener listener;
 
-    private final Map<NodeAddress, RequestDataHandler> requestDataHandlerMap = new HashMap<>();
+    private final Map<NodeAddress, RequestDataHandler> handlerMap = new HashMap<>();
     private Optional<NodeAddress> nodeAddressOfPreliminaryDataRequest = Optional.empty();
     private Timer retryTimer;
     private boolean dataUpdateRequested;
@@ -82,7 +82,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         stopRetryTimer();
         networkNode.removeMessageListener(this);
         peerManager.removeListener(this);
-        requestDataHandlerMap.values().stream().forEach(RequestDataHandler::cleanup);
+        handlerMap.values().stream().forEach(RequestDataHandler::cleanup);
     }
 
 
@@ -210,7 +210,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private void requestData(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
         Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
         if (!stopped) {
-            if (!requestDataHandlerMap.containsKey(nodeAddress)) {
+            if (!handlerMap.containsKey(nodeAddress)) {
                 RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager,
                         new RequestDataHandler.Listener() {
                             @Override
@@ -220,7 +220,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 stopRetryTimer();
 
                                 // need to remove before listeners are notified as they cause the update call
-                                requestDataHandlerMap.remove(nodeAddress);
+                                handlerMap.remove(nodeAddress);
 
                                 // 1. We get a response from requestPreliminaryData
                                 if (!nodeAddressOfPreliminaryDataRequest.isPresent()) {
@@ -242,7 +242,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 log.trace("requestDataHandshake of outbound connection failed.\n\tnodeAddress={}\n\t" +
                                         "ErrorMessage={}", nodeAddress, errorMessage);
 
-                                requestDataHandlerMap.remove(nodeAddress);
+                                handlerMap.remove(nodeAddress);
                                 peerManager.handleConnectionFault(nodeAddress, connection);
 
                                 if (!stopped) {
@@ -273,7 +273,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 }
                             }
                         });
-                requestDataHandlerMap.put(nodeAddress, requestDataHandler);
+                handlerMap.put(nodeAddress, requestDataHandler);
                 requestDataHandler.requestData(nodeAddress);
             } else {
                 log.warn("We have started already a requestDataHandshake to peer. nodeAddress=" + nodeAddress);
@@ -346,16 +346,19 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     }
 
     private void closeRequestDataHandler(Connection connection) {
-        if (connection.getPeersNodeAddressOptional().isPresent()) {
-            NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
-            requestDataHandlerMap.get(nodeAddress).cleanup();
-            requestDataHandlerMap.remove(nodeAddress);
+        Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
+        if (peersNodeAddressOptional.isPresent()) {
+            NodeAddress nodeAddress = peersNodeAddressOptional.get();
+            if (handlerMap.containsKey(nodeAddress)) {
+                handlerMap.get(nodeAddress).cleanup();
+                handlerMap.remove(nodeAddress);
+            }
         }
     }
 
     private void closeAllRequestDataHandlers() {
-        requestDataHandlerMap.values().stream().forEach(RequestDataHandler::cleanup);
-        requestDataHandlerMap.clear();
+        handlerMap.values().stream().forEach(RequestDataHandler::cleanup);
+        handlerMap.clear();
     }
 
 }

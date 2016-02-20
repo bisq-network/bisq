@@ -27,7 +27,7 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
-    private final Map<String, KeepAliveHandler> maintenanceHandlerMap = new HashMap<>();
+    private final Map<String, KeepAliveHandler> handlerMap = new HashMap<>();
     private boolean stopped;
     private Timer keepAliveTimer;
 
@@ -165,19 +165,19 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                     .filter(connection -> connection instanceof OutboundConnection)
                     .forEach(connection -> {
                         final String uid = connection.getUid();
-                        if (!maintenanceHandlerMap.containsKey(uid)) {
+                        if (!handlerMap.containsKey(uid)) {
                             KeepAliveHandler keepAliveHandler = new KeepAliveHandler(networkNode, peerManager, new KeepAliveHandler.Listener() {
                                 @Override
                                 public void onComplete() {
-                                    maintenanceHandlerMap.remove(uid);
+                                    handlerMap.remove(uid);
                                 }
 
                                 @Override
                                 public void onFault(String errorMessage) {
-                                    maintenanceHandlerMap.remove(uid);
+                                    handlerMap.remove(uid);
                                 }
                             });
-                            maintenanceHandlerMap.put(uid, keepAliveHandler);
+                            handlerMap.put(uid, keepAliveHandler);
                             keepAliveHandler.sendPing(connection);
                         } else {
                             log.warn("Connection with id {} has not completed and is still in our map. " +
@@ -185,7 +185,7 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                         }
                     });
 
-            int size = maintenanceHandlerMap.size();
+            int size = handlerMap.size();
             log.info("maintenanceHandlerMap size=" + size);
             if (size > peerManager.getMaxConnections())
                 log.warn("Seems we didn't clean up out map correctly.\n" +
@@ -195,19 +195,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
         }
     }
 
-    private void closeMaintenanceHandler(Connection connection) {
-        if (connection.getPeersNodeAddressOptional().isPresent()) {
-            String uid = connection.getUid();
-            maintenanceHandlerMap.get(uid).cleanup();
-            maintenanceHandlerMap.remove(uid);
-        }
-    }
-
-    private void closeAllMaintenanceHandlers() {
-        maintenanceHandlerMap.values().stream().forEach(KeepAliveHandler::cleanup);
-        maintenanceHandlerMap.clear();
-    }
-
     private void stopKeepAliveTimer() {
         stopped = true;
         if (keepAliveTimer != null) {
@@ -215,4 +202,18 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
             keepAliveTimer = null;
         }
     }
+
+    private void closeMaintenanceHandler(Connection connection) {
+        String uid = connection.getUid();
+        if (handlerMap.containsKey(uid)) {
+            handlerMap.get(uid).cleanup();
+            handlerMap.remove(uid);
+        }
+    }
+
+    private void closeAllMaintenanceHandlers() {
+        handlerMap.values().stream().forEach(KeepAliveHandler::cleanup);
+        handlerMap.clear();
+    }
+
 }

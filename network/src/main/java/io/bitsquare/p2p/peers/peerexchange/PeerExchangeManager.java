@@ -29,7 +29,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final Set<NodeAddress> seedNodeAddresses;
-    private final Map<NodeAddress, PeerExchangeHandler> peerExchangeHandlerMap = new HashMap<>();
+    private final Map<NodeAddress, PeerExchangeHandler> handlerMap = new HashMap<>();
     private Timer retryTimer, periodicTimer;
     private boolean stopped;
 
@@ -180,14 +180,14 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     private void requestReportedPeers(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
         Log.traceCall("nodeAddress=" + nodeAddress);
         if (!stopped) {
-            if (!peerExchangeHandlerMap.containsKey(nodeAddress)) {
+            if (!handlerMap.containsKey(nodeAddress)) {
                 PeerExchangeHandler peerExchangeHandler = new PeerExchangeHandler(networkNode,
                         peerManager,
                         new PeerExchangeHandler.Listener() {
                             @Override
                             public void onComplete() {
                                 log.trace("PeerExchangeHandshake of outbound connection complete. nodeAddress={}", nodeAddress);
-                                peerExchangeHandlerMap.remove(nodeAddress);
+                                handlerMap.remove(nodeAddress);
                                 requestWithAvailablePeers();
                             }
 
@@ -196,7 +196,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                                 log.trace("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
                                         "nodeAddress={}", errorMessage, nodeAddress);
 
-                                peerExchangeHandlerMap.remove(nodeAddress);
+                                handlerMap.remove(nodeAddress);
                                 peerManager.handleConnectionFault(nodeAddress, connection);
                                 if (!stopped) {
                                     if (!remainingNodeAddresses.isEmpty()) {
@@ -224,7 +224,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                                 }
                             }
                         });
-                peerExchangeHandlerMap.put(nodeAddress, peerExchangeHandler);
+                handlerMap.put(nodeAddress, peerExchangeHandler);
                 peerExchangeHandler.sendGetPeersRequest(nodeAddress);
             } else {
                 //TODO check when that happens
@@ -339,15 +339,18 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     }
 
     private void closePeerExchangeHandler(Connection connection) {
-        if (connection.getPeersNodeAddressOptional().isPresent()) {
-            NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
-            peerExchangeHandlerMap.get(nodeAddress).cleanup();
-            peerExchangeHandlerMap.remove(nodeAddress);
+        Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
+        if (peersNodeAddressOptional.isPresent()) {
+            NodeAddress nodeAddress = peersNodeAddressOptional.get();
+            if (handlerMap.containsKey(nodeAddress)) {
+                handlerMap.get(nodeAddress).cleanup();
+                handlerMap.remove(nodeAddress);
+            }
         }
     }
 
     private void closeAllPeerExchangeHandlers() {
-        peerExchangeHandlerMap.values().stream().forEach(PeerExchangeHandler::cleanup);
-        peerExchangeHandlerMap.clear();
+        handlerMap.values().stream().forEach(PeerExchangeHandler::cleanup);
+        handlerMap.clear();
     }
 }
