@@ -225,6 +225,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         errorMessage -> {
                             //TODO handle with retry
                             log.error("Add offer to P2P network failed. " + errorMessage);
+                            stopRepublishOffersTimer();
+                            republishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
+                                    RETRY_DELAY_AFTER_ALL_CON_LOST_SEC);
                         });
                 openOffer.setStorage(openOffersStorage);
             }
