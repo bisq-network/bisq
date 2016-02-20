@@ -272,7 +272,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void doPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        openOfferManager.onPlaceOffer(offer, resultHandler);
+        openOfferManager.placeOffer(offer, resultHandler);
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {

@@ -698,7 +698,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         decryptedDirectMessageListeners.add(listener);
     }
 
-    public void removeDecryptedMailListener(DecryptedDirectMessageListener listener) {
+    public void removeDecryptedDirectMessageListener(DecryptedDirectMessageListener listener) {
         decryptedDirectMessageListeners.remove(listener);
     }
 
@@ -711,7 +711,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void removeP2PServiceListener(P2PServiceListener listener) {
-        p2pServiceListeners.remove(listener);
+        if (p2pServiceListeners.contains(listener))
+            p2pServiceListeners.remove(listener);
     }
 
     public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {

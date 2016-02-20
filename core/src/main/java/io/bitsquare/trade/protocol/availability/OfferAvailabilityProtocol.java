@@ -73,7 +73,7 @@ public class OfferAvailabilityProtocol {
 
     private void cleanup() {
         stopTimeout();
-        model.p2PService.removeDecryptedMailListener(decryptedDirectMessageListener);
+        model.p2PService.removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
     }
 
 

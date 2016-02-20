@@ -88,7 +88,7 @@ public abstract class TradeProtocol {
         log.debug("cleanup " + this);
         stopTimeout();
 
-        processModel.getP2PService().removeDecryptedMailListener(decryptedDirectMessageListener);
+        processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
 
     }
 

@@ -179,7 +179,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     void onRemoveOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        openOfferManager.onRemoveOpenOffer(offer, resultHandler, errorMessageHandler);
+        openOfferManager.removeOffer(offer, resultHandler, errorMessageHandler);
     }
 
 
