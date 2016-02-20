@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.peers.peerexchange;
+package io.bitsquare.p2p.peers.getdata;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -10,18 +10,21 @@ import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.PeerManager;
-import io.bitsquare.p2p.peers.peerexchange.messages.GetPeersRequest;
-import io.bitsquare.p2p.peers.peerexchange.messages.GetPeersResponse;
+import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
+import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
+import io.bitsquare.p2p.storage.P2PDataStorage;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-class GetPeersRequestHandler {
-    private static final Logger log = LoggerFactory.getLogger(GetPeersRequestHandler.class);
+public class GetDataRequestHandler {
+    private static final Logger log = LoggerFactory.getLogger(GetDataRequestHandler.class);
+
 
     private static final long TIME_OUT_SEC = 20;
 
@@ -43,6 +46,7 @@ class GetPeersRequestHandler {
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
+    private P2PDataStorage dataStorage;
     private final Listener listener;
     private Timer timeoutTimer;
 
@@ -51,9 +55,10 @@ class GetPeersRequestHandler {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public GetPeersRequestHandler(NetworkNode networkNode, PeerManager peerManager, Listener listener) {
+    public GetDataRequestHandler(NetworkNode networkNode, PeerManager peerManager, P2PDataStorage dataStorage, Listener listener) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
+        this.dataStorage = dataStorage;
         this.listener = listener;
     }
 
@@ -62,44 +67,36 @@ class GetPeersRequestHandler {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void handle(GetPeersRequest getPeersRequest, final Connection connection) {
-        Log.traceCall("getPeersRequest=" + getPeersRequest + "\n\tconnection=" + connection + "\n\tthis=" + this);
-
-        checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
-                "The peers address must have been already set at the moment");
-        GetPeersResponse getPeersResponse = new GetPeersResponse(getPeersRequest.nonce,
-                peerManager.getConnectedPeersNonSeedNodes(connection.getPeersNodeAddressOptional().get()));
-        SettableFuture<Connection> future = networkNode.sendMessage(connection,
-                getPeersResponse);
+    public void handle(GetDataRequest getDataRequest, final Connection connection) {
+        Log.traceCall(getDataRequest + "\n\tconnection=" + connection);
+        GetDataResponse getDataResponse = new GetDataResponse(new HashSet<>(dataStorage.getMap().values()),
+                getDataRequest.getNonce());
+        SettableFuture<Connection> future = networkNode.sendMessage(connection, getDataResponse);
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(Connection connection) {
-                log.trace("GetPeersResponse sent successfully");
+                log.trace("Send DataResponse to {} succeeded. getDataResponse={}",
+                        connection.getPeersNodeAddressOptional(), getDataResponse);
                 cleanup();
                 listener.onComplete();
             }
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                String errorMessage = "Sending getPeersResponse to " + connection +
-                        " failed. That is expected if the peer is offline. getPeersResponse=" + getPeersResponse + "." +
+                String errorMessage = "Sending getDataRequest to " + connection +
+                        " failed. That is expected if the peer is offline. getDataResponse=" + getDataResponse + "." +
                         "Exception: " + throwable.getMessage();
-                log.info(errorMessage);
                 handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);
             }
         });
 
-        checkArgument(timeoutTimer == null, "onGetPeersRequest must not be called twice.");
+        checkArgument(timeoutTimer == null, "requestData must not be called twice.");
         timeoutTimer = UserThread.runAfter(() -> {
-                    String errorMessage = "A timeout occurred at sending getPeersResponse:" + getPeersResponse + " on connection:" + connection;
-                    log.info(errorMessage + " / PeerExchangeHandshake=" +
-                            GetPeersRequestHandler.this);
-                    log.info("timeoutTimer called. this=" + this);
+                    String errorMessage = "A timeout occurred for getDataResponse:" + getDataResponse +
+                            " on connection:" + connection;
                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
                 },
                 TIME_OUT_SEC, TimeUnit.SECONDS);
-
-        peerManager.addToReportedPeers(getPeersRequest.reportedPeers, connection);
     }
 
 
@@ -108,9 +105,9 @@ class GetPeersRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, Connection connection) {
-        // TODO retry
-        cleanup();
+        log.info(errorMessage);
         peerManager.shutDownConnection(connection, closeConnectionReason);
+        cleanup();
         listener.onFault(errorMessage, connection);
     }
 

@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.peers;
 
 import io.bitsquare.app.Log;
+import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
@@ -36,6 +37,7 @@ public class PeerManager implements ConnectionListener, MessageListener {
 
     private static int MAX_CONNECTIONS_ABSOLUTE;
     private final boolean printReportedPeersDetails = true;
+    private boolean lostAllConnections;
 
     public static void setMaxConnections(int maxConnections) {
         MAX_CONNECTIONS = maxConnections;
@@ -54,7 +56,26 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(14); // max age for reported peers is 14 days
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public interface Listener {
+        void onAllConnectionsLost();
+
+        void onNewConnectionAfterAllConnectionsLost();
+
+        void onAwakeFromStandby();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Instance fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
     private final NetworkNode networkNode;
+    private Clock clock;
     private final Set<NodeAddress> seedNodeAddresses;
     private final Storage<HashSet<ReportedPeer>> dbStorage;
 
@@ -62,14 +83,16 @@ public class PeerManager implements ConnectionListener, MessageListener {
     private final Set<ReportedPeer> reportedPeers = new HashSet<>();
     private Timer checkMaxConnectionsTimer;
     private final ChangeListener<NodeAddress> connectionNodeAddressListener;
-
+    private final Clock.Listener listener;
+    private final List<Listener> listeners = new LinkedList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PeerManager(NetworkNode networkNode, Set<NodeAddress> seedNodeAddresses, File storageDir) {
+    public PeerManager(NetworkNode networkNode, Set<NodeAddress> seedNodeAddresses, File storageDir, Clock clock) {
         this.networkNode = networkNode;
+        this.clock = clock;
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir);
@@ -89,17 +112,46 @@ public class PeerManager implements ConnectionListener, MessageListener {
                     checkMaxConnections(MAX_CONNECTIONS);
                 }, 3);
         };
+
+        // we check if app was idle for more then 5 sec.
+        listener = new Clock.Listener() {
+            @Override
+            public void onSecondTick() {
+            }
+
+            @Override
+            public void onMinuteTick() {
+            }
+
+            @Override
+            public void onMissedSecondTick(long missed) {
+                if (missed > Clock.IDLE_TOLERANCE) {
+                    log.error("We have been idle for {} sec", missed / 1000);
+                    listeners.stream().forEach(Listener::onAwakeFromStandby);
+                }
+            }
+        };
+        clock.addListener(listener);
     }
 
     public void shutDown() {
         Log.traceCall();
 
         networkNode.removeConnectionListener(this);
+        clock.removeListener(listener);
         stopCheckMaxConnectionsTimer();
     }
 
     public int getMaxConnections() {
         return MAX_CONNECTIONS_ABSOLUTE;
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -118,12 +170,21 @@ public class PeerManager implements ConnectionListener, MessageListener {
                 seedNodeAddresses.contains(peersNodeAddressOptional.get())) {
             connection.setPeerType(Connection.PeerType.SEED_NODE);
         }
+
+        if (lostAllConnections) {
+            lostAllConnections = false;
+            listeners.stream().forEach(Listener::onNewConnectionAfterAllConnectionsLost);
+        }
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         connection.getNodeAddressProperty().removeListener(connectionNodeAddressListener);
         handleConnectionFault(connection);
+
+        lostAllConnections = networkNode.getAllConnections().isEmpty();
+        if (lostAllConnections)
+            listeners.stream().forEach(Listener::onAllConnectionsLost);
     }
 
     @Override

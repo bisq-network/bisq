@@ -3,6 +3,7 @@ package io.bitsquare.p2p.seed;
 import com.google.common.annotations.VisibleForTesting;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.Clock;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
@@ -137,7 +138,7 @@ public class SeedNode {
             log.info("Created torDir at " + torDir.getAbsolutePath());
 
         seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
-        seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, torDir, useLocalhost, networkId, storageDir, null, null);
+        seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, torDir, useLocalhost, networkId, storageDir, new Clock(), null, null);
         seedNodeP2PService.start(listener);
     }
 

@@ -2,13 +2,11 @@ package io.bitsquare.p2p.peers.keepalive;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
@@ -19,10 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
-public class KeepAliveManager implements MessageListener, ConnectionListener {
+public class KeepAliveManager implements MessageListener, ConnectionListener, PeerManager.Listener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveManager.class);
 
     //private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
@@ -31,9 +27,9 @@ public class KeepAliveManager implements MessageListener, ConnectionListener {
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
-    private ScheduledThreadPoolExecutor executor;
     private final Map<String, KeepAliveHandler> maintenanceHandlerMap = new HashMap<>();
-    private boolean shutDownInProgress;
+    private boolean stopped;
+    private Timer keepAliveTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,18 +42,20 @@ public class KeepAliveManager implements MessageListener, ConnectionListener {
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
+        peerManager.addListener(this);
     }
 
     public void shutDown() {
         Log.traceCall();
-        shutDownInProgress = true;
+        stopped = true;
 
         networkNode.removeMessageListener(this);
         networkNode.removeConnectionListener(this);
-        maintenanceHandlerMap.values().stream().forEach(KeepAliveHandler::cleanup);
+        peerManager.removeListener(this);
 
-        if (executor != null)
-            MoreExecutors.shutdownAndAwaitTermination(executor, 100, TimeUnit.MILLISECONDS);
+        closeAllMaintenanceHandlers();
+
+        stopKeepAliveTimer();
     }
 
 
@@ -66,11 +64,9 @@ public class KeepAliveManager implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
-        if (executor == null) {
-            executor = Utilities.getScheduledThreadPoolExecutor("KeepAliveManager", 1, 2, 5);
-            executor.scheduleAtFixedRate(() -> UserThread.execute(this::keepAlive),
-                    INTERVAL_SEC, INTERVAL_SEC, TimeUnit.SECONDS);
-        }
+        stopped = false;
+        if (keepAliveTimer == null)
+            keepAliveTimer = UserThread.runPeriodically(this::keepAlive, INTERVAL_SEC);
     }
 
 
@@ -82,26 +78,29 @@ public class KeepAliveManager implements MessageListener, ConnectionListener {
     public void onMessage(Message message, Connection connection) {
         if (message instanceof Ping) {
             Log.traceCall(message.toString() + "\n\tconnection=" + connection);
+            if (!stopped) {
+                Ping ping = (Ping) message;
+                Pong pong = new Pong(ping.nonce);
+                SettableFuture<Connection> future = networkNode.sendMessage(connection, pong);
+                Futures.addCallback(future, new FutureCallback<Connection>() {
+                    @Override
+                    public void onSuccess(Connection connection) {
+                        log.trace("Pong sent successfully");
+                    }
 
-            Ping ping = (Ping) message;
-            Pong pong = new Pong(ping.nonce);
-            SettableFuture<Connection> future = networkNode.sendMessage(connection, pong);
-            Futures.addCallback(future, new FutureCallback<Connection>() {
-                @Override
-                public void onSuccess(Connection connection) {
-                    log.trace("Pong sent successfully");
-                }
-
-                @Override
-                public void onFailure(@NotNull Throwable throwable) {
-                    String errorMessage = "Sending pong to " + connection +
-                            " failed. That is expected if the peer is offline. pong=" + pong + "." +
-                            "Exception: " + throwable.getMessage();
-                    log.info(errorMessage);
-                    peerManager.handleConnectionFault(connection);
-                    peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
-                }
-            });
+                    @Override
+                    public void onFailure(@NotNull Throwable throwable) {
+                        String errorMessage = "Sending pong to " + connection +
+                                " failed. That is expected if the peer is offline. pong=" + pong + "." +
+                                "Exception: " + throwable.getMessage();
+                        log.info(errorMessage);
+                        peerManager.handleConnectionFault(connection);
+                        peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
+                    }
+                });
+            } else {
+                log.warn("We have stopped already. We ignore that onMessage call.");
+            }
         }
     }
 
@@ -112,15 +111,15 @@ public class KeepAliveManager implements MessageListener, ConnectionListener {
 
     @Override
     public void onConnection(Connection connection) {
+        Log.traceCall();
         // clean up in case we could not clean up at disconnect
-        if (connection.getPeersNodeAddressOptional().isPresent())
-            maintenanceHandlerMap.remove(connection.getPeersNodeAddressOptional().get().getFullAddress());
+        closeMaintenanceHandler(connection);
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        if (connection.getPeersNodeAddressOptional().isPresent())
-            maintenanceHandlerMap.remove(connection.getPeersNodeAddressOptional().get().getFullAddress());
+        Log.traceCall();
+        closeMaintenanceHandler(connection);
     }
 
     @Override
@@ -129,57 +128,91 @@ public class KeepAliveManager implements MessageListener, ConnectionListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // PeerManager.Listener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAllConnectionsLost() {
+        Log.traceCall();
+        closeAllMaintenanceHandlers();
+        stopKeepAliveTimer();
+    }
+
+    @Override
+    public void onNewConnectionAfterAllConnectionsLost() {
+        Log.traceCall();
+        closeAllMaintenanceHandlers();
+        start();
+    }
+
+    @Override
+    public void onAwakeFromStandby() {
+        Log.traceCall();
+        closeAllMaintenanceHandlers();
+        if (!networkNode.getAllConnections().isEmpty())
+            start();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     private void keepAlive() {
-        Log.traceCall();
-
-        if (!shutDownInProgress) {
+        if (!stopped) {
+            Log.traceCall();
             networkNode.getConfirmedConnections().stream()
                     .filter(connection -> connection instanceof OutboundConnection)
                     .forEach(connection -> {
-                        if (!maintenanceHandlerMap.containsKey(getKey(connection))) {
+                        final String uid = connection.getUid();
+                        if (!maintenanceHandlerMap.containsKey(uid)) {
                             KeepAliveHandler keepAliveHandler = new KeepAliveHandler(networkNode, peerManager, new KeepAliveHandler.Listener() {
                                 @Override
                                 public void onComplete() {
-                                    maintenanceHandlerMap.remove(getKey(connection));
+                                    maintenanceHandlerMap.remove(uid);
                                 }
 
                                 @Override
-                                public void onFault(String errorMessage, Connection connection) {
-                                    maintenanceHandlerMap.remove(getKey(connection));
-                                }
-
-                                @Override
-                                public void onFault(String errorMessage, NodeAddress nodeAddress) {
-                                    maintenanceHandlerMap.remove(nodeAddress.getFullAddress());
+                                public void onFault(String errorMessage) {
+                                    maintenanceHandlerMap.remove(uid);
                                 }
                             });
-                            maintenanceHandlerMap.put(getKey(connection), keepAliveHandler);
+                            maintenanceHandlerMap.put(uid, keepAliveHandler);
                             keepAliveHandler.sendPing(connection);
                         } else {
                             log.warn("Connection with id {} has not completed and is still in our map. " +
-                                    "We will try to ping that peer at the next schedule.", getKey(connection));
+                                    "We will try to ping that peer at the next schedule.", uid);
                         }
                     });
 
             int size = maintenanceHandlerMap.size();
             log.info("maintenanceHandlerMap size=" + size);
             if (size > peerManager.getMaxConnections())
-                log.warn("Seems we don't clean up out map correctly.\n" +
+                log.warn("Seems we didn't clean up out map correctly.\n" +
                         "maintenanceHandlerMap size={}, peerManager.getMaxConnections()={}", size, peerManager.getMaxConnections());
+        } else {
+            log.warn("We have stopped already. We ignore that keepAlive call.");
         }
     }
 
-    private String getKey(Connection connection) {
+    private void closeMaintenanceHandler(Connection connection) {
         if (connection.getPeersNodeAddressOptional().isPresent()) {
-            return connection.getPeersNodeAddressOptional().get().getFullAddress();
-        } else {
-            // TODO not sure if that can be the case, but handle it otherwise we get an exception
-            log.warn("!connection.getPeersNodeAddressOptional().isPresent(). That should not happen.");
-            return "null";
+            String uid = connection.getUid();
+            maintenanceHandlerMap.get(uid).cleanup();
+            maintenanceHandlerMap.remove(uid);
+        }
+    }
+
+    private void closeAllMaintenanceHandlers() {
+        maintenanceHandlerMap.values().stream().forEach(KeepAliveHandler::cleanup);
+        maintenanceHandlerMap.clear();
+    }
+
+    private void stopKeepAliveTimer() {
+        stopped = true;
+        if (keepAliveTimer != null) {
+            keepAliveTimer.stop();
+            keepAliveTimer = null;
         }
     }
 }

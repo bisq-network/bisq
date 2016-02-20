@@ -1,19 +1,65 @@
 package io.bitsquare.common;
 
-public interface Clock {
-    void start();
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    void stop();
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-    void addListener(Listener listener);
+public class Clock {
+    private static final Logger log = LoggerFactory.getLogger(Clock.class);
 
-    void removeListener(Listener listener);
+    public static final int IDLE_TOLERANCE = 5000;
 
-    interface Listener {
+    public interface Listener {
         void onSecondTick();
 
         void onMinuteTick();
 
         void onMissedSecondTick(long missed);
+    }
+
+    private Timer timer;
+    private final List<Listener> listeners = new LinkedList<>();
+    private long counter = 0;
+    private long lastSecondTick;
+
+    public Clock() {
+    }
+
+    public void start() {
+        if (timer == null) {
+            lastSecondTick = System.currentTimeMillis();
+            timer = UserThread.runPeriodically(() -> {
+                listeners.stream().forEach(Listener::onSecondTick);
+                counter++;
+                if (counter >= 60) {
+                    counter = 0;
+                    listeners.stream().forEach(Listener::onMinuteTick);
+                }
+
+                long currentTimeMillis = System.currentTimeMillis();
+                long diff = currentTimeMillis - lastSecondTick;
+                if (diff > 1000)
+                    listeners.stream().forEach(listener -> listener.onMissedSecondTick(diff - 1000));
+
+                lastSecondTick = currentTimeMillis;
+            }, 1, TimeUnit.SECONDS);
+        }
+    }
+
+    public void stop() {
+        timer.stop();
+        timer = null;
+        counter = 0;
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
     }
 }

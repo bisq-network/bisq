@@ -52,6 +52,7 @@ class PeerExchangeHandler implements MessageListener {
     private final int nonce = new Random().nextInt();
     private Timer timeoutTimer;
     private Connection connection;
+    private boolean stopped;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +66,7 @@ class PeerExchangeHandler implements MessageListener {
     }
 
     public void cleanup() {
+        stopped = true;
         if (connection != null)
             connection.removeMessageListener(this);
 
@@ -81,43 +83,47 @@ class PeerExchangeHandler implements MessageListener {
 
     public void sendGetPeersRequest(NodeAddress nodeAddress) {
         Log.traceCall("nodeAddress=" + nodeAddress + " / this=" + this);
-        if (networkNode.getNodeAddress() != null) {
-            GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getConnectedPeersNonSeedNodes(nodeAddress));
-            SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getPeersRequest);
-            Futures.addCallback(future, new FutureCallback<Connection>() {
-                @Override
-                public void onSuccess(Connection connection) {
-                    if (!connection.getPeersNodeAddressOptional().isPresent()) {
-                        connection.setPeersNodeAddress(nodeAddress);
-                        //TODO remove setPeersNodeAddress if never needed
-                        log.warn("sendGetPeersRequest: !connection.getPeersNodeAddressOptional().isPresent()");
+        if (!stopped) {
+            if (networkNode.getNodeAddress() != null) {
+                GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getConnectedPeersNonSeedNodes(nodeAddress));
+                SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getPeersRequest);
+                Futures.addCallback(future, new FutureCallback<Connection>() {
+                    @Override
+                    public void onSuccess(Connection connection) {
+                        if (!connection.getPeersNodeAddressOptional().isPresent()) {
+                            connection.setPeersNodeAddress(nodeAddress);
+                            //TODO remove setPeersNodeAddress if never needed
+                            log.warn("sendGetPeersRequest: !connection.getPeersNodeAddressOptional().isPresent()");
+                        }
+                        PeerExchangeHandler.this.connection = connection;
+                        connection.addMessageListener(PeerExchangeHandler.this);
+                        log.trace("Send " + getPeersRequest + " to " + nodeAddress + " succeeded.");
                     }
-                    PeerExchangeHandler.this.connection = connection;
-                    connection.addMessageListener(PeerExchangeHandler.this);
-                    log.trace("Send " + getPeersRequest + " to " + nodeAddress + " succeeded.");
-                }
 
-                @Override
-                public void onFailure(@NotNull Throwable throwable) {
-                    String errorMessage = "Sending getPeersRequest to " + nodeAddress +
-                            " failed. That is expected if the peer is offline.\n\tgetPeersRequest=" + getPeersRequest +
-                            ".\n\tException=" + throwable.getMessage();
-                    log.info(errorMessage);
-                    handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, nodeAddress);
-                }
-            });
+                    @Override
+                    public void onFailure(@NotNull Throwable throwable) {
+                        String errorMessage = "Sending getPeersRequest to " + nodeAddress +
+                                " failed. That is expected if the peer is offline.\n\tgetPeersRequest=" + getPeersRequest +
+                                ".\n\tException=" + throwable.getMessage();
+                        log.info(errorMessage);
+                        handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, nodeAddress);
+                    }
+                });
 
-            checkArgument(timeoutTimer == null, "requestReportedPeers must not be called twice.");
-            timeoutTimer = UserThread.runAfter(() -> {
-                        String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
-                        log.info(errorMessage + " / PeerExchangeHandler=" +
-                                PeerExchangeHandler.this);
-                        log.info("timeoutTimer called on " + this);
-                        handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
-                    },
-                    TIME_OUT_SEC, TimeUnit.SECONDS);
+                checkArgument(timeoutTimer == null, "requestReportedPeers must not be called twice.");
+                timeoutTimer = UserThread.runAfter(() -> {
+                            String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
+                            log.info(errorMessage + " / PeerExchangeHandler=" +
+                                    PeerExchangeHandler.this);
+                            log.info("timeoutTimer called on " + this);
+                            handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
+                        },
+                        TIME_OUT_SEC, TimeUnit.SECONDS);
+            } else {
+                log.warn("My node address is still null at sendGetPeersRequest. We ignore that call.");
+            }
         } else {
-            log.trace("My node address is still null at sendGetPeersRequest. We ignore that call.");
+            log.warn("We have stopped that handler already. We ignore that sendGetPeersRequest call.");
         }
     }
 
@@ -128,23 +134,24 @@ class PeerExchangeHandler implements MessageListener {
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof GetPeersResponse) {
-            GetPeersResponse getPeersResponse = (GetPeersResponse) message;
-
-            if (peerManager.isSeedNode(connection))
-                connection.setPeerType(Connection.PeerType.SEED_NODE);
-
-            // Check if the response is for our request
-            if (getPeersResponse.requestNonce == nonce) {
+            if (!stopped) {
                 Log.traceCall(message.toString() + "\n\tconnection=" + connection);
-                Log.traceCall("this=" + this);
-                peerManager.addToReportedPeers(getPeersResponse.reportedPeers, connection);
+                GetPeersResponse getPeersResponse = (GetPeersResponse) message;
+                if (peerManager.isSeedNode(connection))
+                    connection.setPeerType(Connection.PeerType.SEED_NODE);
 
-                cleanup();
-                listener.onComplete();
+                // Check if the response is for our request
+                if (getPeersResponse.requestNonce == nonce) {
+                    peerManager.addToReportedPeers(getPeersResponse.reportedPeers, connection);
+                    cleanup();
+                    listener.onComplete();
+                } else {
+                    log.warn("Nonce not matching. That should never happen.\n\t" +
+                                    "We drop that message. nonce={} / requestNonce={}",
+                            nonce, getPeersResponse.requestNonce);
+                }
             } else {
-                log.warn("Nonce not matching. That should never happen.\n\t" +
-                                "We drop that message. nonce={} / requestNonce={}",
-                        nonce, getPeersResponse.requestNonce);
+                log.warn("We have stopped that handler already. We ignore that onMessage call.");
             }
         }
     }

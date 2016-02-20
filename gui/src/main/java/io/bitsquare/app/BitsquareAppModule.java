@@ -26,7 +26,6 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.crypto.EncryptionServiceModule;
 import io.bitsquare.gui.GuiModule;
-import io.bitsquare.gui.common.UIClock;
 import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.main.intructions.InstructionCenter;
 import io.bitsquare.gui.main.notifications.NotificationCenter;
@@ -64,7 +63,7 @@ class BitsquareAppModule extends AppModule {
         bind(Preferences.class).in(Singleton.class);
         bind(NotificationCenter.class).in(Singleton.class);
         bind(InstructionCenter.class).in(Singleton.class);
-        bind(Clock.class).to(UIClock.class).in(Singleton.class);
+        bind(Clock.class).in(Singleton.class);
         
         File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
         bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);

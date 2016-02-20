@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.ProgramArguments;
+import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
@@ -56,6 +57,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final SeedNodesRepository seedNodesRepository;
     private final int port;
     private final File torDir;
+    private Clock clock;
     private final Optional<EncryptionService> optionalEncryptionService;
     private final Optional<KeyRing> optionalKeyRing;
 
@@ -99,11 +101,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       @Named(ProgramArguments.USE_LOCALHOST) boolean useLocalhost,
                       @Named(ProgramArguments.NETWORK_ID) int networkId,
                       @Named("storage.dir") File storageDir,
+                      Clock clock,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
         this.seedNodesRepository = seedNodesRepository;
         this.port = port;
         this.torDir = torDir;
+        this.clock = clock;
 
         optionalEncryptionService = encryptionService == null ? Optional.empty() : Optional.of(encryptionService);
         optionalKeyRing = keyRing == null ? Optional.empty() : Optional.of(keyRing);
@@ -126,7 +130,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         p2PDataStorage.addHashMapChangedListener(this);
 
         Set<NodeAddress> seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, networkId);
-        peerManager = new PeerManager(networkNode, seedNodeAddresses, storageDir);
+        peerManager = new PeerManager(networkNode, seedNodeAddresses, storageDir, clock);
 
         requestDataManager = new RequestDataManager(networkNode, p2PDataStorage, peerManager, seedNodeAddresses, this);
 
@@ -247,11 +251,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         networkReadySubscription.unsubscribe();
 
-        Optional<NodeAddress> seedNodeOfPreliminaryDataRequest = requestDataManager.getNodeOfPreliminaryDataRequest();
+        Optional<NodeAddress> seedNodeOfPreliminaryDataRequest = requestDataManager.getNodeAddressOfPreliminaryDataRequest();
         checkArgument(seedNodeOfPreliminaryDataRequest.isPresent(),
                 "seedNodeOfPreliminaryDataRequest must be present");
 
-        requestDataManager.requestUpdatesData();
+        requestDataManager.requestUpdateData();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +271,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onUpdatedDataReceived() {
-        Optional<NodeAddress> seedNodeOfPreliminaryDataRequest = requestDataManager.getNodeOfPreliminaryDataRequest();
+        Optional<NodeAddress> seedNodeOfPreliminaryDataRequest = requestDataManager.getNodeAddressOfPreliminaryDataRequest();
         checkArgument(seedNodeOfPreliminaryDataRequest.isPresent(),
                 "seedNodeOfPreliminaryDataRequest must be present");
         peerExchangeManager.requestReportedPeersFromSeedNodes(seedNodeOfPreliminaryDataRequest.get());

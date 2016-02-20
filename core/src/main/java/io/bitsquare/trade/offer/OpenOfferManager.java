@@ -177,7 +177,7 @@ public class OpenOfferManager {
 
             @Override
             public void onMissedSecondTick(long missed) {
-                if (missed > 5000) {
+                if (missed > Clock.IDLE_TOLERANCE) {
                     log.error("We have been idle for {} sec", missed / 1000);
 
                     // We have been idle for at least 5 sec.

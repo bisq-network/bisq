@@ -1,5 +1,6 @@
 package io.bitsquare.p2p;
 
+import io.bitsquare.common.Clock;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.seed.SeedNode;
@@ -130,7 +131,7 @@ public class TestUtils {
         }
 
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost,
-                2, new File("dummy"), encryptionService, keyRing);
+                2, new File("dummy"), new Clock(), encryptionService, keyRing);
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {

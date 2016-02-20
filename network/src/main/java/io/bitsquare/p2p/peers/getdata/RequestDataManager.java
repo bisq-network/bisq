@@ -5,9 +5,7 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.MessageListener;
-import io.bitsquare.p2p.network.NetworkNode;
+import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
 import io.bitsquare.p2p.peers.peerexchange.ReportedPeer;
@@ -17,12 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class RequestDataManager implements MessageListener {
+public class RequestDataManager implements MessageListener, ConnectionListener, PeerManager.Listener {
     private static final Logger log = LoggerFactory.getLogger(RequestDataManager.class);
 
     private static final long RETRY_DELAY_SEC = 10;
@@ -55,11 +52,11 @@ public class RequestDataManager implements MessageListener {
     private final Collection<NodeAddress> seedNodeAddresses;
     private final Listener listener;
 
-    private final Map<NodeAddress, RequestDataHandshake> requestDataHandshakeMap = new HashMap<>();
-    private Optional<NodeAddress> nodeOfPreliminaryDataRequest = Optional.empty();
-    private Timer requestDataTimer;
+    private final Map<NodeAddress, RequestDataHandler> requestDataHandlerMap = new HashMap<>();
+    private Optional<NodeAddress> nodeAddressOfPreliminaryDataRequest = Optional.empty();
+    private Timer retryTimer;
     private boolean dataUpdateRequested;
-    private boolean shutDownInProgress;
+    private boolean stopped;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,14 +73,16 @@ public class RequestDataManager implements MessageListener {
 
         checkArgument(!seedNodeAddresses.isEmpty(), "seedNodeAddresses must not be empty.");
         networkNode.addMessageListener(this);
+        peerManager.addListener(this);
     }
 
     public void shutDown() {
         Log.traceCall();
-        shutDownInProgress = true;
-        stopRequestDataTimer();
+        stopped = true;
+        stopRetryTimer();
         networkNode.removeMessageListener(this);
-        requestDataHandshakeMap.values().stream().forEach(RequestDataHandshake::shutDown);
+        peerManager.removeListener(this);
+        requestDataHandlerMap.values().stream().forEach(RequestDataHandler::cleanup);
     }
 
 
@@ -100,19 +99,73 @@ public class RequestDataManager implements MessageListener {
         requestData(nextCandidate, nodeAddresses);
     }
 
-    public void requestUpdatesData() {
+    public void requestUpdateData() {
         Log.traceCall();
-        checkArgument(nodeOfPreliminaryDataRequest.isPresent(), "seedNodeOfPreliminaryDataRequest must be present");
+        checkArgument(nodeAddressOfPreliminaryDataRequest.isPresent(), "seedNodeOfPreliminaryDataRequest must be present");
         dataUpdateRequested = true;
         List<NodeAddress> remainingNodeAddresses = new ArrayList<>(seedNodeAddresses);
         Collections.shuffle(remainingNodeAddresses);
-        NodeAddress candidate = nodeOfPreliminaryDataRequest.get();
+        NodeAddress candidate = nodeAddressOfPreliminaryDataRequest.get();
         remainingNodeAddresses.remove(candidate);
         requestData(candidate, remainingNodeAddresses);
     }
 
-    public Optional<NodeAddress> getNodeOfPreliminaryDataRequest() {
-        return nodeOfPreliminaryDataRequest;
+    public Optional<NodeAddress> getNodeAddressOfPreliminaryDataRequest() {
+        return nodeAddressOfPreliminaryDataRequest;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ConnectionListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onConnection(Connection connection) {
+        Log.traceCall();
+        // clean up in case we could not clean up at disconnect
+        closeRequestDataHandler(connection);
+    }
+
+    @Override
+    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+        Log.traceCall();
+        closeRequestDataHandler(connection);
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PeerManager.Listener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAllConnectionsLost() {
+        Log.traceCall();
+        closeAllRequestDataHandlers();
+        stopRetryTimer();
+        stopped = true;
+    }
+
+    @Override
+    public void onNewConnectionAfterAllConnectionsLost() {
+        Log.traceCall();
+        closeAllRequestDataHandlers();
+        stopped = false;
+
+        retryAfterDelay();
+    }
+
+    @Override
+    public void onAwakeFromStandby() {
+        Log.traceCall();
+        closeAllRequestDataHandlers();
+        stopped = false;
+
+        if (!networkNode.getAllConnections().isEmpty())
+            retryAfterDelay();
     }
 
 
@@ -124,124 +177,147 @@ public class RequestDataManager implements MessageListener {
     public void onMessage(Message message, Connection connection) {
         if (message instanceof GetDataRequest) {
             Log.traceCall(message.toString() + "\n\tconnection=" + connection);
-            RequestDataHandshake requestDataHandshake = new RequestDataHandshake(networkNode, dataStorage, peerManager,
-                    new RequestDataHandshake.Listener() {
-                        @Override
-                        public void onComplete() {
-                            log.trace("requestDataHandshake of inbound connection complete.\n\tConnection={}",
-                                    connection);
-                        }
+            if (!stopped) {
+                if (peerManager.isSeedNode(connection))
+                    connection.setPeerType(Connection.PeerType.SEED_NODE);
 
-                        @Override
-                        public void onFault(String errorMessage, @Nullable Connection connection) {
-                            log.trace("requestDataHandshake of inbound connection failed.\n\tConnection={}\n\t" +
-                                    "ErrorMessage={}", connection, errorMessage);
-                            peerManager.handleConnectionFault(connection);
-                        }
-                    });
-            requestDataHandshake.onDataRequest(message, connection);
+                GetDataRequestHandler getDataRequestHandler = new GetDataRequestHandler(networkNode, peerManager, dataStorage,
+                        new GetDataRequestHandler.Listener() {
+                            @Override
+                            public void onComplete() {
+                                log.trace("requestDataHandshake completed.\n\tConnection={}",
+                                        connection);
+                            }
+
+                            @Override
+                            public void onFault(String errorMessage, @Nullable Connection connection) {
+                                log.trace("GetDataRequestHandler failed.\n\tConnection={}\n\t" +
+                                        "ErrorMessage={}", connection, errorMessage);
+                                peerManager.handleConnectionFault(connection);
+                            }
+                        });
+                getDataRequestHandler.handle((GetDataRequest) message, connection);
+            } else {
+                log.warn("We have stopped already. We ignore that onMessage call.");
+            }
         }
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // RequestData
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestData(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
         Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
-        if (!requestDataHandshakeMap.containsKey(nodeAddress)) {
-            RequestDataHandshake requestDataHandshake = new RequestDataHandshake(networkNode, dataStorage, peerManager,
-                    new RequestDataHandshake.Listener() {
-                        @Override
-                        public void onComplete() {
-                            log.trace("RequestDataHandshake of outbound connection complete. nodeAddress={}",
-                                    nodeAddress);
-                            stopRequestDataTimer();
+        if (!stopped) {
+            if (!requestDataHandlerMap.containsKey(nodeAddress)) {
+                RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager,
+                        new RequestDataHandler.Listener() {
+                            @Override
+                            public void onComplete() {
+                                log.trace("RequestDataHandshake of outbound connection complete. nodeAddress={}",
+                                        nodeAddress);
+                                stopRetryTimer();
 
-                            // need to remove before listeners are notified as they cause the update call
-                            requestDataHandshakeMap.remove(nodeAddress);
+                                // need to remove before listeners are notified as they cause the update call
+                                requestDataHandlerMap.remove(nodeAddress);
 
-                            // 1. We get a response from requestPreliminaryData
-                            if (!nodeOfPreliminaryDataRequest.isPresent()) {
-                                nodeOfPreliminaryDataRequest = Optional.of(nodeAddress);
-                                listener.onPreliminaryDataReceived();
+                                // 1. We get a response from requestPreliminaryData
+                                if (!nodeAddressOfPreliminaryDataRequest.isPresent()) {
+                                    nodeAddressOfPreliminaryDataRequest = Optional.of(nodeAddress);
+                                    listener.onPreliminaryDataReceived();
+                                }
+
+                                // 2. Later we get a response from requestUpdatesData
+                                if (dataUpdateRequested) {
+                                    dataUpdateRequested = false;
+                                    listener.onUpdatedDataReceived();
+                                }
+
+                                listener.onDataReceived();
                             }
 
-                            // 2. Later we get a response from requestUpdatesData
-                            if (dataUpdateRequested) {
-                                dataUpdateRequested = false;
-                                listener.onUpdatedDataReceived();
-                            }
+                            @Override
+                            public void onFault(String errorMessage, @Nullable Connection connection) {
+                                log.trace("requestDataHandshake of outbound connection failed.\n\tnodeAddress={}\n\t" +
+                                        "ErrorMessage={}", nodeAddress, errorMessage);
 
-                            listener.onDataReceived();
-                        }
+                                requestDataHandlerMap.remove(nodeAddress);
+                                peerManager.handleConnectionFault(nodeAddress, connection);
 
-                        @Override
-                        public void onFault(String errorMessage, @Nullable Connection connection) {
-                            log.trace("requestDataHandshake of outbound connection failed.\n\tnodeAddress={}\n\t" +
-                                    "ErrorMessage={}", nodeAddress, errorMessage);
+                                if (!stopped) {
+                                    if (!remainingNodeAddresses.isEmpty()) {
+                                        log.info("There are remaining nodes available for requesting data. " +
+                                                "We will try requestDataFromPeers again.");
+                                        NodeAddress nextCandidate = remainingNodeAddresses.get(0);
+                                        remainingNodeAddresses.remove(nextCandidate);
+                                        requestData(nextCandidate, remainingNodeAddresses);
+                                    } else {
+                                        log.info("There is no remaining node available for requesting data. " +
+                                                "That is expected if no other node is online.\n\t" +
+                                                "We will try to use reported peers (if no available we use persisted peers) " +
+                                                "and try again to request data from our seed nodes after a random pause.");
 
-                            peerManager.handleConnectionFault(nodeAddress, connection);
+                                        // Notify listeners
+                                        if (!nodeAddressOfPreliminaryDataRequest.isPresent()) {
+                                            if (peerManager.isSeedNode(nodeAddress))
+                                                listener.onNoSeedNodeAvailable();
+                                            else
+                                                listener.onNoPeersAvailable();
+                                        }
 
-                            if (!shutDownInProgress) {
-                                if (!remainingNodeAddresses.isEmpty()) {
-                                    log.info("There are remaining nodes available for requesting data. " +
-                                            "We will try requestDataFromPeers again.");
-                                    NodeAddress nextCandidate = remainingNodeAddresses.get(0);
-                                    remainingNodeAddresses.remove(nextCandidate);
-                                    requestData(nextCandidate, remainingNodeAddresses);
+                                        retryAfterDelay();
+                                    }
                                 } else {
-                                    log.info("There is no remaining node available for requesting data. " +
-                                            "That is expected if no other node is online.\n\t" +
-                                            "We will try to use reported peers (if no available we use persisted peers) " +
-                                            "and try again to request data from our seed nodes after a random pause.");
-
-                                    // try again after a pause
-                                    stopRequestDataTimer();
-                                    requestDataTimer = UserThread.runAfter(() -> {
-                                                log.trace("requestDataAfterDelayTimer called");
-                                                // We want to keep it sorted but avoid duplicates
-                                                // We don't filter out already established connections for seed nodes as it might be that
-                                                // we got from the other seed node contacted but we still have not requested the initial 
-                                                // data set
-                                                List<NodeAddress> list = new ArrayList<>(seedNodeAddresses);
-                                                Collections.shuffle(list);
-                                                list.addAll(getFilteredAndSortedList(peerManager.getReportedPeers(), list));
-                                                list.addAll(getFilteredAndSortedList(peerManager.getPersistedPeers(), list));
-                                                checkArgument(!list.isEmpty(), "seedNodeAddresses must not be empty.");
-                                                NodeAddress nextCandidate = list.get(0);
-                                                list.remove(nextCandidate);
-                                                requestData(nextCandidate, list);
-                                            },
-                                            RETRY_DELAY_SEC, TimeUnit.SECONDS);
-                                }
-
-                                requestDataHandshakeMap.remove(nodeAddress);
-
-                                // Notify listeners
-                                if (!nodeOfPreliminaryDataRequest.isPresent()) {
-                                    if (peerManager.isSeedNode(nodeAddress))
-                                        listener.onNoSeedNodeAvailable();
-                                    else
-                                        listener.onNoPeersAvailable();
+                                    log.warn("We have stopped already. We ignore that requestData.onFault call.");
                                 }
                             }
-                        }
-                    });
-            requestDataHandshakeMap.put(nodeAddress, requestDataHandshake);
-            requestDataHandshake.requestData(nodeAddress);
+                        });
+                requestDataHandlerMap.put(nodeAddress, requestDataHandler);
+                requestDataHandler.requestData(nodeAddress);
+            } else {
+                log.warn("We have started already a requestDataHandshake to peer. nodeAddress=" + nodeAddress);
+            }
         } else {
-            log.warn("We have started already a requestDataHandshake to peer. nodeAddress=" + nodeAddress);
+            log.warn("We have stopped already. We ignore that requestData call.");
         }
     }
 
-    // sorted by most recent lastActivityDate
-    private List<NodeAddress> getFilteredAndSortedList(Set<ReportedPeer> set, List<NodeAddress> list) {
-        return set.stream()
-                .filter(e -> !list.contains(e.nodeAddress) &&
-                        !peerManager.isSeedNode(e) &&
-                        !peerManager.isSelf(e))
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void retryAfterDelay() {
+        if (retryTimer == null) {
+            retryTimer = UserThread.runAfter(() -> {
+                        log.trace("retryTimer called");
+                        stopRetryTimer();
+
+                        // We create a new list of candidates
+                        // 1. shuffled seedNodes 
+                        // 2. reported peers sorted by last activity date
+                        // 3. Add as last persisted peers sorted by last activity date
+                        List<NodeAddress> list = getFilteredList(new ArrayList<>(seedNodeAddresses), new ArrayList<>());
+                        Collections.shuffle(list);
+
+                        List<NodeAddress> filteredReportedPeers = getFilteredNonSeedNodeList(getSortedNodeAddresses(peerManager.getReportedPeers()), list);
+                        list.addAll(filteredReportedPeers);
+
+                        List<NodeAddress> filteredPersistedPeers = getFilteredNonSeedNodeList(getSortedNodeAddresses(peerManager.getPersistedPeers()), list);
+                        list.addAll(filteredPersistedPeers);
+
+                        checkArgument(!list.isEmpty(), "seedNodeAddresses must not be empty.");
+                        NodeAddress nextCandidate = list.get(0);
+                        list.remove(nextCandidate);
+                        requestData(nextCandidate, list);
+                    },
+                    RETRY_DELAY_SEC);
+        }
+    }
+
+    private List<NodeAddress> getSortedNodeAddresses(Collection<ReportedPeer> collection) {
+        return collection.stream()
                 .collect(Collectors.toList())
                 .stream()
                 .sorted((o1, o2) -> o2.date.compareTo(o1.date))
@@ -249,10 +325,37 @@ public class RequestDataManager implements MessageListener {
                 .collect(Collectors.toList());
     }
 
-    private void stopRequestDataTimer() {
-        if (requestDataTimer != null) {
-            requestDataTimer.stop();
-            requestDataTimer = null;
+    private List<NodeAddress> getFilteredList(Collection<NodeAddress> collection, List<NodeAddress> list) {
+        return collection.stream()
+                .filter(e -> !list.contains(e) &&
+                        !peerManager.isSelf(e))
+                .collect(Collectors.toList());
+    }
+
+    private List<NodeAddress> getFilteredNonSeedNodeList(Collection<NodeAddress> collection, List<NodeAddress> list) {
+        return getFilteredList(collection, list).stream()
+                .filter(e -> !peerManager.isSeedNode(e))
+                .collect(Collectors.toList());
+    }
+
+    private void stopRetryTimer() {
+        if (retryTimer != null) {
+            retryTimer.stop();
+            retryTimer = null;
         }
     }
+
+    private void closeRequestDataHandler(Connection connection) {
+        if (connection.getPeersNodeAddressOptional().isPresent()) {
+            NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+            requestDataHandlerMap.get(nodeAddress).cleanup();
+            requestDataHandlerMap.remove(nodeAddress);
+        }
+    }
+
+    private void closeAllRequestDataHandlers() {
+        requestDataHandlerMap.values().stream().forEach(RequestDataHandler::cleanup);
+        requestDataHandlerMap.clear();
+    }
+
 }
