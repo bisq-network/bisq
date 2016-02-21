@@ -400,6 +400,18 @@ public class BSFormatter {
         return direction == Offer.Direction.BUY ? "Offerer as bitcoin buyer / Taker as bitcoin seller" : "Offerer as bitcoin seller / Taker as bitcoin buyer";
     }
 
+    public String getDirectionForBuyer(boolean isMyOffer) {
+        return isMyOffer ? "You are buying bitcoin as offerer / Taker is selling bitcoin" : "You are buying bitcoin as taker / Offerer is selling bitcoin";
+    }
+
+    public String getDirectionForSeller(boolean isMyOffer) {
+        return isMyOffer ? "You are selling bitcoin as offerer / Taker is buying bitcoin" : "You are selling bitcoin as taker / Offerer is buying bitcoin";
+    }
+
+    public String getDirectionForTaker(Offer.Direction direction) {
+        return direction == Offer.Direction.BUY ? "You are selling bitcoin (take an offer for buying bitcoin)" : "You are buying bitcoin (take an offer for selling bitcoin)";
+    }
+
     public String getOfferDirection(Offer.Direction direction) {
         return direction == Offer.Direction.BUY ? "Offer for buying bitcoin" : "Offer for selling bitcoin";
     }

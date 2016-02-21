@@ -24,6 +24,7 @@ import io.bitsquare.locale.BSResources;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -46,6 +47,7 @@ public class TradeDetailsPopup extends Popup {
 
     private final BSFormatter formatter;
     private final DisputeManager disputeManager;
+    private TradeManager tradeManager;
     private Trade trade;
     private ChangeListener<Number> changeListener;
     private TextArea textArea;
@@ -56,9 +58,10 @@ public class TradeDetailsPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeDetailsPopup(BSFormatter formatter, DisputeManager disputeManager) {
+    public TradeDetailsPopup(BSFormatter formatter, DisputeManager disputeManager, TradeManager tradeManager) {
         this.formatter = formatter;
         this.disputeManager = disputeManager;
+        this.tradeManager = tradeManager;
     }
 
     public TradeDetailsPopup show(Trade trade) {
@@ -104,10 +107,16 @@ public class TradeDetailsPopup extends Popup {
 
         int rows = 5;
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Trade");
-        addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionBothSides(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
-        addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
-        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode());
+
+        boolean myOffer = tradeManager.isMyOffer(offer);
+        if (tradeManager.isBuyer(offer))
+            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForBuyer(myOffer), Layout.FIRST_ROW_DISTANCE);
+        else
+            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForSeller(myOffer), Layout.FIRST_ROW_DISTANCE);
+
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(trade.getTradeAmount()));
+        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(offer.getPrice()));
+        addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
 
         rows = 4;

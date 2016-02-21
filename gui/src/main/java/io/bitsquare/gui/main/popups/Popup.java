@@ -49,7 +49,7 @@ import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 public class Popup {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    protected final static double DEFAULT_WIDTH = 500;
+    protected final static double DEFAULT_WIDTH = 600;
     protected int rowIndex = -1;
     protected String headLine;
     protected String message;

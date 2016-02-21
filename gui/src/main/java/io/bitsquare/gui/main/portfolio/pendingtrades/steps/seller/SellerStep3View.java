@@ -226,6 +226,7 @@ public class SellerStep3View extends TradeStepView {
                         .message("Did you receive the payment from your trading partner?\n\n" +
                                 "Please note that as soon you have confirmed the locked bitcoin will be released.\n" +
                                 "There is no way to reverse a bitcoin payment.")
+                        .width(700)
                         .dontShowAgainId(key, preferences)
                         .actionButtonText("Yes I have received the payment")
                         .closeButtonText("No")

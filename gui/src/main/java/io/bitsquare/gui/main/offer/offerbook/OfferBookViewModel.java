@@ -42,6 +42,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import org.bitcoinj.utils.Fiat;
 
 import java.util.List;
 import java.util.Optional;
@@ -121,9 +122,9 @@ class OfferBookViewModel extends ActivatableViewModel {
         offerBookListItems.addListener(listChangeListener);
         offerBook.fillOfferBookListItems();
         filterList();
-        if (isTabSelected)
-            marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
+        setMarketPriceFeedCurrency();
     }
+
 
     @Override
     protected void deactivate() {
@@ -139,6 +140,15 @@ class OfferBookViewModel extends ActivatableViewModel {
         allTradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
     }
 
+    private void setMarketPriceFeedCurrency() {
+        if (isTabSelected) {
+            if (showAllTradeCurrenciesProperty.get())
+                marketPriceFeed.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
+            else
+                marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -149,8 +159,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
-        if (isTabSelected)
-            marketPriceFeed.setCurrencyCode(tradeCurrencyCode.get());
+        setMarketPriceFeedCurrency();
     }
 
 
@@ -164,8 +173,9 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (!showAllTradeCurrenciesProperty.get()) {
             this.selectedTradeCurrency = tradeCurrency;
             tradeCurrencyCode.set(code);
-            marketPriceFeed.setCurrencyCode(code);
         }
+
+        setMarketPriceFeedCurrency();
 
         filterList();
     }
@@ -231,8 +241,14 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getVolume(OfferBookListItem item) {
-        return (item != null) ? formatter.formatFiat(item.getOffer().getOfferVolume()) +
-                " (" + formatter.formatFiat(item.getOffer().getMinOfferVolume()) + ")" : "";
+        Fiat offerVolume = item.getOffer().getOfferVolume();
+        Fiat minOfferVolume = item.getOffer().getMinOfferVolume();
+        if (showAllTradeCurrenciesProperty.get())
+            return (item != null) ? formatter.formatFiatWithCode(offerVolume) +
+                    " (" + formatter.formatFiatWithCode(minOfferVolume) + ")" : "";
+        else
+            return (item != null) ? formatter.formatFiat(offerVolume) +
+                    " (" + formatter.formatFiat(minOfferVolume) + ")" : "";
     }
 
     String getPaymentMethod(OfferBookListItem item) {

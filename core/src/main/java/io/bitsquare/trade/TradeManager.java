@@ -382,7 +382,7 @@ public class TradeManager {
     }
 
     public boolean isBuyer(Offer offer) {
-        // If I am the offerer, the offer direction is taken, otherwise the mirrored direction
+        // If I am the offerer, we use the offer direction, otherwise the mirrored direction
         if (isMyOffer(offer))
             return offer.getDirection() == Offer.Direction.BUY;
         else

@@ -25,7 +25,7 @@
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-10.0"
           xmlns:fx="http://javafx.com/fxml">
     <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="160.0" maxWidth="160"/>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="160.0"/>
         <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
 </GridPane>

@@ -100,7 +100,7 @@ public class OfferDetailsPopup extends Popup {
         this.dontShowAgainId = dontShowAgainId;
         return this;
     }
-    
+
     public OfferDetailsPopup onPlaceOffer(Consumer<Offer> placeOfferHandler) {
         this.placeOfferHandlerOptional = Optional.of(placeOfferHandler);
         return this;
@@ -115,6 +115,7 @@ public class OfferDetailsPopup extends Popup {
         this.closeHandlerOptional = Optional.of(closeHandler);
         return this;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -137,15 +138,23 @@ public class OfferDetailsPopup extends Popup {
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Offer");
-        addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirection(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
-        addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
-        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
+
+        if (takeOfferHandlerOptional.isPresent())
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTaker(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
+        else
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirection(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
+
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(tradeAmount));
         } else {
             addLabelTextField(gridPane, ++rowIndex, "Amount:", formatter.formatCoinWithCode(offer.getAmount()));
             addLabelTextField(gridPane, ++rowIndex, "Min. amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
         }
+
+        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
+
+        addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
+        
         if (offer.isMyOffer(keyRing) && user.getPaymentAccount(offer.getOffererPaymentAccountId()) != null)
             addLabelTextField(gridPane, ++rowIndex, "Payment account:", user.getPaymentAccount(offer.getOffererPaymentAccountId()).getAccountName());
         else

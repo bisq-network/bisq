@@ -205,6 +205,7 @@ public class BuyerStep2View extends TradeStepView {
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
                 new Popup().headLine("Confirmation")
                         .message("Did you transfer the payment to your trading partner?")
+                        .width(700)
                         .dontShowAgainId(key, preferences)
                         .actionButtonText("Yes I have started the payment")
                         .closeButtonText("No")

@@ -156,7 +156,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     protected void activate() {
         currencyComboBox.setItems(model.getTradeCurrencies());
-        currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
+
+        if (model.showAllTradeCurrenciesProperty.get())
+            currencyComboBox.getSelectionModel().select(0);
+        else
+            currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
+
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
         paymentMethodComboBox.setItems(model.getPaymentMethods());
         paymentMethodComboBox.getSelectionModel().select(0);
@@ -168,12 +173,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         priceColumn.textProperty().bind(createStringBinding(
                 () -> !model.showAllTradeCurrenciesProperty.get() ?
                         "Price in " + model.tradeCurrencyCode.get() + "/BTC" :
-                        "Price (mixed currencies)",
+                        "Price",
                 model.tradeCurrencyCode,
                 model.showAllTradeCurrenciesProperty));
 
         volumeColumn.textProperty().bind(createStringBinding(
-                () -> "Amount in " + model.tradeCurrencyCode.get() + " (Min.)", model.tradeCurrencyCode));
+                () -> !model.showAllTradeCurrenciesProperty.get() ?
+                        "Amount in " + model.tradeCurrencyCode.get() + " (Min.)" :
+                        "Amount (Min.)",
+                model.tradeCurrencyCode,
+                model.showAllTradeCurrenciesProperty));
+
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
 
 
@@ -455,7 +465,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                 if (newItem != null && !empty) {
                                     final Offer offer = newItem.getOffer();
-
+                                    boolean myOffer = model.isMyOffer(offer);
                                     TableRow tableRow = getTableRow();
                                     if (tableRow != null) {
                                         isPaymentAccountValidForOffer = model.isPaymentAccountValidForOffer(offer);
@@ -464,7 +474,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         isTradable = isPaymentAccountValidForOffer && hasMatchingArbitrator &&
                                                 hasSameProtocolVersion;
 
-                                        tableRow.setOpacity(isTradable ? 1 : 0.4);
+                                        tableRow.setOpacity(isTradable || myOffer ? 1 : 0.4);
 
                                         if (isTradable) {
                                             // set first row button as default
@@ -475,25 +485,26 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             tableRow.setOnMouseClicked(e ->
                                                     onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator,
                                                             hasSameProtocolVersion));
+
+                                            //TODO
+                                            //tableRow.setTooltip(new Tooltip(""));
                                         }
                                     }
 
                                     String title;
-                                    if (isTradable) {
-                                        if (model.isMyOffer(offer)) {
-                                            iconView.setId("image-remove");
-                                            title = "Remove";
-                                            button.setOnAction(e -> onRemoveOpenOffer(offer));
-                                        } else {
-                                            iconView.setId(offer.getDirection() == Offer.Direction.SELL ? "image-buy" : "image-sell");
-                                            title = model.getDirectionLabel(offer);
-                                            button.setOnAction(e -> onTakeOffer(offer));
-                                        }
+                                    if (myOffer) {
+                                        iconView.setId("image-remove");
+                                        title = "Remove";
+                                        button.setOnAction(e -> onRemoveOpenOffer(offer));
                                     } else {
-                                        title = "Not matching";
-                                        iconView.setId(null);
-                                        button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator, hasSameProtocolVersion));
+                                        iconView.setId(offer.getDirection() == Offer.Direction.SELL ? "image-buy" : "image-sell");
+                                        title = model.getDirectionLabel(offer);
+                                        button.setOnAction(e -> onTakeOffer(offer));
                                     }
+
+                                    if (!isTradable)
+                                        button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator, hasSameProtocolVersion));
+
 
                                     button.setText(title);
                                     setGraphic(button);
