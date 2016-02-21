@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.markets.charts;
 
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -105,8 +105,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
         createChart();
 
-        Tuple2<TableView<Offer>, VBox> tupleBuy = getOfferTable(Offer.Direction.BUY);
-        Tuple2<TableView<Offer>, VBox> tupleSell = getOfferTable(Offer.Direction.SELL);
+        Tuple3<TableView<Offer>, VBox, Button> tupleBuy = getOfferTable(Offer.Direction.BUY);
+        Tuple3<TableView<Offer>, VBox, Button> tupleSell = getOfferTable(Offer.Direction.SELL);
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
 
@@ -152,7 +152,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     }
 
 
-    private Tuple2<TableView<Offer>, VBox> getOfferTable(Offer.Direction direction) {
+    private Tuple3<TableView<Offer>, VBox, Button> getOfferTable(Offer.Direction direction) {
         TableView<Offer> tableView = new TableView<>();
 
         // price
@@ -224,63 +224,35 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                 });
         tableView.getColumns().add(volumeColumn);
 
-        // select
-        TableColumn<Offer, Offer> selectColumn = new TableColumn<>("I want to:");
-        selectColumn.setMinWidth(100);
-        selectColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        selectColumn.setCellFactory(
-                new Callback<TableColumn<Offer, Offer>, TableCell<Offer, Offer>>() {
-                    @Override
-                    public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
-                        return new TableCell<Offer, Offer>() {
-                            final Button button = new Button();
-                            final ImageView iconView = new ImageView();
-
-                            {
-                                button.setGraphic(iconView);
-                                button.setMinWidth(70);
-                            }
-
-                            @Override
-                            public void updateItem(final Offer item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    boolean isSellOffer = item.getDirection() == Offer.Direction.SELL;
-                                    iconView.setId(isSellOffer ? "image-buy" : "image-sell");
-                                    button.setText(isSellOffer ? "Buy" : "Sell");
-                                    button.setOnAction(e -> {
-                                        if (isSellOffer)
-                                            navigation.navigateTo(MainView.class, BuyOfferView.class);
-                                        else
-                                            navigation.navigateTo(MainView.class, SellOfferView.class);
-                                    });
-                                    setGraphic(button);
-                                } else {
-                                    setGraphic(null);
-                                    if (button != null)
-                                        button.setOnAction(null);
-                                }
-                            }
-                        };
-                    }
-                });
-        tableView.getColumns().add(selectColumn);
-
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new Label("Currently there are no offers available");
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
+        tableView.getSelectionModel().setCellSelectionEnabled(false);
 
         Label titleLabel = new Label(direction.equals(Offer.Direction.BUY) ? "Offers for buying bitcoin  (bid)" : "Offers for selling bitcoin  (ask)");
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
+        boolean isSellOffer = direction == Offer.Direction.SELL;
+        Button button = new Button();
+        ImageView iconView = new ImageView();
+        iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
+        button.setGraphic(iconView);
+        button.setGraphicTextGap(10);
+        button.setText(isSellOffer ? "I want to buy bitcoin" : "I want to sell bitcoin");
+        button.setMinHeight(40);
+        button.setId(isSellOffer ? "buy-button-big" : "sell-button-big");
+        button.setOnAction(e -> navigation.navigateTo(MainView.class, isSellOffer ? BuyOfferView.class : SellOfferView.class));
+
         VBox vBox = new VBox();
         vBox.setSpacing(10);
         vBox.setFillWidth(true);
-        vBox.setMinHeight(150);
-        vBox.getChildren().addAll(titleLabel, tableView);
-        return new Tuple2<>(tableView, vBox);
+        vBox.setMinHeight(120);
+        vBox.getChildren().addAll(titleLabel, tableView, button);
+
+        button.prefWidthProperty().bind(vBox.widthProperty());
+        return new Tuple3<>(tableView, vBox, button);
     }
 
 

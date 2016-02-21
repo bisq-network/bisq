@@ -30,8 +30,17 @@
     -fx-image: url("../../../images/buy.png");
 }
 
+#image-buy-white {
+    -fx-image: url("../../../images/buy_white.png");
+}
+
+
 #image-sell {
     -fx-image: url("../../../images/sell.png");
+}
+
+#image-sell-white {
+    -fx-image: url("../../../images/sell_white.png");
 }
 
 #image-expand {

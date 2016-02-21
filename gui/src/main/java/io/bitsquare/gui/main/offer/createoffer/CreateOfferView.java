@@ -82,10 +82,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private BalanceTextField balanceTextField;
     private ProgressIndicator placeOfferSpinner;
     private TitledGroupBg payFundsPane;
-    private Button nextButton, cancelButton1, cancelButton2, placeOfferButton;
+    private Button nextButton, cancelButton1, cancelButton2, createOfferButton;
     private InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     private TextField totalToPayTextField, currencyTextField;
-    private Label buyLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
+    private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
             volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, placeOfferSpinnerInfoLabel, currencyTextFieldLabel,
             currencyComboBoxLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
@@ -156,7 +156,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         addBindings();
         addListeners();
 
-        buyLabel.setText(model.getDirectionLabel());
+        directionLabel.setText(model.getDirectionLabel());
         amountDescriptionLabel.setText(model.getAmountDescription());
         addressTextField.setAddress(model.getAddressAsString());
         addressTextField.setPaymentLabel(model.getPaymentLabel());
@@ -181,12 +181,24 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     public void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         model.initWithData(direction, tradeCurrency);
 
+        ImageView iconView = new ImageView();
+        createOfferButton.setGraphic(iconView);
         if (direction == Offer.Direction.BUY) {
             imageView.setId("image-buy-large");
+
+            createOfferButton.setId("buy-button-big");
+            nextButton.setId("buy-button");
+            createOfferButton.setText("Place offer for buying bitcoin");
+            iconView.setId("image-buy-white");
         } else {
             imageView.setId("image-sell-large");
             // only needed for sell
             totalToPayTextField.setPromptText(BSResources.get("createOffer.fundsBox.totalsNeeded.prompt"));
+
+            createOfferButton.setId("sell-button-big");
+            nextButton.setId("sell-button");
+            createOfferButton.setText("Place offer for selling bitcoin");
+            iconView.setId("image-sell-white");
         }
     }
 
@@ -354,8 +366,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.validationResultProperty().bind(model.volumeValidationResult);
 
         // buttons
-        placeOfferButton.visibleProperty().bind(model.isPlaceOfferButtonVisible);
-        placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
+        createOfferButton.visibleProperty().bind(model.isPlaceOfferButtonVisible);
+        createOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
 
         placeOfferSpinnerInfoLabel.visibleProperty().bind(model.isPlaceOfferSpinnerVisible);
 
@@ -387,8 +399,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         minAmountTextField.validationResultProperty().unbind();
         priceTextField.validationResultProperty().unbind();
         volumeTextField.validationResultProperty().unbind();
-        placeOfferButton.visibleProperty().unbind();
-        placeOfferButton.disableProperty().unbind();
+        createOfferButton.visibleProperty().unbind();
+        createOfferButton.disableProperty().unbind();
         placeOfferSpinnerInfoLabel.visibleProperty().unbind();
         currencyComboBox.managedProperty().unbind();
         currencyComboBoxLabel.visibleProperty().unbind();
@@ -613,14 +625,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         imageView = new ImageView();
         imageView.setPickOnBounds(true);
-        buyLabel = new Label();
-        buyLabel.setId("direction-icon-label");
-        buyLabel.setAlignment(Pos.CENTER);
-        buyLabel.setPadding(new Insets(-5, 0, 0, 0));
+        directionLabel = new Label();
+        directionLabel.setAlignment(Pos.CENTER);
+        directionLabel.setPadding(new Insets(-5, 0, 0, 0));
+        directionLabel.setId("direction-icon-label");
         VBox imageVBox = new VBox();
         imageVBox.setAlignment(Pos.CENTER);
         imageVBox.setSpacing(6);
-        imageVBox.getChildren().addAll(imageView, buyLabel);
+        imageVBox.getChildren().addAll(imageView, directionLabel);
         GridPane.setRowIndex(imageVBox, gridRow);
         GridPane.setRowSpan(imageVBox, 2);
         GridPane.setMargin(imageVBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 10, 10, 10));
@@ -636,9 +648,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton1 = tuple.second;
         cancelButton1.setDefaultButton(false);
         cancelButton1.setOnAction(e -> close());
+        cancelButton1.setId("cancel-button");
 
         GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
-        nextButton.setId("show-details-button");
         nextButton.setOnAction(e -> onShowFundsScreen());
     }
 
@@ -679,11 +691,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField = balanceTuple.second;
         balanceTextField.setVisible(false);
 
-        Tuple3<Button, ProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow,
-                BSResources.get("createOffer.fundsBox.placeOffer"));
-        placeOfferButton = placeOfferTuple.first;
-        placeOfferButton.setVisible(false);
-        placeOfferButton.setOnAction(e -> onPlaceOffer());
+        Tuple3<Button, ProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "");
+        createOfferButton = placeOfferTuple.first;
+        createOfferButton.setVisible(false);
+        createOfferButton.setOnAction(e -> onPlaceOffer());
+        createOfferButton.setMinHeight(40);
         placeOfferSpinner = placeOfferTuple.second;
         placeOfferSpinner.setPrefSize(18, 18);
         placeOfferSpinnerInfoLabel = placeOfferTuple.third;
@@ -694,6 +706,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2.setOnAction(e -> close());
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);
+        cancelButton2.setId("cancel-button");
     }
 
     private void addAmountPriceFields() {

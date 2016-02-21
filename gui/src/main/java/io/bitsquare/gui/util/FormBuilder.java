@@ -610,6 +610,23 @@ public class FormBuilder {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + Button
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public static Tuple2<Label, Button> addLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle, double top) {
+        Label label = addLabel(gridPane, rowIndex, labelText, top);
+
+        Button button = new Button(buttonTitle);
+        button.setDefaultButton(true);
+        GridPane.setRowIndex(button, rowIndex);
+        GridPane.setColumnIndex(button, 1);
+        gridPane.getChildren().add(button);
+        GridPane.setMargin(button, new Insets(top, 0, 0, 0));
+        return new Tuple2<>(label, button);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Button
     ///////////////////////////////////////////////////////////////////////////////////////////
 

@@ -6,6 +6,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.crypto.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
@@ -58,10 +59,10 @@ public class Connection implements MessageListener {
 
     private static final int MAX_MSG_SIZE = 100 * 1024;         // 100 kb of compressed data
     private static final int MSG_THROTTLE_PER_SEC = 10;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 10 mbit/sec 
-    private static final int MSG_THROTTLE_PER_10SEC = 50;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec for 10 sec 
-    // private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
+    private static final int MSG_THROTTLE_PER_10_SEC = 50;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec for 10 sec 
+    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
     //TODO
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(30);
+    // private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(30);
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
@@ -96,7 +97,7 @@ public class Connection implements MessageListener {
     private final boolean useCompression = false;
     private PeerType peerType;
     private final ObjectProperty<NodeAddress> nodeAddressProperty = new SimpleObjectProperty<>();
-    private final List<Long> messageTimeStamps = new ArrayList<>();
+    private final List<Tuple2<Long, Serializable>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
 
 
@@ -231,28 +232,40 @@ public class Connection implements MessageListener {
         sharedModel.reportInvalidRequest(ruleViolation);
     }
 
-    private boolean violatesThrottleLimit() {
+    private boolean violatesThrottleLimit(Serializable serializable) {
         long now = System.currentTimeMillis();
         boolean violated = false;
+        //TODO remove serializable storage after network is tested stable
         if (messageTimeStamps.size() >= MSG_THROTTLE_PER_SEC) {
             // check if we got more than 10 (MSG_THROTTLE_PER_SEC) msg per sec.
-            long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC);
+            long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC).first;
             // if duration < 1 sec we received too much messages
             violated = now - compareValue < TimeUnit.SECONDS.toMillis(1);
+            if (violated) {
+                log.error("violatesThrottleLimit 1 ");
+                log.error("compareValue " + compareValue);
+                log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream().map(e -> e.second.toString() + "\n\t").toString());
+            }
         }
 
-        if (messageTimeStamps.size() >= MSG_THROTTLE_PER_10SEC) {
+        if (messageTimeStamps.size() >= MSG_THROTTLE_PER_10_SEC) {
             if (!violated) {
                 // check if we got more than 50 msg per 10 sec.
-                long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_10SEC);
+                long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_10_SEC).first;
                 // if duration < 10 sec we received too much messages
                 violated = now - compareValue < TimeUnit.SECONDS.toMillis(10);
+
+                if (violated) {
+                    log.error("violatesThrottleLimit 2 ");
+                    log.error("compareValue " + compareValue);
+                    log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream().map(e -> e.second.toString() + "\n\t").toString());
+                }
             }
             // we limit to max 50 (MSG_THROTTLE_PER_10SEC) entries
             messageTimeStamps.remove(0);
         }
 
-        messageTimeStamps.add(now);
+        messageTimeStamps.add(new Tuple2<>(now, serializable));
         return violated;
     }
 
@@ -641,7 +654,7 @@ public class Connection implements MessageListener {
                             return;
                         }
 
-                        if (sharedModel.connection.violatesThrottleLimit()) {
+                        if (sharedModel.connection.violatesThrottleLimit(serializable)) {
                             reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED);
                             return;
                         }

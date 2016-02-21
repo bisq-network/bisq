@@ -17,17 +17,11 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.offer.offerbook.OfferBookView"
           hgap="5.0" vgap="5"
           xmlns:fx="http://javafx.com/fxml">
-
-    <rowConstraints>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints vgrow="ALWAYS"/>
-    </rowConstraints>
 
     <columnConstraints>
         <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>

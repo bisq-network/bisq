@@ -30,14 +30,40 @@ bg color of non edit textFields: fafafa
     -bs-very-light-grey: #f8f8f8;
 
     -fx-accent: #0f87c3;
+    -bs-blue-soft: derive(-fx-accent, 60%);
+    -bs-blue-transparent: #0f87c344;
+    
     -bs-green: #00aa33;
     -bs-green-soft: derive(-bs-green, 60%);
+    -bs-green-transparent: #00aa3344;
+    
     -bs-error-red: #dd0000;
     -bs-red-soft: derive(-bs-error-red, 60%);
-    -bs-orange: #dd8f05;
 
-    -bs-blue-transparent: #0f87c344;
-    -bs-green-transparent: #00aa3344;
+    -bs-orange: #ff8a2b;
+    -bs-yellow: #ffb60f;
+    -bs-turquoise: #2cacaf;
+    -bs-turquoise2: #1c9099;
+    -bs-brown: #52321b;
+    -bs-dark-blue: #0b456d;
+    -bs-dark-green: #708614;
+    -bs-fresh-green: #b7d042;
+    -bs-ocher: #de9d2c;
+    -bs-light-blue: #c4eef2;
+    -bs-smooth-red: #ed7157;
+    -bs-soft-red: #fe5e1c;
+    -bs-soft-red2: #f35e1c;
+
+    -bs-warning: -bs-orange;
+
+    -bs-buy: -bs-yellow;
+    -bs-buy-dark: derive(-bs-buy, -10%);
+    -bs-buy-transparent: derive(-bs-buy, 95%);
+
+    -bs-sell: -bs-turquoise;
+    -bs-sell-dark: derive(-bs-sell, -10%);
+    -bs-sell-transparent: derive(-bs-sell, 95%);
+
 
     -fx-default-button: derive(-fx-accent, 95%);
     -fx-focus-color: -fx-accent;
@@ -625,7 +651,7 @@ textfield */
 #open-support-button {
     -fx-font-weight: bold;
     -fx-font-size: 14;
-    -fx-base: -bs-orange;
+    -fx-base: -bs-warning;
 }
 
 #open-dispute-button {
@@ -783,7 +809,7 @@ textfield */
 
 /********************************************************************************************************************
  *
- * Chart
+ * Market overview
  *
  ********************************************************************************************************************/
 
@@ -801,32 +827,95 @@ textfield */
 }
 
 #charts .default-color0.chart-area-symbol {
-    -fx-background-color: -bs-green, white;
+    -fx-background-color: -bs-sell, white;
 }
 
 #charts .default-color1.chart-area-symbol {
-    -fx-background-color: -fx-accent, white;
+    -fx-background-color: -bs-buy, white;
 }
 
 #charts .default-color0.chart-series-area-line {
-    -fx-stroke: -bs-green;
+    -fx-stroke: -bs-sell;
 }
 
 #charts .default-color1.chart-series-area-line {
-    -fx-stroke: -fx-accent;
+    -fx-stroke: -bs-buy;
 }
 
 #charts .default-color0.chart-series-area-fill {
-    -fx-fill: -bs-green-transparent;
+    -fx-fill: -bs-sell-transparent;
 }
 
 #charts .default-color1.chart-series-area-fill {
-    -fx-fill: -bs-blue-transparent;
+    -fx-fill: -bs-buy-transparent;
 }
 
 #charts .axis-label {
     -fx-font-size: 16;
     -fx-alignment: center;
+}
+
+/********************************************************************************************************************
+ *
+ * Rounded buttons
+ *
+ ********************************************************************************************************************/
+
+#buy-button-big {
+    -fx-base: -bs-buy;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 15;
+    -fx-background-radius: 20;
+}
+
+#buy-button-big:hover {
+    -fx-base: -bs-buy-dark;
+}
+
+#sell-button-big {
+    -fx-base: -bs-sell;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 15;
+    -fx-background-radius: 20;
+}
+
+#sell-button-big:hover {
+    -fx-base: -bs-sell-dark;
+}
+
+#buy-button {
+    -fx-base: -bs-buy;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 13;
+}
+
+#buy-button:hover {
+    -fx-base: -bs-buy-dark;
+}
+
+#sell-button {
+    -fx-base: -bs-sell;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 13;
+}
+
+#sell-button:hover {
+    -fx-base: -bs-sell-dark;
+}
+
+#cancel-button {
+    -fx-base: -bs-light-grey;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 13;
+}
+
+#cancel-button:hover {
+    -fx-base: derive(-bs-light-grey, -10%);
 }
 
 /********************************************************************************************************************

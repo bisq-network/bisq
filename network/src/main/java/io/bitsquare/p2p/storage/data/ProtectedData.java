@@ -60,7 +60,7 @@ public class ProtectedData implements Payload {
                 ", ttl=" + ttl +
                 ", date=" + date +
                 ", sequenceNumber=" + sequenceNumber +
-                ", ownerStoragePubKey.hashCode()=" + ownerPubKey.hashCode() +
+                ", ownerPubKey.hashCode()=" + ownerPubKey.hashCode() +
                 ", signature.hashCode()=" + Arrays.toString(signature).hashCode() +
                 '}';
     }

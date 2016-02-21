@@ -21,7 +21,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
-import io.bitsquare.gui.components.TableGroupHeadline;
+import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -38,10 +38,13 @@ import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
@@ -64,7 +67,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private OfferView.OfferActionHandler offerActionHandler;
     private int gridRow = 0;
-    private TableGroupHeadline offerBookTitle;
+    private TitledGroupBg offerBookTitle;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -81,8 +84,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Override
     public void initialize() {
-        root.setPadding(new Insets(30, 25, -1, 25));
-        addTitledGroupBg(root, gridRow, 2, "Filter offer book");
+        root.setPadding(new Insets(20, 25, 5, 25));
+
+        offerBookTitle = addTitledGroupBg(root, gridRow, 3, "");
 
         currencyComboBox = addLabelComboBox(root, gridRow, "Filter by currency:", Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText("Select currency");
@@ -116,21 +120,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             }
         });
 
-
-        // createOfferButton
-        createOfferButton = addButtonAfterGroup(root, ++gridRow, "Create new offer");
-
-        offerBookTitle = new TableGroupHeadline("");
-        GridPane.setRowIndex(offerBookTitle, ++gridRow);
-        GridPane.setColumnSpan(offerBookTitle, 2);
-        GridPane.setMargin(offerBookTitle, new Insets(20, -10, -10, -10));
-        root.getChildren().add(offerBookTitle);
-
         tableView = new TableView<>();
-        GridPane.setRowIndex(tableView, gridRow);
+
+        GridPane.setRowIndex(tableView, ++gridRow);
+        GridPane.setColumnIndex(tableView, 0);
         GridPane.setColumnSpan(tableView, 2);
-        GridPane.setMargin(tableView, new Insets(40, -10, -15, -10));
+        GridPane.setMargin(tableView, new Insets(10, -10, -10, -10));
+        GridPane.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
+
         amountColumn = getAmountColumn();
         tableView.getColumns().add(amountColumn);
         priceColumn = getPriceColumn();
@@ -151,6 +149,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
         volumeColumn.setComparator((o1, o2) -> o1.getOffer().getOfferVolume().compareTo(o2.getOffer().getOfferVolume()));
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
+
+        createOfferButton = addButton(root, ++gridRow, "");
+        createOfferButton.setMinHeight(40);
+        createOfferButton.setPadding(new Insets(0, 20, 0, 20));
+        createOfferButton.setGraphicTextGap(10);
+        GridPane.setMargin(createOfferButton, new Insets(15, 0, 0, 0));
+        GridPane.setHalignment(createOfferButton, HPos.RIGHT);
+        GridPane.setVgrow(createOfferButton, Priority.NEVER);
+        GridPane.setValignment(createOfferButton, VPos.TOP);
     }
 
     @Override
@@ -211,8 +218,21 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     public void setDirection(Offer.Direction direction) {
-        offerBookTitle.setText(direction == Offer.Direction.SELL ? "Offers for buying bitcoin " : "Offers for selling bitcoin ");
         model.setDirection(direction);
+        ImageView iconView = new ImageView();
+
+        createOfferButton.setGraphic(iconView);
+        if (direction == Offer.Direction.SELL) {
+            offerBookTitle.setText("Offers for buying bitcoin ");
+            createOfferButton.setId("sell-button-big");
+            createOfferButton.setText("Create new offer for selling bitcoin");
+            iconView.setId("image-sell-white");
+        } else {
+            offerBookTitle.setText("Offers for selling bitcoin ");
+            createOfferButton.setId("buy-button-big");
+            createOfferButton.setText("Create new offer for buying bitcoin");
+            iconView.setId("image-buy-white");
+        }
     }
 
     public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {
@@ -456,7 +476,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                             {
                                 button.setGraphic(iconView);
-                                button.setMinWidth(70);
+                                button.setMinWidth(150);
+                                button.setMaxWidth(150);
+                                button.setGraphicTextGap(10);
+                                button.setStyle("-fx-text-fill: white;");
                             }
 
                             @Override
@@ -495,16 +518,18 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (myOffer) {
                                         iconView.setId("image-remove");
                                         title = "Remove";
+                                        button.setId("cancel-button");
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
                                     } else {
-                                        iconView.setId(offer.getDirection() == Offer.Direction.SELL ? "image-buy" : "image-sell");
+                                        boolean isSellOffer = offer.getDirection() == Offer.Direction.SELL;
+                                        iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
+                                        button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         title = model.getDirectionLabel(offer);
                                         button.setOnAction(e -> onTakeOffer(offer));
                                     }
 
                                     if (!isTradable)
                                         button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator, hasSameProtocolVersion));
-
 
                                     button.setText(title);
                                     setGraphic(button);

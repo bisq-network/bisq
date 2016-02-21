@@ -248,7 +248,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     if (model.showDispute(item.getTrade())) {
                                         setStyle("-fx-text-fill: -bs-error-red");
                                     } else if (model.showWarning(item.getTrade())) {
-                                        setStyle("-fx-text-fill: -bs-orange");
+                                        setStyle("-fx-text-fill: -bs-warning");
                                     } else {
                                         setId("-fx-text-fill: black");
                                     }

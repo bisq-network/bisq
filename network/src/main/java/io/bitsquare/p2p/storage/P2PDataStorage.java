@@ -39,7 +39,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     @VisibleForTesting
     //public static int CHECK_TTL_INTERVAL_MILLIS = (int) TimeUnit.SECONDS.toMillis(30);
-    public static int CHECK_TTL_INTERVAL_MILLIS = (int) TimeUnit.SECONDS.toMillis(5);//TODO
+    public static int CHECK_TTL_INTERVAL_MILLIS = (int) TimeUnit.HOURS.toMillis(30);
+    // public static int CHECK_TTL_INTERVAL_MILLIS = (int) TimeUnit.SECONDS.toMillis(5);//TODO
 
     private final Broadcaster broadcaster;
     private final Map<ByteArray, ProtectedData> map = new ConcurrentHashMap<>();

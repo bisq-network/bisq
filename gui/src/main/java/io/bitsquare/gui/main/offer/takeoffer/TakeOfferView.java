@@ -83,7 +83,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Button nextButton, takeOfferButton, cancelButton1, cancelButton2;
     private InputTextField amountTextField;
     private TextField paymentMethodTextField, currencyTextField, priceTextField, volumeTextField, amountRangeTextField;
-    private Label buyLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
+    private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
             amountBtcLabel, priceCurrencyLabel,
             volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, takeOfferSpinnerInfoLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
@@ -303,10 +303,25 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     public void initWithData(Offer offer) {
         model.initWithData(offer);
 
-        if (model.getOffer().getDirection() == Offer.Direction.SELL)
+        ImageView iconView = new ImageView();
+        takeOfferButton.setGraphic(iconView);
+        if (model.getOffer().getDirection() == Offer.Direction.SELL) {
             imageView.setId("image-buy-large");
-        else
+            directionLabel.setId("direction-icon-label-buy");
+
+            takeOfferButton.setId("buy-button-big");
+            takeOfferButton.setText("Take offer for buying bitcoin");
+            nextButton.setId("buy-button");
+            iconView.setId("image-buy-white");
+        } else {
             imageView.setId("image-sell-large");
+            directionLabel.setId("direction-icon-label-sell");
+
+            takeOfferButton.setId("sell-button-big");
+            nextButton.setId("sell-button");
+            takeOfferButton.setText("Take offer for selling bitcoin");
+            iconView.setId("image-sell-white");
+        }
 
         balanceTextField.setup(model.address.get(), model.getFormatter());
 
@@ -322,7 +337,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (!showComboBox)
             paymentMethodTextField.setText(BSResources.get(model.getPaymentMethod().getId()));
         currencyTextField.setText(model.dataModel.getCurrencyNameAndCode());
-        buyLabel.setText(model.getDirectionLabel());
+        directionLabel.setText(model.getDirectionLabel());
         amountDescriptionLabel.setText(model.getAmountDescription());
         amountRangeTextField.setText(model.getAmountRange());
         priceTextField.setText(model.getPrice());
@@ -493,14 +508,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         imageView = new ImageView();
         imageView.setPickOnBounds(true);
-        buyLabel = new Label();
-        buyLabel.setId("direction-icon-label");
-        buyLabel.setAlignment(Pos.CENTER);
-        buyLabel.setPadding(new Insets(-5, 0, 0, 0));
+        directionLabel = new Label();
+        directionLabel.setAlignment(Pos.CENTER);
+        directionLabel.setPadding(new Insets(-5, 0, 0, 0));
         VBox imageVBox = new VBox();
         imageVBox.setAlignment(Pos.CENTER);
         imageVBox.setSpacing(6);
-        imageVBox.getChildren().addAll(imageView, buyLabel);
+        imageVBox.getChildren().addAll(imageView, directionLabel);
         GridPane.setRowIndex(imageVBox, gridRow);
         GridPane.setRowSpan(imageVBox, 2);
         GridPane.setMargin(imageVBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 10, 10, 10));
@@ -516,9 +530,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton1 = tuple.second;
         cancelButton1.setDefaultButton(false);
         cancelButton1.setOnAction(e -> close());
+        cancelButton1.setId("cancel-button");
 
         GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
-        nextButton.setId("show-details-button");
         nextButton.setOnAction(e -> onShowPayFundsScreen());
     }
 
@@ -560,10 +574,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         balanceTextField = balanceTuple.second;
         balanceTextField.setVisible(false);
 
-        Tuple3<Button, ProgressIndicator, Label> takeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, BSResources.get("takeOffer.fundsBox.takeOffer"));
+        Tuple3<Button, ProgressIndicator, Label> takeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "");
         takeOfferButton = takeOfferTuple.first;
         takeOfferButton.setVisible(false);
         takeOfferButton.setOnAction(e -> onTakeOffer());
+        takeOfferButton.setMinHeight(40);
         takeOfferSpinner = takeOfferTuple.second;
         takeOfferSpinner.setPrefSize(18, 18);
         takeOfferSpinnerInfoLabel = takeOfferTuple.third;
@@ -574,6 +589,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton2.setOnAction(e -> close());
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);
+        cancelButton2.setId("cancel-button");
     }
 
     private void addAmountPriceFields() {
