@@ -82,7 +82,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         stopRetryTimer();
         networkNode.removeMessageListener(this);
         peerManager.removeListener(this);
-        handlerMap.values().stream().forEach(RequestDataHandler::cleanup);
+        closeAllHandlers();
     }
 
 
@@ -122,14 +122,12 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     @Override
     public void onConnection(Connection connection) {
         Log.traceCall();
-        // clean up in case we could not clean up at disconnect
-        closeRequestDataHandler(connection);
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
-        closeRequestDataHandler(connection);
+        closeHandler(connection);
     }
 
     @Override
@@ -144,28 +142,27 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     @Override
     public void onAllConnectionsLost() {
         Log.traceCall();
-        closeAllRequestDataHandlers();
+        closeAllHandlers();
         stopRetryTimer();
         stopped = true;
+        restart();
     }
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
         Log.traceCall();
-        closeAllRequestDataHandlers();
+        closeAllHandlers();
         stopped = false;
-
-        retryAfterDelay();
+        restart();
     }
 
     @Override
     public void onAwakeFromStandby() {
         Log.traceCall();
-        closeAllRequestDataHandlers();
+        closeAllHandlers();
         stopped = false;
-
         if (!networkNode.getAllConnections().isEmpty())
-            retryAfterDelay();
+            restart();
     }
 
 
@@ -185,22 +182,25 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                         new GetDataRequestHandler.Listener() {
                             @Override
                             public void onComplete() {
-                                log.trace("requestDataHandshake completed.\n\tConnection={}",
-                                        connection);
+                                log.trace("requestDataHandshake completed.\n\tConnection={}", connection);
                             }
 
                             @Override
                             public void onFault(String errorMessage, @Nullable Connection connection) {
-                                log.trace("GetDataRequestHandler failed.\n\tConnection={}\n\t" +
-                                        "ErrorMessage={}", connection, errorMessage);
-                                peerManager.handleConnectionFault(connection);
+                                if (!stopped) {
+                                    log.trace("GetDataRequestHandler failed.\n\tConnection={}\n\t" +
+                                            "ErrorMessage={}", connection, errorMessage);
+                                    peerManager.handleConnectionFault(connection);
+                                } else {
+                                    log.warn("We have stopped already. We ignore that getDataRequestHandler.handle.onFault call.");
+                                }
                             }
                         });
                 getDataRequestHandler.handle((GetDataRequest) message, connection);
             } else {
                 log.warn("We have stopped already. We ignore that onMessage call.");
             }
-        }
+        } 
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -239,37 +239,32 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
                             @Override
                             public void onFault(String errorMessage, @Nullable Connection connection) {
-                                log.trace("requestDataHandshake of outbound connection failed.\n\tnodeAddress={}\n\t" +
+                                log.trace("requestDataHandshake with outbound connection failed.\n\tnodeAddress={}\n\t" +
                                         "ErrorMessage={}", nodeAddress, errorMessage);
 
                                 handlerMap.remove(nodeAddress);
-                                peerManager.handleConnectionFault(nodeAddress, connection);
 
-                                if (!stopped) {
-                                    if (!remainingNodeAddresses.isEmpty()) {
-                                        log.info("There are remaining nodes available for requesting data. " +
-                                                "We will try requestDataFromPeers again.");
-                                        NodeAddress nextCandidate = remainingNodeAddresses.get(0);
-                                        remainingNodeAddresses.remove(nextCandidate);
-                                        requestData(nextCandidate, remainingNodeAddresses);
-                                    } else {
-                                        log.info("There is no remaining node available for requesting data. " +
-                                                "That is expected if no other node is online.\n\t" +
-                                                "We will try to use reported peers (if no available we use persisted peers) " +
-                                                "and try again to request data from our seed nodes after a random pause.");
-
-                                        // Notify listeners
-                                        if (!nodeAddressOfPreliminaryDataRequest.isPresent()) {
-                                            if (peerManager.isSeedNode(nodeAddress))
-                                                listener.onNoSeedNodeAvailable();
-                                            else
-                                                listener.onNoPeersAvailable();
-                                        }
-
-                                        retryAfterDelay();
-                                    }
+                                if (!remainingNodeAddresses.isEmpty()) {
+                                    log.info("There are remaining nodes available for requesting data. " +
+                                            "We will try requestDataFromPeers again.");
+                                    NodeAddress nextCandidate = remainingNodeAddresses.get(0);
+                                    remainingNodeAddresses.remove(nextCandidate);
+                                    requestData(nextCandidate, remainingNodeAddresses);
                                 } else {
-                                    log.warn("We have stopped already. We ignore that requestData.onFault call.");
+                                    log.info("There is no remaining node available for requesting data. " +
+                                            "That is expected if no other node is online.\n\t" +
+                                            "We will try to use reported peers (if no available we use persisted peers) " +
+                                            "and try again to request data from our seed nodes after a random pause.");
+
+                                    // Notify listeners
+                                    if (!nodeAddressOfPreliminaryDataRequest.isPresent()) {
+                                        if (peerManager.isSeedNode(nodeAddress))
+                                            listener.onNoSeedNodeAvailable();
+                                        else
+                                            listener.onNoPeersAvailable();
+                                    }
+
+                                    restart();
                                 }
                             }
                         });
@@ -288,10 +283,13 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void retryAfterDelay() {
+    private void restart() {
+        Log.traceCall();
         if (retryTimer == null) {
             retryTimer = UserThread.runAfter(() -> {
                         log.trace("retryTimer called");
+                        stopped = false;
+                        
                         stopRetryTimer();
 
                         // We create a new list of candidates
@@ -345,19 +343,21 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         }
     }
 
-    private void closeRequestDataHandler(Connection connection) {
+    private void closeHandler(Connection connection) {
         Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
         if (peersNodeAddressOptional.isPresent()) {
             NodeAddress nodeAddress = peersNodeAddressOptional.get();
             if (handlerMap.containsKey(nodeAddress)) {
-                handlerMap.get(nodeAddress).cleanup();
+                handlerMap.get(nodeAddress).cancel();
                 handlerMap.remove(nodeAddress);
             }
+        } else {
+            log.trace("closeRequestDataHandler: nodeAddress not set in connection " + connection);
         }
     }
 
-    private void closeAllRequestDataHandlers() {
-        handlerMap.values().stream().forEach(RequestDataHandler::cleanup);
+    private void closeAllHandlers() {
+        handlerMap.values().stream().forEach(RequestDataHandler::cancel);
         handlerMap.clear();
     }
 

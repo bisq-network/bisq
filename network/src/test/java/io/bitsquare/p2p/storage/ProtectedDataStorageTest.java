@@ -56,7 +56,7 @@ public class ProtectedDataStorageTest {
         dir2.mkdir();
 
         UserThread.setExecutor(Executors.newSingleThreadExecutor());
-        P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS = 500;
+        P2PDataStorage.CHECK_TTL_INTERVAL_SEC = 500;
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));
 
@@ -112,7 +112,7 @@ public class ProtectedDataStorageTest {
 
     // @Test
     public void testTTL() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS * 1.5);
+        mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 1.5);
         ProtectedData data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
         log.debug("data.date " + data.date);
         log.debug("data.date " + data.date.getTime());
@@ -120,11 +120,11 @@ public class ProtectedDataStorageTest {
         log.debug("test 1");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
-        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC);
         log.debug("test 2");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
-        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS * 2);
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 2);
         log.debug("test 3 removed");
         Assert.assertEquals(0, dataStorage1.getMap().size());
     }
@@ -162,31 +162,31 @@ public class ProtectedDataStorageTest {
  */
     @Test
     public void testRefreshTTL() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS * 1.5);
+        mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 1.5);
         ProtectedData data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.add(data, null));
         Assert.assertEquals(1, dataStorage1.getMap().size());
-        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC);
         log.debug("test 1");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         RefreshTTLMessage refreshTTLMessage = dataStorage1.getRefreshTTLMessage(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.refreshTTL(refreshTTLMessage, null));
-        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC);
         log.debug("test 2");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         refreshTTLMessage = dataStorage1.getRefreshTTLMessage(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.refreshTTL(refreshTTLMessage, null));
-        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC);
         log.debug("test 3");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
-        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS);
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC);
         log.debug("test 4");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
-        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_MILLIS * 2);
+        Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 2);
         log.debug("test 5 removed");
         Assert.assertEquals(0, dataStorage1.getMap().size());
     }

@@ -8,14 +8,14 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final int messageVersion = Version.getP2PMessageVersion();
-    private final long nonce;
+    private final int nonce;
 
-    public PreliminaryGetDataRequest(long nonce) {
+    public PreliminaryGetDataRequest(int nonce) {
         this.nonce = nonce;
     }
 
     @Override
-    public long getNonce() {
+    public int getNonce() {
         return nonce;
     }
 

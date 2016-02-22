@@ -17,15 +17,14 @@
 
 package io.bitsquare.arbitration;
 
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.ProgramArguments;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
@@ -47,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -57,10 +55,14 @@ import static org.bitcoinj.core.Utils.HEX;
 public class ArbitratorManager {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorManager.class);
 
-    private final KeyRing keyRing;
-    private final ArbitratorService arbitratorService;
-    private final User user;
-    private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final long REPUBLISH_MILLIS = Arbitrator.TTL / 2;
+    private static final long RETRY_REPUBLISH_SEC = 5;
+
+    private static final String publicKeyForTesting = "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee";
 
     // Keys for invited arbitrators in bootstrapping phase (before registration is open to anyone and security payment is implemented)
     // For testing purpose here is a private key so anyone can setup an arbitrator for now.
@@ -87,10 +89,24 @@ public class ArbitratorManager {
             "0274f772a98d23e7a0251ab30d7121897b5aebd11a2f1e45ab654aa57503173245",
             "036d8a1dfcb406886037d2381da006358722823e1940acc2598c844bbc0fd1026f"
     ));
-    private static final String publicKeyForTesting = "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee";
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Instance fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private final KeyRing keyRing;
+    private final ArbitratorService arbitratorService;
+    private final User user;
+    private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
     private final boolean isDevTest;
     private BootstrapListener bootstrapListener;
-    private ScheduledThreadPoolExecutor republishArbitratorExecutor;
+    private Timer republishArbitratorTimer, retryRepublishArbitratorTimer;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public ArbitratorManager(@Named(ProgramArguments.DEV_TEST) boolean isDevTest, KeyRing keyRing, ArbitratorService arbitratorService, User user) {
@@ -113,19 +129,26 @@ public class ArbitratorManager {
     }
 
     public void shutDown() {
-        if (republishArbitratorExecutor != null)
-            MoreExecutors.shutdownAndAwaitTermination(republishArbitratorExecutor, 500, TimeUnit.MILLISECONDS);
+        stopRepublishArbitratorTimer();
+        stopRetryRepublishArbitratorTimer();
+        if (bootstrapListener != null)
+            arbitratorService.getP2PService().removeP2PServiceListener(bootstrapListener);
+
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
         if (user.getRegisteredArbitrator() != null) {
-
             P2PService p2PService = arbitratorService.getP2PService();
             if (!p2PService.isBootstrapped()) {
                 bootstrapListener = new BootstrapListener() {
                     @Override
                     public void onBootstrapComplete() {
-                        republishArbitrator();
+                        ArbitratorManager.this.onBootstrapComplete();
                     }
                 };
                 p2PService.addP2PServiceListener(bootstrapListener);
@@ -133,27 +156,11 @@ public class ArbitratorManager {
             } else {
                 republishArbitrator();
             }
-
-            // re-publish periodically
-            republishArbitratorExecutor = Utilities.getScheduledThreadPoolExecutor("republishArbitrator", 1, 5, 5);
-            long delay = Arbitrator.TTL / 2;
-            republishArbitratorExecutor.scheduleAtFixedRate(this::republishArbitrator, delay, delay, TimeUnit.MILLISECONDS);
         }
+
+        republishArbitratorTimer = UserThread.runPeriodically(this::republishArbitrator, REPUBLISH_MILLIS, TimeUnit.MILLISECONDS);
 
         applyArbitrators();
-    }
-
-    private void republishArbitrator() {
-        if (bootstrapListener != null)
-            arbitratorService.getP2PService().removeP2PServiceListener(bootstrapListener);
-
-        Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
-        if (registeredArbitrator != null) {
-            addArbitrator(registeredArbitrator,
-                    this::applyArbitrators,
-                    log::error
-            );
-        }
     }
 
     public void applyArbitrators() {
@@ -222,6 +229,49 @@ public class ArbitratorManager {
         return key.signMessage(keyToSignAsHex);
     }
 
+    @Nullable
+    public ECKey getRegistrationKey(String privKeyBigIntString) {
+        try {
+            return ECKey.fromPrivate(new BigInteger(1, HEX.decode(privKeyBigIntString)));
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    public boolean isPublicKeyInList(String pubKeyAsHex) {
+        return isDevTest && pubKeyAsHex.equals(publicKeyForTesting) || publicKeys.contains(pubKeyAsHex);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onBootstrapComplete() {
+        if (bootstrapListener != null) {
+            arbitratorService.getP2PService().removeP2PServiceListener(bootstrapListener);
+            bootstrapListener = null;
+        }
+
+        republishArbitrator();
+    }
+
+    private void republishArbitrator() {
+        Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
+        if (registeredArbitrator != null) {
+            addArbitrator(registeredArbitrator,
+                    this::applyArbitrators,
+                    errorMessage -> {
+                        if (retryRepublishArbitratorTimer == null)
+                            retryRepublishArbitratorTimer = UserThread.runPeriodically(() -> {
+                                stopRetryRepublishArbitratorTimer();
+                                republishArbitrator();
+                            }, RETRY_REPUBLISH_SEC);
+                    }
+            );
+        }
+    }
+
     private boolean verifySignature(PublicKey storageSignaturePubKey, byte[] registrationPubKey, String signature) {
         String keyToSignAsHex = Utils.HEX.encode(storageSignaturePubKey.getEncoded());
         try {
@@ -234,16 +284,18 @@ public class ArbitratorManager {
         }
     }
 
-    @Nullable
-    public ECKey getRegistrationKey(String privKeyBigIntString) {
-        try {
-            return ECKey.fromPrivate(new BigInteger(1, HEX.decode(privKeyBigIntString)));
-        } catch (Throwable t) {
-            return null;
+
+    private void stopRetryRepublishArbitratorTimer() {
+        if (retryRepublishArbitratorTimer != null) {
+            retryRepublishArbitratorTimer.stop();
+            retryRepublishArbitratorTimer = null;
         }
     }
 
-    public boolean isPublicKeyInList(String pubKeyAsHex) {
-        return isDevTest && pubKeyAsHex.equals(publicKeyForTesting) || publicKeys.contains(pubKeyAsHex);
+    private void stopRepublishArbitratorTimer() {
+        if (republishArbitratorTimer != null) {
+            republishArbitratorTimer.stop();
+            republishArbitratorTimer = null;
+        }
     }
 }

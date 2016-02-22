@@ -57,10 +57,8 @@ class KeepAliveHandler implements MessageListener {
         this.listener = listener;
     }
 
-    public void cleanup() {
-        stopped = true;
-        if (connection != null)
-            connection.removeMessageListener(this);
+    public void cancel() {
+        cleanup();
     }
 
 
@@ -83,13 +81,18 @@ class KeepAliveHandler implements MessageListener {
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    String errorMessage = "Sending ping to " + connection +
-                            " failed. That is expected if the peer is offline.\n\tping=" + ping +
-                            ".\n\tException=" + throwable.getMessage();
-                    log.info(errorMessage);
-                    cleanup();
-                    peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
-                    listener.onFault(errorMessage);
+                    if (!stopped) {
+                        String errorMessage = "Sending ping to " + connection +
+                                " failed. That is expected if the peer is offline.\n\tping=" + ping +
+                                ".\n\tException=" + throwable.getMessage();
+                        log.info(errorMessage);
+                        cleanup();
+                        peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
+                        peerManager.handleConnectionFault(connection);
+                        listener.onFault(errorMessage);
+                    } else {
+                        log.warn("We have stopped already. We ignore that sendPing.onFailure call.");
+                    }
                 }
             });
         } else {
@@ -120,5 +123,11 @@ class KeepAliveHandler implements MessageListener {
                 log.warn("We have stopped already. We ignore that onMessage call.");
             }
         }
+    }
+
+    private void cleanup() {
+        stopped = true;
+        if (connection != null)
+            connection.removeMessageListener(this);
     }
 }

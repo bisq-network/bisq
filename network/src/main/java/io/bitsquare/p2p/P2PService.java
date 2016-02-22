@@ -124,14 +124,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
 
-        broadcaster = new Broadcaster(networkNode);
-
-        p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir);
-        p2PDataStorage.addHashMapChangedListener(this);
-
         Set<NodeAddress> seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, networkId);
         peerManager = new PeerManager(networkNode, seedNodeAddresses, storageDir, clock);
 
+        broadcaster = new Broadcaster(networkNode, peerManager);
+
+        p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir);
+        p2PDataStorage.addHashMapChangedListener(this);
+        
         requestDataManager = new RequestDataManager(networkNode, p2PDataStorage, peerManager, seedNodeAddresses, this);
 
         peerExchangeManager = new PeerExchangeManager(networkNode, peerManager, seedNodeAddresses);
@@ -175,6 +175,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (peerManager != null)
                 peerManager.shutDown();
 
+            if (broadcaster != null)
+                broadcaster.shutDown();
+            
             if (requestDataManager != null)
                 requestDataManager.shutDown();
 
@@ -224,7 +227,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
 
         requestDataManager.requestPreliminaryData();
-        keepAliveManager.start();
+        keepAliveManager.restart();
         p2pServiceListeners.stream().forEach(SetupListener::onTorNodeReady);
     }
 

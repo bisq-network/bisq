@@ -19,8 +19,8 @@ public class ProtectedData implements Payload {
     transient public long ttl;
 
     public final PublicKey ownerPubKey;
-    public final int sequenceNumber;
-    public final byte[] signature;
+    public int sequenceNumber;
+    public byte[] signature;
     @VisibleForTesting
     transient public Date date;
 
@@ -49,6 +49,14 @@ public class ProtectedData implements Payload {
         date = new Date();
     }
 
+    public void updateSequenceNumber(int sequenceNumber) {
+        this.sequenceNumber = sequenceNumber;
+    }
+
+    public void updateSignature(byte[] signature) {
+        this.signature = signature;
+    }
+
     public boolean isExpired() {
         return (new Date().getTime() - date.getTime()) > ttl;
     }
@@ -64,4 +72,5 @@ public class ProtectedData implements Payload {
                 ", signature.hashCode()=" + Arrays.toString(signature).hashCode() +
                 '}';
     }
+
 }

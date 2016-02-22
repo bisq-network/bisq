@@ -696,6 +696,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         createOfferButton.setVisible(false);
         createOfferButton.setOnAction(e -> onPlaceOffer());
         createOfferButton.setMinHeight(40);
+        createOfferButton.setPadding(new Insets(0, 20, 0, 20));
+        
         placeOfferSpinner = placeOfferTuple.second;
         placeOfferSpinner.setPrefSize(18, 18);
         placeOfferSpinnerInfoLabel = placeOfferTuple.third;

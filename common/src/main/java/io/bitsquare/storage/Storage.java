@@ -80,7 +80,7 @@ public class Storage<T extends Serializable> {
     public T initAndGetPersisted(String fileName) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 600);
+        fileManager = new FileManager<>(dir, storageFile, 300);
 
         return getPersisted();
     }

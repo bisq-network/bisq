@@ -579,6 +579,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takeOfferButton.setVisible(false);
         takeOfferButton.setOnAction(e -> onTakeOffer());
         takeOfferButton.setMinHeight(40);
+        takeOfferButton.setPadding(new Insets(0, 20, 0, 20));
+        
         takeOfferSpinner = takeOfferTuple.second;
         takeOfferSpinner.setPrefSize(18, 18);
         takeOfferSpinnerInfoLabel = takeOfferTuple.third;

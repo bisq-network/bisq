@@ -50,7 +50,7 @@ public class RequestDataHandler implements MessageListener {
     private final PeerManager peerManager;
     private final Listener listener;
     private Timer timeoutTimer;
-    private final long nonce = new Random().nextLong();
+    private final int nonce = new Random().nextInt();
     private boolean stopped;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,11 +67,8 @@ public class RequestDataHandler implements MessageListener {
         networkNode.addMessageListener(this);
     }
 
-    public void cleanup() {
-        Log.traceCall();
-        stopped = true;
-        networkNode.removeMessageListener(this);
-        stopTimeoutTimer();
+    public void cancel() {
+        cleanup();
     }
 
 
@@ -99,21 +96,29 @@ public class RequestDataHandler implements MessageListener {
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    String errorMessage = "Sending getDataRequest to " + nodeAddress +
-                            " failed. That is expected if the peer is offline.\n\t" +
-                            "getDataRequest=" + getDataRequest + "." +
-                            "\n\tException=" + throwable.getMessage();
-                    log.info(errorMessage);
-                    handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
+                    if (!stopped) {
+                        String errorMessage = "Sending getDataRequest to " + nodeAddress +
+                                " failed. That is expected if the peer is offline.\n\t" +
+                                "getDataRequest=" + getDataRequest + "." +
+                                "\n\tException=" + throwable.getMessage();
+                        log.info(errorMessage);
+                        handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
+                    } else {
+                        log.warn("We have stopped already. We ignore that requestData.onFailure call.");
+                    }
                 }
             });
 
             checkArgument(timeoutTimer == null, "requestData must not be called twice.");
             timeoutTimer = UserThread.runAfter(() -> {
-                        String errorMessage = "A timeout occurred at sending getDataRequest:" + getDataRequest +
-                                " on nodeAddress:" + nodeAddress;
-                        log.info(errorMessage + " / RequestDataHandler=" + RequestDataHandler.this);
-                        handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
+                        if (!stopped) {
+                            String errorMessage = "A timeout occurred at sending getDataRequest:" + getDataRequest +
+                                    " on nodeAddress:" + nodeAddress;
+                            log.info(errorMessage + " / RequestDataHandler=" + RequestDataHandler.this);
+                            handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
+                        } else {
+                            log.warn("We have stopped already. We ignore that timeoutTimer.run call.");
+                        }
                     },
                     10);
         } else {
@@ -160,16 +165,25 @@ public class RequestDataHandler implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
+    private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
+        cleanup();
+        peerManager.shutDownConnection(nodeAddress, closeConnectionReason);
+        peerManager.handleConnectionFault(nodeAddress);
+        listener.onFault(errorMessage, null);
+    }
+
+    private void cleanup() {
+        Log.traceCall();
+        stopped = true;
+        networkNode.removeMessageListener(this);
+        stopTimeoutTimer();
+    }
+
     private void stopTimeoutTimer() {
         if (timeoutTimer != null) {
             timeoutTimer.stop();
             timeoutTimer = null;
         }
-    }
-
-    private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
-        cleanup();
-        peerManager.shutDownConnection(nodeAddress, closeConnectionReason);
-        listener.onFault(errorMessage, null);
     }
 }

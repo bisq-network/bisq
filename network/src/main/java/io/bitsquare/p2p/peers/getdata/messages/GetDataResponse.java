@@ -12,9 +12,9 @@ public final class GetDataResponse implements Message {
     private final int messageVersion = Version.getP2PMessageVersion();
 
     public final HashSet<ProtectedData> dataSet;
-    public final long requestNonce;
+    public final int requestNonce;
 
-    public GetDataResponse(HashSet<ProtectedData> dataSet, long requestNonce) {
+    public GetDataResponse(HashSet<ProtectedData> dataSet, int requestNonce) {
         this.dataSet = dataSet;
         this.requestNonce = requestNonce;
     }

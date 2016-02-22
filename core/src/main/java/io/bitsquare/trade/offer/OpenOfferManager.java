@@ -60,7 +60,10 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener {
     private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
-    private static final long RETRY_DELAY_AFTER_ALL_CON_LOST_SEC = 5;
+    private static final long RETRY_REPUBLISH_DELAY_SEC = 5;
+    private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 10;
+    private static final long REPUBLISH_INTERVAL_MILLIS = 10 * Offer.TTL;
+    private static final long REFRESH_INTERVAL_MILLIS = (long) (Offer.TTL * 0.5);
 
     private final KeyRing keyRing;
     private final User user;
@@ -73,7 +76,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final TradableList<OpenOffer> openOffers;
     private final Storage<TradableList<OpenOffer>> openOffersStorage;
     private boolean stopped;
-    private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, republishOffersTimer;
+    private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
     private BootstrapListener bootstrapListener;
 
 
@@ -131,6 +134,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
         stopPeriodicRefreshOffersTimer();
         stopPeriodicRepublishOffersTimer();
+        stopRetryRepublishOffersTimer();
 
         log.info("remove all open offers at shutDown");
         // we remove own offers from offerbook when we go offline
@@ -167,9 +171,20 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
         // Republish means we send the complete offer object
         republishOffers();
-        startRepublishOffersThread();
+        startPeriodicRepublishOffersTimer();
 
         // Refresh is started once we get a success from republish
+
+        // We republish after a bit as it might be that our connected node still has the offer in the data map
+        // but other peers have it already removed because of expired TTL.
+        // Those other not directly connected peers would not get the broadcast of the new offer, as the first 
+        // connected peer (seed node) does nto broadcast if it has the data in the map.
+        // To update quickly to the whole network we repeat the republishOffers call after a few seconds when we 
+        // are better connected to the network. There is no guarantee that all peers will receive it but we have
+        // also our periodic timer, so after that longer interval the offer should be available to all peers.
+        if (retryRepublishOffersTimer == null)
+            retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
+                    REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC);
 
         p2PService.getPeerManager().addListener(this);
     }
@@ -184,87 +199,22 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         stopped = true;
         stopPeriodicRefreshOffersTimer();
         stopPeriodicRepublishOffersTimer();
+        stopRetryRepublishOffersTimer();
+
+        restart();
     }
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
+        stopped = false;
         restart();
     }
 
     @Override
     public void onAwakeFromStandby() {
+        stopped = false;
         if (!p2PService.getNetworkNode().getAllConnections().isEmpty())
             restart();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // RepublishOffers, refreshOffers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void startRepublishOffersThread() {
-        stopped = false;
-        if (periodicRepublishOffersTimer == null)
-            periodicRepublishOffersTimer = UserThread.runPeriodically(OpenOfferManager.this::republishOffers,
-                    Offer.TTL * 10,
-                    TimeUnit.MILLISECONDS);
-    }
-
-    private void republishOffers() {
-        Log.traceCall("Number of offer for republish: " + openOffers.size());
-        if (!stopped) {
-            stopPeriodicRefreshOffersTimer();
-
-            for (OpenOffer openOffer : openOffers) {
-                offerBookService.republishOffers(openOffer.getOffer(),
-                        () -> {
-                            log.debug("Successful added offer to P2P network");
-                            // Refresh means we send only the dat needed to refresh the TTL (hash, signature and sequence nr.)
-                            startRefreshOffersThread();
-                        },
-                        errorMessage -> {
-                            //TODO handle with retry
-                            log.error("Add offer to P2P network failed. " + errorMessage);
-                            stopRepublishOffersTimer();
-                            republishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
-                                    RETRY_DELAY_AFTER_ALL_CON_LOST_SEC);
-                        });
-                openOffer.setStorage(openOffersStorage);
-            }
-        } else {
-            log.warn("We have stopped already. We ignore that republishOffers call.");
-        }
-    }
-
-    private void startRefreshOffersThread() {
-        stopped = false;
-        // refresh sufficiently before offer would expire
-        if (periodicRefreshOffersTimer == null)
-            periodicRefreshOffersTimer = UserThread.runPeriodically(OpenOfferManager.this::refreshOffers,
-                    (long) (Offer.TTL * 0.5),
-                    TimeUnit.MILLISECONDS);
-    }
-
-    private void refreshOffers() {
-        if (!stopped) {
-            Log.traceCall("Number of offer for refresh: " + openOffers.size());
-            for (OpenOffer openOffer : openOffers) {
-                offerBookService.refreshOffer(openOffer.getOffer(),
-                        () -> log.debug("Successful refreshed TTL for offer"),
-                        errorMessage -> log.error("Refresh TTL for offer failed. " + errorMessage));
-            }
-        } else {
-            log.warn("We have stopped already. We ignore that refreshOffers call.");
-        }
-    }
-
-    private void restart() {
-        startRepublishOffersThread();
-        startRefreshOffersThread();
-        if (republishOffersTimer == null) {
-            stopped = false;
-            republishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers, RETRY_DELAY_AFTER_ALL_CON_LOST_SEC);
-        }
     }
 
 
@@ -282,6 +232,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     openOffers.add(openOffer);
                     openOffersStorage.queueUpForSave();
                     resultHandler.handleResult(transaction);
+                    if (!stopped) {
+                        startPeriodicRepublishOffersTimer();
+                        startPeriodicRefreshOffersTimer();
+                    } else {
+                        log.warn("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
+                    }
                 }
         );
         placeOfferProtocol.placeOffer();
@@ -396,6 +352,97 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // RepublishOffers, refreshOffers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void republishOffers() {
+        Log.traceCall("Number of offer for republish: " + openOffers.size());
+        if (!stopped) {
+            stopPeriodicRefreshOffersTimer();
+
+            openOffers.stream().forEach(openOffer -> {
+                offerBookService.republishOffers(openOffer.getOffer(),
+                        () -> {
+                            if (!stopped) {
+                                log.debug("Successful added offer to P2P network");
+                                // Refresh means we send only the dat needed to refresh the TTL (hash, signature and sequence nr.)
+                                if (periodicRefreshOffersTimer == null)
+                                    startPeriodicRefreshOffersTimer();
+                            } else {
+                                log.warn("We have stopped already. We ignore that offerBookService.republishOffers.onSuccess call.");
+                            }
+                        },
+                        errorMessage -> {
+                            if (!stopped) {
+                                log.error("Add offer to P2P network failed. " + errorMessage);
+                                stopRetryRepublishOffersTimer();
+                                retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
+                                        RETRY_REPUBLISH_DELAY_SEC);
+                            } else {
+                                log.warn("We have stopped already. We ignore that offerBookService.republishOffers.onFault call.");
+                            }
+                        });
+                openOffer.setStorage(openOffersStorage);
+            });
+        } else {
+            log.warn("We have stopped already. We ignore that republishOffers call.");
+        }
+    }
+
+    private void startPeriodicRepublishOffersTimer() {
+        Log.traceCall();
+        stopped = false;
+        if (periodicRepublishOffersTimer == null)
+            periodicRepublishOffersTimer = UserThread.runPeriodically(() -> {
+                        if (!stopped) {
+                            republishOffers();
+                        } else {
+                            log.warn("We have stopped already. We ignore that periodicRepublishOffersTimer.run call.");
+                        }
+                    },
+                    REPUBLISH_INTERVAL_MILLIS,
+                    TimeUnit.MILLISECONDS);
+        else
+            log.warn("periodicRepublishOffersTimer already stated");
+    }
+
+    private void startPeriodicRefreshOffersTimer() {
+        Log.traceCall();
+        stopped = false;
+        // refresh sufficiently before offer would expire
+        if (periodicRefreshOffersTimer == null)
+            periodicRefreshOffersTimer = UserThread.runPeriodically(() -> {
+                        if (!stopped) {
+                            Log.traceCall("Number of offer for refresh: " + openOffers.size());
+                            openOffers.stream().forEach(openOffer -> {
+                                offerBookService.refreshOffer(openOffer.getOffer(),
+                                        () -> log.debug("Successful refreshed TTL for offer"),
+                                        errorMessage -> log.error("Refresh TTL for offer failed. " + errorMessage));
+                            });
+                        } else {
+                            log.warn("We have stopped already. We ignore that periodicRefreshOffersTimer.run call.");
+                        }
+                    },
+                    REFRESH_INTERVAL_MILLIS,
+                    TimeUnit.MILLISECONDS);
+        else
+            log.warn("periodicRefreshOffersTimer already stated");
+    }
+
+    private void restart() {
+        Log.traceCall();
+        if (retryRepublishOffersTimer == null)
+            retryRepublishOffersTimer = UserThread.runAfter(() -> {
+                stopped = false;
+                stopRetryRepublishOffersTimer();
+                republishOffers();
+            }, RETRY_REPUBLISH_DELAY_SEC);
+
+        startPeriodicRepublishOffersTimer();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -413,10 +460,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    private void stopRepublishOffersTimer() {
-        if (republishOffersTimer != null) {
-            republishOffersTimer.stop();
-            republishOffersTimer = null;
+    private void stopRetryRepublishOffersTimer() {
+        if (retryRepublishOffersTimer != null) {
+            retryRepublishOffersTimer.stop();
+            retryRepublishOffersTimer = null;
         }
     }
 }

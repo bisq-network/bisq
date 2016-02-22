@@ -59,7 +59,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
         stopPeriodicTimer();
         stopRetryTimer();
-        closeAllPeerExchangeHandlers();
+        closeAllHandlers();
     }
 
 
@@ -85,14 +85,12 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     @Override
     public void onConnection(Connection connection) {
         Log.traceCall();
-        // clean up in case we could not clean up at disconnect
-        closePeerExchangeHandler(connection);
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
-        closePeerExchangeHandler(connection);
+        closeHandler(connection);
 
         if (retryTimer == null) {
             retryTimer = UserThread.runAfter(() -> {
@@ -115,24 +113,26 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     @Override
     public void onAllConnectionsLost() {
         Log.traceCall();
-        closeAllPeerExchangeHandlers();
+        closeAllHandlers();
         stopPeriodicTimer();
         stopRetryTimer();
+        stopped = true;
+        restart();
     }
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
         Log.traceCall();
-        closeAllPeerExchangeHandlers();
-
+        closeAllHandlers();
+        stopped = false;
         restart();
     }
 
     @Override
     public void onAwakeFromStandby() {
         Log.traceCall();
-        closeAllPeerExchangeHandlers();
-
+        closeAllHandlers();
+        stopped = false;
         if (!networkNode.getAllConnections().isEmpty())
             restart();
     }
@@ -197,30 +197,32 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                                         "nodeAddress={}", errorMessage, nodeAddress);
 
                                 handlerMap.remove(nodeAddress);
-                                peerManager.handleConnectionFault(nodeAddress, connection);
-                                if (!stopped) {
-                                    if (!remainingNodeAddresses.isEmpty()) {
-                                        if (!peerManager.hasSufficientConnections()) {
-                                            log.info("There are remaining nodes available for requesting peers. " +
-                                                    "We will try getReportedPeers again.");
-                                            NodeAddress nextCandidate = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
-                                            remainingNodeAddresses.remove(nextCandidate);
-                                            requestReportedPeers(nextCandidate, remainingNodeAddresses);
-                                        } else {
-                                            // That path will rarely be reached
-                                            log.info("We have already sufficient connections.");
-                                        }
+                                if (!remainingNodeAddresses.isEmpty()) {
+                                    if (!peerManager.hasSufficientConnections()) {
+                                        log.info("There are remaining nodes available for requesting peers. " +
+                                                "We will try getReportedPeers again.");
+                                        NodeAddress nextCandidate = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
+                                        remainingNodeAddresses.remove(nextCandidate);
+                                        requestReportedPeers(nextCandidate, remainingNodeAddresses);
                                     } else {
-                                        log.info("There is no remaining node available for requesting peers. " +
-                                                "That is expected if no other node is online.\n\t" +
-                                                "We will try again after a pause.");
-                                        if (retryTimer == null)
-                                            retryTimer = UserThread.runAfter(() -> {
-                                                log.trace("ConnectToMorePeersTimer called from requestReportedPeers code path");
+                                        // That path will rarely be reached
+                                        log.info("We have already sufficient connections.");
+                                    }
+                                } else {
+                                    log.info("There is no remaining node available for requesting peers. " +
+                                            "That is expected if no other node is online.\n\t" +
+                                            "We will try again after a pause.");
+                                    if (retryTimer == null)
+                                        retryTimer = UserThread.runAfter(() -> {
+                                            if (!stopped) {
+                                                log.trace("retryTimer called from requestReportedPeers code path");
                                                 stopRetryTimer();
                                                 requestWithAvailablePeers();
-                                            }, RETRY_DELAY_SEC);
-                                    }
+                                            } else {
+                                                stopRetryTimer();
+                                                log.warn("We have stopped already. We ignore that retryTimer.run call.");
+                                            }
+                                        }, RETRY_DELAY_SEC);
                                 }
                             }
                         });
@@ -266,9 +268,14 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                     log.info("No more peers are available for requestReportedPeers. We will try again after a pause.");
                     if (retryTimer == null)
                         retryTimer = UserThread.runAfter(() -> {
-                            log.trace("ConnectToMorePeersTimer called from requestWithAvailablePeers code path");
-                            stopRetryTimer();
-                            requestWithAvailablePeers();
+                            if (!stopped) {
+                                log.trace("retryTimer called from requestWithAvailablePeers code path");
+                                stopRetryTimer();
+                                requestWithAvailablePeers();
+                            } else {
+                                stopRetryTimer();
+                                log.warn("We have stopped already. We ignore that retryTimer.run call.");
+                            }
                         }, RETRY_DELAY_SEC);
                 }
             } else {
@@ -289,6 +296,8 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
         if (periodicTimer == null)
             periodicTimer = UserThread.runPeriodically(this::requestWithAvailablePeers,
                     REQUEST_PERIODICALLY_INTERVAL_MINUTES, TimeUnit.MINUTES);
+        else
+            log.warn("periodicTimer already started");
     }
 
     private void restart() {
@@ -296,10 +305,13 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
         if (retryTimer == null) {
             retryTimer = UserThread.runAfter(() -> {
-                log.trace("ConnectToMorePeersTimer called from onNewConnectionAfterAllConnectionsLost");
+                stopped = false;
+                log.trace("retryTimer called from restart");
                 stopRetryTimer();
                 requestWithAvailablePeers();
             }, RETRY_DELAY_AFTER_ALL_CON_LOST_SEC);
+        } else {
+            log.warn("retryTimer already started");
         }
     }
 
@@ -338,19 +350,23 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
         }
     }
 
-    private void closePeerExchangeHandler(Connection connection) {
+    private void closeHandler(Connection connection) {
+        Log.traceCall();
         Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
         if (peersNodeAddressOptional.isPresent()) {
             NodeAddress nodeAddress = peersNodeAddressOptional.get();
             if (handlerMap.containsKey(nodeAddress)) {
-                handlerMap.get(nodeAddress).cleanup();
+                handlerMap.get(nodeAddress).cancel();
                 handlerMap.remove(nodeAddress);
             }
+        } else {
+            log.warn("closeHandler: nodeAddress not set in connection " + connection);
         }
     }
 
-    private void closeAllPeerExchangeHandlers() {
-        handlerMap.values().stream().forEach(PeerExchangeHandler::cleanup);
+    private void closeAllHandlers() {
+        Log.traceCall();
+        handlerMap.values().stream().forEach(PeerExchangeHandler::cancel);
         handlerMap.clear();
     }
 }

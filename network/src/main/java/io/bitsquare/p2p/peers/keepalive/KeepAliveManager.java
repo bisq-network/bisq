@@ -17,14 +17,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class KeepAliveManager implements MessageListener, ConnectionListener, PeerManager.Listener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveManager.class);
 
-    private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
+    //private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
     //TODO
-    // private static final int INTERVAL_SEC = 5;
+    private static final int INTERVAL_SEC = 5;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
@@ -49,13 +48,10 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     public void shutDown() {
         Log.traceCall();
         stopped = true;
-
         networkNode.removeMessageListener(this);
         networkNode.removeConnectionListener(this);
         peerManager.removeListener(this);
-
-        closeAllMaintenanceHandlers();
-
+        closeAllHandlers();
         stopKeepAliveTimer();
     }
 
@@ -64,10 +60,14 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void start() {
-        stopped = false;
+    public void restart() {
         if (keepAliveTimer == null)
-            keepAliveTimer = UserThread.runPeriodically(this::keepAlive, INTERVAL_SEC);
+            keepAliveTimer = UserThread.runPeriodically(() -> {
+                stopped = false;
+                keepAlive();
+            }, INTERVAL_SEC);
+        else
+            log.warn("keepAliveTimer already running");
     }
 
 
@@ -91,12 +91,16 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
 
                     @Override
                     public void onFailure(@NotNull Throwable throwable) {
-                        String errorMessage = "Sending pong to " + connection +
-                                " failed. That is expected if the peer is offline. pong=" + pong + "." +
-                                "Exception: " + throwable.getMessage();
-                        log.info(errorMessage);
-                        peerManager.handleConnectionFault(connection);
-                        peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
+                        if (!stopped) {
+                            String errorMessage = "Sending pong to " + connection +
+                                    " failed. That is expected if the peer is offline. pong=" + pong + "." +
+                                    "Exception: " + throwable.getMessage();
+                            log.info(errorMessage);
+                            peerManager.handleConnectionFault(connection);
+                            peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
+                        } else {
+                            log.warn("We have stopped already. We ignore that  networkNode.sendMessage.onFailure call.");
+                        }
                     }
                 });
             } else {
@@ -113,14 +117,12 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     @Override
     public void onConnection(Connection connection) {
         Log.traceCall();
-        // clean up in case we could not clean up at disconnect
-        closeMaintenanceHandler(connection);
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
-        closeMaintenanceHandler(connection);
+        closeHandler(connection);
     }
 
     @Override
@@ -135,23 +137,27 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     @Override
     public void onAllConnectionsLost() {
         Log.traceCall();
-        closeAllMaintenanceHandlers();
+        closeAllHandlers();
         stopKeepAliveTimer();
+        stopped = true;
+        restart();
     }
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
         Log.traceCall();
-        closeAllMaintenanceHandlers();
-        start();
+        closeAllHandlers();
+        stopped = false;
+        restart();
     }
 
     @Override
     public void onAwakeFromStandby() {
         Log.traceCall();
-        closeAllMaintenanceHandlers();
+        closeAllHandlers();
+        stopped = false;
         if (!networkNode.getAllConnections().isEmpty())
-            start();
+            restart();
     }
 
 
@@ -204,16 +210,16 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
         }
     }
 
-    private void closeMaintenanceHandler(Connection connection) {
+    private void closeHandler(Connection connection) {
         String uid = connection.getUid();
         if (handlerMap.containsKey(uid)) {
-            handlerMap.get(uid).cleanup();
+            handlerMap.get(uid).cancel();
             handlerMap.remove(uid);
         }
     }
 
-    private void closeAllMaintenanceHandlers() {
-        handlerMap.values().stream().forEach(KeepAliveHandler::cleanup);
+    private void closeAllHandlers() {
+        handlerMap.values().stream().forEach(KeepAliveHandler::cancel);
         handlerMap.clear();
     }
 

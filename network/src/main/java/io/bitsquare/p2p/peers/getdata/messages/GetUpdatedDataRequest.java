@@ -10,15 +10,15 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
 
     private final int messageVersion = Version.getP2PMessageVersion();
     private final NodeAddress senderNodeAddress;
-    private final long nonce;
+    private final int nonce;
 
-    public GetUpdatedDataRequest(NodeAddress senderNodeAddress, long nonce) {
+    public GetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce) {
         this.senderNodeAddress = senderNodeAddress;
         this.nonce = nonce;
     }
 
     @Override
-    public long getNonce() {
+    public int getNonce() {
         return nonce;
     }
 

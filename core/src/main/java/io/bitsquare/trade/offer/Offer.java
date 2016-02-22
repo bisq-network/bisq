@@ -54,8 +54,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     @JsonExclude
     private static final Logger log = LoggerFactory.getLogger(Offer.class);
 
-    public static final long TTL = TimeUnit.SECONDS.toMillis(60);
-    // public static final long TTL = TimeUnit.SECONDS.toMillis(10); //TODO
+    // public static final long TTL = TimeUnit.SECONDS.toMillis(60);
+    public static final long TTL = TimeUnit.SECONDS.toMillis(10); //TODO
 
     public final static String TAC_OFFERER = "When placing that offer I accept that anyone who fulfills my conditions can " +
             "take that offer.";

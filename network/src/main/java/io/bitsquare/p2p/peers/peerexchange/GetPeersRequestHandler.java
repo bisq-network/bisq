@@ -68,7 +68,7 @@ class GetPeersRequestHandler {
         checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
                 "The peers address must have been already set at the moment");
         GetPeersResponse getPeersResponse = new GetPeersResponse(getPeersRequest.nonce,
-                peerManager.getConnectedPeersNonSeedNodes(connection.getPeersNodeAddressOptional().get()));
+                peerManager.getConnectedNonSeedNodeReportedPeers(connection.getPeersNodeAddressOptional().get()));
         SettableFuture<Connection> future = networkNode.sendMessage(connection,
                 getPeersResponse);
         Futures.addCallback(future, new FutureCallback<Connection>() {
