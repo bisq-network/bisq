@@ -245,13 +245,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    if (model.showDispute(item.getTrade())) {
+                                   /* if (model.showDispute(item.getTrade())) {
                                         setStyle("-fx-text-fill: -bs-error-red");
                                     } else if (model.showWarning(item.getTrade())) {
                                         setStyle("-fx-text-fill: -bs-warning");
                                     } else {
                                         setId("-fx-text-fill: black");
-                                    }
+                                    }*/
                                     setText(formatter.formatDateTime(item.getTrade().getDate()));
                                 } else {
                                     setText(null);

@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.storage.mocks;
 
-import io.bitsquare.p2p.storage.data.StoragePayload;
+import io.bitsquare.p2p.storage.payload.StoragePayload;
 
 import java.security.PublicKey;
 

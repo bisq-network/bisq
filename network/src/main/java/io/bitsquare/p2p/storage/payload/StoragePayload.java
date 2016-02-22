@@ -1,6 +1,7 @@
-package io.bitsquare.p2p.storage.data;
+package io.bitsquare.p2p.storage.payload;
 
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 
 import java.security.PublicKey;
 
@@ -19,9 +20,9 @@ public interface StoragePayload extends ExpirablePayload {
      * OwnerPubKey has to be equal to the ownerPubKey of the ProtectedData
      *
      * @return The public key of the data owner.
-     * @see ProtectedData#ownerPubKey
-     * @see io.bitsquare.p2p.storage.P2PDataStorage#add(ProtectedData, NodeAddress)
-     * @see io.bitsquare.p2p.storage.P2PDataStorage#remove(ProtectedData, NodeAddress)
+     * @see ProtectedStorageEntry#ownerPubKey
+     * @see io.bitsquare.p2p.storage.P2PDataStorage#add(ProtectedStorageEntry, NodeAddress)
+     * @see io.bitsquare.p2p.storage.P2PDataStorage#remove(ProtectedStorageEntry, NodeAddress)
      */
     PublicKey getOwnerPubKey();
 }

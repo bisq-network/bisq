@@ -34,7 +34,7 @@ public class VerifyTakerAccount extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            //TODO mocked yet
+            //TODO impl. missing
            /* if (processModel.getBlockChainService().isAccountBlackListed(processModel.tradingPeer.getAccountId(),
                     processModel.tradingPeer.getPaymentAccountContractData())) {
                 log.error("Taker is blacklisted");

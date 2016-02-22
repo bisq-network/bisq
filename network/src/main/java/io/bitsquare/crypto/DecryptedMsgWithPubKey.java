@@ -15,19 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.p2p.messaging;
+package io.bitsquare.crypto;
 
-import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
 
 import java.security.PublicKey;
 
-// TODO is that sent over wire????
-public final class DecryptedMsgWithPubKey implements DirectMessage {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
-    private final int messageVersion = Version.getP2PMessageVersion();
+public final class DecryptedMsgWithPubKey {
     public final Message message;
     public final PublicKey signaturePubKey;
 
@@ -37,18 +31,12 @@ public final class DecryptedMsgWithPubKey implements DirectMessage {
     }
 
     @Override
-    public int getMessageVersion() {
-        return messageVersion;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof DecryptedMsgWithPubKey)) return false;
 
         DecryptedMsgWithPubKey that = (DecryptedMsgWithPubKey) o;
 
-        //noinspection SimplifiableIfStatement
         if (message != null ? !message.equals(that.message) : that.message != null) return false;
         return !(signaturePubKey != null ? !signaturePubKey.equals(that.signaturePubKey) : that.signaturePubKey != null);
 
@@ -64,7 +52,6 @@ public final class DecryptedMsgWithPubKey implements DirectMessage {
     @Override
     public String toString() {
         return "DecryptedMsgWithPubKey{" +
-                "messageVersion=" + messageVersion +
                 ", message=" + message +
                 ", signaturePubKey.hashCode()=" + signaturePubKey.hashCode() +
                 '}';

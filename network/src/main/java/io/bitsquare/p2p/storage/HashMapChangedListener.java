@@ -1,9 +1,9 @@
 package io.bitsquare.p2p.storage;
 
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 
 public interface HashMapChangedListener {
-    void onAdded(ProtectedData data);
+    void onAdded(ProtectedStorageEntry data);
 
-    void onRemoved(ProtectedData data);
+    void onRemoved(ProtectedStorageEntry data);
 }

@@ -24,6 +24,7 @@ import io.bitsquare.p2p.NodeAddress;
 public final class PeerOpenedDisputeMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
+
     public final Dispute dispute;
     private final NodeAddress myNodeAddress;
 

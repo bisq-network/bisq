@@ -18,15 +18,16 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.data.RawInput;
+import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.payment.PaymentAccountContractData;
 
 import javax.annotation.concurrent.Immutable;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.UUID;
 
 @Immutable
 public final class PayDepositRequest extends TradeMessage implements MailboxMessage {
@@ -35,7 +36,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
 
     public final long tradeAmount;
     public final byte[] takerTradeWalletPubKey;
-    public final List<RawInput> rawInputs;
+    public final ArrayList<RawTransactionInput> rawTransactionInputs;
     public final long changeOutputValue;
     public final String changeOutputAddress;
     public final String takerPayoutAddressString;
@@ -43,14 +44,15 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public final PaymentAccountContractData takerPaymentAccountContractData;
     public final String takerAccountId;
     public final String takeOfferFeeTxId;
-    public final List<NodeAddress> acceptedArbitratorNodeAddresses;
+    public final ArrayList<NodeAddress> acceptedArbitratorNodeAddresses;
     public final NodeAddress arbitratorNodeAddress;
     private final NodeAddress senderNodeAddress;
+    private final String uid = UUID.randomUUID().toString();
 
     public PayDepositRequest(NodeAddress senderNodeAddress,
                              String tradeId,
                              long tradeAmount,
-                             List<RawInput> rawInputs,
+                             ArrayList<RawTransactionInput> rawTransactionInputs,
                              long changeOutputValue,
                              String changeOutputAddress,
                              byte[] takerTradeWalletPubKey,
@@ -59,12 +61,12 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                              PaymentAccountContractData takerPaymentAccountContractData,
                              String takerAccountId,
                              String takeOfferFeeTxId,
-                             List<NodeAddress> acceptedArbitratorNodeAddresses,
+                             ArrayList<NodeAddress> acceptedArbitratorNodeAddresses,
                              NodeAddress arbitratorNodeAddress) {
         super(tradeId);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
-        this.rawInputs = rawInputs;
+        this.rawTransactionInputs = rawTransactionInputs;
         this.changeOutputValue = changeOutputValue;
         this.changeOutputAddress = changeOutputAddress;
         this.takerPayoutAddressString = takerPayoutAddressString;
@@ -83,6 +85,11 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     }
 
     @Override
+    public String getUID() {
+        return uid;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof PayDepositRequest)) return false;
@@ -93,7 +100,8 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         if (tradeAmount != that.tradeAmount) return false;
         if (changeOutputValue != that.changeOutputValue) return false;
         if (!Arrays.equals(takerTradeWalletPubKey, that.takerTradeWalletPubKey)) return false;
-        if (rawInputs != null ? !rawInputs.equals(that.rawInputs) : that.rawInputs != null) return false;
+        if (rawTransactionInputs != null ? !rawTransactionInputs.equals(that.rawTransactionInputs) : that.rawTransactionInputs != null)
+            return false;
         if (changeOutputAddress != null ? !changeOutputAddress.equals(that.changeOutputAddress) : that.changeOutputAddress != null)
             return false;
         if (takerPayoutAddressString != null ? !takerPayoutAddressString.equals(that.takerPayoutAddressString) : that.takerPayoutAddressString != null)
@@ -110,7 +118,9 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
             return false;
         if (arbitratorNodeAddress != null ? !arbitratorNodeAddress.equals(that.arbitratorNodeAddress) : that.arbitratorNodeAddress != null)
             return false;
-        return !(senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null);
+        if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
+            return false;
+        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
 
     }
 
@@ -119,7 +129,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         int result = super.hashCode();
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
         result = 31 * result + (takerTradeWalletPubKey != null ? Arrays.hashCode(takerTradeWalletPubKey) : 0);
-        result = 31 * result + (rawInputs != null ? rawInputs.hashCode() : 0);
+        result = 31 * result + (rawTransactionInputs != null ? rawTransactionInputs.hashCode() : 0);
         result = 31 * result + (int) (changeOutputValue ^ (changeOutputValue >>> 32));
         result = 31 * result + (changeOutputAddress != null ? changeOutputAddress.hashCode() : 0);
         result = 31 * result + (takerPayoutAddressString != null ? takerPayoutAddressString.hashCode() : 0);
@@ -130,6 +140,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         result = 31 * result + (acceptedArbitratorNodeAddresses != null ? acceptedArbitratorNodeAddresses.hashCode() : 0);
         result = 31 * result + (arbitratorNodeAddress != null ? arbitratorNodeAddress.hashCode() : 0);
         result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
+        result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
     }
 }

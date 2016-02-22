@@ -2,7 +2,7 @@ package io.bitsquare.p2p.mocks;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.storage.data.ExpirablePayload;
+import io.bitsquare.p2p.storage.payload.ExpirablePayload;
 
 public final class MockPayload implements Message, ExpirablePayload {
     public final String msg;

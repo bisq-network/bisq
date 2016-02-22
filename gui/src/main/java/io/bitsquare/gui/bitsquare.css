@@ -866,7 +866,7 @@ textfield */
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-font-size: 15;
-    -fx-background-radius: 20;
+    /*-fx-background-radius: 20;*/
 }
 
 #buy-button-big:hover {
@@ -878,7 +878,7 @@ textfield */
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-font-size: 15;
-    -fx-background-radius: 20;
+    /* -fx-background-radius: 20;*/
 }
 
 #sell-button-big:hover {
@@ -889,7 +889,7 @@ textfield */
     -fx-base: -bs-buy;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 13;
+    /*  -fx-background-radius: 13;*/
 }
 
 #buy-button:hover {
@@ -900,7 +900,7 @@ textfield */
     -fx-base: -bs-sell;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 13;
+    /* -fx-background-radius: 13;*/
 }
 
 #sell-button:hover {
@@ -911,7 +911,7 @@ textfield */
     -fx-base: -bs-light-grey;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 13;
+    /* -fx-background-radius: 13;*/
 }
 
 #cancel-button:hover {
@@ -925,12 +925,12 @@ textfield */
  ********************************************************************************************************************/
 
 #popup-headline {
-    -fx-font-size: 18;
+    -fx-font-size: 16;
     -fx-text-fill: #333;
 }
 
 #popup-bg {
-    -fx-font-size: 15;
+    -fx-font-size: 14;
     -fx-text-fill: #333;
     -fx-background-color: white;
     -fx-background-radius: 5 5 5 5;

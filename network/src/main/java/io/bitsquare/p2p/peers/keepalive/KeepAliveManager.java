@@ -17,13 +17,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class KeepAliveManager implements MessageListener, ConnectionListener, PeerManager.Listener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveManager.class);
 
-    //private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
-    //TODO
-    private static final int INTERVAL_SEC = 5;
+    private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;

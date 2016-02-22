@@ -1,12 +1,12 @@
-package io.bitsquare.crypto;
+package io.bitsquare.p2p.messaging;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.SealedAndSigned;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 public final class PrefixedSealedAndSignedMessage implements MailboxMessage, SendersNodeAddressMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -16,6 +16,7 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
     private final NodeAddress senderNodeAddress;
     public final SealedAndSigned sealedAndSigned;
     public final byte[] addressPrefixHash;
+    private final String uid = UUID.randomUUID().toString();
 
     public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress, SealedAndSigned sealedAndSigned, byte[] addressPrefixHash) {
         this.senderNodeAddress = senderNodeAddress;
@@ -26,6 +27,11 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
     @Override
     public NodeAddress getSenderNodeAddress() {
         return senderNodeAddress;
+    }
+
+    @Override
+    public String getUID() {
+        return uid;
     }
 
     @Override

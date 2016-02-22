@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.storage.data;
+package io.bitsquare.p2p.storage.payload;
 
 import io.bitsquare.common.wire.Payload;
 
@@ -8,7 +8,7 @@ import io.bitsquare.common.wire.Payload;
  * Implementations:
  *
  * @see StoragePayload
- * @see MailboxPayload
+ * @see MailboxStoragePayload
  */
 public interface ExpirablePayload extends Payload {
     /**

@@ -41,16 +41,14 @@ public final class PubKeyRing implements Payload {
 
     private static final Logger log = LoggerFactory.getLogger(PubKeyRing.class);
 
-    private final byte[] signaturePubKeyBytes;
-    private final byte[] encryptionPubKeyBytes;
-
     transient private PublicKey signaturePubKey;
+    private final byte[] signaturePubKeyBytes;
     transient private PublicKey encryptionPubKey;
+    private final byte[] encryptionPubKeyBytes;
 
     public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey) {
         this.signaturePubKey = signaturePubKey;
         this.encryptionPubKey = encryptionPubKey;
-
         this.signaturePubKeyBytes = new X509EncodedKeySpec(signaturePubKey.getEncoded()).getEncoded();
         this.encryptionPubKeyBytes = new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded();
     }

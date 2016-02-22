@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
+import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.ProcessModel;

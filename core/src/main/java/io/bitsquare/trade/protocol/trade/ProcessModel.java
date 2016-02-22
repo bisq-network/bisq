@@ -22,7 +22,7 @@ import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.data.RawInput;
+import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.taskrunner.Model;
@@ -44,6 +44,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProcessModel implements Model, Serializable {
@@ -74,7 +75,7 @@ public class ProcessModel implements Model, Serializable {
     // After successful verified we copy that over to the trade.tradingPeerAddress
     private NodeAddress tempTradingPeerNodeAddress;
     private byte[] preparedDepositTx;
-    private List<RawInput> rawInputs;
+    private ArrayList<RawTransactionInput> rawTransactionInputs;
     private long changeOutputValue;
     @Nullable
     private String changeOutputAddress;
@@ -243,12 +244,12 @@ public class ProcessModel implements Model, Serializable {
         return preparedDepositTx;
     }
 
-    public void setRawInputs(List<RawInput> rawInputs) {
-        this.rawInputs = rawInputs;
+    public void setRawTransactionInputs(ArrayList<RawTransactionInput> rawTransactionInputs) {
+        this.rawTransactionInputs = rawTransactionInputs;
     }
 
-    public List<RawInput> getRawInputs() {
-        return rawInputs;
+    public ArrayList<RawTransactionInput> getRawTransactionInputs() {
+        return rawTransactionInputs;
     }
 
     public void setChangeOutputValue(long changeOutputValue) {

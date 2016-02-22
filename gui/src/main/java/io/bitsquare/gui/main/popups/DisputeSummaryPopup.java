@@ -71,8 +71,8 @@ public class DisputeSummaryPopup extends Popup {
     private ToggleGroup feeToggleGroup;
     private String role;
     private TextArea summaryNotesTextArea;
-    private ObjectBinding<Tuple2<DisputeResult.FeePaymentPolicy, Toggle>> feePaymentPolicyChanged;
-    private ChangeListener<Tuple2<DisputeResult.FeePaymentPolicy, Toggle>> feePaymentPolicyListener;
+    private ObjectBinding<Tuple2<DisputeResult.DisputeFeePolicy, Toggle>> feePaymentPolicyChanged;
+    private ChangeListener<Tuple2<DisputeResult.DisputeFeePolicy, Toggle>> feePaymentPolicyListener;
     private ChangeListener<Boolean> shareRadioButtonSelectedListener;
     private ChangeListener<Toggle> feeToggleSelectionListener;
     // keep a reference to not get GCed
@@ -163,7 +163,7 @@ public class DisputeSummaryPopup extends Popup {
             disputeResult.setBuyerPayoutAmount(peersDisputeResult.getBuyerPayoutAmount());
             disputeResult.setSellerPayoutAmount(peersDisputeResult.getSellerPayoutAmount());
             disputeResult.setArbitratorPayoutAmount(peersDisputeResult.getArbitratorPayoutAmount());
-            disputeResult.setFeePaymentPolicy(peersDisputeResult.getFeePaymentPolicy());
+            disputeResult.setDisputeFeePolicy(peersDisputeResult.getDisputeFeePolicy());
             disputeResult.setWinner(peersDisputeResult.getWinner());
 
             if (disputeResult.getBuyerPayoutAmount() != null) {
@@ -181,13 +181,13 @@ public class DisputeSummaryPopup extends Popup {
             splitFeeRadioButton.setDisable(true);
             waiveFeeRadioButton.setDisable(true);
 
-            calculatePayoutAmounts(disputeResult.getFeePaymentPolicy());
+            calculatePayoutAmounts(disputeResult.getDisputeFeePolicy());
             applyTradeAmountRadioButtonStates();
         } else {
-            applyPayoutAmounts(disputeResult.feePaymentPolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get());
+            applyPayoutAmounts(disputeResult.disputeFeePolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get());
             feePaymentPolicyChanged = Bindings.createObjectBinding(
-                    () -> new Tuple2(disputeResult.feePaymentPolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get()),
-                    disputeResult.feePaymentPolicyProperty(),
+                    () -> new Tuple2(disputeResult.disputeFeePolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get()),
+                    disputeResult.disputeFeePolicyProperty(),
                     tradeAmountToggleGroup.selectedToggleProperty());
             feePaymentPolicyListener = (observable, oldValue, newValue) -> {
                 applyPayoutAmounts(newValue.first, newValue.second);
@@ -302,11 +302,11 @@ public class DisputeSummaryPopup extends Popup {
 
         feeToggleSelectionListener = (observable, oldValue, newValue) -> {
             if (newValue == loserPaysFeeRadioButton)
-                disputeResult.setFeePaymentPolicy(DisputeResult.FeePaymentPolicy.LOSER);
+                disputeResult.setDisputeFeePolicy(DisputeResult.DisputeFeePolicy.LOSER);
             else if (newValue == splitFeeRadioButton)
-                disputeResult.setFeePaymentPolicy(DisputeResult.FeePaymentPolicy.SPLIT);
+                disputeResult.setDisputeFeePolicy(DisputeResult.DisputeFeePolicy.SPLIT);
             else if (newValue == waiveFeeRadioButton)
-                disputeResult.setFeePaymentPolicy(DisputeResult.FeePaymentPolicy.WAIVE);
+                disputeResult.setDisputeFeePolicy(DisputeResult.DisputeFeePolicy.WAIVE);
         };
         feeToggleGroup.selectedToggleProperty().addListener(feeToggleSelectionListener);
 
@@ -315,7 +315,7 @@ public class DisputeSummaryPopup extends Popup {
     }
 
     private void setFeeRadioButtonState() {
-        switch (disputeResult.getFeePaymentPolicy()) {
+        switch (disputeResult.getDisputeFeePolicy()) {
             case LOSER:
                 feeToggleGroup.selectToggle(loserPaysFeeRadioButton);
                 break;
@@ -417,7 +417,7 @@ public class DisputeSummaryPopup extends Popup {
     // Controller
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyPayoutAmounts(DisputeResult.FeePaymentPolicy feePayment, Toggle selectedTradeAmountToggle) {
+    private void applyPayoutAmounts(DisputeResult.DisputeFeePolicy feePayment, Toggle selectedTradeAmountToggle) {
         calculatePayoutAmounts(feePayment);
         if (selectedTradeAmountToggle != null) {
             applyPayoutAmountsToDisputeResult(selectedTradeAmountToggle);
@@ -425,7 +425,7 @@ public class DisputeSummaryPopup extends Popup {
         }
     }
 
-    private void calculatePayoutAmounts(DisputeResult.FeePaymentPolicy feePayment) {
+    private void calculatePayoutAmounts(DisputeResult.DisputeFeePolicy feePayment) {
         Contract contract = dispute.getContract();
         Coin refund = FeePolicy.getSecurityDeposit();
         Coin winnerRefund;

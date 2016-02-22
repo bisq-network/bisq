@@ -45,7 +45,7 @@ public class SendPublishDepositTxRequest extends TradeTask {
                     trade.getOffererContractSignature(),
                     processModel.getAddressEntry().getAddressString(),
                     processModel.getPreparedDepositTx(),
-                    processModel.getRawInputs(),
+                    processModel.getRawTransactionInputs(),
                     trade.getOpenDisputeTimeAsBlockHeight(),
                     trade.getCheckPaymentTimeAsBlockHeight()
             );

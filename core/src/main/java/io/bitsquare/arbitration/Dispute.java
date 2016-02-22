@@ -26,7 +26,6 @@ import io.bitsquare.trade.Contract;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +35,6 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 public final class Dispute implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -71,11 +69,12 @@ public final class Dispute implements Payload {
     private final PubKeyRing arbitratorPubKeyRing;
     private final boolean isSupportTicket;
 
-    private final List<DisputeCommunicationMessage> disputeCommunicationMessages = new ArrayList<>();
+    private final ArrayList<DisputeCommunicationMessage> disputeCommunicationMessages = new ArrayList<>();
 
     private boolean isClosed;
     private DisputeResult disputeResult;
-    private Transaction disputePayoutTx;
+    @Nullable
+    private String disputePayoutTxId;
 
     transient private Storage<DisputeList<Dispute>> storage;
     transient private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessagesAsObservableList = FXCollections.observableArrayList(disputeCommunicationMessages);
@@ -171,8 +170,8 @@ public final class Dispute implements Payload {
         storage.queueUpForSave();
     }
 
-    public void setDisputePayoutTx(Transaction disputePayoutTx) {
-        this.disputePayoutTx = disputePayoutTx;
+    public void setDisputePayoutTxId(String disputePayoutTxId) {
+        this.disputePayoutTxId = disputePayoutTxId;
     }
 
 
@@ -280,8 +279,8 @@ public final class Dispute implements Payload {
         return new Date(tradeDate);
     }
 
-    public Transaction getDisputePayoutTx() {
-        return disputePayoutTx;
+    public String getDisputePayoutTxId() {
+        return disputePayoutTxId;
     }
 
     @Override
@@ -299,6 +298,7 @@ public final class Dispute implements Payload {
         if (isSupportTicket != dispute.isSupportTicket) return false;
         if (isClosed != dispute.isClosed) return false;
         if (tradeId != null ? !tradeId.equals(dispute.tradeId) : dispute.tradeId != null) return false;
+        if (id != null ? !id.equals(dispute.id) : dispute.id != null) return false;
         if (traderPubKeyRing != null ? !traderPubKeyRing.equals(dispute.traderPubKeyRing) : dispute.traderPubKeyRing != null)
             return false;
         if (contract != null ? !contract.equals(dispute.contract) : dispute.contract != null) return false;
@@ -317,13 +317,18 @@ public final class Dispute implements Payload {
             return false;
         if (disputeCommunicationMessages != null ? !disputeCommunicationMessages.equals(dispute.disputeCommunicationMessages) : dispute.disputeCommunicationMessages != null)
             return false;
-        return !(disputeResult != null ? !disputeResult.equals(dispute.disputeResult) : dispute.disputeResult != null);
+        if (disputeResult != null ? !disputeResult.equals(dispute.disputeResult) : dispute.disputeResult != null)
+            return false;
+        if (disputePayoutTxId != null ? !disputePayoutTxId.equals(dispute.disputePayoutTxId) : dispute.disputePayoutTxId != null)
+            return false;
+        return !(storage != null ? !storage.equals(dispute.storage) : dispute.storage != null);
 
     }
 
     @Override
     public int hashCode() {
         int result = tradeId != null ? tradeId.hashCode() : 0;
+        result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + traderId;
         result = 31 * result + (disputeOpenerIsBuyer ? 1 : 0);
         result = 31 * result + (disputeOpenerIsOfferer ? 1 : 0);
@@ -344,27 +349,39 @@ public final class Dispute implements Payload {
         result = 31 * result + (disputeCommunicationMessages != null ? disputeCommunicationMessages.hashCode() : 0);
         result = 31 * result + (isClosed ? 1 : 0);
         result = 31 * result + (disputeResult != null ? disputeResult.hashCode() : 0);
+        result = 31 * result + (disputePayoutTxId != null ? disputePayoutTxId.hashCode() : 0);
+        result = 31 * result + (storage != null ? storage.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "Dispute{" +
-                ", tradeId='" + tradeId + '\'' +
-                ", traderId='" + traderId + '\'' +
+                "tradeId='" + tradeId + '\'' +
+                ", id='" + id + '\'' +
+                ", traderId=" + traderId +
                 ", disputeOpenerIsBuyer=" + disputeOpenerIsBuyer +
                 ", disputeOpenerIsOfferer=" + disputeOpenerIsOfferer +
                 ", openingDate=" + openingDate +
                 ", traderPubKeyRing=" + traderPubKeyRing +
+                ", tradeDate=" + tradeDate +
                 ", contract=" + contract +
+                ", contractHash=" + Arrays.toString(contractHash) +
+                ", depositTxSerialized=" + Arrays.toString(depositTxSerialized) +
+                ", payoutTxSerialized=" + Arrays.toString(payoutTxSerialized) +
+                ", depositTxId='" + depositTxId + '\'' +
+                ", payoutTxId='" + payoutTxId + '\'' +
                 ", contractAsJson='" + contractAsJson + '\'' +
-                ", buyerContractSignature='" + offererContractSignature + '\'' +
-                ", sellerContractSignature='" + takerContractSignature + '\'' +
+                ", offererContractSignature='" + offererContractSignature + '\'' +
+                ", takerContractSignature='" + takerContractSignature + '\'' +
                 ", arbitratorPubKeyRing=" + arbitratorPubKeyRing +
-                ", disputeDirectMessages=" + disputeCommunicationMessages +
-                ", disputeDirectMessagesAsObservableList=" + disputeCommunicationMessagesAsObservableList +
+                ", isSupportTicket=" + isSupportTicket +
+                ", disputeCommunicationMessages=" + disputeCommunicationMessages +
                 ", isClosed=" + isClosed +
                 ", disputeResult=" + disputeResult +
+                ", disputePayoutTxId='" + disputePayoutTxId + '\'' +
+                ", disputeCommunicationMessagesAsObservableList=" + disputeCommunicationMessagesAsObservableList +
+                ", isClosedProperty=" + isClosedProperty +
                 ", disputeResultProperty=" + disputeResultProperty +
                 '}';
     }

@@ -17,13 +17,13 @@
 
 package io.bitsquare.btc.data;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class PreparedDepositTxAndOffererInputs {
-    public final List<RawInput> rawOffererInputs;
+    public final ArrayList<RawTransactionInput> rawOffererInputs;
     public final byte[] depositTransaction;
 
-    public PreparedDepositTxAndOffererInputs(List<RawInput> rawOffererInputs, byte[] depositTransaction) {
+    public PreparedDepositTxAndOffererInputs(ArrayList<RawTransactionInput> rawOffererInputs, byte[] depositTransaction) {
         this.rawOffererInputs = rawOffererInputs;
         this.depositTransaction = depositTransaction;
     }

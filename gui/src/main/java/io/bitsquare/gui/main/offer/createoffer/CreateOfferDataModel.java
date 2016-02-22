@@ -52,6 +52,7 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -237,9 +238,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long amount = amountAsCoin.get() != null ? amountAsCoin.get().getValue() : 0L;
         long minAmount = minAmountAsCoin.get() != null ? minAmountAsCoin.get().getValue() : 0L;
 
-        List<String> acceptedCountryCodes = null;
+        ArrayList<String> acceptedCountryCodes = new ArrayList<>();
         if (paymentAccount instanceof SepaAccount)
-            acceptedCountryCodes = ((SepaAccount) paymentAccount).getAcceptedCountryCodes();
+            acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
 
         // That is optional and set to null if not supported (AltCoins, OKPay,...)
         Country country = paymentAccount.getCountry();
@@ -256,7 +257,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 tradeCurrencyCode.get(),
                 country,
                 paymentAccount.getId(),
-                user.getAcceptedArbitratorAddresses(),
+                new ArrayList<>(user.getAcceptedArbitratorAddresses()),
                 acceptedCountryCodes);
     }
 

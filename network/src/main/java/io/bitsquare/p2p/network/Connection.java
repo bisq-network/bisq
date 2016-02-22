@@ -7,10 +7,10 @@ import io.bitsquare.app.Version;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
-import io.bitsquare.crypto.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.Utils;
+import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
@@ -57,12 +57,10 @@ public class Connection implements MessageListener {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final int MAX_MSG_SIZE = 100 * 1024;         // 100 kb of compressed data
-    private static final int MSG_THROTTLE_PER_SEC = 10;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 10 mbit/sec 
-    private static final int MSG_THROTTLE_PER_10_SEC = 50;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec for 10 sec 
-    //private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
-    //TODO
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(20);
+    private static final int MAX_MSG_SIZE = 100 * 1024;              // 100 kb of compressed data
+    private static final int MSG_THROTTLE_PER_SEC = 20;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 20 mbit/sec 
+    private static final int MSG_THROTTLE_PER_10_SEC = 100;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 10 mbit/sec for 10 sec 
+    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
@@ -519,7 +517,7 @@ public class Connection implements MessageListener {
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 closeConnectionReason = CloseConnectionReason.SOCKET_TIMEOUT;
                 log.warn("SocketTimeoutException at socket " + socket.toString() + "\n\tconnection={}" + this);
-            } else if (e instanceof EOFException) {
+            } else if (e instanceof EOFException || e instanceof StreamCorruptedException) {
                 closeConnectionReason = CloseConnectionReason.TERMINATED;
             } else {
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;

@@ -19,24 +19,42 @@ package io.bitsquare.common.crypto;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.Payload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.security.KeyFactory;
 import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
 public final class SealedAndSigned implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
+    private static final Logger log = LoggerFactory.getLogger(SealedAndSigned.class);
 
     public final byte[] encryptedSecretKey;
     public final byte[] encryptedPayloadWithHmac;
     public final byte[] signature;
-    public final PublicKey sigPublicKey;
+    public transient PublicKey sigPublicKey;
+    private final byte[] sigPublicKeyBytes;
 
     public SealedAndSigned(byte[] encryptedSecretKey, byte[] encryptedPayloadWithHmac, byte[] signature, PublicKey sigPublicKey) {
         this.encryptedSecretKey = encryptedSecretKey;
         this.encryptedPayloadWithHmac = encryptedPayloadWithHmac;
         this.signature = signature;
         this.sigPublicKey = sigPublicKey;
+        this.sigPublicKeyBytes = new X509EncodedKeySpec(this.sigPublicKey.getEncoded()).getEncoded();
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+            sigPublicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
+        } catch (Throwable t) {
+            log.error("Exception at readObject: " + t.getMessage());
+            t.printStackTrace();
+        }
     }
 
     @Override

@@ -23,6 +23,7 @@ import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.Arrays;
+import java.util.UUID;
 
 @Immutable
 public final class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage {
@@ -31,6 +32,7 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
 
     public final byte[] depositTx;
     private final NodeAddress senderNodeAddress;
+    private final String uid = UUID.randomUUID().toString();
 
     public DepositTxPublishedMessage(String tradeId, byte[] depositTx, NodeAddress senderNodeAddress) {
         super(tradeId);
@@ -44,6 +46,11 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     }
 
     @Override
+    public String getUID() {
+        return uid;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof DepositTxPublishedMessage)) return false;
@@ -52,7 +59,9 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
         DepositTxPublishedMessage that = (DepositTxPublishedMessage) o;
 
         if (!Arrays.equals(depositTx, that.depositTx)) return false;
-        return !(senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null);
+        if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
+            return false;
+        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
 
     }
 
@@ -61,6 +70,7 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
         int result = super.hashCode();
         result = 31 * result + (depositTx != null ? Arrays.hashCode(depositTx) : 0);
         result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
+        result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
     }
 }

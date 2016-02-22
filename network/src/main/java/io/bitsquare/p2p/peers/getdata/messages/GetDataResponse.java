@@ -2,7 +2,7 @@ package io.bitsquare.p2p.peers.getdata.messages;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 
 import java.util.HashSet;
 
@@ -11,10 +11,10 @@ public final class GetDataResponse implements Message {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
 
-    public final HashSet<ProtectedData> dataSet;
+    public final HashSet<ProtectedStorageEntry> dataSet;
     public final int requestNonce;
 
-    public GetDataResponse(HashSet<ProtectedData> dataSet, int requestNonce) {
+    public GetDataResponse(HashSet<ProtectedStorageEntry> dataSet, int requestNonce) {
         this.dataSet = dataSet;
         this.requestNonce = requestNonce;
     }

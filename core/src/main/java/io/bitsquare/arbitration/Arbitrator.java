@@ -20,9 +20,10 @@ package io.bitsquare.arbitration;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.storage.data.StoragePayload;
+import io.bitsquare.p2p.storage.payload.StoragePayload;
 
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -38,7 +39,7 @@ public final class Arbitrator implements StoragePayload {
     private final byte[] btcPubKey;
     private final PubKeyRing pubKeyRing;
     private final NodeAddress arbitratorNodeAddress;
-    private final List<String> languageCodes;
+    private final ArrayList<String> languageCodes;
     private final String btcAddress;
     private final long registrationDate;
     private final String registrationSignature;
@@ -48,7 +49,7 @@ public final class Arbitrator implements StoragePayload {
                       byte[] btcPubKey,
                       String btcAddress,
                       PubKeyRing pubKeyRing,
-                      List<String> languageCodes,
+                      ArrayList<String> languageCodes,
                       Date registrationDate,
                       byte[] registrationPubKey,
                       String registrationSignature) {

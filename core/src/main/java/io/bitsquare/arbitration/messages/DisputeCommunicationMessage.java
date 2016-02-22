@@ -42,7 +42,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     private final int traderId;
     private final boolean senderIsTrader;
     private final String message;
-    private final List<Attachment> attachments = new ArrayList<>();
+    private final ArrayList<Attachment> attachments = new ArrayList<>();
     private boolean arrived;
     private boolean storedInMailbox;
     private boolean isSystemMessage;

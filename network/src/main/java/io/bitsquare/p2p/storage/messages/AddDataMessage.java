@@ -1,16 +1,16 @@
 package io.bitsquare.p2p.storage.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 
-public final class AddDataMessage extends DataBroadcastMessage {
+public final class AddDataMessage extends BroadcastMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final ProtectedData data;
+    public final ProtectedStorageEntry protectedStorageEntry;
 
-    public AddDataMessage(ProtectedData data) {
-        this.data = data;
+    public AddDataMessage(ProtectedStorageEntry protectedStorageEntry) {
+        this.protectedStorageEntry = protectedStorageEntry;
     }
 
     @Override
@@ -20,18 +20,18 @@ public final class AddDataMessage extends DataBroadcastMessage {
 
         AddDataMessage that = (AddDataMessage) o;
 
-        return !(data != null ? !data.equals(that.data) : that.data != null);
+        return !(protectedStorageEntry != null ? !protectedStorageEntry.equals(that.protectedStorageEntry) : that.protectedStorageEntry != null);
     }
 
     @Override
     public int hashCode() {
-        return data != null ? data.hashCode() : 0;
+        return protectedStorageEntry != null ? protectedStorageEntry.hashCode() : 0;
     }
 
     @Override
     public String toString() {
         return "AddDataMessage{" +
-                "data=" + data +
+                "protectedStorageEntry=" + protectedStorageEntry +
                 "} " + super.toString();
     }
 }

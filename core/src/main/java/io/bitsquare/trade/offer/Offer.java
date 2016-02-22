@@ -25,8 +25,8 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.locale.Country;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.storage.data.RequiresOwnerIsOnlinePayload;
-import io.bitsquare.p2p.storage.data.StoragePayload;
+import io.bitsquare.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
+import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -48,19 +49,24 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     // That object is sent over the wire, so we need to take care of version compatibility.
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
     private static final Logger log = LoggerFactory.getLogger(Offer.class);
-
-    // public static final long TTL = TimeUnit.SECONDS.toMillis(60);
-    public static final long TTL = TimeUnit.SECONDS.toMillis(10); //TODO
-
+    public static final long TTL = TimeUnit.SECONDS.toMillis(60);
     public final static String TAC_OFFERER = "When placing that offer I accept that anyone who fulfills my conditions can " +
             "take that offer.";
     public static final String TAC_TAKER = "With taking the offer I commit to the trade conditions as defined.";
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enums
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum Direction {BUY, SELL}
 
@@ -73,6 +79,10 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         OFFERER_OFFLINE
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Instance fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final String id;
     private final Direction direction;
@@ -91,8 +101,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final String offererPaymentAccountId;
 
     @Nullable
-    private final List<String> acceptedCountryCodes;
-    private final List<NodeAddress> arbitratorNodeAddresses;
+    private final ArrayList<String> acceptedCountryCodes;
+    private final ArrayList<NodeAddress> arbitratorNodeAddresses;
 
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
     private String offerFeePaymentTxID;
@@ -104,6 +114,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     @JsonExclude
     transient private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(state);
     @JsonExclude
+    @Nullable
     transient private OfferAvailabilityProtocol availabilityProtocol;
     @JsonExclude
     transient private StringProperty errorMessageProperty = new SimpleStringProperty();
@@ -124,8 +135,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  String currencyCode,
                  @Nullable Country paymentMethodCountry,
                  String offererPaymentAccountId,
-                 List<NodeAddress> arbitratorNodeAddresses,
-                 @Nullable List<String> acceptedCountryCodes) {
+                 ArrayList<NodeAddress> arbitratorNodeAddresses,
+                 @Nullable ArrayList<String> acceptedCountryCodes) {
         this.id = id;
         this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;

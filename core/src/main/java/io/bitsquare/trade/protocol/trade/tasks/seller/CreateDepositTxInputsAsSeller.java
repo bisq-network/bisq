@@ -42,7 +42,7 @@ public class CreateDepositTxInputsAsSeller extends TradeTask {
 
                 InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(takerInputAmount, processModel
                         .getAddressEntry());
-                processModel.setRawInputs(result.rawInputs);
+                processModel.setRawTransactionInputs(result.rawTransactionInputs);
                 processModel.setChangeOutputValue(result.changeOutputValue);
                 processModel.setChangeOutputAddress(result.changeOutputAddress);
 

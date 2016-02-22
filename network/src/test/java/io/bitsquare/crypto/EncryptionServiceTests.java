@@ -22,8 +22,8 @@ import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.messaging.MailboxMessage;
+import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -39,6 +39,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.security.cert.CertificateException;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
@@ -84,9 +85,16 @@ public class EncryptionServiceTests {
 final class TestMessage implements MailboxMessage {
     public String data = "test";
     private final int messageVersion = Version.getP2PMessageVersion();
+    private String uid;
 
     public TestMessage(String data) {
         this.data = data;
+        uid = UUID.randomUUID().toString();
+    }
+
+    @Override
+    public String getUID() {
+        return uid;
     }
 
     @Override

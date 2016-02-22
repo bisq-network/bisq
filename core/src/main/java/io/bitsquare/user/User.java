@@ -201,14 +201,6 @@ public final class User implements Persistable {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO just a first attempt, refine when working on the embedded data for the reg. tx
-    public String getStringifiedBankAccounts() {
-        return paymentAccounts.stream()
-                .map(PaymentAccount::getId)
-                .collect(Collectors.joining(", "));
-    }
-
-
     public PaymentAccount getPaymentAccount(String paymentAccountId) {
         Optional<PaymentAccount> optional = paymentAccounts.stream().filter(e -> e.getId().equals(paymentAccountId)).findAny();
         if (optional.isPresent())

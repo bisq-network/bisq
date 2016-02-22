@@ -21,7 +21,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,18 +58,18 @@ public class OfferBookService {
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
-            public void onAdded(ProtectedData data) {
+            public void onAdded(ProtectedStorageEntry data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.expirablePayload instanceof Offer)
-                        listener.onAdded((Offer) data.expirablePayload);
+                    if (data.getStoragePayload() instanceof Offer)
+                        listener.onAdded((Offer) data.getStoragePayload());
                 });
             }
 
             @Override
-            public void onRemoved(ProtectedData data) {
+            public void onRemoved(ProtectedStorageEntry data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.expirablePayload instanceof Offer)
-                        listener.onRemoved((Offer) data.expirablePayload);
+                    if (data.getStoragePayload() instanceof Offer)
+                        listener.onRemoved((Offer) data.getStoragePayload());
                 });
             }
         });
@@ -126,8 +126,8 @@ public class OfferBookService {
 
     public List<Offer> getOffers() {
         return p2PService.getDataMap().values().stream()
-                .filter(data -> data.expirablePayload instanceof Offer)
-                .map(data -> (Offer) data.expirablePayload)
+                .filter(data -> data.getStoragePayload() instanceof Offer)
+                .map(data -> (Offer) data.getStoragePayload())
                 .collect(Collectors.toList());
     }
 

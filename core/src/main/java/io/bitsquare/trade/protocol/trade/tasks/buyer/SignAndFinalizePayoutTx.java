@@ -57,7 +57,7 @@ public class SignAndFinalizePayoutTx extends TradeTask {
             );
 
             trade.setPayoutTx(transaction);
-            trade.setState(Trade.State.PAYOUT_TX_RECEIVED_AND_COMMITTED);
+            trade.setState(Trade.State.PAYOUT_TX_COMMITTED);
 
             complete();
         } catch (Throwable t) {

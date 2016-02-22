@@ -56,7 +56,7 @@ public class CreateAndSignDepositTxAsSeller extends TradeTask {
                     contractHash,
                     sellerInputAmount,
                     msOutputAmount,
-                    processModel.tradingPeer.getRawInputs(),
+                    processModel.tradingPeer.getRawTransactionInputs(),
                     processModel.tradingPeer.getChangeOutputValue(),
                     processModel.tradingPeer.getChangeOutputAddress(),
                     processModel.getAddressEntry(),
@@ -65,7 +65,7 @@ public class CreateAndSignDepositTxAsSeller extends TradeTask {
                     processModel.getArbitratorPubKey(trade.getArbitratorNodeAddress()));
 
             processModel.setPreparedDepositTx(result.depositTransaction);
-            processModel.setRawInputs(result.rawOffererInputs);
+            processModel.setRawTransactionInputs(result.rawOffererInputs);
 
             complete();
         } catch (Throwable t) {

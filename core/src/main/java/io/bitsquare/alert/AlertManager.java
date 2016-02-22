@@ -20,7 +20,7 @@ package io.bitsquare.alert;
 import com.google.inject.Inject;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bitsquare.user.User;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -60,18 +60,18 @@ public class AlertManager {
 
         alertService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
-            public void onAdded(ProtectedData data) {
-                if (data.expirablePayload instanceof Alert) {
-                    Alert alert = (Alert) data.expirablePayload;
+            public void onAdded(ProtectedStorageEntry data) {
+                if (data.getStoragePayload() instanceof Alert) {
+                    Alert alert = (Alert) data.getStoragePayload();
                     if (verifySignature(alert))
                         alertMessageProperty.set(alert);
                 }
             }
 
             @Override
-            public void onRemoved(ProtectedData data) {
-                if (data.expirablePayload instanceof Alert) {
-                    Alert alert = (Alert) data.expirablePayload;
+            public void onRemoved(ProtectedStorageEntry data) {
+                if (data.getStoragePayload() instanceof Alert) {
+                    Alert alert = (Alert) data.getStoragePayload();
                     if (verifySignature(alert))
                         alertMessageProperty.set(null);
                 }

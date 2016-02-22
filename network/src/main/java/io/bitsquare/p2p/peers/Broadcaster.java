@@ -9,7 +9,7 @@ import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.storage.messages.DataBroadcastMessage;
+import io.bitsquare.p2p.storage.messages.BroadcastMessage;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +26,7 @@ public class Broadcaster implements ConnectionListener, PeerManager.Listener {
 
 
     public interface Listener {
-        void onBroadcasted(DataBroadcastMessage message);
+        void onBroadcasted(BroadcastMessage message);
     }
 
     private final NetworkNode networkNode;
@@ -59,7 +59,7 @@ public class Broadcaster implements ConnectionListener, PeerManager.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void broadcast(DataBroadcastMessage message, @Nullable NodeAddress sender) {
+    public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender) {
         Log.traceCall("Sender=" + sender + "\n\t" +
                 "Message=" + StringUtils.abbreviate(message.toString(), 100));
         numOfBroadcasts.set(0);

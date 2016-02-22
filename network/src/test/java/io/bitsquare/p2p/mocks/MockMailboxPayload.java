@@ -3,22 +3,31 @@ package io.bitsquare.p2p.mocks;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
-import io.bitsquare.p2p.storage.data.ExpirablePayload;
+import io.bitsquare.p2p.storage.payload.ExpirablePayload;
+
+import java.util.UUID;
 
 public final class MockMailboxPayload implements MailboxMessage, ExpirablePayload {
     private final int messageVersion = Version.getP2PMessageVersion();
     public final String msg;
     public final NodeAddress senderNodeAddress;
     public long ttl;
+    private String uid;
 
     public MockMailboxPayload(String msg, NodeAddress senderNodeAddress) {
         this.msg = msg;
         this.senderNodeAddress = senderNodeAddress;
+        uid = UUID.randomUUID().toString();
     }
 
     @Override
     public int getMessageVersion() {
         return messageVersion;
+    }
+
+    @Override
+    public String getUID() {
+        return uid;
     }
 
     @Override

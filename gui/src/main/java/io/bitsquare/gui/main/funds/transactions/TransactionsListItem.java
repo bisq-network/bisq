@@ -131,9 +131,9 @@ public class TransactionsListItem {
                     details = "MultiSig payout: " + tradable.getShortId();
                 } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED) {
                     if (valueSentToMe.isPositive())
-                        details = "Refund from dispute: " + tradable.getShortId();
+                        details = "Dispute payout: " + tradable.getShortId();
                     else
-                        details = "Nothing refunded from dispute: " + tradable.getShortId();
+                        details = "Lost dispute case: " + tradable.getShortId();
                 } else {
                     details = "Unknown reason: " + tradable.getShortId();
                 }

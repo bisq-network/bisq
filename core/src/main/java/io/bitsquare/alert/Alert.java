@@ -18,30 +18,48 @@
 package io.bitsquare.alert;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.storage.data.StoragePayload;
+import io.bitsquare.common.crypto.Sig;
+import io.bitsquare.p2p.storage.payload.StoragePayload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.security.KeyFactory;
 import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.concurrent.TimeUnit;
 
 public final class Alert implements StoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
+    private static final Logger log = LoggerFactory.getLogger(Alert.class);
     private static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     public final String message;
     public final boolean isUpdateInfo;
     private String signatureAsBase64;
-    private PublicKey storagePublicKey;
+    private transient PublicKey storagePublicKey;
+    private byte[] storagePublicKeyBytes;
 
     public Alert(String message, boolean isUpdateInfo) {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
     }
 
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+            storagePublicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(storagePublicKeyBytes));
+        } catch (Throwable t) {
+            log.error("Exception at readObject: " + t.getMessage());
+            t.printStackTrace();
+        }
+    }
+
     public void setSigAndStoragePubKey(String signatureAsBase64, PublicKey storagePublicKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.storagePublicKey = storagePublicKey;
+        this.storagePublicKeyBytes = new X509EncodedKeySpec(this.storagePublicKey.getEncoded()).getEncoded();
     }
 
     public String getSignatureAsBase64() {

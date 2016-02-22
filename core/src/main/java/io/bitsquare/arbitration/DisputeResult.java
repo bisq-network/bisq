@@ -35,7 +35,7 @@ public final class DisputeResult implements Payload {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(DisputeResult.class);
 
-    public enum FeePaymentPolicy {
+    public enum DisputeFeePolicy {
         LOSER,
         SPLIT,
         WAIVE
@@ -49,7 +49,7 @@ public final class DisputeResult implements Payload {
 
     public final String tradeId;
     public final int traderId;
-    private FeePaymentPolicy feePaymentPolicy;
+    private DisputeFeePolicy disputeFeePolicy;
 
     private boolean tamperProofEvidence;
     private boolean idVerification;
@@ -68,14 +68,14 @@ public final class DisputeResult implements Payload {
     transient private BooleanProperty tamperProofEvidenceProperty = new SimpleBooleanProperty();
     transient private BooleanProperty idVerificationProperty = new SimpleBooleanProperty();
     transient private BooleanProperty screenCastProperty = new SimpleBooleanProperty();
-    transient private ObjectProperty<FeePaymentPolicy> feePaymentPolicyProperty = new SimpleObjectProperty<>();
+    transient private ObjectProperty<DisputeFeePolicy> feePaymentPolicyProperty = new SimpleObjectProperty<>();
     transient private StringProperty summaryNotesProperty = new SimpleStringProperty();
 
     public DisputeResult(String tradeId, int traderId) {
         this.tradeId = tradeId;
         this.traderId = traderId;
 
-        feePaymentPolicy = FeePaymentPolicy.LOSER;
+        disputeFeePolicy = DisputeFeePolicy.LOSER;
         init();
     }
 
@@ -92,7 +92,7 @@ public final class DisputeResult implements Payload {
         tamperProofEvidenceProperty = new SimpleBooleanProperty(tamperProofEvidence);
         idVerificationProperty = new SimpleBooleanProperty(idVerification);
         screenCastProperty = new SimpleBooleanProperty(screenCast);
-        feePaymentPolicyProperty = new SimpleObjectProperty<>(feePaymentPolicy);
+        feePaymentPolicyProperty = new SimpleObjectProperty<>(disputeFeePolicy);
         summaryNotesProperty = new SimpleStringProperty(summaryNotes);
 
         tamperProofEvidenceProperty.addListener((observable, oldValue, newValue) -> {
@@ -105,7 +105,7 @@ public final class DisputeResult implements Payload {
             screenCast = newValue;
         });
         feePaymentPolicyProperty.addListener((observable, oldValue, newValue) -> {
-            feePaymentPolicy = newValue;
+            disputeFeePolicy = newValue;
         });
         summaryNotesProperty.addListener((observable, oldValue, newValue) -> {
             summaryNotes = newValue;
@@ -124,17 +124,17 @@ public final class DisputeResult implements Payload {
         return screenCastProperty;
     }
 
-    public void setFeePaymentPolicy(FeePaymentPolicy feePaymentPolicy) {
-        this.feePaymentPolicy = feePaymentPolicy;
-        feePaymentPolicyProperty.set(feePaymentPolicy);
+    public void setDisputeFeePolicy(DisputeFeePolicy disputeFeePolicy) {
+        this.disputeFeePolicy = disputeFeePolicy;
+        feePaymentPolicyProperty.set(disputeFeePolicy);
     }
 
-    public ReadOnlyObjectProperty<FeePaymentPolicy> feePaymentPolicyProperty() {
+    public ReadOnlyObjectProperty<DisputeFeePolicy> disputeFeePolicyProperty() {
         return feePaymentPolicyProperty;
     }
 
-    public FeePaymentPolicy getFeePaymentPolicy() {
-        return feePaymentPolicy;
+    public DisputeFeePolicy getDisputeFeePolicy() {
+        return disputeFeePolicy;
     }
 
 
@@ -230,7 +230,7 @@ public final class DisputeResult implements Payload {
         if (arbitratorPayoutAmount != that.arbitratorPayoutAmount) return false;
         if (closeDate != that.closeDate) return false;
         if (tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null) return false;
-        if (feePaymentPolicy != that.feePaymentPolicy) return false;
+        if (disputeFeePolicy != that.disputeFeePolicy) return false;
         if (summaryNotes != null ? !summaryNotes.equals(that.summaryNotes) : that.summaryNotes != null) return false;
         if (disputeCommunicationMessage != null ? !disputeCommunicationMessage.equals(that.disputeCommunicationMessage) : that.disputeCommunicationMessage != null)
             return false;
@@ -246,7 +246,7 @@ public final class DisputeResult implements Payload {
     public int hashCode() {
         int result = tradeId != null ? tradeId.hashCode() : 0;
         result = 31 * result + traderId;
-        result = 31 * result + (feePaymentPolicy != null ? feePaymentPolicy.hashCode() : 0);
+        result = 31 * result + (disputeFeePolicy != null ? disputeFeePolicy.hashCode() : 0);
         result = 31 * result + (tamperProofEvidence ? 1 : 0);
         result = 31 * result + (idVerification ? 1 : 0);
         result = 31 * result + (screenCast ? 1 : 0);

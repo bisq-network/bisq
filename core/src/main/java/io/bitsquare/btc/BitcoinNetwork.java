@@ -17,13 +17,12 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.common.persistance.Persistable;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
 
-public enum BitcoinNetwork implements Persistable {
+public enum BitcoinNetwork {
     MAINNET(MainNetParams.get()),
     TESTNET(TestNet3Params.get()),
     REGTEST(RegTestParams.get());

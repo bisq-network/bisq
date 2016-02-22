@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.data.RawInput;
+import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.payment.PaymentAccountContractData;
 import org.slf4j.Logger;
@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
-import java.util.List;
 
 @Immutable
 
@@ -43,7 +42,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
     public final String offererContractSignature;
     public final String offererPayoutAddressString;
     public final byte[] preparedDepositTx;
-    public final List<RawInput> offererInputs;
+    public final ArrayList<RawTransactionInput> offererInputs;
     public final int openDisputeTimeAsBlockHeight;
     public final int checkPaymentTimeAsBlockHeight;
     public final byte[] offererTradeWalletPubKey;
@@ -56,7 +55,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
                                    String offererContractSignature,
                                    String offererPayoutAddressString,
                                    byte[] preparedDepositTx,
-                                   List<RawInput> offererInputs,
+                                   ArrayList<RawTransactionInput> offererInputs,
                                    int openDisputeTimeAsBlockHeight,
                                    int checkPaymentTimeAsBlockHeight) {
         super(tradeId);

@@ -9,9 +9,9 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.TestUtils;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.PeerManager;
-import io.bitsquare.p2p.storage.data.ProtectedData;
 import io.bitsquare.p2p.storage.messages.RefreshTTLMessage;
 import io.bitsquare.p2p.storage.mocks.MockData;
+import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -98,14 +98,14 @@ public class ProtectedDataStorageTest {
 
     //@Test
     public void testAddAndRemove() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        ProtectedData data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
+        ProtectedStorageEntry data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.add(data, null));
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.expirablePayload, newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        ProtectedData dataToRemove = new ProtectedData(data.expirablePayload, data.ttl, data.ownerPubKey, newSequenceNumber, signature);
+        ProtectedStorageEntry dataToRemove = new ProtectedStorageEntry(data.getStoragePayload(), data.ownerPubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
         Assert.assertEquals(0, dataStorage1.getMap().size());
     }
@@ -113,9 +113,8 @@ public class ProtectedDataStorageTest {
     // @Test
     public void testTTL() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 1.5);
-        ProtectedData data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
-        log.debug("data.date " + data.date);
-        log.debug("data.date " + data.date.getTime());
+        ProtectedStorageEntry data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
+        log.debug("data.date " + data.timeStamp);
         Assert.assertTrue(dataStorage1.add(data, null));
         log.debug("test 1");
         Assert.assertEquals(1, dataStorage1.getMap().size());
@@ -163,7 +162,7 @@ public class ProtectedDataStorageTest {
     @Test
     public void testRefreshTTL() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 1.5);
-        ProtectedData data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
+        ProtectedStorageEntry data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.add(data, null));
         Assert.assertEquals(1, dataStorage1.getMap().size());
         Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC);

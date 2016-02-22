@@ -291,20 +291,19 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
                 break;
             case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
+            case FIAT_PAYMENT_RECEIPT: // In case the msg sending failed we stick in that view state
                 sellerState.set(REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED);
                 break;
 
-
-            case FIAT_PAYMENT_RECEIPT:
-                break;
             case FIAT_PAYMENT_RECEIPT_MSG_SENT:
                 sellerState.set(WAIT_FOR_PAYOUT_TX);
-                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
                 break;
             case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
+                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
                 break;
 
 
+            case PAYOUT_TX_COMMITTED:
             case PAYOUT_TX_SENT:
                 buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;

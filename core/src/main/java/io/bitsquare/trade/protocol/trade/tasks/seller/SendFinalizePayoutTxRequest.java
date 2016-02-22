@@ -66,8 +66,8 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
 
                             @Override
                             public void onFault(String errorMessage) {
-                                appendToErrorMessage("FinalizePayoutTxRequest sending failed");
-                                failed();
+                                appendToErrorMessage("FinalizePayoutTxRequest sending failed. errorMessage=" + errorMessage);
+                                failed(errorMessage);
                             }
                         }
                 );

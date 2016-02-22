@@ -29,9 +29,9 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.taskrunner.Model;
+import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
@@ -82,6 +82,7 @@ public abstract class Trade implements Tradable, Model {
         FIAT_PAYMENT_RECEIPT_MSG_SENT(Phase.FIAT_RECEIVED),
         FIAT_PAYMENT_RECEIPT_MSG_RECEIVED(Phase.FIAT_RECEIVED),
 
+        PAYOUT_TX_COMMITTED(Phase.PAYOUT_PAID),
         PAYOUT_TX_SENT(Phase.PAYOUT_PAID),
         PAYOUT_TX_RECEIVED_AND_COMMITTED(Phase.PAYOUT_PAID),
         PAYOUT_BROAD_CASTED(Phase.PAYOUT_PAID),

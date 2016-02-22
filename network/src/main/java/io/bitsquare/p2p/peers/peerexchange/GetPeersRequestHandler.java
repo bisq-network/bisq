@@ -108,7 +108,6 @@ class GetPeersRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, Connection connection) {
-        // TODO retry
         cleanup();
         peerManager.shutDownConnection(connection, closeConnectionReason);
         listener.onFault(errorMessage, connection);

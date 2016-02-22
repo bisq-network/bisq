@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.data.RawInput;
+import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.payment.PaymentAccountContractData;
@@ -47,7 +47,7 @@ public final class TradingPeer implements Persistable {
     private byte[] signature;
     private PubKeyRing pubKeyRing;
     private byte[] tradeWalletPubKey;
-    private List<RawInput> rawInputs;
+    private List<RawTransactionInput> rawTransactionInputs;
     private long changeOutputValue;
     @Nullable
     private String changeOutputAddress;
@@ -138,12 +138,12 @@ public final class TradingPeer implements Persistable {
         this.pubKeyRing = pubKeyRing;
     }
 
-    public void setRawInputs(List<RawInput> rawInputs) {
-        this.rawInputs = rawInputs;
+    public void setRawTransactionInputs(List<RawTransactionInput> rawTransactionInputs) {
+        this.rawTransactionInputs = rawTransactionInputs;
     }
 
-    public List<RawInput> getRawInputs() {
-        return rawInputs;
+    public List<RawTransactionInput> getRawTransactionInputs() {
+        return rawTransactionInputs;
     }
 
     public void setChangeOutputValue(long changeOutputValue) {

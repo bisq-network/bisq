@@ -211,7 +211,6 @@ public abstract class Connection implements Closeable {
                     } else {
                         if (running) {
                             onError(new ConnectionException(e));
-                            // TODO: Fault Tolerance?
                             if (e instanceof EOFException) {
                                 try {
                                     close(false, PredefinedDisconnectReason.RESET);

@@ -220,7 +220,7 @@ public class BitsquareApp extends Application {
     private void showSendAlertMessagePopup() {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
         new SendAlertMessagePopup()
-                .onAddAlertMessage((alertMessage, privKeyString) -> alertManager.addAlertMessageIfKeyIsValid(alertMessage, privKeyString))
+                .onAddAlertMessage((alert, privKeyString) -> alertManager.addAlertMessageIfKeyIsValid(alert, privKeyString))
                 .onRemoveAlertMessage(privKeyString -> alertManager.removeAlertMessageIfKeyIsValid(privKeyString))
                 .show();
     }

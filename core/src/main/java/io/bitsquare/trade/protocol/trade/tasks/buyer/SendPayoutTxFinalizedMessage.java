@@ -49,24 +49,25 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
                             @Override
                             public void onArrived() {
                                 log.trace("Message arrived at peer.");
-                                trade.setState(Trade.State.PAYOUT_TX_SENT);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.trace("Message stored in mailbox.");
-                                trade.setState(Trade.State.PAYOUT_TX_SENT);
                                 complete();
                             }
 
                             @Override
                             public void onFault(String errorMessage) {
-                                appendToErrorMessage("PayoutTxFinalizedMessage sending failed");
-                                failed();
+                                appendToErrorMessage("PayoutTxFinalizedMessage sending failed. errorMessage=" + errorMessage);
+                                failed(errorMessage);
                             }
                         }
                 );
+                // state must not be set in onArrived or onStoredInMailbox handlers as we would get that 
+                // called delayed and would overwrite the broad cast state set by the next task
+                trade.setState(Trade.State.PAYOUT_TX_SENT);
             } else {
                 log.error("trade.getPayoutTx() = " + trade.getPayoutTx());
                 failed("PayoutTx is null");

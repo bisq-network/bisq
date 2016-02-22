@@ -19,7 +19,6 @@ package io.bitsquare.crypto;
 
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 
 import javax.inject.Inject;
 import java.security.KeyPair;

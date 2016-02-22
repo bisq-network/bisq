@@ -28,11 +28,11 @@ import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.messaging.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Contract;
@@ -513,7 +513,7 @@ public class DisputeManager {
 
                                         // after successful publish we send peer the tx
 
-                                        dispute.setDisputePayoutTx(transaction);
+                                        dispute.setDisputePayoutTxId(transaction.getHashAsString());
                                         sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
                                     }
 
@@ -551,7 +551,7 @@ public class DisputeManager {
     // losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
     private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
         Transaction transaction = tradeWalletService.addTransactionToWallet(peerPublishedPayoutTxMessage.transaction);
-        findOwnDispute(peerPublishedPayoutTxMessage.tradeId).ifPresent(dispute -> dispute.setDisputePayoutTx(transaction));
+        findOwnDispute(peerPublishedPayoutTxMessage.tradeId).ifPresent(dispute -> dispute.setDisputePayoutTxId(transaction.getHashAsString()));
     }
 
 
@@ -585,11 +585,11 @@ public class DisputeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Optional<Dispute> findDispute(String tradeId, int traderId) {
-        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId) && e.getTraderId() == traderId).findFirst();
+        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId) && e.getTraderId() == traderId).findAny();
     }
 
     public Optional<Dispute> findOwnDispute(String tradeId) {
-        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId)).findFirst();
+        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
 
     public List<Dispute> findDisputesByTradeId(String tradeId) {

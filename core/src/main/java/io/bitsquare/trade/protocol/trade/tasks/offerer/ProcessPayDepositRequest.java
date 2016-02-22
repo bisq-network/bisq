@@ -50,8 +50,8 @@ public class ProcessPayDepositRequest extends TradeTask {
             checkTradeId(processModel.getId(), payDepositRequest);
             checkNotNull(payDepositRequest);
 
-            processModel.tradingPeer.setRawInputs(checkNotNull(payDepositRequest.rawInputs));
-            checkArgument(payDepositRequest.rawInputs.size() > 0);
+            processModel.tradingPeer.setRawTransactionInputs(checkNotNull(payDepositRequest.rawTransactionInputs));
+            checkArgument(payDepositRequest.rawTransactionInputs.size() > 0);
 
             processModel.tradingPeer.setChangeOutputValue(payDepositRequest.changeOutputValue);
             if (payDepositRequest.changeOutputAddress != null)

@@ -25,7 +25,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.data.InputsAndChangeOutput;
 import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
-import io.bitsquare.btc.data.RawInput;
+import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.btc.exceptions.SigningException;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
@@ -233,7 +233,7 @@ public class TradeWalletService {
 
         printTxWithInputs("dummyTX", dummyTX);
 
-        List<RawInput> rawInputList = dummyTX.getInputs().stream()
+        List<RawTransactionInput> rawTransactionInputList = dummyTX.getInputs().stream()
                 .map(e -> {
                     checkNotNull(e.getConnectedOutput(), "e.getConnectedOutput() must not be null");
                     checkNotNull(e.getConnectedOutput().getParentTransaction(), "e.getConnectedOutput().getParentTransaction() must not be null");
@@ -255,7 +255,7 @@ public class TradeWalletService {
             changeOutputAddress = addressFromP2PKHScript.toString();
         }
 
-        return new InputsAndChangeOutput(rawInputList, changeOutputValue, changeOutputAddress);
+        return new InputsAndChangeOutput(new ArrayList<>(rawTransactionInputList), changeOutputValue, changeOutputAddress);
     }
 
     /**
@@ -265,7 +265,7 @@ public class TradeWalletService {
      * @param contractHash             The hash of the contract to be added to the OP_RETURN output.
      * @param offererInputAmount       The input amount of the offerer.
      * @param msOutputAmount           The output amount to our MS output.
-     * @param takerRawInputs           Raw data for the connected outputs for all inputs of the taker (normally 1 input)
+     * @param takerRawTransactionInputs           Raw data for the connected outputs for all inputs of the taker (normally 1 input)
      * @param takerChangeOutputValue   Optional taker change output value
      * @param takerChangeAddressString Optional taker change address
      * @param offererAddressInfo       The offerers address entry.
@@ -281,7 +281,7 @@ public class TradeWalletService {
                                                                              byte[] contractHash,
                                                                              Coin offererInputAmount,
                                                                              Coin msOutputAmount,
-                                                                             List<RawInput> takerRawInputs,
+                                                                             List<RawTransactionInput> takerRawTransactionInputs,
                                                                              long takerChangeOutputValue,
                                                                              @Nullable String takerChangeAddressString,
                                                                              AddressEntry offererAddressInfo,
@@ -293,14 +293,14 @@ public class TradeWalletService {
         log.trace("offererIsBuyer " + offererIsBuyer);
         log.trace("offererInputAmount " + offererInputAmount.toFriendlyString());
         log.trace("msOutputAmount " + msOutputAmount.toFriendlyString());
-        log.trace("takerRawInputs " + takerRawInputs.toString());
+        log.trace("takerRawInputs " + takerRawTransactionInputs.toString());
         log.trace("takerChangeOutputValue " + takerChangeOutputValue);
         log.trace("takerChangeAddressString " + takerChangeAddressString);
         log.trace("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
         log.trace("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
         log.trace("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
-        checkArgument(!takerRawInputs.isEmpty());
+        checkArgument(!takerRawTransactionInputs.isEmpty());
 
         // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx. 
         // Similar to the way we did in the createTakerDepositTxInputs method.
@@ -323,30 +323,30 @@ public class TradeWalletService {
         // Now we construct the real deposit tx
         Transaction preparedDepositTx = new Transaction(params);
 
-        List<RawInput> offererRawInputs = new ArrayList<>();
+        ArrayList<RawTransactionInput> offererRawTransactionInputs = new ArrayList<>();
         if (offererIsBuyer) {
             // Add buyer inputs
             for (TransactionInput input : offererInputs) {
                 preparedDepositTx.addInput(input);
-                offererRawInputs.add(getRawInputFromTransactionInput(input));
+                offererRawTransactionInputs.add(getRawInputFromTransactionInput(input));
             }
 
             // Add seller inputs
             // the sellers input is not signed so we attach empty script bytes
-            for (RawInput rawInput : takerRawInputs)
-                preparedDepositTx.addInput(getTransactionInput(preparedDepositTx, new byte[]{}, rawInput));
+            for (RawTransactionInput rawTransactionInput : takerRawTransactionInputs)
+                preparedDepositTx.addInput(getTransactionInput(preparedDepositTx, new byte[]{}, rawTransactionInput));
         } else {
             // taker is buyer role
 
             // Add buyer inputs
             // the sellers input is not signed so we attach empty script bytes
-            for (RawInput rawInput : takerRawInputs)
-                preparedDepositTx.addInput(getTransactionInput(preparedDepositTx, new byte[]{}, rawInput));
+            for (RawTransactionInput rawTransactionInput : takerRawTransactionInputs)
+                preparedDepositTx.addInput(getTransactionInput(preparedDepositTx, new byte[]{}, rawTransactionInput));
 
             // Add seller inputs
             for (TransactionInput input : offererInputs) {
                 preparedDepositTx.addInput(input);
-                offererRawInputs.add(getRawInputFromTransactionInput(input));
+                offererRawTransactionInputs.add(getRawInputFromTransactionInput(input));
             }
         }
 
@@ -401,7 +401,7 @@ public class TradeWalletService {
 
         printTxWithInputs("preparedDepositTx", preparedDepositTx);
 
-        return new PreparedDepositTxAndOffererInputs(offererRawInputs, preparedDepositTx.bitcoinSerialize());
+        return new PreparedDepositTxAndOffererInputs(offererRawTransactionInputs, preparedDepositTx.bitcoinSerialize());
     }
 
     /**
@@ -423,8 +423,8 @@ public class TradeWalletService {
     public void takerSignsAndPublishesDepositTx(boolean takerIsSeller,
                                                 byte[] contractHash,
                                                 byte[] offerersDepositTxSerialized,
-                                                List<RawInput> buyerInputs,
-                                                List<RawInput> sellerInputs,
+                                                List<RawTransactionInput> buyerInputs,
+                                                List<RawTransactionInput> sellerInputs,
                                                 byte[] buyerPubKey,
                                                 byte[] sellerPubKey,
                                                 byte[] arbitratorPubKey,
@@ -460,13 +460,13 @@ public class TradeWalletService {
                 depositTx.addInput(getTransactionInput(depositTx, getScriptProgram(offerersDepositTx, i), buyerInputs.get(i)));
 
             // Add seller inputs 
-            for (RawInput rawInput : sellerInputs)
-                depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, rawInput));
+            for (RawTransactionInput rawTransactionInput : sellerInputs)
+                depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, rawTransactionInput));
         } else {
             // taker is buyer
             // Add buyer inputs and apply signature
-            for (RawInput rawInput : buyerInputs)
-                depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, rawInput));
+            for (RawTransactionInput rawTransactionInput : buyerInputs)
+                depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, rawTransactionInput));
 
             // Add seller inputs 
             // We grab the signature from the offerersDepositTx and apply it to the new tx input
@@ -898,12 +898,12 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @NotNull
-    private RawInput getRawInputFromTransactionInput(@NotNull TransactionInput input) {
+    private RawTransactionInput getRawInputFromTransactionInput(@NotNull TransactionInput input) {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         checkNotNull(input.getConnectedOutput().getParentTransaction(), "input.getConnectedOutput().getParentTransaction() must not be null");
         checkNotNull(input.getValue(), "input.getValue() must not be null");
 
-        return new RawInput(input.getOutpoint().getIndex(), input.getConnectedOutput().getParentTransaction().bitcoinSerialize(), input.getValue().value);
+        return new RawTransactionInput(input.getOutpoint().getIndex(), input.getConnectedOutput().getParentTransaction().bitcoinSerialize(), input.getValue().value);
     }
 
     private byte[] getScriptProgram(Transaction offerersDepositTx, int i) throws TransactionVerificationException {
@@ -915,12 +915,12 @@ public class TradeWalletService {
     }
 
     @NotNull
-    private TransactionInput getTransactionInput(Transaction depositTx, byte[] scriptProgram, RawInput rawInput) {
+    private TransactionInput getTransactionInput(Transaction depositTx, byte[] scriptProgram, RawTransactionInput rawTransactionInput) {
         return new TransactionInput(params,
                 depositTx,
                 scriptProgram,
-                new TransactionOutPoint(params, rawInput.index, new Transaction(params, rawInput.parentTransaction)),
-                Coin.valueOf(rawInput.value));
+                new TransactionOutPoint(params, rawTransactionInput.index, new Transaction(params, rawTransactionInput.parentTransaction)),
+                Coin.valueOf(rawTransactionInput.value));
     }
 
 

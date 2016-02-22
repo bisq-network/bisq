@@ -22,4 +22,6 @@ import io.bitsquare.p2p.NodeAddress;
 
 public interface MailboxMessage extends DirectMessage {
     NodeAddress getSenderNodeAddress();
+
+    String getUID();
 }

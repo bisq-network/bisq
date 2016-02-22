@@ -63,7 +63,7 @@ public class ProcessPublishDepositTxRequest extends TradeTask {
             processModel.tradingPeer.setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.offererContractAsJson));
             processModel.tradingPeer.setContractSignature(nonEmptyStringOf(publishDepositTxRequest.offererContractSignature));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.offererPayoutAddressString));
-            processModel.tradingPeer.setRawInputs(checkNotNull(publishDepositTxRequest.offererInputs));
+            processModel.tradingPeer.setRawTransactionInputs(checkNotNull(publishDepositTxRequest.offererInputs));
             processModel.setPreparedDepositTx(checkNotNull(publishDepositTxRequest.preparedDepositTx));
             checkArgument(publishDepositTxRequest.offererInputs.size() > 0);
             if (publishDepositTxRequest.openDisputeTimeAsBlockHeight != 0) {

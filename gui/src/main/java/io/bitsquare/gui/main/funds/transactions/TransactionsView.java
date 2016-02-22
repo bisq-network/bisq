@@ -172,31 +172,40 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         List<TransactionsListItem> listItems = walletService.getWallet().getRecentTransactions(1000, true).stream()
                 .map(transaction -> {
+                    log.error("tx ID " + transaction.getHashAsString());
                     Optional<Tradable> tradableOptional = all.stream()
-                            .filter(e -> {
+                            .filter(tradable -> {
                                 String txId = transaction.getHashAsString();
-                                if (e instanceof OpenOffer)
-                                    return e.getOffer().getOfferFeePaymentTxID().equals(txId);
-                                else if (e instanceof Trade) {
-                                    Trade trade = (Trade) e;
-                                    return (trade.getTakeOfferFeeTxId() != null &&
-                                            trade.getTakeOfferFeeTxId().equals(txId)) ||
-                                            (trade.getOffer() != null &&
-                                                    trade.getOffer().getOfferFeePaymentTxID() != null &&
-                                                    trade.getOffer().getOfferFeePaymentTxID().equals(txId)) ||
-                                            (trade.getDepositTx() != null &&
-                                                    trade.getDepositTx().getHashAsString().equals(txId)) ||
-                                            (trade.getPayoutTx() != null &&
-                                                    trade.getPayoutTx().getHashAsString().equals(txId)) ||
-                                            (disputeManager.getDisputesAsObservableList().stream()
-                                                    .filter(dispute -> dispute.getDisputePayoutTx() != null &&
-                                                            dispute.getDisputePayoutTx().getHashAsString().equals(txId))
-                                                    .findAny()
-                                                    .isPresent());
+                                if (tradable instanceof OpenOffer)
+                                    return tradable.getOffer().getOfferFeePaymentTxID().equals(txId);
+                                else if (tradable instanceof Trade) {
+                                    Trade trade = (Trade) tradable;
+                                    boolean isTakeOfferFeeTx = txId.equals(trade.getTakeOfferFeeTxId());
+                                    boolean isOfferFeeTx = trade.getOffer() != null &&
+                                            txId.equals(trade.getOffer().getOfferFeePaymentTxID());
+                                    boolean isDepositTx = trade.getDepositTx() != null &&
+                                            trade.getDepositTx().getHashAsString().equals(txId);
+                                    boolean isPayoutTx = trade.getPayoutTx() != null &&
+                                            trade.getPayoutTx().getHashAsString().equals(txId);
+
+                                    boolean isDisputedPayoutTx = disputeManager.getDisputesAsObservableList().stream()
+                                            .filter(dispute -> txId.equals(dispute.getDisputePayoutTxId()) &&
+                                                    tradable.getId().equals(dispute.getTradeId()))
+                                            .findAny()
+                                            .isPresent();
+                                    log.error("isTakeOfferFeeTx " + isTakeOfferFeeTx);
+                                    log.error("isOfferFeeTx " + isOfferFeeTx);
+                                    log.error("isDepositTx " + isDepositTx);
+                                    log.error("isPayoutTx " + isPayoutTx);
+                                    log.error("isDisputedPayoutTx " + isDisputedPayoutTx);
+
+                                    return isTakeOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx || isDisputedPayoutTx;
                                 } else
                                     return false;
                             })
                             .findAny();
+                    if (tradableOptional.isPresent())
+                        log.error("tradableOptional " + tradableOptional.get().getId());
                     return new TransactionsListItem(transaction, walletService, tradableOptional, formatter);
                 })
                 .collect(Collectors.toList());

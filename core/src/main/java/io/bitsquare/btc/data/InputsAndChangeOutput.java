@@ -18,22 +18,22 @@
 package io.bitsquare.btc.data;
 
 import javax.annotation.Nullable;
-import java.util.List;
+import java.util.ArrayList;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class InputsAndChangeOutput {
-    public final List<RawInput> rawInputs;
+    public final ArrayList<RawTransactionInput> rawTransactionInputs;
 
     // Is set to 0L in case we don't have an output
     public final long changeOutputValue;
     @Nullable
     public final String changeOutputAddress;
 
-    public InputsAndChangeOutput(List<RawInput> rawInputs, long changeOutputValue, @Nullable String changeOutputAddress) {
-        checkArgument(!rawInputs.isEmpty(), "rawInputs.isEmpty()");
+    public InputsAndChangeOutput(ArrayList<RawTransactionInput> rawTransactionInputs, long changeOutputValue, @Nullable String changeOutputAddress) {
+        checkArgument(!rawTransactionInputs.isEmpty(), "rawInputs.isEmpty()");
 
-        this.rawInputs = rawInputs;
+        this.rawTransactionInputs = rawTransactionInputs;
         this.changeOutputValue = changeOutputValue;
         this.changeOutputAddress = changeOutputAddress;
     }

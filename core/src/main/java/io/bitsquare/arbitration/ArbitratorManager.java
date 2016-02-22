@@ -29,7 +29,7 @@ import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.data.ProtectedData;
+import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
@@ -117,12 +117,12 @@ public class ArbitratorManager {
 
         arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
-            public void onAdded(ProtectedData data) {
+            public void onAdded(ProtectedStorageEntry data) {
                 applyArbitrators();
             }
 
             @Override
-            public void onRemoved(ProtectedData data) {
+            public void onRemoved(ProtectedStorageEntry data) {
                 applyArbitrators();
             }
         });

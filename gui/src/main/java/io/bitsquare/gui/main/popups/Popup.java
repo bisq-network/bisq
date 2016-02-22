@@ -103,23 +103,26 @@ public class Popup {
 
     public void hide() {
         animateHide(() -> {
-            Window window = owner.getScene().getWindow();
-            window.xProperty().removeListener(positionListener);
-            window.yProperty().removeListener(positionListener);
-            window.widthProperty().removeListener(positionListener);
+            Scene rootScene = owner.getScene();
+            if (rootScene != null) {
+                Window window = rootScene.getWindow();
+                window.xProperty().removeListener(positionListener);
+                window.yProperty().removeListener(positionListener);
+                window.widthProperty().removeListener(positionListener);
 
-            if (centerTime != null)
-                centerTime.stop();
+                if (centerTime != null)
+                    centerTime.stop();
 
-            removeEffectFromBackground();
+                removeEffectFromBackground();
 
-            if (stage != null)
-                stage.hide();
-            else
-                log.warn("Stage is null");
+                if (stage != null)
+                    stage.hide();
+                else
+                    log.warn("Stage is null");
 
-            cleanup();
-            PopupManager.isHidden(Popup.this);
+                cleanup();
+                PopupManager.isHidden(Popup.this);
+            }
         });
     }
 
@@ -245,39 +248,42 @@ public class Popup {
         if (owner == null)
             owner = MainView.getRootContainer();
 
-        stage = new Stage();
-        Scene scene = new Scene(gridPane);
-        scene.getStylesheets().setAll(owner.getScene().getStylesheets());
-        scene.setFill(Color.TRANSPARENT);
-        stage.setScene(scene);
-        setModality();
-        stage.initStyle(StageStyle.TRANSPARENT);
-        Window window = owner.getScene().getWindow();
-        stage.initOwner(window);
-        stage.show();
+        Scene rootScene = owner.getScene();
+        if (rootScene != null) {
+            stage = new Stage();
+            Scene scene = new Scene(gridPane);
+            scene.getStylesheets().setAll(rootScene.getStylesheets());
+            scene.setFill(Color.TRANSPARENT);
+            stage.setScene(scene);
+            setModality();
+            stage.initStyle(StageStyle.TRANSPARENT);
+            Window window = rootScene.getWindow();
+            stage.initOwner(window);
+            stage.show();
 
-        layout();
+            layout();
 
-        addEffectToBackground();
+            addEffectToBackground();
 
-        // On Linux the owner stage does not move the child stage as it does on Mac
-        // So we need to apply centerPopup. Further with fast movements the handler loses
-        // the latest position, with a delay it fixes that.
-        // Also on Mac sometimes the popups are positioned outside of the main app, so keep it for all OS
-        positionListener = (observable, oldValue, newValue) -> {
-            if (stage != null) {
-                layout();
-                if (centerTime != null)
-                    centerTime.stop();
+            // On Linux the owner stage does not move the child stage as it does on Mac
+            // So we need to apply centerPopup. Further with fast movements the handler loses
+            // the latest position, with a delay it fixes that.
+            // Also on Mac sometimes the popups are positioned outside of the main app, so keep it for all OS
+            positionListener = (observable, oldValue, newValue) -> {
+                if (stage != null) {
+                    layout();
+                    if (centerTime != null)
+                        centerTime.stop();
 
-                centerTime = UserThread.runAfter(this::layout, 3);
-            }
-        };
-        window.xProperty().addListener(positionListener);
-        window.yProperty().addListener(positionListener);
-        window.widthProperty().addListener(positionListener);
+                    centerTime = UserThread.runAfter(this::layout, 3);
+                }
+            };
+            window.xProperty().addListener(positionListener);
+            window.yProperty().addListener(positionListener);
+            window.widthProperty().addListener(positionListener);
 
-        animateDisplay();
+            animateDisplay();
+        }
     }
 
     protected void animateDisplay() {
@@ -302,10 +308,13 @@ public class Popup {
     }
 
     protected void layout() {
-        Window window = owner.getScene().getWindow();
-        double titleBarHeight = window.getHeight() - owner.getScene().getHeight();
-        stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
-        stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight()) / 2));
+        Scene rootScene = owner.getScene();
+        if (rootScene != null) {
+            Window window = rootScene.getWindow();
+            double titleBarHeight = window.getHeight() - rootScene.getHeight();
+            stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
+            stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight()) / 2));
+        }
     }
 
     protected void addHeadLine() {

@@ -4,7 +4,7 @@ import io.bitsquare.app.Version;
 
 import java.util.Arrays;
 
-public final class RefreshTTLMessage extends DataBroadcastMessage {
+public final class RefreshTTLMessage extends BroadcastMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

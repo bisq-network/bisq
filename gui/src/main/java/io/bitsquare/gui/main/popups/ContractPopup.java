@@ -130,7 +130,7 @@ public class ContractPopup extends Popup {
             addLabelTextField(gridPane, ++rowIndex, "Seller payment ID:",
                     ((BlockChainAccountContractData) sellerPaymentAccountContractData).getPaymentId());
 
-        if (offer.getAcceptedCountryCodes() != null) {
+        if (offer.getAcceptedCountryCodes() != null && !offer.getAcceptedCountryCodes().isEmpty()) {
             String countries;
             Tooltip tooltip = null;
             if (CountryUtil.containsAllSepaEuroCountries(offer.getAcceptedCountryCodes())) {

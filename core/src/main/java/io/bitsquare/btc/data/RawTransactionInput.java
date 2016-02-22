@@ -22,7 +22,7 @@ import io.bitsquare.common.wire.Payload;
 
 import java.util.Arrays;
 
-public final class RawInput implements Payload {
+public final class RawTransactionInput implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -30,7 +30,7 @@ public final class RawInput implements Payload {
     public final byte[] parentTransaction;
     public final long value;
 
-    public RawInput(long index, byte[] parentTransaction, long value) {
+    public RawTransactionInput(long index, byte[] parentTransaction, long value) {
         this.index = index;
         this.parentTransaction = parentTransaction;
         this.value = value;
@@ -39,13 +39,13 @@ public final class RawInput implements Payload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RawInput)) return false;
+        if (!(o instanceof RawTransactionInput)) return false;
 
-        RawInput rawInput = (RawInput) o;
+        RawTransactionInput rawTransactionInput = (RawTransactionInput) o;
 
-        if (index != rawInput.index) return false;
-        if (value != rawInput.value) return false;
-        return Arrays.equals(parentTransaction, rawInput.parentTransaction);
+        if (index != rawTransactionInput.index) return false;
+        if (value != rawTransactionInput.value) return false;
+        return Arrays.equals(parentTransaction, rawTransactionInput.parentTransaction);
 
     }
 

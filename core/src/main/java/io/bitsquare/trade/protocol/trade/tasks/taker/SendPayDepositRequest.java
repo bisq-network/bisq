@@ -25,6 +25,8 @@ import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SendPayDepositRequest extends TradeTask {
@@ -47,7 +49,7 @@ public class SendPayDepositRequest extends TradeTask {
                     processModel.getMyAddress(),
                     processModel.getId(),
                     trade.getTradeAmount().value,
-                    processModel.getRawInputs(),
+                    processModel.getRawTransactionInputs(),
                     processModel.getChangeOutputValue(),
                     processModel.getChangeOutputAddress(),
                     processModel.getTradeWalletPubKey(),
@@ -56,7 +58,7 @@ public class SendPayDepositRequest extends TradeTask {
                     processModel.getPaymentAccountContractData(trade),
                     processModel.getAccountId(),
                     trade.getTakeOfferFeeTxId(),
-                    processModel.getUser().getAcceptedArbitratorAddresses(),
+                    new ArrayList<>(processModel.getUser().getAcceptedArbitratorAddresses()),
                     trade.getArbitratorNodeAddress()
             );
 

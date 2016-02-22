@@ -197,7 +197,6 @@ public class FileManager<T> {
             fileOutputStream = new FileOutputStream(tempFile);
             objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
-            // TODO ConcurrentModificationException happens sometimes at that line
             objectOutputStream.writeObject(serializable);
             // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
             // to not write through to physical media for at least a few seconds, but this is the best we can do.

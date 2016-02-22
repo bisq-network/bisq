@@ -23,6 +23,7 @@ import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.Arrays;
+import java.util.UUID;
 
 @Immutable
 public final class FinalizePayoutTxRequest extends TradeMessage implements MailboxMessage {
@@ -33,6 +34,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     public final String sellerPayoutAddress;
     public final long lockTimeAsBlockHeight;
     private final NodeAddress senderNodeAddress;
+    private final String uid = UUID.randomUUID().toString();
 
     public FinalizePayoutTxRequest(String tradeId,
                                    byte[] sellerSignature,
@@ -52,6 +54,11 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     }
 
     @Override
+    public String getUID() {
+        return uid;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof FinalizePayoutTxRequest)) return false;
@@ -63,7 +70,9 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
         if (!Arrays.equals(sellerSignature, that.sellerSignature)) return false;
         if (sellerPayoutAddress != null ? !sellerPayoutAddress.equals(that.sellerPayoutAddress) : that.sellerPayoutAddress != null)
             return false;
-        return !(senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null);
+        if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
+            return false;
+        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
 
     }
 
@@ -74,6 +83,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
         result = 31 * result + (sellerPayoutAddress != null ? sellerPayoutAddress.hashCode() : 0);
         result = 31 * result + (int) (lockTimeAsBlockHeight ^ (lockTimeAsBlockHeight >>> 32));
         result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
+        result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
     }
 }
