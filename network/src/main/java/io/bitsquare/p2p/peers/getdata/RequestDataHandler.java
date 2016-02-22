@@ -52,6 +52,8 @@ public class RequestDataHandler implements MessageListener {
     private Timer timeoutTimer;
     private final int nonce = new Random().nextInt();
     private boolean stopped;
+    private Connection connection;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -63,8 +65,6 @@ public class RequestDataHandler implements MessageListener {
         this.dataStorage = dataStorage;
         this.peerManager = peerManager;
         this.listener = listener;
-
-        networkNode.addMessageListener(this);
     }
 
     public void cancel() {
@@ -90,8 +90,14 @@ public class RequestDataHandler implements MessageListener {
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
-                public void onSuccess(@Nullable Connection connection) {
-                    log.trace("Send " + getDataRequest + " to " + nodeAddress + " succeeded.");
+                public void onSuccess(Connection connection) {
+                    if (!stopped) {
+                        RequestDataHandler.this.connection = connection;
+                        connection.addMessageListener(RequestDataHandler.this);
+                        log.trace("Send " + getDataRequest + " to " + nodeAddress + " succeeded.");
+                    } else {
+                        log.warn("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call.");
+                    }
                 }
 
                 @Override
@@ -104,7 +110,7 @@ public class RequestDataHandler implements MessageListener {
                         log.info(errorMessage);
                         handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                     } else {
-                        log.warn("We have stopped already. We ignore that requestData.onFailure call.");
+                        log.warn("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
                     }
                 }
             });
@@ -176,7 +182,8 @@ public class RequestDataHandler implements MessageListener {
     private void cleanup() {
         Log.traceCall();
         stopped = true;
-        networkNode.removeMessageListener(this);
+        if (connection != null)
+            connection.removeMessageListener(this);
         stopTimeoutTimer();
     }
 
