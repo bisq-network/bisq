@@ -69,14 +69,18 @@ class KeepAliveHandler implements MessageListener {
     public void sendPing(Connection connection) {
         Log.traceCall("connection=" + connection + " / this=" + this);
         if (!stopped) {
-            this.connection = connection;
-            connection.addMessageListener(this);
             Ping ping = new Ping(nonce);
             SettableFuture<Connection> future = networkNode.sendMessage(connection, ping);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
-                    log.trace("Send " + ping + " to " + connection + " succeeded.");
+                    if (!stopped) {
+                        log.trace("Send " + ping + " to " + connection + " succeeded.");
+                        KeepAliveHandler.this.connection = connection;
+                        connection.addMessageListener(KeepAliveHandler.this);
+                    } else {
+                        log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call.");
+                    }
                 }
 
                 @Override
@@ -91,12 +95,12 @@ class KeepAliveHandler implements MessageListener {
                         peerManager.handleConnectionFault(connection);
                         listener.onFault(errorMessage);
                     } else {
-                        log.warn("We have stopped already. We ignore that sendPing.onFailure call.");
+                        log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
                     }
                 }
             });
         } else {
-            log.warn("We have stopped already. We ignore that sendPing call.");
+            log.trace("We have stopped already. We ignore that sendPing call.");
         }
     }
 
@@ -120,7 +124,7 @@ class KeepAliveHandler implements MessageListener {
                             nonce, pong.requestNonce);
                 }
             } else {
-                log.warn("We have stopped already. We ignore that onMessage call.");
+                log.trace("We have stopped already. We ignore that onMessage call.");
             }
         }
     }

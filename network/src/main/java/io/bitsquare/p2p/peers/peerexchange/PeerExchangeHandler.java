@@ -94,7 +94,7 @@ class PeerExchangeHandler implements MessageListener {
                             connection.addMessageListener(PeerExchangeHandler.this);
                             log.trace("Send " + getPeersRequest + " to " + nodeAddress + " succeeded.");
                         } else {
-                            log.warn("We have stopped that handler already. We ignore that sendGetPeersRequest.onSuccess call.");
+                            log.trace("We have stopped that handler already. We ignore that sendGetPeersRequest.onSuccess call.");
                         }
                     }
 
@@ -107,7 +107,7 @@ class PeerExchangeHandler implements MessageListener {
                             log.info(errorMessage);
                             handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, nodeAddress);
                         } else {
-                            log.warn("We have stopped that handler already. We ignore that sendGetPeersRequest.onFailure call.");
+                            log.trace("We have stopped that handler already. We ignore that sendGetPeersRequest.onFailure call.");
                         }
                     }
                 });
@@ -121,7 +121,7 @@ class PeerExchangeHandler implements MessageListener {
                                 log.info("timeoutTimer called on " + this);
                                 handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
                             } else {
-                                log.warn("We have stopped that handler already. We ignore that timeoutTimer.run call.");
+                                log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");
                             }
                         },
                         TIME_OUT_SEC, TimeUnit.SECONDS);
@@ -129,7 +129,7 @@ class PeerExchangeHandler implements MessageListener {
                 log.warn("My node address is still null at sendGetPeersRequest. We ignore that call.");
             }
         } else {
-            log.warn("We have stopped that handler already. We ignore that sendGetPeersRequest call.");
+            log.trace("We have stopped that handler already. We ignore that sendGetPeersRequest call.");
         }
     }
 
@@ -157,7 +157,7 @@ class PeerExchangeHandler implements MessageListener {
                             nonce, getPeersResponse.requestNonce);
                 }
             } else {
-                log.warn("We have stopped that handler already. We ignore that onMessage call.");
+                log.trace("We have stopped that handler already. We ignore that onMessage call.");
             }
         }
     }

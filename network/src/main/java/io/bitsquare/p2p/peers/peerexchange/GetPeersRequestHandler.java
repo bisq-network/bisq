@@ -45,6 +45,7 @@ class GetPeersRequestHandler {
     private final PeerManager peerManager;
     private final Listener listener;
     private Timer timeoutTimer;
+    private boolean stopped;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -74,28 +75,40 @@ class GetPeersRequestHandler {
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(Connection connection) {
-                log.trace("GetPeersResponse sent successfully");
-                cleanup();
-                listener.onComplete();
+                if (!stopped) {
+                    log.trace("GetPeersResponse sent successfully");
+                    cleanup();
+                    listener.onComplete();
+                } else {
+                    log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call.");
+                }
             }
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                String errorMessage = "Sending getPeersResponse to " + connection +
-                        " failed. That is expected if the peer is offline. getPeersResponse=" + getPeersResponse + "." +
-                        "Exception: " + throwable.getMessage();
-                log.info(errorMessage);
-                handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);
+                if (!stopped) {
+                    String errorMessage = "Sending getPeersResponse to " + connection +
+                            " failed. That is expected if the peer is offline. getPeersResponse=" + getPeersResponse + "." +
+                            "Exception: " + throwable.getMessage();
+                    log.info(errorMessage);
+                    handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);
+                } else {
+                    log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
+                }
             }
         });
 
         checkArgument(timeoutTimer == null, "onGetPeersRequest must not be called twice.");
         timeoutTimer = UserThread.runAfter(() -> {
-                    String errorMessage = "A timeout occurred at sending getPeersResponse:" + getPeersResponse + " on connection:" + connection;
-                    log.info(errorMessage + " / PeerExchangeHandshake=" +
-                            GetPeersRequestHandler.this);
-                    log.info("timeoutTimer called. this=" + this);
-                    handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
+                    if (!stopped) {
+                        String errorMessage = "A timeout occurred at sending getPeersResponse:" + getPeersResponse + " on connection:" + connection;
+                        log.info(errorMessage + " / PeerExchangeHandshake=" +
+                                GetPeersRequestHandler.this);
+                        log.info("timeoutTimer called. this=" + this);
+                        handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
+                    } else {
+                        log.trace("We have stopped already. We ignore that timeoutTimer.run call.");
+                    }
                 },
                 TIME_OUT_SEC, TimeUnit.SECONDS);
 
@@ -114,6 +127,7 @@ class GetPeersRequestHandler {
     }
 
     private void cleanup() {
+        stopped = true;
         if (timeoutTimer != null) {
             timeoutTimer.stop();
             timeoutTimer = null;

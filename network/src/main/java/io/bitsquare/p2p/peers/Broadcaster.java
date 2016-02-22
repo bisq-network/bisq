@@ -33,7 +33,6 @@ public class Broadcaster implements ConnectionListener, PeerManager.Listener {
     private PeerManager peerManager;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private boolean stopped = false;
-
     private final IntegerProperty numOfBroadcasts = new SimpleIntegerProperty(0);
 
 
