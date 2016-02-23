@@ -75,7 +75,7 @@ public class Connection implements MessageListener {
     // private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
     private final String portInfo;
-    private final String uid = UUID.randomUUID().toString();
+    private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
     // holder of state shared between InputHandler and Connection
     private final SharedModel sharedModel;
@@ -108,6 +108,7 @@ public class Connection implements MessageListener {
         this.socket = socket;
         //this.messageListener = messageListener;
         this.connectionListener = connectionListener;
+        uid = UUID.randomUUID().toString();
         statistic = new Statistic();
 
         addMessageListener(messageListener);
