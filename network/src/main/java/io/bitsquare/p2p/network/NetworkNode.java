@@ -89,20 +89,24 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                         throw new TimeoutException("A timeout occurred when creating a socket.");
 
                     // Tor needs sometimes quite long to create a connection. To avoid that we get too many double 
-                    // sided connections we check again if we still don't have an incoming connection.
-                    Connection inboundConnection = getInboundConnection(peersNodeAddress);
-                    if (inboundConnection != null) {
-                        log.info("We found in the meantime an inbound connection for peersNodeAddress {}, " +
+                    // sided connections we check again if we still don't have any connection for that node address.
+                    Connection existingConnection = getInboundConnection(peersNodeAddress);
+                    if (existingConnection != null)
+                        existingConnection = getOutboundConnection(peersNodeAddress);
+
+                    if (existingConnection != null) {
+                        log.info("We found in the meantime a connection for peersNodeAddress {}, " +
                                         "so we use that for sending the message.\n" +
-                                        "That happens when Tor needs long for creating a new outbound connection.",
+                                        "That can happen if Tor needs long for creating a new outbound connection.\n" +
+                                        "We might have got a new inbound or outbound connection.",
                                 peersNodeAddress.getFullAddress());
                         try {
                             socket.close();
                         } catch (Throwable throwable) {
                             log.error("Error at closing socket " + throwable);
                         }
-                        inboundConnection.sendMessage(message);
-                        return inboundConnection;
+                        existingConnection.sendMessage(message);
+                        return existingConnection;
                     } else {
                         outboundConnection = new OutboundConnection(socket, NetworkNode.this, NetworkNode.this, peersNodeAddress);
                         outBoundConnections.add(outboundConnection);
