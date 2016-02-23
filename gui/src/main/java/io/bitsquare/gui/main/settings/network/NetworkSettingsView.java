@@ -96,7 +96,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         GridPane.setMargin(p2PPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
 
-        bitcoinPeersTextArea.setPrefRowCount(12);
+        bitcoinPeersTextArea.setPrefRowCount(10);
         netWorkComboBox.setItems(FXCollections.observableArrayList(BitcoinNetwork.values()));
         netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork());
         netWorkComboBox.setOnAction(e -> onSelectNetwork());
@@ -142,10 +142,12 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             }
         };
 
+        p2PPeerTable.setMinHeight(300);
         p2PPeerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         p2PPeerTable.setPlaceholder(new Label("No connections are available"));
         p2PPeerTable.getSortOrder().add(creationDateColumn);
         creationDateColumn.setSortType(TableColumn.SortType.ASCENDING);
+
 
         //TODO sorting needs other NetworkStatisticListItem as columns type
        /* creationDateColumn.setComparator((o1, o2) ->

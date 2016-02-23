@@ -9,7 +9,6 @@ import com.google.inject.name.Named;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.ProgramArguments;
 import io.bitsquare.common.Clock;
-import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.KeyRing;
@@ -18,6 +17,7 @@ import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
+import io.bitsquare.p2p.peers.BroadcastHandler;
 import io.bitsquare.p2p.peers.Broadcaster;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.getdata.RequestDataManager;
@@ -27,13 +27,13 @@ import io.bitsquare.p2p.seed.SeedNodesRepository;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.P2PDataStorage;
 import io.bitsquare.p2p.storage.messages.AddDataMessage;
+import io.bitsquare.p2p.storage.messages.BroadcastMessage;
 import io.bitsquare.p2p.storage.messages.RefreshTTLMessage;
 import io.bitsquare.p2p.storage.payload.MailboxStoragePayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -82,10 +82,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     private volatile boolean shutDownInProgress;
     private boolean shutDownComplete;
-    private ChangeListener<NodeAddress> connectionNodeAddressListener;
     private Subscription networkReadySubscription;
     private boolean isBootstrapped;
-    private ChangeListener<Number> numOfBroadcastsChangeListener;
     private KeepAliveManager keepAliveManager;
 
 
@@ -116,10 +114,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     private void init(boolean useLocalhost, int networkId, File storageDir) {
-        connectionNodeAddressListener = (observable, oldValue, newValue) ->
-                UserThread.execute(() ->
-                        numConnectedPeers.set(networkNode.getNodeAddressesOfConfirmedConnections().size()));
-
         networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
@@ -147,6 +141,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (newValue)
                 onNetworkReady();
         });
+
+        numConnectedPeers.set(networkNode.getAllConnections().size());
     }
 
 
@@ -307,24 +303,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @Override
     public void onConnection(Connection connection) {
-        if (connection.getPeersNodeAddressOptional().isPresent()) {
-            connectionNodeAddressListener.changed(connection.peersNodeAddressProperty(), null,
-                    connection.peersNodeAddressProperty().get());
-        } else {
-            connection.peersNodeAddressProperty().addListener(connectionNodeAddressListener);
-        }
+        numConnectedPeers.set(networkNode.getAllConnections().size());
+        UserThread.runAfter(() -> numConnectedPeers.set(networkNode.getAllConnections().size()), 1);
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
-        connection.peersNodeAddressProperty().removeListener(connectionNodeAddressListener);
-        // We removed the listener after a delay to be sure the connection has been removed 
-        // from the networkNode already.
-        UserThread.runAfter(() ->
-                connectionNodeAddressListener.changed(connection.peersNodeAddressProperty(), null,
-                        connection.peersNodeAddressProperty().get())
-                , 1);
+        numConnectedPeers.set(networkNode.getAllConnections().size());
+        UserThread.runAfter(() -> numConnectedPeers.set(networkNode.getAllConnections().size()), 1);
     }
 
     @Override
@@ -548,53 +535,35 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             optionalKeyRing.get().getSignatureKeyPair(),
                             receiversPublicKey);
 
-                    Timer sendMailboxMessageTimeoutTimer = UserThread.runAfter(() -> {
-                        boolean result = p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress());
-                        log.debug("remove result=" + result);
-                        sendMailboxMessageListener.onFault("A timeout occurred when trying to broadcast mailbox data.");
-                    }, 30);
-                    Broadcaster.Listener listener = message -> {
-                        if (message instanceof AddDataMessage &&
-                                ((AddDataMessage) message).protectedStorageEntry.equals(protectedMailboxStorageEntry)) {
-                            sendMailboxMessageListener.onStoredInMailbox();
-                            sendMailboxMessageTimeoutTimer.stop();
+                    BroadcastHandler.Listener listener = new BroadcastHandler.Listener() {
+                        @Override
+                        public void onBroadcasted(BroadcastMessage message, int numOfCompletedBroadcasts) {
                         }
-                    };
-                    broadcaster.addListener(listener);
-                    if (numOfBroadcastsChangeListener != null) {
-                        log.warn("numOfBroadcastsChangeListener should be null");
-                        broadcaster.getNumOfBroadcastsProperty().removeListener(numOfBroadcastsChangeListener);
-                    }
-                    numOfBroadcastsChangeListener = (observable, oldValue, newValue) -> {
-                        // We want to get at least 1 successful broadcast
-                        if ((int) newValue > 0)
-                            broadcaster.removeListener(listener);
 
-                        if (numOfBroadcastsChangeListener != null) {
-                            broadcaster.getNumOfBroadcastsProperty().removeListener(numOfBroadcastsChangeListener);
-                            numOfBroadcastsChangeListener = null;
-                        }
-                        
-                       /* UserThread.execute(() -> {
-                            if (numOfBroadcastsChangeListener != null) {
-                                broadcaster.getNumOfBroadcastsProperty().removeListener(numOfBroadcastsChangeListener);
-                                numOfBroadcastsChangeListener = null;
+                        @Override
+                        public void onBroadcastedToFirstPeer(BroadcastMessage message) {
+                            if (message instanceof AddDataMessage &&
+                                    ((AddDataMessage) message).protectedStorageEntry.equals(protectedMailboxStorageEntry)) {
+                                sendMailboxMessageListener.onStoredInMailbox();
                             }
-                        });*/
+                        }
+
+                        @Override
+                        public void onBroadcastCompleted(BroadcastMessage message, int numOfCompletedBroadcasts, int numOfFailedBroadcasts) {
+                            if (numOfCompletedBroadcasts == 0)
+                                sendMailboxMessageListener.onFault("Broadcast completed without any successful broadcast");
+                        }
+
+                        @Override
+                        public void onBroadcastFailed(String errorMessage) {
+                        }
                     };
-                    broadcaster.getNumOfBroadcastsProperty().addListener(numOfBroadcastsChangeListener);
-
-                    boolean result = p2PDataStorage.add(protectedMailboxStorageEntry, networkNode.getNodeAddress());
+                    boolean result = p2PDataStorage.add(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener);
                     if (!result) {
-                        sendMailboxMessageTimeoutTimer.stop();
-                        broadcaster.removeListener(listener);
-
-                        if (numOfBroadcastsChangeListener != null)
-                            broadcaster.getNumOfBroadcastsProperty().removeListener(numOfBroadcastsChangeListener);
-
+                        //TODO remove and add again with a delay to ensure the data will be broadcasted
                         sendMailboxMessageListener.onFault("Data already exists in our local database");
-                        boolean result2 = p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress());
-                        log.debug("remove result=" + result2);
+                        boolean removeResult = p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress());
+                        log.debug("remove result=" + removeResult);
                     }
                 } catch (CryptoException e) {
                     log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");

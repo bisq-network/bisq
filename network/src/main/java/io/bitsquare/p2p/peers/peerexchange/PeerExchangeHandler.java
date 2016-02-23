@@ -53,6 +53,7 @@ class PeerExchangeHandler implements MessageListener {
     private Timer timeoutTimer;
     private Connection connection;
     private boolean stopped;
+    private Timer delayTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +76,11 @@ class PeerExchangeHandler implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendGetPeersRequest(NodeAddress nodeAddress) {
+    public void sendGetPeersRequestAfterRandomDelay(NodeAddress nodeAddress) {
+        delayTimer = UserThread.runAfterRandomDelay(() -> sendGetPeersRequest(nodeAddress), 1, 3000, TimeUnit.MILLISECONDS);
+    }
+
+    private void sendGetPeersRequest(NodeAddress nodeAddress) {
         Log.traceCall("nodeAddress=" + nodeAddress + " / this=" + this);
         if (!stopped) {
             if (networkNode.getNodeAddress() != null) {
@@ -188,6 +193,11 @@ class PeerExchangeHandler implements MessageListener {
         if (timeoutTimer != null) {
             timeoutTimer.stop();
             timeoutTimer = null;
+        }
+
+        if (delayTimer != null) {
+            delayTimer.stop();
+            delayTimer = null;
         }
     }
 

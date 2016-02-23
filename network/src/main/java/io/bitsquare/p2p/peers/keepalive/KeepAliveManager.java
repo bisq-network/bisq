@@ -22,7 +22,8 @@ import java.util.Random;
 public class KeepAliveManager implements MessageListener, ConnectionListener, PeerManager.Listener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveManager.class);
 
-    private static final int INTERVAL_SEC = new Random().nextInt(10) + 10;
+    private static final int INTERVAL_SEC = new Random().nextInt(5) + 20;
+    private static final long LAST_ACTIVITY_AGE_MILLIS = INTERVAL_SEC / 2;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
@@ -168,7 +169,8 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
         if (!stopped) {
             Log.traceCall();
             networkNode.getConfirmedConnections().stream()
-                    .filter(connection -> connection instanceof OutboundConnection)
+                    .filter(connection -> connection instanceof OutboundConnection &&
+                            connection.getStatistic().getLastActivityAge() > LAST_ACTIVITY_AGE_MILLIS)
                     .forEach(connection -> {
                         final String uid = connection.getUid();
                         if (!handlerMap.containsKey(uid)) {
@@ -184,7 +186,7 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                                 }
                             });
                             handlerMap.put(uid, keepAliveHandler);
-                            keepAliveHandler.sendPing(connection);
+                            keepAliveHandler.sendPingAfterRandomDelay(connection);
                         } else {
                             log.warn("Connection with id {} has not completed and is still in our map. " +
                                     "We will try to ping that peer at the next schedule.", uid);

@@ -108,6 +108,10 @@ public class Statistic {
         return lastActivityTimestamp;
     }
 
+    public long getLastActivityAge() {
+        return System.currentTimeMillis() - lastActivityTimestamp;
+    }
+
     public int getSentBytes() {
         return sentBytes.get();
     }

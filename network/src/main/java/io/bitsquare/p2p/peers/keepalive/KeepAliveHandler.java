@@ -4,6 +4,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
+import io.bitsquare.common.Timer;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
@@ -17,9 +19,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 class KeepAliveHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveHandler.class);
+    private Timer delayTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +69,11 @@ class KeepAliveHandler implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendPing(Connection connection) {
+    public void sendPingAfterRandomDelay(Connection connection) {
+        delayTimer = UserThread.runAfterRandomDelay(() -> sendPing(connection), 1, 5000, TimeUnit.MILLISECONDS);
+    }
+
+    private void sendPing(Connection connection) {
         Log.traceCall("connection=" + connection + " / this=" + this);
         if (!stopped) {
             Ping ping = new Ping(nonce);
@@ -132,5 +140,10 @@ class KeepAliveHandler implements MessageListener {
         stopped = true;
         if (connection != null)
             connection.removeMessageListener(this);
+
+        if (delayTimer != null) {
+            delayTimer.stop();
+            delayTimer = null;
+        }
     }
 }

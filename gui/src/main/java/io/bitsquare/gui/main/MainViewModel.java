@@ -204,8 +204,8 @@ public class MainViewModel implements ViewModel {
             new Popup().warning("The application could not startup after 3 minutes.\n" +
                     "There might be some network connection problems or a unstable Tor path.\n\n" +
                     "Please restart and try again.")
-                    .closeButtonText("Shut down")
-                    .onClose(BitsquareApp.shutDownHandler::run)
+                    .actionButtonText("Shut down and start again")
+                    .onAction(BitsquareApp.shutDownHandler::run)
                     .show();
         }, 3, TimeUnit.MINUTES);
         

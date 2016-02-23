@@ -42,7 +42,7 @@
 
     <Label fx:id="bitcoinPeersLabel" text="Connected peers:" GridPane.rowIndex="2"/>
     <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
-              GridPane.vgrow="ALWAYS" editable="false" focusTraversable="false"/>
+              GridPane.vgrow="SOMETIMES" editable="false" focusTraversable="false"/>
 
     <TitledGroupBg text="P2P network" GridPane.rowIndex="3" GridPane.rowSpan="5">
         <padding>
@@ -66,7 +66,8 @@
     </TextField>
 
     <Label fx:id="p2PPeersLabel" text="Connected peers:" GridPane.rowIndex="4"/>
-    <TableView fx:id="p2PPeerTable" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
+    <TableView fx:id="p2PPeerTable" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+               GridPane.vgrow="ALWAYS">
         <columns>
             <TableColumn text="Onion address" fx:id="onionAddressColumn" minWidth="220">
                 <cellValueFactory>

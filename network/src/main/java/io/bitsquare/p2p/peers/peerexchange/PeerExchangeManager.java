@@ -227,7 +227,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                             }
                         });
                 handlerMap.put(nodeAddress, peerExchangeHandler);
-                peerExchangeHandler.sendGetPeersRequest(nodeAddress);
+                peerExchangeHandler.sendGetPeersRequestAfterRandomDelay(nodeAddress);
             } else {
                 log.trace("We have started already a peerExchangeHandler. " +
                         "We ignore that call. nodeAddress=" + nodeAddress);

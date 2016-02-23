@@ -360,33 +360,37 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         if (!stopped) {
             stopPeriodicRefreshOffersTimer();
 
-            openOffers.stream().forEach(openOffer -> {
-                offerBookService.republishOffers(openOffer.getOffer(),
-                        () -> {
-                            if (!stopped) {
-                                log.debug("Successful added offer to P2P network");
-                                // Refresh means we send only the dat needed to refresh the TTL (hash, signature and sequence nr.)
-                                if (periodicRefreshOffersTimer == null)
-                                    startPeriodicRefreshOffersTimer();
-                            } else {
-                                log.warn("We have stopped already. We ignore that offerBookService.republishOffers.onSuccess call.");
-                            }
-                        },
-                        errorMessage -> {
-                            if (!stopped) {
-                                log.error("Add offer to P2P network failed. " + errorMessage);
-                                stopRetryRepublishOffersTimer();
-                                retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
-                                        RETRY_REPUBLISH_DELAY_SEC);
-                            } else {
-                                log.warn("We have stopped already. We ignore that offerBookService.republishOffers.onFault call.");
-                            }
-                        });
-                openOffer.setStorage(openOffersStorage);
-            });
+            openOffers.stream().forEach(openOffer ->
+                    UserThread.runAfterRandomDelay(() ->
+                            republishOffer(openOffer), 1, 1000, TimeUnit.MILLISECONDS));
         } else {
             log.warn("We have stopped already. We ignore that republishOffers call.");
         }
+    }
+
+    private void republishOffer(OpenOffer openOffer) {
+        offerBookService.republishOffers(openOffer.getOffer(),
+                () -> {
+                    if (!stopped) {
+                        log.debug("Successful added offer to P2P network");
+                        // Refresh means we send only the dat needed to refresh the TTL (hash, signature and sequence nr.)
+                        if (periodicRefreshOffersTimer == null)
+                            startPeriodicRefreshOffersTimer();
+                    } else {
+                        log.warn("We have stopped already. We ignore that offerBookService.republishOffers.onSuccess call.");
+                    }
+                },
+                errorMessage -> {
+                    if (!stopped) {
+                        log.error("Add offer to P2P network failed. " + errorMessage);
+                        stopRetryRepublishOffersTimer();
+                        retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
+                                RETRY_REPUBLISH_DELAY_SEC);
+                    } else {
+                        log.warn("We have stopped already. We ignore that offerBookService.republishOffers.onFault call.");
+                    }
+                });
+        openOffer.setStorage(openOffersStorage);
     }
 
     private void startPeriodicRepublishOffersTimer() {
@@ -403,7 +407,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     REPUBLISH_INTERVAL_MILLIS,
                     TimeUnit.MILLISECONDS);
         else
-            log.warn("periodicRepublishOffersTimer already stated");
+            log.trace("periodicRepublishOffersTimer already stated");
     }
 
     private void startPeriodicRefreshOffersTimer() {
@@ -414,11 +418,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             periodicRefreshOffersTimer = UserThread.runPeriodically(() -> {
                         if (!stopped) {
                             Log.traceCall("Number of offer for refresh: " + openOffers.size());
-                            openOffers.stream().forEach(openOffer -> {
-                                offerBookService.refreshOffer(openOffer.getOffer(),
-                                        () -> log.debug("Successful refreshed TTL for offer"),
-                                        errorMessage -> log.error("Refresh TTL for offer failed. " + errorMessage));
-                            });
+                            openOffers.stream().forEach(openOffer ->
+                                    UserThread.runAfterRandomDelay(() ->
+                                            refreshOffer(openOffer), 1, 5000, TimeUnit.MILLISECONDS));
                         } else {
                             log.warn("We have stopped already. We ignore that periodicRefreshOffersTimer.run call.");
                         }
@@ -426,7 +428,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     REFRESH_INTERVAL_MILLIS,
                     TimeUnit.MILLISECONDS);
         else
-            log.warn("periodicRefreshOffersTimer already stated");
+            log.trace("periodicRefreshOffersTimer already stated");
+    }
+
+    private void refreshOffer(OpenOffer openOffer) {
+        offerBookService.refreshOffer(openOffer.getOffer(),
+                () -> log.debug("Successful refreshed TTL for offer"),
+                errorMessage -> log.error("Refresh TTL for offer failed. " + errorMessage));
     }
 
     private void restart() {

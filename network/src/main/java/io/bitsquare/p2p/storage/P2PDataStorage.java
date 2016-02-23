@@ -13,6 +13,7 @@ import io.bitsquare.common.wire.Payload;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
+import io.bitsquare.p2p.peers.BroadcastHandler;
 import io.bitsquare.p2p.peers.Broadcaster;
 import io.bitsquare.p2p.storage.messages.*;
 import io.bitsquare.p2p.storage.payload.ExpirablePayload;
@@ -171,10 +172,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean add(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender) {
-        return add(protectedStorageEntry, sender, false);
+        return add(protectedStorageEntry, sender, null, false);
     }
 
     public boolean add(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender, boolean forceBroadcast) {
+        return add(protectedStorageEntry, sender, null, forceBroadcast);
+    }
+
+    public boolean add(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender, @Nullable BroadcastHandler.Listener listener) {
+        return add(protectedStorageEntry, sender, listener, false);
+    }
+
+    public boolean add(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender, @Nullable BroadcastHandler.Listener listener, boolean forceBroadcast) {
         Log.traceCall();
 
         ByteArray hashOfPayload = getHashAsByteArray(protectedStorageEntry.getStoragePayload());
@@ -200,7 +209,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             log.info("Data set after doAdd: size=" + map.values().size());
 
             if (!containsKey || forceBroadcast)
-                broadcast(new AddDataMessage(protectedStorageEntry), sender);
+                broadcast(new AddDataMessage(protectedStorageEntry), sender, listener);
             else
                 log.trace("Not broadcasting data as we had it already in our map.");
 
@@ -222,41 +231,36 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (map.containsKey(hashOfPayload)) {
             ProtectedStorageEntry storedData = map.get(hashOfPayload);
 
-            if (storedData.getStoragePayload() instanceof StoragePayload) {
-                if (sequenceNumberMap.containsKey(hashOfPayload) && sequenceNumberMap.get(hashOfPayload).sequenceNr == sequenceNumber) {
-                    log.trace("We got that message with that seq nr already from another peer. We ignore that message.");
-                    return true;
-                } else {
-                    PublicKey ownerPubKey = ((StoragePayload) storedData.getStoragePayload()).getOwnerPubKey();
-                    boolean result = checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature) &&
-                            isSequenceNrValid(sequenceNumber, hashOfPayload) &&
-                            checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload);
-
-                    if (result) {
-                        log.info("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
-                        storedData.updateTimeStamp();
-                        storedData.updateSequenceNumber(sequenceNumber);
-                        storedData.updateSignature(signature);
-
-                        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
-                        storage.queueUpForSave(sequenceNumberMap, 100);
-
-                        StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
-                        sb.append("Data set after refreshTTL (truncated)");
-                        map.values().stream().forEach(e -> sb.append("\n").append(StringUtils.abbreviate(e.toString(), 100)));
-                        sb.append("\n------------------------------------------------------------\n");
-                        log.trace(sb.toString());
-                        log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
-
-                        broadcast(refreshTTLMessage, sender);
-                    } else {
-                        log.warn("Checks for refreshTTL failed");
-                    }
-                    return result;
-                }
+            if (sequenceNumberMap.containsKey(hashOfPayload) && sequenceNumberMap.get(hashOfPayload).sequenceNr == sequenceNumber) {
+                log.trace("We got that message with that seq nr already from another peer. We ignore that message.");
+                return true;
             } else {
-                log.error("storedData.expirablePayload NOT instanceof StoragePayload. That must not happen.");
-                return false;
+                PublicKey ownerPubKey = ((StoragePayload) storedData.getStoragePayload()).getOwnerPubKey();
+                boolean result = checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature) &&
+                        isSequenceNrValid(sequenceNumber, hashOfPayload) &&
+                        checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload);
+
+                if (result) {
+                    log.info("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
+                    storedData.updateTimeStamp();
+                    storedData.updateSequenceNumber(sequenceNumber);
+                    storedData.updateSignature(signature);
+
+                    sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
+                    storage.queueUpForSave(sequenceNumberMap, 100);
+
+                    StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
+                    sb.append("Data set after refreshTTL (truncated)");
+                    map.values().stream().forEach(e -> sb.append("\n").append(StringUtils.abbreviate(e.toString(), 100)));
+                    sb.append("\n------------------------------------------------------------\n");
+                    log.trace(sb.toString());
+                    log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
+
+                    broadcast(refreshTTLMessage, sender, null);
+                } else {
+                    log.warn("Checks for refreshTTL failed");
+                }
+                return result;
             }
         } else {
             log.warn("We don't have data for that refresh message in our map.");
@@ -280,7 +284,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (result) {
             doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
 
-            broadcast(new RemoveDataMessage(protectedStorageEntry), sender);
+            broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null);
 
             sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
             storage.queueUpForSave(sequenceNumberMap, 100);
@@ -299,14 +303,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         boolean result = containsKey
                 && checkPublicKeys(protectedMailboxStorageEntry, false)
                 && isSequenceNrValid(protectedMailboxStorageEntry.sequenceNumber, hashOfData)
-                && protectedMailboxStorageEntry.receiversPubKey.equals(protectedMailboxStorageEntry.receiversPubKey) // at remove both keys are the same (only receiver is able to remove data)
+                && protectedMailboxStorageEntry.getMailboxStoragePayload().receiverPubKeyForRemoveOperation.equals(protectedMailboxStorageEntry.receiversPubKey) // at remove both keys are the same (only receiver is able to remove data)
                 && checkSignature(protectedMailboxStorageEntry)
                 && checkIfStoredMailboxDataMatchesNewMailboxData(protectedMailboxStorageEntry.receiversPubKey, hashOfData);
 
         if (result) {
             doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfData);
 
-            broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender);
+            broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender, null);
 
             sequenceNumberMap.put(hashOfData, new MapValue(protectedMailboxStorageEntry.sequenceNumber, System.currentTimeMillis()));
             storage.queueUpForSave(sequenceNumberMap, 100);
@@ -350,7 +354,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     public ProtectedMailboxStorageEntry getMailboxDataWithSignedSeqNr(MailboxStoragePayload expirableMailboxStoragePayload,
-                                                              KeyPair storageSignaturePubKey, PublicKey receiversPublicKey)
+                                                                      KeyPair storageSignaturePubKey, PublicKey receiversPublicKey)
             throws CryptoException {
         ByteArray hashOfData = getHashAsByteArray(expirableMailboxStoragePayload);
         int sequenceNumber;
@@ -468,8 +472,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
     }
 
-    private void broadcast(BroadcastMessage message, @Nullable NodeAddress sender) {
-        broadcaster.broadcast(message, sender);
+    private void broadcast(BroadcastMessage message, @Nullable NodeAddress sender, @Nullable BroadcastHandler.Listener listener) {
+        broadcaster.broadcast(message, sender, listener);
     }
 
     private ByteArray getHashAsByteArray(ExpirablePayload data) {
