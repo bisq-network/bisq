@@ -122,7 +122,7 @@ class GetPeersRequestHandler {
 
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, Connection connection) {
         cleanup();
-        peerManager.shutDownConnection(connection, closeConnectionReason);
+        //peerManager.shutDownConnection(connection, closeConnectionReason);
         listener.onFault(errorMessage, connection);
     }
 

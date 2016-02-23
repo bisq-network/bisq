@@ -94,7 +94,7 @@ public class Connection implements MessageListener {
     // use GZIPInputStream but problems with blocking
     private final boolean useCompression = false;
     private PeerType peerType;
-    private final ObjectProperty<NodeAddress> nodeAddressProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
     private final List<Tuple2<Long, Serializable>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
 
@@ -301,7 +301,7 @@ public class Connection implements MessageListener {
                     "\n############################################################\n");
         }
 
-        nodeAddressProperty.set(peerNodeAddress);
+        peersNodeAddressProperty.set(peerNodeAddress);
     }
 
 
@@ -329,8 +329,8 @@ public class Connection implements MessageListener {
         return peerType;
     }
 
-    public ReadOnlyObjectProperty<NodeAddress> getNodeAddressProperty() {
-        return nodeAddressProperty;
+    public ReadOnlyObjectProperty<NodeAddress> peersNodeAddressProperty() {
+        return peersNodeAddressProperty;
     }
 
     public RuleViolation getRuleViolation() {
@@ -700,12 +700,15 @@ public class Connection implements MessageListener {
                             if (message instanceof SendersNodeAddressMessage) {
                                 NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) message).getSenderNodeAddress();
                                 Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
-                                if (peersNodeAddressOptional.isPresent())
+                                if (peersNodeAddressOptional.isPresent()) {
                                     checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
-                                            "senderNodeAddress not matching connections peer address.\nmessage=" + message);
-                                else
+                                            "senderNodeAddress not matching connections peer address.\n\t" +
+                                                    "message=" + message);
+                                } else {
                                     connection.setPeersNodeAddress(senderNodeAddress);
+                                }
                             }
+
                             if (message instanceof PrefixedSealedAndSignedMessage)
                                 connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 

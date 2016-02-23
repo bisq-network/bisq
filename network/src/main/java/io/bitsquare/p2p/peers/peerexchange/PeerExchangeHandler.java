@@ -170,10 +170,10 @@ class PeerExchangeHandler implements MessageListener {
     private void handleFault(String errorMessage, CloseConnectionReason sendMsgFailure, NodeAddress nodeAddress) {
         Log.traceCall();
         cleanup();
-        if (connection == null)
+       /* if (connection == null)
             peerManager.shutDownConnection(nodeAddress, sendMsgFailure);
         else
-            peerManager.shutDownConnection(connection, sendMsgFailure);
+            peerManager.shutDownConnection(connection, sendMsgFailure);*/
 
         peerManager.handleConnectionFault(nodeAddress, connection);
         listener.onFault(errorMessage, connection);

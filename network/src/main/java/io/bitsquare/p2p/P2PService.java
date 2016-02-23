@@ -308,22 +308,22 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onConnection(Connection connection) {
         if (connection.getPeersNodeAddressOptional().isPresent()) {
-            connectionNodeAddressListener.changed(connection.getNodeAddressProperty(), null,
-                    connection.getNodeAddressProperty().get());
+            connectionNodeAddressListener.changed(connection.peersNodeAddressProperty(), null,
+                    connection.peersNodeAddressProperty().get());
         } else {
-            connection.getNodeAddressProperty().addListener(connectionNodeAddressListener);
+            connection.peersNodeAddressProperty().addListener(connectionNodeAddressListener);
         }
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
-        connection.getNodeAddressProperty().removeListener(connectionNodeAddressListener);
+        connection.peersNodeAddressProperty().removeListener(connectionNodeAddressListener);
         // We removed the listener after a delay to be sure the connection has been removed 
         // from the networkNode already.
         UserThread.runAfter(() ->
-                connectionNodeAddressListener.changed(connection.getNodeAddressProperty(), null,
-                        connection.getNodeAddressProperty().get())
+                connectionNodeAddressListener.changed(connection.peersNodeAddressProperty(), null,
+                        connection.peersNodeAddressProperty().get())
                 , 1);
     }
 

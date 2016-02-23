@@ -229,11 +229,11 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 handlerMap.put(nodeAddress, peerExchangeHandler);
                 peerExchangeHandler.sendGetPeersRequest(nodeAddress);
             } else {
-                log.warn("We have started already a peerExchangeHandler. " +
+                log.trace("We have started already a peerExchangeHandler. " +
                         "We ignore that call. nodeAddress=" + nodeAddress);
             }
         } else {
-            log.warn("We have stopped already. We ignore that requestReportedPeers call.");
+            log.trace("We have stopped already. We ignore that requestReportedPeers call.");
         }
     }
 
@@ -281,7 +281,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 log.info("We have already sufficient connections.");
             }
         } else {
-            log.warn("We have stopped already. We ignore that requestWithAvailablePeers call.");
+            log.trace("We have stopped already. We ignore that requestWithAvailablePeers call.");
         }
     }
 
@@ -359,7 +359,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 handlerMap.remove(nodeAddress);
             }
         } else {
-            log.warn("closeHandler: nodeAddress not set in connection " + connection);
+            log.trace("closeHandler: nodeAddress not set in connection " + connection);
         }
     }
 

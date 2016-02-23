@@ -177,7 +177,7 @@ public class RequestDataHandler implements MessageListener {
 
     private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
         cleanup();
-        peerManager.shutDownConnection(nodeAddress, closeConnectionReason);
+        //peerManager.shutDownConnection(nodeAddress, closeConnectionReason);
         peerManager.handleConnectionFault(nodeAddress);
         listener.onFault(errorMessage, null);
     }

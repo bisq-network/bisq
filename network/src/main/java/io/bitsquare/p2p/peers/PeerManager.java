@@ -171,7 +171,7 @@ public class PeerManager implements ConnectionListener {
 
     @Override
     public void onConnection(Connection connection) {
-        connection.getNodeAddressProperty().addListener(connectionNodeAddressListener);
+        connection.peersNodeAddressProperty().addListener(connectionNodeAddressListener);
 
         if (isSeedNode(connection))
             connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -185,7 +185,7 @@ public class PeerManager implements ConnectionListener {
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        connection.getNodeAddressProperty().removeListener(connectionNodeAddressListener);
+        connection.peersNodeAddressProperty().removeListener(connectionNodeAddressListener);
         handleConnectionFault(connection);
 
         lostAllConnections = networkNode.getAllConnections().isEmpty();

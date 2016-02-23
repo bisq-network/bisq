@@ -106,7 +106,7 @@ public class GetDataRequestHandler {
 
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, Connection connection) {
         log.info(errorMessage);
-        peerManager.shutDownConnection(connection, closeConnectionReason);
+        //peerManager.shutDownConnection(connection, closeConnectionReason);
         cleanup();
         listener.onFault(errorMessage, connection);
     }

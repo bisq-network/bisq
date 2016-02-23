@@ -4,6 +4,8 @@ import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, GetDataRequest {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -13,6 +15,7 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
     private final int nonce;
 
     public GetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce) {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetUpdatedDataRequest");
         this.senderNodeAddress = senderNodeAddress;
         this.nonce = nonce;
     }

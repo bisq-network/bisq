@@ -5,7 +5,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.p2p.Message;
-import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.MessageListener;
 import io.bitsquare.p2p.network.NetworkNode;
@@ -91,7 +90,7 @@ class KeepAliveHandler implements MessageListener {
                                 ".\n\tException=" + throwable.getMessage();
                         log.info(errorMessage);
                         cleanup();
-                        peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
+                        //peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
                         peerManager.handleConnectionFault(connection);
                         listener.onFault(errorMessage);
                     } else {
