@@ -32,7 +32,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     final int servicePort;
 
-    private final Set<InboundConnection> inBoundConnections = new HashSet<>();
+    private final CopyOnWriteArraySet<InboundConnection> inBoundConnections = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
     final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
@@ -41,7 +41,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     private volatile boolean shutDownInProgress;
     // accessed from different threads
-    private final Set<OutboundConnection> outBoundConnections = new HashSet<>();
+    private final CopyOnWriteArraySet<OutboundConnection> outBoundConnections = new CopyOnWriteArraySet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                     // Tor needs sometimes quite long to create a connection. To avoid that we get too many double 
                     // sided connections we check again if we still don't have any connection for that node address.
                     Connection existingConnection = getInboundConnection(peersNodeAddress);
-                    if (existingConnection != null)
+                    if (existingConnection == null)
                         existingConnection = getOutboundConnection(peersNodeAddress);
 
                     if (existingConnection != null) {
@@ -109,9 +109,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                         return existingConnection;
                     } else {
                         outboundConnection = new OutboundConnection(socket, NetworkNode.this, NetworkNode.this, peersNodeAddress);
-                        synchronized (outBoundConnections) {
-                            outBoundConnections.add(outboundConnection);
-                        }
+                        outBoundConnections.add(outboundConnection);
 
                         log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "NetworkNode created new outbound connection:"
@@ -157,9 +155,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
             log.trace("We have found a connection in inBoundConnections. Connection.uid=" + connection.getUid());
             if (connection.isStopped()) {
                 log.warn("We have a connection which is already stopped in inBoundConnections. Connection.uid=" + connection.getUid());
-                synchronized (inBoundConnections) {
-                    inBoundConnections.remove(connection);
-                }
+                inBoundConnections.remove(connection);
                 return null;
             } else {
                 return connection;
@@ -177,9 +173,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
             log.trace("We have found a connection in outBoundConnections. Connection.uid=" + connection.getUid());
             if (connection.isStopped()) {
                 log.warn("We have a connection which is already stopped in outBoundConnections. Connection.uid=" + connection.getUid());
-                synchronized (outBoundConnections) {
-                    outBoundConnections.remove(connection);
-                }
+                outBoundConnections.remove(connection);
                 return null;
             } else {
                 return connection;
@@ -213,13 +207,8 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     public Set<Connection> getAllConnections() {
         // Can contain inbound and outbound connections with the same peer node address, 
         // as connection hashcode is using uid and port info
-        Set<Connection> set;
-        synchronized (inBoundConnections) {
-            set = new HashSet<>(inBoundConnections);
-        }
-        synchronized (outBoundConnections) {
-            set.addAll(outBoundConnections);
-        }
+        Set<Connection> set = new HashSet<>(inBoundConnections);
+        set.addAll(outBoundConnections);
         return set;
     }
 
@@ -282,9 +271,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
             log.warn("We have the connection in our inBoundConnections. That must not happen as it should be called " +
                     "from the server listener and get removed from there.");
         printOutBoundConnections();
-        synchronized (outBoundConnections) {
-            outBoundConnections.remove(connection);
-        }
+        outBoundConnections.remove(connection);
         // inbound connections are removed in the listener of the server
         connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
     }
@@ -349,18 +336,14 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         ConnectionListener connectionListener = new ConnectionListener() {
             @Override
             public void onConnection(Connection connection) {
-                synchronized (inBoundConnections) {
-                    inBoundConnections.add((InboundConnection) connection);
-                }
+                inBoundConnections.add((InboundConnection) connection);
                 NetworkNode.this.onConnection(connection);
             }
 
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 log.trace("onDisconnect at server socket connectionListener\n\tconnection={}" + connection);
-                synchronized (inBoundConnections) {
-                    inBoundConnections.remove(connection);
-                }
+                inBoundConnections.remove(connection);
                 printInboundConnections();
                 NetworkNode.this.onDisconnect(closeConnectionReason, connection);
             }
@@ -379,13 +362,9 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     private Optional<OutboundConnection> lookupOutBoundConnection(NodeAddress peersNodeAddress) {
         log.trace("lookupOutboundConnection for peersNodeAddress={}", peersNodeAddress.getFullAddress());
         printOutBoundConnections();
-        Optional<OutboundConnection> outboundConnectionOptional;
-        synchronized (outBoundConnections) {
-            outboundConnectionOptional = outBoundConnections.stream()
-                    .filter(connection -> connection.hasPeersNodeAddress() &&
-                            peersNodeAddress.equals(connection.getPeersNodeAddressOptional().get())).findAny();
-        }
-        return outboundConnectionOptional;
+        return outBoundConnections.stream()
+                .filter(connection -> connection.hasPeersNodeAddress() &&
+                        peersNodeAddress.equals(connection.getPeersNodeAddressOptional().get())).findAny();
     }
 
     private void printOutBoundConnections() {
@@ -398,13 +377,9 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     private Optional<InboundConnection> lookupInBoundConnection(NodeAddress peersNodeAddress) {
         log.trace("lookupInboundConnection for peersNodeAddress={}", peersNodeAddress.getFullAddress());
         printInboundConnections();
-        Optional<InboundConnection> inboundConnectionOptional;
-        synchronized (inBoundConnections) {
-            inboundConnectionOptional = inBoundConnections.stream()
-                    .filter(connection -> connection.hasPeersNodeAddress() &&
-                            peersNodeAddress.equals(connection.getPeersNodeAddressOptional().get())).findAny();
-        }
-        return inboundConnectionOptional;
+        return inBoundConnections.stream()
+                .filter(connection -> connection.hasPeersNodeAddress() &&
+                        peersNodeAddress.equals(connection.getPeersNodeAddressOptional().get())).findAny();
     }
 
     private void printInboundConnections() {
