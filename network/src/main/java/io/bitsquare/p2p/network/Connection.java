@@ -420,19 +420,13 @@ public class Connection implements MessageListener {
 
         Connection that = (Connection) o;
 
-        if (portInfo != null ? !portInfo.equals(that.portInfo) : that.portInfo != null) return false;
-        //noinspection SimplifiableIfStatement
-        if (uid != null ? !uid.equals(that.uid) : that.uid != null) return false;
-        return peersNodeAddressOptional != null ? peersNodeAddressOptional.equals(that.peersNodeAddressOptional) : that.peersNodeAddressOptional == null;
+        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
 
     }
 
     @Override
     public int hashCode() {
-        int result = portInfo != null ? portInfo.hashCode() : 0;
-        result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        result = 31 * result + (peersNodeAddressOptional != null ? peersNodeAddressOptional.hashCode() : 0);
-        return result;
+        return uid != null ? uid.hashCode() : 0;
     }
 
     @Override

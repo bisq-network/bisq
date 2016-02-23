@@ -147,7 +147,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     @Nullable
     private InboundConnection getInboundConnection(@NotNull NodeAddress peersNodeAddress) {
-        Optional<InboundConnection> inboundConnectionOptional = lookupInboundConnection(peersNodeAddress);
+        Optional<InboundConnection> inboundConnectionOptional = lookupInBoundConnection(peersNodeAddress);
         if (inboundConnectionOptional.isPresent()) {
             InboundConnection connection = inboundConnectionOptional.get();
             log.trace("We have found a connection in inBoundConnections. Connection.uid=" + connection.getUid());
@@ -165,7 +165,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     @Nullable
     private OutboundConnection getOutboundConnection(@NotNull NodeAddress peersNodeAddress) {
-        Optional<OutboundConnection> outboundConnectionOptional = lookupOutboundConnection(peersNodeAddress);
+        Optional<OutboundConnection> outboundConnectionOptional = lookupOutBoundConnection(peersNodeAddress);
         if (outboundConnectionOptional.isPresent()) {
             OutboundConnection connection = outboundConnectionOptional.get();
             log.trace("We have found a connection in outBoundConnections. Connection.uid=" + connection.getUid());
@@ -264,6 +264,11 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+        log.trace("onDisconnect connectionListener\n\tconnection={}" + connection);
+        if (inBoundConnections.contains(connection))
+            log.warn("We have the connection in our inBoundConnections. That must not happen as it should be called " +
+                    "from the server listener and get removed from there.");
+        printOutBoundConnections();
         outBoundConnections.remove(connection);
         // inbound connections are removed in the listener of the server
         connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
@@ -335,7 +340,9 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+                log.trace("onDisconnect at server socket connectionListener\n\tconnection={}" + connection);
                 inBoundConnections.remove(connection);
+                printInboundConnections();
                 NetworkNode.this.onDisconnect(closeConnectionReason, connection);
             }
 
@@ -350,26 +357,34 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         executorService.submit(server);
     }
 
-    private Optional<OutboundConnection> lookupOutboundConnection(NodeAddress peersNodeAddress) {
-        StringBuilder sb = new StringBuilder("Lookup for peersNodeAddress=");
-        sb.append(peersNodeAddress.toString()).append("/ outBoundConnections.size()=")
-                .append(outBoundConnections.size()).append("/\n\toutBoundConnections=");
-        outBoundConnections.stream().forEach(e -> sb.append(e).append("\n\t"));
-        log.debug(sb.toString());
+    private Optional<OutboundConnection> lookupOutBoundConnection(NodeAddress peersNodeAddress) {
+        log.trace("lookupOutboundConnection for peersNodeAddress={}", peersNodeAddress.getFullAddress());
+        printOutBoundConnections();
         return outBoundConnections.stream()
                 .filter(connection -> connection.hasPeersNodeAddress() &&
                         peersNodeAddress.equals(connection.getPeersNodeAddressOptional().get())).findAny();
     }
 
-    private Optional<InboundConnection> lookupInboundConnection(NodeAddress peersNodeAddress) {
-        StringBuilder sb = new StringBuilder("Lookup for peersNodeAddress=");
-        sb.append(peersNodeAddress.toString()).append("/ inBoundConnections.size()=")
-                .append(inBoundConnections.size()).append("/\n\tinBoundConnections=");
-        inBoundConnections.stream().forEach(e -> sb.append(e).append("\n\t"));
+    private void printOutBoundConnections() {
+        StringBuilder sb = new StringBuilder("outBoundConnections size()=")
+                .append(outBoundConnections.size()).append("\n\toutBoundConnections=");
+        outBoundConnections.stream().forEach(e -> sb.append(e).append("\n\t"));
         log.debug(sb.toString());
+    }
+
+    private Optional<InboundConnection> lookupInBoundConnection(NodeAddress peersNodeAddress) {
+        log.trace("lookupInboundConnection for peersNodeAddress={}", peersNodeAddress.getFullAddress());
+        printInboundConnections();
         return inBoundConnections.stream()
                 .filter(connection -> connection.hasPeersNodeAddress() &&
                         peersNodeAddress.equals(connection.getPeersNodeAddressOptional().get())).findAny();
+    }
+
+    private void printInboundConnections() {
+        StringBuilder sb = new StringBuilder("inBoundConnections size()=")
+                .append(inBoundConnections.size()).append("\n\tinBoundConnections=");
+        inBoundConnections.stream().forEach(e -> sb.append(e).append("\n\t"));
+        log.debug(sb.toString());
     }
 
     abstract protected Socket createSocket(NodeAddress peersNodeAddress) throws IOException;
