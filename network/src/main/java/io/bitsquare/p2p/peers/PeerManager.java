@@ -8,7 +8,6 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.peerexchange.ReportedPeer;
 import io.bitsquare.storage.Storage;
-import javafx.beans.value.ChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,14 +18,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class PeerManager implements ConnectionListener {
-    private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
+    private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
 
-    private static final long CHECK_MAX_CONN_DELAY_SEC = 3;
-    
+    private static final long CHECK_MAX_CONN_DELAY_SEC = Timer.STRESS_TEST ? 1 : 5;
+    private static final long REMOVE_ANONYMOUS_PEER_SEC = Timer.STRESS_TEST ? 1 : 30;
+
     private static int MAX_CONNECTIONS;
     private static int MIN_CONNECTIONS;
     private static int MAX_CONNECTIONS_PEER;
@@ -46,7 +45,7 @@ public class PeerManager implements ConnectionListener {
     }
 
     static {
-        setMaxConnections(12);
+        setMaxConnections(6);
     }
 
     private static final int MAX_REPORTED_PEERS = 1000;
@@ -80,7 +79,6 @@ public class PeerManager implements ConnectionListener {
     private final HashSet<ReportedPeer> persistedPeers = new HashSet<>();
     private final Set<ReportedPeer> reportedPeers = new HashSet<>();
     private Timer checkMaxConnectionsTimer;
-    private final ChangeListener<NodeAddress> connectionNodeAddressListener;
     private final Clock.Listener listener;
     private final List<Listener> listeners = new LinkedList<>();
     private boolean stopped;
@@ -101,21 +99,6 @@ public class PeerManager implements ConnectionListener {
             log.info("We have persisted reported peers. persistedPeers.size()=" + persistedPeers.size());
             this.persistedPeers.addAll(persistedPeers);
         }
-
-        connectionNodeAddressListener = (observable, oldValue, newValue) -> {
-            // Every time we get a new peer connected with a known address we check if we need to remove peers
-            printConnectedPeers();
-            if (checkMaxConnectionsTimer == null && newValue != null)
-                checkMaxConnectionsTimer = UserThread.runAfter(() -> {
-                    if (!stopped) {
-                        removeTooOldReportedPeers();
-                        removeTooOldPersistedPeers();
-                        checkMaxConnections(MAX_CONNECTIONS);
-                    } else {
-                        log.warn("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
-                    }
-                }, CHECK_MAX_CONN_DELAY_SEC);
-        };
 
         // we check if app was idle for more then 5 sec.
         listener = new Clock.Listener() {
@@ -171,10 +154,10 @@ public class PeerManager implements ConnectionListener {
 
     @Override
     public void onConnection(Connection connection) {
-        connection.peersNodeAddressProperty().addListener(connectionNodeAddressListener);
-
         if (isSeedNode(connection))
             connection.setPeerType(Connection.PeerType.SEED_NODE);
+
+        doHouseKeeping();
 
         if (lostAllConnections) {
             lostAllConnections = false;
@@ -185,7 +168,6 @@ public class PeerManager implements ConnectionListener {
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        connection.peersNodeAddressProperty().removeListener(connectionNodeAddressListener);
         handleConnectionFault(connection);
 
         lostAllConnections = networkNode.getAllConnections().isEmpty();
@@ -201,13 +183,32 @@ public class PeerManager implements ConnectionListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Check max connections
+    // Housekeeping
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void doHouseKeeping() {
+        log.trace("Peers before doHouseKeeping");
+        printConnectedPeers();
+        if (checkMaxConnectionsTimer == null)
+            checkMaxConnectionsTimer = UserThread.runAfter(() -> {
+                stopCheckMaxConnectionsTimer();
+                if (!stopped) {
+                    removeAnonymousPeers();
+                    removeSuperfluousSeedNodes();
+                    removeTooOldReportedPeers();
+                    removeTooOldPersistedPeers();
+                    checkMaxConnections(MAX_CONNECTIONS);
+                } else {
+                    log.warn("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
+                }
+            }, CHECK_MAX_CONN_DELAY_SEC);
+
+        log.trace("Peers after doHouseKeeping");
+        printConnectedPeers();
+    }
 
     private boolean checkMaxConnections(int limit) {
         Log.traceCall("limit=" + limit);
-        stopCheckMaxConnectionsTimer();
-        removeSuperfluousSeedNodes();
         Set<Connection> allConnections = networkNode.getAllConnections();
         int size = allConnections.size();
         log.info("We have {} connections open. Our limit is {}", size, limit);
@@ -269,20 +270,36 @@ public class PeerManager implements ConnectionListener {
         }
     }
 
+    private void removeAnonymousPeers() {
+        Log.traceCall();
+        networkNode.getAllConnections().stream()
+                .filter(connection -> !connection.hasPeersNodeAddress())
+                .forEach(connection -> UserThread.runAfter(() -> {
+                    // We give 30 seconds delay and check again if still no address is set
+                    if (!connection.hasPeersNodeAddress()) {
+                        log.info("We close the connection as the peer address is still unknown.\n\t" +
+                                "connection=" + connection);
+                        connection.shutDown(CloseConnectionReason.UNKNOWN_PEER_ADDRESS);
+                    }
+                }, REMOVE_ANONYMOUS_PEER_SEC));
+    }
+
     private void removeSuperfluousSeedNodes() {
         Log.traceCall();
-        Set<Connection> connections = networkNode.getConfirmedConnections();
-        if (hasSufficientConnections()) {
-            List<Connection> candidates = connections.stream()
-                    .filter(this::isSeedNode)
-                    .collect(Collectors.toList());
+        if (networkNode.getConfirmedConnections().size() > MAX_CONNECTIONS) {
+            Set<Connection> connections = networkNode.getConfirmedConnections();
+            if (hasSufficientConnections()) {
+                List<Connection> candidates = connections.stream()
+                        .filter(this::isSeedNode)
+                        .collect(Collectors.toList());
 
-            if (candidates.size() > 1) {
-                candidates.sort((o1, o2) -> ((Long) o1.getStatistic().getLastActivityTimestamp()).compareTo(((Long) o2.getStatistic().getLastActivityTimestamp())));
-                log.info("Number of connections exceeding MAX_CONNECTIONS_EXTENDED_1. Current size=" + candidates.size());
-                Connection connection = candidates.remove(0);
-                log.info("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
-                connection.shutDown(CloseConnectionReason.TOO_MANY_SEED_NODES_CONNECTED, this::removeSuperfluousSeedNodes);
+                if (candidates.size() > 1) {
+                    candidates.sort((o1, o2) -> ((Long) o1.getStatistic().getLastActivityTimestamp()).compareTo(((Long) o2.getStatistic().getLastActivityTimestamp())));
+                    log.info("Number of connections exceeding MAX_CONNECTIONS_EXTENDED_1. Current size=" + candidates.size());
+                    Connection connection = candidates.remove(0);
+                    log.info("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
+                    connection.shutDown(CloseConnectionReason.TOO_MANY_SEED_NODES_CONNECTED, this::removeSuperfluousSeedNodes);
+                }
             }
         }
     }

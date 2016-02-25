@@ -23,8 +23,9 @@ import java.util.concurrent.TimeUnit;
 
 class KeepAliveHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveHandler.class);
-    private Timer delayTimer;
 
+    private static int DELAY_MS = Timer.STRESS_TEST ? 1000 : 5000;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -48,7 +49,8 @@ class KeepAliveHandler implements MessageListener {
     @Nullable
     private Connection connection;
     private boolean stopped;
-
+    private Timer delayTimer;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -70,7 +72,7 @@ class KeepAliveHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void sendPingAfterRandomDelay(Connection connection) {
-        delayTimer = UserThread.runAfterRandomDelay(() -> sendPing(connection), 1, 5000, TimeUnit.MILLISECONDS);
+        delayTimer = UserThread.runAfterRandomDelay(() -> sendPing(connection), 1, DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
     private void sendPing(Connection connection) {

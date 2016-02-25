@@ -22,9 +22,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PeerExchangeManager implements MessageListener, ConnectionListener, PeerManager.Listener {
     private static final Logger log = LoggerFactory.getLogger(PeerExchangeManager.class);
 
-    private static final long RETRY_DELAY_SEC = 10;
-    private static final long RETRY_DELAY_AFTER_ALL_CON_LOST_SEC = 3;
-    private static final long REQUEST_PERIODICALLY_INTERVAL_MINUTES = 10;
+    private static final long RETRY_DELAY_SEC = Timer.STRESS_TEST ? 2 : 10;
+    private static final long RETRY_DELAY_AFTER_ALL_CON_LOST_SEC = Timer.STRESS_TEST ? 1 : 3;
+    private static final long REQUEST_PERIODICALLY_INTERVAL_SEC = Timer.STRESS_TEST ? 5 : 10 * 60;
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
@@ -294,7 +294,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
         stopped = false;
         if (periodicTimer == null)
             periodicTimer = UserThread.runPeriodically(this::requestWithAvailablePeers,
-                    REQUEST_PERIODICALLY_INTERVAL_MINUTES, TimeUnit.MINUTES);
+                    REQUEST_PERIODICALLY_INTERVAL_SEC, TimeUnit.SECONDS);
         else
             log.warn("periodicTimer already started");
     }

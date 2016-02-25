@@ -46,7 +46,7 @@ public class UserThread {
     static {
         // If not defined we use same thread as caller thread
         executor = MoreExecutors.directExecutor();
-        timerClass = DefaultJavaTimer.class;
+        timerClass = FrameRateTimer.class;
     }
 
     private static Executor executor;

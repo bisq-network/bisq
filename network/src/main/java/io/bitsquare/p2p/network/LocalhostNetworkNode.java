@@ -29,7 +29,6 @@ public class LocalhostNetworkNode extends NetworkNode {
 
     private static volatile int simulateTorDelayTorNode = 100;
     private static volatile int simulateTorDelayHiddenService = 500;
-    private NodeAddress nodeAddress;
 
     public static void setSimulateTorDelayTorNode(int simulateTorDelayTorNode) {
         LocalhostNetworkNode.simulateTorDelayTorNode = simulateTorDelayTorNode;
@@ -70,18 +69,10 @@ public class LocalhostNetworkNode extends NetworkNode {
                     log.error("Exception at startServer: " + e.getMessage());
                 }
 
-                nodeAddress = new NodeAddress("localhost", servicePort);
-
+                nodeAddressProperty.set(new NodeAddress("localhost", servicePort));
                 setupListeners.stream().forEach(SetupListener::onHiddenServicePublished);
             });
         });
-    }
-
-
-    @Override
-    @Nullable
-    public NodeAddress getNodeAddress() {
-        return nodeAddress;
     }
 
     // Called from NetworkNode thread

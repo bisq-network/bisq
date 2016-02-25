@@ -141,8 +141,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (newValue)
                 onNetworkReady();
         });
-
-        numConnectedPeers.set(networkNode.getAllConnections().size());
     }
 
 
@@ -304,14 +302,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onConnection(Connection connection) {
         numConnectedPeers.set(networkNode.getAllConnections().size());
-        UserThread.runAfter(() -> numConnectedPeers.set(networkNode.getAllConnections().size()), 1);
+        UserThread.runAfter(() -> numConnectedPeers.set(networkNode.getAllConnections().size()), 3);
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
         numConnectedPeers.set(networkNode.getAllConnections().size());
-        UserThread.runAfter(() -> numConnectedPeers.set(networkNode.getAllConnections().size()), 1);
+        UserThread.runAfter(() -> numConnectedPeers.set(networkNode.getAllConnections().size()), 3);
     }
 
     @Override
@@ -715,10 +713,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     public NodeAddress getAddress() {
         return networkNode.getNodeAddress();
-    }
-
-    public Set<NodeAddress> getNodeAddressesOfConnectedPeers() {
-        return networkNode.getNodeAddressesOfConfirmedConnections();
     }
 
     public ReadOnlyIntegerProperty getNumConnectedPeers() {

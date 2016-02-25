@@ -42,7 +42,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     @VisibleForTesting
-    public static int CHECK_TTL_INTERVAL_SEC = 30;
+    public static int CHECK_TTL_INTERVAL_SEC = Timer.STRESS_TEST ? 5 : 30;
 
     private final Broadcaster broadcaster;
     private final Map<ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();

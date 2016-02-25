@@ -372,11 +372,12 @@ public class Connection implements MessageListener {
 
                         setStopFlags();
 
-                        Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+                        Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
                     } catch (Throwable t) {
                         log.error(t.getMessage());
                         t.printStackTrace();
                     } finally {
+                        setStopFlags();
                         UserThread.execute(() -> doShutDown(closeConnectionReason, shutDownCompleteHandler));
                     }
                 }).start();
@@ -384,6 +385,10 @@ public class Connection implements MessageListener {
                 setStopFlags();
                 doShutDown(closeConnectionReason, shutDownCompleteHandler);
             }
+        } else {
+            //TODO find out why we get called that
+            log.warn("stopped was already true at shutDown call");
+            UserThread.execute(() -> doShutDown(closeConnectionReason, shutDownCompleteHandler));
         }
     }
 
@@ -607,14 +612,25 @@ public class Connection implements MessageListener {
                         Object rawInputObject = objectInputStream.readObject();
 
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
-                        log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                        "New data arrived at inputHandler of connection {}.\n" +
-                                        "Received object (truncated)={} / size={}"
-                                        + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                sharedModel.connection,
-                                StringUtils.abbreviate(rawInputObject.toString(), 100),
-                                size);
+                        boolean doPrintLogs = true;
+                        if (rawInputObject instanceof Message) {
+                            Message message = (Message) rawInputObject;
+                            Connection connection = sharedModel.connection;
+                            connection.statistic.addReceivedBytes(size);
+                            connection.statistic.addReceivedMessage(message);
+                            // We dont want to get all KeepAliveMessage logged
+                            doPrintLogs = !(message instanceof KeepAliveMessage);
+                        }
 
+                        if (doPrintLogs) {
+                            log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
+                                            "New data arrived at inputHandler of connection {}.\n" +
+                                            "Received object (truncated)={} / size={}"
+                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
+                                    sharedModel.connection,
+                                    StringUtils.abbreviate(rawInputObject.toString(), 100),
+                                    size);
+                        }
 
                         if (size > getMaxMsgSize()) {
                             reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
@@ -659,25 +675,24 @@ public class Connection implements MessageListener {
                         }
 
                         Message message = (Message) serializable;
+                        Connection connection = sharedModel.connection;
+                        connection.statistic.addReceivedBytes(size);
+                        connection.statistic.addReceivedMessage(message);
+
                         if (message.getMessageVersion() != Version.getP2PMessageVersion()) {
                             reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
                             return;
                         }
 
-                        Connection connection = sharedModel.connection;
                         if (message instanceof CloseConnectionMessage) {
                             log.info("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", ((CloseConnectionMessage) message).reason, connection);
                             stop();
                             sharedModel.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                         } else if (!stopped) {
-                            connection.statistic.addReceivedBytes(size);
-                            connection.statistic.addReceivedMessage(message);
-
                             // We don't want to get the activity ts updated by ping/pong msg
                             if (!(message instanceof KeepAliveMessage))
                                 connection.statistic.updateLastActivityTimestamp();
-
 
                             // First a seed node gets a message form a peer (PreliminaryDataRequest using 
                             // AnonymousMessage interface) which does not has its hidden service 

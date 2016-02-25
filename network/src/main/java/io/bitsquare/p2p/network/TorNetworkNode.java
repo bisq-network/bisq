@@ -47,7 +47,6 @@ public class TorNetworkNode extends NetworkNode {
     private int restartCounter;
     private MonadicBinding<Boolean> allShutDown;
 
-
     // /////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     // /////////////////////////////////////////////////////////////////////////////////////////
@@ -83,20 +82,11 @@ public class TorNetworkNode extends NetworkNode {
                     hiddenServiceDescriptor -> {
                         Log.traceCall("hiddenService created");
                         TorNetworkNode.this.hiddenServiceDescriptor = hiddenServiceDescriptor;
-
+                        nodeAddressProperty.set(new NodeAddress(hiddenServiceDescriptor.getFullAddress()));
                         startServer(hiddenServiceDescriptor.getServerSocket());
                         setupListeners.stream().forEach(SetupListener::onHiddenServicePublished);
                     });
         });
-    }
-
-    @Override
-    @Nullable
-    public NodeAddress getNodeAddress() {
-        if (hiddenServiceDescriptor != null)
-            return new NodeAddress(hiddenServiceDescriptor.getFullAddress());
-        else
-            return null;
     }
 
     @Override

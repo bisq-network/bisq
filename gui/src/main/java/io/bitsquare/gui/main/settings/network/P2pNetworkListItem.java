@@ -30,8 +30,8 @@ import org.fxmisc.easybind.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NetworkStatisticListItem {
-    private static final Logger log = LoggerFactory.getLogger(NetworkStatisticListItem.class);
+public class P2pNetworkListItem {
+    private static final Logger log = LoggerFactory.getLogger(P2pNetworkListItem.class);
 
     private final Statistic statistic;
     private final Connection connection;
@@ -42,9 +42,12 @@ public class NetworkStatisticListItem {
     private final StringProperty lastActivity = new SimpleStringProperty();
     private final StringProperty sentBytes = new SimpleStringProperty();
     private final StringProperty receivedBytes = new SimpleStringProperty();
+    private final StringProperty peerType = new SimpleStringProperty();
+    private final StringProperty connectionType = new SimpleStringProperty();
+    private final StringProperty onionAddress = new SimpleStringProperty();
     private final Clock.Listener listener;
 
-    public NetworkStatisticListItem(Connection connection, Clock clock, BSFormatter formatter) {
+    public P2pNetworkListItem(Connection connection, Clock clock, BSFormatter formatter) {
         this.connection = connection;
         this.clock = clock;
         this.formatter = formatter;
@@ -59,6 +62,9 @@ public class NetworkStatisticListItem {
             @Override
             public void onSecondTick() {
                 onLastActivityChanged(statistic.getLastActivityTimestamp());
+                updatePeerType();
+                updateConnectionType();
+                updateOnionAddress();
             }
 
             @Override
@@ -71,6 +77,9 @@ public class NetworkStatisticListItem {
         };
         clock.addListener(listener);
         onLastActivityChanged(statistic.getLastActivityTimestamp());
+        updatePeerType();
+        updateConnectionType();
+        updateOnionAddress();
     }
 
     private void onLastActivityChanged(long timeStamp) {
@@ -83,28 +92,50 @@ public class NetworkStatisticListItem {
         clock.removeListener(listener);
     }
 
-    public String getOnionAddress() {
-        if (connection.getPeersNodeAddressOptional().isPresent())
-            return connection.getPeersNodeAddressOptional().get().getFullAddress();
-        else
-            return "";
+    public void updateOnionAddress() {
+        onionAddress.set(connection.getPeersNodeAddressOptional().isPresent() ?
+                connection.getPeersNodeAddressOptional().get().getFullAddress() : "Not known yet");
     }
 
-    public String getConnectionType() {
-        return connection instanceof OutboundConnection ? "outbound" : "inbound";
+    public void updateConnectionType() {
+        connectionType.set(connection instanceof OutboundConnection ? "outbound" : "inbound");
+    }
+
+    public void updatePeerType() {
+        if (connection.getPeerType() == Connection.PeerType.SEED_NODE)
+            peerType.set("Seed node");
+        else if (connection.getPeerType() == Connection.PeerType.DIRECT_MSG_PEER)
+            peerType.set("Peer (direct)");
+        else
+            peerType.set("Peer");
     }
 
     public String getCreationDate() {
         return formatter.formatDateTime(statistic.getCreationDate());
     }
 
+    public String getOnionAddress() {
+        return onionAddress.get();
+    }
+
+    public StringProperty getOnionAddressProperty() {
+        return onionAddress;
+    }
+
+    public String getConnectionType() {
+        return connectionType.get();
+    }
+
+    public StringProperty getConnectionTypeProperty() {
+        return connectionType;
+    }
+
     public String getPeerType() {
-        if (connection.getPeerType() == Connection.PeerType.SEED_NODE)
-            return "Seed node";
-        else if (connection.getPeerType() == Connection.PeerType.DIRECT_MSG_PEER)
-            return "Peer (direct)";
-        else
-            return "Peer";
+        return peerType.get();
+    }
+
+    public StringProperty getPeerTypeProperty() {
+        return peerType;
     }
 
     public String getLastActivity() {

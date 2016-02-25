@@ -28,7 +28,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 class PeerExchangeHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(PeerExchangeHandler.class);
 
-    private static final long TIME_OUT_SEC = 20;
+    private static final long TIME_OUT_SEC = Timer.STRESS_TEST ? 5 : 20;
+    private static int DELAY_MS = Timer.STRESS_TEST ? 1000 : 3000;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +78,7 @@ class PeerExchangeHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void sendGetPeersRequestAfterRandomDelay(NodeAddress nodeAddress) {
-        delayTimer = UserThread.runAfterRandomDelay(() -> sendGetPeersRequest(nodeAddress), 1, 3000, TimeUnit.MILLISECONDS);
+        delayTimer = UserThread.runAfterRandomDelay(() -> sendGetPeersRequest(nodeAddress), 1, DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
     private void sendGetPeersRequest(NodeAddress nodeAddress) {

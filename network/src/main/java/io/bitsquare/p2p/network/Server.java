@@ -54,6 +54,8 @@ class Server implements Runnable {
 
                         if (!stopped)
                             connections.add(connection);
+                        else
+                            connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
                     }
                 }
             } catch (IOException e) {
@@ -83,6 +85,8 @@ class Server implements Runnable {
             } finally {
                 log.info("Server shutdown complete");
             }
+        } else {
+            log.warn("stopped already called ast shutdown");
         }
     }
 }

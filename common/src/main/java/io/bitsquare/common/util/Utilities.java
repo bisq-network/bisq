@@ -60,8 +60,8 @@ public class Utilities {
     public static ListeningExecutorService getListeningExecutorService(String name,
                                                                        int corePoolSize,
                                                                        int maximumPoolSize,
-                                                                       long keepAliveTime) {
-        return MoreExecutors.listeningDecorator(getThreadPoolExecutor(name, corePoolSize, maximumPoolSize, keepAliveTime));
+                                                                       long keepAliveTimeInSec) {
+        return MoreExecutors.listeningDecorator(getThreadPoolExecutor(name, corePoolSize, maximumPoolSize, keepAliveTimeInSec));
     }
 
     public static ThreadPoolExecutor getThreadPoolExecutor(String name,

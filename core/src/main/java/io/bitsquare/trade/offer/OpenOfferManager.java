@@ -60,10 +60,10 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener {
     private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
-    private static final long RETRY_REPUBLISH_DELAY_SEC = 5;
-    private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 10;
-    private static final long REPUBLISH_INTERVAL_MILLIS = 10 * Offer.TTL;
-    private static final long REFRESH_INTERVAL_MILLIS = (long) (Offer.TTL * 0.5);
+    private static final long RETRY_REPUBLISH_DELAY_SEC = Timer.STRESS_TEST ? 1 : 5;
+    private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = Timer.STRESS_TEST ? 1 : 10;
+    private static final long REPUBLISH_INTERVAL_MS = Timer.STRESS_TEST ? 3000 : 10 * Offer.TTL;
+    private static final long REFRESH_INTERVAL_MS = Timer.STRESS_TEST ? 1000 : (long) (Offer.TTL * 0.5);
 
     private final KeyRing keyRing;
     private final User user;
@@ -404,7 +404,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             log.warn("We have stopped already. We ignore that periodicRepublishOffersTimer.run call.");
                         }
                     },
-                    REPUBLISH_INTERVAL_MILLIS,
+                    REPUBLISH_INTERVAL_MS,
                     TimeUnit.MILLISECONDS);
         else
             log.trace("periodicRepublishOffersTimer already stated");
@@ -425,7 +425,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             log.warn("We have stopped already. We ignore that periodicRefreshOffersTimer.run call.");
                         }
                     },
-                    REFRESH_INTERVAL_MILLIS,
+                    REFRESH_INTERVAL_MS,
                     TimeUnit.MILLISECONDS);
         else
             log.trace("periodicRefreshOffersTimer already stated");
