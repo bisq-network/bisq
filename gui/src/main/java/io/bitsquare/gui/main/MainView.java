@@ -279,7 +279,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         // createBitcoinInfoBox
         btcSplashInfo = new Label();
-        btcSplashInfo.textProperty().bind(model.btcSplashInfo);
+        btcSplashInfo.textProperty().bind(model.btcInfo);
         walletServiceErrorMsgListener = (ov, oldValue, newValue) -> {
             btcSplashInfo.setId("splash-error-state-msg");
         };
@@ -329,7 +329,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 splashP2PNetworkIndicator.setVisible(false);
             }
         };
-        model.p2PNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
+        model.p2pNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
 
 
         ImageView splashP2PNetworkIcon = new ImageView();
@@ -367,7 +367,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.walletServiceErrorMsg.removeListener(walletServiceErrorMsgListener);
         model.btcSplashSyncIconId.removeListener(btcSyncIconIdListener);
 
-        model.p2PNetworkWarnMsg.removeListener(splashP2PNetworkErrorMsgListener);
+        model.p2pNetworkWarnMsg.removeListener(splashP2PNetworkErrorMsgListener);
         model.p2PNetworkIconId.removeListener(splashP2PNetworkIconIdListener);
         model.splashP2PNetworkProgress.removeListener(splashP2PNetworkProgressListener);
 
@@ -393,7 +393,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         // BTC
         Label btcInfoLabel = new Label();
         btcInfoLabel.setId("footer-pane");
-        btcInfoLabel.textProperty().bind(model.btcFooterInfo);
+        btcInfoLabel.textProperty().bind(model.btcInfo);
 
         ProgressBar blockchainSyncIndicator = new ProgressBar(-1);
         blockchainSyncIndicator.setPrefWidth(120);
@@ -450,8 +450,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         setBottomAnchor(p2PNetworkIcon, 7d);
         p2PNetworkIcon.setOpacity(0.4);
         p2PNetworkIcon.idProperty().bind(model.p2PNetworkIconId);
-        p2PNetworkLabel.idProperty().bind(model.p2PNetworkLabelId);
-        model.p2PNetworkWarnMsg.addListener((ov, oldValue, newValue) -> {
+        p2PNetworkLabel.idProperty().bind(model.p2pNetworkLabelId);
+        model.p2pNetworkWarnMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 p2PNetworkWarnMsgPopup = new Popup().warning(newValue);
                 p2PNetworkWarnMsgPopup.show();
