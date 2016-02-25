@@ -89,7 +89,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                         ByteArray hashOfPayload = entry.getKey();
                         ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
                         toRemoveSet.add(protectedStorageEntry);
-                        log.warn("We found an expired data entry. We remove the protectedData:\n\t" + protectedStorageEntry);
+                        log.info("We found an expired data entry. We remove the protectedData:\n\t" + protectedStorageEntry);
                         map.remove(hashOfPayload);
                     });
 
@@ -254,7 +254,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     map.values().stream().forEach(e -> sb.append("\n").append(StringUtils.abbreviate(e.toString(), 100)));
                     sb.append("\n------------------------------------------------------------\n");
                     log.trace(sb.toString());
-                    log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
+                    log.info("Data set after refreshTTL: size=" + map.values().size());
 
                     broadcast(refreshTTLMessage, sender, null);
                 } else {
@@ -388,15 +388,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         map.values().stream().forEach(e -> sb.append("\n").append(StringUtils.abbreviate(e.toString(), 100)));
         sb.append("\n------------------------------------------------------------\n");
         log.trace(sb.toString());
-        log.info("Data set after addProtectedExpirableData: size=" + map.values().size());
+        log.info("Data set after doRemoveProtectedExpirableData: size=" + map.values().size());
     }
 
     private boolean isSequenceNrValid(int newSequenceNumber, ByteArray hashOfData) {
         if (sequenceNumberMap.containsKey(hashOfData)) {
             Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
             if (newSequenceNumber < storedSequenceNumber) {
-                log.warn("Sequence number is invalid. sequenceNumber = "
-                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
+                log.info("Sequence number is invalid. sequenceNumber = "
+                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
+                        "That can happen if the data owner gets an old delayed data storage message.");
                 return false;
             } else {
                 return true;

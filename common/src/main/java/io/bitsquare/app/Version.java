@@ -28,26 +28,22 @@ public class Version {
 
     // The version nr. for the objects sent over the network. A change will break the serialization of old objects.
     // If objects are used for both network and database the network version is applied.
-    public static final long P2P_NETWORK_VERSION = 2;
+    public static final int P2P_NETWORK_VERSION = 2;
 
     // The version nr. of the serialized data stored to disc. A change will break the serialization of old objects.
-    public static final long LOCAL_DB_VERSION = 2;
+    public static final int LOCAL_DB_VERSION = 2;
 
     // The version nr. of the current protocol. The offer holds that version. 
     // A taker will check the version of the offers to see if his version is compatible.
-    public static final long TRADE_PROTOCOL_VERSION = 1;
+    public static final int TRADE_PROTOCOL_VERSION = 1;
+    private static int p2pMessageVersion;
 
 
     public static int getP2PMessageVersion() {
         // TODO investigate why a changed NETWORK_PROTOCOL_VERSION for the serialized objects does not trigger 
         // reliable a disconnect., but java serialisation should be replaced anyway, so using one existing field
         // for the version is fine.
-
-        // BTC_NETWORK_ID  is 0, 1 or 2, we use for changes at NETWORK_PROTOCOL_VERSION a multiplication with 10 
-        // to avoid conflicts:
-        // E.g. btc BTC_NETWORK_ID=1, NETWORK_PROTOCOL_VERSION=1 -> getNetworkId()=2;
-        // BTC_NETWORK_ID=0, NETWORK_PROTOCOL_VERSION=2 -> getNetworkId()=2; -> wrong
-        return BTC_NETWORK_ID + 10 * (int) P2P_NETWORK_VERSION;
+        return p2pMessageVersion;
     }
 
     // The version for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
@@ -55,6 +51,12 @@ public class Version {
 
     public static void setBtcNetworkId(int btcNetworkId) {
         BTC_NETWORK_ID = btcNetworkId;
+
+        // BTC_NETWORK_ID  is 0, 1 or 2, we use for changes at NETWORK_PROTOCOL_VERSION a multiplication with 10 
+        // to avoid conflicts:
+        // E.g. btc BTC_NETWORK_ID=1, NETWORK_PROTOCOL_VERSION=1 -> getNetworkId()=2;
+        // BTC_NETWORK_ID=0, NETWORK_PROTOCOL_VERSION=2 -> getNetworkId()=2; -> wrong
+        p2pMessageVersion = BTC_NETWORK_ID + 10 * P2P_NETWORK_VERSION;
     }
 
     public static int getBtcNetworkId() {

@@ -74,7 +74,7 @@ public class PoloniexPriceProvider implements PriceProvider {
 
     @Override
     public String toString() {
-        return "BitcoinAveragePriceProvider{" +
+        return "PoloniexPriceProvider{" +
                 '}';
     }
 }

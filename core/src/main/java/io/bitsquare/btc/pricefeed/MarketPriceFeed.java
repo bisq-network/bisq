@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
+import io.bitsquare.app.Log;
 import io.bitsquare.btc.pricefeed.providers.BitcoinAveragePriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PoloniexPriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PriceProvider;
@@ -74,6 +75,7 @@ public class MarketPriceFeed {
         this.faultHandler = faultHandler;
 
         requestAllPrices(fiatPriceProvider, () -> {
+            log.trace("requestAllPrices result");
             applyPrice();
             UserThread.runPeriodically(() -> requestPrice(fiatPriceProvider), PERIOD_FIAT_SEC);
         });
@@ -144,7 +146,7 @@ public class MarketPriceFeed {
     }
 
     private void requestPrice(PriceProvider provider) {
-        //Log.traceCall();
+        Log.traceCall();
         GetPriceRequest getPriceRequest = new GetPriceRequest();
         SettableFuture<MarketPrice> future = getPriceRequest.requestPrice(currencyCode, provider);
         Futures.addCallback(future, new FutureCallback<MarketPrice>() {
@@ -163,7 +165,7 @@ public class MarketPriceFeed {
     }
 
     private void requestAllPrices(PriceProvider provider, @Nullable Runnable resultHandler) {
-        // Log.traceCall();
+        Log.traceCall();
         GetPriceRequest getPriceRequest = new GetPriceRequest();
         SettableFuture<Map<String, MarketPrice>> future = getPriceRequest.requestAllPrices(provider);
         Futures.addCallback(future, new FutureCallback<Map<String, MarketPrice>>() {

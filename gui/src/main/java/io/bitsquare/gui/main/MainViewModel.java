@@ -267,6 +267,8 @@ public class MainViewModel implements ViewModel {
                 // Other disconnects might be caused by peers running an older version
                 if (connection.getPeerType() == Connection.PeerType.SEED_NODE &&
                         closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
+                    log.warn("onDisconnect closeConnectionReason=" + closeConnectionReason);
+                    log.warn("onDisconnect connection=" + connection);
                     new Popup()
                             .warning("You got disconnected from a seed node.\n\n" +
                                     "Reason for getting disconnected: " + connection.getRuleViolation().name() + "\n\n" +

@@ -117,22 +117,24 @@ public abstract class NetworkNode implements MessageListener {
                                 new ConnectionListener() {
                                     @Override
                                     public void onConnection(Connection connection) {
-                                        outBoundConnections.add((OutboundConnection) connection);
-                                        printOutBoundConnections();
-                                        connectionListeners.stream().forEach(e -> e.onConnection(connection));
+                                        if (!connection.isStopped()) {
+                                            outBoundConnections.add((OutboundConnection) connection);
+                                            printOutBoundConnections();
+                                            connectionListeners.stream().forEach(e -> e.onConnection(connection));
+                                        }
                                     }
 
                                     @Override
                                     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                                         log.trace("onDisconnect connectionListener\n\tconnection={}" + connection);
-                                        printOutBoundConnections();
                                         outBoundConnections.remove(connection);
-
+                                        printOutBoundConnections();
                                         connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
                                     }
 
                                     @Override
                                     public void onError(Throwable throwable) {
+                                        log.error("new OutboundConnection.ConnectionListener.onError " + throwable.getMessage());
                                         connectionListeners.stream().forEach(e -> e.onError(throwable));
                                     }
                                 }, peersNodeAddress);
@@ -341,9 +343,11 @@ public abstract class NetworkNode implements MessageListener {
                 new ConnectionListener() {
                     @Override
                     public void onConnection(Connection connection) {
-                        inBoundConnections.add((InboundConnection) connection);
-                        printInboundConnections();
-                        connectionListeners.stream().forEach(e -> e.onConnection(connection));
+                        if (!connection.isStopped()) {
+                            inBoundConnections.add((InboundConnection) connection);
+                            printInboundConnections();
+                            connectionListeners.stream().forEach(e -> e.onConnection(connection));
+                        }
                     }
 
                     @Override
@@ -356,6 +360,7 @@ public abstract class NetworkNode implements MessageListener {
 
                     @Override
                     public void onError(Throwable throwable) {
+                        log.error("server.ConnectionListener.onError " + throwable.getMessage());
                         connectionListeners.stream().forEach(e -> e.onError(throwable));
                     }
                 });

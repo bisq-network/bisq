@@ -32,7 +32,7 @@ public class RequestDataHandler implements MessageListener {
 
     private static final long TIME_OUT_SEC = Timer.STRESS_TEST ? 5 : 20;
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -120,19 +120,20 @@ public class RequestDataHandler implements MessageListener {
                 }
             });
 
-            checkArgument(timeoutTimer == null, "requestData must not be called twice.");
-            timeoutTimer = UserThread.runAfter(() -> {
-                        if (!stopped) {
-                            String errorMessage = "A timeout occurred at sending getDataRequest:" + getDataRequest +
-                                    " on nodeAddress:" + nodeAddress;
-                            log.info(errorMessage + " / RequestDataHandler=" + RequestDataHandler.this);
-                            handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
-                        } else {
-                            log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
-                                    "Might be caused by an previous networkNode.sendMessage.onFailure.");
-                        }
-                    },
-                    TIME_OUT_SEC);
+            if (timeoutTimer == null) {
+                timeoutTimer = UserThread.runAfter(() -> {
+                            if (!stopped) {
+                                String errorMessage = "A timeout occurred at sending getDataRequest:" + getDataRequest +
+                                        " on nodeAddress:" + nodeAddress;
+                                log.info(errorMessage + " / RequestDataHandler=" + RequestDataHandler.this);
+                                handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
+                            } else {
+                                log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
+                                        "Might be caused by an previous networkNode.sendMessage.onFailure.");
+                            }
+                        },
+                        TIME_OUT_SEC);
+            }
         } else {
             log.warn("We have stopped already. We ignore that requestData call.");
         }

@@ -242,6 +242,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 log.trace("requestDataHandshake with outbound connection failed.\n\tnodeAddress={}\n\t" +
                                         "ErrorMessage={}", nodeAddress, errorMessage);
 
+                                peerManager.handleConnectionFault(nodeAddress);
                                 handlerMap.remove(nodeAddress);
 
                                 if (!remainingNodeAddresses.isEmpty()) {

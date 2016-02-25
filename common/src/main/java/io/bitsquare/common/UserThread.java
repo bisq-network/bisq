@@ -74,8 +74,8 @@ public class UserThread {
         return getTimer().runLater(Duration.ofMillis(timeUnit.toMillis(delay)), runnable);
     }
 
-    public static Timer runPeriodically(Runnable runnable, long interval) {
-        return UserThread.runPeriodically(runnable, interval, TimeUnit.SECONDS);
+    public static Timer runPeriodically(Runnable runnable, long intervalInSec) {
+        return UserThread.runPeriodically(runnable, intervalInSec, TimeUnit.SECONDS);
     }
 
     public static Timer runPeriodically(Runnable runnable, long interval, TimeUnit timeUnit) {

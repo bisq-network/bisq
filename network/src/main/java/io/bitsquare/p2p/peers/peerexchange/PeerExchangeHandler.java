@@ -23,8 +23,6 @@ import javax.annotation.Nullable;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 class PeerExchangeHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(PeerExchangeHandler.class);
 
@@ -118,21 +116,22 @@ class PeerExchangeHandler implements MessageListener {
                     }
                 });
 
-                checkArgument(timeoutTimer == null, "requestReportedPeers must not be called twice.");
-                timeoutTimer = UserThread.runAfter(() -> {
-                            if (!stopped) {
-                                String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
-                                log.info(errorMessage + " / PeerExchangeHandler=" +
-                                        PeerExchangeHandler.this);
-                                log.info("timeoutTimer called on " + this);
-                                handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
-                            } else {
-                                log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");
-                            }
-                        },
-                        TIME_OUT_SEC, TimeUnit.SECONDS);
+                if (timeoutTimer == null) {
+                    timeoutTimer = UserThread.runAfter(() -> {
+                                if (!stopped) {
+                                    String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
+                                    log.info(errorMessage + " / PeerExchangeHandler=" +
+                                            PeerExchangeHandler.this);
+                                    log.info("timeoutTimer called on " + this);
+                                    handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
+                                } else {
+                                    log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");
+                                }
+                            },
+                            TIME_OUT_SEC, TimeUnit.SECONDS);
+                }
             } else {
-                log.warn("My node address is still null at sendGetPeersRequest. We ignore that call.");
+                log.debug("My node address is still null at sendGetPeersRequest. We ignore that call.");
             }
         } else {
             log.trace("We have stopped that handler already. We ignore that sendGetPeersRequest call.");

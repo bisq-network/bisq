@@ -196,6 +196,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                                 log.trace("PeerExchangeHandshake of outbound connection failed.\n\terrorMessage={}\n\t" +
                                         "nodeAddress={}", errorMessage, nodeAddress);
 
+                                peerManager.handleConnectionFault(nodeAddress);
                                 handlerMap.remove(nodeAddress);
                                 if (!remainingNodeAddresses.isEmpty()) {
                                     if (!peerManager.hasSufficientConnections()) {
@@ -295,8 +296,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
         if (periodicTimer == null)
             periodicTimer = UserThread.runPeriodically(this::requestWithAvailablePeers,
                     REQUEST_PERIODICALLY_INTERVAL_SEC, TimeUnit.SECONDS);
-        else
-            log.warn("periodicTimer already started");
     }
 
     private void restart() {

@@ -66,8 +66,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                 stopped = false;
                 keepAlive();
             }, INTERVAL_SEC);
-        else
-            log.warn("keepAliveTimer already running");
     }
 
 
@@ -97,7 +95,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                                     "Exception: " + throwable.getMessage();
                             log.info(errorMessage);
                             peerManager.handleConnectionFault(connection);
-                            // peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
                         } else {
                             log.warn("We have stopped already. We ignore that  networkNode.sendMessage.onFailure call.");
                         }

@@ -9,7 +9,6 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
@@ -31,6 +30,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -77,6 +78,7 @@ public class Connection implements MessageListener {
     private final String portInfo;
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    private final ReentrantLock objectOutputStreamLock = new ReentrantLock(true);
     // holder of state shared between InputHandler and Connection
     private final SharedModel sharedModel;
     private final Statistic statistic;
@@ -88,11 +90,6 @@ public class Connection implements MessageListener {
     // mutable data, set from other threads but not changed internally.
     private Optional<NodeAddress> peersNodeAddressOptional = Optional.empty();
     private volatile boolean stopped;
-
-    //TODO got java.util.zip.DataFormatException: invalid distance too far back
-    // java.util.zip.DataFormatException: invalid literal/lengths set
-    // use GZIPInputStream but problems with blocking
-    private final boolean useCompression = false;
     private PeerType peerType;
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
     private final List<Tuple2<Long, Serializable>> messageTimeStamps = new ArrayList<>();
@@ -134,9 +131,8 @@ public class Connection implements MessageListener {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 
-
             // We create a thread for handling inputStream data
-            inputHandler = new InputHandler(sharedModel, objectInputStream, portInfo, this, useCompression);
+            inputHandler = new InputHandler(sharedModel, objectInputStream, portInfo, this);
             singleThreadExecutor.submit(inputHandler);
         } catch (IOException e) {
             sharedModel.handleConnectionException(e);
@@ -180,22 +176,10 @@ public class Connection implements MessageListener {
                             peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100), size);
                 }
 
-                Object objectToWrite;
-                //noinspection ConstantConditions
-                if (useCompression) {
-                    byte[] messageAsBytes = ByteArrayUtils.objectToByteArray(message);
-                    // log.trace("Write object uncompressed data size: " + messageAsBytes.length);
-                    @SuppressWarnings("UnnecessaryLocalVariable") byte[] compressed = Utils.compress(message);
-                    //log.trace("Write object compressed data size: " + compressed.length);
-                    objectToWrite = compressed;
-                } else {
-                    // log.trace("Write object data size: " + ByteArrayUtils.objectToByteArray(message).length);
-                    objectToWrite = message;
-                }
                 if (!stopped) {
-                    objectOutputStream.writeObject(objectToWrite);
+                    objectOutputStreamLock.lock();
+                    objectOutputStream.writeObject(message);
                     objectOutputStream.flush();
-
 
                     statistic.addSentBytes(size);
                     statistic.addSentMessage(message);
@@ -207,6 +191,13 @@ public class Connection implements MessageListener {
             } catch (IOException e) {
                 // an exception lead to a shutdown
                 sharedModel.handleConnectionException(e);
+            } catch (Throwable t) {
+                log.error(t.getMessage());
+                t.printStackTrace();
+                sharedModel.handleConnectionException(t);
+            } finally {
+                if (objectOutputStreamLock.isLocked())
+                    objectOutputStreamLock.unlock();
             }
         } else {
             log.debug("called sendMessage but was already stopped");
@@ -227,8 +218,8 @@ public class Connection implements MessageListener {
     }
 
     @SuppressWarnings("unused")
-    public void reportIllegalRequest(RuleViolation ruleViolation) {
-        sharedModel.reportInvalidRequest(ruleViolation);
+    public boolean reportIllegalRequest(RuleViolation ruleViolation) {
+        return sharedModel.reportInvalidRequest(ruleViolation);
     }
 
     private boolean violatesThrottleLimit(Serializable serializable) {
@@ -242,8 +233,12 @@ public class Connection implements MessageListener {
             violated = now - compareValue < TimeUnit.SECONDS.toMillis(1);
             if (violated) {
                 log.error("violatesThrottleLimit 1 ");
+                log.error("elapsed " + (now - compareValue));
+                log.error("now " + now);
                 log.error("compareValue " + compareValue);
-                log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream().map(e -> e.second.toString() + "\n\t").toString());
+                log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
+                        .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.toString())
+                        .collect(Collectors.toList()).toString());
             }
         }
 
@@ -341,6 +336,7 @@ public class Connection implements MessageListener {
     public Statistic getStatistic() {
         return statistic;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ShutDown
@@ -453,7 +449,6 @@ public class Connection implements MessageListener {
                 ", uid='" + uid + '\'' +
                 ", sharedSpace=" + sharedModel.toString() +
                 ", stopped=" + stopped +
-                ", useCompression=" + useCompression +
                 '}';
     }
 
@@ -483,7 +478,7 @@ public class Connection implements MessageListener {
             this.socket = socket;
         }
 
-        public void reportInvalidRequest(RuleViolation ruleViolation) {
+        public boolean reportInvalidRequest(RuleViolation ruleViolation) {
             log.warn("We got reported an corrupt request " + ruleViolation + "\n\tconnection=" + this);
             int numRuleViolations;
             if (ruleViolations.contains(ruleViolation))
@@ -502,8 +497,9 @@ public class Connection implements MessageListener {
                         "connection={}", numRuleViolations, ruleViolation, ruleViolations.toString(), connection);
                 this.ruleViolation = ruleViolation;
                 shutDown(CloseConnectionReason.RULE_VIOLATION);
+                return true;
             } else {
-                ruleViolations.put(ruleViolation, ++numRuleViolations);
+                return false;
             }
         }
 
@@ -577,12 +573,10 @@ public class Connection implements MessageListener {
         private final ObjectInputStream objectInputStream;
         private final String portInfo;
         private final MessageListener messageListener;
-        private final boolean useCompression;
 
         private volatile boolean stopped;
 
-        public InputHandler(SharedModel sharedModel, ObjectInputStream objectInputStream, String portInfo, MessageListener messageListener, boolean useCompression) {
-            this.useCompression = useCompression;
+        public InputHandler(SharedModel sharedModel, ObjectInputStream objectInputStream, String portInfo, MessageListener messageListener) {
             this.sharedModel = sharedModel;
             this.objectInputStream = objectInputStream;
             this.portInfo = portInfo;
@@ -633,40 +627,21 @@ public class Connection implements MessageListener {
                         }
 
                         if (size > getMaxMsgSize()) {
-                            reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
-                            return;
+                            if (reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
+                                return;
                         }
 
                         Serializable serializable;
-                        if (useCompression) {
-                            if (rawInputObject instanceof byte[]) {
-                                byte[] compressedObjectAsBytes = (byte[]) rawInputObject;
-                                size = compressedObjectAsBytes.length;
-                                //log.trace("Read object compressed data size: " + size);
-                                serializable = Utils.decompress(compressedObjectAsBytes);
-                            } else {
-                                reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
-                                return;
-                            }
+                        if (rawInputObject instanceof Serializable) {
+                            serializable = (Serializable) rawInputObject;
                         } else {
-                            if (rawInputObject instanceof Serializable) {
-                                serializable = (Serializable) rawInputObject;
-                            } else {
-                                reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
-                                return;
-                            }
-                        }
-                        //log.trace("Read object decompressed data size: " + ByteArrayUtils.objectToByteArray(serializable).length);
-
-                        // compressed size might be bigger theoretically so we check again after decompression
-                        if (size > getMaxMsgSize()) {
-                            reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
+                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                             return;
                         }
 
                         if (sharedModel.connection.violatesThrottleLimit(serializable)) {
-                            reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED);
-                            return;
+                            if (reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
+                                return;
                         }
 
                         if (!(serializable instanceof Message)) {
@@ -680,6 +655,9 @@ public class Connection implements MessageListener {
                         connection.statistic.addReceivedMessage(message);
 
                         if (message.getMessageVersion() != Version.getP2PMessageVersion()) {
+                            log.warn("message.getMessageVersion()=" + message.getMessageVersion());
+                            log.warn("message=" + message);
+                            log.warn("Version.getP2PMessageVersion()=" + Version.getP2PMessageVersion());
                             reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
                             return;
                         }
@@ -745,9 +723,11 @@ public class Connection implements MessageListener {
             }
         }
 
-        private void reportInvalidRequest(RuleViolation ruleViolation) {
-            sharedModel.reportInvalidRequest(ruleViolation);
-            stop();
+        private boolean reportInvalidRequest(RuleViolation ruleViolation) {
+            boolean causedShutDown = sharedModel.reportInvalidRequest(ruleViolation);
+            if (causedShutDown)
+                stop();
+            return causedShutDown;
         }
 
         @Override

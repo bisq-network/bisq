@@ -97,8 +97,8 @@ public final class PubKeyRing implements Payload {
     @Override
     public String toString() {
         return "PubKeyRing{" +
-                "signaturePubKey.hashCode()=" + signaturePubKey.hashCode() +
-                ", encryptionPubKey.hashCode()=" + encryptionPubKey.hashCode() +
+                "signaturePubKey.hashCode()=" + (signaturePubKey != null ? signaturePubKey.hashCode() : "") +
+                ", encryptionPubKey.hashCode()=" + (encryptionPubKey != null ? encryptionPubKey.hashCode() : "") +
                 '}';
     }
 

@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -45,7 +46,7 @@ public class PeerManager implements ConnectionListener {
     }
 
     static {
-        setMaxConnections(6);
+        setMaxConnections(12);
     }
 
     private static final int MAX_REPORTED_PEERS = 1000;
@@ -80,7 +81,7 @@ public class PeerManager implements ConnectionListener {
     private final Set<ReportedPeer> reportedPeers = new HashSet<>();
     private Timer checkMaxConnectionsTimer;
     private final Clock.Listener listener;
-    private final List<Listener> listeners = new LinkedList<>();
+    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     private boolean stopped;
 
 
@@ -187,9 +188,8 @@ public class PeerManager implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void doHouseKeeping() {
-        log.trace("Peers before doHouseKeeping");
-        printConnectedPeers();
-        if (checkMaxConnectionsTimer == null)
+        if (checkMaxConnectionsTimer == null) {
+            printConnectedPeers();
             checkMaxConnectionsTimer = UserThread.runAfter(() -> {
                 stopCheckMaxConnectionsTimer();
                 if (!stopped) {
@@ -203,8 +203,7 @@ public class PeerManager implements ConnectionListener {
                 }
             }, CHECK_MAX_CONN_DELAY_SEC);
 
-        log.trace("Peers after doHouseKeeping");
-        printConnectedPeers();
+        }
     }
 
     private boolean checkMaxConnections(int limit) {
@@ -256,7 +255,8 @@ public class PeerManager implements ConnectionListener {
                 log.info("Candidates.size() for shut down=" + candidates.size());
                 Connection connection = candidates.remove(0);
                 log.info("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
-                connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> checkMaxConnections(limit));
+                if (!connection.isStopped())
+                    connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> checkMaxConnections(limit));
                 return true;
             } else {
                 log.warn("No candidates found to remove (That case should not be possible as we use in the " +
@@ -276,7 +276,7 @@ public class PeerManager implements ConnectionListener {
                 .filter(connection -> !connection.hasPeersNodeAddress())
                 .forEach(connection -> UserThread.runAfter(() -> {
                     // We give 30 seconds delay and check again if still no address is set
-                    if (!connection.hasPeersNodeAddress()) {
+                    if (!connection.hasPeersNodeAddress() && !connection.isStopped()) {
                         log.info("We close the connection as the peer address is still unknown.\n\t" +
                                 "connection=" + connection);
                         connection.shutDown(CloseConnectionReason.UNKNOWN_PEER_ADDRESS);
@@ -315,6 +315,7 @@ public class PeerManager implements ConnectionListener {
         return contained;
     }
 
+    @Nullable
     private ReportedPeer removeReportedPeer(NodeAddress nodeAddress) {
         Optional<ReportedPeer> reportedPeerOptional = reportedPeers.stream()
                 .filter(e -> e.nodeAddress.equals(nodeAddress)).findAny();
@@ -421,9 +422,13 @@ public class PeerManager implements ConnectionListener {
     }
 
     private boolean removePersistedPeer(NodeAddress nodeAddress) {
-        Optional<ReportedPeer> persistedPeerOptional = persistedPeers.stream()
-                .filter(e -> e.nodeAddress.equals(nodeAddress)).findAny();
+        Optional<ReportedPeer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);
         return persistedPeerOptional.isPresent() && removePersistedPeer(persistedPeerOptional.get());
+    }
+
+    private Optional<ReportedPeer> getPersistedPeerOptional(NodeAddress nodeAddress) {
+        return persistedPeers.stream()
+                .filter(e -> e.nodeAddress.equals(nodeAddress)).findAny();
     }
 
     private void removeTooOldPersistedPeers() {
@@ -505,8 +510,17 @@ public class PeerManager implements ConnectionListener {
 
     public void handleConnectionFault(NodeAddress nodeAddress, @Nullable Connection connection) {
         Log.traceCall("nodeAddress=" + nodeAddress);
+        boolean doRemovePersistedPeer = false;
         ReportedPeer reportedPeer = removeReportedPeer(nodeAddress);
-        if (connection != null && connection.getRuleViolation() != null)
+        Optional<ReportedPeer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);
+        if (persistedPeerOptional.isPresent()) {
+            ReportedPeer persistedPeer = persistedPeerOptional.get();
+            persistedPeer.increaseFailedConnectionAttempts();
+            doRemovePersistedPeer = persistedPeer.tooManyFailedConnectionAttempts();
+        }
+        doRemovePersistedPeer = doRemovePersistedPeer || (connection != null && connection.getRuleViolation() != null);
+
+        if (doRemovePersistedPeer)
             removePersistedPeer(nodeAddress);
         else
             removeTooOldPersistedPeers();

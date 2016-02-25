@@ -16,20 +16,36 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class BroadcastHandler implements PeerManager.Listener {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private static final Logger log = LoggerFactory.getLogger(BroadcastHandler.class);
-    private static final long TIMEOUT_PER_PEER_SEC = Timer.STRESS_TEST ? 2 : 20;
-    private static final long DELAY_MS = Timer.STRESS_TEST ? 10 : 300;
+    private static final long TIMEOUT_PER_PEER_SEC = Timer.STRESS_TEST ? 5 : 30;
+
+    public static void setDelayMs(long delayMs) {
+        DELAY_MS = delayMs;
+    }
+
+    private static long DELAY_MS = Timer.STRESS_TEST ? 1000 : 2000;
 
     interface ResultHandler {
         void onCompleted(BroadcastHandler broadcastHandler);
 
         void onFault(BroadcastHandler broadcastHandler);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface Listener {
         void onBroadcasted(BroadcastMessage message, int numOfCompletedBroadcasts);
@@ -40,6 +56,11 @@ public class BroadcastHandler implements PeerManager.Listener {
 
         void onBroadcastFailed(String errorMessage);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Instance fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
     public final String uid;
@@ -53,6 +74,7 @@ public class BroadcastHandler implements PeerManager.Listener {
     private Listener listener;
     private int numOfPeers;
     private Timer timeoutTimer;
+    private Set<String> broadcastQueue = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,28 +98,42 @@ public class BroadcastHandler implements PeerManager.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender, ResultHandler resultHandler, @Nullable Listener listener) {
+    public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender, ResultHandler resultHandler,
+                          @Nullable Listener listener) {
         this.message = message;
         this.resultHandler = resultHandler;
         this.listener = listener;
 
         Log.traceCall("Sender=" + sender + "\n\t" +
                 "Message=" + StringUtils.abbreviate(message.toString(), 100));
-        Set<Connection> receivers = networkNode.getConfirmedConnections();
+        Set<Connection> receivers = networkNode.getConfirmedConnections()
+                .stream()
+                .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
+                .collect(Collectors.toSet());
         if (!receivers.isEmpty()) {
-            timeoutTimer = UserThread.runAfter(() ->
-                    onFault("Timeout: Broadcast did not complete after " + TIMEOUT_PER_PEER_SEC + " sec."), TIMEOUT_PER_PEER_SEC * receivers.size());
             numOfPeers = receivers.size();
             numOfCompletedBroadcasts = 0;
             log.info("Broadcast message to {} peers.", numOfPeers);
-            receivers.stream()
-                    .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
-                    .forEach(connection -> UserThread.runAfterRandomDelay(() ->
-                            sendToPeer(connection, message), 1, DELAY_MS, TimeUnit.MILLISECONDS));
+
+            long timeoutDelay = TIMEOUT_PER_PEER_SEC * receivers.size();
+            timeoutTimer = UserThread.runAfter(() -> {
+                String errorMessage = "Timeout: Broadcast did not complete after " + timeoutDelay + " sec.";
+
+                log.warn(errorMessage + "\n\t" +
+                        "numOfPeers=" + numOfPeers + "\n\t" +
+                        "numOfCompletedBroadcasts=" + numOfCompletedBroadcasts + "\n\t" +
+                        "numOfCompletedBroadcasts=" + numOfCompletedBroadcasts + "\n\t" +
+                        "numOfFailedBroadcasts=" + numOfFailedBroadcasts + "\n\t" +
+                        "broadcastQueue.size()=" + broadcastQueue.size() + "\n\t" +
+                        "broadcastQueue=" + broadcastQueue);
+                onFault(errorMessage);
+            }, timeoutDelay);
+
+            receivers.stream().forEach(connection -> UserThread.runAfterRandomDelay(() ->
+                    sendToPeer(connection, message), DELAY_MS, DELAY_MS * 2, TimeUnit.MILLISECONDS));
         } else {
             onFault("Message not broadcasted because we have no available peers yet.\n\t" +
-                    "That should never happen as broadcast should not be called in such cases.\n" +
-                    "message = " + StringUtils.abbreviate(message.toString(), 100));
+                    "message = " + StringUtils.abbreviate(message.toString(), 100), false);
         }
     }
 
@@ -107,11 +143,13 @@ public class BroadcastHandler implements PeerManager.Listener {
         if (!stopped) {
             NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
             log.trace("Broadcast message to " + nodeAddress + ".");
+            broadcastQueue.add(nodeAddress.getFullAddress());
             SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     numOfCompletedBroadcasts++;
+                    broadcastQueue.remove(nodeAddress.getFullAddress());
                     if (!stopped) {
                         log.trace("Broadcast to " + nodeAddress + " succeeded.");
 
@@ -136,6 +174,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
                     numOfFailedBroadcasts++;
+                    broadcastQueue.remove(nodeAddress.getFullAddress());
                     if (!stopped) {
                         log.info("Broadcast to " + nodeAddress + " failed.\n\t" +
                                 "ErrorMessage=" + throwable.getMessage());
@@ -184,7 +223,15 @@ public class BroadcastHandler implements PeerManager.Listener {
     }
 
     private void onFault(String errorMessage) {
-        log.warn(errorMessage);
+        onFault(errorMessage, true);
+    }
+
+    private void onFault(String errorMessage, boolean logWarning) {
+        if (logWarning)
+            log.warn(errorMessage);
+        else
+            log.trace(errorMessage);
+
         if (listener != null)
             listener.onBroadcastFailed(errorMessage);
 
