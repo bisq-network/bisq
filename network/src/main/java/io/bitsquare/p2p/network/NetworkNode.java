@@ -6,6 +6,9 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +29,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // Run in UserThread
-public abstract class NetworkNode implements MessageListener, ConnectionListener {
+public abstract class NetworkNode implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
     private static final int CREATE_SOCKET_TIMEOUT_MILLIS = 5000;
 
@@ -42,6 +45,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     private volatile boolean shutDownInProgress;
     // accessed from different threads
     private final CopyOnWriteArraySet<OutboundConnection> outBoundConnections = new CopyOnWriteArraySet<>();
+    protected final ObjectProperty<NodeAddress> nodeAddressProperty = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -108,8 +112,30 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
                         existingConnection.sendMessage(message);
                         return existingConnection;
                     } else {
-                        outboundConnection = new OutboundConnection(socket, NetworkNode.this, NetworkNode.this, peersNodeAddress);
-                        outBoundConnections.add(outboundConnection);
+                        outboundConnection = new OutboundConnection(socket,
+                                NetworkNode.this,
+                                new ConnectionListener() {
+                                    @Override
+                                    public void onConnection(Connection connection) {
+                                        outBoundConnections.add((OutboundConnection) connection);
+                                        printOutBoundConnections();
+                                        connectionListeners.stream().forEach(e -> e.onConnection(connection));
+                                    }
+
+                                    @Override
+                                    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+                                        log.trace("onDisconnect connectionListener\n\tconnection={}" + connection);
+                                        printOutBoundConnections();
+                                        outBoundConnections.remove(connection);
+
+                                        connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
+                                    }
+
+                                    @Override
+                                    public void onError(Throwable throwable) {
+                                        connectionListeners.stream().forEach(e -> e.onError(throwable));
+                                    }
+                                }, peersNodeAddress);
 
                         log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "NetworkNode created new outbound connection:"
@@ -204,6 +230,10 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
         return resultFuture;
     }
 
+    public ReadOnlyObjectProperty<NodeAddress> nodeAddressProperty() {
+        return nodeAddressProperty;
+    }
+
     public Set<Connection> getAllConnections() {
         // Can contain inbound and outbound connections with the same peer node address, 
         // as connection hashcode is using uid and port info
@@ -256,33 +286,6 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // ConnectionListener implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onConnection(Connection connection) {
-        connectionListeners.stream().forEach(e -> e.onConnection(connection));
-    }
-
-    @Override
-    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        log.trace("onDisconnect connectionListener\n\tconnection={}" + connection);
-        if (inBoundConnections.contains(connection))
-            log.warn("We have the connection in our inBoundConnections. That must not happen as it should be called " +
-                    "from the server listener and get removed from there.");
-        printOutBoundConnections();
-        outBoundConnections.remove(connection);
-        // inbound connections are removed in the listener of the server
-        connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
-    }
-
-    @Override
-    public void onError(Throwable throwable) {
-        connectionListeners.stream().forEach(e -> e.onError(throwable));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -329,33 +332,33 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void createExecutorService() {
-        executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort, 20, 50, 120L);
+        executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort, 50, 100, 2 * 60);
     }
 
     void startServer(ServerSocket serverSocket) {
-        ConnectionListener connectionListener = new ConnectionListener() {
-            @Override
-            public void onConnection(Connection connection) {
-                inBoundConnections.add((InboundConnection) connection);
-                NetworkNode.this.onConnection(connection);
-            }
-
-            @Override
-            public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-                log.trace("onDisconnect at server socket connectionListener\n\tconnection={}" + connection);
-                inBoundConnections.remove(connection);
-                printInboundConnections();
-                NetworkNode.this.onDisconnect(closeConnectionReason, connection);
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                NetworkNode.this.onError(throwable);
-            }
-        };
         server = new Server(serverSocket,
                 NetworkNode.this,
-                connectionListener);
+                new ConnectionListener() {
+                    @Override
+                    public void onConnection(Connection connection) {
+                        inBoundConnections.add((InboundConnection) connection);
+                        printInboundConnections();
+                        connectionListeners.stream().forEach(e -> e.onConnection(connection));
+                    }
+
+                    @Override
+                    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+                        log.trace("onDisconnect at server socket connectionListener\n\tconnection={}" + connection);
+                        inBoundConnections.remove(connection);
+                        printInboundConnections();
+                        connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        connectionListeners.stream().forEach(e -> e.onError(throwable));
+                    }
+                });
         executorService.submit(server);
     }
 
@@ -392,5 +395,7 @@ public abstract class NetworkNode implements MessageListener, ConnectionListener
     abstract protected Socket createSocket(NodeAddress peersNodeAddress) throws IOException;
 
     @Nullable
-    abstract public NodeAddress getNodeAddress();
+    public NodeAddress getNodeAddress() {
+        return nodeAddressProperty.get();
+    }
 }
