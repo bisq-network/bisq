@@ -11,7 +11,8 @@ import java.util.Map;
 
 class GetPriceRequest {
     private static final Logger log = LoggerFactory.getLogger(GetPriceRequest.class);
-    private final ListeningExecutorService executorService = Utilities.getListeningExecutorService("GetPriceRequest", 5, 10, 120L);
+
+    private static final ListeningExecutorService executorService = Utilities.getListeningExecutorService("GetPriceRequest", 3, 5, 10 * 60);
 
     public GetPriceRequest() {
     }

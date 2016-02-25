@@ -15,12 +15,11 @@ import java.io.IOException;
 
 class GetFeeRequest {
     private static final Logger log = LoggerFactory.getLogger(GetFeeRequest.class);
-    private final ListeningExecutorService executorService;
+    private static final ListeningExecutorService executorService = Utilities.getListeningExecutorService("GetFeeRequest", 3, 5, 10 * 60);
     private Timer timer;
     private int faults;
 
     public GetFeeRequest() {
-        executorService = Utilities.getListeningExecutorService("GetFeeRequest", 5, 10, 120L);
     }
 
     public SettableFuture<Coin> request(String transactionId, FeeProvider provider) {

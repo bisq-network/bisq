@@ -7,9 +7,9 @@ import com.google.inject.Inject;
 import io.bitsquare.btc.pricefeed.providers.BitcoinAveragePriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PoloniexPriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PriceProvider;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
-import io.bitsquare.common.util.Utilities;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -21,8 +21,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class MarketPriceFeed {
@@ -44,10 +42,9 @@ public class MarketPriceFeed {
         }
     }
 
-    private static final long PERIOD_FIAT = 1;    // We load only the selected currency on interval. Only the first request we load all
-    private static final long PERIOD_CRYPTO = 10; // We load the full list with 33kb so we don't want to load too often
+    private static final long PERIOD_FIAT_SEC = Timer.STRESS_TEST ? 30 : 60;    // We load only the selected currency on interval. Only the first request we load all
+    private static final long PERIOD_CRYPTO_SEC = Timer.STRESS_TEST ? 30 : 10 * 60; // We load the full list with 33kb so we don't want to load too often
 
-    private final ScheduledThreadPoolExecutor executorService = Utilities.getScheduledThreadPoolExecutor("MarketPriceFeed", 5, 10, 700L);
     private final Map<String, MarketPrice> cache = new HashMap<>();
     private final PriceProvider fiatPriceProvider = new BitcoinAveragePriceProvider();
     private final PriceProvider cryptoCurrenciesPriceProvider = new PoloniexPriceProvider();
@@ -78,16 +75,13 @@ public class MarketPriceFeed {
 
         requestAllPrices(fiatPriceProvider, () -> {
             applyPrice();
-            executorService.scheduleAtFixedRate(
-                    () -> requestPrice(fiatPriceProvider),
-                    PERIOD_FIAT, PERIOD_FIAT, TimeUnit.MINUTES);
+            UserThread.runPeriodically(() -> requestPrice(fiatPriceProvider), PERIOD_FIAT_SEC);
         });
+
         requestAllPrices(cryptoCurrenciesPriceProvider, () -> {
             applyPrice();
-            executorService.scheduleAtFixedRate(
-                    () -> requestAllPrices(cryptoCurrenciesPriceProvider,
-                            this::applyPrice),
-                    PERIOD_CRYPTO, PERIOD_CRYPTO, TimeUnit.MINUTES);
+            UserThread.runPeriodically(() -> requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPrice),
+                    PERIOD_CRYPTO_SEC);
         });
         requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPrice);
     }
