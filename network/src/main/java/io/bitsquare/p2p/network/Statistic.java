@@ -3,7 +3,9 @@ package io.bitsquare.p2p.network;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleLongProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +51,7 @@ public class Statistic {
     private final IntegerProperty receivedBytes = new SimpleIntegerProperty(0);
     private final Map<String, Integer> receivedMessages = new ConcurrentHashMap<>();
     private final Map<String, Integer> sentMessages = new ConcurrentHashMap<>();
+    private final LongProperty roundTripTime = new SimpleLongProperty(0);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +103,10 @@ public class Statistic {
         sentMessages.put(messageClassName, counter);
     }
 
+    public void setRoundTripTime(long roundTripTime) {
+        this.roundTripTime.set(roundTripTime);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -132,6 +139,9 @@ public class Statistic {
         return creationDate;
     }
 
+    public LongProperty roundTripTimeProperty() {
+        return roundTripTime;
+    }
 
     @Override
     public String toString() {

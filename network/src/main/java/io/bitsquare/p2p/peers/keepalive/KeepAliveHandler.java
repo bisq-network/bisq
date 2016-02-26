@@ -25,7 +25,7 @@ class KeepAliveHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveHandler.class);
 
     private static int DELAY_MS = Timer.STRESS_TEST ? 1000 : 5000;
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -50,7 +50,8 @@ class KeepAliveHandler implements MessageListener {
     private Connection connection;
     private boolean stopped;
     private Timer delayTimer;
-    
+    private long sendTs;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -79,6 +80,7 @@ class KeepAliveHandler implements MessageListener {
         Log.traceCall("connection=" + connection + " / this=" + this);
         if (!stopped) {
             Ping ping = new Ping(nonce);
+            sendTs = System.currentTimeMillis();
             SettableFuture<Connection> future = networkNode.sendMessage(connection, ping);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
@@ -125,6 +127,9 @@ class KeepAliveHandler implements MessageListener {
             if (!stopped) {
                 Pong pong = (Pong) message;
                 if (pong.requestNonce == nonce) {
+                    long roundTripTime = System.currentTimeMillis() - sendTs;
+                    log.trace("roundTripTime=" + roundTripTime + "\n\tconnection=" + connection);
+                    connection.getStatistic().setRoundTripTime(roundTripTime);
                     cleanup();
                     listener.onComplete();
                 } else {

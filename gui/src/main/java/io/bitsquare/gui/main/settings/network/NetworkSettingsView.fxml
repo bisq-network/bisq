@@ -89,6 +89,11 @@
                     <PropertyValueFactory property="lastActivity"/>
                 </cellValueFactory>
             </TableColumn>
+            <TableColumn text="RTT" fx:id="roundTripTimeColumn" minWidth="80" maxWidth="80">
+                <cellValueFactory>
+                    <PropertyValueFactory property="roundTripTime"/>
+                </cellValueFactory>
+            </TableColumn>
             <TableColumn text="Sent" fx:id="sentBytesColumn" minWidth="100" maxWidth="120">
                 <cellValueFactory>
                     <PropertyValueFactory property="sentBytes"/>
