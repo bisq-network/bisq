@@ -89,10 +89,11 @@ class PeerExchangeHandler implements MessageListener {
                     @Override
                     public void onSuccess(Connection connection) {
                         if (!stopped) {
-                            if (!connection.getPeersNodeAddressOptional().isPresent()) {
+                            //TODO
+                            /*if (!connection.getPeersNodeAddressOptional().isPresent()) {
                                 connection.setPeersNodeAddress(nodeAddress);
                                 log.warn("sendGetPeersRequest: !connection.getPeersNodeAddressOptional().isPresent()");
-                            }
+                            }*/
 
                             PeerExchangeHandler.this.connection = connection;
                             connection.addMessageListener(PeerExchangeHandler.this);

@@ -6,7 +6,7 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
-import io.bitsquare.p2p.peers.peerexchange.ReportedPeer;
+import io.bitsquare.p2p.peers.peerexchange.Peer;
 import io.bitsquare.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,10 +76,10 @@ public class PeerManager implements ConnectionListener {
     private final NetworkNode networkNode;
     private Clock clock;
     private final Set<NodeAddress> seedNodeAddresses;
-    private final Storage<HashSet<ReportedPeer>> dbStorage;
+    private final Storage<HashSet<Peer>> dbStorage;
 
-    private final HashSet<ReportedPeer> persistedPeers = new HashSet<>();
-    private final Set<ReportedPeer> reportedPeers = new HashSet<>();
+    private final HashSet<Peer> persistedPeers = new HashSet<>();
+    private final Set<Peer> reportedPeers = new HashSet<>();
     private Timer checkMaxConnectionsTimer;
     private final Clock.Listener listener;
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
@@ -96,7 +96,7 @@ public class PeerManager implements ConnectionListener {
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir);
-        HashSet<ReportedPeer> persistedPeers = dbStorage.initAndGetPersisted("PersistedPeers");
+        HashSet<Peer> persistedPeers = dbStorage.initAndGetPersisted("PersistedPeers");
         if (persistedPeers != null) {
             log.info("We have persisted reported peers. persistedPeers.size()=" + persistedPeers.size());
             this.persistedPeers.addAll(persistedPeers);
@@ -310,18 +310,18 @@ public class PeerManager implements ConnectionListener {
     // Reported peers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean removeReportedPeer(ReportedPeer reportedPeer) {
+    private boolean removeReportedPeer(Peer reportedPeer) {
         boolean contained = reportedPeers.remove(reportedPeer);
         printReportedPeers();
         return contained;
     }
 
     @Nullable
-    private ReportedPeer removeReportedPeer(NodeAddress nodeAddress) {
-        Optional<ReportedPeer> reportedPeerOptional = reportedPeers.stream()
+    private Peer removeReportedPeer(NodeAddress nodeAddress) {
+        Optional<Peer> reportedPeerOptional = reportedPeers.stream()
                 .filter(e -> e.nodeAddress.equals(nodeAddress)).findAny();
         if (reportedPeerOptional.isPresent()) {
-            ReportedPeer reportedPeer = reportedPeerOptional.get();
+            Peer reportedPeer = reportedPeerOptional.get();
             removeReportedPeer(reportedPeer);
             return reportedPeer;
         } else {
@@ -331,17 +331,17 @@ public class PeerManager implements ConnectionListener {
 
     private void removeTooOldReportedPeers() {
         Log.traceCall();
-        Set<ReportedPeer> reportedPeersToRemove = reportedPeers.stream()
+        Set<Peer> reportedPeersToRemove = reportedPeers.stream()
                 .filter(reportedPeer -> new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         reportedPeersToRemove.forEach(this::removeReportedPeer);
     }
 
-    public Set<ReportedPeer> getReportedPeers() {
+    public Set<Peer> getReportedPeers() {
         return reportedPeers;
     }
 
-    public void addToReportedPeers(HashSet<ReportedPeer> reportedPeersToAdd, Connection connection) {
+    public void addToReportedPeers(HashSet<Peer> reportedPeersToAdd, Connection connection) {
         printNewReportedPeers(reportedPeersToAdd);
 
         // We check if the reported msg is not violating our rules
@@ -371,10 +371,10 @@ public class PeerManager implements ConnectionListener {
             log.trace("We have already {} reported peers which exceeds our limit of {}." +
                     "We remove random peers from the reported peers list.", size, limit);
             int diff = size - limit;
-            List<ReportedPeer> list = new ArrayList<>(reportedPeers);
+            List<Peer> list = new ArrayList<>(reportedPeers);
             // we dont use sorting by lastActivityDate to keep it more random
             for (int i = 0; i < diff; i++) {
-                ReportedPeer toRemove = list.remove(new Random().nextInt(list.size()));
+                Peer toRemove = list.remove(new Random().nextInt(list.size()));
                 removeReportedPeer(toRemove);
             }
         } else {
@@ -395,7 +395,7 @@ public class PeerManager implements ConnectionListener {
         }
     }
 
-    private void printNewReportedPeers(HashSet<ReportedPeer> reportedPeers) {
+    private void printNewReportedPeers(HashSet<Peer> reportedPeers) {
         if (printReportedPeersDetails) {
             StringBuilder result = new StringBuilder("We received new reportedPeers:");
             reportedPeers.stream().forEach(e -> result.append("\n\t").append(e));
@@ -409,7 +409,7 @@ public class PeerManager implements ConnectionListener {
     //  Persisted peers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean removePersistedPeer(ReportedPeer persistedPeer) {
+    private boolean removePersistedPeer(Peer persistedPeer) {
         if (persistedPeers.contains(persistedPeer)) {
             persistedPeers.remove(persistedPeer);
 
@@ -423,18 +423,18 @@ public class PeerManager implements ConnectionListener {
     }
 
     private boolean removePersistedPeer(NodeAddress nodeAddress) {
-        Optional<ReportedPeer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);
+        Optional<Peer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);
         return persistedPeerOptional.isPresent() && removePersistedPeer(persistedPeerOptional.get());
     }
 
-    private Optional<ReportedPeer> getPersistedPeerOptional(NodeAddress nodeAddress) {
+    private Optional<Peer> getPersistedPeerOptional(NodeAddress nodeAddress) {
         return persistedPeers.stream()
                 .filter(e -> e.nodeAddress.equals(nodeAddress)).findAny();
     }
 
     private void removeTooOldPersistedPeers() {
         Log.traceCall();
-        Set<ReportedPeer> persistedPeersToRemove = persistedPeers.stream()
+        Set<Peer> persistedPeersToRemove = persistedPeers.stream()
                 .filter(reportedPeer -> new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         persistedPeersToRemove.forEach(this::removePersistedPeer);
@@ -448,10 +448,10 @@ public class PeerManager implements ConnectionListener {
             log.trace("We have already {} persisted peers which exceeds our limit of {}." +
                     "We remove random peers from the persisted peers list.", size, limit);
             int diff = size - limit;
-            List<ReportedPeer> list = new ArrayList<>(persistedPeers);
+            List<Peer> list = new ArrayList<>(persistedPeers);
             // we dont use sorting by lastActivityDate to avoid attack vectors and keep it more random
             for (int i = 0; i < diff; i++) {
-                ReportedPeer toRemove = list.remove(new Random().nextInt(list.size()));
+                Peer toRemove = list.remove(new Random().nextInt(list.size()));
                 removePersistedPeer(toRemove);
             }
         } else {
@@ -459,7 +459,7 @@ public class PeerManager implements ConnectionListener {
         }
     }
 
-    public Set<ReportedPeer> getPersistedPeers() {
+    public Set<Peer> getPersistedPeers() {
         return persistedPeers;
     }
 
@@ -472,7 +472,7 @@ public class PeerManager implements ConnectionListener {
         return networkNode.getNodeAddressesOfConfirmedConnections().size() >= MIN_CONNECTIONS;
     }
 
-    public boolean isSeedNode(ReportedPeer reportedPeer) {
+    public boolean isSeedNode(Peer reportedPeer) {
         return seedNodeAddresses.contains(reportedPeer.nodeAddress);
     }
 
@@ -484,7 +484,7 @@ public class PeerManager implements ConnectionListener {
         return connection.hasPeersNodeAddress() && seedNodeAddresses.contains(connection.getPeersNodeAddressOptional().get());
     }
 
-    public boolean isSelf(ReportedPeer reportedPeer) {
+    public boolean isSelf(Peer reportedPeer) {
         return isSelf(reportedPeer.nodeAddress);
     }
 
@@ -492,7 +492,7 @@ public class PeerManager implements ConnectionListener {
         return nodeAddress.equals(networkNode.getNodeAddress());
     }
 
-    public boolean isConfirmed(ReportedPeer reportedPeer) {
+    public boolean isConfirmed(Peer reportedPeer) {
         return isConfirmed(reportedPeer.nodeAddress);
     }
 
@@ -512,10 +512,10 @@ public class PeerManager implements ConnectionListener {
     public void handleConnectionFault(NodeAddress nodeAddress, @Nullable Connection connection) {
         Log.traceCall("nodeAddress=" + nodeAddress);
         boolean doRemovePersistedPeer = false;
-        ReportedPeer reportedPeer = removeReportedPeer(nodeAddress);
-        Optional<ReportedPeer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);
+        Peer reportedPeer = removeReportedPeer(nodeAddress);
+        Optional<Peer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);
         if (persistedPeerOptional.isPresent()) {
-            ReportedPeer persistedPeer = persistedPeerOptional.get();
+            Peer persistedPeer = persistedPeerOptional.get();
             persistedPeer.increaseFailedConnectionAttempts();
             doRemovePersistedPeer = persistedPeer.tooManyFailedConnectionAttempts();
         }
@@ -541,7 +541,7 @@ public class PeerManager implements ConnectionListener {
                 .ifPresent(connection -> connection.shutDown(closeConnectionReason));
     }
 
-    public HashSet<ReportedPeer> getConnectedNonSeedNodeReportedPeers(NodeAddress excludedNodeAddress) {
+    public HashSet<Peer> getConnectedNonSeedNodeReportedPeers(NodeAddress excludedNodeAddress) {
         return new HashSet<>(getConnectedNonSeedNodeReportedPeers().stream()
                 .filter(e -> !e.nodeAddress.equals(excludedNodeAddress))
                 .collect(Collectors.toSet()));
@@ -551,15 +551,15 @@ public class PeerManager implements ConnectionListener {
     //  Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Set<ReportedPeer> getConnectedReportedPeers() {
+    private Set<Peer> getConnectedReportedPeers() {
         // networkNode.getConfirmedConnections includes:
         // filter(connection -> connection.getPeersNodeAddressOptional().isPresent())
         return networkNode.getConfirmedConnections().stream()
-                .map(c -> new ReportedPeer(c.getPeersNodeAddressOptional().get()))
+                .map(c -> new Peer(c.getPeersNodeAddressOptional().get()))
                 .collect(Collectors.toSet());
     }
 
-    private HashSet<ReportedPeer> getConnectedNonSeedNodeReportedPeers() {
+    private HashSet<Peer> getConnectedNonSeedNodeReportedPeers() {
         return new HashSet<>(getConnectedReportedPeers().stream()
                 .filter(e -> !isSeedNode(e))
                 .collect(Collectors.toSet()));

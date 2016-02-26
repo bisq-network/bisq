@@ -7,7 +7,7 @@ import io.bitsquare.p2p.NodeAddress;
 
 import java.util.Date;
 
-public final class ReportedPeer implements Payload, Persistable {
+public final class Peer implements Payload, Persistable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final int MAX_FAILED_CONNECTION_ATTEMPTS = 5;
@@ -16,7 +16,7 @@ public final class ReportedPeer implements Payload, Persistable {
     public final Date date;
     transient private int failedConnectionAttempts = 0;
 
-    public ReportedPeer(NodeAddress nodeAddress) {
+    public Peer(NodeAddress nodeAddress) {
         this.nodeAddress = nodeAddress;
         this.date = new Date();
     }
@@ -32,9 +32,9 @@ public final class ReportedPeer implements Payload, Persistable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ReportedPeer)) return false;
+        if (!(o instanceof Peer)) return false;
 
-        ReportedPeer that = (ReportedPeer) o;
+        Peer that = (Peer) o;
 
         return !(nodeAddress != null ? !nodeAddress.equals(that.nodeAddress) : that.nodeAddress != null);
 

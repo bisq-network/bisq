@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.UUID;
 
 /**
  * We simulate a global frame rate timer similar to FXTimer to avoid creation of threads for each timer call.
@@ -16,26 +17,30 @@ public class FrameRateTimer implements Timer, Runnable {
     private Runnable runnable;
     private long startTs;
     private boolean isPeriodically;
+    private String uid = UUID.randomUUID().toString();
+    private volatile boolean stopped;
 
     public FrameRateTimer() {
     }
 
     @Override
     public void run() {
-        try {
-            long currentTimeMillis = System.currentTimeMillis();
-            if ((currentTimeMillis - startTs) >= interval) {
-                runnable.run();
-                if (isPeriodically)
-                    startTs = currentTimeMillis;
-                else
-                    stop();
+        if (!stopped) {
+            try {
+                long currentTimeMillis = System.currentTimeMillis();
+                if ((currentTimeMillis - startTs) >= interval) {
+                    runnable.run();
+                    if (isPeriodically)
+                        startTs = currentTimeMillis;
+                    else
+                        stop();
+                }
+            } catch (Throwable t) {
+                log.error(t.getMessage());
+                t.printStackTrace();
+                stop();
+                throw t;
             }
-        } catch (Throwable t) {
-            log.error(t.getMessage());
-            t.printStackTrace();
-            stop();
-            throw t;
         }
     }
 
@@ -60,6 +65,24 @@ public class FrameRateTimer implements Timer, Runnable {
 
     @Override
     public void stop() {
+        stopped = true;
         MasterTimer.removeListener(this);
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FrameRateTimer)) return false;
+
+        FrameRateTimer that = (FrameRateTimer) o;
+
+        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return uid != null ? uid.hashCode() : 0;
     }
 }

@@ -3,7 +3,7 @@ package io.bitsquare.p2p.peers.peerexchange.messages;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
-import io.bitsquare.p2p.peers.peerexchange.ReportedPeer;
+import io.bitsquare.p2p.peers.peerexchange.Peer;
 
 import java.util.HashSet;
 
@@ -15,9 +15,9 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
 
     private final NodeAddress senderNodeAddress;
     public final int nonce;
-    public final HashSet<ReportedPeer> reportedPeers;
+    public final HashSet<Peer> reportedPeers;
 
-    public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<ReportedPeer> reportedPeers) {
+    public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<Peer> reportedPeers) {
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetPeersRequest");
         this.senderNodeAddress = senderNodeAddress;
         this.nonce = nonce;

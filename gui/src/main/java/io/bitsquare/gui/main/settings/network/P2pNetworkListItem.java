@@ -35,7 +35,7 @@ public class P2pNetworkListItem {
 
     private final Statistic statistic;
     private final Connection connection;
-    private final Subscription sentBytesSubscription, receivedBytesSubscription, onionAddressSubscription;
+    private final Subscription sentBytesSubscription, receivedBytesSubscription, onionAddressSubscription, roundTripTimeSubscription;
     private final Clock clock;
     private final BSFormatter formatter;
 
@@ -44,6 +44,9 @@ public class P2pNetworkListItem {
     private final StringProperty receivedBytes = new SimpleStringProperty();
     private final StringProperty peerType = new SimpleStringProperty();
     private final StringProperty connectionType = new SimpleStringProperty();
+
+
+    private final StringProperty roundTripTime = new SimpleStringProperty();
     private final StringProperty onionAddress = new SimpleStringProperty();
     private final Clock.Listener listener;
 
@@ -59,6 +62,8 @@ public class P2pNetworkListItem {
                 e -> receivedBytes.set(formatter.formatBytes((int) e)));
         onionAddressSubscription = EasyBind.subscribe(connection.peersNodeAddressProperty(),
                 nodeAddress -> onionAddress.set(nodeAddress != null ? nodeAddress.getFullAddress() : "Not known yet"));
+        roundTripTimeSubscription = EasyBind.subscribe(statistic.roundTripTimeProperty(),
+                roundTripTime -> this.roundTripTime.set(DurationFormatUtils.formatDuration((long) roundTripTime, "ss.SSS")));
 
         listener = new Clock.Listener() {
             @Override
@@ -90,6 +95,7 @@ public class P2pNetworkListItem {
         sentBytesSubscription.unsubscribe();
         receivedBytesSubscription.unsubscribe();
         onionAddressSubscription.unsubscribe();
+        roundTripTimeSubscription.unsubscribe();
         clock.removeListener(listener);
     }
 
@@ -158,4 +164,11 @@ public class P2pNetworkListItem {
         return receivedBytes;
     }
 
+    public String getRoundTripTime() {
+        return roundTripTime.get();
+    }
+
+    public StringProperty roundTripTimeProperty() {
+        return roundTripTime;
+    }
 }

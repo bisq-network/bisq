@@ -8,7 +8,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
-import io.bitsquare.p2p.peers.peerexchange.ReportedPeer;
+import io.bitsquare.p2p.peers.peerexchange.Peer;
 import io.bitsquare.p2p.storage.P2PDataStorage;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -324,7 +324,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         }
     }
 
-    private List<NodeAddress> getSortedNodeAddresses(Collection<ReportedPeer> collection) {
+    private List<NodeAddress> getSortedNodeAddresses(Collection<Peer> collection) {
         return collection.stream()
                 .collect(Collectors.toList())
                 .stream()

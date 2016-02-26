@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.peers.peerexchange.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.peers.peerexchange.ReportedPeer;
+import io.bitsquare.p2p.peers.peerexchange.Peer;
 
 import java.util.HashSet;
 
@@ -10,9 +10,9 @@ public final class GetPeersResponse extends PeerExchangeMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final int requestNonce;
-    public final HashSet<ReportedPeer> reportedPeers;
+    public final HashSet<Peer> reportedPeers;
 
-    public GetPeersResponse(int requestNonce, HashSet<ReportedPeer> reportedPeers) {
+    public GetPeersResponse(int requestNonce, HashSet<Peer> reportedPeers) {
         this.requestNonce = requestNonce;
         this.reportedPeers = reportedPeers;
     }
