@@ -41,13 +41,13 @@ public class PeerManager implements ConnectionListener {
     public static void setMaxConnections(int maxConnections) {
         MAX_CONNECTIONS = maxConnections;
         MIN_CONNECTIONS = Math.max(1, maxConnections - 4);
-        MAX_CONNECTIONS_PEER = MAX_CONNECTIONS + 5;
-        MAX_CONNECTIONS_NON_DIRECT = MAX_CONNECTIONS + 10;
-        MAX_CONNECTIONS_ABSOLUTE = MAX_CONNECTIONS + 30;
+        MAX_CONNECTIONS_PEER = MAX_CONNECTIONS + 4;
+        MAX_CONNECTIONS_NON_DIRECT = MAX_CONNECTIONS + 8;
+        MAX_CONNECTIONS_ABSOLUTE = MAX_CONNECTIONS + 18;
     }
 
     static {
-        setMaxConnections(12);
+        setMaxConnections(10);
     }
 
     private static final int MAX_REPORTED_PEERS = 1000;

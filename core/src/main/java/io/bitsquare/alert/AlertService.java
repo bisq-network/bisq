@@ -50,7 +50,7 @@ public class AlertService {
     }
 
     public void addAlertMessage(Alert alert, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        boolean result = p2PService.addData(alert);
+        boolean result = p2PService.addData(alert, true, true);
         if (result) {
             log.trace("Add alertMessage to network was successful. AlertMessage = " + alert);
             if (resultHandler != null) resultHandler.handleResult();
@@ -60,11 +60,13 @@ public class AlertService {
     }
 
     public void removeAlertMessage(Alert alert, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        if (p2PService.removeData(alert)) {
+        if (p2PService.removeData(alert, true)) {
             log.trace("Remove alertMessage from network was successful. AlertMessage = " + alert);
-            if (resultHandler != null) resultHandler.handleResult();
+            if (resultHandler != null)
+                resultHandler.handleResult();
         } else {
-            if (errorMessageHandler != null) errorMessageHandler.handleErrorMessage("Remove alertMessage failed");
+            if (errorMessageHandler != null)
+                errorMessageHandler.handleErrorMessage("Remove alertMessage failed");
         }
     }
 

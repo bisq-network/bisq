@@ -39,12 +39,13 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender, @Nullable BroadcastHandler.Listener listener) {
+    public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender,
+                          @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
         Log.traceCall("Sender=" + sender + "\n\t" +
                 "Message=" + StringUtils.abbreviate(message.toString(), 100));
 
         BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager);
-        broadcastHandler.broadcast(message, sender, this, listener);
+        broadcastHandler.broadcast(message, sender, this, listener, isDataOwner);
         broadcastHandlers.add(broadcastHandler);
     }
 

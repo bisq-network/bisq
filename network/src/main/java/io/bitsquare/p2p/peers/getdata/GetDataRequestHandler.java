@@ -9,7 +9,6 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
-import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.storage.P2PDataStorage;
@@ -19,8 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class GetDataRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetDataRequestHandler.class);
@@ -44,19 +41,18 @@ public class GetDataRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
-    private final PeerManager peerManager;
     private P2PDataStorage dataStorage;
     private final Listener listener;
     private Timer timeoutTimer;
+    private boolean stopped;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public GetDataRequestHandler(NetworkNode networkNode, PeerManager peerManager, P2PDataStorage dataStorage, Listener listener) {
+    public GetDataRequestHandler(NetworkNode networkNode, P2PDataStorage dataStorage, Listener listener) {
         this.networkNode = networkNode;
-        this.peerManager = peerManager;
         this.dataStorage = dataStorage;
         this.listener = listener;
     }
@@ -89,28 +85,32 @@ public class GetDataRequestHandler {
             }
         });
 
-        checkArgument(timeoutTimer == null, "requestData must not be called twice.");
-        timeoutTimer = UserThread.runAfter(() -> {
-                    String errorMessage = "A timeout occurred for getDataResponse:" + getDataResponse +
-                            " on connection:" + connection;
-                    handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
-                },
-                TIME_OUT_SEC, TimeUnit.SECONDS);
+        if (timeoutTimer == null) {
+            timeoutTimer = UserThread.runAfter(() -> {
+                        String errorMessage = "A timeout occurred for getDataResponse:" + getDataResponse +
+                                " on connection:" + connection;
+                        handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
+                    },
+                    TIME_OUT_SEC, TimeUnit.SECONDS);
+        }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, Connection connection) {
-        log.info(errorMessage);
-        //peerManager.shutDownConnection(connection, closeConnectionReason);
-        cleanup();
-        listener.onFault(errorMessage, connection);
+        if (!stopped) {
+            log.info(errorMessage + "\n\tcloseConnectionReason=" + closeConnectionReason);
+            cleanup();
+            listener.onFault(errorMessage, connection);
+        } else {
+            log.warn("We have already stopped (handleFault)");
+        }
     }
 
     private void cleanup() {
+        stopped = true;
         if (timeoutTimer != null) {
             timeoutTimer.stop();
             timeoutTimer = null;

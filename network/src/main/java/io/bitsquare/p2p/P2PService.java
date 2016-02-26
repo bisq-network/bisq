@@ -556,11 +556,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         public void onBroadcastFailed(String errorMessage) {
                         }
                     };
-                    boolean result = p2PDataStorage.add(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener);
+                    boolean result = p2PDataStorage.add(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true, true);
                     if (!result) {
                         //TODO remove and add again with a delay to ensure the data will be broadcasted
                         sendMailboxMessageListener.onFault("Data already exists in our local database");
-                        boolean removeResult = p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress());
+                        boolean removeResult = p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
                         log.debug("remove result=" + removeResult);
                     }
                 } catch (CryptoException e) {
@@ -593,7 +593,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 expirableMailboxStoragePayload,
                                 optionalKeyRing.get().getSignatureKeyPair(),
                                 receiversPubKey);
-                        p2PDataStorage.removeMailboxData(protectedMailboxStorageEntry, networkNode.getNodeAddress());
+                        p2PDataStorage.removeMailboxData(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
                     } catch (CryptoException e) {
                         log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                     }
@@ -616,17 +616,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // Data storage
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean addData(StoragePayload storagePayload) {
-        return addData(storagePayload, false);
-    }
-
-    public boolean addData(StoragePayload storagePayload, boolean forceBroadcast) {
+    public boolean addData(StoragePayload storagePayload, boolean forceBroadcast, boolean isDataOwner) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
                 ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedData(storagePayload, optionalKeyRing.get().getSignatureKeyPair());
-                return p2PDataStorage.add(protectedStorageEntry, networkNode.getNodeAddress(), forceBroadcast);
+                return p2PDataStorage.add(protectedStorageEntry, networkNode.getNodeAddress(), null, forceBroadcast, isDataOwner);
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;
@@ -636,13 +632,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    public boolean refreshTTL(StoragePayload storagePayload) {
+    public boolean refreshTTL(StoragePayload storagePayload, boolean isDataOwner) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
                 RefreshTTLMessage refreshTTLMessage = p2PDataStorage.getRefreshTTLMessage(storagePayload, optionalKeyRing.get().getSignatureKeyPair());
-                return p2PDataStorage.refreshTTL(refreshTTLMessage, networkNode.getNodeAddress());
+                return p2PDataStorage.refreshTTL(refreshTTLMessage, networkNode.getNodeAddress(), isDataOwner);
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;
@@ -652,13 +648,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    public boolean removeData(StoragePayload storagePayload) {
+    public boolean removeData(StoragePayload storagePayload, boolean isDataOwner) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
                 ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedData(storagePayload, optionalKeyRing.get().getSignatureKeyPair());
-                return p2PDataStorage.remove(protectedStorageEntry, networkNode.getNodeAddress());
+                return p2PDataStorage.remove(protectedStorageEntry, networkNode.getNodeAddress(), isDataOwner);
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;

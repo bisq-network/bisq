@@ -207,17 +207,6 @@ public class MainViewModel implements ViewModel {
                     .onAction(BitsquareApp.shutDownHandler::run)
                     .show();
         }, 3, TimeUnit.MINUTES);
-        
-        /*startupTimeout = FxTimer.runLater(Duration.ofMinutes(3), () -> {
-            log.warn("startupTimeout called");
-            MainView.blur();
-            new Popup().warning("The application could not startup after 3 minutes.\n" +
-                    "There might be some network connection problems or a unstable Tor path.\n\n" +
-                    "Please restart and try again.")
-                    .closeButtonText("Shut down")
-                    .onClose(BitsquareApp.shutDownHandler::run)
-                    .show();
-        });*/
     }
 
     public void shutDown() {
@@ -269,7 +258,8 @@ public class MainViewModel implements ViewModel {
                         closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
                     log.warn("onDisconnect closeConnectionReason=" + closeConnectionReason);
                     log.warn("onDisconnect connection=" + connection);
-                    new Popup()
+                    //TODO
+                   /* new Popup()
                             .warning("You got disconnected from a seed node.\n\n" +
                                     "Reason for getting disconnected: " + connection.getRuleViolation().name() + "\n\n" +
                                     "It might be that your installed version is not compatible with " +
@@ -277,7 +267,7 @@ public class MainViewModel implements ViewModel {
                                     "Please check if you run the latest software version.\n" +
                                     "You can download the latest version of Bitsquare at:\n" +
                                     "https://github.com/bitsquare/bitsquare/releases")
-                            .show();
+                            .show();*/
                 }
             }
 

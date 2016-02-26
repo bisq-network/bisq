@@ -93,8 +93,8 @@ public class OfferBookService {
         doAddOffer(offer, resultHandler, errorMessageHandler, false);
     }
 
-    public void doAddOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler, boolean forceBroadcast) {
-        boolean result = p2PService.addData(offer, forceBroadcast);
+    private void doAddOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler, boolean forceBroadcast) {
+        boolean result = p2PService.addData(offer, forceBroadcast, true);
         if (result) {
             log.trace("Add offer to network was successful. Offer ID = " + offer.getId());
             resultHandler.handleResult();
@@ -104,7 +104,7 @@ public class OfferBookService {
     }
 
     public void refreshOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        boolean result = p2PService.refreshTTL(offer);
+        boolean result = p2PService.refreshTTL(offer, true);
         if (result) {
             log.trace("Add offer to network was successful. Offer ID = " + offer.getId());
             resultHandler.handleResult();
@@ -114,7 +114,7 @@ public class OfferBookService {
     }
 
     public void removeOffer(Offer offer, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        if (p2PService.removeData(offer)) {
+        if (p2PService.removeData(offer, true)) {
             log.trace("Remove offer from network was successful. Offer ID = " + offer.getId());
             if (resultHandler != null)
                 resultHandler.handleResult();

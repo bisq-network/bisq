@@ -19,7 +19,6 @@ package io.bitsquare.trade.protocol.placeoffer.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.peers.BroadcastHandler;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +34,9 @@ public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
     protected void run() {
         try {
             runInterceptHook();
-            BroadcastHandler.useDelay(false);
             model.offerBookService.addOffer(model.offer,
                     () -> {
                         model.offerAddedToOfferBook = true;
-                        BroadcastHandler.useDelay(true);
                         complete();
                     },
                     errorMessage -> {

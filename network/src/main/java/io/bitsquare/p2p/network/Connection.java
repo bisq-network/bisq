@@ -60,8 +60,8 @@ public class Connection implements MessageListener {
 
     private static final int MAX_MSG_SIZE = 100 * 1024;              // 100 kb of compressed data
     //TODO decrease limits again after testing
-    private static final int MSG_THROTTLE_PER_SEC = 100;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 100 mbit/sec 
-    private static final int MSG_THROTTLE_PER_10_SEC = 1000;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 1000 mbit/sec for 10 sec 
+    private static final int MSG_THROTTLE_PER_SEC = 10;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 10 mbit/sec 
+    private static final int MSG_THROTTLE_PER_10_SEC = 100;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 100 mbit/sec for 10 sec 
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
 
     public static int getMaxMsgSize() {
@@ -235,8 +235,6 @@ public class Connection implements MessageListener {
             if (violated) {
                 log.error("violatesThrottleLimit 1 ");
                 log.error("elapsed " + (now - compareValue));
-                log.error("now " + now);
-                log.error("compareValue " + compareValue);
                 log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
                         .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.toString())
                         .collect(Collectors.toList()).toString());
@@ -252,8 +250,10 @@ public class Connection implements MessageListener {
 
                 if (violated) {
                     log.error("violatesThrottleLimit 2 ");
-                    log.error("compareValue " + compareValue);
-                    log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream().map(e -> e.second.toString() + "\n\t").toString());
+                    log.error("elapsed " + (now - compareValue));
+                    log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
+                            .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.toString())
+                            .collect(Collectors.toList()).toString());
                 }
             }
             // we limit to max 50 (MSG_THROTTLE_PER_10SEC) entries

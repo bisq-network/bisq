@@ -99,14 +99,14 @@ public class ProtectedDataStorageTest {
     //@Test
     public void testAddAndRemove() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         ProtectedStorageEntry data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
-        Assert.assertTrue(dataStorage1.add(data, null));
+        Assert.assertTrue(dataStorage1.add(data, null, null, true, true));
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
         byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedStorageEntry dataToRemove = new ProtectedStorageEntry(data.getStoragePayload(), data.ownerPubKey, newSequenceNumber, signature);
-        Assert.assertTrue(dataStorage1.remove(dataToRemove, null));
+        Assert.assertTrue(dataStorage1.remove(dataToRemove, null, true));
         Assert.assertEquals(0, dataStorage1.getMap().size());
     }
 
@@ -115,7 +115,7 @@ public class ProtectedDataStorageTest {
         mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 1.5);
         ProtectedStorageEntry data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
         log.debug("data.date " + data.timeStamp);
-        Assert.assertTrue(dataStorage1.add(data, null));
+        Assert.assertTrue(dataStorage1.add(data, null, null, true, true));
         log.debug("test 1");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
@@ -163,20 +163,20 @@ public class ProtectedDataStorageTest {
     public void testRefreshTTL() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 1.5);
         ProtectedStorageEntry data = dataStorage1.getProtectedData(mockData, storageSignatureKeyPair1);
-        Assert.assertTrue(dataStorage1.add(data, null));
+        Assert.assertTrue(dataStorage1.add(data, null, null, true, true));
         Assert.assertEquals(1, dataStorage1.getMap().size());
         Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC);
         log.debug("test 1");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         RefreshTTLMessage refreshTTLMessage = dataStorage1.getRefreshTTLMessage(mockData, storageSignatureKeyPair1);
-        Assert.assertTrue(dataStorage1.refreshTTL(refreshTTLMessage, null));
+        Assert.assertTrue(dataStorage1.refreshTTL(refreshTTLMessage, null, true));
         Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC);
         log.debug("test 2");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         refreshTTLMessage = dataStorage1.getRefreshTTLMessage(mockData, storageSignatureKeyPair1);
-        Assert.assertTrue(dataStorage1.refreshTTL(refreshTTLMessage, null));
+        Assert.assertTrue(dataStorage1.refreshTTL(refreshTTLMessage, null, true));
         Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC);
         log.debug("test 3");
         Assert.assertEquals(1, dataStorage1.getMap().size());

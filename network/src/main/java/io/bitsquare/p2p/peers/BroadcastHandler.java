@@ -16,9 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -29,13 +27,7 @@ public class BroadcastHandler implements PeerManager.Listener {
 
     private static final Logger log = LoggerFactory.getLogger(BroadcastHandler.class);
     private static final long TIMEOUT_PER_PEER_SEC = Timer.STRESS_TEST ? 5 : 30;
-    private static final long DELAY_MS = Timer.STRESS_TEST ? 1000 : 2000;
-    private static boolean USE_DELAY;
-
-    public static void useDelay(boolean useDelay) {
-        USE_DELAY = useDelay;
-    }
-
+    private static final long DELAY_MS = Timer.STRESS_TEST ? 100 : 500;
 
     interface ResultHandler {
         void onCompleted(BroadcastHandler broadcastHandler);
@@ -100,7 +92,7 @@ public class BroadcastHandler implements PeerManager.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender, ResultHandler resultHandler,
-                          @Nullable Listener listener) {
+                          @Nullable Listener listener, boolean isDataOwner) {
         this.message = message;
         this.resultHandler = resultHandler;
         this.listener = listener;
@@ -112,9 +104,23 @@ public class BroadcastHandler implements PeerManager.Listener {
                 .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
                 .collect(Collectors.toSet());
         if (!receivers.isEmpty()) {
-            numOfPeers = receivers.size();
             numOfCompletedBroadcasts = 0;
-            log.info("Broadcast message to {} peers.", numOfPeers);
+
+            if (isDataOwner) {
+                // the data owner sends to all and immediately
+                receivers.stream().forEach(connection -> sendToPeer(connection, message));
+                numOfPeers = receivers.size();
+                log.info("Broadcast message to {} peers.", numOfPeers);
+            } else {
+                // for relay nodes we limit to 2 recipients and use a delay
+                List<Connection> list = new ArrayList<>(receivers);
+                Collections.shuffle(list);
+                list = list.subList(0, Math.min(2, list.size()));
+                numOfPeers = list.size();
+                log.info("Broadcast message to {} peers.", numOfPeers);
+                list.stream().forEach(connection -> UserThread.runAfterRandomDelay(() ->
+                        sendToPeer(connection, message), DELAY_MS, DELAY_MS * 2, TimeUnit.MILLISECONDS));
+            }
 
             long timeoutDelay = TIMEOUT_PER_PEER_SEC * receivers.size();
             timeoutTimer = UserThread.runAfter(() -> {
@@ -129,13 +135,6 @@ public class BroadcastHandler implements PeerManager.Listener {
                         "broadcastQueue=" + broadcastQueue);
                 onFault(errorMessage);
             }, timeoutDelay);
-
-            if (USE_DELAY) {
-                receivers.stream().forEach(connection -> UserThread.runAfterRandomDelay(() ->
-                        sendToPeer(connection, message), DELAY_MS, DELAY_MS * 2, TimeUnit.MILLISECONDS));
-            } else {
-                receivers.stream().forEach(connection -> sendToPeer(connection, message));
-            }
         } else {
             onFault("Message not broadcasted because we have no available peers yet.\n\t" +
                     "message = " + StringUtils.abbreviate(message.toString(), 100), false);

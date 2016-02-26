@@ -334,7 +334,7 @@ public abstract class NetworkNode implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void createExecutorService() {
-        executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort, 50, 100, 2 * 60);
+        executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort, 15, 30, 60);
     }
 
     void startServer(ServerSocket serverSocket) {

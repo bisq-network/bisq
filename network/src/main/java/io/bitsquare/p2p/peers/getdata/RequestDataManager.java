@@ -53,6 +53,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private final Listener listener;
 
     private final Map<NodeAddress, RequestDataHandler> handlerMap = new HashMap<>();
+    private Map<String, GetDataRequestHandler> getDataRequestHandlers = new HashMap<>();
     private Optional<NodeAddress> nodeAddressOfPreliminaryDataRequest = Optional.empty();
     private Timer retryTimer;
     private boolean dataUpdateRequested;
@@ -178,25 +179,33 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
 
-                GetDataRequestHandler getDataRequestHandler = new GetDataRequestHandler(networkNode, peerManager, dataStorage,
-                        new GetDataRequestHandler.Listener() {
-                            @Override
-                            public void onComplete() {
-                                log.trace("requestDataHandshake completed.\n\tConnection={}", connection);
-                            }
-
-                            @Override
-                            public void onFault(String errorMessage, @Nullable Connection connection) {
-                                if (!stopped) {
-                                    log.trace("GetDataRequestHandler failed.\n\tConnection={}\n\t" +
-                                            "ErrorMessage={}", connection, errorMessage);
-                                    peerManager.handleConnectionFault(connection);
-                                } else {
-                                    log.warn("We have stopped already. We ignore that getDataRequestHandler.handle.onFault call.");
+                final String uid = connection.getUid();
+                if (!getDataRequestHandlers.containsKey(uid)) {
+                    GetDataRequestHandler getDataRequestHandler = new GetDataRequestHandler(networkNode, dataStorage,
+                            new GetDataRequestHandler.Listener() {
+                                @Override
+                                public void onComplete() {
+                                    getDataRequestHandlers.remove(uid);
+                                    log.trace("requestDataHandshake completed.\n\tConnection={}", connection);
                                 }
-                            }
-                        });
-                getDataRequestHandler.handle((GetDataRequest) message, connection);
+
+                                @Override
+                                public void onFault(String errorMessage, @Nullable Connection connection) {
+                                    getDataRequestHandlers.remove(uid);
+                                    if (!stopped) {
+                                        log.trace("GetDataRequestHandler failed.\n\tConnection={}\n\t" +
+                                                "ErrorMessage={}", connection, errorMessage);
+                                        peerManager.handleConnectionFault(connection);
+                                    } else {
+                                        log.warn("We have stopped already. We ignore that getDataRequestHandler.handle.onFault call.");
+                                    }
+                                }
+                            });
+                    getDataRequestHandlers.put(uid, getDataRequestHandler);
+                    getDataRequestHandler.handle((GetDataRequest) message, connection);
+                } else {
+                    log.warn("We have already a GetDataRequestHandler for that connection started");
+                }
             } else {
                 log.warn("We have stopped already. We ignore that onMessage call.");
             }

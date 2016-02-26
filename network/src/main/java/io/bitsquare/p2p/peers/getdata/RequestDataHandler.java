@@ -157,7 +157,7 @@ public class RequestDataHandler implements MessageListener {
                                     "at that moment");
                     ((GetDataResponse) message).dataSet.stream()
                             .forEach(protectedData -> dataStorage.add(protectedData,
-                                    connection.getPeersNodeAddressOptional().get()));
+                                    connection.getPeersNodeAddressOptional().get(), null, false, false));
 
                     cleanup();
                     listener.onComplete();

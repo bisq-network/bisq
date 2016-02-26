@@ -59,7 +59,7 @@ public class ArbitratorService {
 
     public void addArbitrator(Arbitrator arbitrator, final ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         log.debug("addArbitrator arbitrator.hashCode() " + arbitrator.hashCode());
-        boolean result = p2PService.addData(arbitrator);
+        boolean result = p2PService.addData(arbitrator, true, true);
         if (result) {
             log.trace("Add arbitrator to network was successful. Arbitrator.hashCode() = " + arbitrator.hashCode());
             resultHandler.handleResult();
@@ -70,7 +70,7 @@ public class ArbitratorService {
 
     public void removeArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         log.debug("removeArbitrator arbitrator.hashCode() " + arbitrator.hashCode());
-        if (p2PService.removeData(arbitrator)) {
+        if (p2PService.removeData(arbitrator, true)) {
             log.trace("Remove arbitrator from network was successful. Arbitrator.hashCode() = " + arbitrator.hashCode());
             resultHandler.handleResult();
         } else {

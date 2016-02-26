@@ -33,7 +33,6 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.p2p.messaging.SendDirectMessageListener;
-import io.bitsquare.p2p.peers.BroadcastHandler;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
@@ -63,7 +62,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = Timer.STRESS_TEST ? 1 : 5;
     private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = Timer.STRESS_TEST ? 1 : 10;
-    private static final long REPUBLISH_INTERVAL_MS = Timer.STRESS_TEST ? 3000 : 10 * Offer.TTL;
+    private static final long REPUBLISH_INTERVAL_MS = Timer.STRESS_TEST ? 3000 : 2 * Offer.TTL;
     private static final long REFRESH_INTERVAL_MS = Timer.STRESS_TEST ? 1000 : (long) (Offer.TTL * 0.5);
 
     private final KeyRing keyRing;
@@ -140,7 +139,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         log.info("remove all open offers at shutDown");
         // we remove own offers from offerbook when we go offline
         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
-        BroadcastHandler.useDelay(false);
         openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
 
         if (completeHandler != null)
