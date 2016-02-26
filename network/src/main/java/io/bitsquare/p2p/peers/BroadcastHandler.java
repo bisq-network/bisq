@@ -29,12 +29,13 @@ public class BroadcastHandler implements PeerManager.Listener {
 
     private static final Logger log = LoggerFactory.getLogger(BroadcastHandler.class);
     private static final long TIMEOUT_PER_PEER_SEC = Timer.STRESS_TEST ? 5 : 30;
+    private static final long DELAY_MS = Timer.STRESS_TEST ? 1000 : 2000;
+    private static boolean USE_DELAY;
 
-    public static void setDelayMs(long delayMs) {
-        DELAY_MS = delayMs;
+    public static void useDelay(boolean useDelay) {
+        USE_DELAY = useDelay;
     }
 
-    private static long DELAY_MS = Timer.STRESS_TEST ? 1000 : 2000;
 
     interface ResultHandler {
         void onCompleted(BroadcastHandler broadcastHandler);
@@ -129,8 +130,12 @@ public class BroadcastHandler implements PeerManager.Listener {
                 onFault(errorMessage);
             }, timeoutDelay);
 
-            receivers.stream().forEach(connection -> UserThread.runAfterRandomDelay(() ->
-                    sendToPeer(connection, message), DELAY_MS, DELAY_MS * 2, TimeUnit.MILLISECONDS));
+            if (USE_DELAY) {
+                receivers.stream().forEach(connection -> UserThread.runAfterRandomDelay(() ->
+                        sendToPeer(connection, message), DELAY_MS, DELAY_MS * 2, TimeUnit.MILLISECONDS));
+            } else {
+                receivers.stream().forEach(connection -> sendToPeer(connection, message));
+            }
         } else {
             onFault("Message not broadcasted because we have no available peers yet.\n\t" +
                     "message = " + StringUtils.abbreviate(message.toString(), 100), false);

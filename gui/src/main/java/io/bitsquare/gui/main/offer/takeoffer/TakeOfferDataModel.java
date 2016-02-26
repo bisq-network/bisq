@@ -26,7 +26,7 @@ import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.*;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.pricefeed.MarketPriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
@@ -69,7 +69,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final User user;
     private final WalletPasswordPopup walletPasswordPopup;
     private final Preferences preferences;
-    private final MarketPriceFeed marketPriceFeed;
+    private final PriceFeed priceFeed;
     private final BlockchainService blockchainService;
     private final BSFormatter formatter;
 
@@ -101,7 +101,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Inject
     TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
                        WalletService walletService, User user, WalletPasswordPopup walletPasswordPopup,
-                       Preferences preferences, MarketPriceFeed marketPriceFeed, BlockchainService blockchainService,
+                       Preferences preferences, PriceFeed priceFeed, BlockchainService blockchainService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.tradeWalletService = tradeWalletService;
@@ -109,7 +109,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.user = user;
         this.walletPasswordPopup = walletPasswordPopup;
         this.preferences = preferences;
-        this.marketPriceFeed = marketPriceFeed;
+        this.priceFeed = priceFeed;
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
@@ -134,7 +134,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
             feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
 
         if (isTabSelected)
-            marketPriceFeed.setCurrencyCode(offer.getCurrencyCode());
+            priceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
 
     @Override
@@ -200,7 +200,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         };
 
         offer.resetState();
-        marketPriceFeed.setCurrencyCode(offer.getCurrencyCode());
+        priceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
 
     void checkOfferAvailability(ResultHandler resultHandler) {
@@ -210,7 +210,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
         if (isTabSelected)
-            marketPriceFeed.setCurrencyCode(offer.getCurrencyCode());
+            priceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -30,7 +30,7 @@ public class MarketPrice {
 
     }
 
-    public double getPrice(MarketPriceFeed.Type type) {
+    public double getPrice(PriceFeed.Type type) {
         switch (type) {
             case ASK:
                 return ask;

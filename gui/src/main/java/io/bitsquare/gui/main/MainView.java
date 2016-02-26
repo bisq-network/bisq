@@ -19,7 +19,7 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.pricefeed.MarketPriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
@@ -133,7 +133,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 model.marketPriceCurrency, model.marketPrice));
         marketPriceBox.second.textProperty().bind(createStringBinding(
                 () -> {
-                    MarketPriceFeed.Type type = model.typeProperty.get();
+                    PriceFeed.Type type = model.typeProperty.get();
                     return type != null ? "Market price (" + type.name + ")" : "";
                 },
                 model.marketPriceCurrency, model.typeProperty));

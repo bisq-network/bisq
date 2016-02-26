@@ -866,7 +866,7 @@ textfield */
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-font-size: 15;
-    /*-fx-background-radius: 20;*/
+    -fx-background-radius: 5;
 }
 
 #buy-button-big:hover {
@@ -878,7 +878,7 @@ textfield */
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-font-size: 15;
-    /* -fx-background-radius: 20;*/
+    -fx-background-radius: 5;
 }
 
 #sell-button-big:hover {
@@ -889,7 +889,6 @@ textfield */
     -fx-base: -bs-buy;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    /*  -fx-background-radius: 13;*/
 }
 
 #buy-button:hover {
@@ -900,7 +899,6 @@ textfield */
     -fx-base: -bs-sell;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    /* -fx-background-radius: 13;*/
 }
 
 #sell-button:hover {
@@ -911,7 +909,6 @@ textfield */
     -fx-base: -bs-light-grey;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    /* -fx-background-radius: 13;*/
 }
 
 #cancel-button:hover {

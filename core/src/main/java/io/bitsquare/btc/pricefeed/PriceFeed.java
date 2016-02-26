@@ -24,8 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class MarketPriceFeed {
-    private static final Logger log = LoggerFactory.getLogger(MarketPriceFeed.class);
+public class PriceFeed {
+    private static final Logger log = LoggerFactory.getLogger(PriceFeed.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -62,7 +62,7 @@ public class MarketPriceFeed {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MarketPriceFeed() {
+    public PriceFeed() {
     }
 
 
@@ -75,7 +75,6 @@ public class MarketPriceFeed {
         this.faultHandler = faultHandler;
 
         requestAllPrices(fiatPriceProvider, () -> {
-            log.trace("requestAllPrices result");
             applyPrice();
             UserThread.runPeriodically(() -> requestPrice(fiatPriceProvider), PERIOD_FIAT_SEC);
         });

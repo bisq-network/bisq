@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.offer;
 
-import io.bitsquare.btc.pricefeed.MarketPriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.ViewLoader;
@@ -28,8 +28,8 @@ import javax.inject.Inject;
 public class SellOfferView extends OfferView {
 
     @Inject
-    public SellOfferView(ViewLoader viewLoader, Navigation navigation, MarketPriceFeed marketPriceFeed) {
-        super(viewLoader, navigation, marketPriceFeed);
+    public SellOfferView(ViewLoader viewLoader, Navigation navigation, PriceFeed priceFeed) {
+        super(viewLoader, navigation, priceFeed);
     }
 
     @Override

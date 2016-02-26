@@ -140,7 +140,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         log.info("remove all open offers at shutDown");
         // we remove own offers from offerbook when we go offline
         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
-        BroadcastHandler.setDelayMs(1);
+        BroadcastHandler.useDelay(false);
         openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
 
         if (completeHandler != null)

@@ -22,6 +22,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.p2p.peers.BroadcastHandler;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import org.bitcoinj.core.Coin;
@@ -61,15 +62,19 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                             log.warn("Tx malleability happened after broadcast. We publish the changed offer to the P2P network again.");
                             // Tx malleability happened after broadcast. We first remove the malleable offer.
                             // Then we publish the changed offer to the P2P network again after setting the new TxId.
+                            // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
+                            BroadcastHandler.useDelay(false);
                             model.offerBookService.removeOffer(model.offer,
                                     () -> {
                                         log.info("We store now the changed txID to the offer and add that again.");
                                         // We store now the changed txID to the offer and add that again.
                                         model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
                                         model.setTransaction(transaction);
-
                                         model.offerBookService.addOffer(model.offer,
-                                                BroadcastCreateOfferFeeTx.this::complete,
+                                                () -> {
+                                                    BroadcastHandler.useDelay(true);
+                                                    complete();
+                                                },
                                                 errorMessage -> {
                                                     log.error("addOffer failed");
                                                     addOfferFailed = true;

@@ -35,7 +35,7 @@ public class P2pNetworkListItem {
 
     private final Statistic statistic;
     private final Connection connection;
-    private final Subscription sentBytesSubscription, receivedBytesSubscription;
+    private final Subscription sentBytesSubscription, receivedBytesSubscription, onionAddressSubscription;
     private final Clock clock;
     private final BSFormatter formatter;
 
@@ -57,6 +57,8 @@ public class P2pNetworkListItem {
                 e -> sentBytes.set(formatter.formatBytes((int) e)));
         receivedBytesSubscription = EasyBind.subscribe(statistic.receivedBytesProperty(),
                 e -> receivedBytes.set(formatter.formatBytes((int) e)));
+        onionAddressSubscription = EasyBind.subscribe(connection.peersNodeAddressProperty(),
+                nodeAddress -> onionAddress.set(nodeAddress != null ? nodeAddress.getFullAddress() : "Not known yet"));
 
         listener = new Clock.Listener() {
             @Override
@@ -64,7 +66,6 @@ public class P2pNetworkListItem {
                 onLastActivityChanged(statistic.getLastActivityTimestamp());
                 updatePeerType();
                 updateConnectionType();
-                updateOnionAddress();
             }
 
             @Override
@@ -79,7 +80,6 @@ public class P2pNetworkListItem {
         onLastActivityChanged(statistic.getLastActivityTimestamp());
         updatePeerType();
         updateConnectionType();
-        updateOnionAddress();
     }
 
     private void onLastActivityChanged(long timeStamp) {
@@ -89,12 +89,8 @@ public class P2pNetworkListItem {
     public void cleanup() {
         sentBytesSubscription.unsubscribe();
         receivedBytesSubscription.unsubscribe();
+        onionAddressSubscription.unsubscribe();
         clock.removeListener(listener);
-    }
-
-    public void updateOnionAddress() {
-        onionAddress.set(connection.getPeersNodeAddressOptional().isPresent() ?
-                connection.getPeersNodeAddressOptional().get().getFullAddress() : "Not known yet");
     }
 
     public void updateConnectionType() {
@@ -118,7 +114,7 @@ public class P2pNetworkListItem {
         return onionAddress.get();
     }
 
-    public StringProperty getOnionAddressProperty() {
+    public StringProperty onionAddressProperty() {
         return onionAddress;
     }
 
@@ -126,7 +122,7 @@ public class P2pNetworkListItem {
         return connectionType.get();
     }
 
-    public StringProperty getConnectionTypeProperty() {
+    public StringProperty connectionTypeProperty() {
         return connectionType;
     }
 
@@ -134,7 +130,7 @@ public class P2pNetworkListItem {
         return peerType.get();
     }
 
-    public StringProperty getPeerTypeProperty() {
+    public StringProperty peerTypeProperty() {
         return peerType;
     }
 

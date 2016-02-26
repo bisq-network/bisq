@@ -31,7 +31,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.pricefeed.MarketPriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
@@ -103,7 +103,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
     final StringProperty marketPrice = new SimpleStringProperty("N/A");
     final StringProperty marketPriceCurrency = new SimpleStringProperty("");
-    final ObjectProperty<MarketPriceFeed.Type> typeProperty = new SimpleObjectProperty<>(MarketPriceFeed.Type.LAST);
+    final ObjectProperty<PriceFeed.Type> typeProperty = new SimpleObjectProperty<>(PriceFeed.Type.LAST);
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty reservedBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
@@ -130,7 +130,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2pNetworkLabelId = new SimpleStringProperty("footer-pane");
 
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
-    private final MarketPriceFeed marketPriceFeed;
+    private final PriceFeed priceFeed;
     private final User user;
     private int numBtcPeers = 0;
     private Timer checkNumberOfBtcPeersTimer;
@@ -146,13 +146,13 @@ public class MainViewModel implements ViewModel {
 
     @Inject
     public MainViewModel(WalletService walletService, TradeWalletService tradeWalletService,
-                         MarketPriceFeed marketPriceFeed,
+                         PriceFeed priceFeed,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, WalletPasswordPopup walletPasswordPopup,
                          NotificationCenter notificationCenter, TacPopup tacPopup, Clock clock,
                          Navigation navigation, BSFormatter formatter) {
-        this.marketPriceFeed = marketPriceFeed;
+        this.priceFeed = priceFeed;
         this.user = user;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -615,18 +615,18 @@ public class MainViewModel implements ViewModel {
     }
 
     private void setupMarketPriceFeed() {
-        if (marketPriceFeed.getCurrencyCode() == null)
-            marketPriceFeed.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
-        if (marketPriceFeed.getType() == null)
-            marketPriceFeed.setType(MarketPriceFeed.Type.LAST);
-        marketPriceFeed.init(price -> {
+        if (priceFeed.getCurrencyCode() == null)
+            priceFeed.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
+        if (priceFeed.getType() == null)
+            priceFeed.setType(PriceFeed.Type.LAST);
+        priceFeed.init(price -> {
                     marketPrice.set(formatter.formatMarketPrice(price));
                 },
                 (errorMessage, throwable) -> {
                     marketPrice.set("N/A");
                 });
-        marketPriceCurrency.bind(marketPriceFeed.currencyCodeProperty());
-        typeProperty.bind(marketPriceFeed.typeProperty());
+        marketPriceCurrency.bind(priceFeed.currencyCodeProperty());
+        typeProperty.bind(priceFeed.typeProperty());
     }
 
     private void displayAlertIfPresent(Alert alert) {
