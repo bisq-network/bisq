@@ -79,7 +79,7 @@ class KeepAliveHandler implements MessageListener {
     private void sendPing(Connection connection) {
         Log.traceCall("connection=" + connection + " / this=" + this);
         if (!stopped) {
-            Ping ping = new Ping(nonce);
+            Ping ping = new Ping(nonce, connection.getStatistic().roundTripTimeProperty().get());
             sendTs = System.currentTimeMillis();
             SettableFuture<Connection> future = networkNode.sendMessage(connection, ping);
             Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -127,7 +127,7 @@ class KeepAliveHandler implements MessageListener {
             if (!stopped) {
                 Pong pong = (Pong) message;
                 if (pong.requestNonce == nonce) {
-                    long roundTripTime = System.currentTimeMillis() - sendTs;
+                    int roundTripTime = (int) (System.currentTimeMillis() - sendTs);
                     log.trace("roundTripTime=" + roundTripTime + "\n\tconnection=" + connection);
                     connection.getStatistic().setRoundTripTime(roundTripTime);
                     cleanup();

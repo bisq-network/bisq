@@ -7,9 +7,11 @@ public final class Ping extends KeepAliveMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final int nonce;
+    public final int lastRoundTripTime;
 
-    public Ping(int nonce) {
+    public Ping(int nonce, int lastRoundTripTime) {
         this.nonce = nonce;
+        this.lastRoundTripTime = lastRoundTripTime;
     }
 
     @Override

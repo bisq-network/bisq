@@ -79,6 +79,10 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
             Log.traceCall(message.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 Ping ping = (Ping) message;
+
+                // We get from peer last measured rrt
+                connection.getStatistic().setRoundTripTime(ping.lastRoundTripTime);
+
                 Pong pong = new Pong(ping.nonce);
                 SettableFuture<Connection> future = networkNode.sendMessage(connection, pong);
                 Futures.addCallback(future, new FutureCallback<Connection>() {

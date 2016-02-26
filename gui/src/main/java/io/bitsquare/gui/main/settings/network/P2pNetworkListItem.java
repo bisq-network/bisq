@@ -44,8 +44,6 @@ public class P2pNetworkListItem {
     private final StringProperty receivedBytes = new SimpleStringProperty();
     private final StringProperty peerType = new SimpleStringProperty();
     private final StringProperty connectionType = new SimpleStringProperty();
-
-
     private final StringProperty roundTripTime = new SimpleStringProperty();
     private final StringProperty onionAddress = new SimpleStringProperty();
     private final Clock.Listener listener;
@@ -63,7 +61,7 @@ public class P2pNetworkListItem {
         onionAddressSubscription = EasyBind.subscribe(connection.peersNodeAddressProperty(),
                 nodeAddress -> onionAddress.set(nodeAddress != null ? nodeAddress.getFullAddress() : "Not known yet"));
         roundTripTimeSubscription = EasyBind.subscribe(statistic.roundTripTimeProperty(),
-                roundTripTime -> this.roundTripTime.set(DurationFormatUtils.formatDuration((long) roundTripTime, "ss.SSS")));
+                roundTripTime -> this.roundTripTime.set((int) roundTripTime == 0 ? "-" : roundTripTime + " ms"));
 
         listener = new Clock.Listener() {
             @Override
