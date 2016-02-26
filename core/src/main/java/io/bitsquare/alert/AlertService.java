@@ -50,7 +50,7 @@ public class AlertService {
     }
 
     public void addAlertMessage(Alert alert, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        boolean result = p2PService.addData(alert, true, true);
+        boolean result = p2PService.addData(alert, true);
         if (result) {
             log.trace("Add alertMessage to network was successful. AlertMessage = " + alert);
             if (resultHandler != null) resultHandler.handleResult();

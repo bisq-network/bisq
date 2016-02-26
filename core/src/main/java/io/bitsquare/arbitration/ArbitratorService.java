@@ -59,7 +59,7 @@ public class ArbitratorService {
 
     public void addArbitrator(Arbitrator arbitrator, final ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         log.debug("addArbitrator arbitrator.hashCode() " + arbitrator.hashCode());
-        boolean result = p2PService.addData(arbitrator, true, true);
+        boolean result = p2PService.addData(arbitrator, true);
         if (result) {
             log.trace("Add arbitrator to network was successful. Arbitrator.hashCode() = " + arbitrator.hashCode());
             resultHandler.handleResult();

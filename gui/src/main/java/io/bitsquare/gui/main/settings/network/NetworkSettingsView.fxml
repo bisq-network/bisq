@@ -84,12 +84,12 @@
                     <PropertyValueFactory property="creationDate"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Last activity" fx:id="lastActivityColumn" minWidth="100" maxWidth="120">
-                <cellValueFactory>
-                    <PropertyValueFactory property="lastActivity"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn text="RTT" fx:id="roundTripTimeColumn" minWidth="80" maxWidth="80">
+            <!-- <TableColumn text="Last activity" fx:id="lastActivityColumn" minWidth="100" maxWidth="120">
+                 <cellValueFactory>
+                     <PropertyValueFactory property="lastActivity"/>
+                 </cellValueFactory>
+             </TableColumn>-->
+            <TableColumn text="Roundtrip" fx:id="roundTripTimeColumn" minWidth="80" maxWidth="80">
                 <cellValueFactory>
                     <PropertyValueFactory property="roundTripTime"/>
                 </cellValueFactory>
@@ -117,8 +117,8 @@
                focusTraversable="false"/>
 
     <columnConstraints>
-        <ColumnConstraints hgrow="NEVER" halignment="RIGHT"/>
-        <ColumnConstraints hgrow="ALWAYS"/>
+        <ColumnConstraints hgrow="ALWAYS" halignment="RIGHT"/>
+        <ColumnConstraints hgrow="SOMETIMES"/>
     </columnConstraints>
 </GridPane>
 

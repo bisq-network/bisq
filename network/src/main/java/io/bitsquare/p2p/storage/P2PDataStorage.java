@@ -113,7 +113,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             Log.traceCall(StringUtils.abbreviate(message.toString(), 100) + "\n\tconnection=" + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (message instanceof AddDataMessage) {
-                    add(((AddDataMessage) message).protectedStorageEntry, peersNodeAddress, null, false, false);
+                    add(((AddDataMessage) message).protectedStorageEntry, peersNodeAddress, null, false);
                 } else if (message instanceof RemoveDataMessage) {
                     remove(((RemoveDataMessage) message).protectedStorageEntry, peersNodeAddress, false);
                 } else if (message instanceof RemoveMailboxDataMessage) {
@@ -136,7 +136,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        if (connection.getPeersNodeAddressOptional().isPresent() && !closeConnectionReason.isIntended) {
+        if (connection.hasPeersNodeAddress() && !closeConnectionReason.isIntended) {
             map.values().stream()
                     .forEach(protectedData -> {
                         ExpirablePayload expirablePayload = protectedData.getStoragePayload();
@@ -151,6 +151,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                 ByteArray hashOfPayload = getHashAsByteArray(expirablePayload);
                                 boolean containsKey = map.containsKey(hashOfPayload);
                                 if (containsKey) {
+                                    log.info("We remove the data as the data owner got disconnected with " +
+                                            "closeConnectionReason=" + closeConnectionReason);
                                     doRemoveProtectedExpirableData(protectedData, hashOfPayload);
                                 } else {
                                     log.debug("Remove data ignored as we don't have an entry for that data.");
@@ -172,13 +174,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean add(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
-                       @Nullable BroadcastHandler.Listener listener, boolean forceBroadcast, boolean isDataOwner) {
+                       @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
         Log.traceCall();
 
         ByteArray hashOfPayload = getHashAsByteArray(protectedStorageEntry.getStoragePayload());
+        boolean sequenceNrValid = isSequenceNrValid(protectedStorageEntry.sequenceNumber, hashOfPayload);
         boolean result = checkPublicKeys(protectedStorageEntry, true)
                 && checkSignature(protectedStorageEntry)
-                && isSequenceNrValid(protectedStorageEntry.sequenceNumber, hashOfPayload);
+                && sequenceNrValid;
 
         boolean containsKey = map.containsKey(hashOfPayload);
         if (containsKey)
@@ -197,10 +200,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             log.trace(sb.toString());
             log.info("Data set after doAdd: size=" + map.values().size());
 
-            if (!containsKey || forceBroadcast)
-                broadcast(new AddDataMessage(protectedStorageEntry), sender, listener, isDataOwner);
-            else
-                log.trace("Not broadcasting data as we had it already in our map.");
+            broadcast(new AddDataMessage(protectedStorageEntry), sender, listener, isDataOwner);
 
             hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
         } else {
@@ -383,13 +383,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private boolean isSequenceNrValid(int newSequenceNumber, ByteArray hashOfData) {
         if (sequenceNumberMap.containsKey(hashOfData)) {
             Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
-            if (newSequenceNumber < storedSequenceNumber) {
+            if (newSequenceNumber > storedSequenceNumber) {
+                return true;
+            } else {
                 log.info("Sequence number is invalid. sequenceNumber = "
                         + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
                         "That can happen if the data owner gets an old delayed data storage message.");
                 return false;
-            } else {
-                return true;
             }
         } else {
             return true;

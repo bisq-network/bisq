@@ -370,7 +370,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void republishOffer(OpenOffer openOffer) {
-        offerBookService.republishOffers(openOffer.getOffer(),
+        offerBookService.addOffer(openOffer.getOffer(),
                 () -> {
                     if (!stopped) {
                         log.debug("Successful added offer to P2P network");

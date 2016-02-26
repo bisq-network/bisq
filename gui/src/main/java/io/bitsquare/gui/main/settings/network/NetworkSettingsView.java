@@ -71,7 +71,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     TableView<P2pNetworkListItem> p2PPeerTable;
     @FXML
     TableColumn<P2pNetworkListItem, String> onionAddressColumn, connectionTypeColumn, creationDateColumn,
-            lastActivityColumn, roundTripTimeColumn, sentBytesColumn, receivedBytesColumn, peerTypeColumn;
+    /*lastActivityColumn,*/ roundTripTimeColumn, sentBytesColumn, receivedBytesColumn, peerTypeColumn;
     private Subscription numP2PPeersSubscription;
     private Subscription bitcoinPeersSubscription;
     private Subscription nodeAddressSubscription;

@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.network;
 
+import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.bitsquare.app.Log;
@@ -68,6 +69,8 @@ public class Connection implements MessageListener {
         return MAX_MSG_SIZE;
     }
 
+    private static final CycleDetectingLockFactory cycleDetectingLockFactory = CycleDetectingLockFactory.newInstance(CycleDetectingLockFactory.Policies.THROW);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Class fields
@@ -79,7 +82,7 @@ public class Connection implements MessageListener {
     private final String portInfo;
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-    private final ReentrantLock objectOutputStreamLock = new ReentrantLock(true);
+    private final ReentrantLock objectOutputStreamLock = cycleDetectingLockFactory.newReentrantLock("objectOutputStreamLock");
     // holder of state shared between InputHandler and Connection
     private final SharedModel sharedModel;
     private final Statistic statistic;
@@ -104,7 +107,6 @@ public class Connection implements MessageListener {
     Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener,
                @Nullable NodeAddress peersNodeAddress) {
         this.socket = socket;
-        //this.messageListener = messageListener;
         this.connectionListener = connectionListener;
         uid = UUID.randomUUID().toString();
         statistic = new Statistic();

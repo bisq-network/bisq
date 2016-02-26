@@ -84,17 +84,8 @@ public class OfferBookService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public void republishOffers(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        doAddOffer(offer, resultHandler, errorMessageHandler, true);
-    }
-
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        doAddOffer(offer, resultHandler, errorMessageHandler, false);
-    }
-
-    private void doAddOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler, boolean forceBroadcast) {
-        boolean result = p2PService.addData(offer, forceBroadcast, true);
+        boolean result = p2PService.addData(offer, true);
         if (result) {
             log.trace("Add offer to network was successful. Offer ID = " + offer.getId());
             resultHandler.handleResult();

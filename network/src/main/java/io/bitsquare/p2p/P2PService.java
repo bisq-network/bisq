@@ -556,7 +556,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         public void onBroadcastFailed(String errorMessage) {
                         }
                     };
-                    boolean result = p2PDataStorage.add(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true, true);
+                    boolean result = p2PDataStorage.add(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true);
                     if (!result) {
                         //TODO remove and add again with a delay to ensure the data will be broadcasted
                         sendMailboxMessageListener.onFault("Data already exists in our local database");
@@ -616,13 +616,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // Data storage
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean addData(StoragePayload storagePayload, boolean forceBroadcast, boolean isDataOwner) {
+    public boolean addData(StoragePayload storagePayload, boolean isDataOwner) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             try {
                 ProtectedStorageEntry protectedStorageEntry = p2PDataStorage.getProtectedData(storagePayload, optionalKeyRing.get().getSignatureKeyPair());
-                return p2PDataStorage.add(protectedStorageEntry, networkNode.getNodeAddress(), null, forceBroadcast, isDataOwner);
+                return p2PDataStorage.add(protectedStorageEntry, networkNode.getNodeAddress(), null, isDataOwner);
             } catch (CryptoException e) {
                 log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 return false;
