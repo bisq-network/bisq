@@ -61,6 +61,7 @@ public class ArbitratorManager {
 
     private static final long REPUBLISH_MILLIS = Arbitrator.TTL / 2;
     private static final long RETRY_REPUBLISH_SEC = 5;
+    private static final long REPEATED_REPUBLISH_AT_STARTUP_SEC = 60;
 
     private static final String publicKeyForTesting = "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee";
 
@@ -159,6 +160,8 @@ public class ArbitratorManager {
         }
 
         republishArbitratorTimer = UserThread.runPeriodically(this::republishArbitrator, REPUBLISH_MILLIS, TimeUnit.MILLISECONDS);
+
+        UserThread.runAfter(this::republishArbitrator, REPEATED_REPUBLISH_AT_STARTUP_SEC);
 
         applyArbitrators();
     }
