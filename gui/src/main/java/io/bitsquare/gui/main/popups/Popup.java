@@ -103,6 +103,8 @@ public class Popup {
 
     public void hide() {
         animateHide(() -> {
+            if (owner == null)
+                owner = MainView.getRootContainer();
             Scene rootScene = owner.getScene();
             if (rootScene != null) {
                 Window window = rootScene.getWindow();
@@ -308,6 +310,8 @@ public class Popup {
     }
 
     protected void layout() {
+        if (owner == null)
+            owner = MainView.getRootContainer();
         Scene rootScene = owner.getScene();
         if (rootScene != null) {
             Window window = rootScene.getWindow();

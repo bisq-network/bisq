@@ -82,9 +82,10 @@ public abstract class PaymentMethodForm {
     protected void addAccountNameTextFieldWithAutoFillCheckBox() {
         Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(gridPane, ++gridRow, "Account name:", "Use custom account name");
         accountNameTextField = tuple.second;
-        accountNameTextField.setPrefWidth(250);
+        accountNameTextField.setPrefWidth(300);
         accountNameTextField.setEditable(false);
         accountNameTextField.setValidator(inputValidator);
+        accountNameTextField.setFocusTraversable(false);
         accountNameTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             paymentAccount.setAccountName(newValue);
             updateAllInputsValid();
@@ -92,7 +93,9 @@ public abstract class PaymentMethodForm {
         useCustomAccountNameCheckBox = tuple.third;
         useCustomAccountNameCheckBox.setSelected(false);
         useCustomAccountNameCheckBox.setOnAction(e -> {
-            accountNameTextField.setEditable(useCustomAccountNameCheckBox.isSelected());
+            boolean selected = useCustomAccountNameCheckBox.isSelected();
+            accountNameTextField.setEditable(selected);
+            accountNameTextField.setFocusTraversable(selected);
             autoFillNameTextField();
         });
     }

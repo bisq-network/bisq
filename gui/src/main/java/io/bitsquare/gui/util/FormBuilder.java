@@ -20,6 +20,7 @@ package io.bitsquare.gui.util;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.common.util.Tuple4;
 import io.bitsquare.gui.components.*;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -307,6 +308,104 @@ public class FormBuilder {
 
         return new Tuple3<>(label, inputTextField, checkBox);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + InputTextField + Button
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple3<Label, InputTextField, Button> addLabelInputTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle) {
+        Label label = addLabel(gridPane, rowIndex, title, 0);
+
+        InputTextField inputTextField = new InputTextField();
+        Button button = new Button(buttonTitle);
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(inputTextField, button);
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 1);
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple3<>(label, inputTextField, button);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + TextField + Button
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple3<Label, TextField, Button> addLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle) {
+        Label label = addLabel(gridPane, rowIndex, title, 0);
+
+        TextField textField = new TextField();
+        textField.setEditable(false);
+        textField.setMouseTransparent(true);
+        textField.setFocusTraversable(false);
+        Button button = new Button(buttonTitle);
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(textField, button);
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 1);
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple3<>(label, textField, button);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + InputTextField + Label  + InputTextField
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple4<Label, InputTextField, Label, InputTextField> addLabelInputTextFieldLabelInputTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
+        Label label1 = addLabel(gridPane, rowIndex, title1, 0);
+
+        InputTextField inputTextField1 = new InputTextField();
+        Label label2 = new Label(title2);
+        HBox.setMargin(label2, new Insets(5, 0, 0, 0));
+        InputTextField inputTextField2 = new InputTextField();
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(inputTextField1, label2, inputTextField2);
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 1);
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple4<>(label1, inputTextField1, label2, inputTextField2);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + TextField + Label  + TextField
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple4<Label, TextField, Label, TextField> addLabelTextFieldLabelTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
+        Label label1 = addLabel(gridPane, rowIndex, title1, 0);
+
+        TextField textField1 = new TextField();
+        textField1.setEditable(false);
+        textField1.setMouseTransparent(true);
+        textField1.setFocusTraversable(false);
+        Label label2 = new Label(title2);
+        HBox.setMargin(label2, new Insets(5, 0, 0, 0));
+        TextField textField2 = new TextField();
+        textField2.setEditable(false);
+        textField2.setMouseTransparent(true);
+        textField2.setFocusTraversable(false);
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(textField1, label2, textField2);
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 1);
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple4<>(label1, textField1, label2, textField2);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Button + CheckBox

@@ -31,7 +31,7 @@ public abstract class PaymentAccountContractData implements Payload {
     private final int maxTradePeriod;
 
     @Nullable
-    private String countryCode;
+    protected String countryCode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

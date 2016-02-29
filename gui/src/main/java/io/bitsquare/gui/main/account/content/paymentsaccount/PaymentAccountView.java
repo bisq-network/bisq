@@ -28,7 +28,9 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.payment.*;
+import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.PaymentAccountFactory;
+import io.bitsquare.payment.PaymentMethod;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.geometry.VPos;
@@ -238,8 +240,11 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForDisplayAccount();
             gridRow = paymentMethodForm.getGridRow();
-            Button deleteAccountButton = addButtonAfterGroup(root, ++gridRow, "Delete account");
+            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, "Delete account", "Cancel");
+            Button deleteAccountButton = tuple.first;
             deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
+            Button cancelButton = tuple.second;
+            cancelButton.setOnAction(event -> removeSelectAccountForm());
             GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
             model.onSelectAccount(paymentAccount);
         }
@@ -255,32 +260,7 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod) {
-        PaymentAccount paymentAccount;
-        switch (paymentMethod.getId()) {
-            case PaymentMethod.OK_PAY_ID:
-                paymentAccount = new OKPayAccount();
-                break;
-            case PaymentMethod.PERFECT_MONEY_ID:
-                paymentAccount = new PerfectMoneyAccount();
-                break;
-            case PaymentMethod.SEPA_ID:
-                paymentAccount = new SepaAccount();
-                break;
-            case PaymentMethod.ALI_PAY_ID:
-                paymentAccount = new AliPayAccount();
-                break;
-            case PaymentMethod.SWISH_ID:
-                paymentAccount = new SwishAccount();
-                break;
-            case PaymentMethod.BLOCK_CHAINS_ID:
-                paymentAccount = new BlockChainAccount();
-                break;
-            default:
-                log.error("Not supported PaymentMethod: " + paymentMethod);
-                paymentAccount = null;
-                break;
-        }
-        return getPaymentMethodForm(paymentMethod, paymentAccount);
+        return getPaymentMethodForm(paymentMethod, PaymentAccountFactory.getPaymentAccount(paymentMethod));
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, PaymentAccount paymentAccount) {
@@ -291,6 +271,12 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
                 return new PerfectMoneyForm(paymentAccount, perfectMoneyValidator, inputValidator, root, gridRow);
             case PaymentMethod.SEPA_ID:
                 return new SepaForm(paymentAccount, ibanValidator, bicValidator, inputValidator, root, gridRow);
+            case PaymentMethod.NATIONAL_BANK_ID:
+                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow);
+            case PaymentMethod.SAME_BANK_ID:
+                return new SameBankForm(paymentAccount, inputValidator, root, gridRow);
+            case PaymentMethod.SPECIFIC_BANKS_ID:
+                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow);
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayForm(paymentAccount, aliPayValidator, inputValidator, root, gridRow);
             case PaymentMethod.SWISH_ID:
@@ -313,6 +299,7 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
         FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
         gridRow = 1;
         addAccountButton.setDisable(false);
+        paymentAccountsListView.getSelectionModel().clearSelection();
     }
 
 

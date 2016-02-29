@@ -41,6 +41,9 @@ public final class PaymentMethod implements Persistable, Comparable {
     public static final String OK_PAY_ID = "OK_PAY";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";
     public static final String SEPA_ID = "SEPA";
+    public static final String NATIONAL_BANK_ID = "NATIONAL_BANK";
+    public static final String SAME_BANK_ID = "SAME_BANK";
+    public static final String SPECIFIC_BANKS_ID = "SPECIFIC_BANKS";
     public static final String SWISH_ID = "SWISH";
     public static final String ALI_PAY_ID = "ALI_PAY";
     /* public static final String FED_WIRE="FED_WIRE";*/
@@ -51,6 +54,9 @@ public final class PaymentMethod implements Persistable, Comparable {
     public static PaymentMethod OK_PAY;
     public static PaymentMethod PERFECT_MONEY;
     public static PaymentMethod SEPA;
+    public static PaymentMethod NATIONAL_BANK;
+    public static PaymentMethod SAME_BANK;
+    public static PaymentMethod SPECIFIC_BANKS;
     public static PaymentMethod SWISH;
     public static PaymentMethod ALI_PAY;
     /* public static PaymentMethod FED_WIRE;*/
@@ -62,6 +68,9 @@ public final class PaymentMethod implements Persistable, Comparable {
             OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY), // tx instant so min. wait time 
             PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY),
             SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
+            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY),
+            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY),
+            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY),
             SWISH = new PaymentMethod(SWISH_ID, 0, DAY),
             ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY),
            /* FED_WIRE = new PaymentMethod(FED_WIRE_ID, 0, DAY),*/
@@ -91,7 +100,7 @@ public final class PaymentMethod implements Persistable, Comparable {
         this.maxTradePeriod = maxTradePeriod;
     }
 
-    public static PaymentMethod getPaymentMethodByName(String name) {
+    public static PaymentMethod getPaymentMethodById(String name) {
         return ALL_VALUES.stream().filter(e -> e.getId().equals(name)).findFirst().get();
     }
 

@@ -29,7 +29,7 @@ public final class Country implements Persistable {
 
     public final String code;
     public final String name;
-    private final Region region;
+    public final Region region;
 
     public Country(String code, String name, Region region) {
         this.code = code;

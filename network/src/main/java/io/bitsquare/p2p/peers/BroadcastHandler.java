@@ -111,16 +111,17 @@ public class BroadcastHandler implements PeerManager.Listener {
                 // the data owner sends to all and immediately
                 connectedPeers.stream().forEach(connection -> sendToPeer(connection, message));
                 numOfPeers = connectedPeers.size();
-                log.info("Broadcast message to {} peers.", numOfPeers);
+                log.info("Broadcast message to all {} connected peers.", numOfPeers);
             } else {
                 // for relay nodes we limit to 2 recipients and use a delay
                 List<Connection> list = new ArrayList<>(connectedPeers);
                 Collections.shuffle(list);
                 int size = list.size();
-                if (size > 1)
+                // We want min. 2 nodes
+                if (size > 3)
                     list = list.subList(0, size / 2);
                 numOfPeers = list.size();
-                log.info("Broadcast message to {} peers.", numOfPeers);
+                log.info("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeers.size());
                 list.stream().forEach(connection -> UserThread.runAfterRandomDelay(() ->
                         sendToPeer(connection, message), DELAY_MS, DELAY_MS * 2, TimeUnit.MILLISECONDS));
             }

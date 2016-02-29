@@ -319,7 +319,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public PaymentMethod getPaymentMethod() {
-        return PaymentMethod.getPaymentMethodByName(paymentMethodName);
+        return PaymentMethod.getPaymentMethodById(paymentMethodName);
     }
 
     public String getCurrencyCode() {

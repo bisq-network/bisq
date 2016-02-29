@@ -27,8 +27,11 @@ public final class AliPayAccount extends PaymentAccount {
     public AliPayAccount() {
         super(PaymentMethod.ALI_PAY);
         setSingleTradeCurrency(new FiatCurrency("CNY"));
+    }
 
-        contractData = new AliPayAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    @Override
+    protected PaymentAccountContractData setContractData() {
+        return new AliPayAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setAccountNr(String accountNr) {

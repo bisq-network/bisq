@@ -138,6 +138,15 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.SEPA_ID:
                 gridRow = SepaForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
+            case PaymentMethod.NATIONAL_BANK_ID:
+                gridRow = NationalBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
+            case PaymentMethod.SAME_BANK_ID:
+                gridRow = SameBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
+            case PaymentMethod.SPECIFIC_BANKS_ID:
+                gridRow = SpecificBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
             case PaymentMethod.SWISH_ID:
                 gridRow = SwishForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;

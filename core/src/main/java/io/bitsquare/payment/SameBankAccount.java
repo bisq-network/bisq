@@ -18,31 +18,17 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.locale.CurrencyUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public final class OKPayAccount extends PaymentAccount {
+public final class SameBankAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(OKPayAccount.class);
-
-    public OKPayAccount() {
-        super(PaymentMethod.OK_PAY);
-        tradeCurrencies.addAll(CurrencyUtil.getAllOKPayCurrencies());
+    public SameBankAccount() {
+        super(PaymentMethod.SAME_BANK);
     }
 
     @Override
     protected PaymentAccountContractData setContractData() {
-        return new OKPayAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
-    }
-
-    public void setAccountNr(String accountNr) {
-        ((OKPayAccountContractData) contractData).setAccountNr(accountNr);
-    }
-
-    public String getAccountNr() {
-        return ((OKPayAccountContractData) contractData).getAccountNr();
+        return new SameBankAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 }

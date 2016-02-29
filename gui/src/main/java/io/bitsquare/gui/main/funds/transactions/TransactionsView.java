@@ -172,7 +172,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         List<TransactionsListItem> listItems = walletService.getWallet().getRecentTransactions(1000, true).stream()
                 .map(transaction -> {
-                    log.error("tx ID " + transaction.getHashAsString());
                     Optional<Tradable> tradableOptional = all.stream()
                             .filter(tradable -> {
                                 String txId = transaction.getHashAsString();
@@ -193,19 +192,12 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                                     tradable.getId().equals(dispute.getTradeId()))
                                             .findAny()
                                             .isPresent();
-                                    log.error("isTakeOfferFeeTx " + isTakeOfferFeeTx);
-                                    log.error("isOfferFeeTx " + isOfferFeeTx);
-                                    log.error("isDepositTx " + isDepositTx);
-                                    log.error("isPayoutTx " + isPayoutTx);
-                                    log.error("isDisputedPayoutTx " + isDisputedPayoutTx);
 
                                     return isTakeOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx || isDisputedPayoutTx;
                                 } else
                                     return false;
                             })
                             .findAny();
-                    if (tradableOptional.isPresent())
-                        log.error("tradableOptional " + tradableOptional.get().getId());
                     return new TransactionsListItem(transaction, walletService, tradableOptional, formatter);
                 })
                 .collect(Collectors.toList());

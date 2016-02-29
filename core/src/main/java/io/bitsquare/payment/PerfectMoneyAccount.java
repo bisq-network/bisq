@@ -27,8 +27,11 @@ public final class PerfectMoneyAccount extends PaymentAccount {
     public PerfectMoneyAccount() {
         super(PaymentMethod.PERFECT_MONEY);
         setSingleTradeCurrency(new FiatCurrency("USD"));
+    }
 
-        contractData = new PerfectMoneyAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    @Override
+    protected PaymentAccountContractData setContractData() {
+        return new PerfectMoneyAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setAccountNr(String accountNr) {
@@ -38,4 +41,6 @@ public final class PerfectMoneyAccount extends PaymentAccount {
     public String getAccountNr() {
         return ((PerfectMoneyAccountContractData) contractData).getAccountNr();
     }
+
+
 }

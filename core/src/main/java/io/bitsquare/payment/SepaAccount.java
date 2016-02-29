@@ -27,8 +27,11 @@ public final class SepaAccount extends PaymentAccount {
 
     public SepaAccount() {
         super(PaymentMethod.SEPA);
+    }
 
-        contractData = new SepaAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    @Override
+    protected PaymentAccountContractData setContractData() {
+        return new SepaAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setHolderName(String holderName) {
@@ -66,5 +69,6 @@ public final class SepaAccount extends PaymentAccount {
     public void removeAcceptedCountry(String countryCode) {
         ((SepaAccountContractData) contractData).removeAcceptedCountry(countryCode);
     }
+
 
 }

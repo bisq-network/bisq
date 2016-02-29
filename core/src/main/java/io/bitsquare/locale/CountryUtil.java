@@ -17,12 +17,11 @@
 
 package io.bitsquare.locale;
 
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import io.bitsquare.user.Preferences;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CountryUtil {
@@ -92,10 +91,71 @@ public class CountryUtil {
         return getNamesByCodes(countryCodes).stream().collect(Collectors.joining(",\n"));
     }
 
+    public static List<Region> getAllRegions() {
+        final List<Region> allRegions = new ArrayList<>();
+
+        String regionCode = "NA";
+        Region region = new Region(regionCode, getRegionName(regionCode));
+        allRegions.add(region);
+
+        regionCode = "SA";
+        region = new Region(regionCode, getRegionName(regionCode));
+        allRegions.add(region);
+
+        regionCode = "AF";
+        region = new Region(regionCode, getRegionName(regionCode));
+        allRegions.add(region);
+
+        regionCode = "EU";
+        region = new Region(regionCode, getRegionName(regionCode));
+        allRegions.add(region);
+
+        regionCode = "AS";
+        region = new Region(regionCode, getRegionName(regionCode));
+        allRegions.add(region);
+
+        regionCode = "OC";
+        region = new Region(regionCode, getRegionName(regionCode));
+        allRegions.add(region);
+
+        return allRegions;
+    }
+
+    public static List<Country> getAllCountriesForRegion(Region selectedRegion) {
+        return Lists.newArrayList(Collections2.filter(getAllCountries(), country ->
+                selectedRegion != null && country != null && selectedRegion.equals(country.region)));
+    }
+
+    private static List<Country> getAllCountries() {
+        final List<Country> allCountries = new ArrayList<>();
+        for (final Locale locale : getAllCountryLocales()) {
+            String regionCode = getRegionCode(locale.getCountry());
+            final Region region = new Region(regionCode, getRegionName(regionCode));
+            final Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);
+            allCountries.add(country);
+        }
+        return allCountries;
+    }
+
+    // We use getAvailableLocales as we depend on display names (would be a bit painful with translations if handled
+    // from a static list -or we find something ready made?).
+    private static List<Locale> getAllCountryLocales() {
+        List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
+        Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getCountry()))
+                .map(locale -> new Locale("", locale.getCountry(), ""))
+                .collect(Collectors.toSet());
+
+        allLocales = new ArrayList<>();
+        allLocales.addAll(allLocalesAsSet);
+        allLocales.sort((locale1, locale2) -> locale1.getDisplayCountry().compareTo(locale2.getDisplayCountry()));
+        return allLocales;
+    }
+
     private static List<String> getNamesByCodes(List<String> countryCodes) {
         return countryCodes.stream().map(CountryUtil::getNameByCode).collect(Collectors.toList());
     }
 
+    // other source of countries: https://developers.braintreepayments.com/reference/general/countries/java
     private static final String[] countryCodes = new String[]{"AE", "AL", "AR", "AT", "AU", "BA", "BE", "BG", "BH",
             "BO", "BR", "BY", "CA", "CH", "CL", "CN", "CO", "CR", "CS", "CU", "CY", "CZ", "DE", "DK", "DO", "DZ",
             "EC", "EE", "EG", "ES", "FI", "FR", "GB", "GR", "GT", "HK", "HN", "HR", "HU", "ID", "IE", "IL", "IN",

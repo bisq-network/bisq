@@ -44,7 +44,7 @@ public abstract class PaymentAccount implements Persistable {
     protected TradeCurrency selectedTradeCurrency;
     @Nullable
     protected Country country = null;
-    PaymentAccountContractData contractData;
+    public final PaymentAccountContractData contractData;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -56,6 +56,7 @@ public abstract class PaymentAccount implements Persistable {
         this.paymentMethod = paymentMethod;
         id = UUID.randomUUID().toString();
         creationDate = new Date();
+        contractData = setContractData();
     }
 
 
@@ -95,6 +96,8 @@ public abstract class PaymentAccount implements Persistable {
     // Getter, Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    protected abstract PaymentAccountContractData setContractData();
+    
     public String getAccountName() {
         return accountName;
     }

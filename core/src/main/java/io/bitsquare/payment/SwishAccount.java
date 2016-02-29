@@ -27,8 +27,11 @@ public final class SwishAccount extends PaymentAccount {
     public SwishAccount() {
         super(PaymentMethod.SWISH);
         setSingleTradeCurrency(new FiatCurrency("SEK"));
+    }
 
-        contractData = new SwishAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    @Override
+    protected PaymentAccountContractData setContractData() {
+        return new SwishAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setMobileNr(String mobileNr) {
