@@ -20,28 +20,64 @@ package io.bitsquare.locale;
 public class BankUtil {
 
     public static boolean requiresHolderId(String countryCode) {
-        if (countryCode != null) {
-            switch (countryCode) {
-                case "BR":
-                    return true;
-                default:
-                    return false;
-            }
-        } else {
-            return false;
+        if (countryCode == null)
+            countryCode = "";
+        switch (countryCode) {
+            case "BR":
+            case "CL":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    //TODO set country specific labels
+    public static String getBankCodeLabel(String countryCode) {
+        if (countryCode == null)
+            countryCode = "";
+        switch (countryCode) {
+            default:
+                return "Bank nr.(BIC/SWIFT):";
+        }
+
+    }
+
+    //TODO set country specific labels
+    public static String getBranchCodeLabel(String countryCode) {
+        if (countryCode == null)
+            countryCode = "";
+        switch (countryCode) {
+            case "US":
+                return "Routing Number:";
+            case "GB":
+                return "Sort Number:";
+            case "CA":
+                return "Transit Number:";
+            default:
+                return "Branch nr. (optional):";
+        }
+    }
+
+    //TODO set country specific labels
+    public static String getAccountNrLabel(String countryCode) {
+        if (countryCode == null)
+            countryCode = "";
+        switch (countryCode) {
+            default:
+                return "Account nr.(IBAN):";
         }
     }
 
     public static String getHolderIdLabel(String countryCode) {
-        if (countryCode != null) {
-            switch (countryCode) {
-                case "BR":
-                    return "CPF Number:";
-                default:
-                    return "Holder ID:";
-            }
-        } else {
-            return "Holder ID:";
+        if (countryCode == null)
+            countryCode = "";
+        switch (countryCode) {
+            case "BR":
+                return "CPF Number:";
+            case "CL":
+                return "RUT Number:";
+            default:
+                return "Personal ID:";
         }
     }
 }

@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.components.paymentmethods;
 
+import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Tuple4;
 import io.bitsquare.gui.components.InputTextField;
@@ -46,6 +47,9 @@ abstract class BankForm extends PaymentMethodForm {
     private TextField currencyTextField;
     private Label holderIdLabel;
     private InputTextField holderNameInputTextField;
+    private Label bankIdLabel;
+    private Label branchIdLabel;
+    private Label accountNrLabel;
 
     static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         BankAccountContractData bankAccountContractData = (BankAccountContractData) paymentAccountContractData;
@@ -106,39 +110,47 @@ abstract class BankForm extends PaymentMethodForm {
         });
         countryComboBox.setOnAction(e -> {
             Country selectedItem = countryComboBox.getSelectionModel().getSelectedItem();
-            paymentAccount.setCountry(selectedItem);
-            String countryCode = selectedItem.code;
-            TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode);
-            paymentAccount.setSingleTradeCurrency(currency);
-            currencyTextField.setText(currency.getNameAndCode());
+            if (selectedItem != null) {
+                paymentAccount.setCountry(selectedItem);
+                String countryCode = selectedItem.code;
+                TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode);
+                paymentAccount.setSingleTradeCurrency(currency);
+                currencyTextField.setText(currency.getNameAndCode());
 
-            if (holderIdInputTextField != null) {
-                boolean requiresHolderId = BankUtil.requiresHolderId(countryCode);
-                if (requiresHolderId) {
-                    holderNameInputTextField.minWidthProperty().unbind();
-                    holderNameInputTextField.setMinWidth(300);
-                } else {
-                    holderNameInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
+                bankIdLabel.setText(BankUtil.getBankCodeLabel(bankAccountContractData.getCountryCode()));
+                branchIdLabel.setText(BankUtil.getBranchCodeLabel(bankAccountContractData.getCountryCode()));
+                accountNrLabel.setText(BankUtil.getAccountNrLabel(bankAccountContractData.getCountryCode()));
+
+                if (holderIdInputTextField != null) {
+                    boolean requiresHolderId = BankUtil.requiresHolderId(countryCode);
+                    if (requiresHolderId) {
+                        holderNameInputTextField.minWidthProperty().unbind();
+                        holderNameInputTextField.setMinWidth(300);
+                    } else {
+                        holderNameInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
+                    }
+                    holderIdLabel.setText(BankUtil.getHolderIdLabel(countryCode));
+                    holderIdLabel.setVisible(requiresHolderId);
+                    holderIdLabel.setManaged(requiresHolderId);
+                    holderIdInputTextField.resetValidation();
+                    holderIdInputTextField.setVisible(requiresHolderId);
+                    holderIdInputTextField.setManaged(requiresHolderId);
+                    if (!requiresHolderId)
+                        holderIdInputTextField.setText("");
                 }
-                holderIdLabel.setText(BankUtil.getHolderIdLabel(countryCode));
-                holderIdLabel.setVisible(requiresHolderId);
-                holderIdLabel.setManaged(requiresHolderId);
-                holderIdInputTextField.resetValidation();
-                holderIdInputTextField.setVisible(requiresHolderId);
-                holderIdInputTextField.setManaged(requiresHolderId);
-                if (!requiresHolderId)
-                    holderIdInputTextField.setText("");
+
+                updateFromInputs();
+
+                onCountryChanged();
             }
-
-            updateFromInputs();
-
-            onCountryChanged();
         });
 
         regionComboBox.setOnAction(e -> {
             Region selectedItem = regionComboBox.getSelectionModel().getSelectedItem();
-            countryComboBox.setDisable(false);
-            countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesForRegion(selectedItem)));
+            if (selectedItem != null) {
+                countryComboBox.setDisable(false);
+                countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesForRegion(selectedItem)));
+            }
         });
 
         addAcceptedBanksForAddAccount();
@@ -153,7 +165,9 @@ abstract class BankForm extends PaymentMethodForm {
 
         });
 
-        bankIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Bank number:").second;
+        Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getBankCodeLabel(""));
+        bankIdLabel = tuple2.first;
+        bankIdInputTextField = tuple2.second;
         bankIdInputTextField.setValidator(inputValidator);
         bankIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setBankId(newValue);
@@ -161,15 +175,20 @@ abstract class BankForm extends PaymentMethodForm {
 
         });
 
-        branchIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Branch number:").second;
-        branchIdInputTextField.setValidator(inputValidator);
+        tuple2 = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getBranchCodeLabel(""));
+        branchIdLabel = tuple2.first;
+
+        branchIdInputTextField = tuple2.second;
         branchIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setBranchId(newValue);
             updateFromInputs();
 
         });
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account number:").second;
+        tuple2 = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(""));
+        accountNrLabel = tuple2.first;
+
+        accountNrInputTextField = tuple2.second;
         accountNrInputTextField.setValidator(inputValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setAccountNr(newValue);
@@ -242,7 +261,6 @@ abstract class BankForm extends PaymentMethodForm {
                 && inputValidator.validate(bankAccountContractData.getHolderName()).isValid
                 && inputValidator.validate(bankAccountContractData.getBankName()).isValid
                 && inputValidator.validate(bankAccountContractData.getBankId()).isValid
-                && inputValidator.validate(bankAccountContractData.getBranchId()).isValid
                 && inputValidator.validate(bankAccountContractData.getAccountNr()).isValid
                 && holderIdValid
                 && paymentAccount.getSingleTradeCurrency() != null
