@@ -123,8 +123,10 @@ public class TradeDetailsPopup extends Popup {
         PaymentAccountContractData buyerPaymentAccountContractData = null;
         PaymentAccountContractData sellerPaymentAccountContractData = null;
 
-        if (offer.getAcceptedCountryCodes() != null)
+       /* if (offer.getAcceptedCountryCodes() != null)
             rows++;
+        if (offer.getAcceptedBanks() != null)
+            rows++;*/
 
         if (contract != null) {
             rows++;

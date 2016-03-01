@@ -29,12 +29,12 @@ public abstract class BankAccountContractData extends PaymentAccountContractData
 
     private static final Logger log = LoggerFactory.getLogger(BankAccountContractData.class);
 
-    private String holderName;
-    private String bankName;
-    private String bankId;
-    private String branchId;
-    private String accountNr;
-    private String holderId;
+    protected String holderName;
+    protected String bankName;
+    protected String bankId;
+    protected String branchId;
+    protected String accountNr;
+    protected String holderId;
 
     public BankAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);

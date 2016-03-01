@@ -31,4 +31,8 @@ public final class SameBankAccount extends PaymentAccount {
     protected PaymentAccountContractData setContractData() {
         return new SameBankAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
+
+    public String getAcceptedBank() {
+        return ((SameBankAccountContractData) contractData).getBankName();
+    }
 }

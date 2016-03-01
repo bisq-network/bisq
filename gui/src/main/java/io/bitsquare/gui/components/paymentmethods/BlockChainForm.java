@@ -114,7 +114,7 @@ public class BlockChainForm extends PaymentMethodForm {
     protected void addTradeCurrencyComboBox() {
         currencyComboBox = addLabelComboBox(gridPane, ++gridRow, "Crypto currency:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         currencyComboBox.setPromptText("Select cryptocurrency");
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getSortedCryptoCurrencies()));
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedCryptoCurrencies()));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 20));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override

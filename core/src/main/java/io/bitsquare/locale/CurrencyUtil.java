@@ -27,14 +27,96 @@ import java.util.stream.Collectors;
 public class CurrencyUtil {
     private static final Logger log = LoggerFactory.getLogger(CurrencyUtil.class);
 
-    private static final List<TradeCurrency> allSortedCurrencies = createAllSortedCurrenciesList();
+    private static final List<FiatCurrency> allSortedFiatCurrencies = createAllSortedFiatCurrenciesList();
 
-    public static List<TradeCurrency> getAllSortedCurrencies() {
-        return allSortedCurrencies;
+    private static List<FiatCurrency> createAllSortedFiatCurrenciesList() {
+        Set<FiatCurrency> set = CountryUtil.getAllCountries().stream()
+                .map(country -> getCurrencyByCountryCode(country.code))
+                .collect(Collectors.toSet());
+        List<FiatCurrency> list = new ArrayList<>(set);
+        list.sort(TradeCurrency::compareTo);
+        return list;
     }
 
-    // We add all currencies supported by payment methods
-    private static List<TradeCurrency> createAllSortedCurrenciesList() {
+    public static List<FiatCurrency> getAllSortedFiatCurrencies() {
+        return allSortedFiatCurrencies;
+    }
+
+    public static List<FiatCurrency> getAllMainFiatCurrencies() {
+        List<FiatCurrency> list = new ArrayList<>();
+        // Top traded currencies
+        list.add(new FiatCurrency("USD"));
+        list.add(new FiatCurrency("EUR"));
+        list.add(new FiatCurrency("GBP"));
+        list.add(new FiatCurrency("CAD"));
+        list.add(new FiatCurrency("AUD"));
+        list.add(new FiatCurrency("RUB"));
+        list.add(new FiatCurrency("INR"));
+
+        TradeCurrency defaultTradeCurrency = getDefaultTradeCurrency();
+        FiatCurrency defaultFiatCurrency = defaultTradeCurrency instanceof FiatCurrency ? (FiatCurrency) defaultTradeCurrency : null;
+        if (defaultFiatCurrency != null && list.contains(defaultFiatCurrency)) {
+            list.remove(defaultTradeCurrency);
+            list.add(0, defaultFiatCurrency);
+        }
+        return list;
+    }
+
+
+    private static final List<CryptoCurrency> allSortedCryptoCurrencies = createAllSortedCryptoCurrenciesList();
+
+    public static List<CryptoCurrency> getAllSortedCryptoCurrencies() {
+        return allSortedCryptoCurrencies;
+    }
+
+    public static List<CryptoCurrency> getMainCryptoCurrencies() {
+        final List<CryptoCurrency> result = new ArrayList<>();
+        result.add(new CryptoCurrency("ETH", "Ethereum"));
+        result.add(new CryptoCurrency("LTC", "Litecoin"));
+        result.add(new CryptoCurrency("NMC", "Namecoin"));
+        result.add(new CryptoCurrency("DASH", "Dash"));
+        result.add(new CryptoCurrency("NBT", "NuBits"));
+        result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("NXT", "Nxt"));
+        result.add(new CryptoCurrency("BTS", "BitShares"));
+        return result;
+    }
+
+    public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
+        final List<CryptoCurrency> result = new ArrayList<>();
+        result.add(new CryptoCurrency("ETH", "Ethereum"));
+        result.add(new CryptoCurrency("LTC", "Litecoin"));
+        result.add(new CryptoCurrency("NMC", "Namecoin"));
+        result.add(new CryptoCurrency("DASH", "Dash"));
+        result.add(new CryptoCurrency("NBT", "NuBits"));
+        result.add(new CryptoCurrency("NSR", "NuShares"));
+        result.add(new CryptoCurrency("PPC", "Peercoin"));
+        result.add(new CryptoCurrency("XPM", "Primecoin"));
+        result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
+        result.add(new CryptoCurrency("GEMZ", "Gemz"));
+        result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("BLK", "Blackcoin"));
+        result.add(new CryptoCurrency("FCT", "Factom"));
+        result.add(new CryptoCurrency("NXT", "Nxt"));
+        result.add(new CryptoCurrency("BTS", "BitShares"));
+        result.add(new CryptoCurrency("XCP", "Counterparty"));
+        result.add(new CryptoCurrency("XRP", "Ripple"));
+
+        // Unfortunately we cannot support CryptoNote coins yet as there is no way to proof the transaction. Payment ID helps only locate the tx but the 
+        // arbitrator cannot see if the receiving key matches the receivers address. They might add support for exposing the tx key, but that is not 
+        // implemented yet. To use the view key (also not available in GUI wallets) would reveal the complete wallet history for incoming payments, which is
+        // not acceptable from privacy point of view.
+        // result.add(new CryptoCurrency("XMR", "Monero")); 
+        // result.add(new CryptoCurrency("BCN", "Bytecoin"));
+        return result;
+    }
+    
+   
+
+   /* // We add all currencies supported by payment methods
+    // TODO not used anymore
+    private static List<TradeCurrency> createAllSortedCurrenciesListDerivedFromPaymentMethods() {
         Set<TradeCurrency> set = new HashSet<>();
 
         // Sepa: EUR at first place
@@ -52,11 +134,11 @@ public class CurrencyUtil {
         // Swish: it is already added by SEPA
 
         // for printing out all codes
-         /* String res;
+         *//* String res;
         result.stream().forEach(e -> {
             res += "list.add(new FiatCurrency(\""+e.code+"\"));\n";
         });
-        log.debug(res);*/
+        log.debug(res);*//*
 
 
         List<TradeCurrency> list = getAllManuallySortedFiatCurrencies();
@@ -84,9 +166,10 @@ public class CurrencyUtil {
         getSortedCryptoCurrencies().stream().forEach(list::add);
 
         return list;
-    }
+    }*/
 
-    private static List<TradeCurrency> getAllManuallySortedFiatCurrencies() {
+
+ /*   private static List<TradeCurrency> getAllManuallySortedFiatCurrencies() {
         List<TradeCurrency> list = new ArrayList<>();
         list.add(new FiatCurrency("EUR"));
         list.add(new FiatCurrency("USD"));
@@ -116,7 +199,7 @@ public class CurrencyUtil {
         list.add(new FiatCurrency("RON"));
 
         return list;
-    }
+    }*/
 
     /**
      * @return Sorted list of SEPA currencies with EUR as first item
@@ -160,41 +243,11 @@ public class CurrencyUtil {
 
     @SuppressWarnings("WeakerAccess")
     public static boolean isCryptoCurrency(String currencyCode) {
-        return getSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny().isPresent();
+        return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny().isPresent();
     }
 
-    public static Optional<TradeCurrency> getCryptoCurrency(String currencyCode) {
-        return getSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
-    }
-
-    public static List<TradeCurrency> getSortedCryptoCurrencies() {
-        final List<TradeCurrency> result = new ArrayList<>();
-        result.add(new CryptoCurrency("ETH", "Ethereum"));
-        result.add(new CryptoCurrency("LTC", "Litecoin"));
-        result.add(new CryptoCurrency("NMC", "Namecoin"));
-        result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("NBT", "NuBits"));
-        result.add(new CryptoCurrency("NSR", "NuShares"));
-        result.add(new CryptoCurrency("PPC", "Peercoin"));
-        result.add(new CryptoCurrency("XPM", "Primecoin"));
-        result.add(new CryptoCurrency("SC", "Siacoin"));
-        result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
-        result.add(new CryptoCurrency("GEMZ", "Gemz"));
-        result.add(new CryptoCurrency("DOGE", "Dogecoin"));
-        result.add(new CryptoCurrency("BLK", "Blackcoin"));
-        result.add(new CryptoCurrency("FCT", "Factom"));
-        result.add(new CryptoCurrency("NXT", "Nxt"));
-        result.add(new CryptoCurrency("BTS", "BitShares"));
-        result.add(new CryptoCurrency("XCP", "Counterparty"));
-        result.add(new CryptoCurrency("XRP", "Ripple"));
-
-        // Unfortunately we cannot support CryptoNote coins yet as there is no way to proof the transaction. Payment ID helps only locate the tx but the 
-        // arbitrator cannot see if the receiving key matches the receivers address. They might add support for exposing the tx key, but that is not 
-        // implemented yet. To use the view key (also not available in GUI wallets) would reveal the complete wallet history for incoming payments, which is
-        // not acceptable from privacy point of view.
-        // result.add(new CryptoCurrency("XMR", "Monero")); 
-        // result.add(new CryptoCurrency("BCN", "Bytecoin"));
-        return result;
+    public static Optional<CryptoCurrency> getCryptoCurrency(String currencyCode) {
+        return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
     }
 
     public static boolean isCryptoNoteCoin(String currencyCode) {
@@ -206,6 +259,9 @@ public class CurrencyUtil {
         if (!countryCode.equals("LT"))
             return new FiatCurrency(Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode)).getCurrencyCode());
         else {
+            if (!Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode)).getCurrencyCode().equals("EUR"))
+                log.error("wrong currency reported for LT");
+
             return new FiatCurrency("EUR");
         }
     }
@@ -216,7 +272,7 @@ public class CurrencyUtil {
             return Currency.getInstance(currencyCode).getDisplayName(Preferences.getDefaultLocale());
         } catch (Throwable t) {
             // Seems that it is a cryptocurrency
-            return getSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findFirst().get().getName();
+            return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findFirst().get().getName();
         }
     }
 

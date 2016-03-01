@@ -80,6 +80,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @Inject
     public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences, Clock clock,
                                BSFormatter formatter) {
+        super();
         this.walletService = walletService;
         this.p2PService = p2PService;
         this.preferences = preferences;

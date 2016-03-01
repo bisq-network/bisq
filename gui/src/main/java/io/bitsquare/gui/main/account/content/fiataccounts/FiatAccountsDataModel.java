@@ -19,8 +19,12 @@ package io.bitsquare.gui.main.account.content.fiataccounts;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.FiatCurrency;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -32,12 +36,14 @@ import java.util.stream.Collectors;
 class FiatAccountsDataModel extends ActivatableDataModel {
 
     private final User user;
+    private Preferences preferences;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
 
     @Inject
-    public FiatAccountsDataModel(User user) {
+    public FiatAccountsDataModel(User user, Preferences preferences) {
         this.user = user;
+        this.preferences = preferences;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
@@ -67,6 +73,21 @@ class FiatAccountsDataModel extends ActivatableDataModel {
 
     public void onSaveNewAccount(PaymentAccount paymentAccount) {
         user.addPaymentAccount(paymentAccount);
+        TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
+        List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
+        if (singleTradeCurrency != null) {
+            if (singleTradeCurrency instanceof FiatCurrency)
+                preferences.addFiatCurrency((FiatCurrency) singleTradeCurrency);
+            else
+                preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
+        } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
+            tradeCurrencies.stream().forEach(tradeCurrency -> {
+                if (tradeCurrency instanceof FiatCurrency)
+                    preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
+                else
+                    preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
+            });
+        }
     }
 
     public void onDeleteAccount(PaymentAccount paymentAccount) {

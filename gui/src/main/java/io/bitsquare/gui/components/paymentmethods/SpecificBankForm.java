@@ -43,8 +43,7 @@ public class SpecificBankForm extends BankForm {
     private Tooltip acceptedBanksTooltip;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
-        return gridRow;
+        return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
     }
 
     public SpecificBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,

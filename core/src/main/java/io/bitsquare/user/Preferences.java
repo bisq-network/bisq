@@ -22,10 +22,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.persistance.Persistable;
-import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.FiatCurrency;
-import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.locale.*;
 import io.bitsquare.storage.Storage;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
@@ -33,6 +30,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -94,7 +92,8 @@ public final class Preferences implements Persistable {
     private String btcDenomination = MonetaryFormat.CODE_BTC;
     private boolean useAnimations = true;
     private boolean useEffects = true;
-    private final ArrayList<TradeCurrency> tradeCurrencies;
+    private final ArrayList<FiatCurrency> fiatCurrencies;
+    private final ArrayList<CryptoCurrency> cryptoCurrencies;
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
     private boolean showNotifications = true;
@@ -112,6 +111,8 @@ public final class Preferences implements Persistable {
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
     transient private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(useAnimations);
     transient private final BooleanProperty useEffectsProperty = new SimpleBooleanProperty(useEffects);
+    transient private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
+    transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
 
 
@@ -130,8 +131,12 @@ public final class Preferences implements Persistable {
             setBtcDenomination(persisted.btcDenomination);
             setUseAnimations(persisted.useAnimations);
             setUseEffects(persisted.useEffects);
-            setTradeCurrencies(persisted.tradeCurrencies);
-            tradeCurrencies = new ArrayList<>(tradeCurrenciesAsObservable);
+
+            setFiatCurrencies(persisted.fiatCurrencies);
+            fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
+
+            setCryptoCurrencies(persisted.cryptoCurrencies);
+            cryptoCurrencies = new ArrayList<>(cryptoCurrenciesAsObservable);
 
             setBlockChainExplorerTestNet(persisted.getBlockChainExplorerTestNet());
             setBlockChainExplorerMainNet(persisted.getBlockChainExplorerMainNet());
@@ -160,8 +165,12 @@ public final class Preferences implements Persistable {
                 // leave default value
             }
         } else {
-            setTradeCurrencies(CurrencyUtil.getAllSortedCurrencies());
-            tradeCurrencies = new ArrayList<>(tradeCurrenciesAsObservable);
+            setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
+            fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
+
+            setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
+            cryptoCurrencies = new ArrayList<>(cryptoCurrenciesAsObservable);
+
             setBlockChainExplorerTestNet(blockChainExplorersTestNet.get(0));
             setBlockChainExplorerMainNet(blockChainExplorersMainNet.get(0));
 
@@ -193,16 +202,34 @@ public final class Preferences implements Persistable {
             useEffects = useEffectsProperty.get();
             storage.queueUpForSave(2000);
         });
-        tradeCurrenciesAsObservable.addListener((Observable ov) -> {
-            tradeCurrencies.clear();
-            tradeCurrencies.addAll(tradeCurrenciesAsObservable);
+        fiatCurrenciesAsObservable.addListener((Observable ov) -> {
+            fiatCurrencies.clear();
+            fiatCurrencies.addAll(fiatCurrenciesAsObservable);
             storage.queueUpForSave();
         });
+        cryptoCurrenciesAsObservable.addListener((Observable ov) -> {
+            cryptoCurrencies.clear();
+            cryptoCurrencies.addAll(cryptoCurrenciesAsObservable);
+            storage.queueUpForSave();
+        });
+
+        fiatCurrenciesAsObservable.addListener((ListChangeListener<FiatCurrency>) this::updateTradeCurrencies);
+        cryptoCurrenciesAsObservable.addListener((ListChangeListener<CryptoCurrency>) this::updateTradeCurrencies);
+        tradeCurrenciesAsObservable.addAll(fiatCurrencies);
+        tradeCurrenciesAsObservable.addAll(cryptoCurrencies);
     }
 
     public void dontShowAgain(String id) {
         showAgainMap.put(id, false);
         storage.queueUpForSave(2000);
+    }
+
+    private void updateTradeCurrencies(ListChangeListener.Change<? extends TradeCurrency> change) {
+        change.next();
+        if (change.wasAdded() && change.getAddedSize() == 1)
+            tradeCurrenciesAsObservable.add(change.getAddedSubList().get(0));
+        else if (change.wasRemoved() && change.getRemovedSize() == 1)
+            tradeCurrenciesAsObservable.remove(change.getRemoved().get(0));
     }
 
 
@@ -231,8 +258,46 @@ public final class Preferences implements Persistable {
         // We don't store the bitcoinNetwork locally as BitcoinNetwork is not serializable!
     }
 
-    private void setTradeCurrencies(List<TradeCurrency> tradeCurrencies) {
-        tradeCurrenciesAsObservable.setAll(tradeCurrencies);
+    private void setFiatCurrencies(List<FiatCurrency> currencies) {
+        fiatCurrenciesAsObservable.setAll(currencies);
+    }
+
+    private void setCryptoCurrencies(List<CryptoCurrency> currencies) {
+        cryptoCurrenciesAsObservable.setAll(currencies);
+    }
+
+    public void addFiatCurrency(FiatCurrency tradeCurrency) {
+        if (!fiatCurrenciesAsObservable.contains(tradeCurrency))
+            fiatCurrenciesAsObservable.add(tradeCurrency);
+    }
+
+    public void removeFiatCurrency(FiatCurrency tradeCurrency) {
+        if (tradeCurrenciesAsObservable.size() > 1) {
+            if (fiatCurrenciesAsObservable.contains(tradeCurrency))
+                fiatCurrenciesAsObservable.remove(tradeCurrency);
+
+            if (preferredTradeCurrency.equals(tradeCurrency))
+                setPreferredTradeCurrency(tradeCurrenciesAsObservable.get(0));
+        } else {
+            log.error("you cannot remove the last currency");
+        }
+    }
+
+    public void addCryptoCurrency(CryptoCurrency tradeCurrency) {
+        if (!cryptoCurrenciesAsObservable.contains(tradeCurrency))
+            cryptoCurrenciesAsObservable.add(tradeCurrency);
+    }
+
+    public void removeCryptoCurrency(CryptoCurrency tradeCurrency) {
+        if (tradeCurrenciesAsObservable.size() > 1) {
+            if (cryptoCurrenciesAsObservable.contains(tradeCurrency))
+                cryptoCurrenciesAsObservable.remove(tradeCurrency);
+
+            if (preferredTradeCurrency.equals(tradeCurrency))
+                setPreferredTradeCurrency(tradeCurrenciesAsObservable.get(0));
+        } else {
+            log.error("you cannot remove the last currency");
+        }
     }
 
     private void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
@@ -274,9 +339,11 @@ public final class Preferences implements Persistable {
     }
 
     public void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency) {
-        this.preferredTradeCurrency = preferredTradeCurrency;
-        defaultTradeCurrency = preferredTradeCurrency;
-        storage.queueUpForSave();
+        if (preferredTradeCurrency != null) {
+            this.preferredTradeCurrency = preferredTradeCurrency;
+            defaultTradeCurrency = preferredTradeCurrency;
+            storage.queueUpForSave();
+        }
     }
 
     public void setTxFeePerKB(long txFeePerKB) throws Exception {
@@ -327,6 +394,14 @@ public final class Preferences implements Persistable {
 
     public BitcoinNetwork getBitcoinNetwork() {
         return bitcoinNetwork;
+    }
+
+    public ObservableList<FiatCurrency> getFiatCurrenciesAsObservable() {
+        return fiatCurrenciesAsObservable;
+    }
+
+    public ObservableList<CryptoCurrency> getCryptoCurrenciesAsObservable() {
+        return cryptoCurrenciesAsObservable;
     }
 
     public ObservableList<TradeCurrency> getTradeCurrenciesAsObservable() {

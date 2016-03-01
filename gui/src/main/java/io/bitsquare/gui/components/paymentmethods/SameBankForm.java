@@ -35,8 +35,7 @@ public class SameBankForm extends BankForm {
     private static final Logger log = LoggerFactory.getLogger(SameBankForm.class);
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
-        return gridRow;
+        return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
     }
 
     public SameBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
@@ -72,10 +71,7 @@ public class SameBankForm extends BankForm {
         Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, "Account holder name:");
         TextField holderNameTextField = tuple.second;
         holderNameTextField.setMinWidth(300);
-        holderNameTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountContractData.setHolderName(newValue);
-            updateFromInputs();
-        });
+        holderNameTextField.setText(bankAccountContractData.getHolderName());
     }
 
 }

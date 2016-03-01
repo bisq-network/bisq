@@ -19,8 +19,9 @@ package io.bitsquare.locale;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
+import org.jetbrains.annotations.NotNull;
 
-public abstract class TradeCurrency implements Persistable {
+public abstract class TradeCurrency implements Persistable, Comparable<TradeCurrency> {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -63,6 +64,11 @@ public abstract class TradeCurrency implements Persistable {
 
     public String getCodeAndName() {
         return code + " (" + name + ")";
+    }
+
+    @Override
+    public int compareTo(@NotNull TradeCurrency other) {
+        return this.getName().compareTo(other.getName());
     }
 
     @Override

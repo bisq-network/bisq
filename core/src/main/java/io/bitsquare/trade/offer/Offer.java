@@ -102,6 +102,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
     @Nullable
     private final ArrayList<String> acceptedCountryCodes;
+    @Nullable
+    private final ArrayList<String> acceptedBanks;
     private final ArrayList<NodeAddress> arbitratorNodeAddresses;
 
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
@@ -136,7 +138,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  @Nullable Country paymentMethodCountry,
                  String offererPaymentAccountId,
                  ArrayList<NodeAddress> arbitratorNodeAddresses,
-                 @Nullable ArrayList<String> acceptedCountryCodes) {
+                 @Nullable ArrayList<String> acceptedCountryCodes,
+                 @Nullable ArrayList<String> acceptedBanks) {
         this.id = id;
         this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;
@@ -150,6 +153,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.offererPaymentAccountId = offererPaymentAccountId;
         this.arbitratorNodeAddresses = arbitratorNodeAddresses;
         this.acceptedCountryCodes = acceptedCountryCodes;
+        this.acceptedBanks = acceptedBanks;
 
         protocolVersion = Version.TRADE_PROTOCOL_VERSION;
 
@@ -336,6 +340,11 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return acceptedCountryCodes;
     }
 
+    @Nullable
+    public List<String> getAcceptedBanks() {
+        return acceptedBanks;
+    }
+
     public String getOfferFeePaymentTxID() {
         return offerFeePaymentTxID;
     }
@@ -389,6 +398,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
             return false;
         if (acceptedCountryCodes != null ? !acceptedCountryCodes.equals(offer.acceptedCountryCodes) : offer.acceptedCountryCodes != null)
             return false;
+        if (acceptedBanks != null ? !acceptedBanks.equals(offer.acceptedBanks) : offer.acceptedBanks != null)
+            return false;
         if (arbitratorNodeAddresses != null ? !arbitratorNodeAddresses.equals(offer.arbitratorNodeAddresses) : offer.arbitratorNodeAddresses != null)
             return false;
         return !(offerFeePaymentTxID != null ? !offerFeePaymentTxID.equals(offer.offerFeePaymentTxID) : offer.offerFeePaymentTxID != null);
@@ -410,6 +421,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         result = 31 * result + (paymentMethodCountryCode != null ? paymentMethodCountryCode.hashCode() : 0);
         result = 31 * result + (offererPaymentAccountId != null ? offererPaymentAccountId.hashCode() : 0);
         result = 31 * result + (acceptedCountryCodes != null ? acceptedCountryCodes.hashCode() : 0);
+        result = 31 * result + (acceptedBanks != null ? acceptedBanks.hashCode() : 0);
         result = 31 * result + (arbitratorNodeAddresses != null ? arbitratorNodeAddresses.hashCode() : 0);
         result = 31 * result + (offerFeePaymentTxID != null ? offerFeePaymentTxID.hashCode() : 0);
         return result;
@@ -431,6 +443,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\tpaymentMethodCountryCode='" + paymentMethodCountryCode + '\'' +
                 "\n\toffererPaymentAccountId='" + offererPaymentAccountId + '\'' +
                 "\n\tacceptedCountryCodes=" + acceptedCountryCodes +
+                "\n\tacceptedBanks=" + acceptedBanks +
                 "\n\tarbitratorAddresses=" + arbitratorNodeAddresses +
                 "\n\tofferFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
                 "\n\tstate=" + state +

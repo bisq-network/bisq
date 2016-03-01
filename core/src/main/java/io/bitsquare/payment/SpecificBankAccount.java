@@ -19,6 +19,8 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 
+import java.util.ArrayList;
+
 public final class SpecificBankAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -30,5 +32,9 @@ public final class SpecificBankAccount extends PaymentAccount {
     @Override
     protected PaymentAccountContractData setContractData() {
         return new SpecificBanksAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    }
+
+    public ArrayList<String> getAcceptedBanks() {
+        return ((SpecificBanksAccountContractData) contractData).getAcceptedBanks();
     }
 }

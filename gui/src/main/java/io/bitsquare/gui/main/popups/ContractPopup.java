@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.popups;
 
+import com.google.common.base.Joiner;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
@@ -24,6 +25,7 @@ import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.payment.BlockChainAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
+import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.offer.Offer;
 import javafx.geometry.Insets;
@@ -35,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -90,12 +93,19 @@ public class ContractPopup extends Popup {
         Contract contract = dispute.getContract();
         Offer offer = contract.offer;
 
+        List<String> acceptedBanks = offer.getAcceptedBanks();
+        boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
+        List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
+        boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
+
         int rows = 16;
         if (dispute.getDepositTxSerialized() != null)
             rows++;
         if (dispute.getPayoutTxSerialized() != null)
             rows++;
-        if (offer.getAcceptedCountryCodes() != null)
+        if (showAcceptedCountryCodes)
+            rows++;
+        if (showAcceptedBanks)
             rows++;
 
         boolean isPaymentIdAvailable = false;
@@ -130,20 +140,31 @@ public class ContractPopup extends Popup {
             addLabelTextField(gridPane, ++rowIndex, "Seller payment ID:",
                     ((BlockChainAccountContractData) sellerPaymentAccountContractData).getPaymentId());
 
-        if (offer.getAcceptedCountryCodes() != null && !offer.getAcceptedCountryCodes().isEmpty()) {
+        if (showAcceptedCountryCodes) {
             String countries;
             Tooltip tooltip = null;
-            if (CountryUtil.containsAllSepaEuroCountries(offer.getAcceptedCountryCodes())) {
+            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes)) {
                 countries = "All Euro countries";
             } else {
-                countries = CountryUtil.getCodesString(offer.getAcceptedCountryCodes());
-                tooltip = new Tooltip(CountryUtil.getNamesByCodesString(offer.getAcceptedCountryCodes()));
+                countries = CountryUtil.getCodesString(acceptedCountryCodes);
+                tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
             }
             TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex, "Accepted taker countries:", countries).second;
             if (tooltip != null) acceptedCountries.setTooltip(new Tooltip());
         }
-        //addLabelTextField(gridPane, ++rowIndex, "Buyer Bitsquare account ID:", contract.getBuyerAccountId()).second.setMouseTransparent(false);
-        //addLabelTextField(gridPane, ++rowIndex, "Seller Bitsquare account ID:", contract.getSellerAccountId()).second.setMouseTransparent(false);
+
+        if (showAcceptedBanks) {
+            if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK)) {
+                addLabelTextField(gridPane, ++rowIndex, "Bank name:", acceptedBanks.get(0));
+            } else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
+                String value = Joiner.on(", ").join(acceptedBanks);
+                Tooltip tooltip = new Tooltip("Accepted banks: " + value);
+                TextField acceptedBanksTextField = addLabelTextField(gridPane, ++rowIndex, "Accepted banks:", value).second;
+                acceptedBanksTextField.setMouseTransparent(false);
+                acceptedBanksTextField.setTooltip(tooltip);
+            }
+        }
+
         addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
         addLabelTxIdTextField(gridPane, ++rowIndex, "Trading fee transaction ID:", contract.takeOfferFeeTxID);
         if (dispute.getDepositTxSerialized() != null)

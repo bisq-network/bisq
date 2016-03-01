@@ -17,7 +17,10 @@
 
 package io.bitsquare.payment;
 
+import com.google.common.base.Joiner;
 import io.bitsquare.app.Version;
+import io.bitsquare.locale.BankUtil;
+import io.bitsquare.locale.CountryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,5 +58,18 @@ public final class SpecificBanksAccountContractData extends BankAccountContractD
     @Override
     public String getPaymentDetails() {
         return "Transfers with specific banks - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+    }
+
+    @Override
+    public String getPaymentDetailsForTradePopup() {
+        String holderIdString = BankUtil.requiresHolderId(countryCode) ? (getHolderIdLabel() + ": " + holderId + "\n") : "";
+        return "Holder name: " + holderName + "\n" +
+                holderIdString +
+                "Bank name: " + bankName + "\n" +
+                "Bank Nr.: " + bankId + "\n" +
+                "Branch Nr.: " + branchId + "\n" +
+                "Account Nr.: " + accountNr + "\n" +
+                "Accepted banks: " + Joiner.on(", ").join(acceptedBanks) + "\n" +
+                "Country of bank: " + CountryUtil.getNameAndCode(getCountryCode());
     }
 }

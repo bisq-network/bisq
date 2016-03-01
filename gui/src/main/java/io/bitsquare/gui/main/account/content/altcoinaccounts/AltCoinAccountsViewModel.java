@@ -20,15 +20,24 @@ package io.bitsquare.gui.main.account.content.altcoinaccounts;
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
+import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.FiatCurrency;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.user.Preferences;
 import javafx.collections.ObservableList;
+
+import java.util.List;
 
 class AltCoinAccountsViewModel extends ActivatableWithDataModel<AltCoinAccountsDataModel> implements ViewModel {
 
 
+    private Preferences preferences;
+
     @Inject
-    public AltCoinAccountsViewModel(AltCoinAccountsDataModel dataModel) {
+    public AltCoinAccountsViewModel(AltCoinAccountsDataModel dataModel, Preferences preferences) {
         super(dataModel);
+        this.preferences = preferences;
     }
 
     @Override
@@ -46,6 +55,21 @@ class AltCoinAccountsViewModel extends ActivatableWithDataModel<AltCoinAccountsD
 
     public void onSaveNewAccount(PaymentAccount paymentAccount) {
         dataModel.onSaveNewAccount(paymentAccount);
+        TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
+        List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
+        if (singleTradeCurrency != null) {
+            if (singleTradeCurrency instanceof FiatCurrency)
+                preferences.addFiatCurrency((FiatCurrency) singleTradeCurrency);
+            else
+                preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
+        } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
+            tradeCurrencies.stream().forEach(tradeCurrency -> {
+                if (tradeCurrency instanceof FiatCurrency)
+                    preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
+                else
+                    preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
+            });
+        }
     }
 
     public void onDeleteAccount(PaymentAccount paymentAccount) {

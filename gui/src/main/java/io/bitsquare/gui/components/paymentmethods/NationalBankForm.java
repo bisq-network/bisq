@@ -28,8 +28,7 @@ public class NationalBankForm extends BankForm {
     private static final Logger log = LoggerFactory.getLogger(NationalBankForm.class);
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
-        return gridRow;
+        return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
     }
 
     public NationalBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,

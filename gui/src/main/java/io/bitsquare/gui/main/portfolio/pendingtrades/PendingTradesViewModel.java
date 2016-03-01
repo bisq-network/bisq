@@ -112,7 +112,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         if (selectedItem != null)
             tradeStateSubscription = EasyBind.subscribe(selectedItem.getTrade().stateProperty(), this::onTradeStateChanged);
     }
-    
+
     @Override
     protected void deactivate() {
         if (tradeStateSubscription != null) {
@@ -185,7 +185,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         String result = "";
         if (item != null) {
             Offer offer = item.getTrade().getOffer();
-            String method = BSResources.get(offer.getPaymentMethod().getId());
+            String method = BSResources.get(offer.getPaymentMethod().getId() + "_SHORT");
             String methodCountryCode = offer.getPaymentMethodCountryCode();
 
             if (methodCountryCode != null)

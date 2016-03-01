@@ -36,7 +36,9 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.SameBankAccount;
 import io.bitsquare.payment.SepaAccount;
+import io.bitsquare.payment.SpecificBankAccount;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
@@ -242,6 +244,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
         if (paymentAccount instanceof SepaAccount)
             acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
 
+        ArrayList<String> acceptedBanks = new ArrayList<>();
+        if (paymentAccount instanceof SpecificBankAccount)
+            acceptedBanks.addAll(((SpecificBankAccount) paymentAccount).getAcceptedBanks());
+        else if (paymentAccount instanceof SameBankAccount)
+            acceptedBanks.add(((SameBankAccount) paymentAccount).getAcceptedBank());
+
         // That is optional and set to null if not supported (AltCoins, OKPay,...)
         Country country = paymentAccount.getCountry();
 
@@ -258,7 +266,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 country,
                 paymentAccount.getId(),
                 new ArrayList<>(user.getAcceptedArbitratorAddresses()),
-                acceptedCountryCodes);
+                acceptedCountryCodes,
+                acceptedBanks);
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {

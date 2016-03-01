@@ -190,9 +190,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (result) {
             map.put(hashOfPayload, protectedStorageEntry);
 
-            sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
-            storage.queueUpForSave(sequenceNumberMap, 100);
-
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
             sb.append("Data set after doAdd (truncated)");
             map.values().stream().forEach(e -> sb.append("\n").append(StringUtils.abbreviate(e.toString(), 100)));
@@ -200,8 +197,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             log.trace(sb.toString());
             log.info("Data set after doAdd: size=" + map.values().size());
 
-            broadcast(new AddDataMessage(protectedStorageEntry), sender, listener, isDataOwner);
+            if (hasSequenceNrIncreased(protectedStorageEntry.sequenceNumber, hashOfPayload)) {
+                sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
+                storage.queueUpForSave(sequenceNumberMap, 100);
 
+                broadcast(new AddDataMessage(protectedStorageEntry), sender, listener, isDataOwner);
+            }
+          
             hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
         } else {
             log.trace("add failed");
@@ -226,7 +228,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             } else {
                 PublicKey ownerPubKey = storedData.getStoragePayload().getOwnerPubKey();
                 boolean result = checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature) &&
-                        isSequenceNrValid(sequenceNumber, hashOfPayload) &&
+                        hasSequenceNrIncreased(sequenceNumber, hashOfPayload) &&
                         checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload);
 
                 if (result) {
@@ -381,6 +383,22 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean isSequenceNrValid(int newSequenceNumber, ByteArray hashOfData) {
+        if (sequenceNumberMap.containsKey(hashOfData)) {
+            Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
+            if (newSequenceNumber >= storedSequenceNumber) {
+                return true;
+            } else {
+                log.info("Sequence number is invalid. sequenceNumber = "
+                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
+                        "That can happen if the data owner gets an old delayed data storage message.");
+                return false;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData) {
         if (sequenceNumberMap.containsKey(hashOfData)) {
             Integer storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
             if (newSequenceNumber > storedSequenceNumber) {

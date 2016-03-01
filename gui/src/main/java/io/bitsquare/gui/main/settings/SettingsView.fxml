@@ -25,6 +25,6 @@
          AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="networkSettingsTab" text="Network info" closable="false"/>
     <Tab fx:id="preferencesTab" text="Preferences" closable="false"/>
+    <Tab fx:id="networkSettingsTab" text="Network info" closable="false"/>
 </TabPane>

@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.popups;
 
+import com.google.common.base.Joiner;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.Navigation;
@@ -28,6 +29,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
@@ -41,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -134,7 +137,17 @@ public class OfferDetailsPopup extends Popup {
 
     private void addContent() {
         int rows = 5;
+
+        List<String> acceptedBanks = offer.getAcceptedBanks();
+        boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
+        List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
+        boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
+
         if (!takeOfferHandlerOptional.isPresent())
+            rows++;
+        if (showAcceptedBanks)
+            rows++;
+        if (showAcceptedCountryCodes)
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Offer");
@@ -154,11 +167,39 @@ public class OfferDetailsPopup extends Popup {
         addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
 
         addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
-        
+
         if (offer.isMyOffer(keyRing) && user.getPaymentAccount(offer.getOffererPaymentAccountId()) != null)
             addLabelTextField(gridPane, ++rowIndex, "Payment account:", user.getPaymentAccount(offer.getOffererPaymentAccountId()).getAccountName());
         else
             addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
+
+        if (showAcceptedBanks) {
+            if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK)) {
+                addLabelTextField(gridPane, ++rowIndex, "Bank name:", acceptedBanks.get(0));
+            } else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
+                String value = Joiner.on(", ").join(acceptedBanks);
+                Tooltip tooltip = new Tooltip("Accepted banks: " + value);
+                TextField acceptedBanksTextField = addLabelTextField(gridPane, ++rowIndex, "Accepted banks:", value).second;
+                acceptedBanksTextField.setMouseTransparent(false);
+                acceptedBanksTextField.setTooltip(tooltip);
+            }
+        }
+
+        if (showAcceptedCountryCodes) {
+            String countries;
+            Tooltip tooltip = null;
+            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes)) {
+                countries = "All Euro countries";
+            } else {
+                countries = CountryUtil.getCodesString(acceptedCountryCodes);
+                tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
+            }
+            TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex, "Accepted taker countries:", countries).second;
+            if (tooltip != null) {
+                acceptedCountries.setMouseTransparent(false);
+                acceptedCountries.setTooltip(tooltip);
+            }
+        }
 
         rows = 3;
         String paymentMethodCountryCode = offer.getPaymentMethodCountryCode();
@@ -166,10 +207,6 @@ public class OfferDetailsPopup extends Popup {
             rows++;
         if (offer.getOfferFeePaymentTxID() != null)
             rows++;
-        if (offer.getAcceptedCountryCodes() != null)
-            rows++;
-     /*   if (placeOfferHandlerOptional.isPresent())
-            rows -= 2;*/
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
         addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
@@ -178,21 +215,7 @@ public class OfferDetailsPopup extends Popup {
         if (paymentMethodCountryCode != null)
             addLabelTextField(gridPane, ++rowIndex, "Offerers country of bank:",
                     CountryUtil.getNameAndCode(paymentMethodCountryCode));
-        if (offer.getAcceptedCountryCodes() != null) {
-            String countries;
-            Tooltip tooltip = null;
-            if (CountryUtil.containsAllSepaEuroCountries(offer.getAcceptedCountryCodes())) {
-                countries = "All Euro countries";
-            } else {
-                countries = CountryUtil.getCodesString(offer.getAcceptedCountryCodes());
-                tooltip = new Tooltip(CountryUtil.getNamesByCodesString(offer.getAcceptedCountryCodes()));
-            }
-            TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex, "Accepted taker countries:", countries).second;
-            if (tooltip != null) {
-                acceptedCountries.setMouseTransparent(false);
-                acceptedCountries.setTooltip(tooltip);
-            }
-        }
+
         addLabelTextField(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
         if (offer.getOfferFeePaymentTxID() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());

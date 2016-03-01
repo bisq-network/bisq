@@ -53,14 +53,15 @@ abstract class BankForm extends PaymentMethodForm {
 
     static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         BankAccountContractData bankAccountContractData = (BankAccountContractData) paymentAccountContractData;
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", bankAccountContractData.getHolderName());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameAndCode(bankAccountContractData.getCountryCode()));
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Bank name:", bankAccountContractData.getBankName());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Bank number:", bankAccountContractData.getBankId());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Branch number:", bankAccountContractData.getBranchId());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account number:", bankAccountContractData.getAccountNr());
         if (bankAccountContractData.getHolderId() != null)
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankAccountContractData.getHolderIdLabel(), bankAccountContractData.getHolderId());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name / " + bankAccountContractData.getHolderIdLabel(),
+                    bankAccountContractData.getHolderName() + " / " + bankAccountContractData.getHolderId());
+        else
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", bankAccountContractData.getHolderName());
+
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameAndCode(bankAccountContractData.getCountryCode()));
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Bank name / number:", bankAccountContractData.getBankName() + " / " + bankAccountContractData.getBankId());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Branch number / Account number:", bankAccountContractData.getBranchId() + " / " + bankAccountContractData.getAccountNr());
         return gridRow;
     }
 

@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.pricefeed.PriceFeed;
@@ -60,6 +61,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
+    private final ListChangeListener<TradeCurrency> tradeCurrencyListChangeListener;
     private TradeCurrency selectedTradeCurrency;
     private final ObservableList<TradeCurrency> allTradeCurrencies = FXCollections.observableArrayList();
 
@@ -106,13 +108,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
-        preferences.getTradeCurrenciesAsObservable().addListener(new ListChangeListener<TradeCurrency>() {
-            @Override
-            public void onChanged(Change<? extends TradeCurrency> c) {
-                fillAllTradeCurrencies();
-            }
-        });
-
+        tradeCurrencyListChangeListener = c -> fillAllTradeCurrencies();
     }
 
     @Override
@@ -120,6 +116,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         fillAllTradeCurrencies();
         btcCode.bind(preferences.btcDenominationProperty());
         offerBookListItems.addListener(listChangeListener);
+        preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
         filterList();
         setMarketPriceFeedCurrency();
@@ -130,6 +127,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     protected void deactivate() {
         btcCode.unbind();
         offerBookListItems.removeListener(listChangeListener);
+        preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
     }
 
     private void fillAllTradeCurrencies() {
@@ -255,7 +253,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         String result = "";
         if (item != null) {
             Offer offer = item.getOffer();
-            String method = BSResources.get(offer.getPaymentMethod().getId());
+            String method = BSResources.get(offer.getPaymentMethod().getId() + "_SHORT");
             String methodCountryCode = offer.getPaymentMethodCountryCode();
 
             if (methodCountryCode != null)
@@ -279,11 +277,17 @@ class OfferBookViewModel extends ActivatableViewModel {
                 result = method;
 
             List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
-            if (acceptedCountryCodes != null && acceptedCountryCodes.size() > 0) {
+            List<String> acceptedBanks = offer.getAcceptedBanks();
+            if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
                 if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
                     result += "\n\nAccepted takers seat of bank countries:\nAll Euro countries";
                 else
                     result += "\n\nAccepted taker seat of bank countries:\n" + CountryUtil.getNamesByCodesString(acceptedCountryCodes);
+            } else if (acceptedBanks != null && !acceptedBanks.isEmpty()) {
+                if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK))
+                    result += "\n\nBank name: " + acceptedBanks.get(0);
+                else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS))
+                    result += "\n\nAccepted banks: " + Joiner.on(", ").join(acceptedBanks);
             }
         }
         return result;
@@ -303,7 +307,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isPaymentAccountValidForOffer(Offer offer) {
-
+        // TODO not supporting yet check for acceptedBanks in cae of SpecificBankAccount and SameBankAccount
         Optional<TradeCurrency> result1 = user.getPaymentAccounts().stream()
                 .filter(paymentAccount -> paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod()))
                 .filter(paymentAccount -> {

@@ -126,7 +126,7 @@ public class CountryUtil {
                 selectedRegion != null && country != null && selectedRegion.equals(country.region)));
     }
 
-    private static List<Country> getAllCountries() {
+    public static List<Country> getAllCountries() {
         final List<Country> allCountries = new ArrayList<>();
         for (final Locale locale : getAllCountryLocales()) {
             String regionCode = getRegionCode(locale.getCountry());

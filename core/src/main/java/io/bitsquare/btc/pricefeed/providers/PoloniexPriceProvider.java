@@ -33,7 +33,7 @@ public class PoloniexPriceProvider implements PriceProvider {
         String response = httpClient.requestWithGET("?command=returnTicker");
         LinkedTreeMap<String, Object> treeMap = new Gson().fromJson(response, LinkedTreeMap.class);
         Map<String, String> temp = new HashMap<>();
-        Set<String> supported = CurrencyUtil.getSortedCryptoCurrencies().stream()
+        Set<String> supported = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.toSet());
         treeMap.entrySet().stream().forEach(e -> {

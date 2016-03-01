@@ -149,6 +149,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     protected void deactivate() {
         model.getOfferBookListItems().removeListener(changeListener);
         tradeCurrencySubscriber.unsubscribe();
+        currencyComboBox.setOnAction(null);
     }
 
 
