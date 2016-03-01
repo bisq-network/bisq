@@ -15,43 +15,41 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account.content.paymentsaccount;
+package io.bitsquare.gui.main.account.content.altcoinsaccount;
 
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.components.paymentmethods.*;
+import io.bitsquare.gui.components.paymentmethods.BlockChainForm;
+import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
 import io.bitsquare.gui.main.popups.Popup;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountFactory;
 import io.bitsquare.payment.PaymentMethod;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
 import javafx.geometry.VPos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
-import javafx.util.StringConverter;
 
 import javax.inject.Inject;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
-public class PaymentAccountView extends ActivatableViewAndModel<GridPane, PaymentAccountViewModel> {
+public class AltCoinsAccountView extends ActivatableViewAndModel<GridPane, AltCoinsAccountViewModel> {
 
     private ListView<PaymentAccount> paymentAccountsListView;
-    private ComboBox<PaymentMethod> paymentMethodsComboBox;
 
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
@@ -70,15 +68,15 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
     private ChangeListener<PaymentAccount> paymentAccountChangeListener;
 
     @Inject
-    public PaymentAccountView(PaymentAccountViewModel model,
-                              IBANValidator ibanValidator,
-                              BICValidator bicValidator,
-                              InputValidator inputValidator,
-                              OKPayValidator okPayValidator,
-                              AliPayValidator aliPayValidator,
-                              PerfectMoneyValidator perfectMoneyValidator,
-                              SwishValidator swishValidator,
-                              AltCoinAddressValidator altCoinAddressValidator) {
+    public AltCoinsAccountView(AltCoinsAccountViewModel model,
+                               IBANValidator ibanValidator,
+                               BICValidator bicValidator,
+                               InputValidator inputValidator,
+                               OKPayValidator okPayValidator,
+                               AliPayValidator aliPayValidator,
+                               PerfectMoneyValidator perfectMoneyValidator,
+                               SwishValidator swishValidator,
+                               AltCoinAddressValidator altCoinAddressValidator) {
         super(model);
 
         this.ibanValidator = ibanValidator;
@@ -98,7 +96,7 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
             if (newValue != null)
                 onSelectAccount(newValue);
         };
-        Label placeholder = new Label("There are no payment accounts set up yet");
+        Label placeholder = new Label("There are no altcoin accounts set up yet");
         placeholder.setWrapText(true);
         paymentAccountsListView.setPlaceholder(placeholder);
     }
@@ -137,7 +135,7 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
     }
 
     private void onDeleteAccount(PaymentAccount paymentAccount) {
-        new Popup().warning("Do you really want to delete the selected payment account?")
+        new Popup().warning("Do you really want to delete the selected altcoin account?")
                 .onAction(() -> {
                     model.onDeleteAccount(paymentAccount);
                     removeSelectAccountForm();
@@ -151,9 +149,9 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void buildForm() {
-        addTitledGroupBg(root, gridRow, 1, "Manage payment accounts");
+        addTitledGroupBg(root, gridRow, 1, "Manage altcoin accounts");
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your payment accounts:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your altcoin accounts:", Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
@@ -197,43 +195,24 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", Layout.GROUP_DISTANCE);
-        paymentMethodsComboBox = addLabelComboBox(root, gridRow, "Payment method:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        paymentMethodsComboBox.setPromptText("Select payment method");
-        paymentMethodsComboBox.setPrefWidth(250);
-        List<PaymentMethod> list = PaymentMethod.ALL_VALUES.stream()
-                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
-                .collect(Collectors.toList());
-        paymentMethodsComboBox.setItems(FXCollections.observableArrayList(list));
-        paymentMethodsComboBox.setConverter(new StringConverter<PaymentMethod>() {
-            @Override
-            public String toString(PaymentMethod paymentMethod) {
-                return BSResources.get(paymentMethod.getId());
-            }
 
-            @Override
-            public PaymentMethod fromString(String s) {
-                return null;
-            }
-        });
-        paymentMethodsComboBox.setOnAction(e -> {
-            if (paymentMethodForm != null) {
-                FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
-                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
-            }
-            gridRow = 2;
-            paymentMethodForm = getPaymentMethodForm(paymentMethodsComboBox.getSelectionModel().getSelectedItem());
-            if (paymentMethodForm != null) {
-                paymentMethodForm.addFormForAddAccount();
-                gridRow = paymentMethodForm.getGridRow();
-                Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, "Save new account", "Cancel");
-                saveNewAccountButton = tuple2.first;
-                saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
-                saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
-                Button cancelButton = tuple2.second;
-                cancelButton.setOnAction(event -> onCancelNewAccount());
-                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
-            }
-        });
+        if (paymentMethodForm != null) {
+            FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
+            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
+        }
+        gridRow = 2;
+        paymentMethodForm = getPaymentMethodForm(PaymentMethod.BLOCK_CHAINS);
+        if (paymentMethodForm != null) {
+            paymentMethodForm.addFormForAddAccount();
+            gridRow = paymentMethodForm.getGridRow();
+            Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, "Save new account", "Cancel");
+            saveNewAccountButton = tuple2.first;
+            saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
+            saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
+            Button cancelButton = tuple2.second;
+            cancelButton.setOnAction(event -> onCancelNewAccount());
+            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
+        }
     }
 
     // Select account form
@@ -260,36 +239,12 @@ public class PaymentAccountView extends ActivatableViewAndModel<GridPane, Paymen
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
-        return getPaymentMethodForm(paymentAccount.getPaymentMethod(), paymentAccount);
-    }
-
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod) {
-        return getPaymentMethodForm(paymentMethod, PaymentAccountFactory.getPaymentAccount(paymentMethod));
+        return getPaymentMethodForm(PaymentAccountFactory.getPaymentAccount(paymentMethod));
     }
 
-    private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, PaymentAccount paymentAccount) {
-        switch (paymentMethod.getId()) {
-            case PaymentMethod.OK_PAY_ID:
-                return new OKPayForm(paymentAccount, okPayValidator, inputValidator, root, gridRow);
-            case PaymentMethod.PERFECT_MONEY_ID:
-                return new PerfectMoneyForm(paymentAccount, perfectMoneyValidator, inputValidator, root, gridRow);
-            case PaymentMethod.SEPA_ID:
-                return new SepaForm(paymentAccount, ibanValidator, bicValidator, inputValidator, root, gridRow);
-            case PaymentMethod.NATIONAL_BANK_ID:
-                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow);
-            case PaymentMethod.SAME_BANK_ID:
-                return new SameBankForm(paymentAccount, inputValidator, root, gridRow);
-            case PaymentMethod.SPECIFIC_BANKS_ID:
-                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow);
-            case PaymentMethod.ALI_PAY_ID:
-                return new AliPayForm(paymentAccount, aliPayValidator, inputValidator, root, gridRow);
-            case PaymentMethod.SWISH_ID:
-                return new SwishForm(paymentAccount, swishValidator, inputValidator, root, gridRow);
-            default:
-                log.error("Not supported PaymentMethod: " + paymentMethod);
-                return null;
-        }
+    private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
+        return new BlockChainForm(paymentAccount, altCoinAddressValidator, inputValidator, root, gridRow);
     }
 
     private void removeNewAccountForm() {

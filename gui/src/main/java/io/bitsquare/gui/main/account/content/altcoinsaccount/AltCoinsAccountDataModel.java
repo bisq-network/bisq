@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account.content.paymentsaccount;
+package io.bitsquare.gui.main.account.content.altcoinsaccount;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
@@ -26,17 +26,16 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
-class PaymentAccountDataModel extends ActivatableDataModel {
+class AltCoinsAccountDataModel extends ActivatableDataModel {
 
     private final User user;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
 
     @Inject
-    public PaymentAccountDataModel(User user) {
+    public AltCoinsAccountDataModel(User user) {
         this.user = user;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
@@ -48,10 +47,9 @@ class PaymentAccountDataModel extends ActivatableDataModel {
     }
 
     private void fillAndSortPaymentAccounts() {
-        List<PaymentAccount> list = user.getPaymentAccounts().stream()
-                .filter(paymentAccount -> !paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
-                .collect(Collectors.toList());
-        paymentAccounts.setAll(list);
+        paymentAccounts.setAll(user.getPaymentAccounts().stream()
+                .filter(paymentAccount -> paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
+                .collect(Collectors.toList()));
         paymentAccounts.sort((o1, o2) -> o1.getCreationDate().compareTo(o2.getCreationDate()));
     }
 
