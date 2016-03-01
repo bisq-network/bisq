@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 class MarketsChartsViewModel extends ActivatableViewModel {
+    final static String EDIT_FLAG = "EDIT_FLAG";
 
     private final OfferBook offerBook;
     private final Preferences preferences;

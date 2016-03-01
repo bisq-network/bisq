@@ -23,7 +23,11 @@ import io.bitsquare.app.Version;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.settings.SettingsView;
+import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.*;
 import io.bitsquare.p2p.NodeAddress;
@@ -49,7 +53,8 @@ import java.util.List;
 import java.util.Optional;
 
 class OfferBookViewModel extends ActivatableViewModel {
-    final static String SHOW_ALL_FLAG = "XXX";
+    final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
+    final static String EDIT_FLAG = "EDIT_FLAG";
 
     private final OpenOfferManager openOfferManager;
     private final User user;
@@ -57,6 +62,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final Preferences preferences;
     private final P2PService p2PService;
     private final PriceFeed priceFeed;
+    private Navigation navigation;
     final BSFormatter formatter;
 
     private final FilteredList<OfferBookListItem> filteredItems;
@@ -88,7 +94,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     @Inject
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
                               Preferences preferences, P2PService p2PService, PriceFeed priceFeed,
-                              BSFormatter formatter) {
+                              Navigation navigation, BSFormatter formatter) {
         super();
 
         this.openOfferManager = openOfferManager;
@@ -97,6 +103,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.preferences = preferences;
         this.p2PService = p2PService;
         this.priceFeed = priceFeed;
+        this.navigation = navigation;
         this.formatter = formatter;
 
         offerBookListItems = offerBook.getOfferBookListItems();
@@ -133,9 +140,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     private void fillAllTradeCurrencies() {
         allTradeCurrencies.clear();
         // Used for ignoring filter (show all)
-        TradeCurrency dummy = new FiatCurrency(SHOW_ALL_FLAG);
-        allTradeCurrencies.add(dummy);
+        allTradeCurrencies.add(new CryptoCurrency(SHOW_ALL_FLAG, SHOW_ALL_FLAG));
         allTradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
+        allTradeCurrencies.add(new CryptoCurrency(EDIT_FLAG, EDIT_FLAG));
     }
 
     private void setMarketPriceFeedCurrency() {
@@ -168,7 +175,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
         String code = tradeCurrency.getCode();
         showAllTradeCurrenciesProperty.set(isShowAllEntry(code));
-        if (!showAllTradeCurrenciesProperty.get()) {
+        if (isEditEntry(code))
+            navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
+        else if (!showAllTradeCurrenciesProperty.get()) {
             this.selectedTradeCurrency = tradeCurrency;
             tradeCurrencyCode.set(code);
         }
@@ -365,5 +374,9 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private boolean isShowAllEntry(String id) {
         return id.equals(SHOW_ALL_FLAG);
+    }
+
+    private boolean isEditEntry(String id) {
+        return id.equals(EDIT_FLAG);
     }
 }

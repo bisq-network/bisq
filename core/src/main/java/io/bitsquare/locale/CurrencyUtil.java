@@ -62,7 +62,6 @@ public class CurrencyUtil {
         return list;
     }
 
-
     private static final List<CryptoCurrency> allSortedCryptoCurrencies = createAllSortedCryptoCurrenciesList();
 
     public static List<CryptoCurrency> getAllSortedCryptoCurrencies() {
@@ -112,94 +111,6 @@ public class CurrencyUtil {
         return result;
     }
     
-   
-
-   /* // We add all currencies supported by payment methods
-    // TODO not used anymore
-    private static List<TradeCurrency> createAllSortedCurrenciesListDerivedFromPaymentMethods() {
-        Set<TradeCurrency> set = new HashSet<>();
-
-        // Sepa: EUR at first place
-        set.addAll(getSortedSEPACurrencyCodes());
-
-        // PerfectMoney: 
-        set.add(new FiatCurrency("USD"));
-
-        // Alipay: 
-        set.add(new FiatCurrency("CNY"));
-
-        // OKPay: We want to maintain the order so we don't use a Set but add items if nto already in list
-        getAllOKPayCurrencies().stream().forEach(set::add);
-
-        // Swish: it is already added by SEPA
-
-        // for printing out all codes
-         *//* String res;
-        result.stream().forEach(e -> {
-            res += "list.add(new FiatCurrency(\""+e.code+"\"));\n";
-        });
-        log.debug(res);*//*
-
-
-        List<TradeCurrency> list = getAllManuallySortedFiatCurrencies();
-
-        // check if the list derived form the payment methods is containing exactly the same as our manually sorted one
-
-        List<String> list1 = set.stream().map(e -> e.code).collect(Collectors.toList());
-        list1.sort(String::compareTo);
-        List<String> list2 = list.stream().map(e -> e.code).collect(Collectors.toList());
-        list2.sort(String::compareTo);
-
-        if (list1.size() != list2.size()) {
-            log.error("manually defined currencies are not matching currencies derived form our payment methods");
-            log.error("list1 " + list1.toString());
-            log.error("list2 " + list2.toString());
-        }
-
-        if (!list1.toString().equals(list2.toString())) {
-            log.error("List derived form the payment methods is not matching exactly the same as our manually sorted one");
-            log.error("list1 " + list1.toString());
-            log.error("list2 " + list2.toString());
-        }
-
-        // Blockchain
-        getSortedCryptoCurrencies().stream().forEach(list::add);
-
-        return list;
-    }*/
-
-
- /*   private static List<TradeCurrency> getAllManuallySortedFiatCurrencies() {
-        List<TradeCurrency> list = new ArrayList<>();
-        list.add(new FiatCurrency("EUR"));
-        list.add(new FiatCurrency("USD"));
-        list.add(new FiatCurrency("GBP"));
-        list.add(new FiatCurrency("CNY"));
-        list.add(new FiatCurrency("HKD"));
-        list.add(new FiatCurrency("CHF"));
-        list.add(new FiatCurrency("JPY"));
-        list.add(new FiatCurrency("CAD"));
-        list.add(new FiatCurrency("AUD"));
-        list.add(new FiatCurrency("NZD"));
-        list.add(new FiatCurrency("ZAR"));
-        list.add(new FiatCurrency("RUB"));
-
-        list.add(new FiatCurrency("SEK"));
-        list.add(new FiatCurrency("NOK"));
-        list.add(new FiatCurrency("DKK"));
-        list.add(new FiatCurrency("ISK"));
-
-        list.add(new FiatCurrency("PLN"));
-        list.add(new FiatCurrency("CZK"));
-        list.add(new FiatCurrency("TRY"));
-
-        list.add(new FiatCurrency("BGN"));
-        list.add(new FiatCurrency("HRK"));
-        list.add(new FiatCurrency("HUF"));
-        list.add(new FiatCurrency("RON"));
-
-        return list;
-    }*/
 
     /**
      * @return Sorted list of SEPA currencies with EUR as first item
@@ -255,15 +166,7 @@ public class CurrencyUtil {
     }
 
     public static FiatCurrency getCurrencyByCountryCode(String countryCode) {
-        // java 1.8.8_0_20 reports wrong currency (Lita instead of EUR)
-        if (!countryCode.equals("LT"))
-            return new FiatCurrency(Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode)).getCurrencyCode());
-        else {
-            if (!Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode)).getCurrencyCode().equals("EUR"))
-                log.error("wrong currency reported for LT");
-
-            return new FiatCurrency("EUR");
-        }
+        return new FiatCurrency(Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode)).getCurrencyCode());
     }
 
 

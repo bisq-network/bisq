@@ -93,10 +93,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                if (!tradeCurrency.getCode().equals(OfferBookViewModel.SHOW_ALL_FLAG))
-                    return tradeCurrency.getNameAndCode();
+                String code = tradeCurrency.getCode();
+                if (code.equals(OfferBookViewModel.SHOW_ALL_FLAG))
+                    return ">> Show all";
+                else if (code.equals(OfferBookViewModel.EDIT_FLAG))
+                    return ">> Edit currency list";
                 else
-                    return "Show all";
+                    return tradeCurrency.getNameAndCode();
             }
 
             @Override
@@ -111,7 +114,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             @Override
             public String toString(PaymentMethod paymentMethod) {
                 String id = paymentMethod.getId();
-                return BSResources.get(!id.equals(OfferBookViewModel.SHOW_ALL_FLAG) ? id : "Show all");
+                return BSResources.get(!id.equals(OfferBookViewModel.SHOW_ALL_FLAG) ? id : ">> Show all");
             }
 
             @Override
