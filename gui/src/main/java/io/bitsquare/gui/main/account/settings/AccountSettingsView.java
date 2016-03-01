@@ -23,11 +23,11 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
-import io.bitsquare.gui.main.account.content.altcoinsaccount.AltCoinsAccountView;
+import io.bitsquare.gui.main.account.content.altcoinaccounts.AltCoinAccountsView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
 import io.bitsquare.gui.main.account.content.backup.BackupView;
+import io.bitsquare.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bitsquare.gui.main.account.content.password.PasswordView;
-import io.bitsquare.gui.main.account.content.paymentsaccount.PaymentAccountView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 import io.bitsquare.gui.util.Colors;
 import javafx.beans.value.ChangeListener;
@@ -75,8 +75,8 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        paymentAccount = new MenuItem(navigation, toggleGroup, "Payment account(s)", PaymentAccountView.class, AwesomeIcon.MONEY);
-        altCoinsAccountView = new MenuItem(navigation, toggleGroup, "Altcoin account(s)", AltCoinsAccountView.class, AwesomeIcon.LINK);
+        paymentAccount = new MenuItem(navigation, toggleGroup, "National currency accounts", FiatAccountsView.class, AwesomeIcon.MONEY);
+        altCoinsAccountView = new MenuItem(navigation, toggleGroup, "Cryptocurrency accounts", AltCoinAccountsView.class, AwesomeIcon.LINK);
         arbitratorSelection = new MenuItem(navigation, toggleGroup, "Arbitrator selection", ArbitratorSelectionView.class, AwesomeIcon.USER_MD);
         password = new MenuItem(navigation, toggleGroup, "Wallet password", PasswordView.class, AwesomeIcon.UNLOCK_ALT);
         seedWords = new MenuItem(navigation, toggleGroup, "Wallet seed", SeedWordsView.class, AwesomeIcon.KEY);
@@ -98,7 +98,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         ViewPath viewPath = navigation.getCurrentPath();
         if (viewPath.size() == 3 && viewPath.indexOf(AccountSettingsView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(AccountView.class) == 1) {
-            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, PaymentAccountView.class);
+            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
         } else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
             selectedViewClass = viewPath.get(3);
             loadView(selectedViewClass);
@@ -121,8 +121,8 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
-        if (view instanceof PaymentAccountView) paymentAccount.setSelected(true);
-        else if (view instanceof AltCoinsAccountView) altCoinsAccountView.setSelected(true);
+        if (view instanceof FiatAccountsView) paymentAccount.setSelected(true);
+        else if (view instanceof AltCoinAccountsView) altCoinsAccountView.setSelected(true);
         else if (view instanceof ArbitratorSelectionView) arbitratorSelection.setSelected(true);
         else if (view instanceof PasswordView) password.setSelected(true);
         else if (view instanceof SeedWordsView) seedWords.setSelected(true);
@@ -150,7 +150,7 @@ class MenuItem extends ToggleButton {
         setText(title);
         setId("account-settings-item-background-active");
         setPrefHeight(40);
-        setPrefWidth(200);
+        setPrefWidth(220);
         setAlignment(Pos.CENTER_LEFT);
 
         Label icon = new Label();

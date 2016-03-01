@@ -21,7 +21,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.arbitratorregistration.ArbitratorRegistrationView;
-import io.bitsquare.gui.main.account.content.paymentsaccount.PaymentAccountView;
+import io.bitsquare.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
@@ -67,7 +67,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
                 if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class))
-                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, PaymentAccountView.class);
+                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
                 else
                     loadView(viewPath.tip());
             }
@@ -86,7 +86,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
             if (newValue == accountSettingsTab) {
                 Class<? extends View> selectedViewClass = accountSettingsView.getSelectedViewClass();
                 if (selectedViewClass == null)
-                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, PaymentAccountView.class);
+                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
                 else
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, selectedViewClass);
             } else if (arbitratorRegistrationTab != null) {

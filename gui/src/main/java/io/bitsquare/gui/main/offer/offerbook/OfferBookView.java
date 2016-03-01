@@ -25,7 +25,7 @@ import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
-import io.bitsquare.gui.main.account.content.paymentsaccount.PaymentAccountView;
+import io.bitsquare.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
@@ -251,12 +251,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void onCreateOffer() {
         if (!model.hasPaymentAccount()) {
             showWarning("You don't have setup a payment account yet.",
-                    "You need to setup your payment account before you can trade.\nDo you want to do this now?", PaymentAccountView.class);
+                    "You need to setup your payment account before you can trade.\nDo you want to do this now?", FiatAccountsView.class);
         } else if (!model.hasPaymentAccountForCurrency()) {
             showWarning("You don't have a payment account for the currency:\n" +
                             model.getSelectedTradeCurrency().getCodeAndName(),
                     "You need to setup a payment account for the selected currency to be able to trade in that currency.\n" +
-                            "Do you want to do this now?", PaymentAccountView.class);
+                            "Do you want to do this now?", FiatAccountsView.class);
         } else if (!model.hasAcceptedArbitrators()) {
             showWarning("You don't have an arbitrator selected.",
                     "You need to setup at least one arbitrator to be able to trade.\n" +
@@ -275,7 +275,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         } else if (!isPaymentAccountValidForOffer) {
             showWarning("You don't have a payment account with the payment method required for that offer.",
                     "You need to setup a payment account with that payment method if you want to take that offer.\n" +
-                            "Do you want to do this now?", PaymentAccountView.class);
+                            "Do you want to do this now?", FiatAccountsView.class);
         } else if (!hasSameProtocolVersion) {
             new Popup().information("That offer requires a different protocol version as the one used in your " +
                     "version of the software." +

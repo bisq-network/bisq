@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account.content.altcoinsaccount;
+package io.bitsquare.gui.main.account.content.fiataccounts;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
@@ -23,11 +23,11 @@ import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.payment.PaymentAccount;
 import javafx.collections.ObservableList;
 
-class AltCoinsAccountViewModel extends ActivatableWithDataModel<AltCoinsAccountDataModel> implements ViewModel {
+class FiatAccountsViewModel extends ActivatableWithDataModel<FiatAccountsDataModel> implements ViewModel {
 
 
     @Inject
-    public AltCoinsAccountViewModel(AltCoinsAccountDataModel dataModel) {
+    public FiatAccountsViewModel(FiatAccountsDataModel dataModel) {
         super(dataModel);
     }
 
