@@ -1,5 +1,7 @@
 package io.bitsquare.gui.main.notifications;
 
+import io.bitsquare.common.Timer;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.main.popups.Popup;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -19,6 +21,8 @@ import org.slf4j.LoggerFactory;
 public class Notification extends Popup {
     private static final Logger log = LoggerFactory.getLogger(Notification.class);
     private boolean hasBeenDisplayed;
+    private boolean autoClose;
+    private Timer autoCloseTimer;
 
     public Notification() {
         width = 345; // 320 visible bg because of insets
@@ -31,6 +35,10 @@ public class Notification extends Popup {
 
     public Notification tradeHeadLine(String tradeId) {
         return headLine("Notification for trade with ID " + tradeId);
+    }
+
+    public Notification notification(String message) {
+        return (Notification) super.notification(message);
     }
 
     public Notification disputeHeadLine(String tradeId) {
@@ -52,13 +60,26 @@ public class Notification extends Popup {
         hasBeenDisplayed = true;
     }
 
+    public Notification autoClose() {
+        autoClose = true;
+        return this;
+    }
+
     @Override
     public void display() {
         super.display();
+
+        if (autoClose && autoCloseTimer == null)
+            autoCloseTimer = UserThread.runAfter(this::hide, 5);
     }
 
     @Override
     protected void animateHide(Runnable onFinishedHandler) {
+        if (autoCloseTimer != null) {
+            autoCloseTimer.stop();
+            autoCloseTimer = null;
+        }
+
         if (NotificationCenter.useAnimations) {
             double duration = 400;
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);

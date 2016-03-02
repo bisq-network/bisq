@@ -33,7 +33,9 @@ public class Help {
 
     public static void openWindow(HelpId id) {
         try {
-            Utilities.openWebPage("https://github.com/bitsquare/bitsquare/wiki/User-Guide");
+            // TODO create user guide
+            Utilities.openWebPage("http://bitsquare.io/faq");
+            // Utilities.openWebPage("https://github.com/bitsquare/bitsquare/wiki/User-Guide");
         } catch (Exception e) {
             log.error(e.getMessage());
             new Popup().warning("Opening browser failed. Please check your internet " +

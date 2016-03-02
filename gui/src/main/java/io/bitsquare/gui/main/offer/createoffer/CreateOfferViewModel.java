@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.offer.createoffer;
 
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
@@ -38,7 +37,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
-import java.util.List;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
@@ -66,8 +64,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     final StringProperty placeOfferSpinnerInfoText = new SimpleStringProperty();
 
-    final BooleanProperty isPlaceOfferButtonVisible = new SimpleBooleanProperty(false);
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
+    final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty isPlaceOfferSpinnerVisible = new SimpleBooleanProperty(false);
     final BooleanProperty showWarningAdjustedVolume = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
@@ -246,7 +244,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         };
         requestPlaceOfferSuccessListener = (ov, oldValue, newValue) -> {
             if (newValue) {
-                isPlaceOfferButtonVisible.set(!newValue);
+                isPlaceOfferButtonDisabled.set(newValue);
                 isPlaceOfferSpinnerVisible.set(false);
                 placeOfferSpinnerInfoText.set("");
             }
@@ -334,10 +332,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         };
         offer.errorMessageProperty().addListener(errorMessageListener);
         dataModel.onPlaceOffer(offer, transaction -> requestPlaceOfferSuccess.set(true));
-    }
-
-    void onShowPayFundsScreen() {
-        isPlaceOfferButtonVisible.set(true);
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
@@ -563,18 +557,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void updateButtonDisableState() {
         log.debug("updateButtonDisableState");
-        isPlaceOfferButtonDisabled.set(
-                !(isBtcInputValid(amount.get()).isValid &&
-                        isBtcInputValid(minAmount.get()).isValid &&
-                        isFiatInputValid(price.get()).isValid &&
-                        isFiatInputValid(volume.get()).isValid &&
-                        dataModel.isMinAmountLessOrEqualAmount() &&
+        boolean inputDataValid = isBtcInputValid(amount.get()).isValid &&
+                isBtcInputValid(minAmount.get()).isValid &&
+                isFiatInputValid(price.get()).isValid &&
+                isFiatInputValid(volume.get()).isValid &&
+                dataModel.isMinAmountLessOrEqualAmount();
+        isNextButtonDisabled.set(!inputDataValid);
+        isPlaceOfferButtonDisabled.set(!(inputDataValid &&
                         dataModel.isWalletFunded.get() &&
                         dataModel.isFeeFromFundingTxSufficient())
         );
-    }
-
-    public List<Arbitrator> getArbitrators() {
-        return dataModel.getArbitrators();
     }
 }

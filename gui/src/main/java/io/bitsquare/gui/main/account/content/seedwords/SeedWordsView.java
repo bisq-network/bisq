@@ -198,17 +198,17 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         Wallet wallet = walletService.getWallet();
         if (wallet.getBalance(Wallet.BalanceType.AVAILABLE).value > 0) {
             new Popup()
-                    .headLine("Wallet is not empty")
-                    .warning("You must empty this wallet out before attempting to restore an older one, as mixing wallets " +
+                    .warning("Your bitcoin wallet is not empty.\n\n" +
+                            "You must empty this wallet before attempting to restore an older one, as mixing wallets " +
                             "together can lead to invalidated backups.\n\n" +
                             "Please finalize your trades, close all your open offers and go to the Funds section to withdraw your bitcoin.\n" +
                             "In case you cannot access your bitcoin you can use the emergency tool to empty the wallet.\n" +
-                            "To open that emergency tool press cmd + e.")
+                            "To open that emergency tool press \"cmd + e\".")
                     .show();
         } else if (wallet.isEncrypted()) {
             new Popup()
-                    .headLine("Wallet is encrypted")
-                    .information("After restore, the wallet will no longer be encrypted and you must set a new password.")
+                    .warning("Your bitcoin wallet is encrypted.\n\n" +
+                            "After restore, the wallet will no longer be encrypted and you must set a new password.")
                     .closeButtonText("I understand")
                     .onClose(() -> doRestore()).show();
         } else {
@@ -225,7 +225,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                     log.debug("Wallet restored with seed words");
 
                     new Popup()
-                            .information("Wallet restored successfully with the new seed words.\n\n" +
+                            .feedback("Wallet restored successfully with the new seed words.\n\n" +
                                     "You need to shut down and restart the application.")
                             .closeButtonText("Shut down")
                             .onClose(() -> BitsquareApp.shutDownHandler.run()).show();
@@ -239,8 +239,8 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());
                     new Popup()
-                            .headLine("Wrong password")
-                            .warning("Please try entering your password again, carefully checking for typos or spelling errors.")
+                            .warning("You entered the wrong password.\n\n" +
+                                    "Please try entering your password again, carefully checking for typos or spelling errors.")
                             .show();
 
                     new Popup()

@@ -37,6 +37,4 @@ public enum HelpId {
     SETUP_FIAT_ACCOUNT,
     MANAGE_FIAT_ACCOUNT,
     PAY_ACCOUNT_FEE
-
-
 }

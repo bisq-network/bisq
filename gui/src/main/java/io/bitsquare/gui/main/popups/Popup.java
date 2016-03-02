@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.popups;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
@@ -74,6 +75,8 @@ public class Popup {
     private ChangeListener<Number> positionListener;
     private Timer centerTime;
     protected double buttonDistance = 20;
+    private String type;
+    private AwesomeIcon awesomeIcon;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -152,30 +155,75 @@ public class Popup {
     }
 
     public Popup notification(String message) {
-        // TODO use icons
-        this.headLine = "Notification";
+        type = "notification";
+        if (headLine == null)
+            this.headLine = "Notification";
+        this.message = message;
+        setTruncatedMessage();
+        return this;
+    }
+
+    public Popup instruction(String message) {
+        type = "instruction";
+        if (headLine == null)
+            this.headLine = "Instruction";
+        this.message = message;
+        setTruncatedMessage();
+        return this;
+    }
+
+    public Popup backgroundInfo(String message) {
+        type = "backgroundInfo";
+        if (headLine == null)
+            this.headLine = "Background information";
+        this.message = message;
+        setTruncatedMessage();
+        return this;
+    }
+
+    public Popup feedback(String message) {
+        type = "feedback";
+        if (headLine == null)
+            this.headLine = "Feedback";
+        this.message = message;
+        setTruncatedMessage();
+        return this;
+    }
+
+    public Popup confirmation(String message) {
+        type = "confirmation";
+        if (headLine == null)
+            this.headLine = "Confirmation";
         this.message = message;
         setTruncatedMessage();
         return this;
     }
 
     public Popup information(String message) {
-        this.headLine = "Information";
+        type = "information";
+        if (headLine == null)
+            this.headLine = "Information";
         this.message = message;
         setTruncatedMessage();
         return this;
     }
 
     public Popup warning(String message) {
-        this.headLine = "Warning";
+        type = "warning";
+        awesomeIcon = AwesomeIcon.LIGHTBULB;
+
+        if (headLine == null)
+            this.headLine = "Warning";
         this.message = message;
         setTruncatedMessage();
         return this;
     }
 
     public Popup error(String message) {
+        type = "error";
         showReportErrorButtons();
-        this.headLine = "Error";
+        if (headLine == null)
+            this.headLine = "Error";
         this.message = message;
         setTruncatedMessage();
         return this;
@@ -183,11 +231,6 @@ public class Popup {
 
     public Popup showReportErrorButtons() {
         this.showReportErrorButtons = true;
-        return this;
-    }
-
-    public Popup hideReportErrorButtons() {
-        this.showReportErrorButtons = false;
         return this;
     }
 
@@ -218,7 +261,7 @@ public class Popup {
     }
 
     public Popup dontShowAgainId(String dontShowAgainId, Preferences preferences) {
-        this.dontShowAgainId = dontShowAgainId;
+        this.dontShowAgainId = type + "_" + dontShowAgainId;
         this.preferences = preferences;
         return this;
     }
@@ -323,10 +366,21 @@ public class Popup {
 
     protected void addHeadLine() {
         if (headLine != null) {
+            ++rowIndex;
+                    
+           /* Label icon = AwesomeDude.createIconLabel(awesomeIcon, "40.0");
+            icon.getStyleClass().add("popup-icon-" + type);
+
+            GridPane.setHalignment(icon, HPos.RIGHT);
+            GridPane.setRowIndex(icon, ++rowIndex);
+            GridPane.setColumnIndex(icon, 1);
+            GridPane.setMargin(icon, new Insets(0, 0, -10, 0));
+            gridPane.getChildren().add(icon);*/
+
             headLineLabel = new Label(BSResources.get(headLine));
             headLineLabel.setMouseTransparent(true);
             GridPane.setHalignment(headLineLabel, HPos.LEFT);
-            GridPane.setRowIndex(headLineLabel, ++rowIndex);
+            GridPane.setRowIndex(headLineLabel, rowIndex);
             GridPane.setColumnSpan(headLineLabel, 2);
             gridPane.getChildren().addAll(headLineLabel);
         }
@@ -406,7 +460,7 @@ public class Popup {
 
     private void addDontShowAgainCheckBox() {
         if (dontShowAgainId != null && preferences != null) {
-            CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, "Don't show again", 30);
+            CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, "Don't show again", buttonDistance - 1);
             GridPane.setColumnIndex(dontShowAgainCheckBox, 0);
             GridPane.setHalignment(dontShowAgainCheckBox, HPos.LEFT);
             dontShowAgainCheckBox.setOnAction(e -> {

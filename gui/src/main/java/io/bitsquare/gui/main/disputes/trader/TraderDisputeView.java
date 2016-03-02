@@ -289,7 +289,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 }
             }
         } else {
-            new Popup().error("You cannot send more then 3 attachments in one message.").show();
+            new Popup().warning("You cannot send more then 3 attachments in one message.").show();
         }
     }
 

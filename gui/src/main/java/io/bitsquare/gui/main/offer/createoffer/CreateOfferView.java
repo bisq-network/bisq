@@ -23,6 +23,7 @@ import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -111,6 +112,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler;
     private int gridRow = 0;
     private final Preferences preferences;
+    private ChangeListener<String> tradeCurrencyCodeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +173,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     protected void deactivate() {
         removeBindings();
         removeListeners();
+        if (balanceTextField != null)
+            balanceTextField.cleanup();
     }
 
 
@@ -188,7 +192,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
             createOfferButton.setId("buy-button-big");
             nextButton.setId("buy-button");
-            createOfferButton.setText("Place offer for buying bitcoin");
+            createOfferButton.setText("Review place offer for buying bitcoin");
             iconView.setId("image-buy-white");
         } else {
             imageView.setId("image-sell-large");
@@ -197,7 +201,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
             createOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            createOfferButton.setText("Place offer for selling bitcoin");
+            createOfferButton.setText("Review place offer for selling bitcoin");
             iconView.setId("image-sell-white");
         }
     }
@@ -247,25 +251,44 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void onShowFundsScreen() {
+        amountTextField.setMouseTransparent(true);
+        minAmountTextField.setMouseTransparent(true);
+        priceTextField.setMouseTransparent(true);
+        volumeTextField.setMouseTransparent(true);
+        currencyComboBox.setMouseTransparent(true);
+        paymentAccountsComboBox.setMouseTransparent(true);
+
         if (!BitsquareApp.DEV_MODE) {
-            String id = "tradeWalletInfoPopup";
+            String id = "securityDepositInfo";
             if (model.dataModel.getPreferences().showAgain(id)) {
-                new Popup().information("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
+                new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
                         "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
-                        "It will be refunded to you after the trade has successfully completed.\n\n" +
-                        "You need to pay in the exact amount displayed to you from your external bitcoin wallet into the " +
-                        "Bitsquare trade wallet.\n" +
-                        "The amount is the sum of the security deposit, the trading fee and " +
-                        "the bitcoin mining fee.\n" +
-                        "You can see the details when you move the mouse over the question mark.\n\n" +
-                        "Important notice!\n" +
-                        "Please take care that you use a mining fee of at least " +
-                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + " when you transfer bitcoin from your external " +
-                        "wallet to ensure the trade transactions will get into the blockchain.\n" +
-                        "A too low mining fee might result in a delayed trade and will be rejected!")
-                        .closeButtonText("I understand")
+                        "It will be refunded to you after the trade has successfully completed.")
+                        .closeButtonText("I want to learn more")
+                        .onClose(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
+                        .actionButtonText("I understand")
+                        .onAction(() -> {
+                        })
+                        .dontShowAgainId(id, preferences)
                         .show();
-                model.dataModel.getPreferences().dontShowAgain(id);
+            }
+
+            id = "createOfferFundWalletInfo";
+            if (model.dataModel.getPreferences().showAgain(id)) {
+                String tradeAmountText = model.isSellOffer() ? "the trade amount, " : "";
+                new Popup().headLine("Fund your trading wallet").instruction("You need to pay in " +
+                        model.totalToPay.get() + " to your local Bitsquare trading wallet.\n" +
+                        "The amount is the sum of " + tradeAmountText + "the security deposit, the trading fee and " +
+                        "the bitcoin mining fee.\n\n" +
+                        "Please send from your external Bitcoin wallet the exact amount to the address: " +
+                        model.getAddressAsString() + "\n" +
+                        "(you can copy the address in the screen below after closing that popup)\n\n" +
+                        "Make sure you use a sufficiently high mining fee of at least " +
+                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) +
+                        " to avoid problems that your transaction does not get confirmed in the blockchain.\n\n" +
+                        "You can see the status of your incoming payment and all the details in the screen below.")
+                        .dontShowAgainId(id, preferences)
+                        .show();
             }
         }
 
@@ -283,12 +306,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         addressTextField.setVisible(true);
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
+        createOfferButton.setVisible(true);
         cancelButton2.setVisible(true);
         //root.requestFocus();
 
         setupTotalToPayInfoIconLabel();
-
-        model.onShowPayFundsScreen();
     }
 
     private void onPaymentAccountsComboBoxSelected() {
@@ -366,7 +388,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.validationResultProperty().bind(model.volumeValidationResult);
 
         // buttons
-        createOfferButton.visibleProperty().bind(model.isPlaceOfferButtonVisible);
         createOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
 
         placeOfferSpinnerInfoLabel.visibleProperty().bind(model.isPlaceOfferSpinnerVisible);
@@ -399,7 +420,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         minAmountTextField.validationResultProperty().unbind();
         priceTextField.validationResultProperty().unbind();
         volumeTextField.validationResultProperty().unbind();
-        createOfferButton.visibleProperty().unbind();
         createOfferButton.disableProperty().unbind();
         placeOfferSpinnerInfoLabel.visibleProperty().unbind();
         currencyComboBox.managedProperty().unbind();
@@ -487,6 +507,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         paymentAccountsComboBoxSelectionHandler = e -> onPaymentAccountsComboBoxSelected();
         currencyComboBoxSelectionHandler = e -> onCurrencyComboBoxSelected();
 
+        tradeCurrencyCodeListener = (observable, oldValue, newValue) -> {
+            priceTextField.clear();
+            volumeTextField.clear();
+        };
+
         showTransactionPublishedScreen = (o, oldValue, newValue) -> {
             if (BitsquareApp.DEV_MODE) {
                 newValue = false;
@@ -498,7 +523,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 FxTimer.runLater(Duration.ofMillis(100),
                         () -> {
                             new Popup().headLine(BSResources.get("createOffer.success.headline"))
-                                    .message(BSResources.get("createOffer.success.info"))
+                                    .feedback(BSResources.get("createOffer.success.info"))
                                     .actionButtonText("Go to \"My open offers\"")
                                     .onAction(() -> {
                                         close();
@@ -515,6 +540,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addListeners() {
+        model.tradeCurrencyCode.addListener(tradeCurrencyCodeListener);
+
         // focus out
         amountTextField.focusedProperty().addListener(amountFocusedListener);
         minAmountTextField.focusedProperty().addListener(minAmountFocusedListener);
@@ -537,6 +564,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void removeListeners() {
+        model.tradeCurrencyCode.removeListener(tradeCurrencyCodeListener);
+
         // focus out
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
         minAmountTextField.focusedProperty().removeListener(minAmountFocusedListener);
@@ -644,6 +673,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow, BSResources.get("createOffer.amountPriceBox.next"), BSResources.get("shared.cancel"));
         nextButton = tuple.first;
+        nextButton.disableProperty().bind(model.isNextButtonDisabled);
         //UserThread.runAfter(() -> nextButton.requestFocus(), 100, TimeUnit.MILLISECONDS);
         cancelButton1 = tuple.second;
         cancelButton1.setDefaultButton(false);
@@ -697,7 +727,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         createOfferButton.setOnAction(e -> onPlaceOffer());
         createOfferButton.setMinHeight(40);
         createOfferButton.setPadding(new Insets(0, 20, 0, 20));
-        
+
         placeOfferSpinner = placeOfferTuple.second;
         placeOfferSpinner.setPrefSize(18, 18);
         placeOfferSpinnerInfoLabel = placeOfferTuple.third;

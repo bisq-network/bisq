@@ -91,8 +91,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         model.onCancelOpenOffer(openOffer,
                 () -> {
                     log.debug("Remove offer was successful");
-                    new Popup().information("You can withdraw the funds you paid in from the funds screens.")
-                            .onClose(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                    new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
+                            .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+                            .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                             .show();
                 },
                 (message) -> {

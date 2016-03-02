@@ -30,7 +30,6 @@ import io.bitsquare.payment.BlockChainAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.user.PopupId;
 import io.bitsquare.user.Preferences;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -71,26 +70,25 @@ public class SellerStep3View extends TradeStepView {
                 if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
                     String message;
                     String tradeAmountWithCode = model.formatter.formatFiatWithCode(trade.getTradeVolume());
+                    String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
                     if (paymentAccountContractData instanceof BlockChainAccountContractData) {
-                        String nameByCode = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
                         String address = ((BlockChainAccountContractData) paymentAccountContractData).getAddress();
-                        message = "Please check on your favorite " +
-                                nameByCode +
+                        message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
+                                "Please check on your favorite " + currencyName +
                                 " blockchain explorer if the transaction to your receiving address\n" +
                                 "" + address + "\n" +
-                                "has already " +
-                                "sufficient blockchain confirmations.\n" +
+                                "has already sufficient blockchain confirmations.\n" +
                                 "The payment amount has to be " + tradeAmountWithCode + "\n\n" +
-                                "You can copy & paste your " + nameByCode + " address from the main screen after " +
+                                "You can copy & paste your " + currencyName + " address from the main screen after " +
                                 "closing that popup.";
                     } else {
-                        message = "Please go to your online banking web page and check if you have received " +
+                        message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
+                                "Please go to your online banking web page and check if you have received " +
                                 tradeAmountWithCode + " from the bitcoin buyer.\n\n" +
-                                "The reference text of the transaction is: " + trade.getShortId();
+                                "The reference text of the transaction is: \"" + trade.getShortId() + "\"";
                     }
-                    new Popup().headLine("Notification for trade with ID " + trade.getShortId())
-                            .message(message)
-                            .closeButtonText("I understand")
+                    new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
+                            .instruction(message)
                             .dontShowAgainId(id, preferences)
                             .show();
 
@@ -220,16 +218,17 @@ public class SellerStep3View extends TradeStepView {
         log.debug("onPaymentReceived");
         if (model.p2PService.isBootstrapped()) {
             Preferences preferences = model.dataModel.preferences;
-            String key = PopupId.PAYMENT_RECEIVED;
+            String key = "confirmPaymentReceived";
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
-                new Popup().headLine("Confirmation")
-                        .message("Did you receive the payment from your trading partner?\n\n" +
-                                "Please note that as soon you have confirmed the locked bitcoin will be released.\n" +
-                                "There is no way to reverse a bitcoin payment.")
+                new Popup()
+                        .headLine("Confirm that you have received the payment")
+                        .confirmation("Have you received the " + model.dataModel.getCurrencyCode() + " payment from your trading partner?\n\n" +
+                                "Please note that as soon you have confirmed the receipt, the locked trade amount will be released " +
+                                "to the bitcoin buyer and the security deposit will be refunded.")
                         .width(700)
                         .dontShowAgainId(key, preferences)
-                        .actionButtonText("Yes I have received the payment")
-                        .closeButtonText("No")
+                        .actionButtonText("Yes, I have received the payment")
+                        .closeButtonText("Cancel")
                         .onAction(this::confirmPaymentReceived)
                         .show();
             } else {

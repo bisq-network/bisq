@@ -143,7 +143,7 @@ public class EmptyWalletPopup extends Popup {
                         emptyWalletButton.setDisable(true);
                         log.debug("wallet empty successful");
                         FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), () -> new Popup()
-                                .information("The balance of your wallet was successfully transferred.")
+                                .feedback("The balance of your wallet was successfully transferred.")
                                 .onClose(() -> blurAgain()).show());
                     },
                     (errorMessage) -> {

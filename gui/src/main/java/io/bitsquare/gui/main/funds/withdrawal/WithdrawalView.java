@@ -188,14 +188,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 if (BitsquareApp.DEV_MODE) {
                     doWithdraw(receiverAmount, callback);
                 } else {
-                    new Popup().headLine("Confirm your withdrawal request")
-                            .message("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
+                    new Popup().headLine("Confirm withdrawal request")
+                            .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
                                     "From address: " + withdrawFromTextField.getText() + "\n" +
                                     "To receiving address: " + withdrawToTextField.getText() + ".\n" +
                                     "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n\n" +
                                     "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
                                     "Are you sure you want to withdraw that amount?")
+                            .actionButtonText("Yes")
                             .onAction(() -> doWithdraw(receiverAmount, callback))
+                            .closeButtonText("Cancel")
                             .show();
 
                 }
@@ -323,10 +325,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             reset();
             updateList();
         } catch (AddressFormatException e) {
-            new Popup().error("The address is not correct. Please check the address format.").show();
+            new Popup().warning("The address is not correct. Please check the address format.").show();
         } catch (InsufficientMoneyException e) {
             log.warn(e.getMessage());
-            new Popup().error("You don't have enough fund in your wallet.").show();
+            new Popup().warning("You don't have enough fund in your wallet.").show();
         }
     }
 

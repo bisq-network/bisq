@@ -40,13 +40,13 @@ public class TacPopup extends Popup {
                 preferences.setTacAccepted(true);
                 if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET)
                     UserThread.runAfter(() -> new Popup()
+                            .headLine("Important information!")
                             .warning("This software is still in alpha version.\n" +
                                     "Please be aware that using Mainnet comes with the risk to lose funds " +
                                     "in case of software bugs.\n" +
                                     "To limit the possible losses the maximum allowed trading amount and the " +
-                                    "security deposit have been reduced to 0.01 BTC for the alpha version " +
+                                    "security deposit have been reduced to 0.1 BTC for the alpha version " +
                                     "when using Mainnet.")
-                            .headLine("Important information!")
                             .actionButtonText("I understand and want to use Mainnet")
                             .closeButtonText("Restart and use Testnet")
                             .onClose(() -> {

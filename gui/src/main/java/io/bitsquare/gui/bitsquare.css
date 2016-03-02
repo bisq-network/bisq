@@ -973,5 +973,12 @@ textfield */
     -fx-background-radius: 5 5 5 5;
     -fx-background-insets: 5 5 20 20;
     -fx-effect: dropshadow(gaussian, #000000, 15, 0, 2, 2);
+}
 
+.popup-icon-information {
+    -fx-text-fill: #ddd;
+}
+
+.popup-icon-warning {
+    -fx-text-fill: #dd6900;
 }

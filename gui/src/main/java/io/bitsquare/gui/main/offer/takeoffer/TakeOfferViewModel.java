@@ -71,6 +71,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     final BooleanProperty isOfferAvailable = new SimpleBooleanProperty();
     final BooleanProperty isTakeOfferButtonDisabled = new SimpleBooleanProperty(true);
+    final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty isTakeOfferSpinnerVisible = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
@@ -340,13 +341,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     private void updateButtonDisableState() {
-        isTakeOfferButtonDisabled.set(!(isBtcInputValid(amount.get()).isValid
-                        && dataModel.isMinAmountLessOrEqualAmount()
-                        && !dataModel.isAmountLargerThanOfferAmount()
-                        && dataModel.isWalletFunded.get()
-                        && !takeOfferRequested
-                        && dataModel.isFeeFromFundingTxSufficient())
-        );
+        boolean inputDataValid = isBtcInputValid(amount.get()).isValid
+                && dataModel.isMinAmountLessOrEqualAmount()
+                && !dataModel.isAmountLargerThanOfferAmount();
+        isNextButtonDisabled.set(!inputDataValid);
+        isTakeOfferButtonDisabled.set(!(inputDataValid
+                && dataModel.isWalletFunded.get()
+                && !takeOfferRequested
+                && dataModel.isFeeFromFundingTxSufficient()));
     }
 
 
@@ -401,8 +403,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 if (connection.getPeersNodeAddressOptional().isPresent() &&
                         connection.getPeersNodeAddressOptional().get().equals(offer.getOffererNodeAddress()))
                     offerWarning.set("You lost connection to the offerer.\n" +
-                            "He might have gone offline or has closed the connection to you because of " +
-                            "many other connections.");
+                            "He might have gone offline or has closed the connection to you because of too " +
+                            "many open connections.\n\n" +
+                            "If you can still see his offer in the offerbook you can try to take the offer again.");
             }
 
             @Override

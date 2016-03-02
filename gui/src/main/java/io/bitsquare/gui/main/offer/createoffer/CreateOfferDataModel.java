@@ -29,6 +29,7 @@ import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.gui.main.notifications.Notification;
 import io.bitsquare.gui.main.popups.Popup;
 import io.bitsquare.gui.main.popups.WalletPasswordPopup;
 import io.bitsquare.gui.util.BSFormatter;
@@ -381,8 +382,15 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private void updateBalance(Coin balance) {
         isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
 
-        if (isWalletFunded.get())
+        if (isWalletFunded.get()) {
             walletService.removeBalanceListener(balanceListener);
+            new Notification()
+                    .headLine("Trading wallet update")
+                    .notification("Your trading wallet is sufficiently funded.\n" +
+                            "Amount: " + formatter.formatCoinWithCode(totalToPayAsCoin.get()))
+                    .autoClose()
+                    .show();
+        }
     }
 
     public Coin getOfferFeeAsCoin() {

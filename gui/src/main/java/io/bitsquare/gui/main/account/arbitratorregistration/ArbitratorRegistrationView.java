@@ -225,7 +225,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     private void onRevoke() {
         if (model.isBootstrapped()) {
             model.onRevoke(
-                    () -> new Popup().information("You have successfully removed your arbitrator from the P2P network.").show(),
+                    () -> new Popup().feedback("You have successfully removed your arbitrator from the P2P network.").show(),
                     (errorMessage) -> new Popup().error("Could not remove arbitrator.\nError message: " + errorMessage).show());
         } else {
             new Popup().warning("You need to wait until your client is bootstrapped in the network.\n" +
@@ -236,7 +236,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     private void onRegister() {
         if (model.isBootstrapped()) {
             model.onRegister(
-                    () -> new Popup().information("You have successfully registered your arbitrator to the P2P network.").show(),
+                    () -> new Popup().feedback("You have successfully registered your arbitrator to the P2P network.").show(),
                     (errorMessage) -> new Popup().error("Could not register arbitrator.\nError message: " + errorMessage).show());
         } else {
             new Popup().warning("You need to wait until your client is bootstrapped in the network.\n" +

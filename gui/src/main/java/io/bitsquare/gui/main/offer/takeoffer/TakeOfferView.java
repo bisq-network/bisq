@@ -23,6 +23,7 @@ import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -175,11 +176,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         errorMessageSubscription = EasyBind.subscribe(model.errorMessage, newValue -> {
             if (newValue != null) {
-                new Popup().error(BSResources.get("takeOffer.error.message", newValue)).onClose(() -> {
-                    errorPopupDisplayed.set(true);
-                    model.resetErrorMessage();
-                    close();
-                }).show();
+                new Popup().error(BSResources.get("takeOffer.error.message", model.errorMessage.get()) +
+                        "Please try to restart you application and check your network connection to see if you can resolve the issue.")
+                        .onClose(() -> {
+                            errorPopupDisplayed.set(true);
+                            model.resetErrorMessage();
+                            close();
+                        })
+                        .show();
             }
         });
 
@@ -220,15 +224,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
                 FxTimer.runLater(Duration.ofMillis(100),
                         () -> {
-                            new Popup().information(BSResources.get("takeOffer.success.info"))
-                                    .actionButtonText("Go to \"Portfolio/Open trades\"")
+                            new Popup().headLine(BSResources.get("takeOffer.success.headline"))
+                                    .feedback(BSResources.get("takeOffer.success.info"))
+                                    .actionButtonText("Go to \"Open trades\"")
                                     .onAction(() -> {
                                         close();
                                         FxTimer.runLater(Duration.ofMillis(100),
                                                 () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
                                         );
                                     })
-                                    .onClose(() -> close())
+                                    .onClose(this::close)
                                     .show();
                         }
                 );
@@ -293,6 +298,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         showCheckAvailabilityPopupSubscription.unsubscribe();
 
         model.dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
+        if (balanceTextField != null)
+            balanceTextField.cleanup();
     }
 
 
@@ -310,7 +317,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             directionLabel.setId("direction-icon-label-buy");
 
             takeOfferButton.setId("buy-button-big");
-            takeOfferButton.setText("Take offer for buying bitcoin");
+            takeOfferButton.setText("Review take offer for buying bitcoin");
             nextButton.setId("buy-button");
             iconView.setId("image-buy-white");
         } else {
@@ -319,7 +326,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            takeOfferButton.setText("Take offer for selling bitcoin");
+            takeOfferButton.setText("Review take offer for selling bitcoin");
             iconView.setId("image-sell-white");
         }
 
@@ -390,24 +397,40 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void onShowPayFundsScreen() {
+        amountTextField.setMouseTransparent(true);
+        priceTextField.setMouseTransparent(true);
+        volumeTextField.setMouseTransparent(true);
+
         if (!BitsquareApp.DEV_MODE) {
-            String id = "tradeWalletInfoPopup";
+            String id = "securityDepositInfo";
             if (model.dataModel.getPreferences().showAgain(id)) {
-                new Popup().information("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
-                        "The deposit will be refunded to you after the trade has successfully completed.\n\n" +
-                        "You need to pay in the exact amount displayed to you from your external bitcoin wallet into the " +
-                        "Bitsquare trade wallet.\n" +
-                        "The amount is the sum of the trade amount, the security deposit, the trading fee and " +
-                        "the bitcoin mining fee.\n" +
-                        "You can see the details when you move the mouse over the question mark.\n\n" +
-                        "Important notice!\n" +
-                        "Please take care that you use a mining fee of at least " +
-                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + " when you transfer bitcoin from your external " +
-                        "wallet to ensure the trade transactions will get into the blockchain.\n" +
-                        "A too low mining fee might result in a delayed trade and will be rejected!")
-                        .closeButtonText("I understand")
+                new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
+                        "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
+                        "It will be refunded to you after the trade has successfully completed.")
+                        .closeButtonText("I want to learn more")
+                        .onClose(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
+                        .actionButtonText("I understand")
+                        .onAction(() -> {
+                        })
+                        .dontShowAgainId(id, preferences)
                         .show();
-                model.dataModel.getPreferences().dontShowAgain(id);
+            }
+
+            id = "takeOfferFundWalletInfo";
+            if (model.dataModel.getPreferences().showAgain(id)) {
+                String tradeAmountText = model.isSeller() ? "the trade amount, " : "";
+                new Popup().headLine("Fund your trading wallet").instruction("You need to pay in " +
+                        model.totalToPay.get() + " to your local Bitsquare trading wallet.\n" +
+                        "The amount is the sum of " + tradeAmountText + "the security deposit, the trading fee and " +
+                        "the bitcoin mining fee.\n\n" +
+                        "Please send from your external Bitcoin wallet the exact amount to the address: " +
+                        model.getAddressAsString() + "\n(you can copy the address in the screen below after closing that popup)\n\n" +
+                        "Make sure you use a sufficiently high mining fee of at least " +
+                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) +
+                        " to avoid problems that your transaction does not get confirmed in the blockchain.\n\n" +
+                        "You can see the status of your incoming payment and all the details in the screen below.")
+                        .dontShowAgainId(id, preferences)
+                        .show();
             }
         }
 
@@ -526,6 +549,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow, BSResources.get("takeOffer.amountPriceBox.next"), BSResources.get("shared.cancel"));
         nextButton = tuple.first;
+        nextButton.disableProperty().bind(model.isNextButtonDisabled);
         //UserThread.runAfter(() -> nextButton.requestFocus(), 100, TimeUnit.MILLISECONDS);
         cancelButton1 = tuple.second;
         cancelButton1.setDefaultButton(false);
@@ -577,10 +601,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Tuple3<Button, ProgressIndicator, Label> takeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "");
         takeOfferButton = takeOfferTuple.first;
         takeOfferButton.setVisible(false);
-        takeOfferButton.setOnAction(e -> onTakeOffer());
+        takeOfferButton.setOnAction(e -> {
+            onTakeOffer();
+            balanceTextField.cleanup();
+        });
         takeOfferButton.setMinHeight(40);
         takeOfferButton.setPadding(new Insets(0, 20, 0, 20));
-        
+
         takeOfferSpinner = takeOfferTuple.second;
         takeOfferSpinner.setPrefSize(18, 18);
         takeOfferSpinnerInfoLabel = takeOfferTuple.third;

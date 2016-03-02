@@ -32,7 +32,6 @@ import io.bitsquare.payment.BlockChainAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.user.PopupId;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
@@ -70,26 +69,27 @@ public class BuyerStep2View extends TradeStepView {
                     if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
                         String message = "";
                         if (paymentAccountContractData instanceof BlockChainAccountContractData)
-                            message = "Please transfer from your external " +
+                            message = "Your trade has reached at least one blockchain confirmation.\n\n" +
+                                    "Please transfer from your external " +
                                     CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " wallet\n" +
                                     model.formatter.formatFiatWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
                                     "Here are the payment account details of the bitcoin seller:\n" +
                                     "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n\n" +
-                                    "You can copy & paste the receivers address from the main screen after closing that popup.";
+                                    "You can copy & paste the values from the main screen after closing that popup.";
                         else if (paymentAccountContractData != null)
-                            message = "Please go to your online banking web page and pay\n" +
+                            message = "Your trade has reached at least one blockchain confirmation.\n\n" +
+                                    "Please go to your online banking web page and pay " +
                                     model.formatter.formatFiatWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
                                     "Here are the payment account details of the bitcoin seller:\n" +
-                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n\n" +
-                                    "Please don't forget to add the reference text " + trade.getShortId() +
-                                    " so the receiver can assign your payment to this trade.\n" +
+                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
+                                    "You can copy & paste the values from the main screen after closing that popup.\n\n" +
+                                    "Please don't forget to add the reference text \"" + trade.getShortId() +
+                                    "\" so the receiver can assign your payment to this trade.\n\n" +
                                     "DO NOT use any additional notice in the reference text like " +
-                                    "Bitcoin, Btc, Trade or Bitsquare.\n\n" +
-                                    "You can copy & paste the values from the main screen after closing that popup.";
+                                    "Bitcoin, Btc or Bitsquare.";
 
-                        new Popup().headLine("Notification for trade with ID " + trade.getShortId())
-                                .message(message)
-                                .closeButtonText("I understand")
+                        new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
+                                .instruction(message)
                                 .dontShowAgainId(id, preferences)
                                 .show();
                     }
@@ -210,13 +210,15 @@ public class BuyerStep2View extends TradeStepView {
 
     private void onPaymentStarted() {
         if (model.p2PService.isBootstrapped()) {
-            String key = PopupId.PAYMENT_SENT;
+            String key = "confirmPaymentStarted";
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
-                new Popup().headLine("Confirmation")
-                        .message("Did you transfer the payment to your trading partner?")
+                new Popup()
+                        .headLine("Confirm that you have started the payment")
+                        .confirmation("Have you initiated the " + model.dataModel.getCurrencyCode() +
+                                " payment to your trading partner?")
                         .width(700)
                         .dontShowAgainId(key, preferences)
-                        .actionButtonText("Yes I have started the payment")
+                        .actionButtonText("Yes, I have started the payment")
                         .closeButtonText("No")
                         .onAction(this::confirmPaymentStarted)
                         .show();

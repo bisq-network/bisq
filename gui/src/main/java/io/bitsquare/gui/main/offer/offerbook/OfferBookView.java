@@ -253,17 +253,18 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onCreateOffer() {
         if (!model.hasPaymentAccount()) {
-            showWarning("You don't have setup a payment account yet.",
-                    "You need to setup your payment account before you can trade.\nDo you want to do this now?", FiatAccountsView.class);
+            openPopupForMissingAccountSetup("You have not setup a payment account",
+                    "You need to setup a national currency or crypto currency account before you can create an offer.\n" +
+                            "Do you want to setup an account?", FiatAccountsView.class, "\"Account\"");
         } else if (!model.hasPaymentAccountForCurrency()) {
-            showWarning("You don't have a payment account for the currency:\n" +
+            openPopupForMissingAccountSetup("You don't have a payment account for the currency:\n" +
                             model.getSelectedTradeCurrency().getCodeAndName(),
                     "You need to setup a payment account for the selected currency to be able to trade in that currency.\n" +
-                            "Do you want to do this now?", FiatAccountsView.class);
+                            "Do you want to do this now?", FiatAccountsView.class, "\"Account\"");
         } else if (!model.hasAcceptedArbitrators()) {
-            showWarning("You don't have an arbitrator selected.",
+            openPopupForMissingAccountSetup("You don't have an arbitrator selected.",
                     "You need to setup at least one arbitrator to be able to trade.\n" +
-                            "Do you want to do this now?", ArbitratorSelectionView.class);
+                            "Do you want to do this now?", ArbitratorSelectionView.class, "\"Arbitrator selection\"");
         } else {
             createOfferButton.setDisable(true);
             offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
@@ -272,19 +273,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onShowInfo(boolean isPaymentAccountValidForOffer, boolean hasMatchingArbitrator, boolean hasSameProtocolVersion) {
         if (!hasMatchingArbitrator) {
-            showWarning("You don't have an arbitrator selected.",
+            openPopupForMissingAccountSetup("You don't have an arbitrator selected.",
                     "You need to setup at least one arbitrator to be able to trade.\n" +
-                            "Do you want to do this now?", ArbitratorSelectionView.class);
+                            "Do you want to do this now?", ArbitratorSelectionView.class, "\"Arbitrator selection\"");
         } else if (!isPaymentAccountValidForOffer) {
-            showWarning("You don't have a payment account with the payment method required for that offer.",
+            openPopupForMissingAccountSetup("You don't have a payment account with the payment method required for that offer.",
                     "You need to setup a payment account with that payment method if you want to take that offer.\n" +
-                            "Do you want to do this now?", FiatAccountsView.class);
+                            "Do you want to do this now?", FiatAccountsView.class, "\"Account\"");
         } else if (!hasSameProtocolVersion) {
-            new Popup().information("That offer requires a different protocol version as the one used in your " +
-                    "version of the software." +
-                    "\n\n" + "Please check if you have the latest version installed, otherwise the user " +
-                    "who created the offer has used an older version.\n" +
-                    "You cannot trade with an incompatible protocol version.")
+            new Popup().warning("That offer requires a different protocol version as the one used in your " +
+                    "version of the software.\n\n" +
+                    "Please check if you have the latest version installed, otherwise the user " +
+                    "who created the offer has used an older version.\n\n" +
+                    "Users cannot trade with an incompatible trade protocol version.")
                     .show();
         }
     }
@@ -315,8 +316,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.onRemoveOpenOffer(offer,
                 () -> {
                     log.debug("Remove offer was successful");
-                    new Popup().information("You can withdraw the funds you paid in from the funds screens.").show();
-                    navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+                    new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
+                            .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+                            .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                            .show();
                 },
                 (message) -> {
                     log.error(message);
@@ -324,8 +327,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 });
     }
 
-    private void showWarning(String masthead, String message, Class target) {
-        new Popup().information(masthead + "\n\n" + message)
+    private void openPopupForMissingAccountSetup(String headLine, String message, Class target, String targetAsString) {
+        new Popup().headLine(headLine)
+                .instruction(message)
+                .actionButtonText("Go to " + targetAsString)
                 .onAction(() -> {
                     navigation.setReturnPath(navigation.getCurrentPath());
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, target);

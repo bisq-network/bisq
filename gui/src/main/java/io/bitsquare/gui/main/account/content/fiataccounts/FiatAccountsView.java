@@ -128,7 +128,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {
-            new Popup().error("That account name is already used in a saved account. \nPlease use another name.").show();
+            new Popup().warning("That account name is already used in a saved account.\n" +
+                    "Please use another name.").show();
         }
     }
 
@@ -138,6 +139,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
 
     private void onDeleteAccount(PaymentAccount paymentAccount) {
         new Popup().warning("Do you really want to delete the selected account?")
+                .actionButtonText("Yes")
+                .closeButtonText("Cancel")
                 .onAction(() -> {
                     model.onDeleteAccount(paymentAccount);
                     removeSelectAccountForm();

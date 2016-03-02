@@ -113,14 +113,14 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                         wallet.decrypt(aesKey);
                         tradeWalletService.setAesKey(null);
                         new Popup()
-                                .information("Wallet successfully decrypted and password protection removed.")
+                                .feedback("Wallet successfully decrypted and password protection removed.")
                                 .show();
                         passwordField.setText("");
                         repeatedPasswordField.setText("");
                     } else {
                         new Popup()
-                                .headLine("Wrong password")
-                                .message("Please try entering your password again, carefully checking for typos or spelling errors.")
+                                .warning("You entered the wrong password.\n\n" +
+                                        "Please try entering your password again, carefully checking for typos or spelling errors.")
                                 .show();
                     }
                 } else {
@@ -128,7 +128,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                     // we save the key for the trade wallet as we don't require passwords here
                     tradeWalletService.setAesKey(aesKey);
                     new Popup()
-                            .information("Wallet successfully encrypted and password protection enabled.")
+                            .feedback("Wallet successfully encrypted and password protection enabled.")
                             .show();
                     passwordField.setText("");
                     repeatedPasswordField.setText("");

@@ -156,8 +156,8 @@ public class WalletPasswordPopup extends Popup {
                     hide();
                 } else {
                     FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), () -> new Popup()
-                            .headLine("Wrong password")
-                            .message("Please try entering your password again, carefully checking for typos or spelling errors.")
+                            .warning("You entered the wrong password.\n\n" +
+                                    "Please try entering your password again, carefully checking for typos or spelling errors.")
                             .onClose(() -> blurAgain()).show());
                 }
             });

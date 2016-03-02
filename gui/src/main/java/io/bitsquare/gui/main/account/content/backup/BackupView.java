@@ -104,7 +104,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                     String destination = Paths.get(backupDirectory, "bitsquare_backup_" + dateString).toString();
                     FileUtils.copyDirectory(new File(environment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY)),
                             new File(destination));
-                    new Popup().information("Backup successfully saved at:\n" + destination).show();
+                    new Popup().feedback("Backup successfully saved at:\n" + destination).show();
                 } catch (IOException e1) {
                     e1.printStackTrace();
                     log.error(e1.getMessage());

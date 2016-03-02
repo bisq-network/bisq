@@ -70,7 +70,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private final User user;
     private final KeyRing keyRing;
     public final DisputeManager disputeManager;
-    private final Navigation navigation;
+    public final Navigation navigation;
     private final WalletPasswordPopup walletPasswordPopup;
     private final NotificationCenter notificationCenter;
 

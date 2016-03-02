@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.funds;
 
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.*;
@@ -26,7 +27,6 @@ import io.bitsquare.gui.main.funds.reserved.ReservedView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.popups.Popup;
-import io.bitsquare.user.PopupId;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -85,15 +85,20 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         else if (root.getSelectionModel().getSelectedItem() == transactionsTab)
             navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
 
-        String key = PopupId.TRADE_WALLET;
-        String text = "Bitsquare does not use a single application wallet, but dedicated wallets for every trade.\n" +
-                "Funding of the wallet will be done when needed, for instance when you create or take an offer.\n" +
-                "Withdrawing funds can be done after a trade is completed.\n" +
-                "Dedicated wallets help protect user privacy and prevent leaking information of previous trades to other" +
-                "traders.\n\n" +
-                "For more background information please see the Bitsquare FAQ on our web page.";
+        String key = "tradeWalletInfoAtFunds";
         if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE)
-            new Popup().information(text).dontShowAgainId(key, preferences).show();
+            new Popup().backgroundInfo("Bitsquare does not use a single application wallet, but dedicated wallets for every trade.\n\n" +
+                    "Funding of the wallet will be done when needed, for instance when you create or take an offer.\n" +
+                    "Withdrawing funds can be done after a trade is completed.\n\n" +
+                    "Dedicated wallets help protect user privacy and prevent leaking information of previous trades to other" +
+                    "traders.")
+                    .closeButtonText("I want to learn more")
+                    .onClose(() -> Utilities.openWebPage("https://bitsquare.io/faq"))
+                    .actionButtonText("I understand")
+                    .onAction(() -> {
+                    })
+                    .dontShowAgainId(key, preferences)
+                    .show();
     }
 
     @Override

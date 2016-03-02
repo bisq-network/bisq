@@ -57,8 +57,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
-    private CheckBox useAnimationsCheckBox, useEffectsCheckBox, showNotificationsCheckBox, showInstructionsCheckBox,
-            autoSelectArbitratorsCheckBox;
+    private CheckBox useAnimationsCheckBox, useEffectsCheckBox, autoSelectArbitratorsCheckBox;
     private int gridRow = 0;
     //private InputTextField transactionFeeInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
@@ -78,6 +77,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     public final ObservableList<CryptoCurrency> cryptoCurrencies;
     public final ObservableList<CryptoCurrency> allCryptoCurrencies;
     public final ObservableList<TradeCurrency> tradeCurrencies;
+    private Button resetDontShowAgainButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -293,16 +293,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, "Display options", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
         useAnimationsCheckBox = addLabelCheckBox(root, gridRow, "Use animations:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        Tuple2<Label, CheckBox> labelCheckBoxTuple2 = addLabelCheckBox(root, gridRow, "Show notifications:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        showNotificationsCheckBox = labelCheckBoxTuple2.second;
-        GridPane.setColumnIndex(labelCheckBoxTuple2.first, 2);
-        GridPane.setColumnIndex(showNotificationsCheckBox, 3);
+        Tuple2<Label, Button> labelButton = addLabelButton(root, gridRow, "Reset all don't show again flags:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        resetDontShowAgainButton = labelButton.second;
+        GridPane.setColumnIndex(labelButton.first, 2);
+        GridPane.setColumnIndex(resetDontShowAgainButton, 3);
 
         useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use effects:", "").second;
-        labelCheckBoxTuple2 = addLabelCheckBox(root, gridRow, "Show instruction popups:", "");
-        showInstructionsCheckBox = labelCheckBoxTuple2.second;
-        GridPane.setColumnIndex(labelCheckBoxTuple2.first, 2);
-        GridPane.setColumnIndex(showInstructionsCheckBox, 3);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -406,11 +402,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         useEffectsCheckBox.setSelected(preferences.getUseEffects());
         useEffectsCheckBox.setOnAction(e -> preferences.setUseEffects(useEffectsCheckBox.isSelected()));
 
-        showNotificationsCheckBox.setSelected(preferences.getShowNotifications());
-        showNotificationsCheckBox.setOnAction(e -> preferences.setShowNotifications(showNotificationsCheckBox.isSelected()));
-
-        showInstructionsCheckBox.setSelected(preferences.getShowInstructions());
-        showInstructionsCheckBox.setOnAction(e -> preferences.setShowInstructions(showInstructionsCheckBox.isSelected()));
+        resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgainForType());
 
         autoSelectArbitratorsCheckBox.setSelected(preferences.getAutoSelectArbitrators());
         autoSelectArbitratorsCheckBox.setOnAction(e -> preferences.setAutoSelectArbitrators(autoSelectArbitratorsCheckBox.isSelected()));
@@ -428,8 +420,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         //btcDenominationComboBox.setOnAction(null);
         userLanguageComboBox.setOnAction(null);
         blockChainExplorerComboBox.setOnAction(null);
-        showNotificationsCheckBox.setOnAction(null);
-        showInstructionsCheckBox.setOnAction(null);
         //  transactionFeeInputTextField.textProperty().unbind();
         ///  transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
     }

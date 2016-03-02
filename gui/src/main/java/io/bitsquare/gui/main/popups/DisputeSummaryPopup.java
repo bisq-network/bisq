@@ -392,8 +392,8 @@ public class DisputeSummaryPopup extends Popup {
                     disputeManager.sendDisputeResultMessage(disputeResult, dispute, text);
 
                     if (!finalPeersDispute.isClosed())
-                        FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), () -> new Popup().information(
-                                "You need to close also the trading peers ticket!").show());
+                        FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), () ->
+                                new Popup().instruction("You need to close also the trading peers ticket!").show());
 
                     hide();
 

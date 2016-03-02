@@ -96,8 +96,6 @@ public final class Preferences implements Persistable {
     private final ArrayList<CryptoCurrency> cryptoCurrencies;
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
-    private boolean showNotifications = true;
-    private boolean showInstructions = true;
     private String backupDirectory;
     private boolean autoSelectArbitrators = true;
     private final Map<String, Boolean> showAgainMap;
@@ -146,8 +144,6 @@ public final class Preferences implements Persistable {
             if (blockChainExplorerMainNet == null)
                 setBlockChainExplorerTestNet(blockChainExplorersMainNet.get(0));
 
-            showNotifications = persisted.getShowNotifications();
-            showInstructions = persisted.getShowInstructions();
             backupDirectory = persisted.getBackupDirectory();
             autoSelectArbitrators = persisted.getAutoSelectArbitrators();
             showAgainMap = persisted.getShowAgainMap();
@@ -175,11 +171,6 @@ public final class Preferences implements Persistable {
             setBlockChainExplorerMainNet(blockChainExplorersMainNet.get(0));
 
             showAgainMap = new HashMap<>();
-            showAgainMap.put(PopupId.TRADE_WALLET, true);
-            showAgainMap.put(PopupId.SEND_PAYMENT_INFO, true);
-            showAgainMap.put(PopupId.PAYMENT_SENT, true);
-            showAgainMap.put(PopupId.PAYMENT_RECEIVED, true);
-
             preferredLocale = getDefaultLocale();
             preferredTradeCurrency = getDefaultTradeCurrency();
 
@@ -219,8 +210,22 @@ public final class Preferences implements Persistable {
         tradeCurrenciesAsObservable.addAll(cryptoCurrencies);
     }
 
-    public void dontShowAgain(String id) {
-        showAgainMap.put(id, false);
+    public void dontShowAgain(String key) {
+        showAgainMap.put(key, false);
+        storage.queueUpForSave(2000);
+    }
+
+    public void resetDontShowAgainForType() {
+        showAgainMap.clear();
+        storage.queueUpForSave(2000);
+    }
+
+    public void removeDontShowAgainForType(String type) {
+        showAgainMap.keySet().stream().forEach(key -> {
+            if (key.startsWith(type + "_"))
+                showAgainMap.put(key, true);
+        });
+
         storage.queueUpForSave(2000);
     }
 
@@ -315,16 +320,6 @@ public final class Preferences implements Persistable {
             setBlockChainExplorerMainNet(blockChainExplorer);
         else
             setBlockChainExplorerTestNet(blockChainExplorer);
-    }
-
-    public void setShowNotifications(boolean showNotifications) {
-        this.showNotifications = showNotifications;
-        storage.queueUpForSave(2000);
-    }
-
-    public void setShowInstructions(boolean showInstructions) {
-        this.showInstructions = showInstructions;
-        storage.queueUpForSave(2000);
     }
 
     public void setTacAccepted(boolean tacAccepted) {
@@ -428,14 +423,6 @@ public final class Preferences implements Persistable {
             return blockChainExplorersMainNet;
         else
             return blockChainExplorersTestNet;
-    }
-
-    public boolean getShowNotifications() {
-        return showNotifications;
-    }
-
-    public boolean getShowInstructions() {
-        return showInstructions;
     }
 
     public String getBackupDirectory() {

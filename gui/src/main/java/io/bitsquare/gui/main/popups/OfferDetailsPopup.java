@@ -155,7 +155,7 @@ public class OfferDetailsPopup extends Popup {
         if (takeOfferHandlerOptional.isPresent())
             addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTaker(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
         else
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirection(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForOfferer(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
 
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(tradeAmount));
