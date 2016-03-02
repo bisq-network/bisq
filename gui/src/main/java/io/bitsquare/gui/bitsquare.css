@@ -32,11 +32,11 @@ bg color of non edit textFields: fafafa
     -fx-accent: #0f87c3;
     -bs-blue-soft: derive(-fx-accent, 60%);
     -bs-blue-transparent: #0f87c344;
-    
+
     -bs-green: #00aa33;
     -bs-green-soft: derive(-bs-green, 60%);
     -bs-green-transparent: #00aa3344;
-    
+
     -bs-error-red: #dd0000;
     -bs-red-soft: derive(-bs-error-red, 60%);
 
@@ -57,13 +57,18 @@ bg color of non edit textFields: fafafa
     -bs-warning: -bs-orange;
 
     -bs-buy: -bs-yellow;
-    -bs-buy-dark: derive(-bs-buy, -10%);
+    -bs-buy-focus: derive(-bs-buy, -50%);
+    -bs-buy-hover: derive(-bs-buy, -10%);
     -bs-buy-transparent: derive(-bs-buy, 95%);
 
     -bs-sell: -bs-turquoise;
-    -bs-sell-dark: derive(-bs-sell, -10%);
+    -bs-sell-focus: derive(-bs-sell, -50%);
+    -bs-sell-hover: derive(-bs-sell, -10%);
     -bs-sell-transparent: derive(-bs-sell, 95%);
 
+    -bs-cancel: -bs-light-grey;
+    -bs-cancel-focus: derive(-bs-cancel, -50%);
+    -bs-cancel-hover: derive(-bs-cancel, -10%);
 
     -fx-default-button: derive(-fx-accent, 95%);
     -fx-focus-color: -fx-accent;
@@ -869,8 +874,26 @@ textfield */
     -fx-background-radius: 5;
 }
 
+#buy-button-big:focused {
+    -fx-background-color: -bs-buy-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
+}
+
 #buy-button-big:hover {
-    -fx-base: -bs-buy-dark;
+    -fx-base: -bs-buy-hover;
+}
+
+#buy-button {
+    -fx-base: -bs-buy;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+#buy-button:focused {
+    -fx-background-color: -bs-buy-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
+}
+
+#buy-button:hover {
+    -fx-base: -bs-buy-hover;
 }
 
 #sell-button-big {
@@ -881,18 +904,12 @@ textfield */
     -fx-background-radius: 5;
 }
 
+#sell-button-big:focused {
+    -fx-background-color: -bs-sell-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
+}
+
 #sell-button-big:hover {
-    -fx-base: -bs-sell-dark;
-}
-
-#buy-button {
-    -fx-base: -bs-buy;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-}
-
-#buy-button:hover {
-    -fx-base: -bs-buy-dark;
+    -fx-base: -bs-sell-hover;
 }
 
 #sell-button {
@@ -901,18 +918,26 @@ textfield */
     -fx-font-weight: bold;
 }
 
+#sell-button:focused {
+    -fx-background-color: -bs-sell-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
+}
+
 #sell-button:hover {
-    -fx-base: -bs-sell-dark;
+    -fx-base: -bs-sell-hover;
 }
 
 #cancel-button {
-    -fx-base: -bs-light-grey;
+    -fx-base: -bs-cancel;
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
 
 #cancel-button:hover {
-    -fx-base: derive(-bs-light-grey, -10%);
+    -fx-base: -bs-cancel-hover;
+}
+
+#cancel-button:focused {
+    -fx-background-color: -bs-cancel-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
 }
 
 /********************************************************************************************************************

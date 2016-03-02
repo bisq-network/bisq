@@ -105,6 +105,7 @@ public class FileManager<T> {
 
         if (savePending.getAndSet(true))
             return;   // Already pending.
+
         executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
     }
 

@@ -224,30 +224,33 @@ public class OfferDetailsPopup extends Popup {
             addTitledGroupBg(gridPane, ++rowIndex, 1, "Commitment", Layout.GROUP_DISTANCE);
             addLabelTextField(gridPane, rowIndex, "Please note:", Offer.TAC_OFFERER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
-            Button cancelButton = addConfirmButton(true);
-            addCancelButton(cancelButton);
+            addConfirmAndCancelButtons(true);
         } else if (takeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, "Contract", Layout.GROUP_DISTANCE);
             addLabelTextField(gridPane, rowIndex, "Terms and conditions:", Offer.TAC_TAKER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
-            Button cancelButton = addConfirmButton(false);
-            addCancelButton(cancelButton);
+            addConfirmAndCancelButtons(false);
         } else {
             Button cancelButton = addButtonAfterGroup(gridPane, ++rowIndex, "Close");
             cancelButton.setOnAction(e -> {
-                closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+                closeHandlerOptional.ifPresent(Runnable::run);
                 hide();
             });
         }
     }
 
     @NotNull
-    private Button addConfirmButton(boolean isPlaceOffer) {
+    private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane,
                 ++rowIndex,
                 isPlaceOffer ? "Confirm place offer" : "Confirm take offer",
                 "Cancel");
         Button placeButton = tuple.first;
+
+        boolean isBuyOffer = offer.getDirection() == Offer.Direction.BUY;
+        boolean isBuyStyle = isPlaceOffer ? isBuyOffer : !isBuyOffer;
+        placeButton.setId(isBuyStyle ? "buy-button" : "sell-button");
+
         placeButton.setOnAction(e -> {
             if (user.getAcceptedArbitrators().size() > 0) {
                 if (isPlaceOffer)
@@ -262,12 +265,11 @@ public class OfferDetailsPopup extends Popup {
             }
             hide();
         });
-        return tuple.second;
-    }
 
-    private void addCancelButton(Button cancelButton) {
+        Button cancelButton = tuple.second;
+        cancelButton.setId("cancel-button");
         cancelButton.setOnAction(e -> {
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            closeHandlerOptional.ifPresent(Runnable::run);
             hide();
         });
     }
