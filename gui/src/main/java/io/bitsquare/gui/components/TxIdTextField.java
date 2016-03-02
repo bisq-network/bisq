@@ -23,7 +23,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.user.Preferences;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;

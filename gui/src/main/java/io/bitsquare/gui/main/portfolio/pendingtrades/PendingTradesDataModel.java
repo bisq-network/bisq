@@ -32,9 +32,9 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.disputes.DisputesView;
-import io.bitsquare.gui.main.notifications.NotificationCenter;
-import io.bitsquare.gui.main.popups.SelectDepositTxPopup;
-import io.bitsquare.gui.main.popups.WalletPasswordPopup;
+import io.bitsquare.gui.main.overlays.notifications.NotificationCenter;
+import io.bitsquare.gui.main.overlays.windows.SelectDepositTxWindow;
+import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.SellerTrade;
@@ -71,7 +71,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private final KeyRing keyRing;
     public final DisputeManager disputeManager;
     public final Navigation navigation;
-    private final WalletPasswordPopup walletPasswordPopup;
+    private final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
@@ -91,7 +91,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, TradeWalletService tradeWalletService,
                                   User user, KeyRing keyRing, DisputeManager disputeManager, Preferences preferences,
-                                  Navigation navigation, WalletPasswordPopup walletPasswordPopup, NotificationCenter notificationCenter) {
+                                  Navigation navigation, WalletPasswordWindow walletPasswordWindow, NotificationCenter notificationCenter) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -100,7 +100,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.disputeManager = disputeManager;
         this.preferences = preferences;
         this.navigation = navigation;
-        this.walletPasswordPopup = walletPasswordPopup;
+        this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
 
         tradesListChangeListener = change -> onListChanged();
@@ -150,7 +150,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public void onWithdrawRequest(String toAddress, ResultHandler resultHandler, FaultHandler faultHandler) {
         checkNotNull(getTrade(), "trade must not be null");
         if (walletService.getWallet().isEncrypted()) {
-            walletPasswordPopup.onAesKey(aesKey -> doWithdrawRequest(toAddress, aesKey, resultHandler, faultHandler)).show();
+            walletPasswordWindow.onAesKey(aesKey -> doWithdrawRequest(toAddress, aesKey, resultHandler, faultHandler)).show();
         } else
             doWithdrawRequest(toAddress, null, resultHandler, faultHandler);
     }
@@ -327,7 +327,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 if (candidates.size() == 1)
                     doOpenDispute(isSupportTicket, candidates.get(0));
                 else if (candidates.size() > 1)
-                    new SelectDepositTxPopup().transactions(candidates)
+                    new SelectDepositTxWindow().transactions(candidates)
                             .onSelect(transaction -> doOpenDispute(isSupportTicket, transaction))
                             .closeButtonText("Cancel")
                             .show();

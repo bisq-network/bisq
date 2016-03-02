@@ -24,7 +24,7 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Statistic;

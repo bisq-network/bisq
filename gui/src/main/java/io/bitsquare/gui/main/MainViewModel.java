@@ -40,11 +40,11 @@ import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
 import io.bitsquare.gui.components.TxIdTextField;
-import io.bitsquare.gui.main.notifications.NotificationCenter;
-import io.bitsquare.gui.main.popups.DisplayAlertMessagePopup;
-import io.bitsquare.gui.main.popups.Popup;
-import io.bitsquare.gui.main.popups.TacPopup;
-import io.bitsquare.gui.main.popups.WalletPasswordPopup;
+import io.bitsquare.gui.main.overlays.notifications.NotificationCenter;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.DisplayAlertMessageWindow;
+import io.bitsquare.gui.main.overlays.windows.TacWindow;
+import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
@@ -89,9 +89,9 @@ public class MainViewModel implements ViewModel {
     private final DisputeManager disputeManager;
     private final Preferences preferences;
     private final AlertManager alertManager;
-    private final WalletPasswordPopup walletPasswordPopup;
+    private final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
-    private final TacPopup tacPopup;
+    private final TacWindow tacWindow;
     private Clock clock;
     private final Navigation navigation;
     private final BSFormatter formatter;
@@ -149,8 +149,8 @@ public class MainViewModel implements ViewModel {
                          PriceFeed priceFeed,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
-                         User user, AlertManager alertManager, WalletPasswordPopup walletPasswordPopup,
-                         NotificationCenter notificationCenter, TacPopup tacPopup, Clock clock,
+                         User user, AlertManager alertManager, WalletPasswordWindow walletPasswordWindow,
+                         NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
                          Navigation navigation, BSFormatter formatter) {
         this.priceFeed = priceFeed;
         this.user = user;
@@ -163,9 +163,9 @@ public class MainViewModel implements ViewModel {
         this.disputeManager = disputeManager;
         this.preferences = preferences;
         this.alertManager = alertManager;
-        this.walletPasswordPopup = walletPasswordPopup;
+        this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
-        this.tacPopup = tacPopup;
+        this.tacWindow = tacWindow;
         this.clock = clock;
         this.navigation = navigation;
         this.formatter = formatter;
@@ -426,7 +426,7 @@ public class MainViewModel implements ViewModel {
                 (openOfferManager.getOpenOffers().size() > 0
                         || tradeManager.getTrades().size() > 0
                         || disputeManager.getDisputesAsObservableList().size() > 0)) {
-            walletPasswordPopup.onAesKey(aesKey -> tradeWalletService.setAesKey(aesKey)).show();
+            walletPasswordWindow.onAesKey(aesKey -> tradeWalletService.setAesKey(aesKey)).show();
         }
         walletService.addBalanceListener(new BalanceListener() {
             @Override
@@ -447,7 +447,7 @@ public class MainViewModel implements ViewModel {
         setupDevDummyPaymentAccount();
         setupMarketPriceFeed();
 
-        tacPopup.showIfNeeded();
+        tacWindow.showIfNeeded();
 
         showAppScreen.set(true);
     }
@@ -512,15 +512,15 @@ public class MainViewModel implements ViewModel {
             else if (trade.getCheckPaymentTimeAsBlockHeight() > 0 && bestChainHeight >= trade.getCheckPaymentTimeAsBlockHeight())
                 trade.setTradePeriodState(Trade.TradePeriodState.HALF_REACHED);
 
-            String id;
+            String key;
             String limitDate = formatter.addBlocksToNowDateFormatted(trade.getOpenDisputeTimeAsBlockHeight() - tradeWalletService.getBestChainHeight());
             switch (trade.getTradePeriodState()) {
                 case NORMAL:
                     break;
                 case HALF_REACHED:
-                    id = "displayHalfTradePeriodOver" + trade.getId();
-                    if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
-                        preferences.dontShowAgain(id);
+                    key = "displayHalfTradePeriodOver" + trade.getId();
+                    if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
+                        preferences.dontShowAgain(key, true);
                         new Popup().warning("Your trade with ID " + trade.getShortId() +
                                 " has reached the half of the max. allowed trading period and " +
                                 "is still not completed.\n\n" +
@@ -530,9 +530,9 @@ public class MainViewModel implements ViewModel {
                     }
                     break;
                 case TRADE_PERIOD_OVER:
-                    id = "displayTradePeriodOver" + trade.getId();
-                    if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
-                        preferences.dontShowAgain(id);
+                    key = "displayTradePeriodOver" + trade.getId();
+                    if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
+                        preferences.dontShowAgain(key, true);
                         new Popup().warning("Your trade with ID " + trade.getShortId() +
                                 " has reached the max. allowed trading period and is " +
                                 "not completed.\n\n" +
@@ -624,7 +624,7 @@ public class MainViewModel implements ViewModel {
         user.setDisplayedAlert(alert);
 
         if (alert != null && !alreadyDisplayed) {
-            new DisplayAlertMessagePopup().alertMessage(alert).show();
+            new DisplayAlertMessageWindow().alertMessage(alert).show();
         }
     }
 

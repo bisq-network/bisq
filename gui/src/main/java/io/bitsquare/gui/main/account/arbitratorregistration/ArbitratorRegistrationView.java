@@ -24,8 +24,8 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.main.popups.EnterPrivKeyPopup;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.EnterPrivKeyWindow;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
@@ -57,7 +57,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     private Button revokeButton;
 
     private ChangeListener<Arbitrator> arbitratorChangeListener;
-    private EnterPrivKeyPopup enterPrivKeyPopup;
+    private EnterPrivKeyWindow enterPrivKeyWindow;
     private ListChangeListener<String> listChangeListener;
 
 
@@ -94,9 +94,9 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             model.myArbitratorProperty.addListener(arbitratorChangeListener);
             updateLanguageList();
 
-            if (model.registrationPubKeyAsHex.get() == null && enterPrivKeyPopup == null) {
-                enterPrivKeyPopup = new EnterPrivKeyPopup();
-                enterPrivKeyPopup.onClose(() -> enterPrivKeyPopup = null)
+            if (model.registrationPubKeyAsHex.get() == null && enterPrivKeyWindow == null) {
+                enterPrivKeyWindow = new EnterPrivKeyWindow();
+                enterPrivKeyWindow.onClose(() -> enterPrivKeyWindow = null)
                         .onKey(privKey -> model.setPrivKeyAndCheckPubKey(privKey))
                         .width(700)
                         .show();

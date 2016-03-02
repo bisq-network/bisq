@@ -28,7 +28,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookView;
 import io.bitsquare.gui.main.offer.takeoffer.TakeOfferView;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;

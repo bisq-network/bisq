@@ -15,10 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -26,9 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
-import java.util.Optional;
-
-public class EnterPrivKeyPopup extends Popup {
+public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
     private Button unlockButton;
     private InputTextField keyInputTextField;
     private PrivKeyHandler privKeyHandler;
@@ -48,7 +48,7 @@ public class EnterPrivKeyPopup extends Popup {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public EnterPrivKeyPopup() {
+    public EnterPrivKeyWindow() {
         if (keyInputTextField != null)
             keyInputTextField.textProperty().addListener(changeListener);
     }
@@ -68,15 +68,10 @@ public class EnterPrivKeyPopup extends Popup {
         addInputFields();
         addButtons();
         applyStyles();
-        PopupManager.queueForDisplay(this);
+        display();
     }
 
-    public EnterPrivKeyPopup onClose(Runnable closeHandler) {
-        this.closeHandlerOptional = Optional.of(closeHandler);
-        return this;
-    }
-
-    public EnterPrivKeyPopup onKey(PrivKeyHandler privKeyHandler) {
+    public EnterPrivKeyWindow onKey(PrivKeyHandler privKeyHandler) {
         this.privKeyHandler = privKeyHandler;
         return this;
     }

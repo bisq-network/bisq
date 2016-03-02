@@ -15,9 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
@@ -36,8 +37,8 @@ import java.util.function.Consumer;
 import static io.bitsquare.gui.util.FormBuilder.addLabelComboBox;
 import static io.bitsquare.gui.util.FormBuilder.addMultilineLabel;
 
-public class SelectDepositTxPopup extends Popup {
-    private static final Logger log = LoggerFactory.getLogger(SelectDepositTxPopup.class);
+public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
+    private static final Logger log = LoggerFactory.getLogger(SelectDepositTxWindow.class);
     private ComboBox<Transaction> transactionsComboBox;
     private List<Transaction> transaction;
     private Optional<Consumer<Transaction>> selectHandlerOptional;
@@ -48,7 +49,7 @@ public class SelectDepositTxPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SelectDepositTxPopup() {
+    public SelectDepositTxWindow() {
     }
 
     public void show() {
@@ -62,15 +63,15 @@ public class SelectDepositTxPopup extends Popup {
         addContent();
         addCloseButton();
         applyStyles();
-        PopupManager.queueForDisplay(this);
+        display();
     }
 
-    public SelectDepositTxPopup onSelect(Consumer<Transaction> selectHandler) {
+    public SelectDepositTxWindow onSelect(Consumer<Transaction> selectHandler) {
         this.selectHandlerOptional = Optional.of(selectHandler);
         return this;
     }
 
-    public SelectDepositTxPopup transactions(List<Transaction> transaction) {
+    public SelectDepositTxWindow transactions(List<Transaction> transaction) {
         this.transaction = transaction;
         return this;
     }

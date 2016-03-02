@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
 import io.bitsquare.common.crypto.KeyRing;
@@ -25,6 +25,8 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
+import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
@@ -37,6 +39,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -49,8 +52,8 @@ import java.util.function.Consumer;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
-public class OfferDetailsPopup extends Popup {
-    protected static final Logger log = LoggerFactory.getLogger(OfferDetailsPopup.class);
+public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
+    protected static final Logger log = LoggerFactory.getLogger(OfferDetailsWindow.class);
 
     private final BSFormatter formatter;
     protected final Preferences preferences;
@@ -68,7 +71,7 @@ public class OfferDetailsPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferDetailsPopup(BSFormatter formatter, Preferences preferences, User user, KeyRing keyRing, Navigation navigation) {
+    public OfferDetailsWindow(BSFormatter formatter, Preferences preferences, User user, KeyRing keyRing, Navigation navigation) {
         this.formatter = formatter;
         this.preferences = preferences;
         this.user = user;
@@ -76,7 +79,7 @@ public class OfferDetailsPopup extends Popup {
         this.navigation = navigation;
     }
 
-    public OfferDetailsPopup show(Offer offer, Coin tradeAmount) {
+    public void show(Offer offer, Coin tradeAmount) {
         this.offer = offer;
         this.tradeAmount = tradeAmount;
 
@@ -85,39 +88,28 @@ public class OfferDetailsPopup extends Popup {
         createGridPane();
         addContent();
         display();
-        return this;
     }
 
-    public OfferDetailsPopup show(Offer offer) {
+    public void show(Offer offer) {
         this.offer = offer;
-
         rowIndex = -1;
         width = 850;
         createGridPane();
         addContent();
         display();
-        return this;
     }
 
-    public OfferDetailsPopup dontShowAgainId(String dontShowAgainId) {
-        this.dontShowAgainId = dontShowAgainId;
-        return this;
-    }
 
-    public OfferDetailsPopup onPlaceOffer(Consumer<Offer> placeOfferHandler) {
+    public OfferDetailsWindow onPlaceOffer(Consumer<Offer> placeOfferHandler) {
         this.placeOfferHandlerOptional = Optional.of(placeOfferHandler);
         return this;
     }
 
-    public OfferDetailsPopup onTakeOffer(Runnable takeOfferHandler) {
+    public OfferDetailsWindow onTakeOffer(Runnable takeOfferHandler) {
         this.takeOfferHandlerOptional = Optional.of(takeOfferHandler);
         return this;
     }
 
-    public OfferDetailsPopup onClose(Runnable closeHandler) {
-        this.closeHandlerOptional = Optional.of(closeHandler);
-        return this;
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -241,15 +233,23 @@ public class OfferDetailsPopup extends Popup {
 
     @NotNull
     private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
+        boolean isBuyOffer = offer.getDirection() == Offer.Direction.BUY;
+        boolean isBuyerRole = isPlaceOffer ? isBuyOffer : !isBuyOffer;
+
+        String placeOffer = isBuyerRole ? "Confirm place offer for buying bitcoin" : "Confirm place offer for selling bitcoin";
+        String takeOffer = isBuyerRole ? "Confirm take offer for buying bitcoin" : "Confirm take offer for selling bitcoin";
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane,
                 ++rowIndex,
-                isPlaceOffer ? "Confirm place offer" : "Confirm take offer",
+                isPlaceOffer ? placeOffer : takeOffer,
                 "Cancel");
         Button placeButton = tuple.first;
 
-        boolean isBuyOffer = offer.getDirection() == Offer.Direction.BUY;
-        boolean isBuyStyle = isPlaceOffer ? isBuyOffer : !isBuyOffer;
-        placeButton.setId(isBuyStyle ? "buy-button" : "sell-button");
+        ImageView iconView = new ImageView();
+        iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");
+        placeButton.setGraphicTextGap(10);
+        placeButton.setGraphic(iconView);
+
+        placeButton.setId(isBuyerRole ? "buy-button" : "sell-button");
 
         placeButton.setOnAction(e -> {
             if (user.getAcceptedArbitrators().size() > 0) {

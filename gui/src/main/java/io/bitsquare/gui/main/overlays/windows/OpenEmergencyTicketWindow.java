@@ -15,9 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
@@ -25,12 +26,10 @@ import javafx.scene.layout.HBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-
 import static io.bitsquare.gui.util.FormBuilder.addMultilineLabel;
 
-public class OpenEmergencyTicketPopup extends Popup {
-    private static final Logger log = LoggerFactory.getLogger(OpenEmergencyTicketPopup.class);
+public class OpenEmergencyTicketWindow extends Overlay<OpenEmergencyTicketWindow> {
+    private static final Logger log = LoggerFactory.getLogger(OpenEmergencyTicketWindow.class);
     private Button openTicketButton;
     private ResultHandler openTicketHandler;
 
@@ -39,7 +38,7 @@ public class OpenEmergencyTicketPopup extends Popup {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OpenEmergencyTicketPopup() {
+    public OpenEmergencyTicketWindow() {
     }
 
     public void show() {
@@ -52,18 +51,14 @@ public class OpenEmergencyTicketPopup extends Popup {
         addSeparator();
         addContent();
         applyStyles();
-        PopupManager.queueForDisplay(this);
+        display();
     }
 
-    public OpenEmergencyTicketPopup onOpenTicket(ResultHandler openTicketHandler) {
+    public OpenEmergencyTicketWindow onOpenTicket(ResultHandler openTicketHandler) {
         this.openTicketHandler = openTicketHandler;
         return this;
     }
 
-    public OpenEmergencyTicketPopup onClose(Runnable closeHandler) {
-        this.closeHandlerOptional = Optional.of(closeHandler);
-        return this;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected

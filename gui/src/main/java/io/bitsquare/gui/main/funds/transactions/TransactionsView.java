@@ -25,9 +25,9 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.AddressWithIconAndDirection;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
-import io.bitsquare.gui.main.popups.OfferDetailsPopup;
-import io.bitsquare.gui.main.popups.Popup;
-import io.bitsquare.gui.main.popups.TradeDetailsPopup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
+import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
@@ -72,9 +72,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final FailedTradesManager failedTradesManager;
     private final BSFormatter formatter;
     private final Preferences preferences;
-    private final TradeDetailsPopup tradeDetailsPopup;
+    private final TradeDetailsWindow tradeDetailsWindow;
     private final DisputeManager disputeManager;
-    private final OfferDetailsPopup offerDetailsPopup;
+    private final OfferDetailsWindow offerDetailsWindow;
     private WalletEventListener walletEventListener;
 
 
@@ -85,9 +85,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @Inject
     private TransactionsView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                              ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager,
-                             BSFormatter formatter, Preferences preferences, TradeDetailsPopup tradeDetailsPopup,
+                             BSFormatter formatter, Preferences preferences, TradeDetailsWindow tradeDetailsWindow,
                              DisputeManager disputeManager,
-                             OfferDetailsPopup offerDetailsPopup) {
+                             OfferDetailsWindow offerDetailsWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -95,9 +95,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         this.failedTradesManager = failedTradesManager;
         this.formatter = formatter;
         this.preferences = preferences;
-        this.tradeDetailsPopup = tradeDetailsPopup;
+        this.tradeDetailsWindow = tradeDetailsWindow;
         this.disputeManager = disputeManager;
-        this.offerDetailsPopup = offerDetailsPopup;
+        this.offerDetailsWindow = offerDetailsWindow;
     }
 
     @Override
@@ -222,9 +222,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private void openDetailPopup(TransactionsListItem item) {
         if (item.getTradable() instanceof OpenOffer)
-            offerDetailsPopup.show(item.getTradable().getOffer());
+            offerDetailsWindow.show(item.getTradable().getOffer());
         else if (item.getTradable() instanceof Trade)
-            tradeDetailsPopup.show((Trade) item.getTradable());
+            tradeDetailsWindow.show((Trade) item.getTradable());
     }
 
 

@@ -25,9 +25,9 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
-import io.bitsquare.gui.main.popups.OfferDetailsPopup;
-import io.bitsquare.gui.main.popups.Popup;
-import io.bitsquare.gui.main.popups.TradeDetailsPopup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
+import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
@@ -62,8 +62,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private final OpenOfferManager openOfferManager;
     private final Preferences preferences;
     private final BSFormatter formatter;
-    private final OfferDetailsPopup offerDetailsPopup;
-    private final TradeDetailsPopup tradeDetailsPopup;
+    private final OfferDetailsWindow offerDetailsWindow;
+    private final TradeDetailsWindow tradeDetailsWindow;
     private final ObservableList<ReservedListItem> reservedAddresses = FXCollections.observableArrayList();
     private BalanceListener balanceListener;
 
@@ -74,14 +74,14 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Inject
     private ReservedView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
-                         BSFormatter formatter, OfferDetailsPopup offerDetailsPopup, TradeDetailsPopup tradeDetailsPopup) {
+                         BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.preferences = preferences;
         this.formatter = formatter;
-        this.offerDetailsPopup = offerDetailsPopup;
-        this.tradeDetailsPopup = tradeDetailsPopup;
+        this.offerDetailsWindow = offerDetailsWindow;
+        this.tradeDetailsWindow = tradeDetailsWindow;
     }
 
 
@@ -157,9 +157,9 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         if (tradableOptional.isPresent()) {
             Tradable tradable = tradableOptional.get();
             if (tradable instanceof Trade) {
-                tradeDetailsPopup.show((Trade) tradable);
+                tradeDetailsWindow.show((Trade) tradable);
             } else if (tradable instanceof OpenOffer) {
-                offerDetailsPopup.show(tradable.getOffer());
+                offerDetailsWindow.show(tradable.getOffer());
             }
         }
     }

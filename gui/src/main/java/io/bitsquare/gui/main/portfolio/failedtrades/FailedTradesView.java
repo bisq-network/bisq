@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.portfolio.failedtrades;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
-import io.bitsquare.gui.main.popups.TradeDetailsPopup;
+import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -37,12 +37,12 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     @FXML
     TableColumn<FailedTradesListItem, FailedTradesListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn, stateColumn;
-    private final TradeDetailsPopup tradeDetailsPopup;
+    private final TradeDetailsWindow tradeDetailsWindow;
 
     @Inject
-    public FailedTradesView(FailedTradesViewModel model, TradeDetailsPopup tradeDetailsPopup) {
+    public FailedTradesView(FailedTradesViewModel model, TradeDetailsWindow tradeDetailsWindow) {
         super(model);
-        this.tradeDetailsPopup = tradeDetailsPopup;
+        this.tradeDetailsWindow = tradeDetailsWindow;
     }
 
     @Override
@@ -81,7 +81,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(model.getTradeId(item), true);
-                                    field.setOnAction(event -> tradeDetailsPopup.show(item.getTrade()));
+                                    field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
                                     field.setTooltip(new Tooltip("Open popup for details"));
                                     setGraphic(field);
                                 } else {

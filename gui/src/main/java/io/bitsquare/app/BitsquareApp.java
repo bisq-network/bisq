@@ -35,9 +35,9 @@ import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.MainViewModel;
 import io.bitsquare.gui.main.debug.DebugView;
-import io.bitsquare.gui.main.popups.EmptyWalletPopup;
-import io.bitsquare.gui.main.popups.Popup;
-import io.bitsquare.gui.main.popups.SendAlertMessagePopup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.EmptyWalletWindow;
+import io.bitsquare.gui.main.overlays.windows.SendAlertMessageWindow;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
@@ -219,14 +219,14 @@ public class BitsquareApp extends Application {
 
     private void showSendAlertMessagePopup() {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
-        new SendAlertMessagePopup()
+        new SendAlertMessageWindow()
                 .onAddAlertMessage((alert, privKeyString) -> alertManager.addAlertMessageIfKeyIsValid(alert, privKeyString))
                 .onRemoveAlertMessage(privKeyString -> alertManager.removeAlertMessageIfKeyIsValid(privKeyString))
                 .show();
     }
 
     private void showEmptyWalletPopup() {
-        injector.getInstance(EmptyWalletPopup.class).show();
+        injector.getInstance(EmptyWalletWindow.class).show();
     }
 
     private void showErrorPopup(Throwable throwable, boolean doShutDown) {

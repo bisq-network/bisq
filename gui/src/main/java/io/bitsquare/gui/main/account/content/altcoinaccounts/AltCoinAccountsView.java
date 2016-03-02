@@ -23,7 +23,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.BlockChainForm;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;

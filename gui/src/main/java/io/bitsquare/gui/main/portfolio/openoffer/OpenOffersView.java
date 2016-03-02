@@ -24,8 +24,8 @@ import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
-import io.bitsquare.gui.main.popups.OfferDetailsPopup;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
@@ -45,13 +45,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, offerIdColumn, removeItemColumn;
     private final Navigation navigation;
-    private final OfferDetailsPopup offerDetailsPopup;
+    private final OfferDetailsWindow offerDetailsWindow;
 
     @Inject
-    public OpenOffersView(OpenOffersViewModel model, Navigation navigation, OfferDetailsPopup offerDetailsPopup) {
+    public OpenOffersView(OpenOffersViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow) {
         super(model);
         this.navigation = navigation;
-        this.offerDetailsPopup = offerDetailsPopup;
+        this.offerDetailsWindow = offerDetailsWindow;
     }
 
     @Override
@@ -119,7 +119,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(model.getTradeId(item), true);
-                                    field.setOnAction(event -> offerDetailsPopup.show(item.getOffer()));
+                                    field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                     field.setTooltip(new Tooltip("Open popup for details"));
                                     setGraphic(field);
                                 } else {

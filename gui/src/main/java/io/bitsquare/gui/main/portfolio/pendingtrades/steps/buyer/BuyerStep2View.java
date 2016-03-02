@@ -22,7 +22,8 @@ import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.*;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
@@ -47,6 +48,7 @@ public class BuyerStep2View extends TradeStepView {
     private Label statusLabel;
     private ProgressIndicator statusProgressIndicator;
     private Subscription tradeStatePropertySubscription;
+    private Overlay attentionRequiredPopup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,8 +67,8 @@ public class BuyerStep2View extends TradeStepView {
             tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
                 if (state.equals(Trade.State.DEPOSIT_CONFIRMED)) {
                     PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-                    String id = "StartPaymentPopup_" + trade.getId();
-                    if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
+                    String key = "StartPaymentPopup_" + trade.getId();
+                    if (attentionRequiredPopup == null && !BitsquareApp.DEV_MODE) {
                         String message = "";
                         if (paymentAccountContractData instanceof BlockChainAccountContractData)
                             message = "Your trade has reached at least one blockchain confirmation.\n\n" +
@@ -88,10 +90,11 @@ public class BuyerStep2View extends TradeStepView {
                                     "DO NOT use any additional notice in the reference text like " +
                                     "Bitcoin, Btc or Bitsquare.";
 
-                        new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
+                        attentionRequiredPopup = new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
                                 .instruction(message)
-                                .dontShowAgainId(id, preferences)
-                                .show();
+                                .dontShowAgainId(key, preferences);
+
+                        attentionRequiredPopup.show();
                     }
                 }
             });

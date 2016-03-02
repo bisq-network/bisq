@@ -38,8 +38,8 @@ import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.offer.OfferView;
-import io.bitsquare.gui.main.popups.OfferDetailsPopup;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bitsquare.gui.util.FormBuilder;
@@ -74,7 +74,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
     private final Navigation navigation;
-    private final OfferDetailsPopup offerDetailsPopup;
+    private final OfferDetailsWindow offerDetailsWindow;
 
     private ScrollPane scrollPane;
     private GridPane gridPane;
@@ -120,11 +120,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, OfferDetailsPopup offerDetailsPopup, Preferences preferences) {
+    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, Preferences preferences) {
         super(model);
 
         this.navigation = navigation;
-        this.offerDetailsPopup = offerDetailsPopup;
+        this.offerDetailsWindow = offerDetailsWindow;
         this.preferences = preferences;
     }
 
@@ -228,21 +228,16 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void onPlaceOffer() {
         if (model.isBootstrapped()) {
-            Offer offer = model.createAndGetOffer();
-            String id = "CreateOfferConfirmation";
-            if (preferences.showAgain(id)) {
-                offerDetailsPopup.onPlaceOffer(model::onPlaceOffer)
-                        .dontShowAgainId(id)
+            if (model.hasAcceptedArbitrators()) {
+                Offer offer = model.createAndGetOffer();
+                offerDetailsWindow.onPlaceOffer(model::onPlaceOffer)
                         .show(offer);
             } else {
-                if (model.hasAcceptedArbitrators()) {
-                    model.onPlaceOffer(offer);
-                } else {
-                    new Popup().warning("You have no arbitrator selected.\n" +
-                            "Please select at least one arbitrator.").show();
-
-                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
-                }
+                new Popup().warning("You have no arbitrator selected.\n" +
+                        "You need to select at least one arbitrator.")
+                        .actionButtonText("Go to \"Arbitrator selection\"")
+                        .onAction(() -> navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class))
+                        .show();
             }
         } else {
             new Popup().warning("You need to wait until your client is bootstrapped in the network.\n" +
@@ -259,37 +254,33 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         paymentAccountsComboBox.setMouseTransparent(true);
 
         if (!BitsquareApp.DEV_MODE) {
-            String id = "securityDepositInfo";
-            if (model.dataModel.getPreferences().showAgain(id)) {
-                new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
-                        "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
-                        "It will be refunded to you after the trade has successfully completed.")
-                        .closeButtonText("I want to learn more")
-                        .onClose(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
-                        .actionButtonText("I understand")
-                        .onAction(() -> {
-                        })
-                        .dontShowAgainId(id, preferences)
-                        .show();
-            }
+            String key = "securityDepositInfo";
+            new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
+                    "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
+                    "It will be refunded to you after the trade has successfully completed.")
+                    .closeButtonText("I want to learn more")
+                    .onClose(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
+                    .actionButtonText("I understand")
+                    .onAction(() -> {
+                    })
+                    .dontShowAgainId(key, preferences)
+                    .show();
 
-            id = "createOfferFundWalletInfo";
-            if (model.dataModel.getPreferences().showAgain(id)) {
-                String tradeAmountText = model.isSellOffer() ? "the trade amount, " : "";
-                new Popup().headLine("Fund your trading wallet").instruction("You need to pay in " +
-                        model.totalToPay.get() + " to your local Bitsquare trading wallet.\n" +
-                        "The amount is the sum of " + tradeAmountText + "the security deposit, the trading fee and " +
-                        "the bitcoin mining fee.\n\n" +
-                        "Please send from your external Bitcoin wallet the exact amount to the address: " +
-                        model.getAddressAsString() + "\n" +
-                        "(you can copy the address in the screen below after closing that popup)\n\n" +
-                        "Make sure you use a sufficiently high mining fee of at least " +
-                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) +
-                        " to avoid problems that your transaction does not get confirmed in the blockchain.\n\n" +
-                        "You can see the status of your incoming payment and all the details in the screen below.")
-                        .dontShowAgainId(id, preferences)
-                        .show();
-            }
+            key = "createOfferFundWalletInfo";
+            String tradeAmountText = model.isSellOffer() ? "the trade amount, " : "";
+            new Popup().headLine("Fund your trading wallet").instruction("You need to pay in " +
+                    model.totalToPay.get() + " to your local Bitsquare trading wallet.\n" +
+                    "The amount is the sum of " + tradeAmountText + "the security deposit, the trading fee and " +
+                    "the bitcoin mining fee.\n\n" +
+                    "Please send from your external Bitcoin wallet the exact amount to the address: " +
+                    model.getAddressAsString() + "\n" +
+                    "(you can copy the address in the screen below after closing that popup)\n\n" +
+                    "Make sure you use a sufficiently high mining fee of at least " +
+                    model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) +
+                    " to avoid problems that your transaction does not get confirmed in the blockchain.\n\n" +
+                    "You can see the status of your incoming payment and all the details in the screen below.")
+                    .dontShowAgainId(key, preferences)
+                    .show();
         }
 
         nextButton.setVisible(false);

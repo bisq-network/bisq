@@ -30,9 +30,9 @@ import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
-import io.bitsquare.gui.main.notifications.Notification;
-import io.bitsquare.gui.main.popups.Popup;
-import io.bitsquare.gui.main.popups.WalletPasswordPopup;
+import io.bitsquare.gui.main.overlays.notifications.Notification;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -68,7 +68,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final TradeWalletService tradeWalletService;
     private final WalletService walletService;
     private final User user;
-    private final WalletPasswordPopup walletPasswordPopup;
+    private final WalletPasswordWindow walletPasswordWindow;
     private final Preferences preferences;
     private final PriceFeed priceFeed;
     private final BlockchainService blockchainService;
@@ -92,6 +92,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private BalanceListener balanceListener;
     private PaymentAccount paymentAccount;
     private boolean isTabSelected;
+    private Notification walletFundedNotification;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,14 +102,14 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     @Inject
     TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
-                       WalletService walletService, User user, WalletPasswordPopup walletPasswordPopup,
+                       WalletService walletService, User user, WalletPasswordWindow walletPasswordWindow,
                        Preferences preferences, PriceFeed priceFeed, BlockchainService blockchainService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
         this.user = user;
-        this.walletPasswordPopup = walletPasswordPopup;
+        this.walletPasswordWindow = walletPasswordWindow;
         this.preferences = preferences;
         this.priceFeed = priceFeed;
         this.blockchainService = blockchainService;
@@ -222,7 +223,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
         if (walletService.getWallet().isEncrypted() && tradeWalletService.getAesKey() == null) {
-            walletPasswordPopup.onAesKey(aesKey -> {
+            walletPasswordWindow.onAesKey(aesKey -> {
                 tradeWalletService.setAesKey(aesKey);
                 doTakeOffer(tradeResultHandler);
             }).show();
@@ -327,12 +328,14 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         if (isWalletFunded.get()) {
             walletService.removeBalanceListener(balanceListener);
-            new Notification()
-                    .headLine("Trading wallet update")
-                    .notification("Your trading wallet is sufficiently funded.\n" +
-                            "Amount: " + formatter.formatCoinWithCode(totalToPayAsCoin.get()))
-                    .autoClose()
-                    .show();
+            if (walletFundedNotification == null) {
+                walletFundedNotification = new Notification()
+                        .headLine("Trading wallet update")
+                        .notification("Your trading wallet is sufficiently funded.\n" +
+                                "Amount: " + formatter.formatCoinWithCode(totalToPayAsCoin.get()))
+                        .autoClose();
+                walletFundedNotification.show();
+            }
         }
     }
 

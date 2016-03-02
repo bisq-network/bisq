@@ -15,12 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.alert.Alert;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -31,12 +33,10 @@ import javafx.scene.layout.HBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-
 import static io.bitsquare.gui.util.FormBuilder.*;
 
-public class SendAlertMessagePopup extends Popup {
-    private static final Logger log = LoggerFactory.getLogger(SendAlertMessagePopup.class);
+public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
+    private static final Logger log = LoggerFactory.getLogger(SendAlertMessageWindow.class);
     private Button sendButton;
     private SendAlertMessageHandler sendAlertMessageHandler;
     private RemoveAlertMessageHandler removeAlertMessageHandler;
@@ -58,7 +58,7 @@ public class SendAlertMessagePopup extends Popup {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SendAlertMessagePopup() {
+    public SendAlertMessageWindow() {
     }
 
     public void show() {
@@ -71,21 +71,16 @@ public class SendAlertMessagePopup extends Popup {
         addSeparator();
         addContent();
         applyStyles();
-        PopupManager.queueForDisplay(this);
+        display();
     }
 
-    public SendAlertMessagePopup onAddAlertMessage(SendAlertMessageHandler sendAlertMessageHandler) {
+    public SendAlertMessageWindow onAddAlertMessage(SendAlertMessageHandler sendAlertMessageHandler) {
         this.sendAlertMessageHandler = sendAlertMessageHandler;
         return this;
     }
 
-    public SendAlertMessagePopup onRemoveAlertMessage(RemoveAlertMessageHandler removeAlertMessageHandler) {
+    public SendAlertMessageWindow onRemoveAlertMessage(RemoveAlertMessageHandler removeAlertMessageHandler) {
         this.removeAlertMessageHandler = removeAlertMessageHandler;
-        return this;
-    }
-
-    public SendAlertMessagePopup onClose(Runnable closeHandler) {
-        this.closeHandlerOptional = Optional.of(closeHandler);
         return this;
     }
 

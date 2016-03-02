@@ -1,21 +1,23 @@
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-public class TacPopup extends Popup {
-    private static final Logger log = LoggerFactory.getLogger(TacPopup.class);
+public class TacWindow extends Overlay<TacWindow> {
+    private static final Logger log = LoggerFactory.getLogger(TacWindow.class);
     private final Preferences preferences;
 
     @Inject
-    public TacPopup(Preferences preferences) {
+    public TacWindow(Preferences preferences) {
         this.preferences = preferences;
     }
 
@@ -60,4 +62,10 @@ public class TacPopup extends Popup {
             super.show();
         }
     }
+
+    @Override
+    protected void onShow() {
+        display();
+    }
+
 }

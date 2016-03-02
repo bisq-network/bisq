@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.Timer;
@@ -47,7 +47,7 @@ import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 
-public class Popup {
+public abstract class Overlay<T extends Overlay> {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     protected final static double DEFAULT_WIDTH = 600;
@@ -72,8 +72,8 @@ public class Popup {
     protected Label headLineLabel;
     protected String dontShowAgainId;
     private Preferences preferences;
-    private ChangeListener<Number> positionListener;
-    private Timer centerTime;
+    protected ChangeListener<Number> positionListener;
+    protected Timer centerTime;
     protected double buttonDistance = 20;
     private String type;
     private AwesomeIcon awesomeIcon;
@@ -83,25 +83,30 @@ public class Popup {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Popup() {
+    public Overlay() {
     }
 
     public void show() {
-        createGridPane();
-        addHeadLine();
-        addSeparator();
+        if (dontShowAgainId == null || preferences == null || preferences.showAgain(dontShowAgainId)) {
+            createGridPane();
+            addHeadLine();
+            addSeparator();
 
-        if (showProgressIndicator)
-            addProgressIndicator();
+            if (showProgressIndicator)
+                addProgressIndicator();
 
-        addMessage();
-        if (showReportErrorButtons)
-            addReportErrorButtons();
+            addMessage();
+            if (showReportErrorButtons)
+                addReportErrorButtons();
 
-        addCloseButton();
-        addDontShowAgainCheckBox();
-        applyStyles();
-        PopupManager.queueForDisplay(this);
+            addCloseButton();
+            addDontShowAgainCheckBox();
+            applyStyles();
+            onShow();
+        }
+    }
+
+    protected void onShow() {
     }
 
     public void hide() {
@@ -126,9 +131,12 @@ public class Popup {
                     log.warn("Stage is null");
 
                 cleanup();
-                PopupManager.isHidden(Popup.this);
+                onHidden();
             }
         });
+    }
+
+    protected void onHidden() {
     }
 
     protected void animateHide(Runnable onFinishedHandler) {
@@ -139,76 +147,76 @@ public class Popup {
 
     }
 
-    public Popup onClose(Runnable closeHandler) {
+    public T onClose(Runnable closeHandler) {
         this.closeHandlerOptional = Optional.of(closeHandler);
-        return this;
+        return (T) this;
     }
 
-    public Popup onAction(Runnable actionHandler) {
+    public T onAction(Runnable actionHandler) {
         this.actionHandlerOptional = Optional.of(actionHandler);
-        return this;
+        return (T) this;
     }
 
-    public Popup headLine(String headLine) {
+    public T headLine(String headLine) {
         this.headLine = headLine;
-        return this;
+        return (T) this;
     }
 
-    public Popup notification(String message) {
+    public T notification(String message) {
         type = "notification";
         if (headLine == null)
             this.headLine = "Notification";
         this.message = message;
         setTruncatedMessage();
-        return this;
+        return (T) this;
     }
 
-    public Popup instruction(String message) {
+    public T instruction(String message) {
         type = "instruction";
         if (headLine == null)
             this.headLine = "Instruction";
         this.message = message;
         setTruncatedMessage();
-        return this;
+        return (T) this;
     }
 
-    public Popup backgroundInfo(String message) {
+    public T backgroundInfo(String message) {
         type = "backgroundInfo";
         if (headLine == null)
             this.headLine = "Background information";
         this.message = message;
         setTruncatedMessage();
-        return this;
+        return (T) this;
     }
 
-    public Popup feedback(String message) {
+    public T feedback(String message) {
         type = "feedback";
         if (headLine == null)
             this.headLine = "Feedback";
         this.message = message;
         setTruncatedMessage();
-        return this;
+        return (T) this;
     }
 
-    public Popup confirmation(String message) {
+    public T confirmation(String message) {
         type = "confirmation";
         if (headLine == null)
             this.headLine = "Confirmation";
         this.message = message;
         setTruncatedMessage();
-        return this;
+        return (T) this;
     }
 
-    public Popup information(String message) {
+    public T information(String message) {
         type = "information";
         if (headLine == null)
             this.headLine = "Information";
         this.message = message;
         setTruncatedMessage();
-        return this;
+        return (T) this;
     }
 
-    public Popup warning(String message) {
+    public T warning(String message) {
         type = "warning";
         awesomeIcon = AwesomeIcon.LIGHTBULB;
 
@@ -216,54 +224,54 @@ public class Popup {
             this.headLine = "Warning";
         this.message = message;
         setTruncatedMessage();
-        return this;
+        return (T) this;
     }
 
-    public Popup error(String message) {
+    public T error(String message) {
         type = "error";
         showReportErrorButtons();
         if (headLine == null)
             this.headLine = "Error";
         this.message = message;
         setTruncatedMessage();
-        return this;
+        return (T) this;
     }
 
-    public Popup showReportErrorButtons() {
+    public T showReportErrorButtons() {
         this.showReportErrorButtons = true;
-        return this;
+        return (T) this;
     }
 
-    public Popup message(String message) {
+    public T message(String message) {
         this.message = message;
         setTruncatedMessage();
-        return this;
+        return (T) this;
     }
 
-    public Popup closeButtonText(String closeButtonText) {
+    public T closeButtonText(String closeButtonText) {
         this.closeButtonText = closeButtonText;
-        return this;
+        return (T) this;
     }
 
-    public Popup actionButtonText(String actionButtonText) {
+    public T actionButtonText(String actionButtonText) {
         this.actionButtonText = actionButtonText;
-        return this;
+        return (T) this;
     }
 
-    public Popup width(double width) {
+    public T width(double width) {
         this.width = width;
-        return this;
+        return (T) this;
     }
 
-    public Popup showProgressIndicator() {
+    public T showProgressIndicator() {
         this.showProgressIndicator = true;
-        return this;
+        return (T) this;
     }
 
-    public Popup dontShowAgainId(String dontShowAgainId, Preferences preferences) {
-        this.dontShowAgainId = type + "_" + dontShowAgainId;
+    public T dontShowAgainId(String key, Preferences preferences) {
+        this.dontShowAgainId = key;
         this.preferences = preferences;
-        return this;
+        return (T) this;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -458,15 +466,12 @@ public class Popup {
         gridPane.getChildren().add(progressIndicator);
     }
 
-    private void addDontShowAgainCheckBox() {
+    protected void addDontShowAgainCheckBox() {
         if (dontShowAgainId != null && preferences != null) {
             CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, "Don't show again", buttonDistance - 1);
             GridPane.setColumnIndex(dontShowAgainCheckBox, 0);
             GridPane.setHalignment(dontShowAgainCheckBox, HPos.LEFT);
-            dontShowAgainCheckBox.setOnAction(e -> {
-                if (dontShowAgainCheckBox.isSelected())
-                    preferences.dontShowAgain(dontShowAgainId);
-            });
+            dontShowAgainCheckBox.setOnAction(e -> preferences.dontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
         }
     }
 

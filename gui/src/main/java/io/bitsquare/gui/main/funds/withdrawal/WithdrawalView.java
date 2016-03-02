@@ -28,10 +28,10 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
-import io.bitsquare.gui.main.popups.OfferDetailsPopup;
-import io.bitsquare.gui.main.popups.Popup;
-import io.bitsquare.gui.main.popups.TradeDetailsPopup;
-import io.bitsquare.gui.main.popups.WalletPasswordPopup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
+import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
+import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.trade.Tradable;
@@ -86,9 +86,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final BSFormatter formatter;
     private final Preferences preferences;
     private final BtcAddressValidator btcAddressValidator;
-    private final WalletPasswordPopup walletPasswordPopup;
-    private final OfferDetailsPopup offerDetailsPopup;
-    private final TradeDetailsPopup tradeDetailsPopup;
+    private final WalletPasswordWindow walletPasswordWindow;
+    private final OfferDetailsWindow offerDetailsWindow;
+    private final TradeDetailsWindow tradeDetailsWindow;
     private final ObservableList<WithdrawalListItem> fundedAddresses = FXCollections.observableArrayList();
     private Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
@@ -104,8 +104,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            ClosedTradableManager closedTradableManager,
                            FailedTradesManager failedTradesManager, OpenOfferManager openOfferManager,
                            BSFormatter formatter, Preferences preferences,
-                           BtcAddressValidator btcAddressValidator, WalletPasswordPopup walletPasswordPopup,
-                           OfferDetailsPopup offerDetailsPopup, TradeDetailsPopup tradeDetailsPopup) {
+                           BtcAddressValidator btcAddressValidator, WalletPasswordWindow walletPasswordWindow,
+                           OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
@@ -114,9 +114,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         this.formatter = formatter;
         this.preferences = preferences;
         this.btcAddressValidator = btcAddressValidator;
-        this.walletPasswordPopup = walletPasswordPopup;
-        this.offerDetailsPopup = offerDetailsPopup;
-        this.tradeDetailsPopup = tradeDetailsPopup;
+        this.walletPasswordWindow = walletPasswordWindow;
+        this.offerDetailsWindow = offerDetailsWindow;
+        this.tradeDetailsWindow = tradeDetailsWindow;
     }
 
     @Override
@@ -270,9 +270,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         if (tradableOptional.isPresent()) {
             Tradable tradable = tradableOptional.get();
             if (tradable instanceof Trade) {
-                tradeDetailsPopup.show((Trade) tradable);
+                tradeDetailsWindow.show((Trade) tradable);
             } else if (tradable instanceof OpenOffer) {
-                offerDetailsPopup.show(tradable.getOffer());
+                offerDetailsWindow.show(tradable.getOffer());
             }
         }
     }
@@ -313,7 +313,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void doWithdraw(Coin amount, FutureCallback<Transaction> callback) {
         if (walletService.getWallet().isEncrypted()) {
-            walletPasswordPopup.onAesKey(aesKey -> sendFunds(amount, aesKey, callback)).show();
+            walletPasswordWindow.onAesKey(aesKey -> sendFunds(amount, aesKey, callback)).show();
         } else {
             sendFunds(amount, null, callback);
         }

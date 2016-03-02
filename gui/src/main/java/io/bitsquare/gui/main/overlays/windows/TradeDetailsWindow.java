@@ -15,9 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.arbitration.DisputeManager;
+import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
@@ -38,12 +39,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
-public class TradeDetailsPopup extends Popup {
-    protected static final Logger log = LoggerFactory.getLogger(TradeDetailsPopup.class);
+public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
+    protected static final Logger log = LoggerFactory.getLogger(TradeDetailsWindow.class);
 
     private final BSFormatter formatter;
     private final DisputeManager disputeManager;
@@ -58,13 +58,13 @@ public class TradeDetailsPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeDetailsPopup(BSFormatter formatter, DisputeManager disputeManager, TradeManager tradeManager) {
+    public TradeDetailsWindow(BSFormatter formatter, DisputeManager disputeManager, TradeManager tradeManager) {
         this.formatter = formatter;
         this.disputeManager = disputeManager;
         this.tradeManager = tradeManager;
     }
 
-    public TradeDetailsPopup show(Trade trade) {
+    public void show(Trade trade) {
         this.trade = trade;
 
         rowIndex = -1;
@@ -72,13 +72,8 @@ public class TradeDetailsPopup extends Popup {
         createGridPane();
         addContent();
         display();
-        return this;
     }
 
-    public TradeDetailsPopup onClose(Runnable closeHandler) {
-        this.closeHandlerOptional = Optional.of(closeHandler);
-        return this;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected

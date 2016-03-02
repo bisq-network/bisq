@@ -21,7 +21,8 @@ import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
@@ -48,6 +49,7 @@ public class SellerStep3View extends TradeStepView {
     private Label statusLabel;
     private ProgressIndicator statusProgressIndicator;
     private Subscription tradeStatePropertySubscription;
+    private Overlay attentionRequiredPopup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +58,6 @@ public class SellerStep3View extends TradeStepView {
 
     public SellerStep3View(PendingTradesViewModel model) {
         super(model);
-
     }
 
     @Override
@@ -66,8 +67,8 @@ public class SellerStep3View extends TradeStepView {
         tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
             if (state.equals(Trade.State.FIAT_PAYMENT_STARTED_MSG_RECEIVED)) {
                 PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-                String id = "ConfirmPaymentPopup_" + trade.getId();
-                if (preferences.showAgain(id) && !BitsquareApp.DEV_MODE) {
+                String key = "ConfirmPaymentPopup_" + trade.getId();
+                if (attentionRequiredPopup == null && !BitsquareApp.DEV_MODE) {
                     String message;
                     String tradeAmountWithCode = model.formatter.formatFiatWithCode(trade.getTradeVolume());
                     String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
@@ -87,10 +88,11 @@ public class SellerStep3View extends TradeStepView {
                                 tradeAmountWithCode + " from the bitcoin buyer.\n\n" +
                                 "The reference text of the transaction is: \"" + trade.getShortId() + "\"";
                     }
-                    new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
+                    attentionRequiredPopup = new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
                             .instruction(message)
-                            .dontShowAgainId(id, preferences)
-                            .show();
+                            .dontShowAgainId(key, preferences);
+
+                    attentionRequiredPopup.show();
 
                 }
             }

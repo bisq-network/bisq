@@ -15,12 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Transitions;
 import javafx.geometry.Insets;
@@ -39,14 +41,13 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.inject.Inject;
 import java.time.Duration;
-import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
-public class EmptyWalletPopup extends Popup {
-    private static final Logger log = LoggerFactory.getLogger(EmptyWalletPopup.class);
+public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
+    private static final Logger log = LoggerFactory.getLogger(EmptyWalletWindow.class);
     private final WalletService walletService;
-    private final WalletPasswordPopup walletPasswordPopup;
+    private final WalletPasswordWindow walletPasswordWindow;
     private final BSFormatter formatter;
     private Button emptyWalletButton;
     private InputTextField addressInputTextField;
@@ -58,9 +59,9 @@ public class EmptyWalletPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public EmptyWalletPopup(WalletService walletService, WalletPasswordPopup walletPasswordPopup, BSFormatter formatter) {
+    public EmptyWalletWindow(WalletService walletService, WalletPasswordWindow walletPasswordWindow, BSFormatter formatter) {
         this.walletService = walletService;
-        this.walletPasswordPopup = walletPasswordPopup;
+        this.walletPasswordWindow = walletPasswordWindow;
         this.formatter = formatter;
     }
 
@@ -74,12 +75,7 @@ public class EmptyWalletPopup extends Popup {
         addSeparator();
         addContent();
         applyStyles();
-        PopupManager.queueForDisplay(this);
-    }
-
-    public EmptyWalletPopup onClose(Runnable closeHandler) {
-        this.closeHandlerOptional = Optional.of(closeHandler);
-        return this;
+        display();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +102,7 @@ public class EmptyWalletPopup extends Popup {
         emptyWalletButton.setOnAction(e -> {
             if (addressInputTextField.getText().length() > 0 && isBalanceSufficient) {
                 if (walletService.getWallet().isEncrypted()) {
-                    walletPasswordPopup
+                    walletPasswordWindow
                             .onClose(() -> blurAgain())
                             .onAesKey(aesKey -> doEmptyWallet(aesKey))
                             .show();

@@ -30,8 +30,8 @@ import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.offer.OfferView;
-import io.bitsquare.gui.main.popups.OfferDetailsPopup;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.TradeCurrency;
@@ -57,7 +57,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {
 
     private final Navigation navigation;
-    private final OfferDetailsPopup offerDetailsPopup;
+    private final OfferDetailsWindow offerDetailsWindow;
 
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
@@ -75,11 +75,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsPopup offerDetailsPopup) {
+    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow) {
         super(model);
 
         this.navigation = navigation;
-        this.offerDetailsPopup = offerDetailsPopup;
+        this.offerDetailsWindow = offerDetailsWindow;
     }
 
     @Override
@@ -445,7 +445,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(model.getPaymentMethod(item), true);
-                                    field.setOnAction(event -> offerDetailsPopup.show(item.getOffer()));
+                                    field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                     field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
                                     setGraphic(field);
                                 } else {

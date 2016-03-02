@@ -30,10 +30,10 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.TableGroupHeadline;
-import io.bitsquare.gui.main.popups.ContractPopup;
-import io.bitsquare.gui.main.popups.DisputeSummaryPopup;
-import io.bitsquare.gui.main.popups.Popup;
-import io.bitsquare.gui.main.popups.TradeDetailsPopup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.ContractWindow;
+import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
+import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.p2p.network.Connection;
@@ -80,9 +80,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final TradeManager tradeManager;
     private final Stage stage;
     private final BSFormatter formatter;
-    private final DisputeSummaryPopup disputeSummaryPopup;
-    private final ContractPopup contractPopup;
-    private final TradeDetailsPopup tradeDetailsPopup;
+    private final DisputeSummaryWindow disputeSummaryWindow;
+    private final ContractWindow contractWindow;
+    private final TradeDetailsWindow tradeDetailsWindow;
 
     private final List<Attachment> tempAttachments = new ArrayList<>();
 
@@ -110,16 +110,16 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Inject
     public TraderDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
-                             BSFormatter formatter, DisputeSummaryPopup disputeSummaryPopup,
-                             ContractPopup contractPopup, TradeDetailsPopup tradeDetailsPopup) {
+                             BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
+                             ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
         this.stage = stage;
         this.formatter = formatter;
-        this.disputeSummaryPopup = disputeSummaryPopup;
-        this.contractPopup = contractPopup;
-        this.tradeDetailsPopup = tradeDetailsPopup;
+        this.disputeSummaryWindow = disputeSummaryWindow;
+        this.contractWindow = contractWindow;
+        this.tradeDetailsWindow = tradeDetailsWindow;
     }
 
     @Override
@@ -198,7 +198,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onOpenContract(Dispute dispute) {
-        contractPopup.show(dispute);
+        contractWindow.show(dispute);
     }
 
     private void onSendMessage(String inputText, Dispute dispute) {
@@ -256,7 +256,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onCloseDispute(Dispute dispute) {
-        disputeSummaryPopup.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
+        disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
                 .show(dispute);
     }
 
@@ -654,7 +654,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     if (tradeOptional.isPresent()) {
                                         field.setMouseTransparent(false);
                                         field.setTooltip(new Tooltip("Open popup for details"));
-                                        field.setOnAction(event -> tradeDetailsPopup.show(tradeOptional.get()));
+                                        field.setOnAction(event -> tradeDetailsWindow.show(tradeOptional.get()));
                                     } else {
                                         field.setMouseTransparent(true);
                                     }

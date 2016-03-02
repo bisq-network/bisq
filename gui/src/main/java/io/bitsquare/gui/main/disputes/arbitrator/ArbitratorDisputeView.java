@@ -22,9 +22,9 @@ import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.disputes.trader.TraderDisputeView;
-import io.bitsquare.gui.main.popups.ContractPopup;
-import io.bitsquare.gui.main.popups.DisputeSummaryPopup;
-import io.bitsquare.gui.main.popups.TradeDetailsPopup;
+import io.bitsquare.gui.main.overlays.windows.ContractWindow;
+import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
+import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.TradeManager;
 import javafx.collections.transformation.FilteredList;
@@ -38,10 +38,10 @@ public class ArbitratorDisputeView extends TraderDisputeView {
 
     @Inject
     public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
-                                 BSFormatter formatter, DisputeSummaryPopup disputeSummaryPopup,
-                                 ContractPopup contractPopup, TradeDetailsPopup tradeDetailsPopup) {
+                                 BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
+                                 ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow) {
         super(disputeManager, keyRing, tradeManager, stage, formatter,
-                disputeSummaryPopup, contractPopup, tradeDetailsPopup);
+                disputeSummaryWindow, contractWindow, tradeDetailsWindow);
     }
 
     @Override

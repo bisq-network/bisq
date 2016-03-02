@@ -20,8 +20,8 @@ package io.bitsquare.gui.main.portfolio.closedtrades;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
-import io.bitsquare.gui.main.popups.OfferDetailsPopup;
-import io.bitsquare.gui.main.popups.TradeDetailsPopup;
+import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
+import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
@@ -43,15 +43,15 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn, stateColumn;
     private final BSFormatter formatter;
-    private final OfferDetailsPopup offerDetailsPopup;
-    private final TradeDetailsPopup tradeDetailsPopup;
+    private final OfferDetailsWindow offerDetailsWindow;
+    private final TradeDetailsWindow tradeDetailsWindow;
 
     @Inject
-    public ClosedTradesView(ClosedTradesViewModel model, BSFormatter formatter, OfferDetailsPopup offerDetailsPopup, TradeDetailsPopup tradeDetailsPopup) {
+    public ClosedTradesView(ClosedTradesViewModel model, BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
         super(model);
         this.formatter = formatter;
-        this.offerDetailsPopup = offerDetailsPopup;
-        this.tradeDetailsPopup = tradeDetailsPopup;
+        this.offerDetailsWindow = offerDetailsWindow;
+        this.tradeDetailsWindow = tradeDetailsWindow;
     }
 
     @Override
@@ -94,9 +94,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                     field.setOnAction(event -> {
                                         Tradable tradable = item.getTradable();
                                         if (tradable instanceof Trade)
-                                            tradeDetailsPopup.show((Trade) tradable);
+                                            tradeDetailsWindow.show((Trade) tradable);
                                         else if (tradable instanceof OpenOffer)
-                                            offerDetailsPopup.show(tradable.getOffer());
+                                            offerDetailsWindow.show(tradable.getOffer());
                                     });
                                     field.setTooltip(new Tooltip("Open popup for details"));
                                     setGraphic(field);

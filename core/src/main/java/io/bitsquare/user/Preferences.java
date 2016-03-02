@@ -98,7 +98,7 @@ public final class Preferences implements Persistable {
     private BlockChainExplorer blockChainExplorerTestNet;
     private String backupDirectory;
     private boolean autoSelectArbitrators = true;
-    private final Map<String, Boolean> showAgainMap;
+    private final Map<String, Boolean> dontShowAgainMap;
     private boolean tacAccepted;
     private boolean useTorForBitcoinJ = true;
     private Locale preferredLocale;
@@ -146,7 +146,7 @@ public final class Preferences implements Persistable {
 
             backupDirectory = persisted.getBackupDirectory();
             autoSelectArbitrators = persisted.getAutoSelectArbitrators();
-            showAgainMap = persisted.getShowAgainMap();
+            dontShowAgainMap = persisted.getDontShowAgainMap();
             tacAccepted = persisted.getTacAccepted();
 
             preferredLocale = persisted.getPreferredLocale();
@@ -170,7 +170,7 @@ public final class Preferences implements Persistable {
             setBlockChainExplorerTestNet(blockChainExplorersTestNet.get(0));
             setBlockChainExplorerMainNet(blockChainExplorersMainNet.get(0));
 
-            showAgainMap = new HashMap<>();
+            dontShowAgainMap = new HashMap<>();
             preferredLocale = getDefaultLocale();
             preferredTradeCurrency = getDefaultTradeCurrency();
 
@@ -210,23 +210,14 @@ public final class Preferences implements Persistable {
         tradeCurrenciesAsObservable.addAll(cryptoCurrencies);
     }
 
-    public void dontShowAgain(String key) {
-        showAgainMap.put(key, false);
-        storage.queueUpForSave(2000);
+    public void dontShowAgain(String key, boolean dontShowAgain) {
+        dontShowAgainMap.put(key, dontShowAgain);
+        storage.queueUpForSave(1000);
     }
 
     public void resetDontShowAgainForType() {
-        showAgainMap.clear();
-        storage.queueUpForSave(2000);
-    }
-
-    public void removeDontShowAgainForType(String type) {
-        showAgainMap.keySet().stream().forEach(key -> {
-            if (key.startsWith(type + "_"))
-                showAgainMap.put(key, true);
-        });
-
-        storage.queueUpForSave(2000);
+        dontShowAgainMap.clear();
+        storage.queueUpForSave(1000);
     }
 
     private void updateTradeCurrencies(ListChangeListener.Change<? extends TradeCurrency> change) {
@@ -443,18 +434,12 @@ public final class Preferences implements Persistable {
         return autoSelectArbitrators;
     }
 
-    public Map<String, Boolean> getShowAgainMap() {
-        return showAgainMap;
+    public Map<String, Boolean> getDontShowAgainMap() {
+        return dontShowAgainMap;
     }
 
     public boolean showAgain(String key) {
-        // if we add new and those are not in our stored map we display by default the new popup
-        if (!showAgainMap.containsKey(key)) {
-            showAgainMap.put(key, true);
-            storage.queueUpForSave(2000);
-        }
-
-        return showAgainMap.get(key);
+        return !dontShowAgainMap.containsKey(key) || !dontShowAgainMap.get(key);
     }
 
     public boolean getTacAccepted() {

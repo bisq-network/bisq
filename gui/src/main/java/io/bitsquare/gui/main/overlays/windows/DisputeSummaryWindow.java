@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
@@ -26,6 +26,8 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.Transitions;
@@ -53,9 +55,9 @@ import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
-public class DisputeSummaryPopup extends Popup {
-    private static final Logger log = LoggerFactory.getLogger(DisputeSummaryPopup.class);
-    
+public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
+    private static final Logger log = LoggerFactory.getLogger(DisputeSummaryWindow.class);
+
     private final BSFormatter formatter;
     private final DisputeManager disputeManager;
     private final WalletService walletService;
@@ -83,7 +85,7 @@ public class DisputeSummaryPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DisputeSummaryPopup(BSFormatter formatter, DisputeManager disputeManager, WalletService walletService, TradeWalletService tradeWalletService) {
+    public DisputeSummaryWindow(BSFormatter formatter, DisputeManager disputeManager, WalletService walletService, TradeWalletService tradeWalletService) {
         this.formatter = formatter;
         this.disputeManager = disputeManager;
         this.walletService = walletService;
@@ -97,15 +99,10 @@ public class DisputeSummaryPopup extends Popup {
         width = 850;
         createGridPane();
         addContent();
-        PopupManager.queueForDisplay(this);
+        display();
     }
 
-    public DisputeSummaryPopup onClose(Runnable closeHandler) {
-        this.closeHandlerOptional = Optional.of(closeHandler);
-        return this;
-    }
-
-    public DisputeSummaryPopup onFinalizeDispute(Runnable finalizeDisputeHandler) {
+    public DisputeSummaryWindow onFinalizeDispute(Runnable finalizeDisputeHandler) {
         this.finalizeDisputeHandlerOptional = Optional.of(finalizeDisputeHandler);
         return this;
     }

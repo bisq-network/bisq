@@ -1,8 +1,8 @@
-package io.bitsquare.gui.main.notifications;
+package io.bitsquare.gui.main.overlays.notifications;
 
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -18,7 +18,7 @@ import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Notification extends Popup {
+public class Notification extends Overlay<Notification> {
     private static final Logger log = LoggerFactory.getLogger(Notification.class);
     private boolean hasBeenDisplayed;
     private boolean autoClose;
@@ -29,24 +29,28 @@ public class Notification extends Popup {
         NotificationCenter.add(this);
     }
 
-    public Notification headLine(String headLine) {
-        return (Notification) super.headLine(headLine);
+    public void onReadyForDisplay() {
+        super.display();
+        if (autoClose && autoCloseTimer == null)
+            autoCloseTimer = UserThread.runAfter(this::hide, 5);
+    }
+
+    @Override
+    protected void onShow() {
+        NotificationManager.queueForDisplay(this);
+    }
+
+    @Override
+    protected void onHidden() {
+        NotificationManager.onHidden(this);
     }
 
     public Notification tradeHeadLine(String tradeId) {
         return headLine("Notification for trade with ID " + tradeId);
     }
 
-    public Notification notification(String message) {
-        return (Notification) super.notification(message);
-    }
-
     public Notification disputeHeadLine(String tradeId) {
         return headLine("Support ticket for trade with ID " + tradeId);
-    }
-
-    public Notification message(String message) {
-        return (Notification) super.message(message);
     }
 
     @Override
@@ -60,17 +64,10 @@ public class Notification extends Popup {
         hasBeenDisplayed = true;
     }
 
+
     public Notification autoClose() {
         autoClose = true;
         return this;
-    }
-
-    @Override
-    public void display() {
-        super.display();
-
-        if (autoClose && autoCloseTimer == null)
-            autoCloseTimer = UserThread.runAfter(this::hide, 5);
     }
 
     @Override

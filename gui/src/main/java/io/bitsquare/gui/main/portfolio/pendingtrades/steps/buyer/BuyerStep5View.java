@@ -25,7 +25,7 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.BSFormatter;
@@ -119,28 +119,26 @@ public class BuyerStep5View extends TradeStepView {
             reviewWithdrawal();
         });
 
-        String id = "tradeCompleteInfo";
+        String key = "tradeCompleteInfo";
         if (BitsquareApp.DEV_MODE)
             withdrawAddressTextField.setText("mi8k5f9L972VgDaT4LgjAhriC9hHEPL7EW");
         else
             new Popup().headLine("Trade completed")
                     .instruction("You can withdraw your funds now to your external Bitcoin wallet.")
-                    .dontShowAgainId(id, preferences)
+                    .dontShowAgainId(key, preferences)
                     .show();
     }
 
     private void doWithdrawal() {
         model.dataModel.onWithdrawRequest(withdrawAddressTextField.getText(),
                 () -> {
-                    String id = "tradeCompleteWithdrawCompletedInfo";
-                    if (preferences.showAgain(id)) {
-                        new Popup().headLine("Withdrawal completed").instruction("Your completed trades are stored under \"Portfolio/History\".\n" +
-                                "You can review all your bitcoin transactions under \"Funds/Transactions\"")
-                                .actionButtonText("Go to \"Transactions\"")
-                                .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
-                                .dontShowAgainId(id, preferences)
-                                .show();
-                    }
+                    String key = "tradeCompleteWithdrawCompletedInfo";
+                    new Popup().headLine("Withdrawal completed").instruction("Your completed trades are stored under \"Portfolio/History\".\n" +
+                            "You can review all your bitcoin transactions under \"Funds/Transactions\"")
+                            .actionButtonText("Go to \"Transactions\"")
+                            .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
+                            .dontShowAgainId(key, preferences)
+                            .show();
                     withdrawButton.setDisable(true);
                 },
                 (errorMessage, throwable) -> {
@@ -166,20 +164,24 @@ public class BuyerStep5View extends TradeStepView {
                     doWithdrawal();
                 } else {
                     BSFormatter formatter = model.formatter;
-                    String id = "reviewWithdrawalAtTradeComplete";
-                    new Popup().headLine("Confirm withdrawal request")
-                            .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
-                                    "From address: " + fromAddresses + "\n" +
-                                    "To receiving address: " + toAddresses + ".\n" +
-                                    "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n\n" +
-                                    "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
-                                    "Are you sure you want to withdraw that amount?")
-                            .actionButtonText("Yes")
-                            .onAction(this::doWithdrawal)
-                            .closeButtonText("Cancel")
-                            .onClose(() -> withdrawButton.setDisable(false))
-                            .dontShowAgainId(id, preferences)
-                            .show();
+                    String key = "reviewWithdrawalAtTradeComplete";
+                    if (preferences.showAgain(key)) {
+                        new Popup().headLine("Confirm withdrawal request")
+                                .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
+                                        "From address: " + fromAddresses + "\n" +
+                                        "To receiving address: " + toAddresses + ".\n" +
+                                        "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n\n" +
+                                        "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
+                                        "Are you sure you want to withdraw that amount?")
+                                .actionButtonText("Yes")
+                                .onAction(this::doWithdrawal)
+                                .closeButtonText("Cancel")
+                                .onClose(() -> withdrawButton.setDisable(false))
+                                .dontShowAgainId(key, preferences)
+                                .show();
+                    } else {
+                        doWithdrawal();
+                    }
 
                 }
             } catch (AddressFormatException e) {

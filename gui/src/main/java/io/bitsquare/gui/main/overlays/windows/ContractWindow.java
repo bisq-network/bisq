@@ -15,10 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
 import io.bitsquare.arbitration.Dispute;
+import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
@@ -38,12 +39,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
-public class ContractPopup extends Popup {
-    protected static final Logger log = LoggerFactory.getLogger(ContractPopup.class);
+public class ContractWindow extends Overlay<ContractWindow> {
+    protected static final Logger log = LoggerFactory.getLogger(ContractWindow.class);
 
     private final BSFormatter formatter;
     private Dispute dispute;
@@ -54,11 +54,11 @@ public class ContractPopup extends Popup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractPopup(BSFormatter formatter) {
+    public ContractWindow(BSFormatter formatter) {
         this.formatter = formatter;
     }
 
-    public ContractPopup show(Dispute dispute) {
+    public void show(Dispute dispute) {
         this.dispute = dispute;
 
         rowIndex = -1;
@@ -66,12 +66,6 @@ public class ContractPopup extends Popup {
         createGridPane();
         addContent();
         display();
-        return this;
-    }
-
-    public ContractPopup onClose(Runnable closeHandler) {
-        this.closeHandlerOptional = Optional.of(closeHandler);
-        return this;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -15,11 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.ScryptUtil;
 import io.bitsquare.gui.components.PasswordTextField;
+import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.gui.util.validation.PasswordValidator;
 import javafx.beans.value.ChangeListener;
@@ -37,10 +39,9 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.inject.Inject;
 import java.time.Duration;
-import java.util.Optional;
 
-public class WalletPasswordPopup extends Popup {
-    private static final Logger log = LoggerFactory.getLogger(WalletPasswordPopup.class);
+public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
+    private static final Logger log = LoggerFactory.getLogger(WalletPasswordWindow.class);
     private final WalletService walletService;
     private Button unlockButton;
     private AesKeyHandler aesKeyHandler;
@@ -68,7 +69,7 @@ public class WalletPasswordPopup extends Popup {
     }
 
     @Inject
-    public WalletPasswordPopup(WalletService walletService) {
+    public WalletPasswordWindow(WalletService walletService) {
         this.walletService = walletService;
     }
 
@@ -87,15 +88,11 @@ public class WalletPasswordPopup extends Popup {
         addInputFields();
         addButtons();
         applyStyles();
-        PopupManager.queueForDisplay(this);
+        display();
     }
 
-    public WalletPasswordPopup onClose(Runnable closeHandler) {
-        this.closeHandlerOptional = Optional.of(closeHandler);
-        return this;
-    }
 
-    public WalletPasswordPopup onAesKey(AesKeyHandler aesKeyHandler) {
+    public WalletPasswordWindow onAesKey(AesKeyHandler aesKeyHandler) {
         this.aesKeyHandler = aesKeyHandler;
         return this;
     }

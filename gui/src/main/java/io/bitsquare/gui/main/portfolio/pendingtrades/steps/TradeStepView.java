@@ -23,7 +23,7 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.TradeSubView;
 import io.bitsquare.gui.util.Layout;

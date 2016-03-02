@@ -31,7 +31,8 @@ import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.markets.MarketView;
 import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.util.Transitions;
@@ -90,7 +91,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Label btcSplashInfo;
     private List<String> persistedFilesCorrupted;
     private BorderPane baseApplicationContainer;
-    private Popup p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
+    private Overlay<Popup> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
     private static StackPane rootContainer;
 
     @Inject

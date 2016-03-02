@@ -23,7 +23,7 @@ import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.*;
@@ -67,6 +67,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
     private ListView<CryptoCurrency> cryptoCurrenciesListView;
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
+    private Button resetDontShowAgainButton;
     // private ListChangeListener<TradeCurrency> displayCurrenciesListChangeListener;
     final ObservableList<String> btcDenominations = FXCollections.observableArrayList(Preferences.getBtcDenominations());
     final ObservableList<BlockChainExplorer> blockExplorers;
@@ -77,7 +78,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     public final ObservableList<CryptoCurrency> cryptoCurrencies;
     public final ObservableList<CryptoCurrency> allCryptoCurrencies;
     public final ObservableList<TradeCurrency> tradeCurrencies;
-    private Button resetDontShowAgainButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -293,12 +293,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, "Display options", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
         useAnimationsCheckBox = addLabelCheckBox(root, gridRow, "Use animations:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        Tuple2<Label, Button> labelButton = addLabelButton(root, gridRow, "Reset all don't show again flags:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        resetDontShowAgainButton = labelButton.second;
-        GridPane.setColumnIndex(labelButton.first, 2);
-        GridPane.setColumnIndex(resetDontShowAgainButton, 3);
-
         useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use effects:", "").second;
+        resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all don't show again flags:", "Reset", 0).second;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -429,6 +425,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         useAnimationsCheckBox.setOnAction(null);
         useEffectsCheckBox.setOnAction(null);
         autoSelectArbitratorsCheckBox.setOnAction(null);
+        resetDontShowAgainButton.setOnAction(null);
     }
 
 

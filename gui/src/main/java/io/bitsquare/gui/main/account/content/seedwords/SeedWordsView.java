@@ -24,8 +24,8 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.main.popups.Popup;
-import io.bitsquare.gui.main.popups.WalletPasswordPopup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.Layout;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -54,7 +54,7 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 @FxmlView
 public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private final WalletService walletService;
-    private final WalletPasswordPopup walletPasswordPopup;
+    private final WalletPasswordWindow walletPasswordWindow;
 
     private Button restoreButton;
     private TextArea seedWordsTextArea;
@@ -75,9 +75,9 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsView(WalletService walletService, WalletPasswordPopup walletPasswordPopup) {
+    private SeedWordsView(WalletService walletService, WalletPasswordWindow walletPasswordWindow) {
         this.walletService = walletService;
-        this.walletPasswordPopup = walletPasswordPopup;
+        this.walletPasswordWindow = walletPasswordWindow;
     }
 
     @Override
@@ -126,7 +126,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
 
     private void askForPassword() {
-        walletPasswordPopup.onAesKey(aesKey -> {
+        walletPasswordWindow.onAesKey(aesKey -> {
             Wallet wallet = walletService.getWallet();
             KeyCrypter keyCrypter = wallet.getKeyCrypter();
             keyChainSeed = wallet.getKeyChainSeed();

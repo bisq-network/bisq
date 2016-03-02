@@ -22,8 +22,8 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
-import io.bitsquare.gui.main.popups.OpenEmergencyTicketPopup;
-import io.bitsquare.gui.main.popups.TradeDetailsPopup;
+import io.bitsquare.gui.main.overlays.windows.OpenEmergencyTicketWindow;
+import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.event.EventHandler;
@@ -49,7 +49,7 @@ import javax.inject.Inject;
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
 
-    private final TradeDetailsPopup tradeDetailsPopup;
+    private final TradeDetailsWindow tradeDetailsWindow;
     private final BSFormatter formatter;
     @FXML
     TableView<PendingTradesListItem> table;
@@ -73,9 +73,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesView(PendingTradesViewModel model, TradeDetailsPopup tradeDetailsPopup, BSFormatter formatter) {
+    public PendingTradesView(PendingTradesViewModel model, TradeDetailsWindow tradeDetailsWindow, BSFormatter formatter) {
         super(model);
-        this.tradeDetailsPopup = tradeDetailsPopup;
+        this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;
     }
 
@@ -96,7 +96,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         // we use a hidden emergency shortcut to open support ticket
         keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event))
-                new OpenEmergencyTicketPopup().onOpenTicket(model.dataModel::onOpenSupportTicket).show();
+                new OpenEmergencyTicketWindow().onOpenTicket(model.dataModel::onOpenSupportTicket).show();
         };
     }
 
@@ -218,7 +218,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(item.getTrade().getShortId(), true);
-                                    field.setOnAction(event -> tradeDetailsPopup.show(item.getTrade()));
+                                    field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
                                     field.setTooltip(new Tooltip("Open popup for details"));
                                     setGraphic(field);
                                 } else {

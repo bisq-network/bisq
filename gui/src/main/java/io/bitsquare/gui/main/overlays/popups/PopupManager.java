@@ -1,4 +1,4 @@
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.popups;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,12 +6,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-class PopupManager {
+public class PopupManager {
     private static final Logger log = LoggerFactory.getLogger(PopupManager.class);
-    private static final Queue<Popup> popups = new LinkedBlockingQueue<>(3);
+    private static final Queue<Popup> popups = new LinkedBlockingQueue<>(5);
     private static Popup displayedPopup;
 
-    static void queueForDisplay(Popup popup) {
+    public static void queueForDisplay(Popup popup) {
         boolean result = popups.offer(popup);
         if (!result)
             log.warn("The capacity is full with popups in the queue.\n\t" +
@@ -19,7 +19,7 @@ class PopupManager {
         displayNext();
     }
 
-    static void isHidden(Popup popup) {
+    public static void onHidden(Popup popup) {
         if (displayedPopup == null || displayedPopup == popup) {
             displayedPopup = null;
             displayNext();
@@ -33,7 +33,7 @@ class PopupManager {
         if (displayedPopup == null) {
             if (!popups.isEmpty()) {
                 displayedPopup = popups.poll();
-                displayedPopup.display();
+                displayedPopup.onReadyForDisplay();
             }
         }
     }

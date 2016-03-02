@@ -1,4 +1,4 @@
-package io.bitsquare.gui.main.notifications;
+package io.bitsquare.gui.main.overlays.notifications;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.Log;

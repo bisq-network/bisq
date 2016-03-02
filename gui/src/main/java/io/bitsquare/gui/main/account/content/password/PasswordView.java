@@ -26,7 +26,7 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.PasswordTextField;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.main.popups.Popup;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;

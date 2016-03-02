@@ -15,27 +15,24 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.popups;
+package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.alert.Alert;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.gui.util.FormBuilder.addLabelHyperlinkWithIcon;
 import static io.bitsquare.gui.util.FormBuilder.addMultilineLabel;
 
-public class DisplayAlertMessagePopup extends Popup {
-    private static final Logger log = LoggerFactory.getLogger(DisplayAlertMessagePopup.class);
-    private Label msgLabel;
+public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow> {
+    private static final Logger log = LoggerFactory.getLogger(DisplayAlertMessageWindow.class);
     private Alert alert;
 
 
@@ -43,7 +40,7 @@ public class DisplayAlertMessagePopup extends Popup {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisplayAlertMessagePopup() {
+    public DisplayAlertMessageWindow() {
     }
 
     public void show() {
@@ -55,16 +52,11 @@ public class DisplayAlertMessagePopup extends Popup {
         addSeparator();
         addContent();
         applyStyles();
-        PopupManager.queueForDisplay(this);
+        display();
     }
 
-    public DisplayAlertMessagePopup alertMessage(Alert alert) {
+    public DisplayAlertMessageWindow alertMessage(Alert alert) {
         this.alert = alert;
-        return this;
-    }
-
-    public DisplayAlertMessagePopup onClose(Runnable closeHandler) {
-        this.closeHandlerOptional = Optional.of(closeHandler);
         return this;
     }
 
@@ -74,7 +66,7 @@ public class DisplayAlertMessagePopup extends Popup {
 
     private void addContent() {
         checkNotNull(alert, "alertMessage must not be null");
-        msgLabel = addMultilineLabel(gridPane, ++rowIndex, alert.message, 10);
+        addMultilineLabel(gridPane, ++rowIndex, alert.message, 10);
         if (alert.isUpdateInfo) {
             headLine = "Important update information!";
             headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
