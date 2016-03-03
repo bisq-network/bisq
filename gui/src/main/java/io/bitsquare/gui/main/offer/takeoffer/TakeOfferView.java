@@ -21,6 +21,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
@@ -59,10 +60,9 @@ import org.bitcoinj.core.Coin;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.reactfx.util.FxTimer;
 
 import javax.inject.Inject;
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -223,21 +223,18 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             }
 
             if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
-                FxTimer.runLater(Duration.ofMillis(100),
-                        () -> {
-                            new Popup().headLine(BSResources.get("takeOffer.success.headline"))
-                                    .feedback(BSResources.get("takeOffer.success.info"))
-                                    .actionButtonText("Go to \"Open trades\"")
-                                    .onAction(() -> {
-                                        close();
-                                        FxTimer.runLater(Duration.ofMillis(100),
-                                                () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
-                                        );
-                                    })
-                                    .onClose(this::close)
-                                    .show();
-                        }
-                );
+                UserThread.runAfter(
+                        () -> new Popup().headLine(BSResources.get("takeOffer.success.headline"))
+                                .feedback(BSResources.get("takeOffer.success.info"))
+                                .actionButtonText("Go to \"Open trades\"")
+                                .onAction(() -> {
+                                    close();
+                                    UserThread.runAfter(
+                                            () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
+                                            , 100, TimeUnit.MILLISECONDS);
+                                })
+                                .onClose(this::close)
+                                .show(), 100, TimeUnit.MILLISECONDS);
             }
         });
 

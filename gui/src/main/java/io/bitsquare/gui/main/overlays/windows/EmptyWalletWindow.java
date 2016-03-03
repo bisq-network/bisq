@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
@@ -34,13 +35,12 @@ import javafx.scene.layout.HBox;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.inject.Inject;
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -138,9 +138,9 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                         addressTextField.setText(formatter.formatCoinWithCode(walletService.getAvailableBalance()));
                         emptyWalletButton.setDisable(true);
                         log.debug("wallet empty successful");
-                        FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), () -> new Popup()
+                        UserThread.runAfter(() -> new Popup()
                                 .feedback("The balance of your wallet was successfully transferred.")
-                                .onClose(() -> blurAgain()).show());
+                                .onClose(() -> blurAgain()).show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
                     },
                     (errorMessage) -> {
                         emptyWalletButton.setDisable(false);

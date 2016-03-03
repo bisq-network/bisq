@@ -25,6 +25,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
@@ -44,14 +45,13 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
-import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.time.Duration;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -389,8 +389,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     disputeManager.sendDisputeResultMessage(disputeResult, dispute, text);
 
                     if (!finalPeersDispute.isClosed())
-                        FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), () ->
-                                new Popup().instruction("You need to close also the trading peers ticket!").show());
+                        UserThread.runAfter(() ->
+                                        new Popup().instruction("You need to close also the trading peers ticket!").show(),
+                                Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
 
                     hide();
 

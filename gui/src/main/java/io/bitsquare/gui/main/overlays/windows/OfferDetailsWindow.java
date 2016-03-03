@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
 import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
@@ -36,9 +36,7 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +46,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -62,8 +59,9 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;
-    private Optional<Consumer<Offer>> placeOfferHandlerOptional = Optional.empty();
+    private Optional<Runnable> placeOfferHandlerOptional = Optional.empty();
     private Optional<Runnable> takeOfferHandlerOptional = Optional.empty();
+    private ProgressIndicator spinner;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +98,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     }
 
 
-    public OfferDetailsWindow onPlaceOffer(Consumer<Offer> placeOfferHandler) {
+    public OfferDetailsWindow onPlaceOffer(Runnable placeOfferHandler) {
         this.placeOfferHandlerOptional = Optional.of(placeOfferHandler);
         return this;
     }
@@ -109,7 +107,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         this.takeOfferHandlerOptional = Optional.of(takeOfferHandler);
         return this;
     }
-
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -236,41 +233,57 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         boolean isBuyOffer = offer.getDirection() == Offer.Direction.BUY;
         boolean isBuyerRole = isPlaceOffer ? isBuyOffer : !isBuyOffer;
 
-        String placeOffer = isBuyerRole ? "Confirm place offer for buying bitcoin" : "Confirm place offer for selling bitcoin";
-        String takeOffer = isBuyerRole ? "Confirm take offer for buying bitcoin" : "Confirm take offer for selling bitcoin";
-        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane,
-                ++rowIndex,
-                isPlaceOffer ? placeOffer : takeOffer,
-                "Cancel");
-        Button placeButton = tuple.first;
+        String placeOfferButtonText = isBuyerRole ? "Confirm place offer for buying bitcoin" : "Confirm place offer for selling bitcoin";
+        String takeOfferButtonText = isBuyerRole ? "Confirm take offer for buying bitcoin" : "Confirm take offer for selling bitcoin";
 
         ImageView iconView = new ImageView();
-        iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");
-        placeButton.setGraphicTextGap(10);
-        placeButton.setGraphic(iconView);
+        iconView.setId(isBuyOffer ? "image-buy-white" : "image-sell-white");
 
-        placeButton.setId(isBuyerRole ? "buy-button" : "sell-button");
+        Tuple3<Button, ProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
-        placeButton.setOnAction(e -> {
+        Button button = placeOfferTuple.first;
+        button.setGraphic(iconView);
+        button.setId(isBuyOffer ? "buy-button" : "sell-button");
+        button.setText(isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
+
+        spinner = placeOfferTuple.second;
+        spinner.setPrefSize(18, 18);
+        spinner.setVisible(false);
+        Label spinnerInfoLabel = placeOfferTuple.third;
+
+        Button cancelButton = addButton(gridPane, ++rowIndex, BSResources.get("shared.cancel"));
+        cancelButton.setDefaultButton(false);
+        cancelButton.setId("cancel-button");
+        cancelButton.setOnAction(e -> {
+            closeHandlerOptional.ifPresent(Runnable::run);
+            hide();
+        });
+
+        button.setOnAction(e -> {
             if (user.getAcceptedArbitrators().size() > 0) {
-                if (isPlaceOffer)
-                    placeOfferHandlerOptional.get().accept(offer);
-                else
+                button.setDisable(true);
+                cancelButton.setDisable(true);
+                spinner.setVisible(true);
+                spinner.setProgress(-1);
+                if (isPlaceOffer) {
+                    spinnerInfoLabel.setText(BSResources.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
+                    placeOfferHandlerOptional.get().run();
+                } else {
+                    spinnerInfoLabel.setText("Take offer in progress...");
                     takeOfferHandlerOptional.get().run();
+                }
             } else {
                 new Popup().warning("You have no arbitrator selected.\n" +
                         "Please select at least one arbitrator.").show();
 
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
             }
-            hide();
         });
+    }
 
-        Button cancelButton = tuple.second;
-        cancelButton.setId("cancel-button");
-        cancelButton.setOnAction(e -> {
-            closeHandlerOptional.ifPresent(Runnable::run);
-            hide();
-        });
+    @Override
+    protected void onHidden() {
+        if (spinner != null)
+            spinner.setProgress(0);
     }
 }

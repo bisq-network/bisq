@@ -38,12 +38,11 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import org.apache.commons.lang3.StringUtils;
-import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 
@@ -294,7 +293,7 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void blurAgain() {
-        FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), MainView::blurLight);
+        UserThread.runAfter(MainView::blurLight, Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
     }
 
     public void display() {
@@ -479,7 +478,7 @@ public abstract class Overlay<T extends Overlay> {
         closeButton = new Button(closeButtonText == null ? "Close" : closeButtonText);
         closeButton.setOnAction(event -> {
             hide();
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            closeHandlerOptional.ifPresent(Runnable::run);
         });
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
@@ -489,7 +488,7 @@ public abstract class Overlay<T extends Overlay> {
             //actionButton.requestFocus();
             actionButton.setOnAction(event -> {
                 hide();
-                actionHandlerOptional.ifPresent(actionHandler -> actionHandler.run());
+                actionHandlerOptional.ifPresent(Runnable::run);
             });
 
             Pane spacer = new Pane();

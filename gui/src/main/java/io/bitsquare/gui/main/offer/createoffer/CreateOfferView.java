@@ -21,6 +21,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
@@ -62,10 +63,9 @@ import javafx.stage.Window;
 import javafx.util.StringConverter;
 import org.bitcoinj.core.Coin;
 import org.controlsfx.control.PopOver;
-import org.reactfx.util.FxTimer;
 
 import javax.inject.Inject;
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -81,17 +81,16 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ImageView imageView;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
-    private ProgressIndicator placeOfferSpinner;
+    private ProgressIndicator spinner;
     private TitledGroupBg payFundsPane;
-    private Button nextButton, cancelButton1, cancelButton2, createOfferButton;
+    private Button nextButton, cancelButton1, cancelButton2, placeOfferButton;
     private InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     private TextField totalToPayTextField, currencyTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
-            volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, placeOfferSpinnerInfoLabel, currencyTextFieldLabel,
+            volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, spinnerInfoLabel, currencyTextFieldLabel,
             currencyComboBoxLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
-
     private PopOver totalToPayInfoPopover;
 
     private OfferView.CloseHandler closeHandler;
@@ -104,8 +103,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<Boolean> showWarningInvalidFiatDecimalPlacesPlacesListener;
     private ChangeListener<Boolean> showWarningAdjustedVolumeListener;
     private ChangeListener<String> errorMessageListener;
-    private ChangeListener<Boolean> isPlaceOfferSpinnerVisibleListener;
-    private ChangeListener<Boolean> showTransactionPublishedScreen;
+    private ChangeListener<Boolean> isSpinnerVisibleListener;
+    private ChangeListener<Boolean> placeOfferCompletedListener;
     private ChangeListener<Coin> feeFromFundingTxListener;
     private EventHandler<ActionEvent> paymentAccountsComboBoxSelectionHandler;
 
@@ -175,6 +174,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         removeListeners();
         if (balanceTextField != null)
             balanceTextField.cleanup();
+
+        if (spinner != null)
+            spinner.setProgress(0);
     }
 
 
@@ -186,32 +188,32 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.initWithData(direction, tradeCurrency);
 
         ImageView iconView = new ImageView();
-        createOfferButton.setGraphic(iconView);
+        placeOfferButton.setGraphic(iconView);
         if (direction == Offer.Direction.BUY) {
             imageView.setId("image-buy-large");
 
-            createOfferButton.setId("buy-button-big");
+            placeOfferButton.setId("buy-button-big");
+            placeOfferButton.setText("Review place offer for buying bitcoin");
             nextButton.setId("buy-button");
-            createOfferButton.setText("Review place offer for buying bitcoin");
             iconView.setId("image-buy-white");
         } else {
             imageView.setId("image-sell-large");
             // only needed for sell
             totalToPayTextField.setPromptText(BSResources.get("createOffer.fundsBox.totalsNeeded.prompt"));
 
-            createOfferButton.setId("sell-button-big");
+            placeOfferButton.setId("sell-button-big");
+            placeOfferButton.setText("Review place offer for selling bitcoin");
             nextButton.setId("sell-button");
-            createOfferButton.setText("Review place offer for selling bitcoin");
             iconView.setId("image-sell-white");
         }
     }
 
     // called form parent as the view does not get notified when the tab is closed
     public void onClose() {
-        // we use model.requestPlaceOfferSuccess to not react on close caused by placeOffer
-        if (model.dataModel.isWalletFunded.get() && !model.requestPlaceOfferSuccess.get())
+        // we use model.placeOfferCompleted to not react on close which was triggered by a successful placeOffer
+        if (model.dataModel.isWalletFunded.get() && !model.placeOfferCompleted.get())
             new Popup().warning("You have already funds paid in.\n" +
-                    "In the \"Funds/Open for withdrawal\" section you can withdraw those funds.").show();
+                    "In the \"Funds/Available for withdrawal\" section you can withdraw those funds.").show();
     }
 
     public void setCloseHandler(OfferView.CloseHandler closeHandler) {
@@ -230,7 +232,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (model.isBootstrapped()) {
             if (model.hasAcceptedArbitrators()) {
                 Offer offer = model.createAndGetOffer();
-                offerDetailsWindow.onPlaceOffer(model::onPlaceOffer)
+                offerDetailsWindow.onPlaceOffer(() ->
+                        model.onPlaceOffer(offer, () ->
+                                offerDetailsWindow.hide()))
                         .show(offer);
             } else {
                 new Popup().warning("You have no arbitrator selected.\n" +
@@ -252,6 +256,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.setMouseTransparent(true);
         currencyComboBox.setMouseTransparent(true);
         paymentAccountsComboBox.setMouseTransparent(true);
+
+        spinner.setVisible(true);
+        spinner.setProgress(-1);
 
         if (!BitsquareApp.DEV_MODE) {
             String key = "securityDepositInfo";
@@ -297,7 +304,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         addressTextField.setVisible(true);
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
-        createOfferButton.setVisible(true);
+        placeOfferButton.setVisible(true);
         cancelButton2.setVisible(true);
         //root.requestFocus();
 
@@ -379,9 +386,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.validationResultProperty().bind(model.volumeValidationResult);
 
         // buttons
-        createOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
-
-        placeOfferSpinnerInfoLabel.visibleProperty().bind(model.isPlaceOfferSpinnerVisible);
+        placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
+        cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
+        spinnerInfoLabel.visibleProperty().bind(model.isSpinnerVisible);
 
         // payment account
         currencyComboBox.prefWidthProperty().bind(paymentAccountsComboBox.widthProperty());
@@ -411,8 +418,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         minAmountTextField.validationResultProperty().unbind();
         priceTextField.validationResultProperty().unbind();
         volumeTextField.validationResultProperty().unbind();
-        createOfferButton.disableProperty().unbind();
-        placeOfferSpinnerInfoLabel.visibleProperty().unbind();
+        placeOfferButton.disableProperty().unbind();
+        cancelButton2.disableProperty().unbind();
+        spinnerInfoLabel.visibleProperty().unbind();
         currencyComboBox.managedProperty().unbind();
         currencyComboBoxLabel.visibleProperty().unbind();
         currencyComboBoxLabel.managedProperty().unbind();
@@ -463,14 +471,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         };
         errorMessageListener = (o, oldValue, newValue) -> {
             if (newValue != null)
-                new Popup().error(BSResources.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()) +
+                UserThread.runAfter(() -> new Popup().error(BSResources.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()) +
                         "\n\nThere have no funds left your wallet yet.\n" +
                         "Please try to restart you application and check your network connection to see if you can resolve the issue.")
-                        .show();
+                        .show(), 100, TimeUnit.MILLISECONDS);
         };
-        isPlaceOfferSpinnerVisibleListener = (ov, oldValue, newValue) -> {
-            placeOfferSpinner.setProgress(newValue ? -1 : 0);
-            placeOfferSpinner.setVisible(newValue);
+        isSpinnerVisibleListener = (ov, oldValue, newValue) -> {
+            spinner.setProgress(newValue ? -1 : 0);
+            spinner.setVisible(newValue);
         };
 
         feeFromFundingTxListener = (observable, oldValue, newValue) -> {
@@ -503,29 +511,25 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             volumeTextField.clear();
         };
 
-        showTransactionPublishedScreen = (o, oldValue, newValue) -> {
+        placeOfferCompletedListener = (o, oldValue, newValue) -> {
             if (BitsquareApp.DEV_MODE) {
-                newValue = false;
                 close();
                 navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
-            }
-
-            if (newValue) {
-                FxTimer.runLater(Duration.ofMillis(100),
-                        () -> {
-                            new Popup().headLine(BSResources.get("createOffer.success.headline"))
-                                    .feedback(BSResources.get("createOffer.success.info"))
-                                    .actionButtonText("Go to \"My open offers\"")
-                                    .onAction(() -> {
-                                        close();
-                                        FxTimer.runLater(Duration.ofMillis(100),
-                                                () -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class)
-                                        );
-                                    })
-                                    .onClose(() -> close())
-                                    .show();
-                        }
-                );
+            } else if (newValue) {
+                // We need a bit of delay to avoid issues with fade out/fade in of 2 popups 
+                UserThread.runAfter(() ->
+                                new Popup().headLine(BSResources.get("createOffer.success.headline"))
+                                        .feedback(BSResources.get("createOffer.success.info"))
+                                        .actionButtonText("Go to \"My open offers\"")
+                                        .onAction(() -> {
+                                            close();
+                                            UserThread.runAfter(() ->
+                                                            navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class),
+                                                    100, TimeUnit.MILLISECONDS);
+                                        })
+                                        .onClose(this::close)
+                                        .show(),
+                        100, TimeUnit.MILLISECONDS);
             }
         };
     }
@@ -544,10 +548,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.showWarningInvalidFiatDecimalPlaces.addListener(showWarningInvalidFiatDecimalPlacesPlacesListener);
         model.showWarningAdjustedVolume.addListener(showWarningAdjustedVolumeListener);
         model.errorMessage.addListener(errorMessageListener);
-        model.isPlaceOfferSpinnerVisible.addListener(isPlaceOfferSpinnerVisibleListener);
+        model.isSpinnerVisible.addListener(isSpinnerVisibleListener);
         model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
 
-        model.requestPlaceOfferSuccess.addListener(showTransactionPublishedScreen);
+        model.placeOfferCompleted.addListener(placeOfferCompletedListener);
 
         // UI actions
         paymentAccountsComboBox.setOnAction(paymentAccountsComboBoxSelectionHandler);
@@ -568,10 +572,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.showWarningInvalidFiatDecimalPlaces.removeListener(showWarningInvalidFiatDecimalPlacesPlacesListener);
         model.showWarningAdjustedVolume.removeListener(showWarningAdjustedVolumeListener);
         model.errorMessage.removeListener(errorMessageListener);
-        model.isPlaceOfferSpinnerVisible.removeListener(isPlaceOfferSpinnerVisibleListener);
+        model.isSpinnerVisible.removeListener(isSpinnerVisibleListener);
         model.dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
 
-        model.requestPlaceOfferSuccess.removeListener(showTransactionPublishedScreen);
+        model.placeOfferCompleted.removeListener(placeOfferCompletedListener);
 
         // UI actions
         paymentAccountsComboBox.setOnAction(null);
@@ -713,17 +717,19 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField.setVisible(false);
 
         Tuple3<Button, ProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "");
-        createOfferButton = placeOfferTuple.first;
-        createOfferButton.setVisible(false);
-        createOfferButton.setOnAction(e -> onPlaceOffer());
-        createOfferButton.setMinHeight(40);
-        createOfferButton.setPadding(new Insets(0, 20, 0, 20));
+        placeOfferButton = placeOfferTuple.first;
+        placeOfferButton.setVisible(false);
+        placeOfferButton.setOnAction(e -> onPlaceOffer());
+        placeOfferButton.setMinHeight(40);
+        placeOfferButton.setPadding(new Insets(0, 20, 0, 20));
 
-        placeOfferSpinner = placeOfferTuple.second;
-        placeOfferSpinner.setPrefSize(18, 18);
-        placeOfferSpinnerInfoLabel = placeOfferTuple.third;
-        placeOfferSpinnerInfoLabel.textProperty().bind(model.placeOfferSpinnerInfoText);
-        placeOfferSpinnerInfoLabel.setVisible(false);
+        spinner = placeOfferTuple.second;
+        spinner.setProgress(0);
+        spinner.setVisible(false);
+        spinner.setPrefSize(18, 18);
+        spinnerInfoLabel = placeOfferTuple.third;
+        spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
+        spinnerInfoLabel.setVisible(false);
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> close());

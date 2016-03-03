@@ -801,17 +801,16 @@ public class FormBuilder {
                                                                                double top) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
+
         Button button = new Button(buttonTitle);
         button.setDefaultButton(true);
 
         ProgressIndicator progressIndicator = new ProgressIndicator(0);
         progressIndicator.setPrefHeight(24);
         progressIndicator.setPrefWidth(24);
-        progressIndicator.setVisible(false);
 
         Label label = new Label();
-        label.setPadding(new Insets(5, 0, 0, 0));
-
+        hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(button, progressIndicator, label);
 
         GridPane.setRowIndex(hBox, rowIndex);

@@ -55,8 +55,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import org.reactfx.util.FxTimer;
-import org.reactfx.util.Timer;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -66,10 +64,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView
@@ -214,7 +212,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         inputTextArea.setDisable(true);
         inputTextArea.clear();
 
-        final Timer timer = FxTimer.runLater(Duration.ofMillis(500), () -> {
+        io.bitsquare.common.Timer timer = UserThread.runAfter(() -> {
             sendMsgInfoLabel.setVisible(true);
             sendMsgInfoLabel.setManaged(true);
             sendMsgInfoLabel.setText("Sending Message...");
@@ -222,7 +220,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendMsgProgressIndicator.setProgress(-1);
             sendMsgProgressIndicator.setVisible(true);
             sendMsgProgressIndicator.setManaged(true);
-        });
+        }, 500, TimeUnit.MILLISECONDS);
 
         arrivedPropertyListener = (observable, oldValue, newValue) -> {
             if (newValue) {
@@ -242,14 +240,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         disputeCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
     }
 
-    private void hideSendMsgInfo(Timer timer) {
+    private void hideSendMsgInfo(io.bitsquare.common.Timer timer) {
         timer.stop();
         inputTextArea.setDisable(false);
 
-        FxTimer.runLater(Duration.ofMillis(5000), () -> {
+        UserThread.runAfter(() -> {
             sendMsgInfoLabel.setVisible(false);
             sendMsgInfoLabel.setManaged(false);
-        });
+        }, 5);
         sendMsgProgressIndicator.setProgress(0);
         sendMsgProgressIndicator.setVisible(false);
         sendMsgProgressIndicator.setManaged(false);

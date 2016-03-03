@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.crypto.ScryptUtil;
 import io.bitsquare.gui.components.PasswordTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
@@ -32,13 +33,12 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.reactfx.util.FxTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.inject.Inject;
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private static final Logger log = LoggerFactory.getLogger(WalletPasswordWindow.class);
@@ -152,10 +152,10 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
                     hide();
                 } else {
-                    FxTimer.runLater(Duration.ofMillis(Transitions.DEFAULT_DURATION), () -> new Popup()
+                    UserThread.runAfter(() -> new Popup()
                             .warning("You entered the wrong password.\n\n" +
                                     "Please try entering your password again, carefully checking for typos or spelling errors.")
-                            .onClose(() -> blurAgain()).show());
+                            .onClose(this::blurAgain).show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
                 }
             });
         } else {

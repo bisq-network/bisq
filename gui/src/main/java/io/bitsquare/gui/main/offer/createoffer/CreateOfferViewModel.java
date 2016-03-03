@@ -18,6 +18,9 @@
 package io.bitsquare.gui.main.offer.createoffer;
 
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.common.Timer;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
@@ -62,15 +65,16 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    final StringProperty placeOfferSpinnerInfoText = new SimpleStringProperty();
+    final StringProperty spinnerInfoText = new SimpleStringProperty("Waiting for funds...");
 
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
+    final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
     final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
-    final BooleanProperty isPlaceOfferSpinnerVisible = new SimpleBooleanProperty(false);
+    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty(true);
     final BooleanProperty showWarningAdjustedVolume = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
-    final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
+    final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new
@@ -92,10 +96,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private ChangeListener<Fiat> volumeAsFiatListener;
     private ChangeListener<Boolean> isWalletFundedListener;
     private ChangeListener<Coin> feeFromFundingTxListener;
-    private ChangeListener<Boolean> requestPlaceOfferSuccessListener;
     private ChangeListener<String> requestPlaceOfferErrorMessageListener;
     private ChangeListener<String> errorMessageListener;
     private Offer offer;
+    private Timer timeoutTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -156,6 +160,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     protected void deactivate() {
         removeBindings();
         removeListeners();
+        stopTimeoutTimer();
     }
 
     private void addBindings() {
@@ -232,27 +237,19 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         isWalletFundedListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
-            isPlaceOfferSpinnerVisible.set(true);
-            placeOfferSpinnerInfoText.set("Checking funding tx miner fee...");
+            spinnerInfoText.set("Checking funding tx miner fee...");
         };
         feeFromFundingTxListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
-            if (newValue.isPositive()) {
-                isPlaceOfferSpinnerVisible.set(false);
-                placeOfferSpinnerInfoText.set("");
-            }
-        };
-        requestPlaceOfferSuccessListener = (ov, oldValue, newValue) -> {
-            if (newValue) {
-                isPlaceOfferButtonDisabled.set(newValue);
-                isPlaceOfferSpinnerVisible.set(false);
-                placeOfferSpinnerInfoText.set("");
+            if (newValue.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0) {
+                isSpinnerVisible.set(false);
+                spinnerInfoText.set("");
             }
         };
         requestPlaceOfferErrorMessageListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
-                isPlaceOfferSpinnerVisible.set(false);
-                placeOfferSpinnerInfoText.set("");
+                isSpinnerVisible.set(false);
+                spinnerInfoText.set("");
             }
         };
     }
@@ -273,7 +270,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
-        requestPlaceOfferSuccess.addListener(requestPlaceOfferSuccessListener);
         errorMessage.addListener(requestPlaceOfferErrorMessageListener);
 
     }
@@ -292,7 +288,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.removeListener(isWalletFundedListener);
-        requestPlaceOfferSuccess.removeListener(requestPlaceOfferSuccessListener);
         errorMessage.removeListener(requestPlaceOfferErrorMessageListener);
 
         if (offer != null && errorMessageListener != null)
@@ -313,25 +308,51 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void onPlaceOffer(Offer offer) {
+    void onPlaceOffer(Offer offer, Runnable resultHandler) {
         errorMessage.set(null);
-        isPlaceOfferSpinnerVisible.set(true);
-        requestPlaceOfferSuccess.set(false);
-        placeOfferSpinnerInfoText.set(BSResources.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
 
+        isPlaceOfferButtonDisabled.set(true);
+        cancelButtonDisabled.set(true);
+
+        if (timeoutTimer == null) {
+            timeoutTimer = UserThread.runAfter(() -> {
+                stopTimeoutTimer();
+                isPlaceOfferButtonDisabled.set(false);
+                cancelButtonDisabled.set(false);
+                errorMessage.set("A timeout occurred at publishing the offer.");
+                resultHandler.run();
+            }, 30);
+        }
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
+                stopTimeoutTimer();
+                isPlaceOfferButtonDisabled.set(false);
+                cancelButtonDisabled.set(false);
                 if (offer.getState() == Offer.State.OFFER_FEE_PAID)
-                    this.errorMessage.set(newValue +
+                    errorMessage.set(newValue +
                             "\n\nThe offer fee is already paid. In the worst case you have lost that fee. " +
                             "We are sorry about that but keep in mind it is a very small amount.\n" +
                             "Please try to restart you application and check your network connection to see if you can resolve the issue.");
                 else
-                    this.errorMessage.set(newValue);
+                    errorMessage.set(newValue);
+
+                resultHandler.run();
             }
         };
         offer.errorMessageProperty().addListener(errorMessageListener);
-        dataModel.onPlaceOffer(offer, transaction -> requestPlaceOfferSuccess.set(true));
+        dataModel.onPlaceOffer(offer, transaction -> {
+            stopTimeoutTimer();
+            placeOfferCompleted.set(true);
+            resultHandler.run();
+            errorMessage.set(null);
+        });
+    }
+
+    private void stopTimeoutTimer() {
+        if (timeoutTimer != null) {
+            timeoutTimer.stop();
+            timeoutTimer = null;
+        }
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {

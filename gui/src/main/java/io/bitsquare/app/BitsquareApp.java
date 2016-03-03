@@ -61,14 +61,12 @@ import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.controlsfx.dialog.Dialogs;
 import org.reactfx.EventStreams;
-import org.reactfx.util.FxTimer;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.Security;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -333,9 +331,9 @@ public class BitsquareApp extends Application {
                     });
                 });
                 // we wait max 5 sec.
-                FxTimer.runLater(Duration.ofMillis(5000), resultHandler::handleResult);
+                UserThread.runAfter(resultHandler::handleResult, 5);
             } else {
-                FxTimer.runLater(Duration.ofMillis(500), resultHandler::handleResult);
+                UserThread.runAfter(resultHandler::handleResult, 1);
             }
         } catch (Throwable t) {
             log.info("App shutdown failed with exception");

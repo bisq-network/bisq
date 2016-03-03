@@ -21,6 +21,7 @@ import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.Clock;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -40,11 +41,10 @@ import javafx.util.StringConverter;
 import org.bitcoinj.core.Peer;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.reactfx.util.FxTimer;
 
 import javax.inject.Inject;
-import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -137,7 +137,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                         .actionButtonText("Apply and shut down")
                         .onAction(() -> {
                             preferences.setUseTorForBitcoinJ(selected);
-                            FxTimer.runLater(Duration.ofMillis(500), BitsquareApp.shutDownHandler::run);
+                            UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
                         })
                         .closeButtonText("Cancel")
                         .onClose(() -> useTorCheckBox.setSelected(!selected))
@@ -204,7 +204,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 "Do you want to shut down now?")
                 .onAction(() -> {
                     preferences.setBitcoinNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
-                    FxTimer.runLater(Duration.ofMillis(500), BitsquareApp.shutDownHandler::run);
+                    UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
                 })
                 .actionButtonText("Shut down")
                 .closeButtonText("Cancel")
