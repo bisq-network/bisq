@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.offer.takeoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
@@ -126,9 +125,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         offer.stateProperty().addListener(offerStateListener);
         applyOfferState(offer.stateProperty().get());
 
-        // when getting back to an open screen we want to re-check again
-        UserThread.execute(() -> dataModel.checkOfferAvailability(() -> {
-        }));
         updateButtonDisableState();
     }
 
@@ -253,6 +249,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 break;
             case AVAILABLE:
                 isOfferAvailable.set(true);
+                updateButtonDisableState();
                 break;
             case NOT_AVAILABLE:
                 if (takeOfferRequested)
@@ -319,6 +316,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     break;
             }
             this.errorMessage.set(errorMessage + appendMsg);
+
+            if (takeOfferSucceededHandler != null)
+                takeOfferSucceededHandler.run();
         } else {
             this.errorMessage.set(null);
         }
@@ -349,7 +349,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void updateButtonDisableState() {
         boolean inputDataValid = isBtcInputValid(amount.get()).isValid
                 && dataModel.isMinAmountLessOrEqualAmount()
-                && !dataModel.isAmountLargerThanOfferAmount();
+                && !dataModel.isAmountLargerThanOfferAmount()
+                && isOfferAvailable.get();
         isNextButtonDisabled.set(!inputDataValid);
         isTakeOfferButtonDisabled.set(!(inputDataValid
                 && dataModel.isWalletFunded.get()

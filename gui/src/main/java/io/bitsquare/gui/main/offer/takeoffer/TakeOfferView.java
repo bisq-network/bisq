@@ -36,7 +36,6 @@ import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.offer.OfferView;
-import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
@@ -80,14 +79,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private ImageView imageView;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
-    private ProgressIndicator takeOfferSpinner;
+    private ProgressIndicator takeOfferSpinner, offerAvailabilitySpinner;
     private TitledGroupBg payFundsPane;
     private Button nextButton, takeOfferButton, cancelButton1, cancelButton2;
     private InputTextField amountTextField;
     private TextField paymentMethodTextField, currencyTextField, priceTextField, volumeTextField, amountRangeTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
             amountBtcLabel, priceCurrencyLabel,
-            volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, takeOfferSpinnerInfoLabel;
+            volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, takeOfferSpinnerLabel, offerAvailabilitySpinnerLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
     private PopOver totalToPayInfoPopover;
     private OfferView.CloseHandler closeHandler;
@@ -97,13 +96,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Label paymentAccountsLabel;
     private Label paymentMethodLabel;
     private Subscription offerWarningSubscription;
-    private Subscription errorMessageSubscription;
+    private Subscription errorMessageSubscription, isOfferAvailableSubscription;
     private Subscription isTakeOfferSpinnerVisibleSubscription;
     private Subscription showWarningInvalidBtcDecimalPlacesSubscription;
     private Subscription showTransactionPublishedScreenSubscription;
-    private Subscription showCheckAvailabilityPopupSubscription;
     private SimpleBooleanProperty errorPopupDisplayed;
-    private Overlay<Popup> isOfferAvailablePopup;
     private ChangeListener<Coin> feeFromFundingTxListener;
 
 
@@ -149,7 +146,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
         takeOfferButton.disableProperty().bind(model.isTakeOfferButtonDisabled);
-        takeOfferSpinnerInfoLabel.visibleProperty().bind(model.isTakeOfferSpinnerVisible);
+        takeOfferSpinnerLabel.visibleProperty().bind(model.isTakeOfferSpinnerVisible);
 
         priceCurrencyLabel.textProperty().bind(createStringBinding(() ->
                 model.dataModel.getCurrencyCode() + "/" + model.btcCode.get(), model.btcCode));
@@ -163,10 +160,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         errorPopupDisplayed = new SimpleBooleanProperty();
         offerWarningSubscription = EasyBind.subscribe(model.offerWarning, newValue -> {
             if (newValue != null) {
-                if (isOfferAvailablePopup != null) {
-                    isOfferAvailablePopup.hide();
-                    isOfferAvailablePopup = null;
-                }
                 new Popup().warning(newValue).onClose(() -> {
                     errorPopupDisplayed.set(true);
                     model.resetOfferWarning();
@@ -187,22 +180,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         .show();
             }
         });
-
-        showCheckAvailabilityPopupSubscription = EasyBind.combine(model.offerWarning,
-                model.errorMessage,
-                errorPopupDisplayed,
-                model.isOfferAvailable,
-                (a, b, c, d) -> a == null && b == null && !c && !d)
-                .subscribe((observable, oldValue, newValue) -> {
-                    if (!oldValue && newValue) {
-                        isOfferAvailablePopup = new Popup().information(BSResources.get("takeOffer.fundsBox.isOfferAvailable"))
-                                .onClose(() -> {
-                                    model.resetErrorMessage();
-                                    close();
-                                });
-                        isOfferAvailablePopup.show();
-                    }
-                });
+        isOfferAvailableSubscription = EasyBind.subscribe(model.isOfferAvailable, newValue -> {
+            if (newValue) {
+                offerAvailabilitySpinner.setProgress(0);
+                offerAvailabilitySpinner.setVisible(false);
+                offerAvailabilitySpinnerLabel.setVisible(false);
+            }
+        });
 
         isTakeOfferSpinnerVisibleSubscription = EasyBind.subscribe(model.isTakeOfferSpinnerVisible, newValue -> {
             takeOfferSpinner.setProgress(newValue ? -1 : 0);
@@ -278,7 +262,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.amountAsCoinProperty().unbind();
         amountTextField.validationResultProperty().unbind();
         takeOfferButton.disableProperty().unbind();
-        takeOfferSpinnerInfoLabel.visibleProperty().unbind();
+        takeOfferSpinnerLabel.visibleProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
         volumeCurrencyLabel.textProperty().unbind();
         amountRangeBtcLabel.textProperty().unbind();
@@ -287,14 +271,19 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         offerWarningSubscription.unsubscribe();
         errorMessageSubscription.unsubscribe();
+        isOfferAvailableSubscription.unsubscribe();
         isTakeOfferSpinnerVisibleSubscription.unsubscribe();
         showWarningInvalidBtcDecimalPlacesSubscription.unsubscribe();
         showTransactionPublishedScreenSubscription.unsubscribe();
-        showCheckAvailabilityPopupSubscription.unsubscribe();
 
         model.dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
         if (balanceTextField != null)
             balanceTextField.cleanup();
+
+        if (offerAvailabilitySpinner != null)
+            offerAvailabilitySpinner.setProgress(0);
+        if (takeOfferSpinner != null)
+            takeOfferSpinner.setProgress(0);
     }
 
 
@@ -422,6 +411,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         }
 
         nextButton.setVisible(false);
+        offerAvailabilitySpinner.setProgress(0);
+        offerAvailabilitySpinner.setVisible(false);
+        offerAvailabilitySpinnerLabel.setVisible(false);
         cancelButton1.setVisible(false);
         cancelButton1.setOnAction(null);
         takeOfferButton.setVisible(true);
@@ -447,8 +439,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void close() {
         if (closeHandler != null)
             closeHandler.close();
-
-        isOfferAvailablePopup = null;
     }
 
 
@@ -534,17 +524,33 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         addAmountRangeBox();
 
-        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow, BSResources.get("takeOffer.amountPriceBox.next"), BSResources.get("shared.cancel"));
-        nextButton = tuple.first;
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+
+        nextButton = new Button(BSResources.get("takeOffer.amountPriceBox.next"));
+        nextButton.setDefaultButton(true);
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
+        nextButton.setOnAction(e -> onShowPayFundsScreen());
         //UserThread.runAfter(() -> nextButton.requestFocus(), 100, TimeUnit.MILLISECONDS);
-        cancelButton1 = tuple.second;
-        cancelButton1.setDefaultButton(false);
+
+        cancelButton1 = new Button(BSResources.get("shared.cancel"));
         cancelButton1.setOnAction(e -> close());
+        cancelButton1.setDefaultButton(false);
         cancelButton1.setId("cancel-button");
 
-        GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
-        nextButton.setOnAction(e -> onShowPayFundsScreen());
+        offerAvailabilitySpinner = new ProgressIndicator(0);
+        offerAvailabilitySpinner.setPrefSize(18, 18);
+        offerAvailabilitySpinner.setProgress(-1);
+
+        offerAvailabilitySpinnerLabel = new Label(BSResources.get("takeOffer.fundsBox.isOfferAvailable"));
+
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.getChildren().addAll(nextButton, cancelButton1, offerAvailabilitySpinner, offerAvailabilitySpinnerLabel);
+
+        GridPane.setRowIndex(hBox, ++gridRow);
+        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(-30, 0, 0, 0));
+        gridPane.getChildren().add(hBox);
     }
 
     private void addFundingGroup() {
@@ -597,9 +603,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         takeOfferSpinner = takeOfferTuple.second;
         takeOfferSpinner.setPrefSize(18, 18);
-        takeOfferSpinnerInfoLabel = takeOfferTuple.third;
-        takeOfferSpinnerInfoLabel.textProperty().bind(model.takeOfferSpinnerInfoText);
-        takeOfferSpinnerInfoLabel.setVisible(false);
+        takeOfferSpinnerLabel = takeOfferTuple.third;
+        takeOfferSpinnerLabel.textProperty().bind(model.takeOfferSpinnerInfoText);
+        takeOfferSpinnerLabel.setVisible(false);
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> close());

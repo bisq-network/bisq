@@ -28,7 +28,6 @@ import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
@@ -137,6 +136,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         if (isTabSelected)
             priceFeed.setCurrencyCode(offer.getCurrencyCode());
+
+        tradeManager.checkOfferAvailability(offer, () -> {
+        });
     }
 
     @Override
@@ -205,9 +207,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         priceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
 
-    void checkOfferAvailability(ResultHandler resultHandler) {
-        tradeManager.checkOfferAvailability(offer, resultHandler);
-    }
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
