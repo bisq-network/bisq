@@ -342,8 +342,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         offer.errorMessageProperty().addListener(errorMessageListener);
         dataModel.onPlaceOffer(offer, transaction -> {
             stopTimeoutTimer();
-            placeOfferCompleted.set(true);
             resultHandler.run();
+            placeOfferCompleted.set(true);
             errorMessage.set(null);
         });
     }

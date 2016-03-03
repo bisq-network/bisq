@@ -91,6 +91,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<String> offerErrorListener;
     private ConnectionListener connectionListener;
     private ChangeListener<Coin> feeFromFundingTxListener;
+    private Runnable takeOfferSucceededHandler;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -177,11 +178,12 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void onTakeOffer() {
+    void onTakeOffer(Runnable resultHandler) {
+        takeOfferSucceededHandler = resultHandler;
         takeOfferRequested = true;
         showTransactionPublishedScreen.set(false);
-        isTakeOfferSpinnerVisible.set(true);
-        takeOfferSpinnerInfoText.set(BSResources.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
+        //isTakeOfferSpinnerVisible.set(true);
+        //takeOfferSpinnerInfoText.set(BSResources.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
         dataModel.onTakeOffer(trade -> {
             this.trade = trade;
             trade.stateProperty().addListener(tradeStateListener);
@@ -329,10 +331,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 || trade.getState() == Trade.State.DEPOSIT_SEEN_IN_NETWORK
                 || trade.getState() == Trade.State.DEPOSIT_PUBLISHED_MSG_SENT
                 || trade.getState() == Trade.State.DEPOSIT_PUBLISHED_MSG_RECEIVED) {
-            if (trade.getDepositTx() != null)
+            if (trade.getDepositTx() != null) {
+                if (takeOfferSucceededHandler != null)
+                    takeOfferSucceededHandler.run();
+
                 showTransactionPublishedScreen.set(true);
-            else
+            } else {
                 log.error("trade.getDepositTx() == null. That must not happen");
+            }
         }
 
         takeOfferSpinnerInfoText.set("");

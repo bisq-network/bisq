@@ -529,7 +529,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                                         })
                                         .onClose(this::close)
                                         .show(),
-                        100, TimeUnit.MILLISECONDS);
+                        500, TimeUnit.MILLISECONDS);
             }
         };
     }

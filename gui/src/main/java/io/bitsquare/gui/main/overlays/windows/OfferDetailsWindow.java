@@ -237,13 +237,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         String takeOfferButtonText = isBuyerRole ? "Confirm take offer for buying bitcoin" : "Confirm take offer for selling bitcoin";
 
         ImageView iconView = new ImageView();
-        iconView.setId(isBuyOffer ? "image-buy-white" : "image-sell-white");
+        iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");
 
         Tuple3<Button, ProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
         Button button = placeOfferTuple.first;
         button.setGraphic(iconView);
-        button.setId(isBuyOffer ? "buy-button" : "sell-button");
+        button.setId(isBuyerRole ? "buy-button" : "sell-button");
         button.setText(isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
         spinner = placeOfferTuple.second;
@@ -269,7 +269,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     spinnerInfoLabel.setText(BSResources.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
                     placeOfferHandlerOptional.get().run();
                 } else {
-                    spinnerInfoLabel.setText("Take offer in progress...");
+                    spinnerInfoLabel.setText(BSResources.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
                     takeOfferHandlerOptional.get().run();
                 }
             } else {

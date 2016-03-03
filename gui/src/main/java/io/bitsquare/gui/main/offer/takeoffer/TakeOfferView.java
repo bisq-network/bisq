@@ -217,12 +217,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
             if (newValue && BitsquareApp.DEV_MODE) {
-                newValue = false;
                 close();
                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-            }
-
-            if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
+            } else if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
                 UserThread.runAfter(
                         () -> new Popup().headLine(BSResources.get("takeOffer.success.headline"))
                                 .feedback(BSResources.get("takeOffer.success.info"))
@@ -234,7 +231,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                                             , 100, TimeUnit.MILLISECONDS);
                                 })
                                 .onClose(this::close)
-                                .show(), 100, TimeUnit.MILLISECONDS);
+                                .show(), 500, TimeUnit.MILLISECONDS);
             }
         });
 
@@ -373,9 +370,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void onTakeOffer() {
         if (model.hasAcceptedArbitrators()) {
-            offerDetailsWindow.onTakeOffer(() -> model.onTakeOffer())
+            offerDetailsWindow.onTakeOffer(() ->
+                    model.onTakeOffer(() ->
+                            offerDetailsWindow.hide()))
                     .show(model.getOffer(), model.dataModel.amountAsCoin.get());
-
         } else {
             new Popup().warning("You have no arbitrator selected.\n" +
                     "You need to select at least one arbitrator.")
