@@ -147,10 +147,10 @@ public class NotificationCenter {
         String message = null;
         if (tradeManager.isBuyer(trade.getOffer())) {
             switch (tradeState) {
-                case DEPOSIT_PUBLISHED_MSG_RECEIVED:
+                case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
                     message = "Your offer has been accepted by a seller.";
                     break;
-                case DEPOSIT_CONFIRMED:
+                case DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN:
                     message = "Your trade has at least one blockchain confirmation.\n" +
                             "You can start the payment now.";
 
@@ -164,10 +164,10 @@ public class NotificationCenter {
             }
         } else {
             switch (tradeState) {
-                case DEPOSIT_PUBLISHED_MSG_RECEIVED:
+                case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
                     message = "Your offer has been accepted by a buyer.";
                     break;
-                case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
+                case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG:
                     message = "The bitcoin buyer has started the payment.";
                     break;
                /* case FIAT_PAYMENT_RECEIPT_MSG_SENT:

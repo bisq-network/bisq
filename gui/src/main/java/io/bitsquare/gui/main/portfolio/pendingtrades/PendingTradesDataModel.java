@@ -140,11 +140,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         ((BuyerTrade) getTrade()).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
-    public void onFiatPaymentReceived() {
+    public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkNotNull(getTrade(), "trade must not be null");
         checkArgument(getTrade() instanceof SellerTrade, "Check failed: trade instanceof SellerTrade");
         if (getTrade().getDisputeState() == Trade.DisputeState.NONE)
-            ((SellerTrade) getTrade()).onFiatPaymentReceived();
+            ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
     }
 
     public void onWithdrawRequest(String toAddress, ResultHandler resultHandler, FaultHandler faultHandler) {

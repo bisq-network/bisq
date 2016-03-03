@@ -53,14 +53,14 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
                             @Override
                             public void onArrived() {
                                 log.trace("Message arrived at peer.");
-                                trade.setState(Trade.State.FIAT_PAYMENT_RECEIPT_MSG_SENT);
+                                trade.setState(Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.trace("Message stored in mailbox.");
-                                trade.setState(Trade.State.FIAT_PAYMENT_RECEIPT_MSG_SENT);
+                                trade.setState(Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG);
                                 complete();
                             }
 

@@ -144,7 +144,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        buyerAsOffererTrade.setState(Trade.State.FIAT_PAYMENT_STARTED);
+        buyerAsOffererTrade.setState(Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
                 () -> {

@@ -67,24 +67,24 @@ public abstract class Trade implements Tradable, Model {
 
         TAKER_FEE_PAID(Phase.TAKER_FEE_PAID),
 
-        DEPOSIT_PUBLISH_REQUESTED(Phase.DEPOSIT_REQUESTED),
-        DEPOSIT_PUBLISHED(Phase.DEPOSIT_PAID),
+        OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST(Phase.DEPOSIT_REQUESTED),
+        TAKER_PUBLISHED_DEPOSIT_TX(Phase.DEPOSIT_PAID),
         DEPOSIT_SEEN_IN_NETWORK(Phase.DEPOSIT_PAID), // triggered by balance update, used only in error cases
-        DEPOSIT_PUBLISHED_MSG_SENT(Phase.DEPOSIT_PAID),
-        DEPOSIT_PUBLISHED_MSG_RECEIVED(Phase.DEPOSIT_PAID),
-        DEPOSIT_CONFIRMED(Phase.DEPOSIT_PAID),
+        TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PAID),
+        OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PAID),
+        DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN(Phase.DEPOSIT_PAID),
 
-        FIAT_PAYMENT_STARTED(Phase.FIAT_SENT),
-        FIAT_PAYMENT_STARTED_MSG_SENT(Phase.FIAT_SENT),
-        FIAT_PAYMENT_STARTED_MSG_RECEIVED(Phase.FIAT_SENT),
+        BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED(Phase.FIAT_SENT),
+        BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
+        SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
 
-        FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
-        FIAT_PAYMENT_RECEIPT_MSG_SENT(Phase.FIAT_RECEIVED),
-        FIAT_PAYMENT_RECEIPT_MSG_RECEIVED(Phase.FIAT_RECEIVED),
+        SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
+        SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG(Phase.FIAT_RECEIVED),
+        BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG(Phase.FIAT_RECEIVED),
 
-        PAYOUT_TX_COMMITTED(Phase.PAYOUT_PAID),
-        PAYOUT_TX_SENT(Phase.PAYOUT_PAID),
-        PAYOUT_TX_RECEIVED_AND_COMMITTED(Phase.PAYOUT_PAID),
+        BUYER_COMMITTED_PAYOUT_TX(Phase.PAYOUT_PAID), //TODO needed?
+        BUYER_STARTED_SEND_PAYOUT_TX(Phase.PAYOUT_PAID), // not from the success/arrived handler!
+        SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX(Phase.PAYOUT_PAID),
         PAYOUT_BROAD_CASTED(Phase.PAYOUT_PAID),
 
         WITHDRAW_COMPLETED(Phase.WITHDRAWN);
@@ -569,7 +569,7 @@ public abstract class Trade implements Tradable, Model {
             TransactionConfidence transactionConfidence = depositTx.getConfidence();
             log.debug("transactionConfidence " + transactionConfidence.getDepthInBlocks());
             if (transactionConfidence.getDepthInBlocks() > 0) {
-                handleConfidenceResult();
+                setConfirmedState();
             } else {
                 ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
                 Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
@@ -577,7 +577,7 @@ public abstract class Trade implements Tradable, Model {
                     public void onSuccess(TransactionConfidence result) {
                         log.debug("transactionConfidence " + transactionConfidence.getDepthInBlocks());
                         log.debug("state " + state);
-                        handleConfidenceResult();
+                        setConfirmedState();
                     }
 
                     @Override
@@ -596,9 +596,10 @@ public abstract class Trade implements Tradable, Model {
 
     abstract protected void createProtocol();
 
-    private void handleConfidenceResult() {
-        if (state.ordinal() < State.DEPOSIT_CONFIRMED.ordinal())
-            setState(State.DEPOSIT_CONFIRMED);
+    private void setConfirmedState() {
+        // we oly apply the state if we are not already further in the process
+        if (state.ordinal() < State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN.ordinal())
+            setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
     }
 
     abstract protected void initStates();

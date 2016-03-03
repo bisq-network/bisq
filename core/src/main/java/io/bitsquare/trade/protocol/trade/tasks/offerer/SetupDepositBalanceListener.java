@@ -62,7 +62,7 @@ public class SetupDepositBalanceListener extends TradeTask {
 
             tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), newValue -> {
                 log.debug("tradeStateSubscription newValue " + newValue);
-                if (newValue == Trade.State.DEPOSIT_PUBLISHED_MSG_RECEIVED
+                if (newValue == Trade.State.OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG
                         || newValue == Trade.State.DEPOSIT_SEEN_IN_NETWORK) {
 
                     walletService.removeBalanceListener(balanceListener);
@@ -91,7 +91,7 @@ public class SetupDepositBalanceListener extends TradeTask {
             if (trade instanceof OffererTrade) {
                 processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
 
-                if (tradeState == Trade.State.DEPOSIT_PUBLISH_REQUESTED) {
+                if (tradeState == Trade.State.OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST) {
                     trade.setState(Trade.State.DEPOSIT_SEEN_IN_NETWORK);
                 } else if (tradeState.getPhase() == Trade.Phase.PREPARATION) {
                     processModel.getTradeManager().removePreparedTrade(trade);

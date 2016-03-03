@@ -45,7 +45,7 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class SellerStep3View extends TradeStepView {
 
-    private Button confirmFiatReceivedButton;
+    private Button confirmButton;
     private Label statusLabel;
     private ProgressIndicator statusProgressIndicator;
     private Subscription tradeStatePropertySubscription;
@@ -65,7 +65,7 @@ public class SellerStep3View extends TradeStepView {
         super.activate();
 
         tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
-            if (state.equals(Trade.State.FIAT_PAYMENT_STARTED_MSG_RECEIVED)) {
+            if (state == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
                 PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
                 String key = "ConfirmPaymentPopup_" + trade.getId();
                 if (attentionRequiredPopup == null && !BitsquareApp.DEV_MODE) {
@@ -95,6 +95,11 @@ public class SellerStep3View extends TradeStepView {
                     attentionRequiredPopup.show();
 
                 }
+            } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT) {
+                showStatusInfo();
+                statusLabel.setText("Sending confirmation...");
+            } else if (state == Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG) {
+                hideStatusInfo();
             }
         });
     }
@@ -103,9 +108,12 @@ public class SellerStep3View extends TradeStepView {
     public void deactivate() {
         super.deactivate();
 
-        if (tradeStatePropertySubscription != null)
+        if (tradeStatePropertySubscription != null) {
             tradeStatePropertySubscription.unsubscribe();
-        statusProgressIndicator.setProgress(0);
+            tradeStatePropertySubscription = null;
+        }
+
+        hideStatusInfo();
     }
 
 
@@ -151,10 +159,12 @@ public class SellerStep3View extends TradeStepView {
         }
 
         Tuple3<Button, ProgressIndicator, Label> tuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "Confirm payment receipt");
-        confirmFiatReceivedButton = tuple.first;
-        confirmFiatReceivedButton.setOnAction(e -> onPaymentReceived());
+        confirmButton = tuple.first;
+        confirmButton.setOnAction(e -> onPaymentReceived());
         statusProgressIndicator = tuple.second;
         statusLabel = tuple.third;
+
+        hideStatusInfo();
     }
 
 
@@ -208,7 +218,7 @@ public class SellerStep3View extends TradeStepView {
 
     @Override
     protected void applyOnDisputeOpened() {
-        confirmFiatReceivedButton.setDisable(true);
+        confirmButton.setDisable(true);
     }
 
 
@@ -243,13 +253,33 @@ public class SellerStep3View extends TradeStepView {
     }
 
     private void confirmPaymentReceived() {
-        confirmFiatReceivedButton.setDisable(true);
+        confirmButton.setDisable(true);
 
+        model.dataModel.onFiatPaymentReceived(() -> {
+            // In case the first send failed we got the support button displayed. 
+            // If it succeeds at a second try we remove the support button again.
+            //TODO check for support. in case of a dispute we dont want to hide the button
+            //if (notificationGroup != null) 
+            //   notificationGroup.setButtonVisible(false);
+        }, errorMessage -> {
+            confirmButton.setDisable(false);
+            hideStatusInfo();
+            new Popup().warning("Sending message to your trading partner failed.\n" +
+                    "Please try again and if it continue to fail report a bug.").show();
+        });
+    }
+
+    private void showStatusInfo() {
         statusProgressIndicator.setVisible(true);
+        statusProgressIndicator.setManaged(true);
         statusProgressIndicator.setProgress(-1);
-        statusLabel.setText("Sending message to trading partner...");
+    }
 
-        model.dataModel.onFiatPaymentReceived();
+    private void hideStatusInfo() {
+        statusProgressIndicator.setVisible(false);
+        statusProgressIndicator.setManaged(false);
+        statusProgressIndicator.setProgress(0);
+        statusLabel.setText("");
     }
 }
 

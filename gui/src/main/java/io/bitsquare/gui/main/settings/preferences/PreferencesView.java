@@ -260,7 +260,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         Tuple2<Label, ComboBox> labelComboBoxTuple2 = addLabelComboBox(root, gridRow);
         cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
-        cryptoCurrenciesComboBox.setPromptText("Add crypto currency");
+        cryptoCurrenciesComboBox.setPromptText("Add cryptocurrency");
         cryptoCurrenciesComboBox.setConverter(new StringConverter<CryptoCurrency>() {
             @Override
             public String toString(CryptoCurrency tradeCurrency) {

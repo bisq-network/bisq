@@ -254,12 +254,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void onCreateOffer() {
         if (!model.hasPaymentAccount()) {
             openPopupForMissingAccountSetup("You have not setup a payment account",
-                    "You need to setup a national currency or crypto currency account before you can create an offer.\n" +
+                    "You need to setup a national currency or cryptocurrency account before you can create an offer.\n" +
                             "Do you want to setup an account?", FiatAccountsView.class, "\"Account\"");
         } else if (!model.hasPaymentAccountForCurrency()) {
-            openPopupForMissingAccountSetup("You don't have a payment account for the currency:\n" +
-                            model.getSelectedTradeCurrency().getCodeAndName(),
-                    "You need to setup a payment account for the selected currency to be able to trade in that currency.\n" +
+            openPopupForMissingAccountSetup("No matching payment account",
+                    "You don't have a payment account for the currency required for that offer.\n" +
+                            "You need to setup a payment account for that currency to be able to take this offer.\n" +
                             "Do you want to do this now?", FiatAccountsView.class, "\"Account\"");
         } else if (!model.hasAcceptedArbitrators()) {
             openPopupForMissingAccountSetup("You don't have an arbitrator selected.",
@@ -277,8 +277,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     "You need to setup at least one arbitrator to be able to trade.\n" +
                             "Do you want to do this now?", ArbitratorSelectionView.class, "\"Arbitrator selection\"");
         } else if (!isPaymentAccountValidForOffer) {
-            openPopupForMissingAccountSetup("You don't have a payment account with the payment method required for that offer.",
-                    "You need to setup a payment account with that payment method if you want to take that offer.\n" +
+            openPopupForMissingAccountSetup("No matching payment account",
+                    "You don't have a payment account with the payment method required for that offer.\n" +
+                            "You need to setup a payment account with that payment method if you want to take this offer.\n" +
                             "Do you want to do this now?", FiatAccountsView.class, "\"Account\"");
         } else if (!hasSameProtocolVersion) {
             new Popup().warning("That offer requires a different protocol version as the one used in your " +

@@ -44,7 +44,7 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class BuyerStep2View extends TradeStepView {
 
-    private Button paymentStartedButton;
+    private Button confirmButton;
     private Label statusLabel;
     private ProgressIndicator statusProgressIndicator;
     private Subscription tradeStatePropertySubscription;
@@ -65,7 +65,7 @@ public class BuyerStep2View extends TradeStepView {
         //TODO we get called twice, check why
         if (tradeStatePropertySubscription == null) {
             tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
-                if (state.equals(Trade.State.DEPOSIT_CONFIRMED)) {
+                if (state == Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN) {
                     PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
                     String key = "StartPaymentPopup_" + trade.getId();
                     if (attentionRequiredPopup == null && !BitsquareApp.DEV_MODE) {
@@ -96,6 +96,11 @@ public class BuyerStep2View extends TradeStepView {
 
                         attentionRequiredPopup.show();
                     }
+                } else if (state == Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED) {
+                    showStatusInfo();
+                    statusLabel.setText("Sending confirmation...");
+                } else if (state == Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG) {
+                    hideStatusInfo();
                 }
             });
         }
@@ -105,7 +110,7 @@ public class BuyerStep2View extends TradeStepView {
     public void deactivate() {
         super.deactivate();
 
-        removeStatusProgressIndicator();
+        hideStatusInfo();
         if (tradeStatePropertySubscription != null) {
             tradeStatePropertySubscription.unsubscribe();
             tradeStatePropertySubscription = null;
@@ -169,10 +174,12 @@ public class BuyerStep2View extends TradeStepView {
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
 
         Tuple3<Button, ProgressIndicator, Label> tuple3 = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "Payment started");
-        paymentStartedButton = tuple3.first;
-        paymentStartedButton.setOnAction(e -> onPaymentStarted());
+        confirmButton = tuple3.first;
+        confirmButton.setOnAction(e -> onPaymentStarted());
         statusProgressIndicator = tuple3.second;
         statusLabel = tuple3.third;
+
+        hideStatusInfo();
     }
 
 
@@ -203,7 +210,7 @@ public class BuyerStep2View extends TradeStepView {
 
     @Override
     protected void applyOnDisputeOpened() {
-        paymentStartedButton.setDisable(true);
+        confirmButton.setDisable(true);
     }
 
 
@@ -235,41 +242,31 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void confirmPaymentStarted() {
-        paymentStartedButton.setDisable(true);
-        paymentStartedButton.setMinWidth(130);
-
-        statusProgressIndicator.setVisible(true);
-        statusProgressIndicator.setManaged(true);
-        statusProgressIndicator.setProgress(-1);
-
-        statusLabel.setWrapText(true);
-        statusLabel.setPrefWidth(160);
-        statusLabel.setText("Sending message to your trading partner.\n" +
-                "Please wait until you get the confirmation that the message has arrived.");
-
+        confirmButton.setDisable(true);
         model.dataModel.onPaymentStarted(() -> {
-            // We would not really need an update as the success triggers a screen change
-            removeStatusProgressIndicator();
-            statusLabel.setText("");
-
             // In case the first send failed we got the support button displayed. 
             // If it succeeds at a second try we remove the support button again.
-            //TODO check for support. in case of a dispute we dont want to hid ethe button
-            /*if (notificationGroup != null) {
-                notificationGroup.setButtonVisible(false);
-            }*/
+            //TODO check for support. in case of a dispute we dont want to hide the button
+            //if (notificationGroup != null) 
+            //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
-            removeStatusProgressIndicator();
-            statusLabel.setText("Sending message to your trading partner failed.\n" +
-                    "Please try again and if it continue to fail report a bug.");
-            paymentStartedButton.setDisable(false);
+            confirmButton.setDisable(false);
+            hideStatusInfo();
+            new Popup().warning("Sending message to your trading partner failed.\n" +
+                    "Please try again and if it continue to fail report a bug.").show();
         });
     }
 
-    private void removeStatusProgressIndicator() {
-        statusProgressIndicator.setVisible(false);
-        statusProgressIndicator.setProgress(0);
-        statusProgressIndicator.setManaged(false);
+    private void showStatusInfo() {
+        statusProgressIndicator.setVisible(true);
+        statusProgressIndicator.setManaged(true);
+        statusProgressIndicator.setProgress(-1);
     }
 
+    private void hideStatusInfo() {
+        statusProgressIndicator.setVisible(false);
+        statusProgressIndicator.setManaged(false);
+        statusProgressIndicator.setProgress(0);
+        statusLabel.setText("");
+    }
 }

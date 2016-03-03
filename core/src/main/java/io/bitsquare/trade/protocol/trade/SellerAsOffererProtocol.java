@@ -18,6 +18,8 @@
 package io.bitsquare.trade.protocol.trade;
 
 
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
@@ -159,12 +161,18 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
-    public void onFiatPaymentReceived() {
-        sellerAsOffererTrade.setState(Trade.State.FIAT_PAYMENT_RECEIPT);
+    public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        sellerAsOffererTrade.setState(Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsOffererTrade,
-                () -> handleTaskRunnerSuccess("onFiatPaymentReceived"),
-                this::handleTaskRunnerFault);
+                () -> {
+                    resultHandler.handleResult();
+                    handleTaskRunnerSuccess("onFiatPaymentReceived");
+                },
+                (errorMessage) -> {
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    handleTaskRunnerFault(errorMessage);
+                });
 
         taskRunner.addTasks(
                 VerifyTakeOfferFeePayment.class,

@@ -99,7 +99,7 @@ public class BlockChainForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(blockChainAccount.getPaymentMethod().getId()));
         TextField field = addLabelTextField(gridPane, ++gridRow, "Cryptocurrency address:", blockChainAccount.getAddress()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Crypto currency:", blockChainAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, "Cryptocurrency:", blockChainAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 
@@ -112,7 +112,7 @@ public class BlockChainForm extends PaymentMethodForm {
 
     @Override
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, "Crypto currency:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, "Cryptocurrency:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         currencyComboBox.setPromptText("Select cryptocurrency");
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedCryptoCurrencies()));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 20));

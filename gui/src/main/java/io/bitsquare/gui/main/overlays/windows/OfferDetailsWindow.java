@@ -242,12 +242,15 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         Tuple3<Button, ProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
         Button button = placeOfferTuple.first;
+        button.setMinHeight(40);
+        button.setPadding(new Insets(0, 20, 0, 20));
         button.setGraphic(iconView);
-        button.setId(isBuyerRole ? "buy-button" : "sell-button");
+        button.setGraphicTextGap(10);
+        button.setId(isBuyerRole ? "buy-button-big" : "sell-button-big");
         button.setText(isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
         spinner = placeOfferTuple.second;
-        spinner.setPrefSize(18, 18);
+        //spinner.setPrefSize(18, 18);
         spinner.setVisible(false);
         Label spinnerInfoLabel = placeOfferTuple.third;
 

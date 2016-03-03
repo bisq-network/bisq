@@ -52,7 +52,7 @@ public class ProcessFinalizePayoutTxRequest extends TradeTask {
 
             removeMailboxMessageAfterProcessing();
 
-            trade.setState(Trade.State.FIAT_PAYMENT_RECEIPT_MSG_RECEIVED);
+            trade.setState(Trade.State.BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG);
 
             complete();
         } catch (Throwable t) {

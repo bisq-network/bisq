@@ -70,7 +70,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
     final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
-    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty(true);
+    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty();
     final BooleanProperty showWarningAdjustedVolume = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
@@ -363,6 +363,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.onCurrencySelected(tradeCurrency);
     }
 
+    public void onShowFundsScreen() {
+        isSpinnerVisible.set(true);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handle focus

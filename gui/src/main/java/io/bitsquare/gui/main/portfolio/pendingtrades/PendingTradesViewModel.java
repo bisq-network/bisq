@@ -263,6 +263,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     private void onTradeStateChanged(Trade.State tradeState) {
         Log.traceCall(tradeState.toString());
+
+        // TODO what is first valid state for trade?
+
         switch (tradeState) {
             case PREPARATION:
                 sellerState.set(UNDEFINED);
@@ -270,44 +273,37 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
 
             case TAKER_FEE_PAID:
-                break;
-
-            case DEPOSIT_PUBLISH_REQUESTED:
-                break;
-            case DEPOSIT_PUBLISHED:
+            case OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST:
+            case TAKER_PUBLISHED_DEPOSIT_TX:
             case DEPOSIT_SEEN_IN_NETWORK:
-            case DEPOSIT_PUBLISHED_MSG_SENT:
-            case DEPOSIT_PUBLISHED_MSG_RECEIVED:
+            case TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG:
+            case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
                 sellerState.set(WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
                 buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
                 break;
 
-            case DEPOSIT_CONFIRMED:
-                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
+            case DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN:
                 sellerState.set(WAIT_FOR_FIAT_PAYMENT_STARTED);
+                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
+            case BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED:  // we stick with the state until we get the msg sent success
+                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
                 break;
-            case FIAT_PAYMENT_STARTED:
-            case FIAT_PAYMENT_STARTED_MSG_SENT:
+            case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
                 buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
                 break;
-            case FIAT_PAYMENT_STARTED_MSG_RECEIVED:
-            case FIAT_PAYMENT_RECEIPT: // In case the msg sending failed we stick in that view state
+            case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG: // seller
+            case SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT:  // we stick with the state until we get the msg sent success
                 sellerState.set(REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED);
                 break;
-
-            case FIAT_PAYMENT_RECEIPT_MSG_SENT:
+            case SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG:
                 sellerState.set(WAIT_FOR_PAYOUT_TX);
                 break;
-            case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
-                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
-                break;
-
-
-            case PAYOUT_TX_COMMITTED:
-            case PAYOUT_TX_SENT:
+            case BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG:
+            case BUYER_COMMITTED_PAYOUT_TX:
+            case BUYER_STARTED_SEND_PAYOUT_TX:
                 buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;
-            case PAYOUT_TX_RECEIVED_AND_COMMITTED:
+            case SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX:
                 sellerState.set(SellerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;
             case PAYOUT_BROAD_CASTED:

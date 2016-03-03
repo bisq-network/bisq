@@ -63,7 +63,7 @@ public class ProcessDepositTxPublishedMessage extends TradeTask {
 
             removeMailboxMessageAfterProcessing();
 
-            trade.setState(Trade.State.DEPOSIT_PUBLISHED_MSG_RECEIVED);
+            trade.setState(Trade.State.OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
             
             complete();
         } catch (Throwable t) {

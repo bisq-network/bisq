@@ -198,7 +198,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
                         }
                     });
                 } else {
-                    feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
+                    // Simulate a bit of delay
+                    UserThread.runAfter(() -> feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx()), 1);
                 }
             }
         };

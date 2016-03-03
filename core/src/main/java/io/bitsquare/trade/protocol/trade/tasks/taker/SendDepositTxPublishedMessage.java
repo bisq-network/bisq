@@ -49,14 +49,14 @@ public class SendDepositTxPublishedMessage extends TradeTask {
                             @Override
                             public void onArrived() {
                                 log.trace("Message arrived at peer.");
-                                trade.setState(Trade.State.DEPOSIT_PUBLISHED_MSG_SENT);
+                                trade.setState(Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.trace("Message stored in mailbox.");
-                                trade.setState(Trade.State.DEPOSIT_PUBLISHED_MSG_SENT);
+                                trade.setState(Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 

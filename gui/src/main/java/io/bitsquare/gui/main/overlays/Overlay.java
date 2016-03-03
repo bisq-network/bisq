@@ -307,10 +307,9 @@ public abstract class Overlay<T extends Overlay> {
             scene.getStylesheets().setAll(rootScene.getStylesheets());
             scene.setFill(Color.TRANSPARENT);
             stage.setScene(scene);
+            Window window = rootScene.getWindow();
             setModality();
             stage.initStyle(StageStyle.TRANSPARENT);
-            Window window = rootScene.getWindow();
-            stage.initOwner(window);
             stage.show();
 
             layout();
@@ -342,6 +341,7 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void setModality() {
+        stage.initOwner(owner.getScene().getWindow());
         stage.initModality(Modality.WINDOW_MODAL);
     }
 

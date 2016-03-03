@@ -187,15 +187,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     public void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         model.initWithData(direction, tradeCurrency);
 
-        ImageView iconView = new ImageView();
-        placeOfferButton.setGraphic(iconView);
         if (direction == Offer.Direction.BUY) {
             imageView.setId("image-buy-large");
 
             placeOfferButton.setId("buy-button-big");
             placeOfferButton.setText("Review place offer for buying bitcoin");
             nextButton.setId("buy-button");
-            iconView.setId("image-buy-white");
         } else {
             imageView.setId("image-sell-large");
             // only needed for sell
@@ -204,7 +201,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             placeOfferButton.setId("sell-button-big");
             placeOfferButton.setText("Review place offer for selling bitcoin");
             nextButton.setId("sell-button");
-            iconView.setId("image-sell-white");
         }
     }
 
@@ -250,6 +246,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void onShowFundsScreen() {
+        model.onShowFundsScreen();
         amountTextField.setMouseTransparent(true);
         minAmountTextField.setMouseTransparent(true);
         priceTextField.setMouseTransparent(true);
@@ -257,7 +254,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         currencyComboBox.setMouseTransparent(true);
         paymentAccountsComboBox.setMouseTransparent(true);
 
-        spinner.setVisible(true);
         spinner.setProgress(-1);
 
         if (!BitsquareApp.DEV_MODE) {
@@ -388,7 +384,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // buttons
         placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
         cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
+
+        spinner.visibleProperty().bind(model.isSpinnerVisible);
         spinnerInfoLabel.visibleProperty().bind(model.isSpinnerVisible);
+        spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
 
         // payment account
         currencyComboBox.prefWidthProperty().bind(paymentAccountsComboBox.widthProperty());
@@ -420,7 +419,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.validationResultProperty().unbind();
         placeOfferButton.disableProperty().unbind();
         cancelButton2.disableProperty().unbind();
+        spinner.visibleProperty().unbind();
         spinnerInfoLabel.visibleProperty().unbind();
+        spinnerInfoLabel.textProperty().unbind();
         currencyComboBox.managedProperty().unbind();
         currencyComboBoxLabel.visibleProperty().unbind();
         currencyComboBoxLabel.managedProperty().unbind();
@@ -476,10 +477,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         "Please try to restart you application and check your network connection to see if you can resolve the issue.")
                         .show(), 100, TimeUnit.MILLISECONDS);
         };
-        isSpinnerVisibleListener = (ov, oldValue, newValue) -> {
-            spinner.setProgress(newValue ? -1 : 0);
-            spinner.setVisible(newValue);
-        };
+        isSpinnerVisibleListener = (ov, oldValue, newValue) -> spinner.setProgress(newValue ? -1 : 0);
 
         feeFromFundingTxListener = (observable, oldValue, newValue) -> {
             log.debug("feeFromFundingTxListener " + newValue);
@@ -517,18 +515,25 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
             } else if (newValue) {
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups 
-                UserThread.runAfter(() ->
+                UserThread.runAfter(() -> {
+                            String key = "createOfferSuccessInfo";
+                            if (preferences.showAgain(key)) {
                                 new Popup().headLine(BSResources.get("createOffer.success.headline"))
                                         .feedback(BSResources.get("createOffer.success.info"))
+                                        .dontShowAgainId(key, preferences)
                                         .actionButtonText("Go to \"My open offers\"")
                                         .onAction(() -> {
-                                            close();
                                             UserThread.runAfter(() ->
                                                             navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class),
                                                     100, TimeUnit.MILLISECONDS);
+                                            close();
                                         })
                                         .onClose(this::close)
-                                        .show(),
+                                        .show();
+                            } else {
+                                close();
+                            }
+                        },
                         500, TimeUnit.MILLISECONDS);
             }
         };
@@ -725,11 +730,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         spinner = placeOfferTuple.second;
         spinner.setProgress(0);
-        spinner.setVisible(false);
-        spinner.setPrefSize(18, 18);
+        //spinner.setPrefSize(18, 18);
         spinnerInfoLabel = placeOfferTuple.third;
-        spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
-        spinnerInfoLabel.setVisible(false);
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> close());

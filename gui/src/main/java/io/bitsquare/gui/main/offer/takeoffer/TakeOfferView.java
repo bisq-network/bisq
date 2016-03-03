@@ -205,17 +205,25 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
             } else if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
                 UserThread.runAfter(
-                        () -> new Popup().headLine(BSResources.get("takeOffer.success.headline"))
-                                .feedback(BSResources.get("takeOffer.success.info"))
-                                .actionButtonText("Go to \"Open trades\"")
-                                .onAction(() -> {
-                                    close();
-                                    UserThread.runAfter(
-                                            () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
-                                            , 100, TimeUnit.MILLISECONDS);
-                                })
-                                .onClose(this::close)
-                                .show(), 500, TimeUnit.MILLISECONDS);
+                        () -> {
+                            String key = "takeOfferSuccessInfo";
+                            if (preferences.showAgain(key)) {
+                                new Popup().headLine(BSResources.get("takeOffer.success.headline"))
+                                        .feedback(BSResources.get("takeOffer.success.info"))
+                                        .actionButtonText("Go to \"Open trades\"")
+                                        .dontShowAgainId(key, preferences)
+                                        .onAction(() -> {
+                                            UserThread.runAfter(
+                                                    () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
+                                                    , 100, TimeUnit.MILLISECONDS);
+                                            close();
+                                        })
+                                        .onClose(this::close)
+                                        .show();
+                            } else {
+                                close();
+                            }
+                        }, 500, TimeUnit.MILLISECONDS);
             }
         });
 
@@ -294,8 +302,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     public void initWithData(Offer offer) {
         model.initWithData(offer);
 
-        ImageView iconView = new ImageView();
-        takeOfferButton.setGraphic(iconView);
         if (model.getOffer().getDirection() == Offer.Direction.SELL) {
             imageView.setId("image-buy-large");
             directionLabel.setId("direction-icon-label-buy");
@@ -303,7 +309,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             takeOfferButton.setId("buy-button-big");
             takeOfferButton.setText("Review take offer for buying bitcoin");
             nextButton.setId("buy-button");
-            iconView.setId("image-buy-white");
         } else {
             imageView.setId("image-sell-large");
             directionLabel.setId("direction-icon-label-sell");
@@ -311,7 +316,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
             takeOfferButton.setText("Review take offer for selling bitcoin");
-            iconView.setId("image-sell-white");
         }
 
         balanceTextField.setup(model.address.get(), model.getFormatter());

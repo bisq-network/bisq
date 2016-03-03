@@ -58,6 +58,7 @@ public class SendPublishDepositTxRequest extends TradeTask {
                         @Override
                         public void onArrived() {
                             log.trace("Message arrived at peer.");
+                            trade.setState(Trade.State.OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);
                             complete();
                         }
 
@@ -68,9 +69,6 @@ public class SendPublishDepositTxRequest extends TradeTask {
                         }
                     }
             );
-
-            //TODO should it be in success handler?
-            trade.setState(Trade.State.DEPOSIT_PUBLISH_REQUESTED);
         } catch (Throwable t) {
             failed(t);
         }

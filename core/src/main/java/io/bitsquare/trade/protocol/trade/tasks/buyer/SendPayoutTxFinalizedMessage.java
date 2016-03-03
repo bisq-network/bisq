@@ -67,7 +67,7 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
                 );
                 // state must not be set in onArrived or onStoredInMailbox handlers as we would get that 
                 // called delayed and would overwrite the broad cast state set by the next task
-                trade.setState(Trade.State.PAYOUT_TX_SENT);
+                trade.setState(Trade.State.BUYER_STARTED_SEND_PAYOUT_TX);
             } else {
                 log.error("trade.getPayoutTx() = " + trade.getPayoutTx());
                 failed("PayoutTx is null");

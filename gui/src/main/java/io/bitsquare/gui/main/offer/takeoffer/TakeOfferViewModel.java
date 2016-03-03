@@ -327,10 +327,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void applyTradeState(Trade.State tradeState) {
         log.debug("applyTradeState state = " + tradeState);
 
-        if (trade.getState() == Trade.State.DEPOSIT_PUBLISHED
+        if (trade.getState() == Trade.State.TAKER_PUBLISHED_DEPOSIT_TX
                 || trade.getState() == Trade.State.DEPOSIT_SEEN_IN_NETWORK
-                || trade.getState() == Trade.State.DEPOSIT_PUBLISHED_MSG_SENT
-                || trade.getState() == Trade.State.DEPOSIT_PUBLISHED_MSG_RECEIVED) {
+                || trade.getState() == Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG
+                || trade.getState() == Trade.State.OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG) {
             if (trade.getDepositTx() != null) {
                 if (takeOfferSucceededHandler != null)
                     takeOfferSucceededHandler.run();

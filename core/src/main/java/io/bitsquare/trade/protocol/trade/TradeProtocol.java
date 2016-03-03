@@ -136,7 +136,7 @@ public abstract class TradeProtocol {
         Trade.State tradeState = trade.getState();
         log.debug("cleanupTradable tradeState=" + tradeState);
         boolean isOffererTrade = trade instanceof OffererTrade;
-        if (isOffererTrade && (tradeState == Trade.State.DEPOSIT_PUBLISH_REQUESTED || tradeState == Trade.State.DEPOSIT_SEEN_IN_NETWORK))
+        if (isOffererTrade && (tradeState == Trade.State.OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST || tradeState == Trade.State.DEPOSIT_SEEN_IN_NETWORK))
             processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
 
         boolean isTakerTrade = trade instanceof TakerTrade;

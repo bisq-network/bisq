@@ -52,7 +52,7 @@ public class ProcessPayoutTxFinalizedMessage extends TradeTask {
 
             removeMailboxMessageAfterProcessing();
 
-            trade.setState(Trade.State.PAYOUT_TX_RECEIVED_AND_COMMITTED);
+            trade.setState(Trade.State.SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX);
 
             complete();
         } catch (Throwable t) {
