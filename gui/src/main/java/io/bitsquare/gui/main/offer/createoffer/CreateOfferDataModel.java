@@ -162,8 +162,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                         }
                     });
                 } else {
-                    // Simulate a bit of delay
-                    UserThread.runAfter(() -> feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx()), 1);
+                    feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
                 }
             }
         };

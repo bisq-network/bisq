@@ -100,30 +100,28 @@ public class BroadcastHandler implements PeerManager.Listener {
 
         Log.traceCall("Sender=" + sender + "\n\t" +
                 "Message=" + StringUtils.abbreviate(message.toString(), 100));
-        Set<Connection> connectedPeers = networkNode.getConfirmedConnections()
+        Set<Connection> connectedPeersSet = networkNode.getConfirmedConnections()
                 .stream()
                 .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
                 .collect(Collectors.toSet());
-        if (!connectedPeers.isEmpty()) {
+        if (!connectedPeersSet.isEmpty()) {
             numOfCompletedBroadcasts = 0;
 
-            if (isDataOwner) {
-                // the data owner sends to all and immediately
-                connectedPeers.stream().forEach(connection -> sendToPeer(connection, message));
-                numOfPeers = connectedPeers.size();
-                log.info("Broadcast message to all {} connected peers.", numOfPeers);
-            } else {
-                // for relay nodes we limit to 2 recipients and use a delay
-                List<Connection> list = new ArrayList<>(connectedPeers);
-                Collections.shuffle(list);
-                int size = list.size();
-                // We want min. 2 nodes
-                if (size > 3)
-                    list = list.subList(0, size / 2);
-                numOfPeers = list.size();
-                log.info("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeers.size());
-                list.stream().forEach(connection -> UserThread.runAfterRandomDelay(() ->
-                        sendToPeer(connection, message), DELAY_MS, DELAY_MS * 2, TimeUnit.MILLISECONDS));
+            List<Connection> connectedPeersList = new ArrayList<>(connectedPeersSet);
+            Collections.shuffle(connectedPeersList);
+            numOfPeers = connectedPeersList.size();
+            int factor = 1;
+            if (!isDataOwner) {
+                // for not data owner (relay nodes) we send to max. 4 nodes and use a longer delay
+                numOfPeers = Math.min(4, connectedPeersList.size());
+                factor = 2;
+            }
+            log.info("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeersSet.size());
+            for (int i = 0; i < numOfPeers; i++) {
+                final long minDelay = i * 50 * factor + 1;
+                final long maxDelay = minDelay * 2 + 50 * factor;
+                final Connection connection = connectedPeersList.get(i);
+                UserThread.runAfterRandomDelay(() -> sendToPeer(connection, message), minDelay, maxDelay, TimeUnit.MILLISECONDS);
             }
 
             long timeoutDelay = TIMEOUT_PER_PEER_SEC * numOfPeers;

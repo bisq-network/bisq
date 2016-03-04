@@ -209,7 +209,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
             new Popup()
                     .warning("Your bitcoin wallet is encrypted.\n\n" +
                             "After restore, the wallet will no longer be encrypted and you must set a new password.")
-                    .closeButtonText("I understand")
+                    .closeButtonText("I got it")
                     .onClose(() -> doRestore()).show();
         } else {
             doRestore();

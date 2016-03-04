@@ -32,7 +32,7 @@ import javax.inject.Inject;
 
 public class Transitions {
 
-    public final static int DEFAULT_DURATION = 400;
+    public final static int DEFAULT_DURATION = 600;
 
     private final Preferences preferences;
     private Timeline removeBlurTimeLine;

@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.inject.Named;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -357,13 +358,23 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void republishOffers() {
-        Log.traceCall("Number of offer for republish: " + openOffers.size());
+        int size = openOffers.size();
+        final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers);
+        Log.traceCall("Number of offer for republish: " + size);
         if (!stopped) {
             stopPeriodicRefreshOffersTimer();
-
-            openOffers.stream().forEach(openOffer ->
-                    UserThread.runAfterRandomDelay(() ->
-                            republishOffer(openOffer), 1, 1000, TimeUnit.MILLISECONDS));
+            for (int i = 0; i < size; i++) {
+                // we delay to avoid reaching throttle limits
+                // roughly 1 offer per second
+                final int n = i;
+                final long minDelay = i * 500 + 1;
+                final long maxDelay = minDelay * 2 + 500;
+                UserThread.runAfterRandomDelay(() -> {
+                    OpenOffer openOffer = openOffersList.get(n);
+                    if (openOffers.contains(openOffer))
+                        republishOffer(openOffer);
+                }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
+            }
         } else {
             log.warn("We have stopped already. We ignore that republishOffers call.");
         }
@@ -418,10 +429,24 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         if (periodicRefreshOffersTimer == null)
             periodicRefreshOffersTimer = UserThread.runPeriodically(() -> {
                         if (!stopped) {
-                            Log.traceCall("Number of offer for refresh: " + openOffers.size());
-                            openOffers.stream().forEach(openOffer ->
-                                    UserThread.runAfterRandomDelay(() ->
-                                            refreshOffer(openOffer), 1, 5000, TimeUnit.MILLISECONDS));
+                            int size = openOffers.size();
+                            Log.traceCall("Number of offer for refresh: " + size);
+
+                            //we clone our list as openOffers might change during our delayed call
+                            final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers);
+                            for (int i = 0; i < size; i++) {
+                                // we delay to avoid reaching throttle limits
+                                // roughly 1 offer per second
+                                final int n = i;
+                                final long minDelay = i * 500 + 1;
+                                final long maxDelay = minDelay * 2 + 500;
+                                UserThread.runAfterRandomDelay(() -> {
+                                    OpenOffer openOffer = openOffersList.get(n);
+                                    // we need to check if in the meantime the offer has been removed
+                                    if (openOffers.contains(openOffer))
+                                        refreshOffer(openOffer);
+                                }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
+                            }
                         } else {
                             log.warn("We have stopped already. We ignore that periodicRefreshOffersTimer.run call.");
                         }

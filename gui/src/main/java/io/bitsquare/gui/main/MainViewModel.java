@@ -137,7 +137,6 @@ public class MainViewModel implements ViewModel {
     private Timer checkNumberOfP2pNetworkPeersTimer;
     private Timer startupTimeout;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
-    private Subscription downloadPercentageSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -186,6 +185,8 @@ public class MainViewModel implements ViewModel {
 
     public void initializeAllServices() {
         Log.traceCall();
+
+        UserThread.runAfter(() -> tacWindow.showIfNeeded(), 2);
 
         BooleanProperty walletInitialized = initBitcoinWallet();
         BooleanProperty p2pNetWorkReady = initP2PNetwork();
@@ -446,8 +447,6 @@ public class MainViewModel implements ViewModel {
         updateBalance();
         setupDevDummyPaymentAccount();
         setupMarketPriceFeed();
-
-        tacWindow.showIfNeeded();
 
         showAppScreen.set(true);
     }

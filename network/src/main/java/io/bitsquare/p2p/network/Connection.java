@@ -98,7 +98,8 @@ public class Connection implements MessageListener {
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
     private final List<Tuple2<Long, Serializable>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
-
+    private volatile long lastSendTimeStamp = 0;
+    ;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -161,6 +162,16 @@ public class Connection implements MessageListener {
     public void sendMessage(Message message) {
         if (!stopped) {
             try {
+                Log.traceCall();
+                // Throttle outgoing messages
+                if (System.currentTimeMillis() - lastSendTimeStamp < 20) {
+                    log.info("We got 2 sendMessage requests in less then 20 ms. We set the thread to sleep " +
+                                    "for 50 ms to avoid that we flood our peer. lastSendTimeStamp={}, now={}, elapsed={}",
+                            lastSendTimeStamp, System.currentTimeMillis(), (System.currentTimeMillis() - lastSendTimeStamp));
+                    Thread.sleep(50);
+                }
+
+                lastSendTimeStamp = System.currentTimeMillis();
                 String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
                 int size = ByteArrayUtils.objectToByteArray(message).length;
 

@@ -27,7 +27,7 @@ class PeerExchangeHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(PeerExchangeHandler.class);
 
     private static final long TIME_OUT_SEC = Timer.STRESS_TEST ? 5 : 20;
-    private static int DELAY_MS = Timer.STRESS_TEST ? 1000 : 3000;
+    private static int DELAY_MS = Timer.STRESS_TEST ? 1000 : 1000;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

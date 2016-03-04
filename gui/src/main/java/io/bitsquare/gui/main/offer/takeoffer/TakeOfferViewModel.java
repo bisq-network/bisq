@@ -253,7 +253,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 break;
             case NOT_AVAILABLE:
                 if (takeOfferRequested)
-                    offerWarning.set("Take offer request failed because offer is not available anymore. " +
+                    offerWarning.set("Take offer request failed because the offer is not available anymore. " +
                             "Maybe another trader has taken the offer in the meantime.");
                 else
                     offerWarning.set("You cannot take that offer because the offer was already taken by another trader.");
