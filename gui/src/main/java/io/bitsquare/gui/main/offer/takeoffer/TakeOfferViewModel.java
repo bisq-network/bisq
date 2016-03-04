@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.offer.takeoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
@@ -66,12 +67,12 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty offerWarning = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
-    final StringProperty takeOfferSpinnerInfoText = new SimpleStringProperty();
+    final StringProperty spinnerInfoText = new SimpleStringProperty("");
 
     final BooleanProperty isOfferAvailable = new SimpleBooleanProperty();
     final BooleanProperty isTakeOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
-    final BooleanProperty isTakeOfferSpinnerVisible = new SimpleBooleanProperty();
+    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
 
@@ -91,6 +92,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ConnectionListener connectionListener;
     private ChangeListener<Coin> feeFromFundingTxListener;
     private Runnable takeOfferSucceededHandler;
+    private boolean showPayFundsScreenDisplayed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +117,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         addListeners();
 
         amount.set(formatter.formatCoin(dataModel.amountAsCoin.get()));
-        isTakeOfferSpinnerVisible.set(false);
+        isSpinnerVisible.set(false);
         showTransactionPublishedScreen.set(false);
 
         // when getting back to an open screen we want to re-check again
@@ -126,6 +128,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         applyOfferState(offer.stateProperty().get());
 
         updateButtonDisableState();
+
+        updateSpinnerInfo();
     }
 
     @Override
@@ -194,6 +198,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.onPaymentAccountSelected(paymentAccount);
     }
 
+
+    public void onShowPayFundsScreen() {
+        showPayFundsScreenDisplayed = true;
+        updateSpinnerInfo();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handle focus
@@ -277,8 +286,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 break;
         }
 
-        if (offerWarning != null)
-            isTakeOfferSpinnerVisible.set(false);
+        if (offerWarning.get() != null) {
+            isSpinnerVisible.set(false);
+            spinnerInfoText.set("");
+        }
 
         updateButtonDisableState();
     }
@@ -317,6 +328,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             }
             this.errorMessage.set(errorMessage + appendMsg);
 
+            isSpinnerVisible.set(false);
+            spinnerInfoText.set("");
+
             if (takeOfferSucceededHandler != null)
                 takeOfferSucceededHandler.run();
         } else {
@@ -335,15 +349,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 if (takeOfferSucceededHandler != null)
                     takeOfferSucceededHandler.run();
 
+                isSpinnerVisible.set(false);
+                spinnerInfoText.set("");
                 showTransactionPublishedScreen.set(true);
             } else {
                 log.error("trade.getDepositTx() == null. That must not happen");
             }
         }
-
-        takeOfferSpinnerInfoText.set("");
-        if (errorMessage.get() == null)
-            isTakeOfferSpinnerVisible.set(false);
     }
 
     private void updateButtonDisableState() {
@@ -398,8 +410,15 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         amountAsCoinListener = (ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue));
         isWalletFundedListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
-            isTakeOfferSpinnerVisible.set(true);
-            takeOfferSpinnerInfoText.set("Checking funding tx miner fee...");
+            isSpinnerVisible.set(true);
+            spinnerInfoText.set("Checking funding tx miner fee...");
+        };
+        feeFromFundingTxListener = (ov, oldValue, newValue) -> {
+            updateButtonDisableState();
+            if (newValue.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0) {
+                isSpinnerVisible.set(false);
+                spinnerInfoText.set("");
+            }
         };
         tradeStateListener = (ov, oldValue, newValue) -> applyTradeState(newValue);
         tradeErrorListener = (ov, oldValue, newValue) -> applyTradeErrorMessage(newValue);
@@ -408,11 +427,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 if (connection.getPeersNodeAddressOptional().isPresent() &&
-                        connection.getPeersNodeAddressOptional().get().equals(offer.getOffererNodeAddress()))
+                        connection.getPeersNodeAddressOptional().get().equals(offer.getOffererNodeAddress())) {
                     offerWarning.set("You lost connection to the offerer.\n" +
                             "He might have gone offline or has closed the connection to you because of too " +
                             "many open connections.\n\n" +
                             "If you can still see his offer in the offerbook you can try to take the offer again.");
+                    isSpinnerVisible.set(false);
+                    spinnerInfoText.set("");
+                }
             }
 
             @Override
@@ -423,14 +445,18 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             public void onError(Throwable throwable) {
             }
         };
-        feeFromFundingTxListener = (ov, oldValue, newValue) -> {
-            updateButtonDisableState();
-            if (newValue.isPositive()) {
-                isTakeOfferSpinnerVisible.set(false);
-                takeOfferSpinnerInfoText.set("");
-            }
-        };
     }
+
+    private void updateSpinnerInfo() {
+        if (dataModel.isWalletFunded.get() || !showPayFundsScreenDisplayed) {
+            isSpinnerVisible.set(false);
+            spinnerInfoText.set("");
+        } else if (showPayFundsScreenDisplayed) {
+            spinnerInfoText.set("Waiting for funds...");
+            isSpinnerVisible.set(true);
+        }
+    }
+
 
     private void addListeners() {
         // Bidirectional bindings are used for all input fields: amount, price, volume and minAmount

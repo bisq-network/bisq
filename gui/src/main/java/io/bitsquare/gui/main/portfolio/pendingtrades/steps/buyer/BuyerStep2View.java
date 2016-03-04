@@ -67,7 +67,7 @@ public class BuyerStep2View extends TradeStepView {
             tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
                 if (state == Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN) {
                     PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-                    String key = "StartPaymentPopup_" + trade.getId();
+                    String key = "startPaymentPopup";
                     if (attentionRequiredPopup == null && !BitsquareApp.DEV_MODE) {
                         String message = "";
                         if (paymentAccountContractData instanceof BlockChainAccountContractData)

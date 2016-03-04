@@ -79,14 +79,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private ImageView imageView;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
-    private ProgressIndicator takeOfferSpinner, offerAvailabilitySpinner;
+    private ProgressIndicator spinner, offerAvailabilitySpinner;
     private TitledGroupBg payFundsPane;
     private Button nextButton, takeOfferButton, cancelButton1, cancelButton2;
     private InputTextField amountTextField;
     private TextField paymentMethodTextField, currencyTextField, priceTextField, volumeTextField, amountRangeTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
             amountBtcLabel, priceCurrencyLabel,
-            volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, takeOfferSpinnerLabel, offerAvailabilitySpinnerLabel;
+            volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, spinnerInfoLabel, offerAvailabilitySpinnerLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
     private PopOver totalToPayInfoPopover;
     private OfferView.CloseHandler closeHandler;
@@ -97,11 +97,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Label paymentMethodLabel;
     private Subscription offerWarningSubscription;
     private Subscription errorMessageSubscription, isOfferAvailableSubscription;
-    private Subscription isTakeOfferSpinnerVisibleSubscription;
+    private Subscription isSpinnerVisibleSubscription;
     private Subscription showWarningInvalidBtcDecimalPlacesSubscription;
     private Subscription showTransactionPublishedScreenSubscription;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Coin> feeFromFundingTxListener;
+    private boolean offerDetailsWindowDisplayed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -146,7 +147,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
         takeOfferButton.disableProperty().bind(model.isTakeOfferButtonDisabled);
-        takeOfferSpinnerLabel.visibleProperty().bind(model.isTakeOfferSpinnerVisible);
+
+        spinner.visibleProperty().bind(model.isSpinnerVisible);
+        spinnerInfoLabel.visibleProperty().bind(model.isSpinnerVisible);
+        spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
 
         priceCurrencyLabel.textProperty().bind(createStringBinding(() ->
                 model.dataModel.getCurrencyCode() + "/" + model.btcCode.get(), model.btcCode));
@@ -160,11 +164,25 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         errorPopupDisplayed = new SimpleBooleanProperty();
         offerWarningSubscription = EasyBind.subscribe(model.offerWarning, newValue -> {
             if (newValue != null) {
-                new Popup().warning(newValue).onClose(() -> {
-                    errorPopupDisplayed.set(true);
-                    model.resetOfferWarning();
-                    close();
-                }).show();
+                if (offerDetailsWindowDisplayed)
+                    offerDetailsWindow.hide();
+
+                UserThread.runAfter(() -> new Popup().warning(newValue + "\n\n" +
+                        "If you have already paid in funds you can withdraw it in the " +
+                        "\"Funds/Available for withdrawal\" screen.")
+                        .actionButtonText("Go to \"Available for withdrawal\"")
+                        .onAction(() -> {
+                            errorPopupDisplayed.set(true);
+                            model.resetOfferWarning();
+                            close();
+                            navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+                        })
+                        .onClose(() -> {
+                            errorPopupDisplayed.set(true);
+                            model.resetOfferWarning();
+                            close();
+                        })
+                        .show(), 100, TimeUnit.MILLISECONDS);
             }
         });
 
@@ -188,10 +206,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             }
         });
 
-        isTakeOfferSpinnerVisibleSubscription = EasyBind.subscribe(model.isTakeOfferSpinnerVisible, newValue -> {
-            takeOfferSpinner.setProgress(newValue ? -1 : 0);
-            takeOfferSpinner.setVisible(newValue);
-        });
+        isSpinnerVisibleSubscription = EasyBind.subscribe(model.isSpinnerVisible,
+                isSpinnerVisible -> spinner.setProgress(isSpinnerVisible ? -1 : 0));
 
         showWarningInvalidBtcDecimalPlacesSubscription = EasyBind.subscribe(model.showWarningInvalidBtcDecimalPlaces, newValue -> {
             if (newValue) {
@@ -270,7 +286,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.amountAsCoinProperty().unbind();
         amountTextField.validationResultProperty().unbind();
         takeOfferButton.disableProperty().unbind();
-        takeOfferSpinnerLabel.visibleProperty().unbind();
+        spinner.visibleProperty().unbind();
+        spinnerInfoLabel.visibleProperty().unbind();
+        spinnerInfoLabel.textProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
         volumeCurrencyLabel.textProperty().unbind();
         amountRangeBtcLabel.textProperty().unbind();
@@ -280,7 +298,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         offerWarningSubscription.unsubscribe();
         errorMessageSubscription.unsubscribe();
         isOfferAvailableSubscription.unsubscribe();
-        isTakeOfferSpinnerVisibleSubscription.unsubscribe();
+        isSpinnerVisibleSubscription.unsubscribe();
         showWarningInvalidBtcDecimalPlacesSubscription.unsubscribe();
         showTransactionPublishedScreenSubscription.unsubscribe();
 
@@ -290,8 +308,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (offerAvailabilitySpinner != null)
             offerAvailabilitySpinner.setProgress(0);
-        if (takeOfferSpinner != null)
-            takeOfferSpinner.setProgress(0);
+
+        if (spinner != null)
+            spinner.setProgress(0);
     }
 
 
@@ -364,9 +383,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void onTakeOffer() {
         if (model.hasAcceptedArbitrators()) {
             offerDetailsWindow.onTakeOffer(() ->
-                    model.onTakeOffer(() ->
-                            offerDetailsWindow.hide()))
-                    .show(model.getOffer(), model.dataModel.amountAsCoin.get());
+                            model.onTakeOffer(() -> {
+                                offerDetailsWindow.hide();
+                                offerDetailsWindowDisplayed = false;
+                            })
+            ).show(model.getOffer(), model.dataModel.amountAsCoin.get());
+            offerDetailsWindowDisplayed = true;
         } else {
             new Popup().warning("You have no arbitrator selected.\n" +
                     "You need to select at least one arbitrator.")
@@ -381,6 +403,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void onShowPayFundsScreen() {
+        model.onShowPayFundsScreen();
+        
         amountTextField.setMouseTransparent(true);
         priceTextField.setMouseTransparent(true);
         volumeTextField.setMouseTransparent(true);
@@ -422,6 +446,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton1.setOnAction(null);
         takeOfferButton.setVisible(true);
         cancelButton2.setVisible(true);
+
+        spinner.setProgress(-1);
 
         payFundsPane.setVisible(true);
         totalToPayLabel.setVisible(true);
@@ -598,18 +624,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Tuple3<Button, ProgressIndicator, Label> takeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "");
         takeOfferButton = takeOfferTuple.first;
         takeOfferButton.setVisible(false);
+        takeOfferButton.setMinHeight(40);
+        takeOfferButton.setPadding(new Insets(0, 20, 0, 20));
         takeOfferButton.setOnAction(e -> {
             onTakeOffer();
             balanceTextField.cleanup();
         });
-        takeOfferButton.setMinHeight(40);
-        takeOfferButton.setPadding(new Insets(0, 20, 0, 20));
 
-        takeOfferSpinner = takeOfferTuple.second;
-        takeOfferSpinner.setPrefSize(18, 18);
-        takeOfferSpinnerLabel = takeOfferTuple.third;
-        takeOfferSpinnerLabel.textProperty().bind(model.takeOfferSpinnerInfoText);
-        takeOfferSpinnerLabel.setVisible(false);
+        spinner = takeOfferTuple.second;
+        spinnerInfoLabel = takeOfferTuple.third;
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> close());

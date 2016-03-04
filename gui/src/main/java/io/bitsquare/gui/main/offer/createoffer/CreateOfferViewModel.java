@@ -65,7 +65,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    final StringProperty spinnerInfoText = new SimpleStringProperty("Waiting for funds...");
+    final StringProperty spinnerInfoText = new SimpleStringProperty("");
 
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
@@ -153,6 +153,14 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         } else {
             directionLabel = BSResources.get("shared.sellBitcoin");
             amountDescription = BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.sell"));
+        }
+
+        if (dataModel.isWalletFunded.get()) {
+            isSpinnerVisible.set(false);
+            spinnerInfoText.set("");
+        } else {
+            spinnerInfoText.set("Waiting for funds...");
+            isSpinnerVisible.set(true);
         }
     }
 
@@ -271,7 +279,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
         errorMessage.addListener(requestPlaceOfferErrorMessageListener);
-
     }
 
     private void removeListeners() {
@@ -363,9 +370,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.onCurrencySelected(tradeCurrency);
     }
 
-    public void onShowFundsScreen() {
-        isSpinnerVisible.set(true);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handle focus

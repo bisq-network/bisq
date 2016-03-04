@@ -114,10 +114,7 @@ public class BuyerStep5View extends TradeStepView {
         addLabelTextField(gridPane, gridRow, "Amount to withdraw:", model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
         withdrawButton = addButtonAfterGroup(gridPane, ++gridRow, "Withdraw to external wallet");
-        withdrawButton.setOnAction(e -> {
-            withdrawButton.setDisable(true);
-            reviewWithdrawal();
-        });
+        withdrawButton.setOnAction(e -> reviewWithdrawal());
 
         String key = "tradeCompleteInfo";
         if (BitsquareApp.DEV_MODE)
@@ -130,6 +127,7 @@ public class BuyerStep5View extends TradeStepView {
     }
 
     private void doWithdrawal() {
+        withdrawButton.setDisable(true);
         model.dataModel.onWithdrawRequest(withdrawAddressTextField.getText(),
                 () -> {
                     String key = "tradeCompleteWithdrawCompletedInfo";

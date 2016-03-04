@@ -86,7 +86,6 @@ public abstract class TradeStepView extends AnchorPane {
 
     public void activate() {
         if (txIdTextField != null) {
-            txIdTextField.setup(model.dataModel.txId.get());
             if (txIdSubscription != null)
                 txIdSubscription.unsubscribe();
 

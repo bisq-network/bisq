@@ -246,7 +246,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void onShowFundsScreen() {
-        model.onShowFundsScreen();
         amountTextField.setMouseTransparent(true);
         minAmountTextField.setMouseTransparent(true);
         priceTextField.setMouseTransparent(true);
@@ -729,8 +728,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         placeOfferButton.setPadding(new Insets(0, 20, 0, 20));
 
         spinner = placeOfferTuple.second;
-        spinner.setProgress(0);
-        //spinner.setPrefSize(18, 18);
         spinnerInfoLabel = placeOfferTuple.third;
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));

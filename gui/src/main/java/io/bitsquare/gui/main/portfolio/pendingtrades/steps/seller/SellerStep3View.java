@@ -67,7 +67,7 @@ public class SellerStep3View extends TradeStepView {
         tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
             if (state == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
                 PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-                String key = "ConfirmPaymentPopup_" + trade.getId();
+                String key = "confirmPaymentPopup";
                 if (attentionRequiredPopup == null && !BitsquareApp.DEV_MODE) {
                     String message;
                     String tradeAmountWithCode = model.formatter.formatFiatWithCode(trade.getTradeVolume());
