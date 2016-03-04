@@ -155,6 +155,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
     private Tuple3<TableView<Offer>, VBox, Button> getOfferTable(Offer.Direction direction) {
         TableView<Offer> tableView = new TableView<>();
+        tableView.setMinHeight(100);
+        tableView.setMinWidth(390);
 
         // price
         TableColumn<Offer, Offer> priceColumn = new TableColumn<>();
