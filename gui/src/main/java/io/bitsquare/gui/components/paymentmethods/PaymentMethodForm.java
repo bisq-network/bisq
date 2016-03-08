@@ -35,6 +35,8 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 public abstract class PaymentMethodForm {
@@ -101,20 +103,22 @@ public abstract class PaymentMethodForm {
     }
 
     public static void addAllowedPeriod(GridPane gridPane, int gridRow,
-                                        PaymentAccountContractData paymentAccountContractData, String dateFromBlocks) {
-        long hours = paymentAccountContractData.getMaxTradePeriod() / 6;
-        String displayText;
-        if (hours == 1)
-            displayText = hours + " hour";
-        else
-            displayText = hours + " hours";
-        if (hours == 24)
-            displayText = "1 day";
-        if (hours > 24)
-            displayText = hours / 24 + " days";
+                                        @Nullable PaymentAccountContractData paymentAccountContractData, String dateFromBlocks) {
+        if (paymentAccountContractData != null) {
+            long hours = paymentAccountContractData.getMaxTradePeriod() / 6;
+            String displayText;
+            if (hours == 1)
+                displayText = hours + " hour";
+            else
+                displayText = hours + " hours";
+            if (hours == 24)
+                displayText = "1 day";
+            if (hours > 24)
+                displayText = hours / 24 + " days";
 
 
-        addLabelTextField(gridPane, gridRow, "Max. allowed trade period / date:", displayText + " / " + dateFromBlocks);
+            addLabelTextField(gridPane, gridRow, "Max. allowed trade period / date:", displayText + " / " + dateFromBlocks);
+        }
     }
 
     protected void addAllowedPeriod() {

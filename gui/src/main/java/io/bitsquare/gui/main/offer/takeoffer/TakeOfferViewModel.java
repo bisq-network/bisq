@@ -117,7 +117,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         addListeners();
 
         amount.set(formatter.formatCoin(dataModel.amountAsCoin.get()));
-        isSpinnerVisible.set(false);
         showTransactionPublishedScreen.set(false);
 
         // when getting back to an open screen we want to re-check again
@@ -197,7 +196,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         dataModel.onPaymentAccountSelected(paymentAccount);
     }
-
 
     public void onShowPayFundsScreen() {
         showPayFundsScreenDisplayed = true;

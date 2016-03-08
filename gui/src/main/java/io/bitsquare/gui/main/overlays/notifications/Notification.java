@@ -36,6 +36,21 @@ public class Notification extends Overlay<Notification> {
     }
 
     @Override
+    public void hide() {
+        animateHide(() -> {
+            removeEffectFromBackground();
+
+            if (stage != null)
+                stage.hide();
+            else
+                log.warn("Stage is null");
+
+            cleanup();
+            onHidden();
+        });
+    }
+
+    @Override
     protected void onShow() {
         NotificationManager.queueForDisplay(this);
     }
@@ -159,6 +174,7 @@ public class Notification extends Overlay<Notification> {
 
     @Override
     protected void setModality() {
+        stage.initOwner(owner.getScene().getWindow());
         stage.initModality(Modality.NONE);
     }
 

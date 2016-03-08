@@ -70,6 +70,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, true, false, 5);
     }
 
+    public static void blurUltraLight() {
+        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, true, false, 2);
+    }
+
     public static void removeBlur() {
         transitions.removeBlur(MainView.rootContainer);
     }

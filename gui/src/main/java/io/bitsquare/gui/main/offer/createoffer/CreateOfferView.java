@@ -245,7 +245,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         }
     }
 
-    private void onShowFundsScreen() {
+    private void onShowPayFundsScreen() {
+        model.onShowPayFundsScreen();
+
         amountTextField.setMouseTransparent(true);
         minAmountTextField.setMouseTransparent(true);
         priceTextField.setMouseTransparent(true);
@@ -262,7 +264,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     "It will be refunded to you after the trade has successfully completed.")
                     .closeButtonText("I want to learn more")
                     .onClose(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
-                    .actionButtonText("I got it")
+                    .actionButtonText("I understand")
                     .onAction(() -> {
                     })
                     .dontShowAgainId(key, preferences)
@@ -514,26 +516,24 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
             } else if (newValue) {
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups 
-                UserThread.runAfter(() -> {
-                            String key = "createOfferSuccessInfo";
-                            if (preferences.showAgain(key)) {
-                                new Popup().headLine(BSResources.get("createOffer.success.headline"))
-                                        .feedback(BSResources.get("createOffer.success.info"))
-                                        .dontShowAgainId(key, preferences)
-                                        .actionButtonText("Go to \"My open offers\"")
-                                        .onAction(() -> {
-                                            UserThread.runAfter(() ->
-                                                            navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class),
-                                                    100, TimeUnit.MILLISECONDS);
-                                            close();
-                                        })
-                                        .onClose(this::close)
-                                        .show();
-                            } else {
-                                close();
-                            }
-                        },
-                        500, TimeUnit.MILLISECONDS);
+                String key = "createOfferSuccessInfo";
+                if (preferences.showAgain(key)) {
+                    UserThread.runAfter(() -> new Popup().headLine(BSResources.get("createOffer.success.headline"))
+                                    .feedback(BSResources.get("createOffer.success.info"))
+                                    .dontShowAgainId(key, preferences)
+                                    .actionButtonText("Go to \"My open offers\"")
+                                    .onAction(() -> {
+                                        UserThread.runAfter(() ->
+                                                        navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class),
+                                                100, TimeUnit.MILLISECONDS);
+                                        close();
+                                    })
+                                    .onClose(this::close)
+                                    .show(),
+                            1);
+                } else {
+                    close();
+                }
             }
         };
     }
@@ -680,7 +680,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton1.setId("cancel-button");
 
         GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
-        nextButton.setOnAction(e -> onShowFundsScreen());
+        nextButton.setOnAction(e -> onShowPayFundsScreen());
     }
 
     private void addFundingGroup() {

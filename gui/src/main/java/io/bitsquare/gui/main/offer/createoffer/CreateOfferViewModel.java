@@ -100,6 +100,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private ChangeListener<String> errorMessageListener;
     private Offer offer;
     private Timer timeoutTimer;
+    private boolean showPayFundsScreenDisplayed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -155,13 +156,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             amountDescription = BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.sell"));
         }
 
-        if (dataModel.isWalletFunded.get()) {
-            isSpinnerVisible.set(false);
-            spinnerInfoText.set("");
-        } else {
-            spinnerInfoText.set("Waiting for funds...");
-            isSpinnerVisible.set(true);
-        }
+        updateSpinnerInfo();
     }
 
     @Override
@@ -169,6 +164,16 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         removeBindings();
         removeListeners();
         stopTimeoutTimer();
+    }
+
+    private void updateSpinnerInfo() {
+        if (dataModel.isWalletFunded.get() || !showPayFundsScreenDisplayed) {
+            isSpinnerVisible.set(false);
+            spinnerInfoText.set("");
+        } else if (showPayFundsScreenDisplayed) {
+            spinnerInfoText.set("Waiting for funds...");
+            isSpinnerVisible.set(true);
+        }
     }
 
     private void addBindings() {
@@ -368,6 +373,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         dataModel.onCurrencySelected(tradeCurrency);
+    }
+
+    public void onShowPayFundsScreen() {
+        showPayFundsScreenDisplayed = true;
+        updateSpinnerInfo();
     }
 
 

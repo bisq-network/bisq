@@ -220,26 +220,23 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 close();
                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
             } else if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
-                UserThread.runAfter(
-                        () -> {
-                            String key = "takeOfferSuccessInfo";
-                            if (preferences.showAgain(key)) {
-                                new Popup().headLine(BSResources.get("takeOffer.success.headline"))
-                                        .feedback(BSResources.get("takeOffer.success.info"))
-                                        .actionButtonText("Go to \"Open trades\"")
-                                        .dontShowAgainId(key, preferences)
-                                        .onAction(() -> {
-                                            UserThread.runAfter(
-                                                    () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
-                                                    , 100, TimeUnit.MILLISECONDS);
-                                            close();
-                                        })
-                                        .onClose(this::close)
-                                        .show();
-                            } else {
+                String key = "takeOfferSuccessInfo";
+                if (preferences.showAgain(key)) {
+                    UserThread.runAfter(() -> new Popup().headLine(BSResources.get("takeOffer.success.headline"))
+                            .feedback(BSResources.get("takeOffer.success.info"))
+                            .actionButtonText("Go to \"Open trades\"")
+                            .dontShowAgainId(key, preferences)
+                            .onAction(() -> {
+                                UserThread.runAfter(
+                                        () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
+                                        , 100, TimeUnit.MILLISECONDS);
                                 close();
-                            }
-                        }, 500, TimeUnit.MILLISECONDS);
+                            })
+                            .onClose(this::close)
+                            .show(), 1);
+                } else {
+                    close();
+                }
             }
         });
 
@@ -404,7 +401,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void onShowPayFundsScreen() {
         model.onShowPayFundsScreen();
-        
+
         amountTextField.setMouseTransparent(true);
         priceTextField.setMouseTransparent(true);
         volumeTextField.setMouseTransparent(true);
@@ -416,7 +413,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     "It will be refunded to you after the trade has successfully completed.")
                     .closeButtonText("I want to learn more")
                     .onClose(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
-                    .actionButtonText("I got it")
+                    .actionButtonText("I understand")
                     .onAction(() -> {
                     })
                     .dontShowAgainId(key, preferences)

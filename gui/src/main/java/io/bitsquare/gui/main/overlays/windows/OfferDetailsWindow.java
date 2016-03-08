@@ -97,7 +97,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         display();
     }
 
-
     public OfferDetailsWindow onPlaceOffer(Runnable placeOfferHandler) {
         this.placeOfferHandlerOptional = Optional.of(placeOfferHandler);
         return this;
@@ -112,6 +111,12 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void onHidden() {
+        if (spinner != null)
+            spinner.setProgress(0);
+    }
 
     @Override
     protected void createGridPane() {
@@ -282,11 +287,5 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
             }
         });
-    }
-
-    @Override
-    protected void onHidden() {
-        if (spinner != null)
-            spinner.setProgress(0);
     }
 }

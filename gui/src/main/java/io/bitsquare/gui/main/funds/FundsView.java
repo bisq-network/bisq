@@ -94,7 +94,7 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
                     "traders.")
                     .closeButtonText("I want to learn more")
                     .onClose(() -> Utilities.openWebPage("https://bitsquare.io/faq"))
-                    .actionButtonText("I got it")
+                    .actionButtonText("I understand")
                     .onAction(() -> {
                     })
                     .dontShowAgainId(key, preferences)

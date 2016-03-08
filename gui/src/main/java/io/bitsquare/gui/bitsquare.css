@@ -53,6 +53,8 @@ bg color of non edit textFields: fafafa
     -bs-smooth-red: #ed7157;
     -bs-soft-red: #fe5e1c;
     -bs-soft-red2: #f35e1c;
+    -bs-soft-red3: #fa6f25;
+    -bs-yellow2: #f7ac03;
 
     -bs-warning: -bs-orange;
 
@@ -955,15 +957,24 @@ textfield */
     -fx-font-size: 14;
     -fx-text-fill: #333;
     -fx-background-color: white;
-    -fx-background-radius: 5 5 5 5;
+    -fx-background-radius: 10 10 10 10;
+    -fx-background-insets: 10;
+    -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
+}
+
+#popup-bg-top {
+    -fx-font-size: 14;
+    -fx-text-fill: #333;
+    -fx-background-color: white;
+    -fx-background-radius: 0 0 10 10;
     -fx-background-insets: 10;
     -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
 }
 
 #notification-popup-headline {
-    -fx-font-size: 12;
+    -fx-font-size: 13;
     -fx-font-weight: bold;
-    -fx-text-fill: #3c3c3c;
+    -fx-text-fill: #333;
 }
 
 #notification-popup-bg {
@@ -972,7 +983,7 @@ textfield */
     -fx-background-color: linear-gradient(to bottom, #fcfcfc, #e5e5e5);
     -fx-background-radius: 5 5 5 5;
     -fx-background-insets: 5 5 20 20;
-    -fx-effect: dropshadow(gaussian, #000000, 15, 0, 2, 2);
+    -fx-effect: dropshadow(gaussian, #666, 10, 0, 2, 2);
 }
 
 .popup-icon-information {
