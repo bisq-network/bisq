@@ -19,12 +19,14 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.app.Log;
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
+import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -116,14 +118,17 @@ public class BuyerStep5View extends TradeStepView {
         withdrawButton = addButtonAfterGroup(gridPane, ++gridRow, "Withdraw to external wallet");
         withdrawButton.setOnAction(e -> reviewWithdrawal());
 
-        String key = "tradeCompleteInfo";
-        if (BitsquareApp.DEV_MODE)
+        if (BitsquareApp.DEV_MODE) {
             withdrawAddressTextField.setText("mi8k5f9L972VgDaT4LgjAhriC9hHEPL7EW");
-        else
-            new Popup().headLine("Trade completed")
-                    .instruction("You can withdraw your funds now to your external Bitcoin wallet.")
-                    .dontShowAgainId(key, preferences)
-                    .show();
+        } else {
+            String key = "tradeCompleted" + trade.getId();
+            if (preferences.showAgain(key))
+                new Notification().headLine("Trade completed")
+                        .notification("You can withdraw your funds now to your external Bitcoin wallet.")
+                        .onClose(() -> preferences.dontShowAgain(key, true))
+                        .autoClose()
+                        .show();
+        }
     }
 
     private void doWithdrawal() {
@@ -131,8 +136,9 @@ public class BuyerStep5View extends TradeStepView {
         model.dataModel.onWithdrawRequest(withdrawAddressTextField.getText(),
                 () -> {
                     String key = "tradeCompleteWithdrawCompletedInfo";
-                    new Popup().headLine("Withdrawal completed").instruction("Your completed trades are stored under \"Portfolio/History\".\n" +
-                            "You can review all your bitcoin transactions under \"Funds/Transactions\"")
+                    new Popup().headLine("Withdrawal completed")
+                            .feedback("Your completed trades are stored under \"Portfolio/History\".\n" +
+                                    "You can review all your bitcoin transactions under \"Funds/Transactions\"")
                             .actionButtonText("Go to \"Transactions\"")
                             .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
                             .dontShowAgainId(key, preferences)
@@ -151,45 +157,54 @@ public class BuyerStep5View extends TradeStepView {
     private void reviewWithdrawal() {
         Coin senderAmount = trade.getPayoutAmount();
         WalletService walletService = model.dataModel.walletService;
-        String fromAddresses = walletService.getAddressEntryByOfferId(trade.getId()).getAddressString();
+        AddressEntry fromAddressesEntry = walletService.getAddressEntryByOfferId(trade.getId());
+        String fromAddresses = fromAddressesEntry.getAddressString();
         String toAddresses = withdrawAddressTextField.getText();
 
-        if (Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
-            try {
-                Coin requiredFee = walletService.getRequiredFee(fromAddresses, toAddresses, senderAmount, null);
-                Coin receiverAmount = senderAmount.subtract(requiredFee);
-                if (BitsquareApp.DEV_MODE) {
-                    doWithdrawal();
-                } else {
-                    BSFormatter formatter = model.formatter;
-                    String key = "reviewWithdrawalAtTradeComplete";
-                    if (preferences.showAgain(key)) {
-                        new Popup().headLine("Confirm withdrawal request")
-                                .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
-                                        "From address: " + fromAddresses + "\n" +
-                                        "To receiving address: " + toAddresses + ".\n" +
-                                        "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n\n" +
-                                        "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
-                                        "Are you sure you want to withdraw that amount?")
-                                .actionButtonText("Yes")
-                                .onAction(this::doWithdrawal)
-                                .closeButtonText("Cancel")
-                                .onClose(() -> withdrawButton.setDisable(false))
-                                .dontShowAgainId(key, preferences)
-                                .show();
-                    } else {
-                        doWithdrawal();
-                    }
-
-                }
-            } catch (AddressFormatException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-            }
+        // TODO at some error situation it can be tha the funds are already paid out and we get stuck here
+        // need handling to remove the trade (planned for next release)
+        Coin balance = walletService.getBalanceForAddress(fromAddressesEntry.getAddress());
+        if (balance.isZero()) {
+            new Popup().warning("Your funds have already been withdrawn.\nPlease check the transaction history.").show();
+            model.dataModel.tradeManager.addTradeToClosedTrades(trade);
         } else {
-            new Popup()
-                    .warning("The amount to transfer is lower than the transaction fee and the min. possible tx value (dust).")
-                    .show();
+            if (Restrictions.isAboveFixedTxFeeAndDust(senderAmount) && !toAddresses.isEmpty()) {
+                try {
+                    Coin requiredFee = walletService.getRequiredFee(fromAddresses, toAddresses, senderAmount, null);
+                    Coin receiverAmount = senderAmount.subtract(requiredFee);
+                    if (BitsquareApp.DEV_MODE) {
+                        doWithdrawal();
+                    } else {
+                        BSFormatter formatter = model.formatter;
+                        String key = "reviewWithdrawalAtTradeComplete";
+                        if (preferences.showAgain(key)) {
+                            new Popup().headLine("Confirm withdrawal request")
+                                    .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
+                                            "From address: " + fromAddresses + "\n" +
+                                            "To receiving address: " + toAddresses + ".\n" +
+                                            "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n\n" +
+                                            "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
+                                            "Are you sure you want to proceed with the withdrawal?")
+                                    .closeButtonText("Cancel")
+                                    .onClose(() -> withdrawButton.setDisable(false))
+                                    .actionButtonText("Yes")
+                                    .onAction(this::doWithdrawal)
+                                    .dontShowAgainId(key, preferences)
+                                    .show();
+                        } else {
+                            doWithdrawal();
+                        }
+
+                    }
+                } catch (AddressFormatException e) {
+                    e.printStackTrace();
+                    log.error(e.getMessage());
+                }
+            } else {
+                new Popup()
+                        .warning("The amount to transfer is lower than the transaction fee and the min. possible tx value (dust).")
+                        .show();
+            }
         }
     }
 

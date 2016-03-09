@@ -140,11 +140,11 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private void onDeleteAccount(PaymentAccount paymentAccount) {
         new Popup().warning("Do you really want to delete the selected account?")
                 .actionButtonText("Yes")
-                .closeButtonText("Cancel")
                 .onAction(() -> {
                     model.onDeleteAccount(paymentAccount);
                     removeSelectAccountForm();
                 })
+                .closeButtonText("Cancel")
                 .show();
     }
 

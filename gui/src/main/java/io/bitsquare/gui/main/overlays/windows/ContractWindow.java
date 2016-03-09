@@ -56,6 +56,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
     @Inject
     public ContractWindow(BSFormatter formatter) {
         this.formatter = formatter;
+        type = Type.Confirmation;
     }
 
     public void show(Dispute dispute) {

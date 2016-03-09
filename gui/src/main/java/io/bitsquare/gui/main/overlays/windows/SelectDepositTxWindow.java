@@ -50,6 +50,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
 
     @Inject
     public SelectDepositTxWindow() {
+        type = Type.Attention;
     }
 
     public void show() {

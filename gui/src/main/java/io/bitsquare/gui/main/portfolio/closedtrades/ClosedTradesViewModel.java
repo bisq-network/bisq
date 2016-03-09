@@ -83,7 +83,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                /* if (trade.isFailedState())
                     return "Failed";
                 else*/
-                if (trade.getState() == Trade.State.WITHDRAW_COMPLETED) {
+                if (trade.getState() == Trade.State.WITHDRAW_COMPLETED || trade.getState() == Trade.State.PAYOUT_BROAD_CASTED) {
                     return "Completed";
                 } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED) {
                     return "Ticket closed";

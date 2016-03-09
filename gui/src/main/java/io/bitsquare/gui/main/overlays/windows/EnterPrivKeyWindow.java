@@ -51,6 +51,8 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
     public EnterPrivKeyWindow() {
         if (keyInputTextField != null)
             keyInputTextField.textProperty().addListener(changeListener);
+
+        type = Type.Attention;
     }
 
     public void show() {

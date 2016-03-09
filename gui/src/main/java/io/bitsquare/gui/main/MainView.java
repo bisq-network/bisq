@@ -67,15 +67,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     public static void blurLight() {
-        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, true, false, 5);
+        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 5);
     }
 
     public static void blurUltraLight() {
-        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, true, false, 2);
+        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
     }
 
-    public static void removeBlur() {
-        transitions.removeBlur(MainView.rootContainer);
+    public static void darken() {
+        transitions.darken(MainView.rootContainer, Transitions.DEFAULT_DURATION, false);
+    }
+
+    public static void removeEffect() {
+        transitions.removeEffect(MainView.rootContainer);
     }
 
     private final ToggleGroup navButtons = new ToggleGroup();

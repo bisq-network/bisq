@@ -113,12 +113,12 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
             if (preferences.showAgain(key)) {
                 new Popup().warning("You have not setup a wallet password which would protect the display of the seed words.\n\n" +
                         "Do you want to display the seed words?")
-                        .closeButtonText("Yes, and don't ask me again")
-                        .onClose(() -> {
+                        .actionButtonText("Yes, and don't ask me again")
+                        .onAction(() -> {
                             preferences.dontShowAgain(key, true);
                             showSeedScreen(keyChainSeed);
                         })
-                        .actionButtonText("No")
+                        .closeButtonText("No")
                         .show();
             } else {
                 showSeedScreen(keyChainSeed);

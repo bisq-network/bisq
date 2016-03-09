@@ -63,6 +63,8 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         this.walletService = walletService;
         this.walletPasswordWindow = walletPasswordWindow;
         this.formatter = formatter;
+
+        type = Type.Instruction;
     }
 
     public void show() {

@@ -22,7 +22,6 @@ import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.*;
-import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -48,7 +47,6 @@ public class BuyerStep2View extends TradeStepView {
     private Label statusLabel;
     private ProgressIndicator statusProgressIndicator;
     private Subscription tradeStatePropertySubscription;
-    private Overlay attentionRequiredPopup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,36 +65,36 @@ public class BuyerStep2View extends TradeStepView {
             tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
                 if (state == Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN) {
                     PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-                    String key = "startPaymentPopup";
-                    if (attentionRequiredPopup == null && !BitsquareApp.DEV_MODE) {
-                        String message = "";
-                        if (paymentAccountContractData instanceof BlockChainAccountContractData)
-                            message = "Your trade has reached at least one blockchain confirmation.\n\n" +
-                                    "You can wait for more confirmations if you want - 6 confirmations are considered as very secure.\n\n" +
-                                    "Please transfer from your external " +
-                                    CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " wallet\n" +
-                                    model.formatter.formatFiatWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
-                                    "Here are the payment account details of the bitcoin seller:\n" +
-                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n\n" +
-                                    "You can copy & paste the values from the main screen after closing that popup.";
-                        else if (paymentAccountContractData != null)
-                            message = "Your trade has reached at least one blockchain confirmation.\n\n" +
-                                    "You can wait for more confirmations if you want - 6 confirmations are considered as very secure.\n\n" +
-                                    "Please go to your online banking web page and pay " +
-                                    model.formatter.formatFiatWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
-                                    "Here are the payment account details of the bitcoin seller:\n" +
-                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
-                                    "You can copy & paste the values from the main screen after closing that popup.\n\n" +
-                                    "Please don't forget to add the reference text \"" + trade.getShortId() +
-                                    "\" so the receiver can assign your payment to this trade.\n\n" +
-                                    "DO NOT use any additional notice in the reference text like " +
-                                    "Bitcoin, Btc or Bitsquare.";
+                    String key = "startPayment" + trade.getId();
+                    log.error("key " + key);
+                    String message = "";
+                    if (paymentAccountContractData instanceof BlockChainAccountContractData)
+                        message = "Your trade has reached at least one blockchain confirmation.\n" +
+                                "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
+                                "Please transfer from your external " +
+                                CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " wallet\n" +
+                                model.formatter.formatFiatWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
+                                "Here are the payment account details of the bitcoin seller:\n" +
+                                "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n\n" +
+                                "(You can copy & paste the values from the main screen after closing that popup.)";
+                    else if (paymentAccountContractData != null)
+                        message = "Your trade has reached at least one blockchain confirmation.\n" +
+                                "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
+                                "Please go to your online banking web page and pay " +
+                                model.formatter.formatFiatWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
+                                "Here are the payment account details of the bitcoin seller:\n" +
+                                "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
+                                "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
+                                "Please don't forget to add the reference text \"" + trade.getShortId() +
+                                "\" so the receiver can assign your payment to this trade.\n\n" +
+                                "DO NOT use any additional notice in the reference text like " +
+                                "Bitcoin, Btc or Bitsquare.";
 
-                        attentionRequiredPopup = new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
+                    if (preferences.showAgain(key)) {
+                        new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
                                 .instruction(message)
-                                .dontShowAgainId(key, preferences);
-
-                        attentionRequiredPopup.show();
+                                .onClose(() -> preferences.dontShowAgain(key, true))
+                                .show();
                     }
                 } else if (state == Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED) {
                     showStatusInfo();
@@ -224,15 +222,16 @@ public class BuyerStep2View extends TradeStepView {
         if (model.p2PService.isBootstrapped()) {
             String key = "confirmPaymentStarted";
             if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
-                new Popup()
-                        .headLine("Confirm that you have started the payment")
+                Popup popup = new Popup();
+                popup.headLine("Confirm that you have started the payment")
                         .confirmation("Have you initiated the " + model.dataModel.getCurrencyCode() +
                                 " payment to your trading partner?")
                         .width(700)
-                        .dontShowAgainId(key, preferences)
                         .actionButtonText("Yes, I have started the payment")
-                        .closeButtonText("No")
                         .onAction(this::confirmPaymentStarted)
+                        .closeButtonText("No")
+                        .onClose(popup::hide)
+                        .dontShowAgainId(key, preferences)
                         .show();
             } else {
                 confirmPaymentStarted();

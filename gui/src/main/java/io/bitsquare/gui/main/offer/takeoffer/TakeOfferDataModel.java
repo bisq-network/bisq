@@ -29,7 +29,6 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
-import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
@@ -91,7 +90,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private BalanceListener balanceListener;
     private PaymentAccount paymentAccount;
     private boolean isTabSelected;
-    private Notification walletFundedNotification;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -214,6 +212,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
             priceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -325,17 +324,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private void updateBalance(@NotNull Coin balance) {
         isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
 
-        if (isWalletFunded.get()) {
+        if (isWalletFunded.get())
             walletService.removeBalanceListener(balanceListener);
-            if (walletFundedNotification == null) {
-                walletFundedNotification = new Notification()
-                        .headLine("Trading wallet update")
-                        .notification("Your trading wallet is sufficiently funded.\n" +
-                                "Amount: " + formatter.formatCoinWithCode(totalToPayAsCoin.get()))
-                        .autoClose();
-                walletFundedNotification.show();
-            }
-        }
     }
 
     boolean isMinAmountLessOrEqualAmount() {

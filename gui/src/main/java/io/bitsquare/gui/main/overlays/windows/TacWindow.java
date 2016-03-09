@@ -19,6 +19,7 @@ public class TacWindow extends Overlay<TacWindow> {
     @Inject
     public TacWindow(Preferences preferences) {
         this.preferences = preferences;
+        type = Type.Attention;
     }
 
     public void showIfNeeded() {
@@ -47,7 +48,7 @@ public class TacWindow extends Overlay<TacWindow> {
                                     "Please be aware that using Mainnet comes with the risk to lose funds " +
                                     "in case of software bugs.\n" +
                                     "To limit the possible losses the maximum allowed trading amount and the " +
-                                    "security deposit have been reduced to 0.1 BTC for the alpha version " +
+                                    "security deposit have been reduced for the alpha version " +
                                     "when using Mainnet.")
                             .actionButtonText("I understand and want to use Mainnet")
                             .closeButtonText("Restart and use Testnet")

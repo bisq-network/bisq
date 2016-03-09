@@ -333,7 +333,7 @@ public class TradeManager {
     }
 
     // If trade was completed (closed without fault but might be closed by a dispute) we move it to the closed trades
-    private void addTradeToClosedTrades(Trade trade) {
+    public void addTradeToClosedTrades(Trade trade) {
         trades.remove(trade);
         closedTradableManager.add(trade);
     }

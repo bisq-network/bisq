@@ -71,6 +71,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     @Inject
     public WalletPasswordWindow(WalletService walletService) {
         this.walletService = walletService;
+        type = Type.Attention;
     }
 
     public void show() {

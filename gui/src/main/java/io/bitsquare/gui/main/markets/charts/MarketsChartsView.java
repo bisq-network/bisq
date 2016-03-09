@@ -139,8 +139,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                     xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis, "", ""));
                 });
 
-        buyOfferTableView.setItems(model.getBuyOfferList());
-        sellOfferTableView.setItems(model.getSellOfferList());
+        buyOfferTableView.setItems(model.getTop3BuyOfferList());
+        sellOfferTableView.setItems(model.getTop3SellOfferList());
 
         updateChartData();
     }
@@ -155,10 +155,10 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
     private Tuple3<TableView<Offer>, VBox, Button> getOfferTable(Offer.Direction direction) {
         TableView<Offer> tableView = new TableView<>();
-        tableView.setMinHeight(99);
-        tableView.setMaxHeight(99);
+        tableView.setMinHeight(100);
+        tableView.setMaxHeight(100);
         tableView.setMinWidth(390);
-        tableView.setMouseTransparent(true);
+        // tableView.setMouseTransparent(true);
 
         // price
         TableColumn<Offer, Offer> priceColumn = new TableColumn<>();

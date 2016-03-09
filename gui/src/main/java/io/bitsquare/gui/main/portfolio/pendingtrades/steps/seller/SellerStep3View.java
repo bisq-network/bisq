@@ -21,7 +21,6 @@ import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -49,7 +48,6 @@ public class SellerStep3View extends TradeStepView {
     private Label statusLabel;
     private ProgressIndicator statusProgressIndicator;
     private Subscription tradeStatePropertySubscription;
-    private Overlay attentionRequiredPopup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,34 +65,33 @@ public class SellerStep3View extends TradeStepView {
         tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
             if (state == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
                 PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-                String key = "confirmPaymentPopup";
-                if (attentionRequiredPopup == null && !BitsquareApp.DEV_MODE) {
-                    String message;
-                    String tradeAmountWithCode = model.formatter.formatFiatWithCode(trade.getTradeVolume());
-                    String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
-                    if (paymentAccountContractData instanceof BlockChainAccountContractData) {
-                        String address = ((BlockChainAccountContractData) paymentAccountContractData).getAddress();
-                        message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
-                                "Please check on your favorite " + currencyName +
-                                " blockchain explorer if the transaction to your receiving address\n" +
-                                "" + address + "\n" +
-                                "has already sufficient blockchain confirmations.\n" +
-                                "The payment amount has to be " + tradeAmountWithCode + "\n\n" +
-                                "You can copy & paste your " + currencyName + " address from the main screen after " +
-                                "closing that popup.";
-                    } else {
-                        message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
-                                "Please go to your online banking web page and check if you have received " +
-                                tradeAmountWithCode + " from the bitcoin buyer.\n\n" +
-                                "The reference text of the transaction is: \"" + trade.getShortId() + "\"";
-                    }
-                    attentionRequiredPopup = new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
-                            .instruction(message)
-                            .dontShowAgainId(key, preferences);
-
-                    attentionRequiredPopup.show();
-
+                String key = "confirmPayment" + trade.getId();
+                String message;
+                String tradeAmountWithCode = model.formatter.formatFiatWithCode(trade.getTradeVolume());
+                String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
+                if (paymentAccountContractData instanceof BlockChainAccountContractData) {
+                    String address = ((BlockChainAccountContractData) paymentAccountContractData).getAddress();
+                    message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
+                            "Please check on your favorite " + currencyName +
+                            " blockchain explorer if the transaction to your receiving address\n" +
+                            "" + address + "\n" +
+                            "has already sufficient blockchain confirmations.\n" +
+                            "The payment amount has to be " + tradeAmountWithCode + "\n\n" +
+                            "You can copy & paste your " + currencyName + " address from the main screen after " +
+                            "closing that popup.";
+                } else {
+                    message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
+                            "Please go to your online banking web page and check if you have received " +
+                            tradeAmountWithCode + " from the bitcoin buyer.\n\n" +
+                            "The reference text of the transaction is: \"" + trade.getShortId() + "\"";
                 }
+                if (preferences.showAgain(key)) {
+                    new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
+                            .instruction(message)
+                            .onClose(() -> preferences.dontShowAgain(key, true))
+                            .show();
+                }
+
             } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT) {
                 showStatusInfo();
                 statusLabel.setText("Sending confirmation...");
@@ -238,10 +235,10 @@ public class SellerStep3View extends TradeStepView {
                                 "Please note that as soon you have confirmed the receipt, the locked trade amount will be released " +
                                 "to the bitcoin buyer and the security deposit will be refunded.")
                         .width(700)
-                        .dontShowAgainId(key, preferences)
                         .actionButtonText("Yes, I have received the payment")
-                        .closeButtonText("Cancel")
                         .onAction(this::confirmPaymentReceived)
+                        .closeButtonText("Cancel")
+                        .dontShowAgainId(key, preferences)
                         .show();
             } else {
                 confirmPaymentReceived();

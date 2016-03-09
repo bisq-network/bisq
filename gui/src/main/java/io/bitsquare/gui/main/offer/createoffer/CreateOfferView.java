@@ -208,7 +208,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     public void onClose() {
         // we use model.placeOfferCompleted to not react on close which was triggered by a successful placeOffer
         if (model.dataModel.isWalletFunded.get() && !model.placeOfferCompleted.get())
-            new Popup().warning("You have already funds paid in.\n" +
+            new Popup().information("You have already funds paid in.\n" +
                     "In the \"Funds/Available for withdrawal\" section you can withdraw those funds.").show();
     }
 
@@ -262,11 +262,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
                     "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
                     "It will be refunded to you after the trade has successfully completed.")
-                    .closeButtonText("I want to learn more")
-                    .onClose(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
-                    .actionButtonText("I understand")
-                    .onAction(() -> {
-                    })
+                    .actionButtonText("Visit FAQ web page")
+                    .onAction(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
+                    .closeButtonText("I understand")
                     .dontShowAgainId(key, preferences)
                     .show();
 
@@ -281,7 +279,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     "(you can copy the address in the screen below after closing that popup)\n\n" +
                     "Make sure you use a sufficiently high mining fee of at least " +
                     model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) +
-                    " to avoid problems that your transaction does not get confirmed in the blockchain.\n\n" +
+                    " to avoid problems that your transaction does not get confirmed in the blockchain.\n" +
+                    "Transactions with a lower fee will not be accepted.\n\n" +
                     "You can see the status of your incoming payment and all the details in the screen below.")
                     .dontShowAgainId(key, preferences)
                     .show();
@@ -731,7 +730,17 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         spinnerInfoLabel = placeOfferTuple.third;
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
-        cancelButton2.setOnAction(e -> close());
+        cancelButton2.setOnAction(e -> {
+            if (model.dataModel.isWalletFunded.get())
+                new Popup().warning("You have already paid in the funds.\n" +
+                        "Are you sure you want to cancel.")
+                        .actionButtonText("No")
+                        .closeButtonText("Yes, close")
+                        .onClose(() -> close())
+                        .show();
+            else
+                close();
+        });
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);
         cancelButton2.setId("cancel-button");

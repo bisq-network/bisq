@@ -36,6 +36,7 @@ import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.offer.OfferView;
+import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
@@ -103,6 +104,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Coin> feeFromFundingTxListener;
     private boolean offerDetailsWindowDisplayed;
+    private Notification walletFundedNotification;
+    private Subscription isWalletFundedSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -308,6 +311,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (spinner != null)
             spinner.setProgress(0);
+
+        if (isWalletFundedSubscription != null)
+            isWalletFundedSubscription.unsubscribe();
     }
 
 
@@ -411,11 +417,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
                     "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
                     "It will be refunded to you after the trade has successfully completed.")
-                    .closeButtonText("I want to learn more")
-                    .onClose(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
-                    .actionButtonText("I understand")
-                    .onAction(() -> {
-                    })
+                    .actionButtonText("Visit FAQ web page")
+                    .onAction(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
+                    .closeButtonText("I understand")
                     .dontShowAgainId(key, preferences)
                     .show();
 
@@ -429,7 +433,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     model.getAddressAsString() + "\n(you can copy the address in the screen below after closing that popup)\n\n" +
                     "Make sure you use a sufficiently high mining fee of at least " +
                     model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) +
-                    " to avoid problems that your transaction does not get confirmed in the blockchain.\n\n" +
+                    " to avoid problems that your transaction does not get confirmed in the blockchain.\n" +
+                    "Transactions with a lower fee will not be accepted.\n\n" +
                     "You can see the status of your incoming payment and all the details in the screen below.")
                     .dontShowAgainId(key, preferences)
                     .show();
@@ -456,6 +461,30 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         balanceTextField.setVisible(true);
 
         setupTotalToPayInfoIconLabel();
+
+        if (model.dataModel.isWalletFunded.get()) {
+            if (walletFundedNotification == null) {
+                walletFundedNotification = new Notification()
+                        .headLine("Trading wallet update")
+                        .notification("Your trading wallet was already sufficiently funded from an earlier take offer attempt.\n" +
+                                "Amount: " + formatter.formatCoinWithCode(model.dataModel.totalToPayAsCoin.get()))
+                        .autoClose();
+                walletFundedNotification.show();
+            }
+        } else {
+            isWalletFundedSubscription = EasyBind.subscribe(model.dataModel.isWalletFunded, isFunded -> {
+                if (isFunded) {
+                    if (walletFundedNotification == null) {
+                        walletFundedNotification = new Notification()
+                                .headLine("Trading wallet update")
+                                .notification("Your trading wallet is sufficiently funded.\n" +
+                                        "Amount: " + formatter.formatCoinWithCode(model.dataModel.totalToPayAsCoin.get()))
+                                .autoClose();
+                        walletFundedNotification.show();
+                    }
+                }
+            });
+        }
     }
 
 
@@ -632,7 +661,17 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         spinnerInfoLabel = takeOfferTuple.third;
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
-        cancelButton2.setOnAction(e -> close());
+        cancelButton2.setOnAction(e -> {
+            if (model.dataModel.isWalletFunded.get())
+                new Popup().warning("You have already paid in the funds.\n" +
+                        "Are you sure you want to cancel.")
+                        .actionButtonText("Yes, cancel")
+                        .onAction(() -> close())
+                        .closeButtonText("No")
+                        .show();
+            else
+                close();
+        });
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);
         cancelButton2.setId("cancel-button");

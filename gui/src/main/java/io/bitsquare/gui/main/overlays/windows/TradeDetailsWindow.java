@@ -63,6 +63,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         this.formatter = formatter;
         this.disputeManager = disputeManager;
         this.tradeManager = tradeManager;
+        type = Type.Confirmation;
     }
 
     public void show(Trade trade) {

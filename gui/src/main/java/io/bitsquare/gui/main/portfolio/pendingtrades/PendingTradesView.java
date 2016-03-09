@@ -102,10 +102,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 "When you open a support ticket the trade will be interrupted and handled by the arbitrator\n\n" +
                                 "Unjustified support tickets (e.g. caused by usability problems or questions) will " +
                                 "cause a loss of the security deposit by the trader who opened the ticket.")
-                        .closeButtonText("Open support ticket")
-                        .onClose(model.dataModel::onOpenSupportTicket)
-                        .actionButtonText("Cancel")
-                        .onAction(() -> popup.hide())
+                        .actionButtonText("Open support ticket")
+                        .onAction(model.dataModel::onOpenSupportTicket)
+                        .closeButtonText("Cancel")
+                        .onClose(() -> popup.hide())
                         .show();
             }
         };
@@ -147,7 +147,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         root.getChildren().add(selectedSubView);
                     else if (root.getChildren().size() == 2)
                         root.getChildren().set(1, selectedSubView);
-                    selectedSubView.activate();
+
                 }
 
                 updateTableSelection();
@@ -156,6 +156,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             }
 
             model.onSelectedItemChanged(selectedItem);
+
+            if (selectedSubView != null && selectedItem != null)
+                selectedSubView.activate();
         });
 
         selectedTableItemSubscription = EasyBind.subscribe(table.getSelectionModel().selectedItemProperty(),

@@ -41,6 +41,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public DisplayAlertMessageWindow() {
+        type = Type.Attention;
     }
 
     public void show() {

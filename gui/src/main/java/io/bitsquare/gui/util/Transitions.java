@@ -35,7 +35,7 @@ public class Transitions {
     public final static int DEFAULT_DURATION = 600;
 
     private final Preferences preferences;
-    private Timeline removeBlurTimeLine;
+    private Timeline removeEffectTimeLine;
 
     @Inject
     public Transitions(Preferences preferences) {
@@ -91,65 +91,61 @@ public class Transitions {
 
     // Blur
     public void blur(Node node) {
-        blur(node, DEFAULT_DURATION, true, false, 15);
+        blur(node, DEFAULT_DURATION, -0.1, false, 15);
     }
 
-    public void blur(Node node, int duration, boolean useDarken, boolean removeNode, double blurRadius) {
-        if (removeBlurTimeLine != null)
-            removeBlurTimeLine.stop();
+    public void blur(Node node, int duration, double brightness, boolean removeNode, double blurRadius) {
+        if (removeEffectTimeLine != null)
+            removeEffectTimeLine.stop();
 
         node.setMouseTransparent(true);
         GaussianBlur blur = new GaussianBlur(0.0);
         Timeline timeline = new Timeline();
         KeyValue kv1 = new KeyValue(blur.radiusProperty(), blurRadius);
         KeyFrame kf1 = new KeyFrame(Duration.millis(getDuration(duration)), kv1);
-
-        if (useDarken) {
-            ColorAdjust darken = new ColorAdjust();
-            darken.setBrightness(0.0);
-            blur.setInput(darken);
-
-            KeyValue kv2 = new KeyValue(darken.brightnessProperty(), -0.1);
-            KeyFrame kf2 = new KeyFrame(Duration.millis(getDuration(duration)), kv2);
-            timeline.getKeyFrames().addAll(kf1, kf2);
-        } else {
-            timeline.getKeyFrames().addAll(kf1);
-        }
+        ColorAdjust darken = new ColorAdjust();
+        darken.setBrightness(0.0);
+        blur.setInput(darken);
+        KeyValue kv2 = new KeyValue(darken.brightnessProperty(), brightness);
+        KeyFrame kf2 = new KeyFrame(Duration.millis(getDuration(duration)), kv2);
+        timeline.getKeyFrames().addAll(kf1, kf2);
         node.setEffect(blur);
         if (removeNode) timeline.setOnFinished(actionEvent -> UserThread.execute(() -> ((Pane) (node.getParent()))
                 .getChildren().remove(node)));
         timeline.play();
     }
 
-    public void removeBlur(Node node) {
-        removeBlur(node, DEFAULT_DURATION, false);
+    // Darken
+    public void darken(Node node, int duration, boolean removeNode) {
+        blur(node, duration, -0.2, removeNode, 0);
     }
 
-    private void removeBlur(Node node, int duration, boolean useDarken) {
+    public void removeEffect(Node node) {
+        removeEffect(node, DEFAULT_DURATION);
+    }
+
+    private void removeEffect(Node node, int duration) {
         if (node != null) {
             node.setMouseTransparent(false);
+            removeEffectTimeLine = new Timeline();
             GaussianBlur blur = (GaussianBlur) node.getEffect();
             if (blur != null) {
-                removeBlurTimeLine = new Timeline();
                 KeyValue kv1 = new KeyValue(blur.radiusProperty(), 0.0);
                 KeyFrame kf1 = new KeyFrame(Duration.millis(getDuration(duration)), kv1);
+                removeEffectTimeLine.getKeyFrames().add(kf1);
 
-
-                if (useDarken) {
-                    ColorAdjust darken = (ColorAdjust) blur.getInput();
-
-                    KeyValue kv2 = new KeyValue(darken.brightnessProperty(), 0.0);
-                    KeyFrame kf2 = new KeyFrame(Duration.millis(getDuration(duration)), kv2);
-                    removeBlurTimeLine.getKeyFrames().addAll(kf1, kf2);
-                } else {
-                    removeBlurTimeLine.getKeyFrames().addAll(kf1);
-                }
-
-                removeBlurTimeLine.setOnFinished(actionEvent -> {
+                ColorAdjust darken = (ColorAdjust) blur.getInput();
+                KeyValue kv2 = new KeyValue(darken.brightnessProperty(), 0.0);
+                KeyFrame kf2 = new KeyFrame(Duration.millis(getDuration(duration)), kv2);
+                removeEffectTimeLine.getKeyFrames().add(kf2);
+                removeEffectTimeLine.setOnFinished(actionEvent -> {
                     node.setEffect(null);
-                    removeBlurTimeLine = null;
+                    removeEffectTimeLine = null;
                 });
-                removeBlurTimeLine.play();
+                removeEffectTimeLine.play();
+            } else {
+                node.setEffect(null);
+                removeEffectTimeLine = null;
             }
         }
     }

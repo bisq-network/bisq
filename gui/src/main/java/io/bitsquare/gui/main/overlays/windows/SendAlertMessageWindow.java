@@ -59,6 +59,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public SendAlertMessageWindow() {
+        type = Type.Attention;
     }
 
     public void show() {

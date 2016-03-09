@@ -44,7 +44,6 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import javax.inject.Inject;
-import java.util.Locale;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -54,7 +53,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     // not supported yet
     //private ComboBox<String> btcDenominationComboBox; 
     private ComboBox<BlockChainExplorer> blockChainExplorerComboBox;
-    private ComboBox<String> userLanguageComboBox;
+    //  private ComboBox<String> userLanguageComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
     private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox;
@@ -275,11 +274,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void initializeOtherOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "General preferences", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, "General preferences", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
-        userLanguageComboBox = addLabelComboBox(root, gridRow, "Language:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        // userLanguageComboBox = addLabelComboBox(root, gridRow, "Language:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
-        blockChainExplorerComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin block explorer:").second;
+        blockChainExplorerComboBox = addLabelComboBox(root, gridRow, "Bitcoin block explorer:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow, "Auto select arbitrators:", "").second;
 
         // TODO need a bit extra work to separate trade and non trade tx fees before it can be used
@@ -352,7 +351,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
      btcDenominationComboBox.getSelectionModel().select(getBtcDenomination());
      btcDenominationComboBox.setOnAction(e -> onSelectBtcDenomination(btcDenominationComboBox.getSelectionModel().getSelectedItem()));*/
 
-        userLanguageComboBox.setItems(languageCodes);
+     /*   userLanguageComboBox.setItems(languageCodes);
         userLanguageComboBox.getSelectionModel().select(preferences.getPreferredLocale().getLanguage());
         userLanguageComboBox.setConverter(new StringConverter<String>() {
             @Override
@@ -368,7 +367,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         userLanguageComboBox.setOnAction(e -> {
             String code = userLanguageComboBox.getSelectionModel().getSelectedItem();
             preferences.setPreferredLocale(new Locale(code, preferences.getPreferredLocale().getCountry()));
-        });
+        });*/
 
 
         blockChainExplorerComboBox.setItems(blockExplorers);
@@ -410,7 +409,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     private void deactivateOtherOptions() {
         //btcDenominationComboBox.setOnAction(null);
-        userLanguageComboBox.setOnAction(null);
+        // userLanguageComboBox.setOnAction(null);
         blockChainExplorerComboBox.setOnAction(null);
         //  transactionFeeInputTextField.textProperty().unbind();
         ///  transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);

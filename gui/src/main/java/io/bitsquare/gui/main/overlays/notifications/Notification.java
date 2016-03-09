@@ -27,12 +27,13 @@ public class Notification extends Overlay<Notification> {
     public Notification() {
         width = 345; // 320 visible bg because of insets
         NotificationCenter.add(this);
+        type = Type.Notification;
     }
 
     public void onReadyForDisplay() {
         super.display();
         if (autoClose && autoCloseTimer == null)
-            autoCloseTimer = UserThread.runAfter(this::hide, 4);
+            autoCloseTimer = UserThread.runAfter(() -> doClose(), 5);
     }
 
     @Override

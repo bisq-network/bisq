@@ -76,6 +76,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         this.user = user;
         this.keyRing = keyRing;
         this.navigation = navigation;
+        type = Type.Confirmation;
     }
 
     public void show(Offer offer, Coin tradeAmount) {

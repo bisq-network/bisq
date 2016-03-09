@@ -50,6 +50,7 @@ public class NotificationCenter {
 
     private final TradeManager tradeManager;
     private final DisputeManager disputeManager;
+    private Preferences preferences;
     private final Navigation navigation;
 
     private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();
@@ -66,6 +67,7 @@ public class NotificationCenter {
     public NotificationCenter(TradeManager tradeManager, DisputeManager disputeManager, Preferences preferences, Navigation navigation) {
         this.tradeManager = tradeManager;
         this.disputeManager = disputeManager;
+        this.preferences = preferences;
         this.navigation = navigation;
 
         EasyBind.subscribe(preferences.useAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);
@@ -179,21 +181,29 @@ public class NotificationCenter {
         }
 
         if (message != null) {
-            Notification notification = new Notification().tradeHeadLine(trade.getShortId()).message(message);
-
-            if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(PendingTradesView.class)) {
-                notification.actionButtonText("Go to \"Open trades\"")
-                        .onAction(() -> {
-                            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-                            UserThread.runAfter(() -> {
+            String key = tradeState.name() + trade.getId();
+            if (preferences.showAgain(key)) {
+                Notification notification = new Notification().tradeHeadLine(trade.getShortId()).message(message);
+                if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(PendingTradesView.class)) {
+                    notification.actionButtonText("Go to \"Open trades\"")
+                            .onAction(() -> {
+                                preferences.dontShowAgain(key, true);
+                                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+                                UserThread.runAfter(() -> {
+                                    selectItemByTradeIdConsumer.accept(trade.getId());
+                                }, 1);
+                            })
+                            .onClose(() -> preferences.dontShowAgain(key, true))
+                            .show();
+                } else if (selectedTradeId != null && !trade.getId().equals(selectedTradeId)) {
+                    notification.actionButtonText("Select trade")
+                            .onAction(() -> {
+                                preferences.dontShowAgain(key, true);
                                 selectItemByTradeIdConsumer.accept(trade.getId());
-                            }, 1);
-                        })
-                        .show();
-            } else if (selectedTradeId != null && !trade.getId().equals(selectedTradeId)) {
-                notification.actionButtonText("Select trade")
-                        .onAction(() -> selectItemByTradeIdConsumer.accept(trade.getId()))
-                        .show();
+                            })
+                            .onClose(() -> preferences.dontShowAgain(key, true))
+                            .show();
+                }
             }
         }
     }

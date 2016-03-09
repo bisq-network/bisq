@@ -361,11 +361,11 @@ public abstract class TradeStepView extends AnchorPane {
                     if (dispute.isSupportTicket()) {
                         setSupportOpenedHeadline();
                         msg = "You opened already a support ticket.\n" +
-                                "Please communicate in the support section with the arbitrator.";
+                                "Please communicate in the \"Support\" screen with the arbitrator.";
                     } else {
                         setDisputeOpenedHeadline();
                         msg = "You opened already a dispute.\n" +
-                                "Please communicate in the support section with the arbitrator.";
+                                "Please communicate in the \"Support\" screen with the arbitrator.";
                     }
                     if (notificationGroup != null)
                         notificationGroup.label.setText(msg);
@@ -380,11 +380,11 @@ public abstract class TradeStepView extends AnchorPane {
                     if (dispute.isSupportTicket()) {
                         setSupportOpenedHeadline();
                         msg = "Your trading peer opened a support ticket due technical problems.\n" +
-                                "Please communicate in the support section with the arbitrator.";
+                                "Please communicate in the \"Support\" screen with the arbitrator.";
                     } else {
                         setDisputeOpenedHeadline();
                         msg = "Your trading peer opened a dispute.\n" +
-                                "Please communicate in the support section with the arbitrator.";
+                                "Please communicate in the \"Support\" screen with the arbitrator.";
                     }
                     if (notificationGroup != null)
                         notificationGroup.label.setText(msg);

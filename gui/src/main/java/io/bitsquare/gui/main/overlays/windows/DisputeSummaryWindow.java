@@ -90,6 +90,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.disputeManager = disputeManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
+
+        type = Type.Confirmation;
     }
 
     public void show(Dispute dispute) {

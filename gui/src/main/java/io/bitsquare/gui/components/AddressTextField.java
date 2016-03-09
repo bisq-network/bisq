@@ -109,7 +109,7 @@ public class AddressTextField extends AnchorPane {
                 PopOver popOver = new PopOver(pane);
                 popOver.setDetachedTitle("Scan QR code for this address");
                 popOver.setDetached(true);
-                popOver.setOnHiding(windowEvent -> MainView.removeBlur());
+                popOver.setOnHiding(windowEvent -> MainView.removeEffect());
 
                 Window window = getScene().getWindow();
                 double x = Math.round(window.getX() + (window.getWidth() - 320) / 2);

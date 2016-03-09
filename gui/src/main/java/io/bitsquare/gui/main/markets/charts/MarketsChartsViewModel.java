@@ -50,8 +50,8 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     private final List<XYChart.Data> sellData = new ArrayList();
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
-    private final ObservableList<Offer> buyOfferList = FXCollections.observableArrayList();
-    private final ObservableList<Offer> sellOfferList = FXCollections.observableArrayList();
+    private final ObservableList<Offer> top3BuyOfferList = FXCollections.observableArrayList();
+    private final ObservableList<Offer> top3SellOfferList = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,13 +83,8 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     }
 
     private void updateChartData(ObservableList<OfferBookListItem> offerBookListItems) {
-        List<Offer> offerList = offerBookListItems.stream()
+        List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
-                .collect(Collectors.toList());
-
-        buyOfferList.clear();
-        buyOfferList.addAll(offerList
-                .stream()
                 .filter(e -> e.getCurrencyCode().equals(tradeCurrency.get().getCode())
                         && e.getDirection().equals(Offer.Direction.BUY))
                 .sorted((o1, o2) -> {
@@ -99,13 +94,12 @@ class MarketsChartsViewModel extends ActivatableViewModel {
                         return a < b ? 1 : -1;
                     return 0;
                 })
-                .collect(Collectors.toList()));
-        buyOfferList.subList(0, Math.min(3, buyOfferList.size()));
-        iterateBuyOffers(buyOfferList, Offer.Direction.BUY, buyData);
+                .collect(Collectors.toList());
+        top3BuyOfferList.setAll(allBuyOffers.subList(0, Math.min(3, allBuyOffers.size())));
+        buildChartDataItems(allBuyOffers, Offer.Direction.BUY, buyData);
 
-        sellOfferList.clear();
-        sellOfferList.addAll(offerList
-                .stream()
+        List<Offer> allSellOffers = offerBookListItems.stream()
+                .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(tradeCurrency.get().getCode())
                         && e.getDirection().equals(Offer.Direction.SELL))
                 .sorted((o1, o2) -> {
@@ -115,12 +109,12 @@ class MarketsChartsViewModel extends ActivatableViewModel {
                         return a > b ? 1 : -1;
                     return 0;
                 })
-                .collect(Collectors.toList()));
-        sellOfferList.subList(0, Math.min(3, sellOfferList.size()));
-        iterateBuyOffers(sellOfferList, Offer.Direction.SELL, sellData);
+                .collect(Collectors.toList());
+        top3SellOfferList.setAll(allSellOffers.subList(0, Math.min(3, allSellOffers.size())));
+        buildChartDataItems(allSellOffers, Offer.Direction.SELL, sellData);
     }
 
-    private void iterateBuyOffers(List<Offer> sortedList, Offer.Direction direction, List<XYChart.Data> data) {
+    private void buildChartDataItems(List<Offer> sortedList, Offer.Direction direction, List<XYChart.Data> data) {
         data.clear();
         double accumulatedAmount = 0;
         for (Offer offer : sortedList) {
@@ -165,12 +159,12 @@ class MarketsChartsViewModel extends ActivatableViewModel {
         return offerBookListItems;
     }
 
-    public ObservableList<Offer> getBuyOfferList() {
-        return buyOfferList;
+    public ObservableList<Offer> getTop3BuyOfferList() {
+        return top3BuyOfferList;
     }
 
-    public ObservableList<Offer> getSellOfferList() {
-        return sellOfferList;
+    public ObservableList<Offer> getTop3SellOfferList() {
+        return top3SellOfferList;
     }
 
     public ObservableList<TradeCurrency> getTradeCurrencies() {
