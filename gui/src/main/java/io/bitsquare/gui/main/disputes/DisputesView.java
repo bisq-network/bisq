@@ -143,28 +143,6 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                     })
                     .dontShowAgainId(key, preferences)
                     .show();
-        /*
-                    .backgroundInfo("Bitsquare is not a company and not operating any kind of customer support.\n\n" +
-                    "If there are disputes in the trade process (e.g. one trader does not follow the trade protocol) " +
-                    "the application will display a \"Open dispute\" button after the trade period is over " +
-                    "for contacting the arbitrator.\n" +
-                    "In cases of software bugs or network problems, which are detected by the application there will " +
-                    "be displayed a \"Open support ticket\" button to contact the arbitrator who will forward the issue " +
-                    "to the developers.\n\n" +
-                    "In cases where a user got stuck by a bug without getting displayed that \"Open support ticket\" button, " +
-                    "you can open here a support ticket manually.\n\n" +
-                    "Please use that only if you are sure that the software is not working like expected. " +
-                    "If you have problems how to use Bitsquare of questions please review the FAQ at the " +
-                    "Bitsquare.io web page or contact the Bitsquare over " +
-                    "any of the communication channels offered " +
-                    "at the Bitsquare.io web page.")
-                    .closeButtonText("Open Bitsquare.io web page")
-                    .onClose(() -> Utilities.openWebPage("https://bitsquare.io"))
-                    .actionButtonText("I understand")
-                    .onAction(() -> {
-                    })
-                    .dontShowAgainId(key, preferences)
-                    .show();*/
     }
 
     @Override

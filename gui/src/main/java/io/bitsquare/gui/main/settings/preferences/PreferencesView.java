@@ -57,7 +57,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
-    private CheckBox useAnimationsCheckBox, useEffectsCheckBox, autoSelectArbitratorsCheckBox;
+    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox;
     private int gridRow = 0;
     //private InputTextField transactionFeeInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
@@ -130,7 +130,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeDisplayCurrencies() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 3, "Currencies");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 3, "Currencies to get displayed in list");
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         preferredTradeCurrencyComboBox = addLabelComboBox(root, gridRow, "Preferred currency:", Layout.FIRST_ROW_DISTANCE).second;
@@ -275,7 +275,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void initializeOtherOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Options", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "General preferences", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
         userLanguageComboBox = addLabelComboBox(root, gridRow, "Language:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
@@ -290,10 +290,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void initializeDisplayOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, "Display options", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, "Display options", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
         useAnimationsCheckBox = addLabelCheckBox(root, gridRow, "Use animations:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        useEffectsCheckBox = addLabelCheckBox(root, ++gridRow, "Use effects:", "").second;
         resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all don't show again flags:", "Reset", 0).second;
     }
 
@@ -395,9 +394,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         useAnimationsCheckBox.setSelected(preferences.getUseAnimations());
         useAnimationsCheckBox.setOnAction(e -> preferences.setUseAnimations(useAnimationsCheckBox.isSelected()));
 
-        useEffectsCheckBox.setSelected(preferences.getUseEffects());
-        useEffectsCheckBox.setOnAction(e -> preferences.setUseEffects(useEffectsCheckBox.isSelected()));
-
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgainForType());
 
         autoSelectArbitratorsCheckBox.setSelected(preferences.getAutoSelectArbitrators());
@@ -423,10 +419,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     private void deactivateDisplayPreferences() {
         useAnimationsCheckBox.setOnAction(null);
-        useEffectsCheckBox.setOnAction(null);
         autoSelectArbitratorsCheckBox.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
     }
-
-
 }

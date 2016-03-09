@@ -100,6 +100,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
                     return 0;
                 })
                 .collect(Collectors.toList()));
+        buyOfferList.subList(0, Math.min(3, buyOfferList.size()));
         iterateBuyOffers(buyOfferList, Offer.Direction.BUY, buyData);
 
         sellOfferList.clear();
@@ -115,6 +116,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
                     return 0;
                 })
                 .collect(Collectors.toList()));
+        sellOfferList.subList(0, Math.min(3, sellOfferList.size()));
         iterateBuyOffers(sellOfferList, Offer.Direction.SELL, sellData);
     }
 

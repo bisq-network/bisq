@@ -156,7 +156,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private void buildForm() {
         addTitledGroupBg(root, gridRow, 2, "Manage accounts");
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your accounts:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your national currency accounts:", Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);

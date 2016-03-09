@@ -206,7 +206,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         dateColumn.setMinWidth(130);
         dateColumn.setMaxWidth(130);
 
-        TableColumn<ArbitratorListItem, String> nameColumn = new TableColumn("Public key");
+        TableColumn<ArbitratorListItem, String> nameColumn = new TableColumn("Onion address");
         nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getAddressString()));
         nameColumn.setMinWidth(90);
 

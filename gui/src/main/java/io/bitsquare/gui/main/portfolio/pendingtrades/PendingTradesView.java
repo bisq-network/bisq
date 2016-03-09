@@ -108,7 +108,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         .onAction(() -> popup.hide())
                         .show();
             }
-            //new OpenSupportTicketWindow().onOpenTicket(model.dataModel::onOpenSupportTicket).show();
         };
     }
 

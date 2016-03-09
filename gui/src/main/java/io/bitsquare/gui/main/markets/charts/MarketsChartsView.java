@@ -155,13 +155,16 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
     private Tuple3<TableView<Offer>, VBox, Button> getOfferTable(Offer.Direction direction) {
         TableView<Offer> tableView = new TableView<>();
-        tableView.setMinHeight(100);
+        tableView.setMinHeight(99);
+        tableView.setMaxHeight(99);
         tableView.setMinWidth(390);
+        tableView.setMouseTransparent(true);
 
         // price
         TableColumn<Offer, Offer> priceColumn = new TableColumn<>();
         priceColumn.textProperty().bind(priceColumnLabel);
         priceColumn.setMinWidth(120);
+        priceColumn.setSortable(false);
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
                 new Callback<TableColumn<Offer, Offer>, TableCell<Offer, Offer>>() {
@@ -185,6 +188,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         TableColumn<Offer, Offer> amountColumn = new TableColumn<>("Amount (BTC)");
         amountColumn.setText("Amount (BTC)");
         amountColumn.setMinWidth(120);
+        amountColumn.setSortable(false);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
                 new Callback<TableColumn<Offer, Offer>, TableCell<Offer, Offer>>() {
@@ -207,6 +211,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         // volume
         TableColumn<Offer, Offer> volumeColumn = new TableColumn<>("Amount (BTC)");
         volumeColumn.setMinWidth(120);
+        volumeColumn.setSortable(false);
         volumeColumn.textProperty().bind(volumeColumnLabel);
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
@@ -231,9 +236,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         Label placeholder = new Label("Currently there are no offers available");
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
-        tableView.getSelectionModel().setCellSelectionEnabled(false);
 
-        Label titleLabel = new Label(direction.equals(Offer.Direction.BUY) ? "Offers for buying bitcoin  (bid)" : "Offers for selling bitcoin  (ask)");
+        Label titleLabel = new Label(direction.equals(Offer.Direction.BUY) ? "Top 3 offers for buying bitcoin  (bid)" : "Top 3 offers for selling bitcoin  (ask)");
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
@@ -251,7 +255,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         VBox vBox = new VBox();
         vBox.setSpacing(10);
         vBox.setFillWidth(true);
-        vBox.setMinHeight(120);
+        vBox.setMinHeight(180);
         vBox.getChildren().addAll(titleLabel, tableView, button);
 
         button.prefWidthProperty().bind(vBox.widthProperty());

@@ -108,7 +108,6 @@ public final class Preferences implements Persistable {
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
     transient private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(useAnimations);
-    transient private final BooleanProperty useEffectsProperty = new SimpleBooleanProperty(useEffects);
     transient private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
@@ -128,7 +127,6 @@ public final class Preferences implements Persistable {
         if (persisted != null) {
             setBtcDenomination(persisted.btcDenomination);
             setUseAnimations(persisted.useAnimations);
-            setUseEffects(persisted.useEffects);
 
             setFiatCurrencies(persisted.fiatCurrencies);
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
@@ -189,10 +187,6 @@ public final class Preferences implements Persistable {
             useAnimations = useAnimationsProperty.get();
             storage.queueUpForSave(2000);
         });
-        useEffectsProperty.addListener((ov) -> {
-            useEffects = useEffectsProperty.get();
-            storage.queueUpForSave(2000);
-        });
         fiatCurrenciesAsObservable.addListener((Observable ov) -> {
             fiatCurrencies.clear();
             fiatCurrencies.addAll(fiatCurrenciesAsObservable);
@@ -239,10 +233,6 @@ public final class Preferences implements Persistable {
 
     public void setUseAnimations(boolean useAnimationsProperty) {
         this.useAnimationsProperty.set(useAnimationsProperty);
-    }
-
-    public void setUseEffects(boolean useEffectsProperty) {
-        this.useEffectsProperty.set(useEffectsProperty);
     }
 
     public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
@@ -358,10 +348,6 @@ public final class Preferences implements Persistable {
         return btcDenominationProperty.get();
     }
 
-    public boolean getUseEffects() {
-        return useEffectsProperty.get();
-    }
-
     public boolean getUseAnimations() {
         return useAnimationsProperty.get();
     }
@@ -372,10 +358,6 @@ public final class Preferences implements Persistable {
 
     public BooleanProperty useAnimationsProperty() {
         return useAnimationsProperty;
-    }
-
-    public BooleanProperty useEffectsPropertyProperty() {
-        return useEffectsProperty;
     }
 
     public BitcoinNetwork getBitcoinNetwork() {

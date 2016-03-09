@@ -130,7 +130,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         if (view instanceof AccountSettingsView) {
             selectedTab = accountSettingsTab;
             accountSettingsView = (AccountSettingsView) view;
-            selectedTab.setText("Account settings");
+            selectedTab.setText("Account");
             if (arbitratorRegistrationTab != null) {
                 arbitratorRegistrationTab.setDisable(false);
                 if (arbitratorRegistrationView != null)
