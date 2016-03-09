@@ -86,6 +86,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         Tuple3<Button, ProgressIndicator, Label> tuple = addButtonWithStatus(root, ++gridRow, "", 0);
         pwButton = tuple.first;
         ProgressIndicator progressIndicator = tuple.second;
+        progressIndicator.setVisible(false);
         Label deriveStatusLabel = tuple.third;
         pwButton.setDisable(true);
 

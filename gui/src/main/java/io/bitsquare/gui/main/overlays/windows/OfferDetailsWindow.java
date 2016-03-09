@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
@@ -195,7 +196,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             }
         }
 
-        rows = 3;
+        rows = 4;
         String paymentMethodCountryCode = offer.getPaymentMethodCountryCode();
         if (paymentMethodCountryCode != null)
             rows++;
@@ -205,6 +206,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
         addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
+        addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit()));
 
         if (paymentMethodCountryCode != null)
             addLabelTextField(gridPane, ++rowIndex, "Offerers country of bank:",

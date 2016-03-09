@@ -27,6 +27,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.user.Preferences;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
@@ -55,6 +56,7 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private final WalletService walletService;
     private final WalletPasswordWindow walletPasswordWindow;
+    private Preferences preferences;
 
     private Button restoreButton;
     private TextArea seedWordsTextArea;
@@ -75,9 +77,10 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsView(WalletService walletService, WalletPasswordWindow walletPasswordWindow) {
+    private SeedWordsView(WalletService walletService, WalletPasswordWindow walletPasswordWindow, Preferences preferences) {
         this.walletService = walletService;
         this.walletPasswordWindow = walletPasswordWindow;
+        this.preferences = preferences;
     }
 
     @Override
@@ -106,24 +109,45 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
             datePicker.setDisable(true);
             askForPassword();
         } else {
-            showSeedScreen(keyChainSeed);
+            String key = "showSeedWordsWarning";
+            if (preferences.showAgain(key)) {
+                new Popup().warning("You have not setup a wallet password which would protect the display of the seed words.\n\n" +
+                        "Do you want to display the seed words?")
+                        .closeButtonText("Yes, and don't ask me again")
+                        .onClose(() -> {
+                            preferences.dontShowAgain(key, true);
+                            showSeedScreen(keyChainSeed);
+                        })
+                        .actionButtonText("No")
+                        .show();
+            } else {
+                showSeedScreen(keyChainSeed);
+            }
         }
     }
 
     @Override
     protected void deactivate() {
-        seedWordsValid.removeListener(seedWordsValidChangeListener);
-        seedWordsTextArea.textProperty().removeListener(seedWordsTextAreaChangeListener);
-        dateValid.removeListener(datePickerChangeListener);
-        datePicker.valueProperty().removeListener(dateChangeListener);
+        if (seedWordsTextAreaChangeListener != null)
+            seedWordsTextArea.textProperty().removeListener(seedWordsTextAreaChangeListener);
 
         seedWordsTextArea.setText("");
-        datePicker.setValue(null);
-        restoreButton.disableProperty().unbind();
         seedWordsTextArea.getStyleClass().remove("validation_error");
-        datePicker.getStyleClass().remove("validation_error");
-    }
 
+        if (dateChangeListener != null)
+            datePicker.valueProperty().removeListener(dateChangeListener);
+
+        datePicker.setValue(null);
+        datePicker.getStyleClass().remove("validation_error");
+
+        restoreButton.disableProperty().unbind();
+
+        if (seedWordsValid != null && seedWordsValidChangeListener != null)
+            seedWordsValid.removeListener(seedWordsValidChangeListener);
+
+        if (dateValid != null && datePickerChangeListener != null)
+            dateValid.removeListener(datePickerChangeListener);
+    }
 
     private void askForPassword() {
         walletPasswordWindow.onAesKey(aesKey -> {

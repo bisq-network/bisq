@@ -71,7 +71,8 @@ public class AccountSettingsView extends ActivatableViewAndModel {
             if (viewPath.size() != 4 || viewPath.indexOf(AccountSettingsView.class) != 2)
                 return;
 
-            loadView(viewPath.tip());
+            selectedViewClass = viewPath.tip();
+            loadView(selectedViewClass);
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
@@ -98,7 +99,14 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         ViewPath viewPath = navigation.getCurrentPath();
         if (viewPath.size() == 3 && viewPath.indexOf(AccountSettingsView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(AccountView.class) == 1) {
-            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
+            if (selectedViewClass == null)
+                selectedViewClass = FiatAccountsView.class;
+
+            loadView(selectedViewClass);
+                        
+              /*  navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
+            else
+                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, selectedViewClass);*/
         } else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
             selectedViewClass = viewPath.get(3);
             loadView(selectedViewClass);

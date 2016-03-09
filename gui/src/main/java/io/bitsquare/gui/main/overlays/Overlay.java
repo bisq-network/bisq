@@ -76,6 +76,7 @@ public abstract class Overlay<T extends Overlay> {
     private Button actionButton;
     protected Label headLineLabel;
     protected String dontShowAgainId;
+    protected String dontShowAgainText;
     private Preferences preferences;
     protected ChangeListener<Number> positionListener;
     protected Timer centerTime;
@@ -270,6 +271,11 @@ public abstract class Overlay<T extends Overlay> {
     public T dontShowAgainId(String key, Preferences preferences) {
         this.dontShowAgainId = key;
         this.preferences = preferences;
+        return (T) this;
+    }
+
+    public T dontShowAgainText(String dontShowAgainText) {
+        this.dontShowAgainText = dontShowAgainText;
         return (T) this;
     }
 
@@ -624,7 +630,9 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void addDontShowAgainCheckBox() {
         if (dontShowAgainId != null && preferences != null) {
-            CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, "Don't show again", buttonDistance - 1);
+            if (dontShowAgainText == null)
+                dontShowAgainText = "Don't show again";
+            CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, dontShowAgainText, buttonDistance - 1);
             GridPane.setColumnIndex(dontShowAgainCheckBox, 0);
             GridPane.setHalignment(dontShowAgainCheckBox, HPos.LEFT);
             dontShowAgainCheckBox.setOnAction(e -> preferences.dontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
