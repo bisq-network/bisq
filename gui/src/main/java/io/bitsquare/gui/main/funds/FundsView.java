@@ -92,9 +92,9 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
                     "Withdrawing funds can be done after a trade is completed.\n\n" +
                     "Dedicated wallets help protect user privacy and prevent leaking information of previous trades to other" +
                     "traders.")
-                    .closeButtonText("I understand")
                     .actionButtonText("Visit FAQ web page")
                     .onAction(() -> Utilities.openWebPage("https://bitsquare.io/faq"))
+                    .closeButtonText("I understand")
                     .dontShowAgainId(key, preferences)
                     .show();
     }

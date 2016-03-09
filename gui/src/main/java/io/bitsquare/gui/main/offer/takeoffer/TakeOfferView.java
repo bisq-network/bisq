@@ -425,7 +425,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             key = "takeOfferFundWalletInfo";
             String tradeAmountText = model.isSeller() ? "the trade amount, " : "";
-            new Popup().headLine("Fund your trading wallet").instruction("You need to pay in " +
+            new Popup().headLine("Fund your trading wallet")
+                    .instruction("You need to pay in " +
                     model.totalToPay.get() + " to your local Bitsquare trading wallet.\n" +
                     "The amount is the sum of " + tradeAmountText + "the security deposit, the trading fee and " +
                     "the bitcoin mining fee.\n\n" +

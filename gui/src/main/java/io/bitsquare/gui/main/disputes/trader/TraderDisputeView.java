@@ -153,8 +153,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         FilteredList<Dispute> filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
         setFilteredListPredicate(filteredList);
         SortedList<Dispute> sortedList = new SortedList<>(filteredList);
-        sortedList.setComparator((o1, o2) -> o2.getOpeningDate().compareTo(o1.getOpeningDate()));
+        // sortedList.setComparator((o1, o2) -> o2.getOpeningDate().compareTo(o1.getOpeningDate()));
+        sortedList.comparatorProperty().bind(disputesTable.comparatorProperty());
         disputesTable.setItems(sortedList);
+        disputesTable.sort();
         disputesTable.getSelectionModel().selectedItemProperty().addListener(disputeChangeListener);
 
         Dispute selectedItem = disputesTable.getSelectionModel().getSelectedItem();

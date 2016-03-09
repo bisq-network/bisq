@@ -189,9 +189,8 @@ public class NotificationCenter {
                             .onAction(() -> {
                                 preferences.dontShowAgain(key, true);
                                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-                                UserThread.runAfter(() -> {
-                                    selectItemByTradeIdConsumer.accept(trade.getId());
-                                }, 1);
+                                if (selectItemByTradeIdConsumer != null)
+                                    UserThread.runAfter(() -> selectItemByTradeIdConsumer.accept(trade.getId()), 1);
                             })
                             .onClose(() -> preferences.dontShowAgain(key, true))
                             .show();
@@ -199,7 +198,8 @@ public class NotificationCenter {
                     notification.actionButtonText("Select trade")
                             .onAction(() -> {
                                 preferences.dontShowAgain(key, true);
-                                selectItemByTradeIdConsumer.accept(trade.getId());
+                                if (selectItemByTradeIdConsumer != null)
+                                    selectItemByTradeIdConsumer.accept(trade.getId());
                             })
                             .onClose(() -> preferences.dontShowAgain(key, true))
                             .show();

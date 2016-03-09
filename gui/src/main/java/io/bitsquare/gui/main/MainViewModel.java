@@ -518,7 +518,7 @@ public class MainViewModel implements ViewModel {
                     break;
                 case HALF_REACHED:
                     key = "displayHalfTradePeriodOver" + trade.getId();
-                    if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
+                    if (preferences.showAgain(key)) {
                         preferences.dontShowAgain(key, true);
                         new Popup().warning("Your trade with ID " + trade.getShortId() +
                                 " has reached the half of the max. allowed trading period and " +
@@ -530,7 +530,7 @@ public class MainViewModel implements ViewModel {
                     break;
                 case TRADE_PERIOD_OVER:
                     key = "displayTradePeriodOver" + trade.getId();
-                    if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
+                    if (preferences.showAgain(key)) {
                         preferences.dontShowAgain(key, true);
                         new Popup().warning("Your trade with ID " + trade.getShortId() +
                                 " has reached the max. allowed trading period and is " +

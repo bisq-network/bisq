@@ -180,11 +180,11 @@ public class BitsquareApp extends Application {
                     showEmptyWalletPopup();
                 } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showSendAlertMessagePopup();
-                } else if (BitsquareApp.DEV_MODE) {
+                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                    showFPSWindow();
+                else if (BitsquareApp.DEV_MODE) {
                     if (new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                         showDebugWindow();
-                    else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
-                        showFPSWindow();
                 }
             });
 

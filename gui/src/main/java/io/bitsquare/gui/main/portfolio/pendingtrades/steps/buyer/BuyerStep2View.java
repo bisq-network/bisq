@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
@@ -66,7 +65,6 @@ public class BuyerStep2View extends TradeStepView {
                 if (state == Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN) {
                     PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
                     String key = "startPayment" + trade.getId();
-                    log.error("key " + key);
                     String message = "";
                     if (paymentAccountContractData instanceof BlockChainAccountContractData)
                         message = "Your trade has reached at least one blockchain confirmation.\n" +
@@ -91,9 +89,9 @@ public class BuyerStep2View extends TradeStepView {
                                 "Bitcoin, Btc or Bitsquare.";
 
                     if (preferences.showAgain(key)) {
+                        preferences.dontShowAgain(key, true);
                         new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
                                 .instruction(message)
-                                .onClose(() -> preferences.dontShowAgain(key, true))
                                 .show();
                     }
                 } else if (state == Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED) {
@@ -221,7 +219,7 @@ public class BuyerStep2View extends TradeStepView {
     private void onPaymentStarted() {
         if (model.p2PService.isBootstrapped()) {
             String key = "confirmPaymentStarted";
-            if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
+            if (preferences.showAgain(key)) {
                 Popup popup = new Popup();
                 popup.headLine("Confirm that you have started the payment")
                         .confirmation("Have you initiated the " + model.dataModel.getCurrencyCode() +

@@ -66,7 +66,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public final BSFormatter formatter;
-    private final BtcAddressValidator btcAddressValidator;
+    public final BtcAddressValidator btcAddressValidator;
 
     public final P2PService p2PService;
     public final User user;

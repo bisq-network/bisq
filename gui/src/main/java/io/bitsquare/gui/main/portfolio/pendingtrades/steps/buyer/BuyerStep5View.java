@@ -23,6 +23,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
@@ -46,7 +47,7 @@ public class BuyerStep5View extends TradeStepView {
 
     protected Label btcTradeAmountLabel;
     protected Label fiatTradeAmountLabel;
-    private TextField withdrawAddressTextField;
+    private InputTextField withdrawAddressTextField;
     private Button withdrawButton;
 
 
@@ -122,12 +123,13 @@ public class BuyerStep5View extends TradeStepView {
             withdrawAddressTextField.setText("mi8k5f9L972VgDaT4LgjAhriC9hHEPL7EW");
         } else {
             String key = "tradeCompleted" + trade.getId();
-            if (preferences.showAgain(key))
+            if (preferences.showAgain(key)) {
+                preferences.dontShowAgain(key, true);
                 new Notification().headLine("Trade completed")
                         .notification("You can withdraw your funds now to your external Bitcoin wallet.")
-                        .onClose(() -> preferences.dontShowAgain(key, true))
                         .autoClose()
                         .show();
+            }
         }
     }
 
@@ -168,7 +170,9 @@ public class BuyerStep5View extends TradeStepView {
             new Popup().warning("Your funds have already been withdrawn.\nPlease check the transaction history.").show();
             model.dataModel.tradeManager.addTradeToClosedTrades(trade);
         } else {
-            if (Restrictions.isAboveFixedTxFeeAndDust(senderAmount) && !toAddresses.isEmpty()) {
+            if (toAddresses.isEmpty()) {
+                validateWithdrawAddress();
+            } else if (Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
                 try {
                     Coin requiredFee = walletService.getRequiredFee(fromAddresses, toAddresses, senderAmount, null);
                     Coin receiverAmount = senderAmount.subtract(requiredFee);
@@ -194,11 +198,9 @@ public class BuyerStep5View extends TradeStepView {
                         } else {
                             doWithdrawal();
                         }
-
                     }
                 } catch (AddressFormatException e) {
-                    e.printStackTrace();
-                    log.error(e.getMessage());
+                    validateWithdrawAddress();
                 }
             } else {
                 new Popup()
@@ -206,6 +208,12 @@ public class BuyerStep5View extends TradeStepView {
                         .show();
             }
         }
+    }
+
+    private void validateWithdrawAddress() {
+        withdrawAddressTextField.setValidator(model.btcAddressValidator);
+        withdrawAddressTextField.requestFocus();
+        withdrawButton.requestFocus();
     }
 
     protected String getBtcTradeAmountLabel() {

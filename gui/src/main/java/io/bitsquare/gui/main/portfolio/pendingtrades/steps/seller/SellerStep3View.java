@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
-import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
@@ -86,9 +85,9 @@ public class SellerStep3View extends TradeStepView {
                             "The reference text of the transaction is: \"" + trade.getShortId() + "\"";
                 }
                 if (preferences.showAgain(key)) {
+                    preferences.dontShowAgain(key, true);
                     new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
                             .instruction(message)
-                            .onClose(() -> preferences.dontShowAgain(key, true))
                             .show();
                 }
 
@@ -228,7 +227,7 @@ public class SellerStep3View extends TradeStepView {
         if (model.p2PService.isBootstrapped()) {
             Preferences preferences = model.dataModel.preferences;
             String key = "confirmPaymentReceived";
-            if (preferences.showAgain(key) && !BitsquareApp.DEV_MODE) {
+            if (preferences.showAgain(key)) {
                 new Popup()
                         .headLine("Confirm that you have received the payment")
                         .confirmation("Have you received the " + model.dataModel.getCurrencyCode() + " payment from your trading partner?\n\n" +
