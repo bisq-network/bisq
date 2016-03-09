@@ -375,7 +375,12 @@ public class BSFormatter {
     }
 
     public String getDaysHoursMinutes(Date startDate, Date endDate) {
-        return DurationFormatUtils.formatDurationWords(endDate.getTime() - startDate.getTime(), true, true);
+        try {
+            return DurationFormatUtils.formatDurationWords(endDate.getTime() - startDate.getTime(), true, true);
+        } catch (Throwable t) {
+            // in case we get a invalid duration we set swallow the exception
+            return "";
+        }
     }
 
 

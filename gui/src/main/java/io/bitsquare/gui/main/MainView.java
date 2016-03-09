@@ -148,10 +148,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox("Available balance");
         availableBalanceBox.first.textProperty().bind(model.availableBalance);
 
-        Tuple2<TextField, VBox> reservedBalanceBox = getBalanceBox("Reserved balance");
+        Tuple2<TextField, VBox> reservedBalanceBox = getBalanceBox("Reserved in offers");
         reservedBalanceBox.first.textProperty().bind(model.reservedBalance);
 
-        Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox("Locked balance");
+        Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox("Locked in trades");
         lockedBalanceBox.first.textProperty().bind(model.lockedBalance);
 
         HBox rightNavPane = new HBox(marketPriceBox.third, availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,

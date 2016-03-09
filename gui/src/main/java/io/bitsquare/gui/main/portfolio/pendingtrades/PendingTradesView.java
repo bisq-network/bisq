@@ -22,7 +22,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
-import io.bitsquare.gui.main.overlays.windows.OpenEmergencyTicketWindow;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -95,8 +95,20 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         // we use a hidden emergency shortcut to open support ticket
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event))
-                new OpenEmergencyTicketWindow().onOpenTicket(model.dataModel::onOpenSupportTicket).show();
+            if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event)) {
+                Popup popup = new Popup();
+                popup.headLine("Open support ticket")
+                        .message("Please use that only in emergency case if you don't get displayed a \"Open support\" or \"Open dispute\" button.\n\n" +
+                                "When you open a support ticket the trade will be interrupted and handled by the arbitrator\n\n" +
+                                "Unjustified support tickets (e.g. caused by usability problems or questions) will " +
+                                "cause a loss of the security deposit by the trader who opened the ticket.")
+                        .closeButtonText("Open support ticket")
+                        .onClose(model.dataModel::onOpenSupportTicket)
+                        .actionButtonText("Cancel")
+                        .onAction(() -> popup.hide())
+                        .show();
+            }
+            //new OpenSupportTicketWindow().onOpenTicket(model.dataModel::onOpenSupportTicket).show();
         };
     }
 

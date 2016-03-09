@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.disputes;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.common.crypto.KeyRing;
@@ -26,7 +27,11 @@ import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.disputes.arbitrator.ArbitratorDisputeView;
 import io.bitsquare.gui.main.disputes.trader.TraderDisputeView;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.portfolio.PortfolioView;
+import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
@@ -47,6 +52,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
     private final KeyRing keyRing;
+    private Preferences preferences;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -56,13 +62,15 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private boolean isArbitrator;
 
     @Inject
-    public DisputesView(CachingViewLoader viewLoader, Navigation navigation, ArbitratorManager arbitratorManager, KeyRing keyRing) {
+    public DisputesView(CachingViewLoader viewLoader, Navigation navigation, ArbitratorManager arbitratorManager,
+                        KeyRing keyRing, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
         this.keyRing = keyRing;
 
 
+        this.preferences = preferences;
     }
 
     @Override
@@ -109,6 +117,54 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
             navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
         else
             navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
+
+        String key = "supportInfo";
+        if (!BitsquareApp.DEV_MODE)
+            new Popup().backgroundInfo("Bitsquare is not a company and not operating any kind of customer support.\n\n" +
+                    "If there are disputes in the trade process (e.g. one trader does not follow the trade protocol) " +
+                    "the application will display a \"Open dispute\" button after the trade period is over " +
+                    "for contacting the arbitrator.\n" +
+                    "In cases of software bugs or network problems, which are detected by the application there will " +
+                    "be displayed a \"Open support ticket\" button to contact the arbitrator who will forward the issue " +
+                    "to the developers.\n\n" +
+                    "In cases where a user got stuck by a bug without getting displayed that \"Open support ticket\" button, " +
+                    "you can open a support ticket manually with a special short cut.\n\n" +
+                    "Please use that only if you are sure that the software is not working like expected. " +
+                    "If you have problems how to use Bitsquare or any questions please review the FAQ at the " +
+                    "Bitsquare.io web page or contact the Bitsquare team using " +
+                    "any of the communication channels offered " +
+                    "at the Bitsquare.io web page.\n\n" +
+                    "If you are sure you want to open a support ticket please select the trade which causes the problem " +
+                    "under \"Portfolio/Open trades\" and type the key combination \"cmd + o\" to open the support ticket.")
+                    .closeButtonText("Go to \"Open trades\"")
+                    .onClose(() -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class))
+                    .actionButtonText("Close")
+                    .onAction(() -> {
+                    })
+                    .dontShowAgainId(key, preferences)
+                    .show();
+        /*
+                    .backgroundInfo("Bitsquare is not a company and not operating any kind of customer support.\n\n" +
+                    "If there are disputes in the trade process (e.g. one trader does not follow the trade protocol) " +
+                    "the application will display a \"Open dispute\" button after the trade period is over " +
+                    "for contacting the arbitrator.\n" +
+                    "In cases of software bugs or network problems, which are detected by the application there will " +
+                    "be displayed a \"Open support ticket\" button to contact the arbitrator who will forward the issue " +
+                    "to the developers.\n\n" +
+                    "In cases where a user got stuck by a bug without getting displayed that \"Open support ticket\" button, " +
+                    "you can open here a support ticket manually.\n\n" +
+                    "Please use that only if you are sure that the software is not working like expected. " +
+                    "If you have problems how to use Bitsquare of questions please review the FAQ at the " +
+                    "Bitsquare.io web page or contact the Bitsquare over " +
+                    "any of the communication channels offered " +
+                    "at the Bitsquare.io web page.")
+                    .closeButtonText("Open Bitsquare.io web page")
+                    .onClose(() -> Utilities.openWebPage("https://bitsquare.io"))
+                    .actionButtonText("I understand")
+                    .onAction(() -> {
+                    })
+                    .dontShowAgainId(key, preferences)
+                    .show();*/
     }
 
     @Override
