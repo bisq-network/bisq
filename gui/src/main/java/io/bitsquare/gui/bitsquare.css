@@ -993,3 +993,10 @@ textfield */
 .popup-icon-warning {
     -fx-text-fill: #dd6900;
 }
+
+#price-feed-text-field {
+    -fx-alignment: center;
+    -fx-background-color: #555;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}

@@ -27,6 +27,8 @@ import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -86,7 +88,13 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency.getNameAndCode();
+                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+                if (tradeCurrency instanceof FiatCurrency)
+                    return "★ " + tradeCurrency.getNameAndCode();
+                else if (tradeCurrency instanceof CryptoCurrency)
+                    return "✦ " + tradeCurrency.getNameAndCode();
+                else
+                    return "-";
             }
 
             @Override
@@ -158,7 +166,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         tableView.setMinHeight(100);
         tableView.setMaxHeight(100);
         tableView.setMinWidth(390);
-        // tableView.setMouseTransparent(true);
+        tableView.setMouseTransparent(true);
 
         // price
         TableColumn<Offer, Offer> priceColumn = new TableColumn<>();

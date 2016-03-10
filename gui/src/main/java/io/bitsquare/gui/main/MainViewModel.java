@@ -101,6 +101,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
     final StringProperty marketPrice = new SimpleStringProperty("N/A");
+    final StringProperty marketPriceInverted = new SimpleStringProperty("N/A");
     final StringProperty marketPriceCurrency = new SimpleStringProperty("");
     final ObjectProperty<PriceFeed.Type> typeProperty = new SimpleObjectProperty<>(PriceFeed.Type.LAST);
     final StringProperty availableBalance = new SimpleStringProperty();
@@ -609,9 +610,11 @@ public class MainViewModel implements ViewModel {
             priceFeed.setType(PriceFeed.Type.LAST);
         priceFeed.init(price -> {
                     marketPrice.set(formatter.formatMarketPrice(price));
+                    marketPriceInverted.set(formatter.formatMarketPrice(1 / price, 8));
                 },
                 (errorMessage, throwable) -> {
                     marketPrice.set("N/A");
+                    marketPriceInverted.set("N/A");
                 });
         marketPriceCurrency.bind(priceFeed.currencyCodeProperty());
         typeProperty.bind(priceFeed.typeProperty());

@@ -36,6 +36,8 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.util.Transitions;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -134,12 +136,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         }};
 
         Tuple3<TextField, Label, VBox> marketPriceBox = getMarketPriceBox("Market price");
+        final BooleanProperty priceInverted = new SimpleBooleanProperty(false);
+        marketPriceBox.first.setOnMouseClicked(e -> priceInverted.setValue(!priceInverted.get()));
         marketPriceBox.first.textProperty().bind(createStringBinding(
-                () -> {
-                    return model.marketPrice.get() + " " +
-                            model.marketPriceCurrency.get() + "/BTC";
-                },
-                model.marketPriceCurrency, model.marketPrice));
+                () -> (priceInverted.get() ?
+                        model.marketPriceInverted.get() :
+                        model.marketPrice.get()) +
+                        (priceInverted.get() ?
+                                " BTC/" + model.marketPriceCurrency.get() :
+                                " " + model.marketPriceCurrency.get() + "/BTC"),
+                model.marketPriceCurrency, model.marketPrice, priceInverted));
+
         marketPriceBox.second.textProperty().bind(createStringBinding(
                 () -> {
                     PriceFeed.Type type = model.typeProperty.get();
@@ -256,10 +263,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple3<TextField, Label, VBox> getMarketPriceBox(String text) {
         TextField textField = new TextField();
         textField.setEditable(false);
-        textField.setPrefWidth(150);
-        textField.setMouseTransparent(true);
+        textField.setPrefWidth(180);
         textField.setFocusTraversable(false);
-        textField.setStyle("-fx-alignment: center; -fx-background-color: -bs-bg-grey;");
+        textField.setId("price-feed-text-field");
 
         Label label = new Label(text);
         label.setId("nav-balance-label");
@@ -497,11 +503,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         notification.getChildren().addAll(icon, label);
         notification.visibleProperty().bind(model.showPendingTradesNotification);
         buttonHolder.getChildren().add(notification);
-
-       /* model.showPendingTradesNotification.addListener((ov, oldValue, newValue) -> {
-            if (newValue)
-                SystemNotification.openInfoNotification(title, "You received a new trade message.");
-        });*/
     }
 
     private void setupDisputesIcon(Pane buttonHolder) {
@@ -521,11 +522,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         notification.getChildren().addAll(icon, label);
         notification.visibleProperty().bind(model.showOpenDisputesNotification);
         buttonHolder.getChildren().add(notification);
-
-      /*  model.showOpenDisputesNotification.addListener((ov, oldValue, newValue) -> {
-            if (newValue)
-                SystemNotification.openInfoNotification(title, "You received a dispute message.");
-        });*/
     }
 
     private class NavButton extends ToggleButton {

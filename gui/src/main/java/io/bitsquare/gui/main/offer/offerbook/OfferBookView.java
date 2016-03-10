@@ -34,6 +34,8 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
@@ -94,12 +96,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             @Override
             public String toString(TradeCurrency tradeCurrency) {
                 String code = tradeCurrency.getCode();
+                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
                 if (code.equals(OfferBookViewModel.SHOW_ALL_FLAG))
-                    return ">> Show all";
+                    return "▶ Show all";
                 else if (code.equals(OfferBookViewModel.EDIT_FLAG))
-                    return ">> Edit currency list";
+                    return "▼ Edit currency list";
+                else if (tradeCurrency instanceof FiatCurrency)
+                    return "★ " + tradeCurrency.getNameAndCode();
+                else if (tradeCurrency instanceof CryptoCurrency)
+                    return "✦ " + tradeCurrency.getNameAndCode();
                 else
-                    return tradeCurrency.getNameAndCode();
+                    return "-";
             }
 
             @Override
@@ -114,7 +121,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             @Override
             public String toString(PaymentMethod paymentMethod) {
                 String id = paymentMethod.getId();
-                return BSResources.get(!id.equals(OfferBookViewModel.SHOW_ALL_FLAG) ? id : ">> Show all");
+                if (id.equals(OfferBookViewModel.SHOW_ALL_FLAG))
+                    return "▶ Show all";
+                else if (paymentMethod.equals(PaymentMethod.BLOCK_CHAINS))
+                    return "✦ " + BSResources.get(id);
+                else
+                    return "★ " + BSResources.get(id);
             }
 
             @Override

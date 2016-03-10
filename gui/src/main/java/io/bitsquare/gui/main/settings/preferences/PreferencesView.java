@@ -136,11 +136,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         preferredTradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency.getNameAndCode();
+                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+                if (tradeCurrency instanceof FiatCurrency)
+                    return "★ " + tradeCurrency.getNameAndCode();
+                else if (tradeCurrency instanceof CryptoCurrency)
+                    return "✦ " + tradeCurrency.getNameAndCode();
+                else
+                    return "-";
             }
 
             @Override
-            public TradeCurrency fromString(String string) {
+            public TradeCurrency fromString(String s) {
                 return null;
             }
         });
