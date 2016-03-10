@@ -166,6 +166,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
 
         onPaymentAccountsComboBoxSelected();
+
+        if (spinner != null && placeOfferButton.isVisible())
+            spinner.setProgress(-1);
     }
 
     @Override

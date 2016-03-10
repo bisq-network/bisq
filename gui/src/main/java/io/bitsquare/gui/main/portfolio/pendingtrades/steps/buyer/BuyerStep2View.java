@@ -27,7 +27,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.payment.BlockChainAccountContractData;
+import io.bitsquare.payment.CryptoCurrencyAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Trade;
@@ -66,7 +66,7 @@ public class BuyerStep2View extends TradeStepView {
                     PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
                     String key = "startPayment" + trade.getId();
                     String message = "";
-                    if (paymentAccountContractData instanceof BlockChainAccountContractData)
+                    if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData)
                         message = "Your trade has reached at least one blockchain confirmation.\n" +
                                 "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
                                 "Please transfer from your external " +
@@ -91,7 +91,7 @@ public class BuyerStep2View extends TradeStepView {
                     if (preferences.showAgain(key)) {
                         preferences.dontShowAgain(key, true);
                         new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
-                                .instruction(message)
+                                .attention(message)
                                 .show();
                     }
                 } else if (state == Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED) {
@@ -166,7 +166,7 @@ public class BuyerStep2View extends TradeStepView {
                 log.error("Not supported PaymentMethod: " + paymentMethodName);
         }
 
-        if (!(paymentAccountContractData instanceof BlockChainAccountContractData))
+        if (!(paymentAccountContractData instanceof CryptoCurrencyAccountContractData))
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Reference text:", model.dataModel.getReference());
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);

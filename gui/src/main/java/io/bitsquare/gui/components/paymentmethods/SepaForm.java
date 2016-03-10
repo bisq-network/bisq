@@ -24,10 +24,7 @@ import io.bitsquare.gui.util.validation.BICValidator;
 import io.bitsquare.gui.util.validation.IBANValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.*;
-import io.bitsquare.payment.PaymentAccount;
-import io.bitsquare.payment.PaymentAccountContractData;
-import io.bitsquare.payment.SepaAccount;
-import io.bitsquare.payment.SepaAccountContractData;
+import io.bitsquare.payment.*;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
@@ -59,7 +56,7 @@ public class SepaForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", ((SepaAccountContractData) paymentAccountContractData).getHolderName());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameAndCode(paymentAccountContractData.getCountryCode()));
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameAndCode(((CountryBasedPaymentAccountContractData) paymentAccountContractData).getCountryCode()));
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", ((SepaAccountContractData) paymentAccountContractData).getIban());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC/SWIFT:", ((SepaAccountContractData) paymentAccountContractData).getBic());
         return gridRow;
@@ -228,7 +225,7 @@ public class SepaForm extends PaymentMethodForm {
             if (iban.length() > 5)
                 iban = StringUtils.abbreviate(iban, 5);
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
-            String country = paymentAccount.getCountry() != null ? paymentAccount.getCountry().code : "?";
+            String country = ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : "?";
             String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "?";
             accountNameTextField.setText(method.concat(", ").concat(currency).concat(", ").concat(country).concat(", ").concat(iban));
         }

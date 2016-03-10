@@ -21,7 +21,7 @@ import io.bitsquare.app.Version;
 
 import java.util.List;
 
-public final class SepaAccount extends PaymentAccount {
+public final class SepaAccount extends CountryBasedPaymentAccount implements BankAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -32,6 +32,11 @@ public final class SepaAccount extends PaymentAccount {
     @Override
     protected PaymentAccountContractData setContractData() {
         return new SepaAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    }
+
+    @Override
+    public String getBankId() {
+        return ((SepaAccountContractData) contractData).getBic();
     }
 
     public void setHolderName(String holderName) {

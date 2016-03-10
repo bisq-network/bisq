@@ -19,15 +19,19 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 
-public final class BlockChainAccountContractData extends PaymentAccountContractData {
+import javax.annotation.Nullable;
+
+public final class CryptoCurrencyAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private String address;
-    // used in crypto note coins. not supported now but hopefully in future, so leave it for now.
+    // used in crypto note coins. not supported now but hopefully in future, so leave it for now to avoid 
+    // incompatibility from serialized data.
+    @Nullable
     private String paymentId;
 
-    public BlockChainAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
+    public CryptoCurrencyAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
@@ -49,10 +53,11 @@ public final class BlockChainAccountContractData extends PaymentAccountContractD
         return getPaymentDetails();
     }
 
-    public void setPaymentId(String paymentId) {
+    public void setPaymentId(@Nullable String paymentId) {
         this.paymentId = paymentId;
     }
 
+    @Nullable
     public String getPaymentId() {
         return paymentId;
     }

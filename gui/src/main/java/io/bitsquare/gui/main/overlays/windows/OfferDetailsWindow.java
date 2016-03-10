@@ -134,7 +134,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private void addContent() {
         int rows = 5;
 
-        List<String> acceptedBanks = offer.getAcceptedBanks();
+        List<String> acceptedBanks = offer.getAcceptedBankIds();
         boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
@@ -198,7 +198,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         }
 
         rows = 4;
-        String paymentMethodCountryCode = offer.getPaymentMethodCountryCode();
+        String paymentMethodCountryCode = offer.getCountryCode();
         if (paymentMethodCountryCode != null)
             rows++;
         if (offer.getOfferFeePaymentTxID() != null)

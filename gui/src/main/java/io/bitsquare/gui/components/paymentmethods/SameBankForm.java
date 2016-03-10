@@ -20,6 +20,7 @@ package io.bitsquare.gui.components.paymentmethods;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.payment.CountryBasedPaymentAccount;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import javafx.scene.control.Label;
@@ -63,7 +64,7 @@ public class SameBankForm extends BankForm {
                 && inputValidator.validate(bankAccountContractData.getBranchId()).isValid
                 && inputValidator.validate(bankAccountContractData.getAccountNr()).isValid
                 && paymentAccount.getSingleTradeCurrency() != null
-                && paymentAccount.getCountry() != null);
+                && ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null);
     }
 
     @Override

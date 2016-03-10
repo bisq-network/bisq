@@ -44,7 +44,7 @@ public class AlertManager {
     private final ObjectProperty<Alert> alertMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global alert message
-    private static final String devPubKeyAsHex = "02682880ae61fc1ea9375198bf2b5594fc3ed28074d3f5f0ed907e38acc5fb1fdc";
+    private static final String pubKeyAsHex = "036d8a1dfcb406886037d2381da006358722823e1940acc2598c844bbc0fd1026f";
     private ECKey alertSigningKey;
 
 
@@ -116,7 +116,7 @@ public class AlertManager {
     private boolean isKeyValid(String privKeyString) {
         try {
             alertSigningKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(privKeyString)));
-            return devPubKeyAsHex.equals(Utils.HEX.encode(alertSigningKey.getPubKey()));
+            return pubKeyAsHex.equals(Utils.HEX.encode(alertSigningKey.getPubKey()));
         } catch (Throwable t) {
             return false;
         }
@@ -131,7 +131,7 @@ public class AlertManager {
     private boolean verifySignature(Alert alert) {
         String alertMessageAsHex = Utils.HEX.encode(alert.message.getBytes());
         try {
-            ECKey.fromPublicOnly(HEX.decode(devPubKeyAsHex)).verifyMessage(alertMessageAsHex, alert.getSignatureAsBase64());
+            ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(alertMessageAsHex, alert.getSignatureAsBase64());
             return true;
         } catch (SignatureException e) {
             log.warn("verifySignature failed");

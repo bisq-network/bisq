@@ -25,7 +25,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.payment.BlockChainAccountContractData;
+import io.bitsquare.payment.CryptoCurrencyAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
@@ -68,8 +68,8 @@ public class SellerStep3View extends TradeStepView {
                 String message;
                 String tradeAmountWithCode = model.formatter.formatFiatWithCode(trade.getTradeVolume());
                 String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
-                if (paymentAccountContractData instanceof BlockChainAccountContractData) {
-                    String address = ((BlockChainAccountContractData) paymentAccountContractData).getAddress();
+                if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData) {
+                    String address = ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress();
                     message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
                             "Please check on your favorite " + currencyName +
                             " blockchain explorer if the transaction to your receiving address\n" +
@@ -87,7 +87,7 @@ public class SellerStep3View extends TradeStepView {
                 if (preferences.showAgain(key)) {
                     preferences.dontShowAgain(key, true);
                     new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
-                            .instruction(message)
+                            .attention(message)
                             .show();
                 }
 
@@ -134,8 +134,8 @@ public class SellerStep3View extends TradeStepView {
         Contract contract = trade.getContract();
         if (contract != null) {
             PaymentAccountContractData paymentAccountContractData = contract.getSellerPaymentAccountContractData();
-            if (paymentAccountContractData instanceof BlockChainAccountContractData) {
-                paymentDetails = ((BlockChainAccountContractData) paymentAccountContractData).getAddress();
+            if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData) {
+                paymentDetails = ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress();
                 title = "Your " + nameByCode + " address:";
                 isBlockChain = true;
             } else {

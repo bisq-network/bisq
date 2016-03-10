@@ -163,7 +163,7 @@ public class Connection implements MessageListener {
         if (!stopped) {
             try {
                 Log.traceCall();
-                // Throttle outgoing messages
+                // Throttle outbound messages
                 if (System.currentTimeMillis() - lastSendTimeStamp < 20) {
                     log.info("We got 2 sendMessage requests in less then 20 ms. We set the thread to sleep " +
                                     "for 50 ms to avoid that we flood our peer. lastSendTimeStamp={}, now={}, elapsed={}",
@@ -589,6 +589,7 @@ public class Connection implements MessageListener {
         private final MessageListener messageListener;
 
         private volatile boolean stopped;
+        private long lastReadTimeStamp;
 
         public InputHandler(SharedModel sharedModel, ObjectInputStream objectInputStream, String portInfo, MessageListener messageListener) {
             this.sharedModel = sharedModel;
@@ -618,6 +619,16 @@ public class Connection implements MessageListener {
                     try {
                         log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + sharedModel.connection);
                         Object rawInputObject = objectInputStream.readObject();
+
+                        // Throttle inbound messages
+                        if (System.currentTimeMillis() - lastReadTimeStamp < 10) {
+                            log.info("We got 2 messages received in less then 10 ms. We set the thread to sleep " +
+                                            "for 20 ms to avoid that we get flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
+                                    lastReadTimeStamp, System.currentTimeMillis(), (System.currentTimeMillis() - lastReadTimeStamp));
+                            Thread.sleep(20);
+                        }
+
+                        lastReadTimeStamp = System.currentTimeMillis();
 
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
                         boolean doPrintLogs = true;

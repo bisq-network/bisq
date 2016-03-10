@@ -27,7 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class SepaAccountContractData extends PaymentAccountContractData {
+// TODO refactor with BankAccountContractData
+public final class SepaAccountContractData extends CountryBasedPaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

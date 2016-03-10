@@ -20,18 +20,13 @@ package io.bitsquare.payment;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.Payload;
 
-import javax.annotation.Nullable;
-
 public abstract class PaymentAccountContractData implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private final String paymentMethodName;
-    private final String id;
-    private final int maxTradePeriod;
-
-    @Nullable
-    protected String countryCode;
+    protected final String paymentMethodName;
+    protected final String id;
+    protected final int maxTradePeriod;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -43,20 +38,6 @@ public abstract class PaymentAccountContractData implements Payload {
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter, Setter
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setCountryCode(String countryCode) {
-        this.countryCode = countryCode;
-    }
-
-    @Nullable
-    public String getCountryCode() {
-        return countryCode;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -78,6 +59,7 @@ public abstract class PaymentAccountContractData implements Payload {
         return maxTradePeriod;
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -88,8 +70,7 @@ public abstract class PaymentAccountContractData implements Payload {
         if (maxTradePeriod != that.maxTradePeriod) return false;
         if (paymentMethodName != null ? !paymentMethodName.equals(that.paymentMethodName) : that.paymentMethodName != null)
             return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        return !(countryCode != null ? !countryCode.equals(that.countryCode) : that.countryCode != null);
+        return !(id != null ? !id.equals(that.id) : that.id != null);
 
     }
 
@@ -98,7 +79,15 @@ public abstract class PaymentAccountContractData implements Payload {
         int result = paymentMethodName != null ? paymentMethodName.hashCode() : 0;
         result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + maxTradePeriod;
-        result = 31 * result + (countryCode != null ? countryCode.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "PaymentAccountContractData{" +
+                "paymentMethodName='" + paymentMethodName + '\'' +
+                ", id='" + id + '\'' +
+                ", maxTradePeriod=" + maxTradePeriod +
+                '}';
     }
 }

@@ -33,13 +33,9 @@ import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.Country;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.payment.PaymentAccount;
-import io.bitsquare.payment.SameBankAccount;
-import io.bitsquare.payment.SepaAccount;
-import io.bitsquare.payment.SpecificBankAccount;
+import io.bitsquare.payment.*;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
@@ -242,18 +238,27 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long amount = amountAsCoin.get() != null ? amountAsCoin.get().getValue() : 0L;
         long minAmount = minAmountAsCoin.get() != null ? minAmountAsCoin.get().getValue() : 0L;
 
-        ArrayList<String> acceptedCountryCodes = new ArrayList<>();
-        if (paymentAccount instanceof SepaAccount)
+        ArrayList<String> acceptedCountryCodes = null;
+        if (paymentAccount instanceof SepaAccount) {
+            acceptedCountryCodes = new ArrayList<>();
             acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
+        } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
+            acceptedCountryCodes = new ArrayList<>();
+            acceptedCountryCodes.add(((CountryBasedPaymentAccount) paymentAccount).getCountry().code);
+        }
 
-        ArrayList<String> acceptedBanks = new ArrayList<>();
-        if (paymentAccount instanceof SpecificBankAccount)
-            acceptedBanks.addAll(((SpecificBankAccount) paymentAccount).getAcceptedBanks());
-        else if (paymentAccount instanceof SameBankAccount)
-            acceptedBanks.add(((SameBankAccount) paymentAccount).getAcceptedBank());
+        ArrayList<String> acceptedBanks = null;
+        if (paymentAccount instanceof SpecificBanksAccount) {
+            acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
+        } else if (paymentAccount instanceof SameBankAccount) {
+            acceptedBanks = new ArrayList<>();
+            acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
+        }
+
+        String bankId = paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
 
         // That is optional and set to null if not supported (AltCoins, OKPay,...)
-        Country country = paymentAccount.getCountry();
+        String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
         return new Offer(offerId,
@@ -263,12 +268,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 fiatPrice,
                 amount,
                 minAmount,
-                paymentAccount.getPaymentMethod().getId(),
                 tradeCurrencyCode.get(),
-                country,
-                paymentAccount.getId(),
                 new ArrayList<>(user.getAcceptedArbitratorAddresses()),
+                paymentAccount.getPaymentMethod().getId(),
+                paymentAccount.getId(),
+                countryCode,
                 acceptedCountryCodes,
+                bankId,
                 acceptedBanks);
     }
 

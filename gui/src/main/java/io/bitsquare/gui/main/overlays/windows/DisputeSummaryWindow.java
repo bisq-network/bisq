@@ -392,7 +392,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
                     if (!finalPeersDispute.isClosed())
                         UserThread.runAfter(() ->
-                                        new Popup().instruction("You need to close also the trading peers ticket!").show(),
+                                        new Popup().attention("You need to close also the trading peers ticket!").show(),
                                 Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
 
                     hide();

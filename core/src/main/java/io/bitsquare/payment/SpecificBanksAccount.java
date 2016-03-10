@@ -21,11 +21,11 @@ import io.bitsquare.app.Version;
 
 import java.util.ArrayList;
 
-public final class SpecificBankAccount extends PaymentAccount {
+public final class SpecificBanksAccount extends CountryBasedPaymentAccount implements BankNameRestrictedBankAccount, SameCountryRestrictedBankAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    public SpecificBankAccount() {
+    public SpecificBanksAccount() {
         super(PaymentMethod.SPECIFIC_BANKS);
     }
 
@@ -36,5 +36,15 @@ public final class SpecificBankAccount extends PaymentAccount {
 
     public ArrayList<String> getAcceptedBanks() {
         return ((SpecificBanksAccountContractData) contractData).getAcceptedBanks();
+    }
+
+    @Override
+    public String getBankId() {
+        return ((SpecificBanksAccountContractData) contractData).getBankId();
+    }
+
+    @Override
+    public String getCountryCode() {
+        return getCountry() != null ? getCountry().code : "";
     }
 }

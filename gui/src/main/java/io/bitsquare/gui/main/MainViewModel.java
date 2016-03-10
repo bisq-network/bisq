@@ -46,7 +46,6 @@ import io.bitsquare.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bitsquare.gui.main.overlays.windows.TacWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
@@ -735,7 +734,6 @@ public class MainViewModel implements ViewModel {
             okPayAccount.setAccountNr("dummy");
             okPayAccount.setAccountName("OKPay dummy");
             okPayAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
-            okPayAccount.setCountry(CountryUtil.getDefaultCountry());
             user.addPaymentAccount(okPayAccount);
         }
     }

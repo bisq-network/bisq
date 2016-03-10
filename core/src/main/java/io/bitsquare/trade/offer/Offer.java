@@ -23,7 +23,6 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
-import io.bitsquare.locale.Country;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
@@ -84,9 +83,26 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private final String id;
+
+    // Fields for filtering offers
     private final Direction direction;
     private final String currencyCode;
+    // payment method
+    private final String paymentMethodName;
+    @Nullable
+    private final String countryCode;
+    @Nullable
+    private final ArrayList<String> acceptedCountryCodes;
+
+    @Nullable
+    private final String bankId;
+    @Nullable
+    private final ArrayList<String> acceptedBankIds;
+
+    private final ArrayList<NodeAddress> arbitratorNodeAddresses;
+
+
+    private final String id;
     private final long date;
     private final long protocolVersion;
     private final long fiatPrice;
@@ -95,16 +111,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final NodeAddress offererNodeAddress;
     @JsonExclude
     private final PubKeyRing pubKeyRing;
-    private final String paymentMethodName;
-    @Nullable
-    private final String paymentMethodCountryCode;
     private final String offererPaymentAccountId;
-
-    @Nullable
-    private final ArrayList<String> acceptedCountryCodes;
-    @Nullable
-    private final ArrayList<String> acceptedBanks;
-    private final ArrayList<NodeAddress> arbitratorNodeAddresses;
 
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
     private String offerFeePaymentTxID;
@@ -133,13 +140,14 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  long fiatPrice,
                  long amount,
                  long minAmount,
-                 String paymentMethodName,
                  String currencyCode,
-                 @Nullable Country paymentMethodCountry,
-                 String offererPaymentAccountId,
                  ArrayList<NodeAddress> arbitratorNodeAddresses,
+                 String paymentMethodName,
+                 String offererPaymentAccountId,
+                 @Nullable String countryCode,
                  @Nullable ArrayList<String> acceptedCountryCodes,
-                 @Nullable ArrayList<String> acceptedBanks) {
+                 @Nullable String bankId,
+                 @Nullable ArrayList<String> acceptedBankIds) {
         this.id = id;
         this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;
@@ -147,13 +155,14 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.fiatPrice = fiatPrice;
         this.amount = amount;
         this.minAmount = minAmount;
-        this.paymentMethodName = paymentMethodName;
         this.currencyCode = currencyCode;
-        this.paymentMethodCountryCode = paymentMethodCountry != null ? paymentMethodCountry.code : null;
-        this.offererPaymentAccountId = offererPaymentAccountId;
         this.arbitratorNodeAddresses = arbitratorNodeAddresses;
+        this.paymentMethodName = paymentMethodName;
+        this.offererPaymentAccountId = offererPaymentAccountId;
+        this.countryCode = countryCode;
         this.acceptedCountryCodes = acceptedCountryCodes;
-        this.acceptedBanks = acceptedBanks;
+        this.bankId = bankId;
+        this.acceptedBankIds = acceptedBankIds;
 
         protocolVersion = Version.TRADE_PROTOCOL_VERSION;
 
@@ -331,8 +340,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     @Nullable
-    public String getPaymentMethodCountryCode() {
-        return paymentMethodCountryCode;
+    public String getCountryCode() {
+        return countryCode;
     }
 
     @Nullable
@@ -341,8 +350,13 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     @Nullable
-    public List<String> getAcceptedBanks() {
-        return acceptedBanks;
+    public List<String> getAcceptedBankIds() {
+        return acceptedBankIds;
+    }
+
+    @Nullable
+    public String getBankId() {
+        return bankId;
     }
 
     public String getOfferFeePaymentTxID() {
@@ -392,13 +406,14 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         if (pubKeyRing != null ? !pubKeyRing.equals(offer.pubKeyRing) : offer.pubKeyRing != null) return false;
         if (paymentMethodName != null ? !paymentMethodName.equals(offer.paymentMethodName) : offer.paymentMethodName != null)
             return false;
-        if (paymentMethodCountryCode != null ? !paymentMethodCountryCode.equals(offer.paymentMethodCountryCode) : offer.paymentMethodCountryCode != null)
+        if (countryCode != null ? !countryCode.equals(offer.countryCode) : offer.countryCode != null)
             return false;
         if (offererPaymentAccountId != null ? !offererPaymentAccountId.equals(offer.offererPaymentAccountId) : offer.offererPaymentAccountId != null)
             return false;
         if (acceptedCountryCodes != null ? !acceptedCountryCodes.equals(offer.acceptedCountryCodes) : offer.acceptedCountryCodes != null)
             return false;
-        if (acceptedBanks != null ? !acceptedBanks.equals(offer.acceptedBanks) : offer.acceptedBanks != null)
+        if (bankId != null ? !bankId.equals(offer.bankId) : offer.bankId != null) return false;
+        if (acceptedBankIds != null ? !acceptedBankIds.equals(offer.acceptedBankIds) : offer.acceptedBankIds != null)
             return false;
         if (arbitratorNodeAddresses != null ? !arbitratorNodeAddresses.equals(offer.arbitratorNodeAddresses) : offer.arbitratorNodeAddresses != null)
             return false;
@@ -418,10 +433,11 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         result = 31 * result + (offererNodeAddress != null ? offererNodeAddress.hashCode() : 0);
         result = 31 * result + (pubKeyRing != null ? pubKeyRing.hashCode() : 0);
         result = 31 * result + (paymentMethodName != null ? paymentMethodName.hashCode() : 0);
-        result = 31 * result + (paymentMethodCountryCode != null ? paymentMethodCountryCode.hashCode() : 0);
+        result = 31 * result + (countryCode != null ? countryCode.hashCode() : 0);
+        result = 31 * result + (bankId != null ? bankId.hashCode() : 0);
         result = 31 * result + (offererPaymentAccountId != null ? offererPaymentAccountId.hashCode() : 0);
         result = 31 * result + (acceptedCountryCodes != null ? acceptedCountryCodes.hashCode() : 0);
-        result = 31 * result + (acceptedBanks != null ? acceptedBanks.hashCode() : 0);
+        result = 31 * result + (acceptedBankIds != null ? acceptedBankIds.hashCode() : 0);
         result = 31 * result + (arbitratorNodeAddresses != null ? arbitratorNodeAddresses.hashCode() : 0);
         result = 31 * result + (offerFeePaymentTxID != null ? offerFeePaymentTxID.hashCode() : 0);
         return result;
@@ -440,10 +456,11 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\toffererAddress=" + offererNodeAddress +
                 "\n\tpubKeyRing=" + pubKeyRing +
                 "\n\tpaymentMethodName='" + paymentMethodName + '\'' +
-                "\n\tpaymentMethodCountryCode='" + paymentMethodCountryCode + '\'' +
+                "\n\tpaymentMethodCountryCode='" + countryCode + '\'' +
                 "\n\toffererPaymentAccountId='" + offererPaymentAccountId + '\'' +
                 "\n\tacceptedCountryCodes=" + acceptedCountryCodes +
-                "\n\tacceptedBanks=" + acceptedBanks +
+                "\n\tbankId=" + bankId +
+                "\n\tacceptedBanks=" + acceptedBankIds +
                 "\n\tarbitratorAddresses=" + arbitratorNodeAddresses +
                 "\n\tofferFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
                 "\n\tstate=" + state +

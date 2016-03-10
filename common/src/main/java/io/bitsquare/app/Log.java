@@ -63,7 +63,7 @@ public class Log {
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         //TODO for now use always trace 
-        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.WARN);
+        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.TRACE);
         // logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.DEBUG);
         logbackLogger.addAppender(appender);
     }

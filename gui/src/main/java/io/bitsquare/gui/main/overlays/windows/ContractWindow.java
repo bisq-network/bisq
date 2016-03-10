@@ -24,7 +24,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.payment.BlockChainAccountContractData;
+import io.bitsquare.payment.CryptoCurrencyAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Contract;
@@ -88,7 +88,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         Contract contract = dispute.getContract();
         Offer offer = contract.offer;
 
-        List<String> acceptedBanks = offer.getAcceptedBanks();
+        List<String> acceptedBanks = offer.getAcceptedBankIds();
         boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
@@ -105,8 +105,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
         boolean isPaymentIdAvailable = false;
         PaymentAccountContractData sellerPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
-        if (sellerPaymentAccountContractData instanceof BlockChainAccountContractData &&
-                ((BlockChainAccountContractData) sellerPaymentAccountContractData).getPaymentId() != null) {
+        if (sellerPaymentAccountContractData instanceof CryptoCurrencyAccountContractData &&
+                ((CryptoCurrencyAccountContractData) sellerPaymentAccountContractData).getPaymentId() != null) {
             rows++;
             isPaymentIdAvailable = true;
         }
@@ -133,7 +133,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second.setMouseTransparent(false);
         if (isPaymentIdAvailable)
             addLabelTextField(gridPane, ++rowIndex, "Seller payment ID:",
-                    ((BlockChainAccountContractData) sellerPaymentAccountContractData).getPaymentId());
+                    ((CryptoCurrencyAccountContractData) sellerPaymentAccountContractData).getPaymentId());
 
         if (showAcceptedCountryCodes) {
             String countries;

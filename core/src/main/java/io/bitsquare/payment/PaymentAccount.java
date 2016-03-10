@@ -19,12 +19,10 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
-import io.bitsquare.locale.Country;
 import io.bitsquare.locale.TradeCurrency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -42,8 +40,6 @@ public abstract class PaymentAccount implements Persistable {
     protected String accountName;
     final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
     protected TradeCurrency selectedTradeCurrency;
-    @Nullable
-    protected Country country = null;
     public final PaymentAccountContractData contractData;
 
 
@@ -97,23 +93,13 @@ public abstract class PaymentAccount implements Persistable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected abstract PaymentAccountContractData setContractData();
-    
+
     public String getAccountName() {
         return accountName;
     }
 
     public void setAccountName(String accountName) {
         this.accountName = accountName;
-    }
-
-    @Nullable
-    public Country getCountry() {
-        return country;
-    }
-
-    public void setCountry(Country country) {
-        this.country = country;
-        contractData.setCountryCode(country.code);
     }
 
     public void setSelectedTradeCurrency(TradeCurrency tradeCurrency) {
@@ -158,21 +144,47 @@ public abstract class PaymentAccount implements Persistable {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Util
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PaymentAccount)) return false;
+
+        PaymentAccount that = (PaymentAccount) o;
+
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (creationDate != null ? !creationDate.equals(that.creationDate) : that.creationDate != null) return false;
+        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
+            return false;
+        if (accountName != null ? !accountName.equals(that.accountName) : that.accountName != null) return false;
+        if (tradeCurrencies != null ? !tradeCurrencies.equals(that.tradeCurrencies) : that.tradeCurrencies != null)
+            return false;
+        if (selectedTradeCurrency != null ? !selectedTradeCurrency.equals(that.selectedTradeCurrency) : that.selectedTradeCurrency != null)
+            return false;
+        return !(contractData != null ? !contractData.equals(that.contractData) : that.contractData != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (creationDate != null ? creationDate.hashCode() : 0);
+        result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
+        result = 31 * result + (accountName != null ? accountName.hashCode() : 0);
+        result = 31 * result + (tradeCurrencies != null ? tradeCurrencies.hashCode() : 0);
+        result = 31 * result + (selectedTradeCurrency != null ? selectedTradeCurrency.hashCode() : 0);
+        result = 31 * result + (contractData != null ? contractData.hashCode() : 0);
+        return result;
+    }
 
     @Override
     public String toString() {
-        return contractData.toString() + '\'' +
-                "PaymentAccount{" +
+        return "PaymentAccount{" +
                 "id='" + id + '\'' +
                 ", creationDate=" + creationDate +
                 ", paymentMethod=" + paymentMethod +
                 ", accountName='" + accountName + '\'' +
                 ", tradeCurrencies=" + tradeCurrencies +
                 ", selectedTradeCurrency=" + selectedTradeCurrency +
-                ", country=" + country +
                 ", contractData=" + contractData +
                 '}';
     }

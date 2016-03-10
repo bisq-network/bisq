@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.tasks.taker;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.payment.BlockChainAccountContractData;
+import io.bitsquare.payment.CryptoCurrencyAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
@@ -52,10 +52,10 @@ public class ProcessPublishDepositTxRequest extends TradeTask {
             PaymentAccountContractData paymentAccountContractData = checkNotNull(publishDepositTxRequest.offererPaymentAccountContractData);
             processModel.tradingPeer.setPaymentAccountContractData(paymentAccountContractData);
             // We apply the payment ID in case its a cryptoNote coin. It is created form the hash of the trade ID
-            if (paymentAccountContractData instanceof BlockChainAccountContractData &&
+            if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData &&
                     CurrencyUtil.isCryptoNoteCoin(processModel.getOffer().getCurrencyCode())) {
                 String paymentId = Hash.getHashAsHex(trade.getId()).substring(0, Math.min(32, trade.getId().length()));
-                ((BlockChainAccountContractData) paymentAccountContractData).setPaymentId(paymentId);
+                ((CryptoCurrencyAccountContractData) paymentAccountContractData).setPaymentId(paymentId);
             }
 
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(publishDepositTxRequest.offererAccountId));

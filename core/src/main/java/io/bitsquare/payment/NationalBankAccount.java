@@ -19,7 +19,7 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 
-public final class NationalBankAccount extends PaymentAccount {
+public final class NationalBankAccount extends CountryBasedPaymentAccount implements SameCountryRestrictedBankAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -30,5 +30,15 @@ public final class NationalBankAccount extends PaymentAccount {
     @Override
     protected PaymentAccountContractData setContractData() {
         return new NationalBankAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    }
+
+    @Override
+    public String getBankId() {
+        return ((BankAccountContractData) contractData).getBankId();
+    }
+
+    @Override
+    public String getCountryCode() {
+        return getCountry() != null ? getCountry().code : "";
     }
 }

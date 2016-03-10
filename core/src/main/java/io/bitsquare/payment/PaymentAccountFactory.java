@@ -37,13 +37,13 @@ public abstract class PaymentAccountFactory implements Persistable {
             case PaymentMethod.SAME_BANK_ID:
                 return new SameBankAccount();
             case PaymentMethod.SPECIFIC_BANKS_ID:
-                return new SpecificBankAccount();
+                return new SpecificBanksAccount();
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayAccount();
             case PaymentMethod.SWISH_ID:
                 return new SwishAccount();
             case PaymentMethod.BLOCK_CHAINS_ID:
-                return new BlockChainAccount();
+                return new CryptoCurrencyAccount();
             default:
                 throw new RuntimeException("Not supported PaymentMethod: " + paymentMethod);
         }

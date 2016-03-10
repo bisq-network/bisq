@@ -73,7 +73,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
             headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
             String url = "https://github.com/bitsquare/bitsquare/releases";
             HyperlinkWithIcon download = addLabelHyperlinkWithIcon(gridPane, ++rowIndex, "Download:", url).second;
-            download.setMaxWidth(350);
+            download.setMaxWidth(550);
             download.setOnAction(e -> Utilities.openWebPage(url));
         } else {
             headLine = "Important information!";

@@ -32,8 +32,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.*;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.payment.PaymentMethod;
-import io.bitsquare.payment.SepaAccount;
+import io.bitsquare.payment.*;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
@@ -48,11 +47,19 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import org.bitcoinj.utils.Fiat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 class OfferBookViewModel extends ActivatableViewModel {
+    protected final static Logger log = LoggerFactory.getLogger(OfferBookViewModel.class);
+
     final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
     final static String EDIT_FLAG = "EDIT_FLAG";
 
@@ -263,7 +270,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (item != null) {
             Offer offer = item.getOffer();
             String method = BSResources.get(offer.getPaymentMethod().getId() + "_SHORT");
-            String methodCountryCode = offer.getPaymentMethodCountryCode();
+            String methodCountryCode = offer.getCountryCode();
 
             if (methodCountryCode != null)
                 result = method + " (" + methodCountryCode + ")";
@@ -278,7 +285,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (item != null) {
             Offer offer = item.getOffer();
             String method = BSResources.get(offer.getPaymentMethod().getId());
-            String methodCountryCode = offer.getPaymentMethodCountryCode();
+            String methodCountryCode = offer.getCountryCode();
 
             if (methodCountryCode != null)
                 result = method + "\n\nOfferers seat of bank country:\n" + CountryUtil.getNameByCode(methodCountryCode);
@@ -286,7 +293,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                 result = method;
 
             List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
-            List<String> acceptedBanks = offer.getAcceptedBanks();
+            List<String> acceptedBanks = offer.getAcceptedBankIds();
             if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
                 if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
                     result += "\n\nAccepted takers seat of bank countries:\nAll Euro countries";
@@ -315,23 +322,100 @@ class OfferBookViewModel extends ActivatableViewModel {
         return user.currentPaymentAccountProperty().get() != null;
     }
 
-    boolean isPaymentAccountValidForOffer(Offer offer) {
-        // TODO not supporting yet check for acceptedBanks in cae of SpecificBankAccount and SameBankAccount
-        Optional<TradeCurrency> result1 = user.getPaymentAccounts().stream()
-                .filter(paymentAccount -> paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod()))
-                .filter(paymentAccount -> {
-                    List<String> offerAcceptedCountryCodes = offer.getAcceptedCountryCodes();
-                    if (offerAcceptedCountryCodes != null && paymentAccount instanceof SepaAccount) {
-                        return ((SepaAccount) paymentAccount).getAcceptedCountryCodes().stream()
-                                .filter(offerAcceptedCountryCodes::contains)
-                                .findAny().isPresent();
-                    } else {
-                        return true;
-                    }
-                })
-                .flatMap(paymentAccount -> paymentAccount.getTradeCurrencies().stream())
-                .filter(currency -> currency.getCode().equals(offer.getCurrencyCode())).findAny();
-        return result1.isPresent();
+    boolean isAnyPaymentAccountValidForOffer(Offer offer) {
+        return isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
+    }
+
+    static boolean isAnyPaymentAccountValidForOffer(Offer offer, Collection<PaymentAccount> paymentAccounts) {
+        for (PaymentAccount paymentAccount : paymentAccounts) {
+            if (isPaymentAccountValidForOffer(offer, paymentAccount))
+                return true;
+        }
+        return false;
+    }
+
+    static boolean isPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
+        // check if we have  a matching currency
+        Set<String> paymentAccountCurrencyCodes = paymentAccount.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
+        boolean matchesCurrencyCode = paymentAccountCurrencyCodes.contains(offer.getCurrencyCode());
+        log.error("paymentAccount.paymentAccountCurrencyCodes " + paymentAccountCurrencyCodes);
+        log.error("offer.getCurrencyCode() " + offer.getCurrencyCode());
+        log.error("matchesCurrencyCode " + matchesCurrencyCode);
+        if (!matchesCurrencyCode)
+            return false;
+
+        // check if we have a matching payment method or if its a bank account payment method which is treated special
+
+
+        if (paymentAccount instanceof CountryBasedPaymentAccount) {
+            CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) paymentAccount;
+
+            checkNotNull(offer.getCountryCode(), "offer.getCountryCode() must not be null");
+            checkNotNull(offer.getBankId(), "offer.getBankId() must not be null");
+            checkNotNull(offer.getAcceptedCountryCodes(), "offer.getAcceptedCountryCodes() must not be null");
+
+            checkNotNull(countryBasedPaymentAccount.getCountry(), "paymentAccount.getCountry() must not be null");
+
+            // check if we have a matching country
+            boolean matchesCountryCodes = offer.getAcceptedCountryCodes().contains(countryBasedPaymentAccount.getCountry().code);
+            log.error("offer.getAcceptedCountryCodes() " + offer.getAcceptedCountryCodes());
+            log.error("paymentAccount.getCountry().code " + countryBasedPaymentAccount.getCountry().code);
+            log.error("matchesCountryCodes " + matchesCountryCodes);
+            if (!matchesCountryCodes)
+                return false;
+
+            if (paymentAccount instanceof SepaAccount || offer.getPaymentMethod().equals(PaymentMethod.SEPA)) {
+                boolean samePaymentMethod = paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
+                log.error("samePaymentMethod " + samePaymentMethod);
+                return samePaymentMethod;
+            } else if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK) ||
+                    offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
+
+                checkNotNull(offer.getAcceptedBankIds(), "offer.getAcceptedBankIds() must not be null");
+                if (paymentAccount instanceof SpecificBanksAccount) {
+                    // check if we have a matching bank
+                    boolean offerSideMatchesBank = offer.getAcceptedBankIds().contains(((BankAccount) paymentAccount).getBankId());
+                    boolean paymentAccountSideMatchesBank = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks().contains(offer.getBankId());
+
+                    log.error("offer.getAcceptedBankIds() " + offer.getAcceptedBankIds());
+                    log.error("((BankAccount) paymentAccount).getBankId() " + ((BankAccount) paymentAccount).getBankId());
+                    log.error("offerSideMatchesBank " + offerSideMatchesBank);
+                    log.error("paymentAccountSideMatchesBank " + paymentAccountSideMatchesBank);
+                    return offerSideMatchesBank && paymentAccountSideMatchesBank;
+                } else {
+                    // national or same bank
+                    boolean matchesBank = offer.getAcceptedBankIds().contains(((BankAccount) paymentAccount).getBankId());
+                    log.error("offer.getAcceptedBankIds() " + offer.getAcceptedBankIds());
+                    log.error("((BankAccount) paymentAccount).getBankId() " + ((BankAccount) paymentAccount).getBankId());
+                    log.error("matchesBank " + matchesBank);
+                    return matchesBank;
+                }
+            } else {
+                if (paymentAccount instanceof SpecificBanksAccount) {
+                    // check if we have a matching bank
+                    boolean paymentAccountSideMatchesBank = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks().contains(offer.getBankId());
+
+                    log.error("offer.getAcceptedBankIds() " + offer.getAcceptedBankIds());
+                    log.error("((BankAccount) paymentAccount).getBankId() " + ((BankAccount) paymentAccount).getBankId());
+                    log.error("paymentAccountSideMatchesBank " + paymentAccountSideMatchesBank);
+                    return paymentAccountSideMatchesBank;
+                } else if (paymentAccount instanceof SameBankAccount) {
+                    // check if we have a matching bank
+                    boolean paymentAccountSideMatchesBank = ((SameBankAccount) paymentAccount).getBankId().equals(offer.getBankId());
+
+                    log.error("offer.getAcceptedBankIds() " + offer.getAcceptedBankIds());
+                    log.error("((BankAccount) paymentAccount).getBankId() " + ((BankAccount) paymentAccount).getBankId());
+                    log.error("paymentAccountSideMatchesBank " + paymentAccountSideMatchesBank);
+                    return paymentAccountSideMatchesBank;
+                } else {
+                    // national
+                    return true;
+                }
+            }
+
+        } else {
+            return paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
+        }
     }
 
     public boolean hasPaymentAccountForCurrency() {

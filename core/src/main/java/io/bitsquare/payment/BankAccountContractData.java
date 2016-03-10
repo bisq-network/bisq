@@ -23,7 +23,9 @@ import io.bitsquare.locale.CountryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BankAccountContractData extends PaymentAccountContractData {
+import javax.annotation.Nullable;
+
+public abstract class BankAccountContractData extends CountryBasedPaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -34,7 +36,9 @@ public abstract class BankAccountContractData extends PaymentAccountContractData
     protected String bankId;
     protected String branchId;
     protected String accountNr;
-    protected String holderId;
+
+    @Nullable
+    protected String holderTaxId;
 
     public BankAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
@@ -47,7 +51,7 @@ public abstract class BankAccountContractData extends PaymentAccountContractData
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        String holderIdString = BankUtil.requiresHolderId(countryCode) ? (getHolderIdLabel() + ": " + holderId + "\n") : "";
+        String holderIdString = BankUtil.requiresHolderId(countryCode) ? (getHolderIdLabel() + ": " + holderTaxId + "\n") : "";
         return "Holder name: " + holderName + "\n" +
                 "Bank name: " + bankName + "\n" +
                 "Bank Nr.: " + bankId + "\n" +
@@ -98,12 +102,13 @@ public abstract class BankAccountContractData extends PaymentAccountContractData
         this.accountNr = accountNr;
     }
 
-    public String getHolderId() {
-        return holderId;
+    @Nullable
+    public String getHolderTaxId() {
+        return holderTaxId;
     }
 
-    public void setHolderId(String holderId) {
-        this.holderId = holderId;
+    public void setHolderTaxId(String holderTaxId) {
+        this.holderTaxId = holderTaxId;
     }
 
     public String getHolderIdLabel() {

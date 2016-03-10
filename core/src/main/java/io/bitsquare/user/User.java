@@ -239,15 +239,17 @@ public final class User implements Persistable {
     }
 
     public List<Arbitrator> getAcceptedArbitrators() {
-        return acceptedArbitrators;
+        return acceptedArbitrators != null ? acceptedArbitrators : new ArrayList<>();
     }
 
     public List<NodeAddress> getAcceptedArbitratorAddresses() {
-        return acceptedArbitrators.stream().map(Arbitrator::getArbitratorNodeAddress).collect(Collectors.toList());
+        return acceptedArbitrators != null ?
+                acceptedArbitrators.stream().map(Arbitrator::getArbitratorNodeAddress).collect(Collectors.toList()) :
+                new ArrayList<>();
     }
 
     public List<String> getAcceptedLanguageLocaleCodes() {
-        return acceptedLanguageLocaleCodes;
+        return acceptedLanguageLocaleCodes != null ? acceptedLanguageLocaleCodes : new ArrayList<>();
     }
 
  /*   public List<String> getArbitratorAddresses(List<String> idList) {

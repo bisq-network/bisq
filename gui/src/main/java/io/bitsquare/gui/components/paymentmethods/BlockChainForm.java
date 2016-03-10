@@ -24,8 +24,8 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
-import io.bitsquare.payment.BlockChainAccount;
-import io.bitsquare.payment.BlockChainAccountContractData;
+import io.bitsquare.payment.CryptoCurrencyAccount;
+import io.bitsquare.payment.CryptoCurrencyAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import javafx.collections.FXCollections;
@@ -42,16 +42,16 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 public class BlockChainForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(BlockChainForm.class);
 
-    private final BlockChainAccount blockChainAccount;
+    private final CryptoCurrencyAccount cryptoCurrencyAccount;
     private final AltCoinAddressValidator altCoinAddressValidator;
     private InputTextField addressInputTextField;
 
     private ComboBox<TradeCurrency> currencyComboBox;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Cryptocurrency address:", ((BlockChainAccountContractData) paymentAccountContractData).getAddress());
-        if (((BlockChainAccountContractData) paymentAccountContractData).getPaymentId() != null)
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Payment ID:", ((BlockChainAccountContractData) paymentAccountContractData).getPaymentId());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Cryptocurrency address:", ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress());
+        if (((CryptoCurrencyAccountContractData) paymentAccountContractData).getPaymentId() != null)
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Payment ID:", ((CryptoCurrencyAccountContractData) paymentAccountContractData).getPaymentId());
 
         return gridRow;
     }
@@ -59,7 +59,7 @@ public class BlockChainForm extends PaymentMethodForm {
     public BlockChainForm(PaymentAccount paymentAccount, AltCoinAddressValidator altCoinAddressValidator, InputValidator inputValidator, GridPane gridPane,
                           int gridRow) {
         super(paymentAccount, inputValidator, gridPane, gridRow);
-        this.blockChainAccount = (BlockChainAccount) paymentAccount;
+        this.cryptoCurrencyAccount = (CryptoCurrencyAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
     }
 
@@ -73,7 +73,7 @@ public class BlockChainForm extends PaymentMethodForm {
         addressInputTextField.setValidator(altCoinAddressValidator);
 
         addressInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            blockChainAccount.setAddress(newValue);
+            cryptoCurrencyAccount.setAddress(newValue);
             updateFromInputs();
         });
 
@@ -95,19 +95,19 @@ public class BlockChainForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, "Account name:", blockChainAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(blockChainAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Cryptocurrency address:", blockChainAccount.getAddress()).second;
+        addLabelTextField(gridPane, gridRow, "Account name:", cryptoCurrencyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
+        TextField field = addLabelTextField(gridPane, ++gridRow, "Cryptocurrency address:", cryptoCurrencyAccount.getAddress()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Cryptocurrency:", blockChainAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, "Cryptocurrency:", cryptoCurrencyAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && altCoinAddressValidator.validate(blockChainAccount.getAddress()).isValid
-                && blockChainAccount.getSingleTradeCurrency() != null);
+                && altCoinAddressValidator.validate(cryptoCurrencyAccount.getAddress()).isValid
+                && cryptoCurrencyAccount.getSingleTradeCurrency() != null);
     }
 
     @Override

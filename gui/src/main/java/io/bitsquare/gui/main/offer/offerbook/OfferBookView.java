@@ -500,7 +500,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     boolean myOffer = model.isMyOffer(offer);
                                     TableRow tableRow = getTableRow();
                                     if (tableRow != null) {
-                                        isPaymentAccountValidForOffer = model.isPaymentAccountValidForOffer(offer);
+                                        isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
                                         hasMatchingArbitrator = model.hasMatchingArbitrator(offer);
                                         hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
                                         isTradable = isPaymentAccountValidForOffer && hasMatchingArbitrator &&

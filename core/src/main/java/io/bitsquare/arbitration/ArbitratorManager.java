@@ -18,8 +18,6 @@
 package io.bitsquare.arbitration;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import io.bitsquare.app.ProgramArguments;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
@@ -63,13 +61,11 @@ public class ArbitratorManager {
     private static final long RETRY_REPUBLISH_SEC = 5;
     private static final long REPEATED_REPUBLISH_AT_STARTUP_SEC = 60;
 
-    private static final String publicKeyForTesting = "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee";
-
     // Keys for invited arbitrators in bootstrapping phase (before registration is open to anyone and security payment is implemented)
-    // For testing purpose here is a private key so anyone can setup an arbitrator for now.
-    // The matching pubkey will be removed once we use real arbitrators.
-    // PrivKey for testing: 6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a
-    // Matching pubKey: 027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee
+    // For developers we add here 2 test keys so one can setup an arbitrator by adding that test pubKey 
+    // to the publicKeys list and use the test PrivKey for arbitrator registration.
+    // PrivKey for dev testing: 6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a
+    // Matching pubKey for dev testing: 027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee
     private static final List<String> publicKeys = new ArrayList<>(Arrays.asList(
             "03697a499d24f497b3c46bf716318231e46c4e6a685a4e122d8e2a2b229fa1f4b8",
             "0365c6af94681dbee69de1851f98d4684063bf5c2d64b1c73ed5d90434f375a054",
@@ -87,8 +83,7 @@ public class ArbitratorManager {
             "03df837a3a0f3d858e82f3356b71d1285327f101f7c10b404abed2abc1c94e7169",
             "0203a90fb2ab698e524a5286f317a183a84327b8f8c3f7fa4a98fec9e1cefd6b72",
             "023c99cc073b851c892d8c43329ca3beb5d2213ee87111af49884e3ce66cbd5ba5",
-            "0274f772a98d23e7a0251ab30d7121897b5aebd11a2f1e45ab654aa57503173245",
-            "036d8a1dfcb406886037d2381da006358722823e1940acc2598c844bbc0fd1026f"
+            "0274f772a98d23e7a0251ab30d7121897b5aebd11a2f1e45ab654aa57503173245"
     ));
 
 
@@ -100,7 +95,6 @@ public class ArbitratorManager {
     private final ArbitratorService arbitratorService;
     private final User user;
     private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
-    private final boolean isDevTest;
     private BootstrapListener bootstrapListener;
     private Timer republishArbitratorTimer, retryRepublishArbitratorTimer;
 
@@ -110,8 +104,7 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorManager(@Named(ProgramArguments.DEV_TEST) boolean isDevTest, KeyRing keyRing, ArbitratorService arbitratorService, User user) {
-        this.isDevTest = isDevTest;
+    public ArbitratorManager(KeyRing keyRing, ArbitratorService arbitratorService, User user) {
         this.keyRing = keyRing;
         this.arbitratorService = arbitratorService;
         this.user = user;
@@ -242,7 +235,7 @@ public class ArbitratorManager {
     }
 
     public boolean isPublicKeyInList(String pubKeyAsHex) {
-        return isDevTest && pubKeyAsHex.equals(publicKeyForTesting) || publicKeys.contains(pubKeyAsHex);
+        return publicKeys.contains(pubKeyAsHex);
     }
 
 

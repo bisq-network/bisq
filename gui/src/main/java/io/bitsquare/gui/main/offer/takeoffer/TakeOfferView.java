@@ -271,6 +271,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         };
         model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
 
+        if (spinner != null && takeOfferButton.isVisible())
+            spinner.setProgress(-1);
     }
 
     @Override

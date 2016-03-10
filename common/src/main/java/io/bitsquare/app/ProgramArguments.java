@@ -8,7 +8,6 @@ public class ProgramArguments {
     // program arg names
     public static final String TOR_DIR = "torDir";
     public static final String USE_LOCALHOST = "useLocalhost";
-    public static final String DEV_TEST = "devTest";
 
 
     public static final String NAME_KEY = "node.name";

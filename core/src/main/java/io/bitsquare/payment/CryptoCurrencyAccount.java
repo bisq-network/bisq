@@ -19,26 +19,26 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 
-public final class BlockChainAccount extends PaymentAccount {
+public final class CryptoCurrencyAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
 
-    public BlockChainAccount() {
+    public CryptoCurrencyAccount() {
         super(PaymentMethod.BLOCK_CHAINS);
 
     }
 
     @Override
     protected PaymentAccountContractData setContractData() {
-        return new BlockChainAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+        return new CryptoCurrencyAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setAddress(String address) {
-        ((BlockChainAccountContractData) contractData).setAddress(address);
+        ((CryptoCurrencyAccountContractData) contractData).setAddress(address);
     }
 
     public String getAddress() {
-        return ((BlockChainAccountContractData) contractData).getAddress();
+        return ((CryptoCurrencyAccountContractData) contractData).getAddress();
     }
 }

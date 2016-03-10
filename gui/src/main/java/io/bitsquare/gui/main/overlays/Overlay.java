@@ -220,7 +220,16 @@ public abstract class Overlay<T extends Overlay> {
     public T instruction(String message) {
         type = Type.Instruction;
         if (headLine == null)
-            this.headLine = "Instruction";
+            this.headLine = "Please note:";
+        this.message = message;
+        setTruncatedMessage();
+        return (T) this;
+    }
+
+    public T attention(String message) {
+        type = Type.Attention;
+        if (headLine == null)
+            this.headLine = "Attention";
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -238,7 +247,7 @@ public abstract class Overlay<T extends Overlay> {
     public T feedback(String message) {
         type = Type.Feedback;
         if (headLine == null)
-            this.headLine = "Feedback";
+            this.headLine = "Completed";
         this.message = message;
         setTruncatedMessage();
         return (T) this;
