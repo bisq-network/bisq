@@ -163,17 +163,11 @@ public class BitsquareApp extends Application {
 
             primaryStage.setOnCloseRequest(event -> {
                 event.consume();
-                if (BitsquareApp.IS_RELEASE_VERSION)
-                    stop(); // systemTray.hideStage(); TODO issues with some linux systems (https://github.com/bitsquare/bitsquare/issues/350) 
-                else
-                    stop();
+                stop();
             });
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
                 if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
-                    if (BitsquareApp.IS_RELEASE_VERSION)
-                        stop(); //systemTray.hideStage(); TODO issues with some linux systems (https://github.com/bitsquare/bitsquare/issues/350) 
-                    else
-                        stop();
+                    stop();
                 } else if (new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     stop();
                 } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {

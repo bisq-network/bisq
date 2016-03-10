@@ -34,7 +34,7 @@ public class VerifyTakeOfferFeePayment extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            //TODO mocked yet, need a confidence listeners
+            //TODO missing impl.
             // int numOfPeersSeenTx = processModel.getWalletService().getNumOfPeersSeenTx(processModel.getTakeOfferFeeTxId());
        /* if (numOfPeersSeenTx > 2) {
             resultHandler.handleResult();

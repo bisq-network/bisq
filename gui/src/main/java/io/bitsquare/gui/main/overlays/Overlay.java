@@ -734,8 +734,8 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void setTruncatedMessage() {
-        if (message != null && message.length() > 1200)
-            truncatedMessage = StringUtils.abbreviate(message, 1200);
+        if (message != null && message.length() > 1500)
+            truncatedMessage = StringUtils.abbreviate(message, 1500);
         else
             truncatedMessage = message;
     }

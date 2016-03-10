@@ -370,7 +370,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     // called form parent as the view does not get notified when the tab is closed
     public void onClose() {
-        // TODO need other implementation as it is displayed laso if there are old funds in the wallet
+        // TODO need other implementation as it is displayed also if there are old funds in the wallet
         /*
         if (model.dataModel.isWalletFunded.get())
             new Popup().warning("You have already funds paid in.\nIn the <Funds/Open for withdrawal> section you can withdraw those funds.").show();*/

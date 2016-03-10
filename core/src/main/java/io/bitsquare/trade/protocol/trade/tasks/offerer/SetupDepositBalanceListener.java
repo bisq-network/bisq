@@ -95,7 +95,8 @@ public class SetupDepositBalanceListener extends TradeTask {
                     trade.setState(Trade.State.DEPOSIT_SEEN_IN_NETWORK);
                 } else if (tradeState.getPhase() == Trade.Phase.PREPARATION) {
                     processModel.getTradeManager().removePreparedTrade(trade);
-                } else if (tradeState.getPhase().ordinal() < Trade.Phase.DEPOSIT_PAID.ordinal()) {  // TODO need to evaluate if that is correct
+                } else if (tradeState.getPhase().ordinal() < Trade.Phase.DEPOSIT_PAID.ordinal()) {
+                    // TODO need to evaluate if that is correct
                     processModel.getTradeManager().addTradeToFailedTrades(trade);
                 }
             }

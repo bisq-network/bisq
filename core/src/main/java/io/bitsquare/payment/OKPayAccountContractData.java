@@ -25,8 +25,6 @@ public final class OKPayAccountContractData extends PaymentAccountContractData {
 
     private String accountNr;
 
-    // TODO refactor PaymentAccountContractData to avoid null values (countryCode, country, selectedTradeCountry) 
-
     public OKPayAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
