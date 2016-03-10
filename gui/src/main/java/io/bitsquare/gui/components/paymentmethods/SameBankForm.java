@@ -19,6 +19,7 @@ package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.payment.CountryBasedPaymentAccount;
 import io.bitsquare.payment.PaymentAccount;
@@ -40,8 +41,8 @@ public class SameBankForm extends BankForm {
     }
 
     public SameBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
-                        GridPane gridPane, int gridRow) {
-        super(paymentAccount, inputValidator, gridPane, gridRow);
+                        GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
     }
 
     @Override

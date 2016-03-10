@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.OKPayValidator;
@@ -53,8 +54,8 @@ public class OKPayForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public OKPayForm(PaymentAccount paymentAccount, OKPayValidator okPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow) {
-        super(paymentAccount, inputValidator, gridPane, gridRow);
+    public OKPayForm(PaymentAccount paymentAccount, OKPayValidator okPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.okPayAccount = (OKPayAccount) paymentAccount;
         this.okPayValidator = okPayValidator;
     }

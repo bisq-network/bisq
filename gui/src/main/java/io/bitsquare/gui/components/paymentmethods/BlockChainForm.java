@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.AltCoinAddressValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -57,8 +58,8 @@ public class BlockChainForm extends PaymentMethodForm {
     }
 
     public BlockChainForm(PaymentAccount paymentAccount, AltCoinAddressValidator altCoinAddressValidator, InputValidator inputValidator, GridPane gridPane,
-                          int gridRow) {
-        super(paymentAccount, inputValidator, gridPane, gridRow);
+                          int gridRow, BSFormatter formatter) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.cryptoCurrencyAccount = (CryptoCurrencyAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
     }

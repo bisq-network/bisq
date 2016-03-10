@@ -24,6 +24,7 @@ import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.BlockChainForm;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
@@ -59,6 +60,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private final PerfectMoneyValidator perfectMoneyValidator;
     private final SwishValidator swishValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
+    private BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
@@ -76,7 +78,8 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                                AliPayValidator aliPayValidator,
                                PerfectMoneyValidator perfectMoneyValidator,
                                SwishValidator swishValidator,
-                               AltCoinAddressValidator altCoinAddressValidator) {
+                               AltCoinAddressValidator altCoinAddressValidator,
+                               BSFormatter formatter) {
         super(model);
 
         this.ibanValidator = ibanValidator;
@@ -87,6 +90,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         this.perfectMoneyValidator = perfectMoneyValidator;
         this.swishValidator = swishValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
+        this.formatter = formatter;
     }
 
     @Override
@@ -247,7 +251,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
-        return new BlockChainForm(paymentAccount, altCoinAddressValidator, inputValidator, root, gridRow);
+        return new BlockChainForm(paymentAccount, altCoinAddressValidator, inputValidator, root, gridRow, formatter);
     }
 
     private void removeNewAccountForm() {

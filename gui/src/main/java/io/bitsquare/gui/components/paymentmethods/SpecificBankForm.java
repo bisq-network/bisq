@@ -20,6 +20,7 @@ package io.bitsquare.gui.components.paymentmethods;
 import com.google.common.base.Joiner;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
@@ -47,8 +48,8 @@ public class SpecificBankForm extends BankForm {
     }
 
     public SpecificBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
-                            GridPane gridPane, int gridRow) {
-        super(paymentAccount, inputValidator, gridPane, gridRow);
+                            GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.specificBanksAccountContractData = (SpecificBanksAccountContractData) paymentAccount.contractData;
     }
 

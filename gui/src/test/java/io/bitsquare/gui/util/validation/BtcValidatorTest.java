@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.util.validation;
 
-import io.bitsquare.btc.Restrictions;
 import io.bitsquare.gui.util.BSFormatter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
@@ -38,7 +37,6 @@ public class BtcValidatorTest {
         assertTrue(validator.validate(".1").isValid);
         assertTrue(validator.validate("0.12345678").isValid);
         assertTrue(validator.validate(Coin.SATOSHI.toPlainString()).isValid);
-        assertTrue(validator.validate(Restrictions.MAX_TRADE_AMOUNT.toPlainString()).isValid);
 
         assertFalse(validator.validate(null).isValid);
         assertFalse(validator.validate("").isValid);
@@ -50,8 +48,6 @@ public class BtcValidatorTest {
         assertFalse(validator.validate("0.000,1").isValid);
         assertFalse(validator.validate("0.123456789").isValid);
         assertFalse(validator.validate("-1").isValid);
-        assertFalse(validator.validate(String.valueOf(Restrictions.MAX_TRADE_AMOUNT.longValue() + Coin.SATOSHI
-                .longValue())).isValid);
         assertFalse(validator.validate(NetworkParameters.MAX_MONEY.toPlainString()).isValid);
     }
 

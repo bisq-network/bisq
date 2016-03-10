@@ -213,12 +213,6 @@ public class WalletService {
                 walletAppKit.connectToLocalHost();   // You should run a regtest mode bitcoind locally.}
             }
         } else if (params == MainNetParams.get()) {
-
-            // reduce for mainnet testing
-            // TODO revert later when tested enough
-            FeePolicy.setSecurityDeposit(Coin.parseCoin("0.01")); // 4 EUR @ 400 EUR/BTC 
-            Restrictions.setMaxTradeAmount(Coin.parseCoin("0.1")); // 40 EUR @ 400 EUR/BTC 
-
             // Checkpoints are block headers that ship inside our app: for a new user, we pick the last header
             // in the checkpoints file and then download the rest from the network. It makes things much faster.
             // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the

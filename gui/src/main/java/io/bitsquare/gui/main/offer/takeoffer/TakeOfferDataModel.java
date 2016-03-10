@@ -88,7 +88,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
 
     private BalanceListener balanceListener;
-    private PaymentAccount paymentAccount;
+    PaymentAccount paymentAccount;
     private boolean isTabSelected;
 
 

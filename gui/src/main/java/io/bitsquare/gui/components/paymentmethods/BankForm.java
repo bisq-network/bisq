@@ -21,6 +21,7 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Tuple4;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.*;
@@ -67,8 +68,8 @@ abstract class BankForm extends PaymentMethodForm {
     }
 
     BankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
-             GridPane gridPane, int gridRow) {
-        super(paymentAccount, inputValidator, gridPane, gridRow);
+             GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.bankAccountContractData = (BankAccountContractData) paymentAccount.contractData;
     }
 

@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.AliPayValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -46,8 +47,8 @@ public class AliPayForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public AliPayForm(PaymentAccount paymentAccount, AliPayValidator aliPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow) {
-        super(paymentAccount, inputValidator, gridPane, gridRow);
+    public AliPayForm(PaymentAccount paymentAccount, AliPayValidator aliPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.aliPayAccount = (AliPayAccount) paymentAccount;
         this.aliPayValidator = aliPayValidator;
     }

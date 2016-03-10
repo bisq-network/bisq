@@ -62,7 +62,7 @@ public class FeePolicy {
 
     // Some wallets (Mycelium) don't support higher fees 
     public static Coin getMinRequiredFeeForFundingTx() {
-        return Coin.valueOf(20_000); 
+        return Coin.valueOf(20_000);
     }
 
 
@@ -78,17 +78,8 @@ public class FeePolicy {
     }
 
 
-    // TODO make final again later 100_000_000
     // 0.1 BTC; about 4 EUR @ 400 EUR/BTC
-    private static Coin SECURITY_DEPOSIT = Coin.valueOf(10_000_000);
-
     public static Coin getSecurityDeposit() {
-        return SECURITY_DEPOSIT;
-    }
-
-    // Called from WalletService to reduce SECURITY_DEPOSIT for mainnet to 0.01 btc
-    // TODO remove later when tested enough
-    public static void setSecurityDeposit(Coin securityDeposit) {
-        SECURITY_DEPOSIT = securityDeposit;
+        return Coin.valueOf(10_000_000);
     }
 }

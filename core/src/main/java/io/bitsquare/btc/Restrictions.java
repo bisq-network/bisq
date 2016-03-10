@@ -22,17 +22,7 @@ import org.bitcoinj.core.Transaction;
 
 public class Restrictions {
 
-    // TODO make final again later 
     public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001"); // 4 cent @ 400 EUR/BTC 
-
-    // TODO make final again later 
-    public static Coin MAX_TRADE_AMOUNT = Coin.parseCoin("1");
-
-    // Called from WalletService to reduce MAX_TRADE_AMOUNT for mainnet to 0.01 btc
-    // TODO remove later when tested enough
-    public static void setMaxTradeAmount(Coin maxTradeAmount) {
-        MAX_TRADE_AMOUNT = maxTradeAmount;
-    }
 
     public static boolean isAboveFixedTxFeeAndDust(Coin amount) {
         return amount != null && amount.compareTo(FeePolicy.getFixedTxFeeForTrades().add(Transaction.MIN_NONDUST_OUTPUT)) > 0;

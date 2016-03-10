@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PerfectMoneyValidator;
@@ -47,8 +48,8 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     }
 
     public PerfectMoneyForm(PaymentAccount paymentAccount, PerfectMoneyValidator perfectMoneyValidator, InputValidator inputValidator, GridPane gridPane, int
-            gridRow) {
-        super(paymentAccount, inputValidator, gridPane, gridRow);
+            gridRow, BSFormatter formatter) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.perfectMoneyAccount = (PerfectMoneyAccount) paymentAccount;
         this.perfectMoneyValidator = perfectMoneyValidator;
     }

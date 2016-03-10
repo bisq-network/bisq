@@ -313,6 +313,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         dataModel.initWithData(direction, tradeCurrency);
+        btcValidator.setPaymentMethod(dataModel.paymentAccount.getPaymentMethod());
     }
 
 
@@ -368,6 +369,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
+        btcValidator.setPaymentMethod(paymentAccount.getPaymentMethod());
         dataModel.onPaymentAccountSelected(paymentAccount);
     }
 

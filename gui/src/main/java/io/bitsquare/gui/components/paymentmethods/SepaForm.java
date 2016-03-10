@@ -19,6 +19,7 @@ package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.BICValidator;
 import io.bitsquare.gui.util.validation.IBANValidator;
@@ -26,6 +27,7 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.*;
 import io.bitsquare.payment.*;
 import javafx.collections.FXCollections;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
@@ -63,8 +65,8 @@ public class SepaForm extends PaymentMethodForm {
     }
 
     public SepaForm(PaymentAccount paymentAccount, IBANValidator ibanValidator, BICValidator bicValidator, InputValidator inputValidator,
-                    GridPane gridPane, int gridRow) {
-        super(paymentAccount, inputValidator, gridPane, gridRow);
+                    GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.sepaAccount = (SepaAccount) paymentAccount;
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;
@@ -152,8 +154,9 @@ public class SepaForm extends PaymentMethodForm {
     private void addCountriesGrid(boolean isEditable, String title, List<CheckBox> checkBoxList, List<Country> dataProvider) {
         Label label = addLabel(gridPane, ++gridRow, title, 0);
         label.setWrapText(true);
-        label.setPrefWidth(200);
+        label.setMaxWidth(180);
         label.setTextAlignment(TextAlignment.RIGHT);
+        GridPane.setHalignment(label, HPos.RIGHT);
         GridPane.setValignment(label, VPos.TOP);
         FlowPane flowPane = new FlowPane();
         flowPane.setPadding(new Insets(10, 10, 10, 10));

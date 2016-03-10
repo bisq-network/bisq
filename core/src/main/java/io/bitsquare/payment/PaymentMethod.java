@@ -19,10 +19,12 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
+import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,39 +67,56 @@ public final class PaymentMethod implements Persistable, Comparable {
     public static PaymentMethod BLOCK_CHAINS;
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
-            OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY), // tx instant so min. wait time 
-            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY),
-            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
-            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY),
-            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY),
-            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY),
-            SWISH = new PaymentMethod(SWISH_ID, 0, DAY),
-            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY),
-           /* FED_WIRE = new PaymentMethod(FED_WIRE_ID, 0, DAY),*/
-           /* TRANSFER_WISE = new PaymentMethod(TRANSFER_WISE_ID, 0, DAY),*/
-           /* US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, DAY),*/
-            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY)
+            OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY, Coin.parseCoin("0.5")), // tx instant so min. wait time 
+            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY, Coin.parseCoin("0.2")),
+            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("0.1")), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
+            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("0.1")),
+            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY, Coin.parseCoin("0.1")),
+            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY, Coin.parseCoin("0.1")),
+            SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("0.2")),
+            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("0.2")),
+           /* FED_WIRE = new PaymentMethod(FED_WIRE_ID, 0, DAY, Coin.parseCoin("0.1")),*/
+           /* TRANSFER_WISE = new PaymentMethod(TRANSFER_WISE_ID, 0, DAY, Coin.parseCoin("0.1")),*/
+           /* US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, DAY, Coin.parseCoin("0.1")),*/
+            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("0.2"))
     ));
 
 
     private final String id;
 
-    private final long lockTime;
+    private long lockTime;
 
-    private final int maxTradePeriod;
+    private int maxTradePeriod;
+    private Coin maxTradeLimitInBitcoin;
 
     /**
      * @param id
-     * @param lockTime       lock time when seller release BTC until the payout tx gets valid (bitcoin tx lockTime). Serves as protection
-     *                       against charge back risk. If Bank do the charge back quickly the Arbitrator and the seller can push another
-     *                       double spend tx to invalidate the time locked payout tx. For the moment we set all to 0 but will have it in
-     *                       place when needed.
-     * @param maxTradePeriod The min. period a trader need to wait until he gets displayed the contact form for opening a dispute.
+     * @param lockTime               lock time when seller release BTC until the payout tx gets valid (bitcoin tx lockTime). Serves as protection
+     *                               against charge back risk. If Bank do the charge back quickly the Arbitrator and the seller can push another
+     *                               double spend tx to invalidate the time locked payout tx. For the moment we set all to 0 but will have it in
+     *                               place when needed.
+     * @param maxTradePeriod         The min. period a trader need to wait until he gets displayed the contact form for opening a dispute.
+     * @param maxTradeLimitInBitcoin The max. allowed trade amount in Bitcoin for that payment method (depending on charge back risk)
      */
-    public PaymentMethod(String id, long lockTime, int maxTradePeriod) {
+    public PaymentMethod(String id, long lockTime, int maxTradePeriod, Coin maxTradeLimitInBitcoin) {
         this.id = id;
         this.lockTime = lockTime;
         this.maxTradePeriod = maxTradePeriod;
+        this.maxTradeLimitInBitcoin = maxTradeLimitInBitcoin;
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+
+            // In case we update those values we want that the persisted accounts get updated as well
+            PaymentMethod paymentMethod = PaymentMethod.getPaymentMethodById(id);
+            this.lockTime = paymentMethod.getLockTime();
+            this.maxTradePeriod = paymentMethod.getMaxTradePeriod();
+            this.maxTradeLimitInBitcoin = paymentMethod.getMaxTradeLimitInBitcoin();
+        } catch (Throwable t) {
+            log.error("Cannot be deserialized." + t.getMessage());
+        }
     }
 
     public static PaymentMethod getPaymentMethodById(String name) {
@@ -114,6 +133,10 @@ public final class PaymentMethod implements Persistable, Comparable {
 
     public long getLockTime() {
         return lockTime;
+    }
+
+    public Coin getMaxTradeLimitInBitcoin() {
+        return maxTradeLimitInBitcoin;
     }
 
     @Override
@@ -133,7 +156,8 @@ public final class PaymentMethod implements Persistable, Comparable {
 
         if (lockTime != that.lockTime) return false;
         if (maxTradePeriod != that.maxTradePeriod) return false;
-        return !(id != null ? !id.equals(that.id) : that.id != null);
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        return !(maxTradeLimitInBitcoin != null ? !maxTradeLimitInBitcoin.equals(that.maxTradeLimitInBitcoin) : that.maxTradeLimitInBitcoin != null);
 
     }
 
@@ -142,6 +166,7 @@ public final class PaymentMethod implements Persistable, Comparable {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (int) (lockTime ^ (lockTime >>> 32));
         result = 31 * result + maxTradePeriod;
+        result = 31 * result + (maxTradeLimitInBitcoin != null ? maxTradeLimitInBitcoin.hashCode() : 0);
         return result;
     }
 
@@ -150,7 +175,8 @@ public final class PaymentMethod implements Persistable, Comparable {
         return "PaymentMethod{" +
                 "id='" + id + '\'' +
                 ", lockTime=" + lockTime +
-                ", waitPeriodForOpenDispute=" + maxTradePeriod +
+                ", maxTradePeriod=" + maxTradePeriod +
+                ", maxTradeLimitInBitcoin=" + maxTradeLimitInBitcoin +
                 '}';
     }
 }

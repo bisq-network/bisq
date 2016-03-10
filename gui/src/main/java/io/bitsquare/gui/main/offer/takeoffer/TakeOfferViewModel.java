@@ -170,6 +170,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         };
         offer.errorMessageProperty().addListener(offerErrorListener);
         errorMessage.set(offer.errorMessageProperty().get());
+
+        btcValidator.setPaymentMethod(dataModel.paymentAccount.getPaymentMethod());
     }
 
 
@@ -195,6 +197,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         dataModel.onPaymentAccountSelected(paymentAccount);
+        btcValidator.setPaymentMethod(paymentAccount.getPaymentMethod());
     }
 
     public void onShowPayFundsScreen() {

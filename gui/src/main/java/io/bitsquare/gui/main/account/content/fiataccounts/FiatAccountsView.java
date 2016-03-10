@@ -23,6 +23,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.*;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
@@ -38,6 +39,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
@@ -61,6 +63,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final PerfectMoneyValidator perfectMoneyValidator;
     private final SwishValidator swishValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
+    private BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
@@ -78,7 +81,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             AliPayValidator aliPayValidator,
                             PerfectMoneyValidator perfectMoneyValidator,
                             SwishValidator swishValidator,
-                            AltCoinAddressValidator altCoinAddressValidator) {
+                            AltCoinAddressValidator altCoinAddressValidator,
+                            BSFormatter formatter) {
         super(model);
 
         this.ibanValidator = ibanValidator;
@@ -89,6 +93,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.perfectMoneyValidator = perfectMoneyValidator;
         this.swishValidator = swishValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
+        this.formatter = formatter;
     }
 
     @Override
@@ -156,8 +161,9 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private void buildForm() {
         addTitledGroupBg(root, gridRow, 2, "Manage accounts");
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your national currency accounts:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your national currency\naccounts:", Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
+        tuple.first.setTextAlignment(TextAlignment.RIGHT);
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
         paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
@@ -274,21 +280,21 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, PaymentAccount paymentAccount) {
         switch (paymentMethod.getId()) {
             case PaymentMethod.OK_PAY_ID:
-                return new OKPayForm(paymentAccount, okPayValidator, inputValidator, root, gridRow);
+                return new OKPayForm(paymentAccount, okPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.PERFECT_MONEY_ID:
-                return new PerfectMoneyForm(paymentAccount, perfectMoneyValidator, inputValidator, root, gridRow);
+                return new PerfectMoneyForm(paymentAccount, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_ID:
-                return new SepaForm(paymentAccount, ibanValidator, bicValidator, inputValidator, root, gridRow);
+                return new SepaForm(paymentAccount, ibanValidator, bicValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.NATIONAL_BANK_ID:
-                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow);
+                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SAME_BANK_ID:
-                return new SameBankForm(paymentAccount, inputValidator, root, gridRow);
+                return new SameBankForm(paymentAccount, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SPECIFIC_BANKS_ID:
-                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow);
+                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow, formatter);
             case PaymentMethod.ALI_PAY_ID:
-                return new AliPayForm(paymentAccount, aliPayValidator, inputValidator, root, gridRow);
+                return new AliPayForm(paymentAccount, aliPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWISH_ID:
-                return new SwishForm(paymentAccount, swishValidator, inputValidator, root, gridRow);
+                return new SwishForm(paymentAccount, swishValidator, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;

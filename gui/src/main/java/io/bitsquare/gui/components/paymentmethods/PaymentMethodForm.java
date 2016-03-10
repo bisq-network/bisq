@@ -19,6 +19,7 @@ package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -46,6 +47,7 @@ public abstract class PaymentMethodForm {
     protected final InputValidator inputValidator;
     protected final GridPane gridPane;
     protected int gridRow;
+    private BSFormatter formatter;
     protected final BooleanProperty allInputsValid = new SimpleBooleanProperty();
 
     protected int gridRowFrom;
@@ -53,11 +55,12 @@ public abstract class PaymentMethodForm {
     protected CheckBox useCustomAccountNameCheckBox;
     private ComboBox<TradeCurrency> currencyComboBox;
 
-    public PaymentMethodForm(PaymentAccount paymentAccount, InputValidator inputValidator, GridPane gridPane, int gridRow) {
+    public PaymentMethodForm(PaymentAccount paymentAccount, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         this.paymentAccount = paymentAccount;
         this.inputValidator = inputValidator;
         this.gridPane = gridPane;
         this.gridRow = gridRow;
+        this.formatter = formatter;
     }
 
     protected void addTradeCurrencyComboBox() {
@@ -116,24 +119,24 @@ public abstract class PaymentMethodForm {
             if (hours > 24)
                 displayText = hours / 24 + " days";
 
-
             addLabelTextField(gridPane, gridRow, "Max. allowed trade period / date:", displayText + " / " + dateFromBlocks);
         }
     }
 
     protected void addAllowedPeriod() {
         long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 6;
-        String displayText = hours + " hours";
+        String time = hours + " hours";
         if (hours == 1)
-            displayText = "1 hour";
+            time = "1 hour";
         else if (hours == 24)
-            displayText = "1 day";
+            time = "1 day";
         else if (hours > 24)
-            displayText = hours / 24 + " days";
+            time = hours / 24 + " days";
 
-        displayText += " (Max. permitted period until the trade has to be completed)";
+        String displayText = "Max. trade duration: " + time + " / Max. trade limit: " +
+                formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimitInBitcoin());
 
-        addLabelTextField(gridPane, ++gridRow, "Max. allowed trade period:", displayText);
+        addLabelTextField(gridPane, ++gridRow, "Limitations:", displayText);
     }
 
     abstract protected void autoFillNameTextField();

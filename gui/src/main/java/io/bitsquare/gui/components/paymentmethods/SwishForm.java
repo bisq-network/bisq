@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.SwishValidator;
@@ -48,8 +49,8 @@ public class SwishForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public SwishForm(PaymentAccount paymentAccount, SwishValidator swishValidator, InputValidator inputValidator, GridPane gridPane, int gridRow) {
-        super(paymentAccount, inputValidator, gridPane, gridRow);
+    public SwishForm(PaymentAccount paymentAccount, SwishValidator swishValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.swishAccount = (SwishAccount) paymentAccount;
         this.swishValidator = swishValidator;
     }
