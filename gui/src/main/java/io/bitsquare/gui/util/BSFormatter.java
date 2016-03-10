@@ -409,12 +409,12 @@ public class BSFormatter {
                 "You are selling bitcoin as taker / Offerer is buying bitcoin";
     }
 
-    public String getDirectionForTaker(Offer.Direction direction) {
+    public String getDirectionForTakeOffer(Offer.Direction direction) {
         return direction == Offer.Direction.BUY ? "You are selling bitcoin (by taking an offer from someone who wants to buy bitcoin)" :
                 "You are buying bitcoin (by taking an offer from someone who wants to sell bitcoin)";
     }
 
-    public String getOfferDirectionForOfferer(Offer.Direction direction) {
+    public String getOfferDirectionForCreateOffer(Offer.Direction direction) {
         return direction == Offer.Direction.BUY ? "You are creating an offer for buying bitcoin" :
                 "You are creating an offer for selling bitcoin";
     }

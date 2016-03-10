@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.fiataccounts;
 
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -45,6 +46,7 @@ import javafx.util.StringConverter;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -146,8 +148,14 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         new Popup().warning("Do you really want to delete the selected account?")
                 .actionButtonText("Yes")
                 .onAction(() -> {
-                    model.onDeleteAccount(paymentAccount);
-                    removeSelectAccountForm();
+                    boolean isPaymentAccountUsed = model.onDeleteAccount(paymentAccount);
+                    if (!isPaymentAccountUsed)
+                        removeSelectAccountForm();
+                    else
+                        UserThread.runAfter(() -> {
+                            new Popup().warning("You cannot delete that account because it is used in an " +
+                                    "open offer or in a trade.").show();
+                        }, 100, TimeUnit.MILLISECONDS);
                 })
                 .closeButtonText("Cancel")
                 .show();

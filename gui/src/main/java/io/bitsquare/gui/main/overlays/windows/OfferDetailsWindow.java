@@ -149,9 +149,11 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Offer");
 
         if (takeOfferHandlerOptional.isPresent())
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTaker(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
+        else if (placeOfferHandlerOptional.isPresent())
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
         else
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForOfferer(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
 
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(tradeAmount));

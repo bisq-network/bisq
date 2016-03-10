@@ -550,7 +550,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setOnAction(e -> onTakeOffer(offer));
                                     }
 
-                                    if (!isTradable)
+                                    if (!myOffer && !isTradable)
                                         button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator, hasSameProtocolVersion));
 
                                     button.setText(title);

@@ -47,6 +47,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -59,6 +61,7 @@ import static javafx.scene.layout.AnchorPane.*;
 public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     public static final String TITLE_KEY = "view.title";
+    private MonadicBinding<String> marketPriceBinding;
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -138,14 +141,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Tuple3<TextField, Label, VBox> marketPriceBox = getMarketPriceBox("Market price");
         final BooleanProperty priceInverted = new SimpleBooleanProperty(false);
         marketPriceBox.first.setOnMouseClicked(e -> priceInverted.setValue(!priceInverted.get()));
-        marketPriceBox.first.textProperty().bind(createStringBinding(
-                () -> (priceInverted.get() ?
-                        model.marketPriceInverted.get() :
-                        model.marketPrice.get()) +
+        marketPriceBinding = EasyBind.combine(
+                model.marketPriceCurrency, model.marketPrice, model.marketPriceInverted, priceInverted,
+                (marketPriceCurrency, marketPrice, marketPriceInverted, inverted) ->
                         (priceInverted.get() ?
-                                " BTC/" + model.marketPriceCurrency.get() :
-                                " " + model.marketPriceCurrency.get() + "/BTC"),
-                model.marketPriceCurrency, model.marketPrice, priceInverted));
+                                marketPriceInverted :
+                                marketPrice) +
+                                (priceInverted.get() ?
+                                        " BTC/" + marketPriceCurrency :
+                                        " " + marketPriceCurrency + "/BTC"));
+
+        marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
+            marketPriceBox.first.setText(newValue);
+        });
 
         marketPriceBox.second.textProperty().bind(createStringBinding(
                 () -> {

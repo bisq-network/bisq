@@ -21,6 +21,8 @@ import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,12 +33,16 @@ import java.util.stream.Collectors;
 class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     private final User user;
+    private final OpenOfferManager openOfferManager;
+    private final TradeManager tradeManager;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
 
     @Inject
-    public AltCoinAccountsDataModel(User user) {
+    public AltCoinAccountsDataModel(User user, OpenOfferManager openOfferManager, TradeManager tradeManager) {
         this.user = user;
+        this.openOfferManager = openOfferManager;
+        this.tradeManager = tradeManager;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
@@ -67,8 +73,20 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
         user.addPaymentAccount(paymentAccount);
     }
 
-    public void onDeleteAccount(PaymentAccount paymentAccount) {
-        user.removePaymentAccount(paymentAccount);
+
+    public boolean onDeleteAccount(PaymentAccount paymentAccount) {
+        boolean isPaymentAccountUsed = openOfferManager.getOpenOffers().stream()
+                .filter(o -> o.getOffer().getOffererPaymentAccountId().equals(paymentAccount.getId()))
+                .findAny()
+                .isPresent();
+        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTrades().stream()
+                .filter(t -> t.getOffer().getOffererPaymentAccountId().equals(paymentAccount.getId()) ||
+                        t.getTakerPaymentAccountId().equals(paymentAccount.getId()))
+                .findAny()
+                .isPresent();
+        if (!isPaymentAccountUsed)
+            user.removePaymentAccount(paymentAccount);
+        return isPaymentAccountUsed;
     }
 
     public void onSelectAccount(PaymentAccount paymentAccount) {

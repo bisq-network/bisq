@@ -230,7 +230,8 @@ public class SellerStep3View extends TradeStepView {
             if (preferences.showAgain(key)) {
                 new Popup()
                         .headLine("Confirm that you have received the payment")
-                        .confirmation("Have you received the " + model.dataModel.getCurrencyCode() + " payment from your trading partner?\n\n" +
+                        .confirmation("Have you received the " + CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()) +
+                                " payment from your trading partner?\n\n" +
                                 "Please note that as soon you have confirmed the receipt, the locked trade amount will be released " +
                                 "to the bitcoin buyer and the security deposit will be refunded.")
                         .width(700)
