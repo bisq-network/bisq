@@ -304,7 +304,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
             String code = tradeCurrency.getCode();
             tradeCurrencyCode.set(code);
 
-            paymentAccount.setSelectedTradeCurrency(tradeCurrency);
+            if (paymentAccount != null)
+                paymentAccount.setSelectedTradeCurrency(tradeCurrency);
 
             priceFeed.setCurrencyCode(code);
         }

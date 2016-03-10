@@ -78,8 +78,9 @@ public class FeePolicy {
     }
 
 
-    // 0.1 BTC; about 4 EUR @ 400 EUR/BTC
+    // TODO will be increased once we get higher limits
+    // 0.01 BTC; about 0.4 EUR @ 400 EUR/BTC
     public static Coin getSecurityDeposit() {
-        return Coin.valueOf(10_000_000);
+        return Coin.valueOf(1_000_000);
     }
 }

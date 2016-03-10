@@ -68,7 +68,7 @@ bg color of non edit textFields: fafafa
     -bs-sell-hover: derive(-bs-sell, -10%);
     -bs-sell-transparent: derive(-bs-sell, 95%);
 
-    -bs-cancel: -bs-light-grey;
+    -bs-cancel: #ddd;
     -bs-cancel-focus: derive(-bs-cancel, -50%);
     -bs-cancel-hover: derive(-bs-cancel, -10%);
 
@@ -930,7 +930,7 @@ textfield */
 
 #cancel-button {
     -fx-base: -bs-cancel;
-    -fx-text-fill: white;
+    -fx-text-fill: #444;
     -fx-font-weight: bold;
 }
 

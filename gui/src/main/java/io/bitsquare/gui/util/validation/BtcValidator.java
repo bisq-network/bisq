@@ -70,7 +70,7 @@ public class BtcValidator extends NumberValidator {
     }
 
     protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
-        if (Coin.parseCoin(input).compareTo(paymentMethod.getMaxTradeLimitInBitcoin()) > 0)
+        if (paymentMethod != null && Coin.parseCoin(input).compareTo(paymentMethod.getMaxTradeLimitInBitcoin()) > 0)
             return new ValidationResult(false, BSResources.get("validation.btc.toLarge", formatter.formatCoinWithCode(paymentMethod.getMaxTradeLimitInBitcoin())));
         else
             return new ValidationResult(true);

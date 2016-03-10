@@ -500,7 +500,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 button.setMinWidth(150);
                                 button.setMaxWidth(150);
                                 button.setGraphicTextGap(10);
-                                button.setStyle("-fx-text-fill: white;");
                             }
 
                             @Override
@@ -540,11 +539,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         iconView.setId("image-remove");
                                         title = "Remove";
                                         button.setId("cancel-button");
+                                        button.setStyle("-fx-text-fill: #444;"); // does not take the font colors sometimes from the style
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
                                     } else {
                                         boolean isSellOffer = offer.getDirection() == Offer.Direction.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
+                                        button.setStyle("-fx-text-fill: white;"); // does not take the font colors sometimes from the style
                                         title = model.getDirectionLabel(offer);
                                         button.setOnAction(e -> onTakeOffer(offer));
                                     }
