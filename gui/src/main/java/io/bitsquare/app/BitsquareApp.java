@@ -310,6 +310,10 @@ public class BitsquareApp extends Application {
 
     private void gracefulShutDown(ResultHandler resultHandler) {
         log.debug("gracefulShutDown");
+        new Popup().headLine("Shut down in progress")
+                .backgroundInfo("Shutting down application can take a few seconds.\n" +
+                        "Please don't interrupt that process.").closeButtonText("Ok")
+                .show();
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
