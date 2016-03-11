@@ -14,6 +14,9 @@ import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
+import io.bitsquare.p2p.peers.keepalive.messages.Ping;
+import io.bitsquare.p2p.peers.keepalive.messages.Pong;
+import io.bitsquare.p2p.storage.messages.RefreshTTLMessage;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -175,7 +178,14 @@ public class Connection implements MessageListener {
                 String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
                 int size = ByteArrayUtils.objectToByteArray(message).length;
 
-                if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
+                if (message instanceof Ping || message instanceof RefreshTTLMessage) {
+                    // pings and offer refresh msg we dont want to log in production
+                    log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                                    "Sending direct message to peer" +
+                                    "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
+                                    "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100), size);
+                } else if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                     setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
                     log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
@@ -631,17 +641,22 @@ public class Connection implements MessageListener {
                         lastReadTimeStamp = System.currentTimeMillis();
 
                         int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
-                        boolean doPrintLogs = true;
                         if (rawInputObject instanceof Message) {
                             Message message = (Message) rawInputObject;
                             Connection connection = sharedModel.connection;
                             connection.statistic.addReceivedBytes(size);
                             connection.statistic.addReceivedMessage(message);
-                            // We dont want to get all KeepAliveMessage logged
-                            doPrintLogs = !(message instanceof KeepAliveMessage);
                         }
-
-                        if (doPrintLogs) {
+                        if (rawInputObject instanceof Pong || rawInputObject instanceof RefreshTTLMessage) {
+                            // pongs and offer refresh msg we dont want to log in production
+                            log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
+                                            "New data arrived at inputHandler of connection {}.\n" +
+                                            "Received object (truncated)={} / size={}"
+                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
+                                    sharedModel.connection,
+                                    StringUtils.abbreviate(rawInputObject.toString(), 100),
+                                    size);
+                        } else {
                             log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
                                             "Received object (truncated)={} / size={}"
