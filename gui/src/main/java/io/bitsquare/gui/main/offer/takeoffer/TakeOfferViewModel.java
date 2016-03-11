@@ -453,7 +453,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             isSpinnerVisible.set(false);
             spinnerInfoText.set("");
         } else if (showPayFundsScreenDisplayed) {
-            spinnerInfoText.set("Waiting for funds...");
+            spinnerInfoText.set("Waiting for receiving funds...");
             isSpinnerVisible.set(true);
         }
     }

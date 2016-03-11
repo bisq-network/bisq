@@ -18,16 +18,12 @@ import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bitsquare.p2p.storage.P2PDataStorage;
-import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -160,17 +156,10 @@ public class RequestDataHandler implements MessageListener {
                             "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
                                     "at that moment");
 
-                    final List<ProtectedStorageEntry> dataList = new ArrayList<>(((GetDataResponse) message).dataSet);
                     final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
-                    for (int i = 0; i < dataList.size(); i++) {
-                        // roughly 3-6 sec for 100 entries
-                        final long minDelay = i * 30 + 1;
-                        final long maxDelay = minDelay * 2 + 30;
-                        final ProtectedStorageEntry protectedData = dataList.get(i);
-                        // TODO questionable if it is needed to relay the data to our peers
-                        UserThread.runAfterRandomDelay(() -> dataStorage.add(protectedData, sender, null, false),
-                                minDelay, maxDelay, TimeUnit.MILLISECONDS);
-                    }
+                    ((GetDataResponse) message).dataSet.stream().forEach(protectedStorageEntry -> {
+                        dataStorage.add(protectedStorageEntry, sender, null, false);
+                    });
 
                     cleanup();
                     listener.onComplete();

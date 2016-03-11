@@ -24,6 +24,10 @@ public class OfferBookViewModelTest {
         Offer offer;
         Collection<PaymentAccount> paymentAccounts;
 
+        paymentAccounts = new ArrayList<>(Arrays.asList(getSepaAccount("EUR", "DE", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
+        assertTrue(OfferBookViewModel.isAnyPaymentAccountValidForOffer(
+                getSEPAPaymentMethod("EUR", "AT", new ArrayList(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+
 
         // empty paymentAccounts
         paymentAccounts = new ArrayList<>();
@@ -56,15 +60,20 @@ public class OfferBookViewModelTest {
         assertTrue(OfferBookViewModel.isAnyPaymentAccountValidForOffer(
                 getSameBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
 
-        // offer: SpecificBanks paymentAccount: SpecificBanks - same country, same currency
-        paymentAccounts = new ArrayList<>(Arrays.asList(getSpecificBanksAccount("EUR", "AT", "PSK",
-                new ArrayList<>(Arrays.asList("PSK", "Raika")))));
+        // offer: sepa paymentAccount: sepa - diff. country, same currency
+        paymentAccounts = new ArrayList<>(Arrays.asList(getSepaAccount("EUR", "DE", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(OfferBookViewModel.isAnyPaymentAccountValidForOffer(
-                getSpecificBanksPaymentMethod("EUR", "AT", "PSK",
-                        new ArrayList<>(Arrays.asList("PSK", "Raika"))), paymentAccounts));
+                getSEPAPaymentMethod("EUR", "AT", new ArrayList(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+
 
         //////
 
+        // offer: sepa paymentAccount: sepa - same country, same currency
+        paymentAccounts = new ArrayList<>(Arrays.asList(getSepaAccount("EUR", "AT", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
+        assertTrue(OfferBookViewModel.isAnyPaymentAccountValidForOffer(
+                getSEPAPaymentMethod("EUR", "AT", new ArrayList(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+
+        
         // offer: sepa paymentAccount: nationalBank - same country, same currency
         // wrong method
         paymentAccounts = new ArrayList<>(Arrays.asList(getNationalBankAccount("EUR", "AT", "PSK")));

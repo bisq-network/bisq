@@ -254,7 +254,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 return result;
             }
         } else {
-            log.warn("We don't have data for that refresh message in our map.");
+            log.debug("We don't have data for that refresh message in our map. That is expected if we missed the data publishing.");
             return false;
         }
     }

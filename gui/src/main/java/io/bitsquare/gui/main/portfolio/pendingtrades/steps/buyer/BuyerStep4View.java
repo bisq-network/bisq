@@ -93,9 +93,13 @@ public class BuyerStep4View extends TradeStepView {
     @Override
     protected void addContent() {
         addTradeInfoBlock();
-        blockTextField = addLabelTextField(gridPane, gridRow, "Block(s) to wait until lock time elapsed:", "").second;
-        timeTextField = addLabelTextField(gridPane, ++gridRow, "Approx. date when payout gets unlocked:").second;
-        GridPane.setRowSpan(tradeInfoTitledGroupBg, 5);
+        if (model.getLockTime() > 0) {
+            blockTextField = addLabelTextField(gridPane, gridRow, "Block(s) to wait until lock time elapsed:", "").second;
+            timeTextField = addLabelTextField(gridPane, ++gridRow, "Approx. date when payout gets unlocked:").second;
+            GridPane.setRowSpan(tradeInfoTitledGroupBg, 5);
+        } else {
+            GridPane.setRowSpan(tradeInfoTitledGroupBg, 3); //TODO should never reach
+        }
 
         addInfoBlock();
     }
@@ -107,15 +111,21 @@ public class BuyerStep4View extends TradeStepView {
 
     @Override
     protected String getInfoBlockTitle() {
-        return "Wait until payout lock time is over";
+        if (model.getLockTime() > 0)
+            return "Wait until payout lock time is over";
+        else
+            return "Sending payout transaction to peer"; 
     }
 
     @Override
     protected String getInfoText() {
-        return "The payout transaction is signed and finalized by both parties.\n" +
-                "For reducing bank chargeback risks the payout transaction is blocked by a lock time.\n" +
-                "After that lock time is over the payout transaction gets published and you receive " +
-                "your bitcoin.";
+        if (model.getLockTime() > 0)
+            return "The payout transaction is signed and finalized by both parties.\n" +
+                    "For reducing bank chargeback risks the payout transaction is blocked by a lock time.\n" +
+                    "After that lock time is over the payout transaction gets published and you receive " +
+                    "your bitcoin.";
+        else
+            return "We are sending the payout transaction to the other peer.";
     }
 
 
@@ -137,9 +147,12 @@ public class BuyerStep4View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateDateFromBlockHeight(long bestBlocKHeight) {
-        long missingBlocks = model.getLockTime() - bestBlocKHeight;
-        blockTextField.setText(String.valueOf(missingBlocks));
-        timeTextField.setText(model.getOpenDisputeTimeAsFormattedDate());
+        if (model.getLockTime() > 0) {
+            long missingBlocks = model.getLockTime() - bestBlocKHeight;
+
+            blockTextField.setText(String.valueOf(missingBlocks));
+            timeTextField.setText(model.getOpenDisputeTimeAsFormattedDate());
+        }
     }
 
 

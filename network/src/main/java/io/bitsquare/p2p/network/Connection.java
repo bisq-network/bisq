@@ -407,7 +407,7 @@ public class Connection implements MessageListener {
             }
         } else {
             //TODO find out why we get called that
-            log.warn("stopped was already true at shutDown call");
+            log.debug("stopped was already at shutDown call");
             UserThread.execute(() -> doShutDown(closeConnectionReason, shutDownCompleteHandler));
         }
     }
@@ -536,20 +536,13 @@ public class Connection implements MessageListener {
                     closeConnectionReason = CloseConnectionReason.RESET;
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 closeConnectionReason = CloseConnectionReason.SOCKET_TIMEOUT;
-                log.warn("SocketTimeoutException at socket " + socket.toString() + "\n\tconnection={}" + this);
+                log.debug("SocketTimeoutException at socket " + socket.toString() + "\n\tconnection={}" + this);
             } else if (e instanceof EOFException || e instanceof StreamCorruptedException) {
                 closeConnectionReason = CloseConnectionReason.TERMINATED;
             } else {
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
-
-                String message;
-                if (e.getMessage() != null)
-                    message = e.getMessage();
-                else
-                    message = e.toString();
-
                 log.warn("Unknown reason for exception at socket {}\n\tconnection={}\n\tException=",
-                        socket.toString(), this, message);
+                        socket.toString(), this, e.toString());
                 e.printStackTrace();
             }
 

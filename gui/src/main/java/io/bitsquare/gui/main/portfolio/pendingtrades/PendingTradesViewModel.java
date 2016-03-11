@@ -301,6 +301,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG:
             case BUYER_COMMITTED_PAYOUT_TX:
             case BUYER_STARTED_SEND_PAYOUT_TX:
+                // TODO would need extra state for wait until msg arrived and PAYOUT_BROAD_CASTED gets called.
                 buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;
             case SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX:

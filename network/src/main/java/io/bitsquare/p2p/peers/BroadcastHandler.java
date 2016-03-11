@@ -112,14 +112,14 @@ public class BroadcastHandler implements PeerManager.Listener {
             numOfPeers = connectedPeersList.size();
             int factor = 1;
             if (!isDataOwner) {
-                // for not data owner (relay nodes) we send to max. 4 nodes and use a longer delay
-                numOfPeers = Math.min(4, connectedPeersList.size());
+                // for not data owner (relay nodes) we send to max. 5 nodes and use a longer delay
+                numOfPeers = Math.min(5, connectedPeersList.size());
                 factor = 2;
             }
             log.info("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeersSet.size());
             for (int i = 0; i < numOfPeers; i++) {
-                final long minDelay = i * 50 * factor + 1;
-                final long maxDelay = minDelay * 2 + 50 * factor;
+                final long minDelay = i * 30 * factor + 1;
+                final long maxDelay = minDelay * 2 + 30 * factor;
                 final Connection connection = connectedPeersList.get(i);
                 UserThread.runAfterRandomDelay(() -> sendToPeer(connection, message), minDelay, maxDelay, TimeUnit.MILLISECONDS);
             }

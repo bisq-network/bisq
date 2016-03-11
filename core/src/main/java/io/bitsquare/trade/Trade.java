@@ -221,7 +221,7 @@ public abstract class Trade implements Tradable, Model {
                      OpenOfferManager openOfferManager,
                      User user,
                      KeyRing keyRing) {
-
+        Log.traceCall();
         processModel.onAllServicesInitialized(offer,
                 tradeManager,
                 openOfferManager,
@@ -234,6 +234,7 @@ public abstract class Trade implements Tradable, Model {
 
         createProtocol();
 
+        log.trace("decryptedMsgWithPubKey = " + decryptedMsgWithPubKey);
         if (decryptedMsgWithPubKey != null) {
             tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
         }
