@@ -73,5 +73,4 @@ public class TacWindow extends Overlay<TacWindow> {
     protected void onShow() {
         display();
     }
-
 }

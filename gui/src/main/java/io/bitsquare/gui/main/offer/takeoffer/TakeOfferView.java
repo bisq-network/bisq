@@ -271,7 +271,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         };
         model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
 
-        if (spinner != null && takeOfferButton.isVisible())
+        if (offerAvailabilitySpinner != null && offerAvailabilitySpinner.isVisible())
+            offerAvailabilitySpinner.setProgress(-1);
+
+        if (spinner != null && spinner.isVisible())
             spinner.setProgress(-1);
     }
 
@@ -429,16 +432,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             String tradeAmountText = model.isSeller() ? "the trade amount, " : "";
             new Popup().headLine("Fund your trading wallet")
                     .instruction("You need to pay in " +
-                    model.totalToPay.get() + " to your local Bitsquare trading wallet.\n" +
-                    "The amount is the sum of " + tradeAmountText + "the security deposit, the trading fee and " +
-                    "the bitcoin mining fee.\n\n" +
-                    "Please send from your external Bitcoin wallet the exact amount to the address: " +
-                    model.getAddressAsString() + "\n(you can copy the address in the screen below after closing that popup)\n\n" +
-                    "Make sure you use a sufficiently high mining fee of at least " +
-                    model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) +
-                    " to avoid problems that your transaction does not get confirmed in the blockchain.\n" +
-                    "Transactions with a lower fee will not be accepted.\n\n" +
-                    "You can see the status of your incoming payment and all the details in the screen below.")
+                            model.totalToPay.get() + " to your local Bitsquare trading wallet.\n" +
+                            "The amount is the sum of " + tradeAmountText + "the security deposit, the trading fee and " +
+                            "the bitcoin mining fee.\n\n" +
+                            "Please send from your external Bitcoin wallet the exact amount to the address: " +
+                            model.getAddressAsString() + "\n(you can copy the address in the screen below after closing that popup)\n\n" +
+                            "Make sure you use a sufficiently high mining fee of at least " +
+                            model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) +
+                            " to avoid problems that your transaction does not get confirmed in the blockchain.\n" +
+                            "Transactions with a lower fee will not be accepted.\n\n" +
+                            "You can see the status of your incoming payment and all the details in the screen below.")
                     .dontShowAgainId(key, preferences)
                     .show();
         }

@@ -203,7 +203,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
                 broadcast(new AddDataMessage(protectedStorageEntry), sender, listener, isDataOwner);
             }
-          
+
             hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
         } else {
             log.trace("add failed");
@@ -442,7 +442,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             else
                 result = expirableMailboxStoragePayload.receiverPubKeyForRemoveOperation.equals(protectedStorageEntry.ownerPubKey);
         } else {
-            result = protectedStorageEntry.getStoragePayload().getOwnerPubKey().equals(protectedStorageEntry.ownerPubKey);
+            result = protectedStorageEntry != null && protectedStorageEntry.getStoragePayload() != null &&
+                    protectedStorageEntry.getStoragePayload().getOwnerPubKey().equals(protectedStorageEntry.ownerPubKey);
         }
 
         if (!result)

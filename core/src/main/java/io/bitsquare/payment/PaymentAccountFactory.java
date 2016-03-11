@@ -17,11 +17,10 @@
 
 package io.bitsquare.payment;
 
-import io.bitsquare.common.persistance.Persistable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class PaymentAccountFactory implements Persistable {
+public class PaymentAccountFactory {
     private static final Logger log = LoggerFactory.getLogger(PaymentAccountFactory.class);
 
     public static PaymentAccount getPaymentAccount(PaymentMethod paymentMethod) {
