@@ -94,7 +94,7 @@ public class Notification extends Overlay<Notification> {
         }
 
         if (NotificationCenter.useAnimations) {
-            double duration = 400;
+            double duration = getDuration(400);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
             gridPane.setRotationAxis(Rotate.X_AXIS);
@@ -127,7 +127,7 @@ public class Notification extends Overlay<Notification> {
     protected void animateDisplay() {
         if (NotificationCenter.useAnimations) {
             double startX = 320;
-            double duration = 600;
+            double duration = getDuration(600);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
             Timeline timeline = new Timeline();
@@ -153,6 +153,7 @@ public class Notification extends Overlay<Notification> {
             timeline.play();
         }
     }
+
 
     @Override
     protected void createGridPane() {

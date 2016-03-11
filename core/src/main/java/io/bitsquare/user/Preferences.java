@@ -83,6 +83,8 @@ public final class Preferences implements Persistable {
         return defaultTradeCurrency;
     }
 
+    private static boolean _useAnimations = true;
+
     transient private final Storage<Preferences> storage;
     transient private final BitsquareEnvironment bitsquareEnvironment;
 
@@ -184,6 +186,7 @@ public final class Preferences implements Persistable {
         });
         useAnimationsProperty.addListener((ov) -> {
             useAnimations = useAnimationsProperty.get();
+            _useAnimations = useAnimations;
             storage.queueUpForSave(2000);
         });
         fiatCurrenciesAsObservable.addListener((Observable ov) -> {
@@ -349,6 +352,10 @@ public final class Preferences implements Persistable {
 
     public boolean getUseAnimations() {
         return useAnimationsProperty.get();
+    }
+
+    public static boolean useAnimations() {
+        return _useAnimations;
     }
 
     public StringProperty btcDenominationProperty() {

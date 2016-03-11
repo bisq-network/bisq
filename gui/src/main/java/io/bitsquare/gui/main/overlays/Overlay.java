@@ -740,11 +740,8 @@ public abstract class Overlay<T extends Overlay> {
             truncatedMessage = message;
     }
 
-    private int getDuration(int duration) {
-        if (preferences != null)
-            return preferences.getUseAnimations() ? duration : 1;
-        else
-            return duration;
+    protected int getDuration(int duration) {
+        return Preferences.useAnimations() ? duration : 1;
     }
 
     @Override
