@@ -235,7 +235,7 @@ public class BuyerStep2View extends TradeStepView {
                 confirmPaymentStarted();
             }
         } else {
-            new Popup().warning("You need to wait until your client is bootstrapped in the network.\n" +
+            new Popup().information("You need to wait until your are bootstrapped to the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
     }

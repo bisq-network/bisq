@@ -36,6 +36,8 @@ import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.p2p.BootstrapListener;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -55,6 +57,8 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -81,12 +85,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final DisputeSummaryWindow disputeSummaryWindow;
     private final ContractWindow contractWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
+    private P2PService p2PService;
 
     private final List<Attachment> tempAttachments = new ArrayList<>();
 
     private TableView<Dispute> disputesTable;
     private Dispute selectedDispute;
-    private ChangeListener<Dispute> disputeChangeListener;
     private ListView<DisputeCommunicationMessage> messageListView;
     private TextArea inputTextArea;
     private AnchorPane messagesAnchorPane;
@@ -98,8 +102,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     @Nullable
     private DisputeCommunicationMessage disputeCommunicationMessage;
     private ListChangeListener<DisputeCommunicationMessage> disputeDirectMessageListListener;
-    private ChangeListener<String> inputTextAreaListener;
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
+    private Subscription selectedDisputeSubscription;
+    private TableGroupHeadline tableGroupHeadline;
+    private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages;
+    private Button sendButton;
+    private boolean isBootstrapped;
+    private Subscription inputTextAreaTextSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +118,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     @Inject
     public TraderDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
                              BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
-                             ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow) {
+                             ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow, P2PService p2PService) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
@@ -118,6 +127,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         this.disputeSummaryWindow = disputeSummaryWindow;
         this.contractWindow = contractWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
+        this.p2PService = p2PService;
     }
 
     @Override
@@ -145,7 +155,25 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         disputesTable.setPlaceholder(placeholder);
         disputesTable.getSelectionModel().clearSelection();
 
-        disputeChangeListener = (observableValue, oldValue, newValue) -> onSelectDispute(newValue);
+        /*inputTextAreaListener = (observable, oldValue, newValue) ->
+                sendButton.setDisable(newValue.length() == 0
+                        && tempAttachments.size() == 0 &&
+                        selectedDispute.disputeResultProperty().get() == null);*/
+
+        selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> {
+            messagesInputBox.setVisible(!newValue);
+            messagesInputBox.setManaged(!newValue);
+            AnchorPane.setBottomAnchor(messageListView, newValue ? 0d : 120d);
+        };
+
+        disputeDirectMessageListListener = c -> scrollToBottom();
+
+        p2PService.addP2PServiceListener(new BootstrapListener() {
+            @Override
+            public void onBootstrapComplete() {
+                isBootstrapped = true;
+            }
+        });
     }
 
     @Override
@@ -157,7 +185,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         sortedList.comparatorProperty().bind(disputesTable.comparatorProperty());
         disputesTable.setItems(sortedList);
         disputesTable.sort();
-        disputesTable.getSelectionModel().selectedItemProperty().addListener(disputeChangeListener);
+        selectedDisputeSubscription = EasyBind.subscribe(disputesTable.getSelectionModel().selectedItemProperty(), this::onSelectDispute);
 
         Dispute selectedItem = disputesTable.getSelectionModel().getSelectedItem();
         if (selectedItem != null)
@@ -168,24 +196,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
-        disputesTable.getSelectionModel().selectedItemProperty().removeListener(disputeChangeListener);
-
-        if (disputeCommunicationMessage != null) {
-            disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
-            disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
-        }
-
-        if (selectedDispute != null) {
-            selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
-            ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
-            if (disputeCommunicationMessages != null) {
-                disputeCommunicationMessages.removeListener(disputeDirectMessageListListener);
-            }
-        }
-
-        if (inputTextArea != null)
-            inputTextArea.textProperty().removeListener(inputTextAreaListener);
-
+        selectedDisputeSubscription.unsubscribe();
+        removeListenersOnSelectDispute();
     }
 
     protected void setFilteredListPredicate(FilteredList<Dispute> filteredList) {
@@ -261,9 +273,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onRequestUpload() {
+        int totalSize = tempAttachments.stream().mapToInt(a -> a.getBytes().length).sum();
         if (tempAttachments.size() < 3) {
             FileChooser fileChooser = new FileChooser();
-            int maxSizeInKB = Connection.getMaxMsgSize() / 1024;
+            int maxMsgSize = Connection.getMaxMsgSize();
+            int maxSizeInKB = maxMsgSize / 1024;
             fileChooser.setTitle("Open file to attach (max. file size: " + maxSizeInKB + " kb)");
            /* if (Utilities.isUnix())
                 fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));*/
@@ -273,11 +287,16 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     URL url = result.toURI().toURL();
                     try (InputStream inputStream = url.openStream()) {
                         byte[] filesAsBytes = ByteStreams.toByteArray(inputStream);
-                        if (filesAsBytes.length <= Connection.getMaxMsgSize()) {
+                        int size = filesAsBytes.length;
+                        int newSize = totalSize + size;
+                        if (newSize > maxMsgSize) {
+                            new Popup().warning("The total size of your attachments is " + (newSize / 1024) + " kb and is exceeding the max. allowed " +
+                                    "message size of " + maxSizeInKB + " kB.").show();
+                        } else if (size > maxMsgSize) {
+                            new Popup().warning("The max. allowed file size is " + maxSizeInKB + " kB.").show();
+                        } else {
                             tempAttachments.add(new Attachment(result.getName(), filesAsBytes));
                             inputTextArea.setText(inputTextArea.getText() + "\n[Attachment " + result.getName() + "]");
-                        } else {
-                            new Popup().warning("The max. allowed file size is " + maxSizeInKB + " kB.").show();
                         }
                     } catch (java.io.IOException e) {
                         e.printStackTrace();
@@ -310,15 +329,48 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void onSelectDispute(Dispute dispute) {
+    private void removeListenersOnSelectDispute() {
         if (selectedDispute != null) {
-            selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
-            ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
-            if (disputeCommunicationMessages != null) {
+            if (selectedDisputeClosedPropertyListener != null)
+                selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
+
+            if (disputeCommunicationMessages != null && disputeDirectMessageListListener != null)
                 disputeCommunicationMessages.removeListener(disputeDirectMessageListListener);
-            }
         }
 
+        if (disputeCommunicationMessage != null) {
+            if (arrivedPropertyListener != null)
+                disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+            if (storedInMailboxPropertyListener != null)
+                disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+        }
+
+        if (messageListView != null)
+            messageListView.prefWidthProperty().unbind();
+
+        if (tableGroupHeadline != null)
+            tableGroupHeadline.prefWidthProperty().unbind();
+
+        if (messagesAnchorPane != null)
+            messagesAnchorPane.prefWidthProperty().unbind();
+
+        if (inputTextAreaTextSubscription != null)
+            inputTextAreaTextSubscription.unsubscribe();
+    }
+
+    private void addListenersOnSelectDispute() {
+        if (tableGroupHeadline != null) {
+            tableGroupHeadline.prefWidthProperty().bind(root.widthProperty());
+            messageListView.prefWidthProperty().bind(root.widthProperty());
+            messagesAnchorPane.prefWidthProperty().bind(root.widthProperty());
+            disputeCommunicationMessages.addListener(disputeDirectMessageListListener);
+            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
+            inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
+        }
+    }
+
+    private void onSelectDispute(Dispute dispute) {
+        removeListenersOnSelectDispute();
         if (dispute == null) {
             if (root.getChildren().size() > 1)
                 root.getChildren().remove(1);
@@ -329,44 +381,45 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
             boolean isTrader = disputeManager.isTrader(selectedDispute);
 
-            TableGroupHeadline tableGroupHeadline = new TableGroupHeadline();
+            tableGroupHeadline = new TableGroupHeadline();
             tableGroupHeadline.setText("Messages");
-            tableGroupHeadline.prefWidthProperty().bind(root.widthProperty());
+
             AnchorPane.setTopAnchor(tableGroupHeadline, 10d);
             AnchorPane.setRightAnchor(tableGroupHeadline, 0d);
             AnchorPane.setBottomAnchor(tableGroupHeadline, 0d);
             AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
-            ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
+            disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
             SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
             sortedList.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
-            disputeDirectMessageListListener = c -> scrollToBottom();
-            disputeCommunicationMessages.addListener(disputeDirectMessageListListener);
             messageListView = new ListView<>(sortedList);
             messageListView.setId("message-list-view");
-            messageListView.prefWidthProperty().bind(root.widthProperty());
+
             messageListView.setMinHeight(150);
             AnchorPane.setTopAnchor(messageListView, 30d);
             AnchorPane.setRightAnchor(messageListView, 0d);
             AnchorPane.setLeftAnchor(messageListView, 0d);
 
             messagesAnchorPane = new AnchorPane();
-            messagesAnchorPane.prefWidthProperty().bind(root.widthProperty());
             VBox.setVgrow(messagesAnchorPane, Priority.ALWAYS);
 
             inputTextArea = new TextArea();
             inputTextArea.setPrefHeight(70);
             inputTextArea.setWrapText(true);
 
-            Button sendButton = new Button("Send");
+            sendButton = new Button("Send");
             sendButton.setDefaultButton(true);
-            sendButton.setOnAction(e -> onSendMessage(inputTextArea.getText(), selectedDispute));
-            sendButton.setDisable(true);
-            inputTextAreaListener = (observable, oldValue, newValue) ->
-                    sendButton.setDisable(newValue.length() == 0
-                            && tempAttachments.size() == 0 &&
-                            selectedDispute.disputeResultProperty().get() == null);
-            inputTextArea.textProperty().addListener(inputTextAreaListener);
+            sendButton.setOnAction(e -> {
+                if (isBootstrapped) {
+                    String text = inputTextArea.getText();
+                    if (!text.isEmpty())
+                        onSendMessage(text, selectedDispute);
+                } else {
+                    new Popup().information("You need to wait until your are bootstrapped to the network.\n" +
+                            "That might take up to about 2 minutes at startup.").show();
+                }
+            });
+            inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
 
             Button uploadButton = new Button("Add attachments");
             uploadButton.setOnAction(e -> onRequestUpload());
@@ -382,12 +435,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendMsgProgressIndicator.setVisible(false);
             sendMsgProgressIndicator.setManaged(false);
 
-            selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> {
-                messagesInputBox.setVisible(!newValue);
-                messagesInputBox.setManaged(!newValue);
-                AnchorPane.setBottomAnchor(messageListView, newValue ? 0d : 120d);
-            };
-            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
             if (!selectedDispute.isClosed()) {
                 HBox buttonBox = new HBox();
                 buttonBox.setSpacing(10);
@@ -483,6 +530,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     else
                                         arrow.setId("bubble_arrow_blue_right");
 
+                                    if (sendMsgProgressIndicatorListener != null)
+                                        sendMsgProgressIndicator.progressProperty().removeListener(sendMsgProgressIndicatorListener);
+
                                     sendMsgProgressIndicatorListener = (observable, oldValue, newValue) -> {
                                         if ((double) oldValue == -1 && (double) newValue == 0) {
                                             if (item.arrivedProperty().get())
@@ -544,6 +594,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 AnchorPane.setBottomAnchor(statusIcon, 7d);
                                 headerLabel.setText(formatter.formatDateTime(item.getDate()));
                                 messageLabel.setText(item.getMessage());
+                                attachmentsBox.getChildren().clear();
                                 if (item.getAttachments().size() > 0) {
                                     AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
                                     attachmentsBox.getChildren().add(new Label("Attachments: ") {{
@@ -569,7 +620,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                         attachmentsBox.getChildren().add(icon);
                                     });
                                 } else {
-                                    attachmentsBox.getChildren().clear();
                                     AnchorPane.setBottomAnchor(messageLabel, bottomBorder + 10);
                                 }
 
@@ -623,6 +673,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
             scrollToBottom();
         }
+
+        addListenersOnSelectDispute();
     }
 
 

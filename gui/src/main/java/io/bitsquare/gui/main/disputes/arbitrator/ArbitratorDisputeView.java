@@ -26,6 +26,7 @@ import io.bitsquare.gui.main.overlays.windows.ContractWindow;
 import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.trade.TradeManager;
 import javafx.collections.transformation.FilteredList;
 import javafx.stage.Stage;
@@ -39,9 +40,9 @@ public class ArbitratorDisputeView extends TraderDisputeView {
     @Inject
     public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
                                  BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
-                                 ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow) {
+                                 ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow, P2PService p2PService) {
         super(disputeManager, keyRing, tradeManager, stage, formatter,
-                disputeSummaryWindow, contractWindow, tradeDetailsWindow);
+                disputeSummaryWindow, contractWindow, tradeDetailsWindow, p2PService);
     }
 
     @Override
