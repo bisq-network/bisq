@@ -17,11 +17,16 @@
 
 package io.bitsquare.crypto;
 
+import io.bitsquare.app.Version;
+import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.p2p.Message;
 
 import java.security.PublicKey;
 
-public final class DecryptedMsgWithPubKey {
+public final class DecryptedMsgWithPubKey implements Persistable {
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+
     public final Message message;
     public final PublicKey signaturePubKey;
 
