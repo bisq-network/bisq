@@ -36,14 +36,16 @@ public final class Alert implements StoragePayload {
     private static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     public final String message;
+    public final String version;
     public final boolean isUpdateInfo;
     private String signatureAsBase64;
     private transient PublicKey storagePublicKey;
     private byte[] storagePublicKeyBytes;
 
-    public Alert(String message, boolean isUpdateInfo) {
+    public Alert(String message, boolean isUpdateInfo, String version) {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
+        this.version = version;
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {

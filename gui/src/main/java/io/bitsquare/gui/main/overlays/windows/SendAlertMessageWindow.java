@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.alert.Alert;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
@@ -106,7 +107,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (sendAlertMessageHandler.handle(
-                        new Alert(alertMessageTextArea.getText(), isUpdateCheckBox.isSelected()),
+                        new Alert(alertMessageTextArea.getText(), isUpdateCheckBox.isSelected(), Version.VERSION),
                         keyInputTextField.getText()))
                     hide();
                 else

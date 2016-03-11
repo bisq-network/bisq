@@ -64,7 +64,7 @@ public abstract class BuyerTrade extends Trade {
     public void setState(State state) {
         super.setState(state);
 
-        if (state == State.WITHDRAW_COMPLETED)
+        if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
             tradeProtocol.completed();
     }
 

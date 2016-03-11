@@ -27,12 +27,10 @@ import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import org.slf4j.LoggerFactory;
 
 public class Log {
-    private static boolean PRINT_TRACE_METHOD = true;
     private static SizeBasedTriggeringPolicy triggeringPolicy;
     private static Logger logbackLogger;
 
     public static void setup(String fileName, boolean useDetailedLogging) {
-        Log.PRINT_TRACE_METHOD = useDetailedLogging;
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         RollingFileAppender appender = new RollingFileAppender();
@@ -62,9 +60,7 @@ public class Log {
         appender.start();
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        //TODO for now use always trace 
-        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.TRACE);
-        // logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.DEBUG);
+        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.INFO);
         logbackLogger.addAppender(appender);
     }
 
