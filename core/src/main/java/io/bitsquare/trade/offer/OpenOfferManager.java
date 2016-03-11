@@ -61,7 +61,7 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener {
     private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
-    private static final long RETRY_REPUBLISH_DELAY_SEC = Timer.STRESS_TEST ? 1 : 5;
+    private static final long RETRY_REPUBLISH_DELAY_SEC = Timer.STRESS_TEST ? 1 : 10;
     private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = Timer.STRESS_TEST ? 1 : 10;
     private static final long REPUBLISH_INTERVAL_MS = Timer.STRESS_TEST ? 3000 : 2 * Offer.TTL;
     private static final long REFRESH_INTERVAL_MS = Timer.STRESS_TEST ? 1000 : (long) (Offer.TTL * 0.5);
@@ -198,6 +198,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     @Override
     public void onAllConnectionsLost() {
+        log.info("onAllConnectionsLost");
         stopped = true;
         stopPeriodicRefreshOffersTimer();
         stopPeriodicRepublishOffersTimer();
@@ -208,12 +209,14 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
+        log.info("onNewConnectionAfterAllConnectionsLost");
         stopped = false;
         restart();
     }
 
     @Override
     public void onAwakeFromStandby() {
+        log.info("onAwakeFromStandby");
         stopped = false;
         if (!p2PService.getNetworkNode().getAllConnections().isEmpty())
             restart();
@@ -464,7 +467,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void restart() {
-        Log.traceCall();
+        log.info("Restart after connection loss");
         if (retryRepublishOffersTimer == null)
             retryRepublishOffersTimer = UserThread.runAfter(() -> {
                 stopped = false;
