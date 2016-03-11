@@ -91,7 +91,6 @@ public final class Preferences implements Persistable {
     // Persisted fields
     private String btcDenomination = MonetaryFormat.CODE_BTC;
     private boolean useAnimations = true;
-    private boolean useEffects = true;
     private final ArrayList<FiatCurrency> fiatCurrencies;
     private final ArrayList<CryptoCurrency> cryptoCurrencies;
     private BlockChainExplorer blockChainExplorerMainNet;

@@ -31,7 +31,7 @@
         <columns>
             <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180" maxWidth="180"/>
             <TableColumn text="Details" fx:id="detailsColumn" minWidth="260"/>
-            <TableColumn text="Address" fx:id="addressColumn" minWidth="320" maxWidth="320">
+            <TableColumn text="Address" fx:id="addressColumn" minWidth="320">
                 <cellValueFactory>
                     <PropertyValueFactory property="addressString"/>
                 </cellValueFactory>

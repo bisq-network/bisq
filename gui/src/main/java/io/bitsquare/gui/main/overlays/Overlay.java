@@ -409,7 +409,7 @@ public abstract class Overlay<T extends Overlay> {
     protected void animateDisplay() {
         gridPane.setOpacity(0);
         Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
-        double duration = 400;
+        double duration = getDuration(400);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
@@ -475,7 +475,7 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void animateHide(Runnable onFinishedHandler) {
         Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
-        double duration = 200;
+        double duration = getDuration(200);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
@@ -738,6 +738,13 @@ public abstract class Overlay<T extends Overlay> {
             truncatedMessage = StringUtils.abbreviate(message, 1500);
         else
             truncatedMessage = message;
+    }
+
+    private int getDuration(int duration) {
+        if (preferences != null)
+            return preferences.getUseAnimations() ? duration : 1;
+        else
+            return duration;
     }
 
     @Override
