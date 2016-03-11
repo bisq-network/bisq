@@ -346,14 +346,9 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (paymentAccount instanceof CountryBasedPaymentAccount) {
             CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) paymentAccount;
 
-            checkNotNull(offer.getCountryCode(), "offer.getCountryCode() must not be null");
-            checkNotNull(offer.getBankId(), "offer.getBankId() must not be null");
-            checkNotNull(offer.getAcceptedCountryCodes(), "offer.getAcceptedCountryCodes() must not be null");
-
-            checkNotNull(countryBasedPaymentAccount.getCountry(), "paymentAccount.getCountry() must not be null");
-
             // check if we have a matching country
-            boolean matchesCountryCodes = offer.getAcceptedCountryCodes().contains(countryBasedPaymentAccount.getCountry().code);
+            boolean matchesCountryCodes = offer.getAcceptedCountryCodes() != null && countryBasedPaymentAccount.getCountry() != null &&
+                    offer.getAcceptedCountryCodes().contains(countryBasedPaymentAccount.getCountry().code);
             if (!matchesCountryCodes)
                 return false;
 
