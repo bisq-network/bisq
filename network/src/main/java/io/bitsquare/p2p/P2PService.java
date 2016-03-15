@@ -347,7 +347,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         log.info("Wrong receiverAddressMaskHash. The message is not intended for us.");
                     }
                 } catch (CryptoException e) {
-                    log.info("Decryption of SealedAndSignedMessage failed. " +
+                    log.warn("Decryption of SealedAndSignedMessage failed. " +
                             "That is expected if the message is not intended for us.");
                 }
             }
