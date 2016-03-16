@@ -35,6 +35,10 @@ import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.crypto.CryptoException;
+import io.bitsquare.common.crypto.Encryption;
+import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.components.BalanceTextField;
@@ -92,6 +96,7 @@ public class MainViewModel implements ViewModel {
     private final NotificationCenter notificationCenter;
     private final TacWindow tacWindow;
     private Clock clock;
+    private KeyRing keyRing;
     private final Navigation navigation;
     private final BSFormatter formatter;
 
@@ -150,7 +155,7 @@ public class MainViewModel implements ViewModel {
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
-                         Navigation navigation, BSFormatter formatter) {
+                         KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.priceFeed = priceFeed;
         this.user = user;
         this.walletService = walletService;
@@ -166,6 +171,7 @@ public class MainViewModel implements ViewModel {
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
         this.clock = clock;
+        this.keyRing = keyRing;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -449,6 +455,40 @@ public class MainViewModel implements ViewModel {
         setupMarketPriceFeed();
 
         showAppScreen.set(true);
+
+        // We want to test if the client is compiled with the correct crypto provider (BountyCastle) 
+        // and if the unlimited Strength for cryptographic keys is set.
+        // If users compile themselves they might miss that step and then would get an exception in the trade.
+        // To avoid that we add here at startup a sample encryption and signing to see if it don't causes an exception.
+        // See: https://github.com/bitsquare/bitsquare/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
+        Thread checkCryptoThread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    log.trace("Run crypto test");
+                    // just use any simple dummy msg
+                    Encryption.encryptHybridWithSignature(new io.bitsquare.p2p.peers.keepalive.messages.Ping(0, 0),
+                            keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
+                    log.trace("Crypto test succeeded");
+                } catch (CryptoException e) {
+                    e.printStackTrace();
+                    String msg = "Seems that you use a self compiled binary and have not following the build " +
+                            "instructions in https://github.com/bitsquare/bitsquare/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys.\n\n" +
+                            "If that is not the case and you use the official Bitsquare binary, " +
+                            "please file a bug report to the Github page.\n" +
+                            "Error=" + e.getMessage();
+                    log.error(msg);
+                    new Popup<>().warning(msg)
+                            .actionButtonText("Shut down")
+                            .onAction(() -> BitsquareApp.shutDownHandler.run())
+                            .closeButtonText("Report bug at Github issues")
+                            .onClose(() -> Utilities.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
+                            .show();
+                }
+
+            }
+        };
+        checkCryptoThread.start();
     }
 
 
