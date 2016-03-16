@@ -32,6 +32,7 @@ Prerequisites
 -------------
 
 The only prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u40 or better (as well as maven and git).
+In Debian-like systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
 To check the version of Java you currently have installed:
 
