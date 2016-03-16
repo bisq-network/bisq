@@ -67,18 +67,18 @@ public final class PaymentMethod implements Persistable, Comparable {
     public static PaymentMethod BLOCK_CHAINS;
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
-            OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY, Coin.parseCoin("0.2")), // tx instant so min. wait time 
-            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY, Coin.parseCoin("0.2")),
-            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("0.1")), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
-            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("0.1")),
-            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY, Coin.parseCoin("0.1")),
-            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY, Coin.parseCoin("0.1")),
-            SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("0.2")),
-            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("0.2")),
+            OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY, Coin.parseCoin("0.4")), // tx instant so min. wait time 
+            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY, Coin.parseCoin("0.4")),
+            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("0.3")), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
+            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("0.3")),
+            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY, Coin.parseCoin("0.3")),
+            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY, Coin.parseCoin("0.3")),
+            SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("0.4")),
+            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("0.4")),
            /* FED_WIRE = new PaymentMethod(FED_WIRE_ID, 0, DAY, Coin.parseCoin("0.1")),*/
            /* TRANSFER_WISE = new PaymentMethod(TRANSFER_WISE_ID, 0, DAY, Coin.parseCoin("0.1")),*/
            /* US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, DAY, Coin.parseCoin("0.1")),*/
-            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("0.3"))
+            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("0.5"))
     ));
 
 
