@@ -150,12 +150,18 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             rows++;
         if (trade.errorMessageProperty().get() != null)
             rows += 2;
+        if (trade.getTradingPeerNodeAddress() != null)
+            rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
         addLabelTextField(gridPane, rowIndex, "Trade ID:", trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(trade.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit()));
         addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", trade.getArbitratorNodeAddress().getFullAddress());
+
+        if (trade.getTradingPeerNodeAddress() != null)
+            addLabelTextField(gridPane, ++rowIndex, "Trading peers onion address:", trade.getTradingPeerNodeAddress().getFullAddress());
+
 
         if (contract != null) {
             if (buyerPaymentAccountContractData != null) {

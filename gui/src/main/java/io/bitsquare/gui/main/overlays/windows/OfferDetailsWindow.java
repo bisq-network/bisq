@@ -199,7 +199,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             }
         }
 
-        rows = 4;
+        rows = 5;
         String paymentMethodCountryCode = offer.getCountryCode();
         if (paymentMethodCountryCode != null)
             rows++;
@@ -208,6 +208,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
         addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++rowIndex, "Offerers onion address:", offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit()));
 
