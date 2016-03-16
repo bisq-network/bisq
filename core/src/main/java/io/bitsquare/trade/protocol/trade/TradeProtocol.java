@@ -38,7 +38,7 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public abstract class TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);
-    private static final long TIMEOUT_SEC = 30;
+    private static final long TIMEOUT_SEC = 60;
 
     protected final ProcessModel processModel;
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
