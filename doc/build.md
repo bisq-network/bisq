@@ -41,7 +41,8 @@ To check the version of Java you currently have installed:
 
 If `javac` is not found, or your version is anything less than `1.8.0_40`, then you'll need to [download and install the latest JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
 
-> _**TIP:** Here are [instructions](http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html) for installing the JDK via `apt` on Debian/Ubuntu systems._
+> _**TIP:** Here are [instructions](http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html) for installing the JDK via `apt` on Debian/Ubuntu systems.
+> Bitsquare can be built with OpenJDK as well, but this hasn't been thoroughly tested yet._
 
 
 Steps
