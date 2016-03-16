@@ -19,28 +19,35 @@ package io.bitsquare.gui.main.account.content.altcoinaccounts;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.FiatCurrency;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOfferManager;
+import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     private final User user;
+    private Preferences preferences;
     private final OpenOfferManager openOfferManager;
     private final TradeManager tradeManager;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
 
     @Inject
-    public AltCoinAccountsDataModel(User user, OpenOfferManager openOfferManager, TradeManager tradeManager) {
+    public AltCoinAccountsDataModel(User user, Preferences preferences, OpenOfferManager openOfferManager, TradeManager tradeManager) {
         this.user = user;
+        this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
         setChangeListener = change -> fillAndSortPaymentAccounts();
@@ -71,6 +78,21 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     public void onSaveNewAccount(PaymentAccount paymentAccount) {
         user.addPaymentAccount(paymentAccount);
+        TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
+        List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
+        if (singleTradeCurrency != null) {
+            if (singleTradeCurrency instanceof FiatCurrency)
+                preferences.addFiatCurrency((FiatCurrency) singleTradeCurrency);
+            else
+                preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
+        } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
+            tradeCurrencies.stream().forEach(tradeCurrency -> {
+                if (tradeCurrency instanceof FiatCurrency)
+                    preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
+                else
+                    preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
+            });
+        }
     }
 
 
