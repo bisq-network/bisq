@@ -32,6 +32,7 @@ Prerequisites
 -------------
 
 The only prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u40 or better (as well as maven and git).
+In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
 To check the version of Java you currently have installed:
 
@@ -40,7 +41,8 @@ To check the version of Java you currently have installed:
 
 If `javac` is not found, or your version is anything less than `1.8.0_40`, then you'll need to [download and install the latest JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
 
-> _**TIP:** Here are [instructions](http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html) for installing the JDK via `apt` on Debian/Ubuntu systems._
+> _**TIP:** Here are [instructions](http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html) for installing the JDK via `apt` on Debian/Ubuntu systems.
+> Bitsquare can be built with OpenJDK as well, but this hasn't been thoroughly tested yet._
 
 
 Steps
@@ -56,8 +58,8 @@ However, if you're not familiar with git or it is otherwise inconvenient to use,
 
  
 ### 2. Install bitcoinj fork 
-Versions later than 0.13.1 has removed support for Java serialisation 
-In version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details)
+Versions later than 0.13.1 has removed support for Java serialisation. 
+In version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details).
 We remove Cartographer/HttpDiscovery support from in our [fork version 0.13.1.1](https://github.com/bitsquare/bitcoinj/tree/RemovedHttpDiscovery).
 Beside the Java serialisation issues here are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer. 
                 
