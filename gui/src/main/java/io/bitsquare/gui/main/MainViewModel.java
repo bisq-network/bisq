@@ -478,12 +478,12 @@ public class MainViewModel implements ViewModel {
                             "please file a bug report to the Github page.\n" +
                             "Error=" + e.getMessage();
                     log.error(msg);
-                    new Popup<>().warning(msg)
+                    UserThread.execute(() -> new Popup<>().warning(msg)
                             .actionButtonText("Shut down")
                             .onAction(() -> BitsquareApp.shutDownHandler.run())
                             .closeButtonText("Report bug at Github issues")
                             .onClose(() -> Utilities.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
-                            .show();
+                            .show());
                 }
 
             }
