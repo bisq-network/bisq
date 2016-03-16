@@ -70,15 +70,16 @@ public class FeePolicy {
     }
 
 
-    // 0.001 BTC  0.1% of 1 BTC about 0.4 EUR @ 400 EUR/BTC
+    // 0.0005 BTC  0.05% of 1 BTC about 0.2 EUR @ 400 EUR/BTC
     public static Coin getCreateOfferFee() {
-        // We cannot reduce it more for alpha testing as we need to pay the quite high miner fee of 30_000
-        return Coin.valueOf(100_000);
+        // We need to pay the quite high miner fee of 30_000 from the trading fee tx so 30_000 us our lower limit
+        // The arbitrator receive only 0.0002 BTC - less than the miners
+        return Coin.valueOf(50_000);
     }
 
-    // Currently we use the same fee for both offerer and taker 
+    // 0.001 BTC  0.1% of 1 BTC about 0.4 EUR @ 400 EUR/BTC
     public static Coin getTakeOfferFee() {
-        return getCreateOfferFee();
+        return Coin.valueOf(100_000);
     }
 
 

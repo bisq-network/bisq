@@ -72,7 +72,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final BlockchainService blockchainService;
     private final BSFormatter formatter;
 
-    private final Coin offerFeeAsCoin;
+    private final Coin takerFeeAsCoin;
     private final Coin networkFeeAsCoin;
     private final Coin securityDepositAsCoin;
 
@@ -112,7 +112,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
-        offerFeeAsCoin = FeePolicy.getCreateOfferFee();
+        takerFeeAsCoin = FeePolicy.getTakeOfferFee();
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
         securityDepositAsCoin = FeePolicy.getSecurityDeposit();
     }
@@ -316,9 +316,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void calculateTotalToPay() {
         if (getDirection() == Offer.Direction.SELL)
-            totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin));
+            totalToPayAsCoin.set(takerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin));
         else
-            totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
+            totalToPayAsCoin.set(takerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
     }
 
     private void updateBalance(@NotNull Coin balance) {
@@ -369,8 +369,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return securityDepositAsCoin;
     }
 
-    public Coin getOfferFeeAsCoin() {
-        return offerFeeAsCoin;
+    public Coin getTakerFeeAsCoin() {
+        return takerFeeAsCoin;
     }
 
     public Coin getNetworkFeeAsCoin() {
