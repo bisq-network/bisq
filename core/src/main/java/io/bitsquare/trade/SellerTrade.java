@@ -55,6 +55,14 @@ public abstract class SellerTrade extends Trade {
         ((SellerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorMessageHandler);
     }
 
+    @Override
+    public void reSendConfirmation() {
+        if (state == State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG) {
+            log.info("reSendConfirmation onFiatPaymentReceived");
+            onFiatPaymentReceived(() -> log.debug("onFiatPaymentReceived succeeded"),
+                    log::warn);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter for Mutable objects

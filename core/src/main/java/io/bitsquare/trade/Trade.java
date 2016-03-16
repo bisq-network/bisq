@@ -238,7 +238,11 @@ public abstract class Trade implements Tradable, Model {
         if (decryptedMsgWithPubKey != null) {
             tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
         }
+
+        reSendConfirmation();
     }
+
+    public abstract void reSendConfirmation();
 
     protected void initStateProperties() {
         stateProperty = new SimpleObjectProperty<>(state);

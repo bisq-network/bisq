@@ -160,24 +160,34 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        sellerAsTakerTrade.setState(Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT);
+        if (sellerAsTakerTrade.getState().ordinal() <= Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG.ordinal()) {
+            if (sellerAsTakerTrade.getState() == Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG)
+                log.warn("onFiatPaymentReceived called twice. " +
+                        "That is expected if the app starts up and the other peer has still not continued.");
 
-        TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> {
-                    resultHandler.handleResult();
-                    handleTaskRunnerSuccess("onFiatPaymentReceived");
-                },
-                (errorMessage) -> {
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(errorMessage);
-                });
-        
-        taskRunner.addTasks(
-                VerifyOfferFeePayment.class,
-                SignPayoutTx.class,
-                SendFinalizePayoutTxRequest.class
-        );
-        taskRunner.run();
+            sellerAsTakerTrade.setState(Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT);
+
+            TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
+                    () -> {
+                        resultHandler.handleResult();
+                        handleTaskRunnerSuccess("onFiatPaymentReceived");
+                    },
+                    (errorMessage) -> {
+                        errorMessageHandler.handleErrorMessage(errorMessage);
+                        handleTaskRunnerFault(errorMessage);
+                    });
+
+            taskRunner.addTasks(
+                    VerifyOfferFeePayment.class,
+                    SignPayoutTx.class,
+                    SendFinalizePayoutTxRequest.class
+            );
+            taskRunner.run();
+        } else {
+            log.warn("onFiatPaymentReceived called twice. " +
+                    "That should not happen.\n" +
+                    "state=" + sellerAsTakerTrade.getState());
+        }
     }
 
     private void handle(PayoutTxFinalizedMessage tradeMessage, NodeAddress sender) {

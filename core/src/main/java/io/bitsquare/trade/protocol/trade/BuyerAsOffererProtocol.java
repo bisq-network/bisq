@@ -144,22 +144,32 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        buyerAsOffererTrade.setState(Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED);
+        if (buyerAsOffererTrade.getState().ordinal() <= Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
+            if (buyerAsOffererTrade.getState() == Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG)
+                log.warn("onFiatPaymentStarted called twice. " +
+                        "That is expected if the app starts up and the other peer has still not continued.");
 
-        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
-                () -> {
-                    resultHandler.handleResult();
-                    handleTaskRunnerSuccess("onFiatPaymentStarted");
-                },
-                (errorMessage) -> {
-                    errorMessageHandler.handleErrorMessage(errorMessage);
-                    handleTaskRunnerFault(errorMessage);
-                });
-        taskRunner.addTasks(
-                VerifyTakeOfferFeePayment.class,
-                SendFiatTransferStartedMessage.class
-        );
-        taskRunner.run();
+            buyerAsOffererTrade.setState(Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED);
+
+            TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsOffererTrade,
+                    () -> {
+                        resultHandler.handleResult();
+                        handleTaskRunnerSuccess("onFiatPaymentStarted");
+                    },
+                    (errorMessage) -> {
+                        errorMessageHandler.handleErrorMessage(errorMessage);
+                        handleTaskRunnerFault(errorMessage);
+                    });
+            taskRunner.addTasks(
+                    VerifyTakeOfferFeePayment.class,
+                    SendFiatTransferStartedMessage.class
+            );
+            taskRunner.run();
+        } else {
+            log.warn("onFiatPaymentStarted called twice. " +
+                    "That should not happen.\n" +
+                    "state=" + buyerAsOffererTrade.getState());
+        }
     }
 
 

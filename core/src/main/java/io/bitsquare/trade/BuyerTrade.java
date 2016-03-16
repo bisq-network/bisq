@@ -55,6 +55,15 @@ public abstract class BuyerTrade extends Trade {
         ((BuyerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
+    @Override
+    public void reSendConfirmation() {
+        if (state == Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG) {
+            log.info("reSendConfirmation onFiatPaymentStarted");
+            onFiatPaymentStarted(() -> log.debug("onFiatPaymentStarted succeeded"),
+                    log::warn);
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter for Mutable objects
