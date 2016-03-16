@@ -73,4 +73,13 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "FiatTransferStartedMessage{" +
+                "buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
+                ", senderNodeAddress=" + senderNodeAddress +
+                ", uid='" + uid + '\'' +
+                "} " + super.toString();
+    }
 }
