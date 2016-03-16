@@ -334,6 +334,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         // we get too many connection attempts.
                         connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
+                        log.debug("Try to decrypt...");
                         DecryptedMsgWithPubKey decryptedMsgWithPubKey = optionalEncryptionService.get().decryptAndVerify(
                                 prefixedSealedAndSignedMessage.sealedAndSigned);
 
@@ -347,6 +348,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         log.info("Wrong receiverAddressMaskHash. The message is not intended for us.");
                     }
                 } catch (CryptoException e) {
+                    log.warn(message.toString());
+                    log.warn(e.toString());
                     log.warn("Decryption of SealedAndSignedMessage failed. " +
                             "That is expected if the message is not intended for us.");
                 }
