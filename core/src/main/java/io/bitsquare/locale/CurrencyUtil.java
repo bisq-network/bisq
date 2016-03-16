@@ -91,6 +91,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("NSR", "NuShares"));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("XPM", "Primecoin"));
+        result.add(new CryptoCurrency("FAIR", "FairCoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
         result.add(new CryptoCurrency("GEMZ", "Gemz"));
