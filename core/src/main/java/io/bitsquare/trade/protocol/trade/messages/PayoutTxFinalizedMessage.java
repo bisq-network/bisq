@@ -32,12 +32,13 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
 
     public final byte[] payoutTx;
     private final NodeAddress senderNodeAddress;
-    private final String uid = UUID.randomUUID().toString();
+    private final String uid;
 
     public PayoutTxFinalizedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress) {
         super(tradeId);
         this.payoutTx = payoutTx;
         this.senderNodeAddress = senderNodeAddress;
+        uid = UUID.randomUUID().toString();
     }
 
     @Override

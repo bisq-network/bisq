@@ -20,5 +20,4 @@ package io.bitsquare.p2p.messaging;
 import io.bitsquare.p2p.Message;
 
 public interface DirectMessage extends Message {
-
 }

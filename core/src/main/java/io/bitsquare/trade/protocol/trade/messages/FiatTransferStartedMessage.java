@@ -31,12 +31,13 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
 
     public final String buyerPayoutAddress;
     private final NodeAddress senderNodeAddress;
-    private final String uid = UUID.randomUUID().toString();
+    private final String uid;
 
     public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress, NodeAddress senderNodeAddress) {
         super(tradeId);
         this.buyerPayoutAddress = buyerPayoutAddress;
         this.senderNodeAddress = senderNodeAddress;
+        uid = UUID.randomUUID().toString();
     }
 
     @Override

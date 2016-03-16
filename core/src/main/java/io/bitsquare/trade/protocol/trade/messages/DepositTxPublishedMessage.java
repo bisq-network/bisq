@@ -32,12 +32,13 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
 
     public final byte[] depositTx;
     private final NodeAddress senderNodeAddress;
-    private final String uid = UUID.randomUUID().toString();
+    private final String uid;
 
     public DepositTxPublishedMessage(String tradeId, byte[] depositTx, NodeAddress senderNodeAddress) {
         super(tradeId);
         this.depositTx = depositTx;
         this.senderNodeAddress = senderNodeAddress;
+        uid = UUID.randomUUID().toString();
     }
 
     @Override

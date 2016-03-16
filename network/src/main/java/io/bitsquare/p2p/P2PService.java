@@ -348,9 +348,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         log.info("Wrong receiverAddressMaskHash. The message is not intended for us.");
                     }
                 } catch (CryptoException e) {
-                    log.warn(message.toString());
-                    log.warn(e.toString());
-                    log.warn("Decryption of SealedAndSignedMessage failed. " +
+                    log.info(message.toString());
+                    log.info(e.toString());
+                    log.info("Decryption of prefixedSealedAndSignedMessage.sealedAndSigned failed. " +
                             "That is expected if the message is not intended for us.");
                 }
             }
@@ -416,6 +416,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             });
         } catch (CryptoException e) {
             e.printStackTrace();
+            log.error(message.toString());
+            log.error(e.toString());
             sendDirectMessageListener.onFault();
         }
     }
@@ -450,8 +452,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 "decryptedMsgWithPubKey.message=", decryptedMsgWithPubKey.message);
                     }
                 } catch (CryptoException e) {
-                    log.trace("Decryption of SealedAndSignedMessage failed. " +
-                            "That is expected if the message is not intended for us. " + e.getMessage());
+                    log.info(e.toString());
+                    log.info("Decryption of prefixedSealedAndSignedMessage.sealedAndSigned failed. " +
+                            "That is expected if the message is not intended for us.");
                 }
             } else {
                 log.info("Wrong blurredAddressHash. The message is not intended for us.");

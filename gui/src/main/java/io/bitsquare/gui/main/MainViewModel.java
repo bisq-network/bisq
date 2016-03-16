@@ -35,9 +35,7 @@ import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.crypto.CryptoException;
-import io.bitsquare.common.crypto.Encryption;
-import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -56,6 +54,7 @@ import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionListener;
+import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.payment.OKPayAccount;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -467,9 +466,16 @@ public class MainViewModel implements ViewModel {
                 try {
                     log.trace("Run crypto test");
                     // just use any simple dummy msg
-                    Encryption.encryptHybridWithSignature(new io.bitsquare.p2p.peers.keepalive.messages.Ping(0, 0),
+                    io.bitsquare.p2p.peers.keepalive.messages.Ping payload = new Ping(1, 1);
+                    SealedAndSigned sealedAndSigned = Encryption.encryptHybridWithSignature(payload,
                             keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
-                    log.trace("Crypto test succeeded");
+                    DecryptedDataTuple tuple = Encryption.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
+                    if (tuple.payload instanceof Ping &&
+                            ((Ping) tuple.payload).nonce == payload.nonce &&
+                            ((Ping) tuple.payload).lastRoundTripTime == payload.lastRoundTripTime)
+                        log.trace("Crypto test succeeded");
+                    else
+                        throw new CryptoException("Payload not correct after decryption");
                 } catch (CryptoException e) {
                     e.printStackTrace();
                     String msg = "Seems that you use a self compiled binary and have not following the build " +

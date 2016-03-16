@@ -47,7 +47,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public final ArrayList<NodeAddress> acceptedArbitratorNodeAddresses;
     public final NodeAddress arbitratorNodeAddress;
     private final NodeAddress senderNodeAddress;
-    private final String uid = UUID.randomUUID().toString();
+    private final String uid;
 
     public PayDepositRequest(NodeAddress senderNodeAddress,
                              String tradeId,
@@ -77,6 +77,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         this.takeOfferFeeTxId = takeOfferFeeTxId;
         this.acceptedArbitratorNodeAddresses = acceptedArbitratorNodeAddresses;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
+        uid = UUID.randomUUID().toString();
     }
 
     @Override

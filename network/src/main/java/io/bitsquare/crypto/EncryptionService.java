@@ -21,7 +21,6 @@ import io.bitsquare.common.crypto.*;
 import io.bitsquare.p2p.Message;
 
 import javax.inject.Inject;
-import java.security.KeyPair;
 
 public class EncryptionService {
     private final KeyRing keyRing;
@@ -32,8 +31,7 @@ public class EncryptionService {
     }
 
     public SealedAndSigned encryptAndSign(PubKeyRing pubKeyRing, Message message) throws CryptoException {
-        KeyPair signatureKeyPair = keyRing.getSignatureKeyPair();
-        return Encryption.encryptHybridWithSignature(message, signatureKeyPair, pubKeyRing.getEncryptionPubKey());
+        return Encryption.encryptHybridWithSignature(message, keyRing.getSignatureKeyPair(), pubKeyRing.getEncryptionPubKey());
     }
 
     public DecryptedMsgWithPubKey decryptAndVerify(SealedAndSigned sealedAndSigned) throws CryptoException {
