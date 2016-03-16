@@ -60,9 +60,13 @@ public class FeePolicy {
         return FEE_PER_KB;
     }
 
-    // Some wallets (Mycelium) don't support higher fees 
+    // Some wallets don't support manual fees. Most use at least 0.0001 BTC (0.04 EUR @ 400 EUR/BTC)
+    // To avoid rejecting deposit tx with too low mining fees we reduce the min. 
+    // required fee to 0.0001 BTC. There is a risk that the tx does not get fast into the blockchain but it seems it has less
+    // negative consequences as forcing the user to set a sufficiently high fee which is impossible in some wallets 
+    // like in the old MultiBit wallet or Coinbase. Unfortunately there is no perfect solution for that problem.
     public static Coin getMinRequiredFeeForFundingTx() {
-        return Coin.valueOf(20_000);
+        return Coin.valueOf(10_000);
     }
 
 
