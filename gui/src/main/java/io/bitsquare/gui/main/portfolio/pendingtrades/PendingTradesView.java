@@ -25,9 +25,11 @@ import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.ImageUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -56,7 +58,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableColumn<PendingTradesListItem, Fiat> priceColumn, tradeVolumeColumn;
     @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> roleColumn, paymentMethodColumn, idColumn, dateColumn;
+    TableColumn<PendingTradesListItem, PendingTradesListItem> avatarColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
     @FXML
     TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
 
@@ -88,6 +90,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         setVolumeColumnCellFactory();
         setPaymentMethodColumnCellFactory();
         setRoleColumnCellFactory();
+        setAvatarColumnCellFactory();
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));
@@ -364,6 +367,38 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         };
                     }
                 });
+    }
+
+    private TableColumn<PendingTradesListItem, PendingTradesListItem> setAvatarColumnCellFactory() {
+        avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        avatarColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
+                        PendingTradesListItem>>() {
+
+                    @Override
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                            @Override
+                            public void updateItem(final PendingTradesListItem newItem, boolean empty) {
+                                super.updateItem(newItem, empty);
+
+                                if (newItem != null && !empty && newItem.getTrade().getTradingPeerNodeAddress() != null) {
+                                    String hostName = newItem.getTrade().getTradingPeerNodeAddress().hostName;
+                                    int numPastTrades = model.getNumPastTrades(newItem.getTrade());
+                                    boolean hasTraded = numPastTrades > 0;
+                                    String tooltipText = hasTraded ? "Trading peers onion address: " + hostName + "\n" +
+                                            "You have already traded " + numPastTrades + " times with that peer." : "Trading peers onion address: " + hostName;
+                                    Node identIcon = ImageUtil.getIdentIcon(hostName, tooltipText, hasTraded);
+                                    if (identIcon != null)
+                                        setGraphic(identIcon);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        return avatarColumn;
     }
 }
 

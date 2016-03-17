@@ -30,6 +30,7 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
@@ -37,6 +38,8 @@ import javafx.beans.value.ChangeListener;
 import org.bitcoinj.core.BlockChainListener;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.stream.Collectors;
 
 import static io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.*;
 
@@ -70,6 +73,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public final P2PService p2PService;
     public final User user;
+    private ClosedTradableManager closedTradableManager;
     public final Clock clock;
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>();
@@ -88,6 +92,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
                                   User user,
+                                  ClosedTradableManager closedTradableManager,
                                   Clock clock) {
         super(dataModel);
 
@@ -95,6 +100,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.btcAddressValidator = btcAddressValidator;
         this.p2PService = p2PService;
         this.user = user;
+        this.closedTradableManager = closedTradableManager;
         this.clock = clock;
     }
 
@@ -256,6 +262,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getOffer() != null && dataModel.getOffer().getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS);
     }
 
+    public int getNumPastTrades(Trade trade) {
+        return closedTradableManager.getClosedTrades().stream()
+                .filter(e -> e instanceof Trade && ((Trade) e).getTradingPeerNodeAddress() != null &&
+                        ((Trade) e).getTradingPeerNodeAddress().hostName.equals(trade.getTradingPeerNodeAddress().hostName))
+                .collect(Collectors.toSet())
+                .size();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // States

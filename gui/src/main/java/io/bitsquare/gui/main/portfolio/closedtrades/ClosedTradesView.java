@@ -23,11 +23,13 @@ import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -41,7 +43,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     TableView<ClosedTradableListItem> table;
     @FXML
     TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn,
-            directionColumn, dateColumn, tradeIdColumn, stateColumn;
+            directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     private final BSFormatter formatter;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
@@ -63,6 +65,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
         setStateColumnCellFactory();
+        setAvatarColumnCellFactory();
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No closed trades available"));
@@ -155,6 +158,34 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 });
     }
 
+    private TableColumn<ClosedTradableListItem, ClosedTradableListItem> setAvatarColumnCellFactory() {
+        avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        avatarColumn.setCellFactory(
+                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
+                        ClosedTradableListItem>>() {
+
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem newItem, boolean empty) {
+                                super.updateItem(newItem, empty);
+
+                                if (newItem != null && !empty && newItem.getTradable() instanceof Trade) {
+
+                                    String hostName = ((Trade) newItem.getTradable()).getTradingPeerNodeAddress().hostName;
+                                    Node identIcon = ImageUtil.getIdentIcon(hostName, "Trading peers onion address: " + hostName, true);
+                                    if (identIcon != null)
+                                        setGraphic(identIcon);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        return avatarColumn;
+    }
 
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));

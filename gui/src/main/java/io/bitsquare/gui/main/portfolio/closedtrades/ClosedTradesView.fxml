@@ -35,6 +35,7 @@
             <TableColumn text="Trade amount" fx:id="volumeColumn" minWidth="130"/>
             <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80"/>
             <TableColumn text="State" fx:id="stateColumn" minWidth="80" sortable="false"/>
+            <TableColumn text="" fx:id="avatarColumn" minWidth="32" maxWidth="32"/>
         </columns>
     </TableView>
 

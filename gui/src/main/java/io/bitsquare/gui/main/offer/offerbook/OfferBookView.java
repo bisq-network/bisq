@@ -32,6 +32,7 @@ import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.offer.OfferView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
+import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CryptoCurrency;
@@ -43,6 +44,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -153,6 +155,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
         tableView.getColumns().add(getActionColumn());
+        tableView.getColumns().add(getAvatarColumn());
 
         tableView.getSortOrder().add(priceColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -192,17 +195,18 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
         createOfferButton.setOnAction(e -> onCreateOffer());
 
-        priceColumn.textProperty().bind(createStringBinding(
-                () -> !model.showAllTradeCurrenciesProperty.get() ?
-                        "Price in " + model.tradeCurrencyCode.get() + "/BTC" :
-                        "Price",
-                model.tradeCurrencyCode,
-                model.showAllTradeCurrenciesProperty));
-
         volumeColumn.textProperty().bind(createStringBinding(
-                () -> !model.showAllTradeCurrenciesProperty.get() ?
-                        "Amount in " + model.tradeCurrencyCode.get() + " (Min.)" :
-                        "Amount (Min.)",
+                () -> {
+                    setDirectionTitles();
+                    String tradeCurrencyCode = model.tradeCurrencyCode.get();
+                    boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
+                    priceColumn.setText(!showAllTradeCurrencies ?
+                            "Price in " + tradeCurrencyCode + "/BTC" :
+                            "Price");
+                    return !showAllTradeCurrencies ?
+                            "Amount in " + tradeCurrencyCode + " (Min.)" :
+                            "Amount (Min.)";
+                },
                 model.tradeCurrencyCode,
                 model.showAllTradeCurrenciesProperty));
 
@@ -212,6 +216,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.setItems(model.getOfferList());
         priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         tableView.sort();
+
     }
 
     @Override
@@ -237,17 +242,22 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         ImageView iconView = new ImageView();
 
         createOfferButton.setGraphic(iconView);
-        if (direction == Offer.Direction.SELL) {
-            offerBookTitle.setText("Offers for buying bitcoin ");
-            createOfferButton.setId("sell-button-big");
-            createOfferButton.setText("Create new offer for selling bitcoin");
-            iconView.setId("image-sell-white");
-        } else {
-            offerBookTitle.setText("Offers for selling bitcoin ");
-            createOfferButton.setId("buy-button-big");
-            createOfferButton.setText("Create new offer for buying bitcoin");
-            iconView.setId("image-buy-white");
-        }
+        iconView.setId(direction == Offer.Direction.SELL ? "image-sell-white" : "image-buy-white");
+        createOfferButton.setId(direction == Offer.Direction.SELL ? "sell-button-big" : "buy-button-big");
+
+        setDirectionTitles();
+    }
+
+    private void setDirectionTitles() {
+        Offer.Direction direction = model.getDirection();
+        String directionText = direction == Offer.Direction.BUY ? "buying" : "selling";
+        String mirroredDirectionText = direction == Offer.Direction.SELL ? "buying" : "selling";
+        TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
+        String postFix = selectedTradeCurrency instanceof FiatCurrency || model.showAllTradeCurrenciesProperty.get() ? "" :
+                " (" + mirroredDirectionText + " " + selectedTradeCurrency.getName() + ")";
+
+        offerBookTitle.setText("Offers for " + directionText + " bitcoin" + postFix);
+        createOfferButton.setText("Create new offer for " + directionText + " bitcoin" + postFix);
     }
 
     public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {
@@ -561,6 +571,45 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setOnAction(null);
                                     TableRow tableRow = getTableRow();
                                     if (tableRow != null) tableRow.setOpacity(1);
+                                }
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("") {
+            {
+                setMinWidth(32);
+                setMaxWidth(32);
+                setSortable(true);
+            }
+        };
+        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
+                        OfferBookListItem>>() {
+
+                    @Override
+                    public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
+                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                            @Override
+                            public void updateItem(final OfferBookListItem newItem, boolean empty) {
+                                super.updateItem(newItem, empty);
+
+                                if (newItem != null && !empty) {
+                                    String hostName = newItem.getOffer().getOwnerNodeAddress().hostName;
+                                    int numPastTrades = model.getNumPastTrades(newItem.getOffer());
+                                    boolean hasTraded = numPastTrades > 0;
+                                    String tooltipText = hasTraded ? "Offerers onion address: " + hostName + "\n" +
+                                            "You have already traded " + numPastTrades + " times with that offerer." : "Offerers onion address: " + hostName;
+                                    Node identIcon = ImageUtil.getIdentIcon(hostName, tooltipText, hasTraded);
+                                    if (identIcon != null)
+                                        setGraphic(identIcon);
+                                } else {
+                                    setGraphic(null);
                                 }
                             }
                         };

@@ -33,6 +33,8 @@ import io.bitsquare.locale.*;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.*;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
@@ -69,6 +71,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final Preferences preferences;
     private final P2PService p2PService;
     private final PriceFeed priceFeed;
+    private ClosedTradableManager closedTradableManager;
     private Navigation navigation;
     final BSFormatter formatter;
 
@@ -101,6 +104,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     @Inject
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
                               Preferences preferences, P2PService p2PService, PriceFeed priceFeed,
+                              ClosedTradableManager closedTradableManager,
                               Navigation navigation, BSFormatter formatter) {
         super();
 
@@ -110,6 +114,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.preferences = preferences;
         this.p2PService = p2PService;
         this.priceFeed = priceFeed;
+        this.closedTradableManager = closedTradableManager;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -434,5 +439,13 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private boolean isEditEntry(String id) {
         return id.equals(EDIT_FLAG);
+    }
+
+    public int getNumPastTrades(Offer offer) {
+        return closedTradableManager.getClosedTrades().stream()
+                .filter(e -> e instanceof Trade && ((Trade) e).getTradingPeerNodeAddress() != null &&
+                        ((Trade) e).getTradingPeerNodeAddress().hostName.equals(offer.getOffererNodeAddress().hostName))
+                .collect(Collectors.toSet())
+                .size();
     }
 }

@@ -34,7 +34,6 @@
     -fx-image: url("../../../images/buy_white.png");
 }
 
-
 #image-sell {
     -fx-image: url("../../../images/sell.png");
 }
@@ -212,4 +211,65 @@
 #link {
     -fx-image: url("../../../images/link.png");
 }
+
+#avatar_1 {
+    -fx-image: url("../../../images/avatars/avatar_1.png");
+}
+
+#avatar_2 {
+    -fx-image: url("../../../images/avatars/avatar_2.png");
+}
+
+#avatar_3 {
+    -fx-image: url("../../../images/avatars/avatar_3.png");
+}
+
+#avatar_4 {
+    -fx-image: url("../../../images/avatars/avatar_4.png");
+}
+
+#avatar_5 {
+    -fx-image: url("../../../images/avatars/avatar_5.png");
+}
+
+#avatar_6 {
+    -fx-image: url("../../../images/avatars/avatar_6.png");
+}
+
+#avatar_7 {
+    -fx-image: url("../../../images/avatars/avatar_7.png");
+}
+
+#avatar_8 {
+    -fx-image: url("../../../images/avatars/avatar_8.png");
+}
+
+#avatar_9 {
+    -fx-image: url("../../../images/avatars/avatar_9.png");
+}
+
+#avatar_10 {
+    -fx-image: url("../../../images/avatars/avatar_10.png");
+}
+
+#avatar_11 {
+    -fx-image: url("../../../images/avatars/avatar_11.png");
+}
+
+#avatar_12 {
+    -fx-image: url("../../../images/avatars/avatar_12.png");
+}
+
+#avatar_13 {
+    -fx-image: url("../../../images/avatars/avatar_13.png");
+}
+
+#avatar_14 {
+    -fx-image: url("../../../images/avatars/avatar_14.png");
+}
+
+#avatar_15 {
+    -fx-image: url("../../../images/avatars/avatar_15.png");
+}
+
 
