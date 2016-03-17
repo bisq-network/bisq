@@ -20,7 +20,6 @@ package io.bitsquare.gui.components;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -29,20 +28,12 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
-import javafx.stage.Window;
-import net.glxn.qrgen.QRCode;
-import net.glxn.qrgen.image.ImageType;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
-import org.controlsfx.control.PopOver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.net.URI;
 
 public class AddressTextField extends AnchorPane {
@@ -86,46 +77,12 @@ public class AddressTextField extends AnchorPane {
                 Utilities.copyToClipboard(address.get());
         });
 
-        Label qrCode = new Label();
-        qrCode.getStyleClass().add("copy-icon");
-        qrCode.setLayoutY(3);
-        AwesomeDude.setIcon(qrCode, AwesomeIcon.QRCODE);
-        Tooltip.install(qrCode, new Tooltip("Show QR code for this address"));
-        qrCode.setOnMouseClicked(e -> {
-            if (address.get() != null && address.get().length() > 0) {
-                final byte[] imageBytes = QRCode
-                        .from(getBitcoinURI())
-                        .withSize(300, 220)
-                        .to(ImageType.PNG)
-                        .stream()
-                        .toByteArray();
-                Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
-                ImageView view = new ImageView(qrImage);
-
-                Pane pane = new Pane(view);
-                pane.setPrefSize(320, 240);
-                view.relocate(10, 10);
-
-                PopOver popOver = new PopOver(pane);
-                popOver.setDetachedTitle("Scan QR code for this address");
-                popOver.setDetached(true);
-                popOver.setOnHiding(windowEvent -> MainView.removeEffect());
-
-                Window window = getScene().getWindow();
-                double x = Math.round(window.getX() + (window.getWidth() - 320) / 2);
-                double y = Math.round(window.getY() + (window.getHeight() - 240) / 2);
-                popOver.show(getScene().getWindow(), x, y);
-                MainView.blur();
-            }
-        });
-
-        AnchorPane.setRightAnchor(qrCode, 5.0);
-        AnchorPane.setRightAnchor(copyIcon, 30.0);
-        AnchorPane.setRightAnchor(extWalletIcon, 55.0);
-        AnchorPane.setRightAnchor(textField, 77.0);
+        AnchorPane.setRightAnchor(copyIcon, 5.0);
+        AnchorPane.setRightAnchor(extWalletIcon, 30.0);
+        AnchorPane.setRightAnchor(textField, 55.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
 
-        getChildren().addAll(textField, extWalletIcon, copyIcon, qrCode);
+        getChildren().addAll(textField, extWalletIcon, copyIcon);
     }
 
     private void openExtWallet() {

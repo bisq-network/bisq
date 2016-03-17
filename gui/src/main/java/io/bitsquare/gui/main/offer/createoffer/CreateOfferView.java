@@ -28,10 +28,7 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.AddressTextField;
-import io.bitsquare.gui.components.BalanceTextField;
-import io.bitsquare.gui.components.InputTextField;
-import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.components.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -41,6 +38,7 @@ import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.offer.OfferView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
+import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bitsquare.gui.util.FormBuilder;
@@ -56,15 +54,21 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.*;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
+import net.glxn.qrgen.QRCode;
+import net.glxn.qrgen.image.ImageType;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.uri.BitcoinURI;
 import org.controlsfx.control.PopOver;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import java.io.ByteArrayInputStream;
 import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -85,10 +89,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private TitledGroupBg payFundsPane;
     private Button nextButton, cancelButton1, cancelButton2, placeOfferButton;
     private InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
-    private TextField totalToPayTextField, currencyTextField;
+    private TextField currencyTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
             volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, spinnerInfoLabel, currencyTextFieldLabel,
             currencyComboBoxLabel;
+    private TextFieldWithCopyIcon totalToPayTextField;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private PopOver totalToPayInfoPopover;
@@ -112,6 +117,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private int gridRow = 0;
     private final Preferences preferences;
     private ChangeListener<String> tradeCurrencyCodeListener;
+    private ImageView qrCodeImageView;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -301,6 +307,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         totalToPayTextField.setVisible(true);
         addressLabel.setVisible(true);
         addressTextField.setVisible(true);
+        qrCodeImageView.setVisible(true);
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
         placeOfferButton.setVisible(true);
@@ -308,6 +315,15 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         //root.requestFocus();
 
         setupTotalToPayInfoIconLabel();
+
+        final byte[] imageBytes = QRCode
+                .from(getBitcoinURI())
+                .withSize(98, 98) // code has 41 elements 8 px is border with 98 we get double scale and min. border
+                .to(ImageType.PNG)
+                .stream()
+                .toByteArray();
+        Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
+        qrCodeImageView.setImage(qrImage);
     }
 
     private void onPaymentAccountsComboBoxSelected() {
@@ -614,16 +630,19 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         gridPane.setVgap(5);
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
         columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.SOMETIMES);
+        columnConstraints1.setHgrow(Priority.NEVER);
         columnConstraints1.setMinWidth(200);
         ColumnConstraints columnConstraints2 = new ColumnConstraints();
         columnConstraints2.setHgrow(Priority.ALWAYS);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+        ColumnConstraints columnConstraints3 = new ColumnConstraints();
+        columnConstraints3.setHgrow(Priority.NEVER);
+        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2, columnConstraints3);
         scrollPane.setContent(gridPane);
     }
 
     private void addPaymentGroup() {
-        addTitledGroupBg(gridPane, gridRow, 2, "Select payment account");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Select payment account");
+        GridPane.setColumnSpan(titledGroupBg, 3);
 
         paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, "Payment account:", Layout.FIRST_ROW_DISTANCE).second;
         paymentAccountsComboBox.setPromptText("Select payment account");
@@ -651,7 +670,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addAmountPriceGroup() {
-        addTitledGroupBg(gridPane, ++gridRow, 2, "Set amount and price", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, "Set amount and price", Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(titledGroupBg, 3);
 
         imageView = new ImageView();
         imageView.setPickOnBounds(true);
@@ -688,6 +708,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void addFundingGroup() {
         // don't increase gridRow as we removed button when this gets visible
         payFundsPane = addTitledGroupBg(gridPane, gridRow, 3, BSResources.get("createOffer.fundsBox.title"), Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(payFundsPane, 3);
         payFundsPane.setVisible(false);
 
         totalToPayLabel = new Label(BSResources.get("createOffer.fundsBox.totalsNeeded"));
@@ -701,14 +722,24 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setMargin(totalToPayBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         GridPane.setRowIndex(totalToPayBox, gridRow);
         gridPane.getChildren().add(totalToPayBox);
-        totalToPayTextField = new TextField();
-        totalToPayTextField.setEditable(false);
+        totalToPayTextField = new TextFieldWithCopyIcon();
+        totalToPayTextField.setCopyWithoutCurrencyPostFix(true);
         totalToPayTextField.setFocusTraversable(false);
         totalToPayTextField.setVisible(false);
         GridPane.setRowIndex(totalToPayTextField, gridRow);
         GridPane.setColumnIndex(totalToPayTextField, 1);
         GridPane.setMargin(totalToPayTextField, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(totalToPayTextField);
+
+        qrCodeImageView = new ImageView();
+        qrCodeImageView.setVisible(false);
+        qrCodeImageView.setStyle("-fx-cursor: hand;");
+        qrCodeImageView.setOnMouseClicked(e -> new QRCodeWindow(getBitcoinURI()).show());
+        GridPane.setRowIndex(qrCodeImageView, gridRow);
+        GridPane.setColumnIndex(qrCodeImageView, 2);
+        GridPane.setRowSpan(qrCodeImageView, 3);
+        GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(qrCodeImageView);
 
         Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, BSResources.get("createOffer.fundsBox.address"));
         addressLabel = addressTuple.first;
@@ -747,6 +778,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);
         cancelButton2.setId("cancel-button");
+    }
+
+    @NotNull
+    private String getBitcoinURI() {
+        return model.getAddressAsString() != null ? BitcoinURI.convertToBitcoinURI(model.getAddressAsString(), model.totalToPayAsCoin.get(),
+                model.getPaymentLabel(), null) : "";
     }
 
     private void addAmountPriceFields() {
@@ -794,6 +831,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setRowIndex(hBox, gridRow);
         GridPane.setColumnIndex(hBox, 1);
         GridPane.setMargin(hBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 10, 0, 0));
+        GridPane.setColumnSpan(hBox, 2);
         gridPane.getChildren().add(hBox);
     }
 

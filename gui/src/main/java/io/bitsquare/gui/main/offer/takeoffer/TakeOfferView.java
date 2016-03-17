@@ -39,6 +39,7 @@ import io.bitsquare.gui.main.offer.OfferView;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
+import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.gui.util.BSFormatter;
@@ -51,17 +52,23 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.*;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
+import net.glxn.qrgen.QRCode;
+import net.glxn.qrgen.image.ImageType;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.uri.BitcoinURI;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import java.io.ByteArrayInputStream;
 import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -106,6 +113,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private boolean offerDetailsWindowDisplayed;
     private Notification walletFundedNotification;
     private Subscription isWalletFundedSubscription;
+    private ImageView qrCodeImageView;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -463,6 +471,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         totalToPayTextField.setVisible(true);
         addressLabel.setVisible(true);
         addressTextField.setVisible(true);
+        qrCodeImageView.setVisible(true);
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
 
@@ -491,6 +500,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 }
             });
         }
+
+        final byte[] imageBytes = QRCode
+                .from(getBitcoinURI())
+                .withSize(98, 98) // code has 41 elements 8 px is border with 98 we get double scale and min. border
+                .to(ImageType.PNG)
+                .stream()
+                .toByteArray();
+        Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
+        qrCodeImageView.setImage(qrImage);
     }
 
 
@@ -529,16 +547,20 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         gridPane.setVgap(5);
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
         columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.SOMETIMES);
+        columnConstraints1.setHgrow(Priority.NEVER);
         columnConstraints1.setMinWidth(200);
         ColumnConstraints columnConstraints2 = new ColumnConstraints();
         columnConstraints2.setHgrow(Priority.ALWAYS);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+        ColumnConstraints columnConstraints3 = new ColumnConstraints();
+        columnConstraints3.setHgrow(Priority.NEVER);
+        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2, columnConstraints3);
         scrollPane.setContent(gridPane);
     }
 
     private void addPaymentGroup() {
-        addTitledGroupBg(gridPane, gridRow, 2, "Payment info");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Payment info");
+        GridPane.setColumnSpan(titledGroupBg, 3);
+
         Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, "Payment account:", Layout.FIRST_ROW_DISTANCE);
         paymentAccountsLabel = tuple.first;
         paymentAccountsLabel.setVisible(false);
@@ -566,7 +588,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void addAmountPriceGroup() {
-        addTitledGroupBg(gridPane, ++gridRow, 2, "Set amount and price", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, "Set amount and price", Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(titledGroupBg, 3);
 
         imageView = new ImageView();
         imageView.setPickOnBounds(true);
@@ -618,6 +641,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void addFundingGroup() {
         // don't increase gridRow as we removed button when this gets visible
         payFundsPane = addTitledGroupBg(gridPane, gridRow, 3, BSResources.get("takeOffer.fundsBox.title"), Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(payFundsPane, 3);
         payFundsPane.setVisible(false);
 
         totalToPayLabel = new Label(BSResources.get("takeOffer.fundsBox.totalsNeeded"));
@@ -640,6 +664,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setColumnIndex(totalToPayTextField, 1);
         GridPane.setMargin(totalToPayTextField, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(totalToPayTextField);
+
+        qrCodeImageView = new ImageView();
+        qrCodeImageView.setVisible(false);
+        qrCodeImageView.setStyle("-fx-cursor: hand;");
+        qrCodeImageView.setOnMouseClicked(e -> new QRCodeWindow(getBitcoinURI()).show());
+        GridPane.setRowIndex(qrCodeImageView, gridRow);
+        GridPane.setColumnIndex(qrCodeImageView, 2);
+        GridPane.setRowSpan(qrCodeImageView, 3);
+        GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(qrCodeImageView);
 
         Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, BSResources.get("takeOffer.fundsBox.address"));
         addressLabel = addressTuple.first;
@@ -683,6 +717,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton2.setId("cancel-button");
     }
 
+    @NotNull
+    private String getBitcoinURI() {
+        return model.getAddressAsString() != null ? BitcoinURI.convertToBitcoinURI(model.getAddressAsString(), model.totalToPayAsCoin.get(),
+                model.getPaymentLabel(), null) : "";
+    }
+    
     private void addAmountPriceFields() {
         // amountBox
         Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getAmountCurrencyBox(BSResources.get("takeOffer.amount.prompt"));
@@ -728,6 +768,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setRowIndex(hBox, gridRow);
         GridPane.setColumnIndex(hBox, 1);
         GridPane.setMargin(hBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 10, 0, 0));
+        GridPane.setColumnSpan(hBox, 2);
         gridPane.getChildren().add(hBox);
     }
 
