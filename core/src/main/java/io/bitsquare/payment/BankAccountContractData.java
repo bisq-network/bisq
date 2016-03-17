@@ -34,7 +34,7 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
     protected String holderName;
     protected String bankName;
     protected String bankId;
-    protected String branchId;
+    protected String branchId = "-";
     protected String accountNr;
 
     @Nullable
