@@ -102,6 +102,7 @@ public final class Preferences implements Persistable {
     private final Map<String, Boolean> dontShowAgainMap;
     private boolean tacAccepted;
     private boolean useTorForBitcoinJ = true;
+    private boolean showOwnOffersInOfferBook;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
     private long txFeePerKB = FeePolicy.getFeePerKb().value;
@@ -153,6 +154,7 @@ public final class Preferences implements Persistable {
             preferredTradeCurrency = persisted.getPreferredTradeCurrency();
             defaultTradeCurrency = preferredTradeCurrency;
             useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
+            showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
 
             try {
                 setTxFeePerKB(persisted.getTxFeePerKB());
@@ -448,5 +450,13 @@ public final class Preferences implements Persistable {
 
     public boolean getUseTorForBitcoinJ() {
         return useTorForBitcoinJ;
+    }
+
+    public boolean getShowOwnOffersInOfferBook() {
+        return showOwnOffersInOfferBook;
+    }
+
+    public void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook) {
+        this.showOwnOffersInOfferBook = showOwnOffersInOfferBook;
     }
 }

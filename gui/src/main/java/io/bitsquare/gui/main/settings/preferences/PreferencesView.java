@@ -56,7 +56,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     //  private ComboBox<String> userLanguageComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
-    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox;
+    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook;
     private int gridRow = 0;
     //private InputTextField transactionFeeInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
@@ -295,9 +295,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void initializeDisplayOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, "Display options", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Display options", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
-        useAnimationsCheckBox = addLabelCheckBox(root, gridRow, "Use animations:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+
+        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, "Show my own offers in offer book:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
         resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all don't show again flags:", "Reset", 0).second;
     }
 
@@ -396,6 +398,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void activateDisplayPreferences() {
+        showOwnOffersInOfferBook.setSelected(preferences.getShowOwnOffersInOfferBook());
+        showOwnOffersInOfferBook.setOnAction(e -> preferences.setShowOwnOffersInOfferBook(showOwnOffersInOfferBook.isSelected()));
+
         useAnimationsCheckBox.setSelected(preferences.getUseAnimations());
         useAnimationsCheckBox.setOnAction(e -> preferences.setUseAnimations(useAnimationsCheckBox.isSelected()));
 
@@ -424,6 +429,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     private void deactivateDisplayPreferences() {
         useAnimationsCheckBox.setOnAction(null);
+        showOwnOffersInOfferBook.setOnAction(null);
         autoSelectArbitratorsCheckBox.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
     }

@@ -409,7 +409,8 @@ class OfferBookViewModel extends ActivatableViewModel {
                     offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
             boolean paymentMethodResult = showAllPaymentMethods ||
                     offer.getPaymentMethod().equals(selectedPaymentMethod);
-            return directionResult && currencyResult && paymentMethodResult;
+            boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.getShowOwnOffersInOfferBook();
+            return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
         });
     }
 
