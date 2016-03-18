@@ -389,7 +389,7 @@ public class TradeWalletService {
         }
 
         // Sign inputs 
-        int start = offererIsBuyer ? 0 : offererInputs.size();
+        int start = offererIsBuyer ? 0 : takerRawTransactionInputs.size();
         int end = offererIsBuyer ? offererInputs.size() : preparedDepositTx.getInputs().size();
         for (int i = start; i < end; i++) {
             TransactionInput input = preparedDepositTx.getInput(i);
