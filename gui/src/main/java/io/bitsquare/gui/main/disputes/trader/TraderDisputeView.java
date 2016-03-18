@@ -168,12 +168,16 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
         disputeDirectMessageListListener = c -> scrollToBottom();
 
-        p2PService.addP2PServiceListener(new BootstrapListener() {
-            @Override
-            public void onBootstrapComplete() {
-                isBootstrapped = true;
-            }
-        });
+        if (!p2PService.isBootstrapped()) {
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onBootstrapComplete() {
+                    isBootstrapped = true;
+                }
+            });
+        } else {
+            isBootstrapped = true;
+        }
     }
 
     @Override
