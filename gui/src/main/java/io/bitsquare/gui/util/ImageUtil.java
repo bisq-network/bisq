@@ -85,10 +85,10 @@ public class ImageUtil {
                         | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF));
 
                 int index = (intValue % maxIndices) + 1;
-
-                int red = intValue % 256;
-                int green = (intValue >> 8) % 64; // we use green for marking repeated trades, so avoid it in main bg color
-                int blue = (intValue >> 16) % 256;
+                double saturation = (intValue % 1000) / 1000d;
+                int red = (intValue >> 8) % 256;
+                int green = (intValue >> 16) % 64; // we use green for marking repeated trades, so avoid it in main bg color
+                int blue = (intValue >> 24) % 256;
 
                 ImageView iconView = new ImageView();
                 iconView.setId("avatar_" + index);
@@ -97,7 +97,7 @@ public class ImageUtil {
                 Group iconGroup = new Group();
 
                 Color color = Color.rgb(red, green, blue);
-                color = color.deriveColor(1, 0.6, 1, 1); // reduce saturation
+                color = color.deriveColor(1, saturation, 1, 1); // reduce saturation
 
                 if (hasTraded) {
                     Canvas outerBg = new Canvas(size, size);
@@ -109,7 +109,7 @@ public class ImageUtil {
                     Canvas innerBg = new Canvas(size, size);
                     GraphicsContext gc2 = innerBg.getGraphicsContext2D();
                     gc2.setFill(color);
-                    gc2.fillOval(2, 2, size - 4, size - 4);
+                    gc2.fillOval(3, 3, size - 6, size - 6);
                     innerBg.setLayoutY(1);
                     iconGroup.getChildren().addAll(outerBg, innerBg, iconView);
                 } else {
