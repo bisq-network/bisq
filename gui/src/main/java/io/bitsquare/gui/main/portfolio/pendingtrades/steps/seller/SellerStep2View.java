@@ -37,13 +37,13 @@ public class SellerStep2View extends TradeStepView {
 
     @Override
     protected String getInfoBlockTitle() {
-        return "Wait for blockchain confirmation";
+        return "Wait for payment";
     }
 
     @Override
     protected String getInfoText() {
         return "The deposit transaction has at least one blockchain confirmation.\n" +
-                "You need to wait until that the bitcoin buyer starts the " + model.dataModel.getCurrencyCode() + " payment.";
+                "You need to wait until the bitcoin buyer starts the " + model.dataModel.getCurrencyCode() + " payment.";
     }
 
 
