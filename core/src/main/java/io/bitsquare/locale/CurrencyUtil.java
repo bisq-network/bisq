@@ -73,6 +73,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ETH", "Ethereum"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
+        result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
@@ -88,6 +89,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
+        result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
