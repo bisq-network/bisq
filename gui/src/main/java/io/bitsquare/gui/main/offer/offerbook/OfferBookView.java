@@ -181,18 +181,22 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     protected void activate() {
         currencyComboBox.setItems(model.getTradeCurrencies());
+        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
+        currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
 
         if (model.showAllTradeCurrenciesProperty.get())
             currencyComboBox.getSelectionModel().select(0);
         else
             currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
 
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
-        paymentMethodComboBox.setItems(model.getPaymentMethods());
-        paymentMethodComboBox.getSelectionModel().select(0);
 
-        currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
+        paymentMethodComboBox.setItems(model.getPaymentMethods());
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
+        if (model.showAllPaymentMethods)
+            paymentMethodComboBox.getSelectionModel().select(0);
+        else
+            paymentMethodComboBox.getSelectionModel().select(model.selectedPaymentMethod);
+
         createOfferButton.setOnAction(e -> onCreateOffer());
 
         volumeColumn.textProperty().bind(createStringBinding(
@@ -212,11 +216,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
 
-
         tableView.setItems(model.getOfferList());
         priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         tableView.sort();
-
     }
 
     @Override
