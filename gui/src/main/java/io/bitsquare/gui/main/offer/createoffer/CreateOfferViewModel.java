@@ -314,7 +314,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         dataModel.initWithData(direction, tradeCurrency);
         if (dataModel.paymentAccount != null)
-            btcValidator.setPaymentMethod(dataModel.paymentAccount.getPaymentMethod());
+            btcValidator.setMaxTradeLimitInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitInBitcoin());
     }
 
 
@@ -370,7 +370,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        btcValidator.setPaymentMethod(paymentAccount.getPaymentMethod());
+        btcValidator.setMaxTradeLimitInBitcoin(paymentAccount.getPaymentMethod().getMaxTradeLimitInBitcoin());
         dataModel.onPaymentAccountSelected(paymentAccount);
     }
 

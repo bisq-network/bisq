@@ -171,7 +171,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         offer.errorMessageProperty().addListener(offerErrorListener);
         errorMessage.set(offer.errorMessageProperty().get());
 
-        btcValidator.setPaymentMethod(dataModel.paymentAccount.getPaymentMethod());
+        btcValidator.setMaxTradeLimitInBitcoin(offer.getAmount());
     }
 
 
@@ -183,8 +183,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         takeOfferSucceededHandler = resultHandler;
         takeOfferRequested = true;
         showTransactionPublishedScreen.set(false);
-        //isTakeOfferSpinnerVisible.set(true);
-        //takeOfferSpinnerInfoText.set(BSResources.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
         dataModel.onTakeOffer(trade -> {
             this.trade = trade;
             trade.stateProperty().addListener(tradeStateListener);
@@ -197,7 +195,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         dataModel.onPaymentAccountSelected(paymentAccount);
-        btcValidator.setPaymentMethod(paymentAccount.getPaymentMethod());
+        if (offer != null)
+            btcValidator.setMaxTradeLimitInBitcoin(offer.getAmount());
     }
 
     public void onShowPayFundsScreen() {

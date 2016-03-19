@@ -19,10 +19,9 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.payment.PaymentMethod;
 import org.bitcoinj.core.Coin;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 
@@ -30,16 +29,17 @@ public class BtcValidator extends NumberValidator {
 
     private final BSFormatter formatter;
 
-    @NotNull
-    private PaymentMethod paymentMethod;
+
+    @Nullable
+    private Coin maxTradeLimitInBitcoin;
 
     @Inject
     public BtcValidator(BSFormatter formatter) {
         this.formatter = formatter;
     }
 
-    public void setPaymentMethod(@NotNull PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
+    public void setMaxTradeLimitInBitcoin(Coin maxTradeLimitInBitcoin) {
+        this.maxTradeLimitInBitcoin = maxTradeLimitInBitcoin;
     }
 
     @Override
@@ -70,8 +70,8 @@ public class BtcValidator extends NumberValidator {
     }
 
     protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
-        if (paymentMethod != null && Coin.parseCoin(input).compareTo(paymentMethod.getMaxTradeLimitInBitcoin()) > 0)
-            return new ValidationResult(false, BSResources.get("validation.btc.toLarge", formatter.formatCoinWithCode(paymentMethod.getMaxTradeLimitInBitcoin())));
+        if (maxTradeLimitInBitcoin != null && Coin.parseCoin(input).compareTo(maxTradeLimitInBitcoin) > 0)
+            return new ValidationResult(false, BSResources.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxTradeLimitInBitcoin)));
         else
             return new ValidationResult(true);
     }
