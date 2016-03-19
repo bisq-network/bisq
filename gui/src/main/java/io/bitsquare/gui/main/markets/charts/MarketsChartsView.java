@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
@@ -165,13 +166,14 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         TableView<Offer> tableView = new TableView<>();
         tableView.setMinHeight(100);
         tableView.setMaxHeight(100);
-        tableView.setMinWidth(390);
+        tableView.setMinWidth(490);
         tableView.setMouseTransparent(true);
 
         // price
         TableColumn<Offer, Offer> priceColumn = new TableColumn<>();
         priceColumn.textProperty().bind(priceColumnLabel);
         priceColumn.setMinWidth(120);
+        priceColumn.setMaxWidth(120);
         priceColumn.setSortable(false);
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
@@ -180,10 +182,10 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                     public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
                         return new TableCell<Offer, Offer>() {
                             @Override
-                            public void updateItem(final Offer item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty)
-                                    setText(formatter.formatFiat(item.getPrice()));
+                            public void updateItem(final Offer offer, boolean empty) {
+                                super.updateItem(offer, empty);
+                                if (offer != null && !empty)
+                                    setText(formatter.formatFiat(offer.getPrice()));
                                 else
                                     setText("");
                             }
@@ -196,6 +198,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         TableColumn<Offer, Offer> amountColumn = new TableColumn<>("Amount (BTC)");
         amountColumn.setText("Amount (BTC)");
         amountColumn.setMinWidth(120);
+        amountColumn.setMaxWidth(120);
         amountColumn.setSortable(false);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
@@ -204,10 +207,10 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                     public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
                         return new TableCell<Offer, Offer>() {
                             @Override
-                            public void updateItem(final Offer item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty)
-                                    setText(formatter.formatCoin(item.getAmount()));
+                            public void updateItem(final Offer offer, boolean empty) {
+                                super.updateItem(offer, empty);
+                                if (offer != null && !empty)
+                                    setText(formatter.formatCoin(offer.getAmount()));
                                 else
                                     setText("");
                             }
@@ -217,8 +220,9 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         tableView.getColumns().add(amountColumn);
 
         // volume
-        TableColumn<Offer, Offer> volumeColumn = new TableColumn<>("Amount (BTC)");
+        TableColumn<Offer, Offer> volumeColumn = new TableColumn<>();
         volumeColumn.setMinWidth(120);
+        volumeColumn.setMaxWidth(120);
         volumeColumn.setSortable(false);
         volumeColumn.textProperty().bind(volumeColumnLabel);
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -228,10 +232,10 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                     public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
                         return new TableCell<Offer, Offer>() {
                             @Override
-                            public void updateItem(final Offer item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty)
-                                    setText(formatter.formatFiat(item.getOfferVolume()));
+                            public void updateItem(final Offer offer, boolean empty) {
+                                super.updateItem(offer, empty);
+                                if (offer != null && !empty)
+                                    setText(formatter.formatFiat(offer.getOfferVolume()));
                                 else
                                     setText("");
                             }
@@ -239,6 +243,29 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                     }
                 });
         tableView.getColumns().add(volumeColumn);
+
+        // payment method
+        TableColumn<Offer, Offer> paymentMethodColumn = new TableColumn<>("Payment method");
+        paymentMethodColumn.setMinWidth(120);
+        paymentMethodColumn.setSortable(false);
+        paymentMethodColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        paymentMethodColumn.setCellFactory(
+                new Callback<TableColumn<Offer, Offer>, TableCell<Offer, Offer>>() {
+                    @Override
+                    public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
+                        return new TableCell<Offer, Offer>() {
+                            @Override
+                            public void updateItem(final Offer offer, boolean empty) {
+                                super.updateItem(offer, empty);
+                                if (offer != null && !empty)
+                                    setText(BSResources.get(offer.getPaymentMethod().getId() + "_SHORT"));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        tableView.getColumns().add(paymentMethodColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new Label("Currently there are no offers available");
