@@ -288,7 +288,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
     @Override
     public PublicKey getOwnerPubKey() {
-        return pubKeyRing.getSignaturePubKey();
+        return pubKeyRing != null ? pubKeyRing.getSignaturePubKey() : null;
     }
 
     public long getProtocolVersion() {

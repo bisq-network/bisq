@@ -540,6 +540,7 @@ public class Connection implements MessageListener {
             } else if (e instanceof EOFException || e instanceof StreamCorruptedException) {
                 closeConnectionReason = CloseConnectionReason.TERMINATED;
             } else {
+                // TODO sometimes we get StreamCorruptedException, OptionalDataException, IllegalStateException
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
                 log.warn("Unknown reason for exception at socket {}\n\tconnection={}\n\tException=",
                         socket.toString(), this, e.toString());

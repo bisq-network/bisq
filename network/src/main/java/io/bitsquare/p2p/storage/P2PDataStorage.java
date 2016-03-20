@@ -443,7 +443,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 result = expirableMailboxStoragePayload.receiverPubKeyForRemoveOperation.equals(protectedStorageEntry.ownerPubKey);
         } else {
             result = protectedStorageEntry != null && protectedStorageEntry.getStoragePayload() != null &&
-                    protectedStorageEntry.getStoragePayload().getOwnerPubKey().equals(protectedStorageEntry.ownerPubKey);
+                    protectedStorageEntry.ownerPubKey.equals(protectedStorageEntry.getStoragePayload().getOwnerPubKey());
         }
 
         if (!result)
