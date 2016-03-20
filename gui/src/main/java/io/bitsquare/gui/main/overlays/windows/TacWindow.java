@@ -2,15 +2,10 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.main.overlays.Overlay;
-import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 public class TacWindow extends Overlay<TacWindow> {
     private static final Logger log = LoggerFactory.getLogger(TacWindow.class);
@@ -32,7 +27,7 @@ public class TacWindow extends Overlay<TacWindow> {
                     "In no event shall the authors or copyright holders be liable for any claim, damages or other " +
                     "liability, whether in an action of contract, tort or otherwise, " +
                     "arising from, out of or in connection with the software or the use or other dealings in the software.\n\n" +
-                    "2. The user is responsible to use the software in compliance with local laws.\n\n" +
+                    "2. The user is responsible to use the software in compliance with local laws. Don't use Bitsquare if the usage of Bitcoin is not legal in your jurisdiction.\n\n" +
                     "3. The user confirms that he has read and agreed to the rules regrading the dispute process:\n" +
                     "    - You must finalize trades within the maximum duration specified for each payment method.\n" +
                     "    - You must enter the correct reference text for your payment transfers.\n" +
@@ -44,26 +39,7 @@ public class TacWindow extends Overlay<TacWindow> {
             message(text);
             actionButtonText("I agree");
             closeButtonText("I disagree and quit");
-            onAction(() -> {
-                preferences.setTacAccepted(true);
-                if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET)
-                    UserThread.runAfter(() -> new Popup()
-                            .headLine("Important information!")
-                            .warning("This software is still in alpha version.\n" +
-                                    "Please be aware that using Mainnet comes with the risk to lose funds " +
-                                    "in case of software bugs.\n" +
-                                    "To limit the possible losses the maximum allowed trading amount and the " +
-                                    "security deposit have been reduced for the alpha version " +
-                                    "when using Mainnet.")
-                            .actionButtonText("I understand and want to use Mainnet")
-                            .closeButtonText("Restart and use Testnet")
-                            .onClose(() -> {
-                                UserThread.execute(() -> preferences.setBitcoinNetwork(BitcoinNetwork.TESTNET));
-                                UserThread.runAfter(BitsquareApp.shutDownHandler::run, 300, TimeUnit.MILLISECONDS);
-                            })
-                            .width(600)
-                            .show(), 300, TimeUnit.MILLISECONDS);
-            });
+            onAction(() -> preferences.setTacAccepted(true));
             onClose(BitsquareApp.shutDownHandler::run);
             super.show();
         }
