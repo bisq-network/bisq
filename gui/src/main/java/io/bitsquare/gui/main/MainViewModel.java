@@ -671,7 +671,8 @@ public class MainViewModel implements ViewModel {
         user.setDisplayedAlert(alert);
 
         if (alert != null && !alreadyDisplayed) {
-            new DisplayAlertMessageWindow().alertMessage(alert).show();
+            if (!alert.isUpdateInfo || !alert.version.equals(Version.VERSION))
+                new DisplayAlertMessageWindow().alertMessage(alert).show();
         }
     }
 

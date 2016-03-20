@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.alert.Alert;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.app.Version;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
@@ -100,6 +99,9 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Is update notification:", "").second;
         isUpdateCheckBox.setSelected(true);
 
+        InputTextField versionInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "New version nr.:").second;
+        versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
+        
         if (BitsquareApp.DEV_MODE)
             keyInputTextField.setText("2e41038992f89eef2e4634ff3586e342c68ad9a5a7ffafee866781687f77a9b1");
 
@@ -107,7 +109,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (sendAlertMessageHandler.handle(
-                        new Alert(alertMessageTextArea.getText(), isUpdateCheckBox.isSelected(), Version.VERSION),
+                        new Alert(alertMessageTextArea.getText(), isUpdateCheckBox.isSelected(), versionInputTextField.getText()),
                         keyInputTextField.getText()))
                     hide();
                 else
@@ -125,7 +127,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
             }
         });
 
-        closeButton = new Button("Cancel");
+        closeButton = new Button("Close");
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
