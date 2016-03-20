@@ -74,8 +74,8 @@ public class ProtectedStorageEntry implements Payload {
                 "expirablePayload=" + storagePayload +
                 ", timeStamp=" + timeStamp +
                 ", sequenceNumber=" + sequenceNumber +
-                ", ownerPubKey.hashCode()=" + ownerPubKey.hashCode() +
-                ", signature.hashCode()=" + Arrays.toString(signature).hashCode() +
+                ", ownerPubKey.hashCode()=" + (ownerPubKey != null ? ownerPubKey.hashCode() : "null") +
+                ", signature.hashCode()=" + (signature != null ? Arrays.toString(signature).hashCode() : "null") +
                 '}';
     }
 
