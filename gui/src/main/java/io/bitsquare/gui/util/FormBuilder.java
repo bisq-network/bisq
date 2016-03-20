@@ -158,6 +158,23 @@ public class FormBuilder {
         return new Tuple2<>(label, textField);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //  HyperlinkWithIcon
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String url) {
+        return addHyperlinkWithIcon(gridPane, rowIndex, url, 0);
+    }
+
+    public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String url, double top) {
+        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(url, AwesomeIcon.EXTERNAL_LINK);
+        GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
+        GridPane.setColumnIndex(hyperlinkWithIcon, 0);
+        GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
+        gridPane.getChildren().add(hyperlinkWithIcon);
+        return hyperlinkWithIcon;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + HyperlinkWithIcon
@@ -167,21 +184,21 @@ public class FormBuilder {
         return addLabelHyperlinkWithIcon(gridPane, rowIndex, title, "", 0);
     }
 
-    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String value) {
-        return addLabelHyperlinkWithIcon(gridPane, rowIndex, title, value, 0);
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url) {
+        return addLabelHyperlinkWithIcon(gridPane, rowIndex, title, url, 0);
     }
 
-    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String value, double top) {
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url, double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
-        HyperlinkWithIcon textField = new HyperlinkWithIcon(value, AwesomeIcon.EXTERNAL_LINK);
-        GridPane.setRowIndex(textField, rowIndex);
-        GridPane.setColumnIndex(textField, 1);
-        GridPane.setMargin(textField, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(textField);
-
-        return new Tuple2<>(label, textField);
+        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(url, AwesomeIcon.EXTERNAL_LINK);
+        GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
+        GridPane.setColumnIndex(hyperlinkWithIcon, 1);
+        GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
+        gridPane.getChildren().add(hyperlinkWithIcon);
+        return new Tuple2<>(label, hyperlinkWithIcon);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + TextArea

@@ -2,10 +2,14 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static io.bitsquare.gui.util.FormBuilder.addHyperlinkWithIcon;
 
 public class TacWindow extends Overlay<TacWindow> {
     private static final Logger log = LoggerFactory.getLogger(TacWindow.class);
@@ -35,7 +39,7 @@ public class TacWindow extends Overlay<TacWindow> {
                     "    - You must reply within 48 hours to each arbitrator inquiry.\n" +
                     "    - Failure to follow the above requirements may result in loss of your security deposit.\n\n" +
                     "For more details and a general overview please read the full documentation about the " +
-                    "arbitration system and the dispute process at: https://bitsquare.io/arbitration_system.pdf";
+                    "arbitration system and the dispute process at:";
             message(text);
             actionButtonText("I agree");
             closeButtonText("I disagree and quit");
@@ -43,6 +47,14 @@ public class TacWindow extends Overlay<TacWindow> {
             onClose(BitsquareApp.shutDownHandler::run);
             super.show();
         }
+    }
+
+    @Override
+    protected void addMessage() {
+        super.addMessage();
+        String url = "https://bitsquare.io/arbitration_system.pdf";
+        HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(gridPane, ++rowIndex, url, -8);
+        hyperlinkWithIcon.setOnAction(e -> Utilities.openWebPage(url));
     }
 
     @Override
