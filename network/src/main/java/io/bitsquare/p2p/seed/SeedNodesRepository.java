@@ -31,16 +31,16 @@ public class SeedNodesRepository {
             new NodeAddress("s5xpstlooosehtxm.onion:8000"),
             new NodeAddress("izs5oz7i5ta7c2ir.onion:8000"),*/
 
-            // v0.3.5
-           /* new NodeAddress("hulvbm5xjn7b7ku4.onion:8000"),
+            // v0.3.5, v0.3.6 (backwards compatible)
+            new NodeAddress("hulvbm5xjn7b7ku4.onion:8000"),
             new NodeAddress("3efgjjbdvhbvck3x.onion:8000"),
-            new NodeAddress("3unfcshgwipxhxfm.onion:8000"),*/
+            new NodeAddress("3unfcshgwipxhxfm.onion:8000"),
 
 
-            // v0.3.6
-            new NodeAddress("ybmi4iaesugslxrw.onion:8000"),
+            // v0.3.7
+           /* new NodeAddress("ybmi4iaesugslxrw.onion:8000"),
             new NodeAddress("ufwnvo775jfnjeux.onion:8000"),
-            new NodeAddress("b66vnevaljo6xt5a.onion:8000"),
+            new NodeAddress("b66vnevaljo6xt5a.onion:8000"),*/
 
             // testnet
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),
