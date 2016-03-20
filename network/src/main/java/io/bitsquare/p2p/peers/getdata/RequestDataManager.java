@@ -69,10 +69,10 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.peerManager = peerManager;
+        // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         this.listener = listener;
 
-        checkArgument(!seedNodeAddresses.isEmpty(), "seedNodeAddresses must not be empty.");
         networkNode.addMessageListener(this);
         peerManager.addListener(this);
     }
@@ -94,10 +94,12 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public void requestPreliminaryData() {
         Log.traceCall();
         ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
-        Collections.shuffle(nodeAddresses);
-        NodeAddress nextCandidate = nodeAddresses.get(0);
-        nodeAddresses.remove(nextCandidate);
-        requestData(nextCandidate, nodeAddresses);
+        if (!nodeAddresses.isEmpty()) {
+            Collections.shuffle(nodeAddresses);
+            NodeAddress nextCandidate = nodeAddresses.get(0);
+            nodeAddresses.remove(nextCandidate);
+            requestData(nextCandidate, nodeAddresses);
+        }
     }
 
     public void requestUpdateData() {
@@ -105,10 +107,12 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         checkArgument(nodeAddressOfPreliminaryDataRequest.isPresent(), "seedNodeOfPreliminaryDataRequest must be present");
         dataUpdateRequested = true;
         List<NodeAddress> remainingNodeAddresses = new ArrayList<>(seedNodeAddresses);
-        Collections.shuffle(remainingNodeAddresses);
-        NodeAddress candidate = nodeAddressOfPreliminaryDataRequest.get();
-        remainingNodeAddresses.remove(candidate);
-        requestData(candidate, remainingNodeAddresses);
+        if (!remainingNodeAddresses.isEmpty()) {
+            Collections.shuffle(remainingNodeAddresses);
+            NodeAddress candidate = nodeAddressOfPreliminaryDataRequest.get();
+            remainingNodeAddresses.remove(candidate);
+            requestData(candidate, remainingNodeAddresses);
+        }
     }
 
     public Optional<NodeAddress> getNodeAddressOfPreliminaryDataRequest() {
@@ -315,10 +319,11 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                         List<NodeAddress> filteredPersistedPeers = getFilteredNonSeedNodeList(getSortedNodeAddresses(peerManager.getPersistedPeers()), list);
                         list.addAll(filteredPersistedPeers);
 
-                        checkArgument(!list.isEmpty(), "seedNodeAddresses must not be empty.");
-                        NodeAddress nextCandidate = list.get(0);
-                        list.remove(nextCandidate);
-                        requestData(nextCandidate, list);
+                        if (!list.isEmpty()) {
+                            NodeAddress nextCandidate = list.get(0);
+                            list.remove(nextCandidate);
+                            requestData(nextCandidate, list);
+                        }
                     },
                     RETRY_DELAY_SEC);
         }

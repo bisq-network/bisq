@@ -93,6 +93,7 @@ public class PeerManager implements ConnectionListener {
     public PeerManager(NetworkNode networkNode, Set<NodeAddress> seedNodeAddresses, File storageDir, Clock clock) {
         this.networkNode = networkNode;
         this.clock = clock;
+        // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir);

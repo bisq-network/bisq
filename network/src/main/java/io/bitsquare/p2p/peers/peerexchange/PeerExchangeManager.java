@@ -16,7 +16,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PeerExchangeManager implements MessageListener, ConnectionListener, PeerManager.Listener {
@@ -41,7 +40,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     public PeerExchangeManager(NetworkNode networkNode, PeerManager peerManager, Set<NodeAddress> seedNodeAddresses) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
-        checkArgument(!seedNodeAddresses.isEmpty(), "seedNodeAddresses must not be empty");
+        // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
 
         networkNode.addMessageListener(this);
