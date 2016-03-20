@@ -153,7 +153,7 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            scene = new Scene(mainView.getRoot(), 1100, 740);
+            scene = new Scene(mainView.getRoot(), 1150, 740);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css");

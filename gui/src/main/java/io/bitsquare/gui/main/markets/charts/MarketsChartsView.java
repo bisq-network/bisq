@@ -166,14 +166,14 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         TableView<Offer> tableView = new TableView<>();
         tableView.setMinHeight(100);
         tableView.setMaxHeight(100);
-        tableView.setMinWidth(490);
+        tableView.setMinWidth(530);
         tableView.setMouseTransparent(true);
 
         // price
         TableColumn<Offer, Offer> priceColumn = new TableColumn<>();
         priceColumn.textProperty().bind(priceColumnLabel);
-        priceColumn.setMinWidth(120);
-        priceColumn.setMaxWidth(120);
+        priceColumn.setMinWidth(130);
+        priceColumn.setMaxWidth(130);
         priceColumn.setSortable(false);
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
@@ -197,8 +197,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         // amount
         TableColumn<Offer, Offer> amountColumn = new TableColumn<>("Amount (BTC)");
         amountColumn.setText("Amount (BTC)");
-        amountColumn.setMinWidth(120);
-        amountColumn.setMaxWidth(120);
+        amountColumn.setMinWidth(130);
+        amountColumn.setMaxWidth(130);
         amountColumn.setSortable(false);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
@@ -221,8 +221,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
         // volume
         TableColumn<Offer, Offer> volumeColumn = new TableColumn<>();
-        volumeColumn.setMinWidth(120);
-        volumeColumn.setMaxWidth(120);
+        volumeColumn.setMinWidth(130);
+        volumeColumn.setMaxWidth(130);
         volumeColumn.setSortable(false);
         volumeColumn.textProperty().bind(volumeColumnLabel);
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -246,7 +246,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
         // payment method
         TableColumn<Offer, Offer> paymentMethodColumn = new TableColumn<>("Payment method");
-        paymentMethodColumn.setMinWidth(120);
+        paymentMethodColumn.setMinWidth(130);
         paymentMethodColumn.setSortable(false);
         paymentMethodColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         paymentMethodColumn.setCellFactory(

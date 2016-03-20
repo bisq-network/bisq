@@ -45,6 +45,7 @@ public class TacWindow extends Overlay<TacWindow> {
             closeButtonText("I disagree and quit");
             onAction(() -> preferences.setTacAccepted(true));
             onClose(BitsquareApp.shutDownHandler::run);
+
             super.show();
         }
     }

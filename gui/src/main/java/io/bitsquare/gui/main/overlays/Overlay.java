@@ -33,7 +33,6 @@ import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.scene.Camera;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -506,9 +505,7 @@ public abstract class Overlay<T extends Overlay> {
             ));
         } else if (type.animationType == AnimationType.ScaleYFromCenter) {
             gridPane.setRotationAxis(Rotate.X_AXIS);
-            Camera camera = gridPane.getScene().getCamera();
             gridPane.getScene().setCamera(new PerspectiveCamera());
-
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(gridPane.rotateProperty(), 0, interpolator),
                     new KeyValue(gridPane.opacityProperty(), 1, interpolator)
