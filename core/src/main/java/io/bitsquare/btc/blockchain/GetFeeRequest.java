@@ -33,7 +33,9 @@ class GetFeeRequest {
             try {
                 return provider.getFee(transactionId);
             } catch (IOException | HttpException e) {
-                log.warn("Fee request failed for tx {} from provider {}\n error={}",
+                log.info("Fee request failed for tx {} from provider {}\n" +
+                                "That is expected if the tx was not propagated yet to the provider.\n" +
+                                "error={}",
                         transactionId, provider, e.getMessage());
                 throw e;
             }
