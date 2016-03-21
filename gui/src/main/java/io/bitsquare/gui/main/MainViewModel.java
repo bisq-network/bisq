@@ -684,7 +684,7 @@ public class MainViewModel implements ViewModel {
 
     private void updateReservedBalance() {
         Coin sum = Coin.valueOf(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
-                .map(tradable -> walletService.getAddressEntryByOfferId(tradable.getId()))
+                .map(tradable -> walletService.getTradeAddressEntry(tradable.getId()))
                 .map(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()))
                 .mapToLong(Coin::getValue)
                 .sum());
@@ -703,7 +703,7 @@ public class MainViewModel implements ViewModel {
                             if (trade.getContract() != null &&
                                     trade.getTradeAmount() != null &&
                                     trade.getContract().getSellerPayoutAddressString()
-                                            .equals(walletService.getAddressEntryByOfferId(trade.getId()).getAddressString())) {
+                                            .equals(walletService.getTradeAddressEntry(trade.getId()).getAddressString())) {
                                 balanceInDeposit = balanceInDeposit.add(trade.getTradeAmount());
                             }
                             return balanceInDeposit;

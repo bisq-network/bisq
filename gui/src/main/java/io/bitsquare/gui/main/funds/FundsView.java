@@ -17,17 +17,14 @@
 
 package io.bitsquare.gui.main.funds;
 
-import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.funds.deposit.DepositView;
 import io.bitsquare.gui.main.funds.reserved.ReservedView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
-import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
@@ -39,7 +36,7 @@ import javax.inject.Inject;
 public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
-    Tab reservedTab, withdrawalTab, transactionsTab;
+    Tab depositTab, withdrawalTab, reservedTab, transactionsTab;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -47,13 +44,11 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final Preferences preferences;
 
     @Inject
-    public FundsView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {
+    public FundsView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.preferences = preferences;
     }
 
     @Override
@@ -64,10 +59,12 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == reservedTab)
-                navigation.navigateTo(MainView.class, FundsView.class, ReservedView.class);
+            if (newValue == depositTab)
+                navigation.navigateTo(MainView.class, FundsView.class, DepositView.class);
             else if (newValue == withdrawalTab)
                 navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+            else if (newValue == reservedTab)
+                navigation.navigateTo(MainView.class, FundsView.class, ReservedView.class);
             else if (newValue == transactionsTab)
                 navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
         };
@@ -78,15 +75,17 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
-        if (root.getSelectionModel().getSelectedItem() == reservedTab)
-            navigation.navigateTo(MainView.class, FundsView.class, ReservedView.class);
+        if (root.getSelectionModel().getSelectedItem() == depositTab)
+            navigation.navigateTo(MainView.class, FundsView.class, DepositView.class);
         else if (root.getSelectionModel().getSelectedItem() == withdrawalTab)
             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+        else if (root.getSelectionModel().getSelectedItem() == reservedTab)
+            navigation.navigateTo(MainView.class, FundsView.class, ReservedView.class);
         else if (root.getSelectionModel().getSelectedItem() == transactionsTab)
             navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
 
         String key = "tradeWalletInfoAtFunds";
-        if (!BitsquareApp.DEV_MODE)
+      /*  if (!BitsquareApp.DEV_MODE)
             new Popup().backgroundInfo("Bitsquare does not use a single application wallet, but dedicated wallets for every trade.\n\n" +
                     "Funding of the wallet will be done when needed, for instance when you create or take an offer.\n" +
                     "Withdrawing funds can be done after a trade is completed.\n\n" +
@@ -96,7 +95,7 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
                     .onAction(() -> Utilities.openWebPage("https://bitsquare.io/faq"))
                     .closeButtonText("I understand")
                     .dontShowAgainId(key, preferences)
-                    .show();
+                    .show();*/
     }
 
     @Override
@@ -113,10 +112,12 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         View view = viewLoader.load(viewClass);
 
-        if (view instanceof ReservedView)
-            currentTab = reservedTab;
+        if (view instanceof DepositView)
+            currentTab = depositTab;
         else if (view instanceof WithdrawalView)
             currentTab = withdrawalTab;
+        else if (view instanceof ReservedView)
+            currentTab = reservedTab;
         else if (view instanceof TransactionsView)
             currentTab = transactionsTab;
 

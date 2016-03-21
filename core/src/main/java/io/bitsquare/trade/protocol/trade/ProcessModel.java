@@ -180,7 +180,7 @@ public class ProcessModel implements Model, Serializable {
     }
 
     public AddressEntry getAddressEntry() {
-        return walletService.getAddressEntryByOfferId(offer.getId());
+        return walletService.getTradeAddressEntry(offer.getId());
     }
 
     public byte[] getTradeWalletPubKey() {

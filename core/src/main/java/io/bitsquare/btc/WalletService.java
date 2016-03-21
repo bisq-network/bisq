@@ -312,18 +312,28 @@ public class WalletService {
         return ImmutableList.copyOf(addressEntryList);
     }
 
+    public List<AddressEntry> getSavingsAddressEntryList() {
+        return getAddressEntryList().stream()
+                .filter(e -> e.getContext().equals(AddressEntry.Context.SAVINGS))
+                .collect(Collectors.toList());
+    }
+
     public AddressEntry getArbitratorAddressEntry() {
         return arbitratorAddressEntry;
     }
 
-    public AddressEntry getAddressEntryByOfferId(String offerId) {
+    public AddressEntry getTradeAddressEntry(String offerId) {
         Optional<AddressEntry> addressEntry = getAddressEntryList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .findAny();
         if (addressEntry.isPresent())
             return addressEntry.get();
         else
-            return addressEntryList.getNewAddressEntry(AddressEntry.Context.TRADE, offerId);
+            return addressEntryList.getNewTradeAddressEntry(offerId);
+    }
+
+    public AddressEntry getNewSavingsAddressEntry() {
+        return addressEntryList.getNewSavingsAddressEntry();
     }
 
     private Optional<AddressEntry> getAddressEntryByAddress(String address) {

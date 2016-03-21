@@ -82,7 +82,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
     // Getter/Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private String getText() {
+    public String getText() {
         return text.get();
     }
 

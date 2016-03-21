@@ -734,6 +734,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         qrCodeImageView = new ImageView();
         qrCodeImageView.setVisible(false);
         qrCodeImageView.setStyle("-fx-cursor: hand;");
+        Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
         qrCodeImageView.setOnMouseClicked(e -> new QRCodeWindow(getBitcoinURI()).show());
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 2);

@@ -159,7 +159,7 @@ public class BuyerStep5View extends TradeStepView {
     private void reviewWithdrawal() {
         Coin senderAmount = trade.getPayoutAmount();
         WalletService walletService = model.dataModel.walletService;
-        AddressEntry fromAddressesEntry = walletService.getAddressEntryByOfferId(trade.getId());
+        AddressEntry fromAddressesEntry = walletService.getTradeAddressEntry(trade.getId());
         String fromAddresses = fromAddressesEntry.getAddressString();
         String toAddresses = withdrawAddressTextField.getText();
 

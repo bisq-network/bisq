@@ -66,9 +66,16 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
         }
     }
 
-    public AddressEntry getNewAddressEntry(AddressEntry.Context context, String offerId) {
+    public AddressEntry getNewTradeAddressEntry(String offerId) {
         log.trace("getNewAddressEntry called with offerId " + offerId);
-        AddressEntry addressEntry = new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context, offerId);
+        AddressEntry addressEntry = new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), AddressEntry.Context.TRADE, offerId);
+        add(addressEntry);
+        storage.queueUpForSave();
+        return addressEntry;
+    }
+
+    public AddressEntry getNewSavingsAddressEntry() {
+        AddressEntry addressEntry = new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), AddressEntry.Context.SAVINGS);
         add(addressEntry);
         storage.queueUpForSave();
         return addressEntry;

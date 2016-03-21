@@ -44,8 +44,10 @@ public final class AddressEntry implements Persistable {
     private static final Logger log = LoggerFactory.getLogger(AddressEntry.class);
 
     public enum Context {
+        SAVINGS,
         TRADE,
-        ARBITRATOR
+        ARBITRATOR,
+        DAO
     }
 
     // keyPair can be null in case the object is created from deserialization as it is transient.

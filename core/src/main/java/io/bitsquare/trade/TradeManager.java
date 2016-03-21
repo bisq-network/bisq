@@ -302,7 +302,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onWithdrawRequest(String toAddress, KeyParameter aesKey, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
-        AddressEntry addressEntry = walletService.getAddressEntryByOfferId(trade.getId());
+        AddressEntry addressEntry = walletService.getTradeAddressEntry(trade.getId());
         String fromAddress = addressEntry.getAddressString();
 
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {

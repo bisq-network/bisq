@@ -51,7 +51,7 @@ public class SetupDepositBalanceListener extends TradeTask {
             runInterceptHook();
 
             WalletService walletService = processModel.getWalletService();
-            Address address = walletService.getAddressEntryByOfferId(trade.getId()).getAddress();
+            Address address = walletService.getTradeAddressEntry(trade.getId()).getAddress();
             balanceListener = new BalanceListener(address) {
                 @Override
                 public void onBalanceChanged(Coin balance, Transaction tx) {

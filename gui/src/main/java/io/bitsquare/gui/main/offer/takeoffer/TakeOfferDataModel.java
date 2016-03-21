@@ -155,7 +155,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void initWithData(Offer offer) {
         this.offer = offer;
 
-        addressEntry = walletService.getAddressEntryByOfferId(offer.getId());
+        addressEntry = walletService.getTradeAddressEntry(offer.getId());
         checkNotNull(addressEntry, "addressEntry must not be null");
 
         ObservableList<PaymentAccount> possiblePaymentAccounts = getPossiblePaymentAccounts();

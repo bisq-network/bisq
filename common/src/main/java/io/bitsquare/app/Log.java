@@ -62,6 +62,22 @@ public class Log {
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.INFO);
         logbackLogger.addAppender(appender);
+
+        // log errors in separate file
+        // not working as expected still.... damn logback...
+       /* FileAppender errorAppender = new FileAppender();
+        errorAppender.setEncoder(encoder);
+        errorAppender.setName("Error");
+        errorAppender.setContext(loggerContext);
+        errorAppender.setFile(fileName + "_error.log");
+        LevelFilter levelFilter = new LevelFilter();
+        levelFilter.setLevel(Level.ERROR);
+        levelFilter.setOnMatch(FilterReply.ACCEPT);
+        levelFilter.setOnMismatch(FilterReply.DENY);
+        levelFilter.start();
+        errorAppender.addFilter(levelFilter);
+        errorAppender.start();
+        logbackLogger.addAppender(errorAppender);*/
     }
 
     public static void traceCall() {

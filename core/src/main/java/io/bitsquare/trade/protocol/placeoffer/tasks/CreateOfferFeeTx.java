@@ -44,7 +44,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
             Arbitrator selectedArbitrator = model.user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             Transaction transaction = model.tradeWalletService.createTradingFeeTx(
-                    model.walletService.getAddressEntryByOfferId(model.offer.getId()),
+                    model.walletService.getTradeAddressEntry(model.offer.getId()),
                     FeePolicy.getCreateOfferFee(),
                     selectedArbitrator.getBtcAddress());
 

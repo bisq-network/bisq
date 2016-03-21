@@ -123,7 +123,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private void updateList() {
         reservedAddresses.forEach(ReservedListItem::cleanup);
         reservedAddresses.setAll(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
-                .map(tradable -> new ReservedListItem(tradable, walletService.getAddressEntryByOfferId(tradable.getOffer().getId()), walletService, formatter))
+                .map(tradable -> new ReservedListItem(tradable, walletService.getTradeAddressEntry(tradable.getOffer().getId()), walletService, formatter))
                 .collect(Collectors.toList()));
 
         reservedAddresses.sort((o1, o2) -> getTradable(o2).get().getDate().compareTo(getTradable(o1).get().getDate()));

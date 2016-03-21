@@ -16,16 +16,16 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.AnchorPane?>
 <TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.funds.FundsView"
          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
          AnchorPane.topAnchor="0.0"
          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="reservedTab" text="Reserved/Locked funds" closable="false"/>
+    <Tab fx:id="depositTab" text="Deposit funds" closable="false"/>
     <Tab fx:id="withdrawalTab" text="Available for withdrawal" closable="false"/>
+    <Tab fx:id="reservedTab" text="Reserved/Locked funds" closable="false"/>
     <Tab fx:id="transactionsTab" text="Transactions" closable="false"/>
 
 </TabPane>

@@ -499,7 +499,7 @@ public class DisputeManager {
                                         contract.getBuyerPayoutAddressString(),
                                         contract.getSellerPayoutAddressString(),
                                         disputeResult.getArbitratorAddressAsString(),
-                                        walletService.getAddressEntryByOfferId(dispute.getTradeId()),
+                                        walletService.getTradeAddressEntry(dispute.getTradeId()),
                                         contract.getBuyerBtcPubKey(),
                                         contract.getSellerBtcPubKey(),
                                         disputeResult.getArbitratorPubKey()
