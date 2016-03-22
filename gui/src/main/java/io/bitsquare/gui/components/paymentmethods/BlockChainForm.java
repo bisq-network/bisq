@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.components.paymentmethods;
 
+import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
@@ -31,6 +32,7 @@ import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
@@ -48,6 +50,7 @@ public class BlockChainForm extends PaymentMethodForm {
     private InputTextField addressInputTextField;
 
     private ComboBox<TradeCurrency> currencyComboBox;
+    private Label addressLabel;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Cryptocurrency address:", ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress());
@@ -70,7 +73,9 @@ public class BlockChainForm extends PaymentMethodForm {
 
         addTradeCurrencyComboBox();
         currencyComboBox.setPrefWidth(250);
-        addressInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Cryptocurrency address:").second;
+        Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(gridPane, ++gridRow, "Cryptocurrency address:");
+        addressLabel = tuple2.first;
+        addressInputTextField = tuple2.second;
         addressInputTextField.setValidator(altCoinAddressValidator);
 
         addressInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -80,6 +85,13 @@ public class BlockChainForm extends PaymentMethodForm {
 
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
+    }
+
+    @Override
+    public void updateFromInputs() {
+        if (addressLabel != null && cryptoCurrencyAccount.getSingleTradeCurrency() != null)
+            addressLabel.setText(cryptoCurrencyAccount.getSingleTradeCurrency().getName() + " address:");
+        super.updateFromInputs();
     }
 
     @Override
@@ -98,7 +110,9 @@ public class BlockChainForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", cryptoCurrencyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Cryptocurrency address:", cryptoCurrencyAccount.getAddress()).second;
+        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow, "Cryptocurrency address:", cryptoCurrencyAccount.getAddress());
+        addressLabel = tuple2.first;
+        TextField field = tuple2.second;
         field.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Cryptocurrency:", cryptoCurrencyAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
