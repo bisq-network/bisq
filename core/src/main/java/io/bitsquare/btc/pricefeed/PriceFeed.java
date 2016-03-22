@@ -87,6 +87,13 @@ public class PriceFeed {
         requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPrice);
     }
 
+    @Nullable
+    public MarketPrice getMarketPrice(String currencyCode) {
+        if (cache.containsKey(currencyCode))
+            return cache.get(currencyCode);
+        else
+            return null;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter

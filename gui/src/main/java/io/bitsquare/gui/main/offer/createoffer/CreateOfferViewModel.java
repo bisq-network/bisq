@@ -19,10 +19,17 @@ package io.bitsquare.gui.main.offer.createoffer;
 
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.pricefeed.MarketPrice;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.settings.SettingsView;
+import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
@@ -32,6 +39,7 @@ import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.user.Preferences;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
@@ -41,11 +49,15 @@ import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
 
+import static com.google.common.math.LongMath.checkedPow;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel> implements ViewModel {
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
+    private PriceFeed priceFeed;
+    private Preferences preferences;
+    private Navigation navigation;
     final BSFormatter formatter;
     private final FiatValidator fiatValidator;
 
@@ -109,13 +121,16 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Inject
     public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatValidator fiatValidator, BtcValidator btcValidator,
-                                P2PService p2PService,
+                                P2PService p2PService, PriceFeed priceFeed, Preferences preferences, Navigation navigation,
                                 BSFormatter formatter) {
         super(dataModel);
 
         this.fiatValidator = fiatValidator;
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
+        this.priceFeed = priceFeed;
+        this.preferences = preferences;
+        this.navigation = navigation;
         this.formatter = formatter;
 
         paymentLabel = BSResources.get("createOffer.fundsBox.paymentLabel", dataModel.getOfferId());
@@ -376,6 +391,33 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         dataModel.onCurrencySelected(tradeCurrency);
+    }
+
+    public boolean isPriceInRange() {
+        MarketPrice marketPrice = priceFeed.getMarketPrice(getTradeCurrency().getCode());
+        if (marketPrice != null) {
+            double marketPriceAsDouble = marketPrice.getPrice(PriceFeed.Type.LAST);
+            Fiat priceAsFiat = dataModel.priceAsFiat.get();
+            long shiftDivisor = checkedPow(10, priceAsFiat.smallestUnitExponent());
+            double offerPrice = ((double) priceAsFiat.longValue()) / ((double) shiftDivisor);
+            if (marketPriceAsDouble != 0 && Math.abs(1 - (offerPrice / marketPriceAsDouble)) > preferences.getMaxPriceDistanceInPercent()) {
+                Popup popup = new Popup();
+                popup.warning("The price you have entered is outside the max. allowed deviation from the market price.\n" +
+                        "The max. allowed deviation is " +
+                        formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent()) +
+                        " and can be adjusted in the preferences.")
+                        .actionButtonText("Change price")
+                        .onAction(() -> popup.hide())
+                        .closeButtonText("Go to \"Preferences\"")
+                        .onClose(() -> navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class))
+                        .show();
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
     }
 
     public void onShowPayFundsScreen() {

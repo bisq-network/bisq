@@ -702,7 +702,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton1.setId("cancel-button");
 
         GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
-        nextButton.setOnAction(e -> onShowPayFundsScreen());
+        nextButton.setOnAction(e -> {
+            if (model.isPriceInRange())
+                onShowPayFundsScreen();
+        });
     }
 
     private void addFundingGroup() {

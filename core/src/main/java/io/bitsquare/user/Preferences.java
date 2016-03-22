@@ -106,6 +106,7 @@ public final class Preferences implements Persistable {
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
     private long txFeePerKB = FeePolicy.getFeePerKb().value;
+    private double maxPriceDistanceInPercent;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -155,6 +156,10 @@ public final class Preferences implements Persistable {
             defaultTradeCurrency = preferredTradeCurrency;
             useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
+            maxPriceDistanceInPercent = persisted.getMaxPriceDistanceInPercent();
+            // Backward compatible to version 0.3.6. Can be removed after a while
+            if (maxPriceDistanceInPercent == 0d)
+                maxPriceDistanceInPercent = 0.2;
 
             try {
                 setTxFeePerKB(persisted.getTxFeePerKB());
@@ -174,6 +179,7 @@ public final class Preferences implements Persistable {
             dontShowAgainMap = new HashMap<>();
             preferredLocale = getDefaultLocale();
             preferredTradeCurrency = getDefaultTradeCurrency();
+            maxPriceDistanceInPercent = 0.2;
 
             storage.queueUpForSave();
         }
@@ -458,5 +464,13 @@ public final class Preferences implements Persistable {
 
     public void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook) {
         this.showOwnOffersInOfferBook = showOwnOffersInOfferBook;
+    }
+
+    public double getMaxPriceDistanceInPercent() {
+        return maxPriceDistanceInPercent;
+    }
+
+    public void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent) {
+        this.maxPriceDistanceInPercent = maxPriceDistanceInPercent;
     }
 }

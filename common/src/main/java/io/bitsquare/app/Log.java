@@ -60,7 +60,7 @@ public class Log {
         appender.start();
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.INFO);
+        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.WARN);
         logbackLogger.addAppender(appender);
 
         // log errors in separate file

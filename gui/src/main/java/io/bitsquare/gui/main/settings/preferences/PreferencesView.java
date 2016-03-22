@@ -22,8 +22,10 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.*;
@@ -44,6 +46,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import javax.inject.Inject;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -61,6 +64,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     //private InputTextField transactionFeeInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
+    private BSFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
@@ -77,6 +81,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     public final ObservableList<CryptoCurrency> cryptoCurrencies;
     public final ObservableList<CryptoCurrency> allCryptoCurrencies;
     public final ObservableList<TradeCurrency> tradeCurrencies;
+    private InputTextField deviationInputTextField;
+    private ChangeListener<String> deviationListener;
+    private ChangeListener<Boolean> deviationFocusedListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,9 +91,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PreferencesView(Preferences preferences) {
+    public PreferencesView(Preferences preferences, BSFormatter formatter) {
         super();
         this.preferences = preferences;
+        this.formatter = formatter;
 
         blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
         languageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
@@ -280,12 +288,30 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void initializeOtherOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, "General preferences", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "General preferences", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
         // userLanguageComboBox = addLabelComboBox(root, gridRow, "Language:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
         blockChainExplorerComboBox = addLabelComboBox(root, gridRow, "Bitcoin block explorer:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        deviationInputTextField = addLabelInputTextField(root, ++gridRow, "Max. deviation from market price:").second;
         autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow, "Auto select arbitrators:", "").second;
+
+        deviationListener = (observable, oldValue, newValue) -> {
+            try {
+                String input = newValue.replace("%", "");
+                input = input.replace(",", ".");
+                input = input.replace(" ", "");
+                double value = Double.parseDouble(input);
+                preferences.setMaxPriceDistanceInPercent(value / 100);
+            } catch (Throwable t) {
+                log.error("Exception at parseDouble deviation: " + t.toString());
+                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+            }
+        };
+        deviationFocusedListener = (observable1, oldValue1, newValue1) -> {
+            if (oldValue1 && !newValue1)
+                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+        };
 
         // TODO need a bit extra work to separate trade and non trade tx fees before it can be used
         /*transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Transaction fee (satoshi/byte):").second;
@@ -393,6 +419,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         });
         blockChainExplorerComboBox.setOnAction(e -> preferences.setBlockChainExplorer(blockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
 
+        deviationInputTextField.setText(formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent()));
+        deviationInputTextField.textProperty().addListener(deviationListener);
+        deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
+
         // transactionFeeInputTextField.textProperty().bindBidirectional(transactionFeePerByte);
         // transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
     }
@@ -422,6 +452,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         //btcDenominationComboBox.setOnAction(null);
         // userLanguageComboBox.setOnAction(null);
         blockChainExplorerComboBox.setOnAction(null);
+        deviationInputTextField.textProperty().removeListener(deviationListener);
+        deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
         //  transactionFeeInputTextField.textProperty().unbind();
         ///  transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
     }
