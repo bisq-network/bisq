@@ -26,6 +26,7 @@ import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
 import io.bitsquare.arbitration.payload.Attachment;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
@@ -479,6 +480,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         final ImageView arrow = new ImageView();
                         final Label headerLabel = new Label();
                         final Label messageLabel = new Label();
+                        final Label copyIcon = new Label();
                         final HBox attachmentsBox = new HBox();
                         final AnchorPane messageAnchorPane = new AnchorPane();
                         final Label statusIcon = new Label();
@@ -487,6 +489,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         final double border = 10d;
                         final double bottomBorder = 25d;
                         final double padding = border + 10d;
+                        final double msgLabelPaddingRight = padding + 20d;
 
                         {
                             bg.setMinHeight(30);
@@ -494,7 +497,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             headerLabel.setTextAlignment(TextAlignment.CENTER);
                             attachmentsBox.setSpacing(5);
                             statusIcon.setStyle("-fx-font-size: 10;");
-                            messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, attachmentsBox, statusIcon);
+
+                            // TODO icon not displayed correctly (too small), don't knwo why....
+                            AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
+                            copyIcon.getStyleClass().add("copy-icon");// -fx-cursor: hand;
+                            Tooltip.install(copyIcon, new Tooltip("Copy to clipboard"));
+                            messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);
                         }
 
                         @Override
@@ -502,6 +510,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             super.updateItem(item, empty);
 
                             if (item != null && !empty) {
+                                copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(messageLabel.getText()));
+                                
                                /* messageAnchorPane.prefWidthProperty().bind(EasyBind.map(messageListView.widthProperty(),
                                         w -> (double) w - padding - GUIUtil.getScrollbarWidth(messageListView)));*/
                                 if (!messageAnchorPane.prefWidthProperty().isBound())
@@ -513,6 +523,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 AnchorPane.setTopAnchor(headerLabel, 0d);
                                 AnchorPane.setBottomAnchor(arrow, bottomBorder + 5d);
                                 AnchorPane.setTopAnchor(messageLabel, 25d);
+                                AnchorPane.setTopAnchor(copyIcon, 25d);
                                 AnchorPane.setBottomAnchor(attachmentsBox, bottomBorder + 10);
 
                                 boolean senderIsTrader = item.isSenderIsTrader();
@@ -525,10 +536,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     headerLabel.setStyle("-fx-text-fill: -bs-green; -fx-font-size: 11;");
                                     bg.setId("message-bubble-green");
                                     messageLabel.setStyle("-fx-text-fill: white;");
+                                    copyIcon.setStyle("-fx-text-fill: white;");
                                 } else if (isMyMsg) {
                                     headerLabel.setStyle("-fx-text-fill: -fx-accent; -fx-font-size: 11;");
                                     bg.setId("message-bubble-blue");
                                     messageLabel.setStyle("-fx-text-fill: white;");
+                                    copyIcon.setStyle("-fx-text-fill: white;");
                                     if (isTrader)
                                         arrow.setId("bubble_arrow_blue_left");
                                     else
@@ -558,6 +571,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     headerLabel.setStyle("-fx-text-fill: -bs-light-grey; -fx-font-size: 11;");
                                     bg.setId("message-bubble-grey");
                                     messageLabel.setStyle("-fx-text-fill: black;");
+                                    copyIcon.setStyle("-fx-text-fill: black;");
                                     if (isTrader)
                                         arrow.setId("bubble_arrow_grey_right");
                                     else
@@ -570,7 +584,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     AnchorPane.setLeftAnchor(bg, border);
                                     AnchorPane.setRightAnchor(bg, border);
                                     AnchorPane.setLeftAnchor(messageLabel, padding);
-                                    AnchorPane.setRightAnchor(messageLabel, padding);
+                                    AnchorPane.setRightAnchor(messageLabel, msgLabelPaddingRight);
+                                    AnchorPane.setRightAnchor(copyIcon, padding);
                                     AnchorPane.setLeftAnchor(attachmentsBox, padding);
                                     AnchorPane.setRightAnchor(attachmentsBox, padding);
                                 } else if (senderIsTrader) {
@@ -579,7 +594,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     AnchorPane.setRightAnchor(bg, border);
                                     AnchorPane.setLeftAnchor(arrow, border);
                                     AnchorPane.setLeftAnchor(messageLabel, padding + arrowWidth);
-                                    AnchorPane.setRightAnchor(messageLabel, padding);
+                                    AnchorPane.setRightAnchor(messageLabel, msgLabelPaddingRight);
+                                    AnchorPane.setRightAnchor(copyIcon, padding);
                                     AnchorPane.setLeftAnchor(attachmentsBox, padding + arrowWidth);
                                     AnchorPane.setRightAnchor(attachmentsBox, padding);
                                     AnchorPane.setRightAnchor(statusIcon, padding);
@@ -589,7 +605,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     AnchorPane.setRightAnchor(bg, border + arrowWidth);
                                     AnchorPane.setRightAnchor(arrow, border);
                                     AnchorPane.setLeftAnchor(messageLabel, padding);
-                                    AnchorPane.setRightAnchor(messageLabel, padding + arrowWidth);
+                                    AnchorPane.setRightAnchor(messageLabel, msgLabelPaddingRight + arrowWidth);
+                                    AnchorPane.setRightAnchor(copyIcon, padding + arrowWidth);
                                     AnchorPane.setLeftAnchor(attachmentsBox, padding);
                                     AnchorPane.setRightAnchor(attachmentsBox, padding + arrowWidth);
                                     AnchorPane.setLeftAnchor(statusIcon, padding);
@@ -640,9 +657,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 AnchorPane.clearConstraints(headerLabel);
                                 AnchorPane.clearConstraints(arrow);
                                 AnchorPane.clearConstraints(messageLabel);
+                                AnchorPane.clearConstraints(copyIcon);
                                 AnchorPane.clearConstraints(statusIcon);
                                 AnchorPane.clearConstraints(attachmentsBox);
 
+                                copyIcon.setOnMouseClicked(null);
                                 setGraphic(null);
                             }
                         }
