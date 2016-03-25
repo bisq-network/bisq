@@ -103,7 +103,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                 .isPresent();
         isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTrades().stream()
                 .filter(t -> t.getOffer().getOffererPaymentAccountId().equals(paymentAccount.getId()) ||
-                        t.getTakerPaymentAccountId().equals(paymentAccount.getId()))
+                        paymentAccount.getId().equals(t.getTakerPaymentAccountId()))
                 .findAny()
                 .isPresent();
         if (!isPaymentAccountUsed)
