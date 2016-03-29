@@ -85,7 +85,13 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         Label label = addMultilineLabel(gridPane, ++rowIndex,
                 "The deposit transaction was not stored in the trade.\n" +
                         "Please select one of the existing MultiSig transactions from your wallet which was the " +
-                        "deposit transaction used in the failed trade.",
+                        "deposit transaction used in the failed trade.\n\n" +
+                        "You can find the correct transaction by opening the trade details window (click on the trade ID in the list)" +
+                        " and following the offer fee payment transaction output to the next transaction where you see " +
+                        "the Multisig deposit transaction (the address starts with 3). That transaction ID should be " +
+                        "visible in the list presented here. Once you found the correct transaction select that transaction here and continue.\n\n" +
+                        "Sorry for the inconvenience but that error case should be happen very rare and in future we will try " +
+                        "to find better ways to resolve it.",
                 10);
 
         GridPane.setMargin(label, new Insets(0, 0, 10, 0));
