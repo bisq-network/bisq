@@ -494,7 +494,9 @@ public class MainViewModel implements ViewModel {
 
             }
         };
-        checkCryptoThread.start();
+        // Delay a bit the test, there was one bug report (Key length not 128//192/256 bits) where the crypto test failed. 
+        // TODO investigate
+        UserThread.runAfter(() -> checkCryptoThread.start(), 3);
     }
 
 
