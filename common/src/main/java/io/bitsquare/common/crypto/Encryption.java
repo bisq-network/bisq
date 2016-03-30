@@ -37,7 +37,7 @@ public class Encryption {
     private static final Logger log = LoggerFactory.getLogger(Encryption.class);
 
     public static final String ASYM_KEY_ALGO = "RSA";
-    private static final String ASYM_CIPHER = "RSA/ECB/PKCS1Padding";
+    private static final String ASYM_CIPHER = "RSA/None/OAEPWithSHA256AndMGF1Padding";
 
     private static final String SYM_KEY_ALGO = "AES";
     private static final String SYM_CIPHER = "AES";

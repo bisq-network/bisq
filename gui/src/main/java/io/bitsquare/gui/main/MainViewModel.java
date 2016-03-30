@@ -491,7 +491,6 @@ public class MainViewModel implements ViewModel {
                             .onClose(() -> Utilities.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
                             .show());
                 }
-
             }
         };
         checkCryptoThread.start();
