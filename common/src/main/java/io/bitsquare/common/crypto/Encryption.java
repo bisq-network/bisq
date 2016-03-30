@@ -26,23 +26,20 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.*;
 import java.util.Arrays;
 
-// TODO: which counter modes and paddings should we use?
 // TODO is Hmac needed/make sense?
-// https://security.stackexchange.com/questions/52665/which-is-the-best-cipher-mode-and-padding-mode-for-aes-encryption
 public class Encryption {
     private static final Logger log = LoggerFactory.getLogger(Encryption.class);
 
-    public static final String ASYM_KEY_ALGO = "RSA"; // RSA/NONE/OAEPWithSHA256AndMGF1Padding
-    private static final String ASYM_CIPHER = "RSA";
+    public static final String ASYM_KEY_ALGO = "RSA";
+    private static final String ASYM_CIPHER = "RSA/ECB/PKCS1Padding";
 
-    private static final String SYM_KEY_ALGO = "AES"; // AES/CTR/NoPadding
+    private static final String SYM_KEY_ALGO = "AES";
     private static final String SYM_CIPHER = "AES";
 
     private static final String HMAC = "HmacSHA256";
@@ -173,22 +170,22 @@ public class Encryption {
     // Asymmetric
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static byte[] encrypt(byte[] payload, PublicKey publicKey) throws CryptoException {
+    private static byte[] encryptSecretKey(SecretKey secretKey, PublicKey publicKey) throws CryptoException {
         try {
             Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            return cipher.doFinal(payload);
+            cipher.init(Cipher.WRAP_MODE, publicKey);
+            return cipher.wrap(secretKey);
         } catch (Throwable e) {
             e.printStackTrace();
             throw new CryptoException("Couldn't encrypt payload");
         }
     }
 
-    private static byte[] decrypt(byte[] encryptedPayload, PrivateKey privateKey) throws CryptoException {
+    private static SecretKey decryptSecretKey(byte[] encryptedSecretKey, PrivateKey privateKey) throws CryptoException {
         try {
             Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
-            cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            return cipher.doFinal(encryptedPayload);
+            cipher.init(Cipher.UNWRAP_MODE, privateKey);
+            return (SecretKey) cipher.unwrap(encryptedSecretKey, "AES", Cipher.SECRET_KEY);
         } catch (Throwable e) {
             // errors when trying to decrypt foreign messages are normal
             throw new CryptoException(e);
@@ -214,7 +211,7 @@ public class Encryption {
         SecretKey secretKey = generateSecretKey();
 
         // Encrypt secretKey with receivers publicKey 
-        byte[] encryptedSecretKey = encrypt(secretKey.getEncoded(), encryptionPublicKey);
+        byte[] encryptedSecretKey = encryptSecretKey(secretKey, encryptionPublicKey);
 
         // Encrypt with sym key payload with appended hmac
         byte[] encryptedPayloadWithHmac = encryptPayloadWithHmac(payload, secretKey);
@@ -234,7 +231,7 @@ public class Encryption {
      * @throws CryptoException
      */
     public static DecryptedDataTuple decryptHybridWithSignature(SealedAndSigned sealedAndSigned, PrivateKey privateKey) throws CryptoException {
-        SecretKey secretKey = getSecretKeyFromBytes(decrypt(sealedAndSigned.encryptedSecretKey, privateKey));
+        SecretKey secretKey = decryptSecretKey(sealedAndSigned.encryptedSecretKey, privateKey);
         boolean isValid = Sig.verify(sealedAndSigned.sigPublicKey,
                 Hash.getHash(sealedAndSigned.encryptedPayloadWithHmac),
                 sealedAndSigned.signature);
@@ -250,13 +247,9 @@ public class Encryption {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static SecretKey getSecretKeyFromBytes(byte[] encodedKey) {
-        return new SecretKeySpec(encodedKey, SYM_KEY_ALGO);
-    }
-
     private static SecretKey generateSecretKey() {
         try {
-            KeyGenerator keyPairGenerator = KeyGenerator.getInstance(SYM_CIPHER, "BC");
+            KeyGenerator keyPairGenerator = KeyGenerator.getInstance(SYM_KEY_ALGO, "BC");
             keyPairGenerator.init(256);
             return keyPairGenerator.generateKey();
         } catch (Throwable e) {
