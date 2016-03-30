@@ -178,7 +178,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
             // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
             errorMessageProperty = new SimpleStringProperty();
         } catch (Throwable t) {
-            log.error("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

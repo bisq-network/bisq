@@ -28,6 +28,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
@@ -40,12 +41,13 @@ import javax.inject.Inject;
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
 
     @FXML
-    TableView<OpenOfferListItem> table;
+    TableView<OpenOfferListItem> tableView;
     @FXML
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, offerIdColumn, removeItemColumn;
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
+    private SortedList<OpenOfferListItem> sortedList;
 
     @Inject
     public OpenOffersView(OpenOffersViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow) {
@@ -64,13 +66,30 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setDateColumnCellFactory();
         setRemoveColumnCellFactory();
 
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No open offers available"));
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new Label("No open offers available"));
+
+        offerIdColumn.setComparator((o1, o2) -> o1.getOffer().getId().compareTo(o2.getOffer().getId()));
+        directionColumn.setComparator((o1, o2) -> o1.getOffer().getDirection().compareTo(o2.getOffer().getDirection()));
+        amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
+        priceColumn.setComparator((o1, o2) -> o1.getOffer().getPrice().compareTo(o2.getOffer().getPrice()));
+        volumeColumn.setComparator((o1, o2) -> o1.getOffer().getOfferVolume().compareTo(o2.getOffer().getOfferVolume()));
+        dateColumn.setComparator((o1, o2) -> o1.getOffer().getDate().compareTo(o2.getOffer().getDate()));
+
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(dateColumn);
     }
 
     @Override
     protected void activate() {
-        table.setItems(model.getList());
+        sortedList = new SortedList<>(model.getList());
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
+    }
+
+    @Override
+    protected void deactivate() {
+        sortedList.comparatorProperty().unbind();
     }
 
     private void onRemoveOpenOffer(OpenOffer openOffer) {

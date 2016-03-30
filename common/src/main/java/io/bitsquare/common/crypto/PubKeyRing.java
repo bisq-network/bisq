@@ -62,7 +62,7 @@ public final class PubKeyRing implements Payload {
             e.printStackTrace();
             log.error(e.getMessage());
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

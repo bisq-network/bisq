@@ -43,8 +43,7 @@ public class ProtectedStorageEntry implements Payload {
             ownerPubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(ownerPubKeyBytes));
             updateTimeStamp();
         } catch (Throwable t) {
-            log.error("Exception at readObject: " + t.getMessage());
-            t.printStackTrace();
+            log.warn("Exception at readObject: " + t.getMessage());
         }
     }
 

@@ -38,6 +38,7 @@ import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -53,7 +54,7 @@ import java.util.stream.Stream;
 @FxmlView
 public class ReservedView extends ActivatableView<VBox, Void> {
     @FXML
-    TableView<ReservedListItem> table;
+    TableView<ReservedListItem> tableView;
     @FXML
     TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn, confidenceColumn;
 
@@ -64,7 +65,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private final BSFormatter formatter;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
-    private final ObservableList<ReservedListItem> reservedAddresses = FXCollections.observableArrayList();
+    private final ObservableList<ReservedListItem> observableList = FXCollections.observableArrayList();
+    private final SortedList<ReservedListItem> sortedList = new SortedList<>(observableList);
     private BalanceListener balanceListener;
 
 
@@ -87,13 +89,21 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No funds are reserved in open offers or trades"));
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new Label("No funds are reserved in open offers or trades"));
+
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
         setAddressColumnCellFactory();
         setBalanceColumnCellFactory();
-        table.getSortOrder().add(dateColumn);
+
+        addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
+        detailsColumn.setComparator((o1, o2) -> o1.getTradable().getId().compareTo(o2.getTradable().getId()));
+        balanceColumn.setComparator((o1, o2) -> o1.getBalance().compareTo(o2.getBalance()));
+        dateColumn.setComparator((o1, o2) -> getTradable(o2).get().getDate().compareTo(getTradable(o1).get().getDate()));
+        tableView.getSortOrder().add(dateColumn);
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+
         balanceListener = new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
@@ -104,6 +114,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
         updateList();
 
         walletService.addBalanceListener(balanceListener);
@@ -111,7 +123,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
-        reservedAddresses.forEach(ReservedListItem::cleanup);
+        sortedList.comparatorProperty().unbind();
+        observableList.forEach(ReservedListItem::cleanup);
         walletService.removeBalanceListener(balanceListener);
     }
 
@@ -121,13 +134,12 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
-        reservedAddresses.forEach(ReservedListItem::cleanup);
-        reservedAddresses.setAll(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
+        observableList.forEach(ReservedListItem::cleanup);
+        observableList.clear();
+        observableList.setAll(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
+                .filter(tradable -> !(tradable instanceof Trade) || ((Trade) tradable).getState().getPhase() != Trade.Phase.PAYOUT_PAID)
                 .map(tradable -> new ReservedListItem(tradable, walletService.getTradeAddressEntry(tradable.getOffer().getId()), walletService, formatter))
                 .collect(Collectors.toList()));
-
-        reservedAddresses.sort((o1, o2) -> getTradable(o2).get().getDate().compareTo(getTradable(o1).get().getDate()));
-        table.setItems(reservedAddresses);
     }
 
     private void openBlockExplorer(ReservedListItem item) {

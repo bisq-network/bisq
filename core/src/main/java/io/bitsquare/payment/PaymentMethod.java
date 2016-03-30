@@ -115,7 +115,7 @@ public final class PaymentMethod implements Persistable, Comparable {
             this.maxTradePeriod = paymentMethod.getMaxTradePeriod();
             this.maxTradeLimitInBitcoin = paymentMethod.getMaxTradeLimitInBitcoin();
         } catch (Throwable t) {
-            log.error("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

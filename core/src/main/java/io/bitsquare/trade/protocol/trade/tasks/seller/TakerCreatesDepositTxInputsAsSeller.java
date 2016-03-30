@@ -26,10 +26,10 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateDepositTxInputsAsSeller extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(CreateDepositTxInputsAsSeller.class);
+public class TakerCreatesDepositTxInputsAsSeller extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(TakerCreatesDepositTxInputsAsSeller.class);
 
-    public CreateDepositTxInputsAsSeller(TaskRunner taskHandler, Trade trade) {
+    public TakerCreatesDepositTxInputsAsSeller(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -40,8 +40,10 @@ public class CreateDepositTxInputsAsSeller extends TradeTask {
             if (trade.getTradeAmount() != null) {
                 Coin takerInputAmount = FeePolicy.getSecurityDeposit().add(FeePolicy.getFixedTxFeeForTrades()).add(trade.getTradeAmount());
 
-                InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(takerInputAmount, processModel
-                        .getAddressEntry());
+                InputsAndChangeOutput result = processModel.getTradeWalletService()
+                        .takerCreatesDepositsTxInputs(takerInputAmount,
+                                processModel.getAddressEntry(),
+                                processModel.getUnusedSavingsAddress());
                 processModel.setRawTransactionInputs(result.rawTransactionInputs);
                 processModel.setChangeOutputValue(result.changeOutputValue);
                 processModel.setChangeOutputAddress(result.changeOutputAddress);

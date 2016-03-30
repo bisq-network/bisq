@@ -32,6 +32,7 @@ import io.bitsquare.p2p.network.Statistic;
 import io.bitsquare.user.Preferences;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
@@ -68,7 +69,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     CheckBox useTorCheckBox;
     @FXML
-    TableView<P2pNetworkListItem> p2PPeerTable;
+    TableView<P2pNetworkListItem> tableView;
     @FXML
     TableColumn<P2pNetworkListItem, String> onionAddressColumn, connectionTypeColumn, creationDateColumn,
     /*lastActivityColumn,*/ roundTripTimeColumn, sentBytesColumn, receivedBytesColumn, peerTypeColumn;
@@ -76,6 +77,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private Subscription bitcoinPeersSubscription;
     private Subscription nodeAddressSubscription;
     private ObservableList<P2pNetworkListItem> networkListItems = FXCollections.observableArrayList();
+    private final SortedList<P2pNetworkListItem> sortedList = new SortedList<>(networkListItems);
 
     @Inject
     public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences, Clock clock,
@@ -110,10 +112,10 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             }
         });
 
-        p2PPeerTable.setMinHeight(300);
-        p2PPeerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        p2PPeerTable.setPlaceholder(new Label("No connections are available"));
-        p2PPeerTable.getSortOrder().add(creationDateColumn);
+        tableView.setMinHeight(300);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new Label("No connections are available"));
+        tableView.getSortOrder().add(creationDateColumn);
         creationDateColumn.setSortType(TableColumn.SortType.ASCENDING);
 
 
@@ -152,8 +154,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         totalTraffic.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(), Statistic.totalReceivedBytesProperty(),
                 (sent, received) -> "Sent: " + formatter.formatBytes((int) sent) + ", received: " + formatter.formatBytes((int) received)));
 
-        p2PPeerTable.setItems(networkListItems);
-        p2PPeerTable.sort();
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
     }
 
     @Override
@@ -169,12 +171,14 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         if (numP2PPeersSubscription != null)
             numP2PPeersSubscription.unsubscribe();
 
-        p2PPeerTable.getItems().forEach(P2pNetworkListItem::cleanup);
         totalTraffic.textProperty().unbind();
+
+        sortedList.comparatorProperty().unbind();
+        tableView.getItems().forEach(P2pNetworkListItem::cleanup);
     }
 
     private void updateP2PTable() {
-        p2PPeerTable.getItems().forEach(P2pNetworkListItem::cleanup);
+        tableView.getItems().forEach(P2pNetworkListItem::cleanup);
         networkListItems.clear();
         networkListItems.setAll(p2PService.getNetworkNode().getAllConnections().stream()
                 .map(connection -> new P2pNetworkListItem(connection, clock, formatter))

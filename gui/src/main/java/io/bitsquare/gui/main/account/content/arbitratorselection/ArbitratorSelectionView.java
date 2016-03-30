@@ -51,7 +51,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
 
     private ListView<String> languagesListView;
     private ComboBox<String> languageComboBox;
-    private TableView<ArbitratorListItem> table;
+    private TableView<ArbitratorListItem> tableView;
     private int gridRow = 0;
     private CheckBox autoSelectAllMatchingCheckBox;
     private ListChangeListener<String> listChangeListener;
@@ -83,7 +83,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         languagesListView.setItems(model.languageCodes);
         languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
 
-        table.setItems(model.arbitratorListItems);
+        tableView.setItems(model.arbitratorListItems);
         autoSelectAllMatchingCheckBox.setSelected(model.getAutoSelectArbitrators());
     }
 
@@ -188,11 +188,11 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         GridPane.setMargin(tableGroupHeadline, new Insets(40, -10, -10, -10));
         root.getChildren().add(tableGroupHeadline);
 
-        table = new TableView<>();
-        GridPane.setRowIndex(table, gridRow);
-        GridPane.setColumnSpan(table, 2);
-        GridPane.setMargin(table, new Insets(60, -10, 5, -10));
-        root.getChildren().add(table);
+        tableView = new TableView<>();
+        GridPane.setRowIndex(tableView, gridRow);
+        GridPane.setColumnSpan(tableView, 2);
+        GridPane.setMargin(tableView, new Insets(60, -10, 5, -10));
+        root.getChildren().add(tableView);
 
         autoSelectAllMatchingCheckBox = addCheckBox(root, ++gridRow, "Auto select all arbitrators with matching language");
         GridPane.setColumnSpan(autoSelectAllMatchingCheckBox, 2);
@@ -202,15 +202,18 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         autoSelectAllMatchingCheckBox.setOnAction(event -> model.setAutoSelectArbitrators(autoSelectAllMatchingCheckBox.isSelected()));
 
         TableColumn<ArbitratorListItem, String> dateColumn = new TableColumn("Registration date");
+        dateColumn.setSortable(false);
         dateColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getRegistrationDate()));
         dateColumn.setMinWidth(130);
         dateColumn.setMaxWidth(130);
 
         TableColumn<ArbitratorListItem, String> nameColumn = new TableColumn("Onion address");
+        nameColumn.setSortable(false);
         nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getAddressString()));
         nameColumn.setMinWidth(90);
 
         TableColumn<ArbitratorListItem, String> languagesColumn = new TableColumn("Languages");
+        languagesColumn.setSortable(false);
         languagesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getLanguageCodes()));
         languagesColumn.setMinWidth(130);
 
@@ -309,8 +312,8 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                     }
                 });
 
-        table.getColumns().addAll(dateColumn, nameColumn, languagesColumn, selectionColumn);
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.getColumns().addAll(dateColumn, nameColumn, languagesColumn, selectionColumn);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 }
 

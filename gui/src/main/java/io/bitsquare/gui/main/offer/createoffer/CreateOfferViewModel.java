@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.offer.createoffer;
 
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.pricefeed.MarketPrice;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.Timer;
@@ -27,6 +26,8 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.funds.FundsView;
+import io.bitsquare.gui.main.funds.deposit.DepositView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
@@ -77,12 +78,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    final StringProperty spinnerInfoText = new SimpleStringProperty("");
 
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
     final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
-    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty();
     final BooleanProperty showWarningAdjustedVolume = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
@@ -95,7 +94,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final ObjectProperty<InputValidator.ValidationResult> volumeValidationResult = new SimpleObjectProperty<>();
 
     // Those are needed for the addressTextField
-    final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
     private ChangeListener<String> amountListener;
@@ -108,7 +106,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private ChangeListener<Fiat> volumeAsFiatListener;
     private ChangeListener<Boolean> isWalletFundedListener;
     private ChangeListener<Coin> feeFromFundingTxListener;
-    private ChangeListener<String> requestPlaceOfferErrorMessageListener;
     private ChangeListener<String> errorMessageListener;
     private Offer offer;
     private Timer timeoutTimer;
@@ -170,8 +167,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             directionLabel = BSResources.get("shared.sellBitcoin");
             amountDescription = BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.sell"));
         }
-
-        updateSpinnerInfo();
     }
 
     @Override
@@ -179,16 +174,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         removeBindings();
         removeListeners();
         stopTimeoutTimer();
-    }
-
-    private void updateSpinnerInfo() {
-        if (dataModel.isWalletFunded.get() || !showPayFundsScreenDisplayed) {
-            isSpinnerVisible.set(false);
-            spinnerInfoText.set("");
-        } else if (showPayFundsScreenDisplayed) {
-            spinnerInfoText.set("Waiting for receiving funds...");
-            isSpinnerVisible.set(true);
-        }
     }
 
     private void addBindings() {
@@ -212,7 +197,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         tradeAmount.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.amountAsCoin.get()),
                 dataModel.amountAsCoin));
 
-        totalToPayAsCoin.bind(dataModel.totalToPayAsCoin);
 
         btcCode.bind(dataModel.btcCode);
         tradeCurrencyCode.bind(dataModel.tradeCurrencyCode);
@@ -221,7 +205,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private void removeBindings() {
         totalToPay.unbind();
         tradeAmount.unbind();
-        totalToPayAsCoin.unbind();
         btcCode.unbind();
         tradeCurrencyCode.unbind();
         volumeDescriptionLabel.unbind();
@@ -265,20 +248,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         isWalletFundedListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
-            spinnerInfoText.set("Checking funding tx miner fee...");
         };
         feeFromFundingTxListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
-            if (newValue.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0) {
-                isSpinnerVisible.set(false);
-                spinnerInfoText.set("");
-            }
-        };
-        requestPlaceOfferErrorMessageListener = (ov, oldValue, newValue) -> {
-            if (newValue != null) {
-                isSpinnerVisible.set(false);
-                spinnerInfoText.set("");
-            }
         };
     }
 
@@ -298,7 +270,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
-        errorMessage.addListener(requestPlaceOfferErrorMessageListener);
     }
 
     private void removeListeners() {
@@ -315,7 +286,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.removeListener(isWalletFundedListener);
-        errorMessage.removeListener(requestPlaceOfferErrorMessageListener);
 
         if (offer != null && errorMessageListener != null)
             offer.errorMessageProperty().removeListener(errorMessageListener);
@@ -420,9 +390,27 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    public void onShowPayFundsScreen() {
+    void onShowPayFundsScreen() {
         showPayFundsScreenDisplayed = true;
-        updateSpinnerInfo();
+    }
+
+    boolean useSavingsWalletForFunding() {
+        dataModel.useSavingsWalletForFunding();
+        if (dataModel.isWalletFunded.get()) {
+            updateButtonDisableState();
+            return true;
+        } else {
+            new Popup().warning("You don't have enough funds in your Bitsquare wallet.\n" +
+                    "You need " + formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()) + " but you have only " +
+                    formatter.formatCoinWithCode(dataModel.totalAvailableBalance) + " in your Bitsquare wallet.\n\n" +
+                    "Please fund that trade from an external Bitcoin wallet or fund your Bitsquare " +
+                    "wallet at \"Funds/Depost funds\".")
+                    .actionButtonText("Go to \"Funds/Depost funds\"")
+                    .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
+                    .show();
+            return false;
+        }
+
     }
 
 
@@ -648,7 +636,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         isNextButtonDisabled.set(!inputDataValid);
         isPlaceOfferButtonDisabled.set(!(inputDataValid &&
                         dataModel.isWalletFunded.get() &&
-                        dataModel.isFeeFromFundingTxSufficient())
+                        (dataModel.useSavingsWallet || dataModel.isFeeFromFundingTxSufficient()))
         );
     }
 }

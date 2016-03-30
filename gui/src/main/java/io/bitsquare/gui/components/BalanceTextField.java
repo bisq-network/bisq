@@ -60,9 +60,11 @@ public class BalanceTextField extends AnchorPane {
         getChildren().addAll(textField);
     }
 
-    public void setup(Address address, BSFormatter formatter) {
+    public void setFormatter(BSFormatter formatter) {
         this.formatter = formatter;
+    }
 
+    public void setupBalanceListener(Address address) {
         balanceListener = new BalanceListener(address) {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
@@ -74,16 +76,21 @@ public class BalanceTextField extends AnchorPane {
     }
 
     public void cleanup() {
-        walletService.removeBalanceListener(balanceListener);
+        if (balanceListener != null)
+            walletService.removeBalanceListener(balanceListener);
     }
 
+    public void setBalance(Coin balance) {
+        updateBalance(balance);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateBalance(Coin balance) {
-        textField.setText(formatter.formatCoinWithCode(balance));
+        if (formatter != null)
+            textField.setText(formatter.formatCoinWithCode(balance));
         if (balance.isPositive())
             textField.setEffect(fundedEffect);
         else

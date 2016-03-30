@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.funds.withdrawal;
 import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -46,6 +45,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -59,10 +59,7 @@ import org.jetbrains.annotations.NotNull;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.inject.Inject;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,11 +69,11 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     Button withdrawButton;
     @FXML
-    TableView<WithdrawalListItem> table;
+    TableView<WithdrawalListItem> tableView;
     @FXML
     TextField withdrawFromTextField, withdrawToTextField, amountTextField;
     @FXML
-    TableColumn<WithdrawalListItem, WithdrawalListItem> dateColumn, detailsColumn, addressColumn, balanceColumn, selectColumn;
+    TableColumn<WithdrawalListItem, WithdrawalListItem> addressColumn, balanceColumn, selectColumn;
 
     private final WalletService walletService;
     private final TradeManager tradeManager;
@@ -89,7 +86,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final WalletPasswordWindow walletPasswordWindow;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
-    private final ObservableList<WithdrawalListItem> fundedAddresses = FXCollections.observableArrayList();
+    private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
+    private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(observableList);
     private Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
     private Set<String> fromAddresses;
@@ -121,15 +119,18 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No funds for withdrawal are available"));
-        setDateColumnCellFactory();
-        setDetailsColumnCellFactory();
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new Label("No funds for withdrawal are available"));
+        tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
         setAddressColumnCellFactory();
         setBalanceColumnCellFactory();
         setSelectColumnCellFactory();
-        table.getSortOrder().add(dateColumn);
-        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+        addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
+        balanceColumn.setComparator((o1, o2) -> o1.getBalance().compareTo(o2.getBalance()));
+        balanceColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(balanceColumn);
 
         balanceListener = new BalanceListener() {
             @Override
@@ -141,6 +142,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
         updateList();
 
         reset();
@@ -152,7 +155,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
-        fundedAddresses.forEach(WithdrawalListItem::cleanup);
+        sortedList.comparatorProperty().unbind();
+        observableList.forEach(WithdrawalListItem::cleanup);
         withdrawButton.disableProperty().unbind();
         walletService.removeBalanceListener(balanceListener);
     }
@@ -174,6 +178,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     } else {
                         log.error("onWithdraw transaction is null");
                     }
+
+                    List<Trade> trades = new ArrayList<>(tradeManager.getTrades());
+                    trades.stream()
+                            .filter(trade -> trade.getState().getPhase() == Trade.Phase.PAYOUT_PAID)
+                            .forEach(trade -> {
+                                if (walletService.getBalanceForAddress(walletService.getTradeAddressEntry(trade.getId()).getAddress()).isZero())
+                                    tradeManager.addTradeToClosedTrades(trade);
+                            });
                 }
 
                 @Override
@@ -283,32 +295,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         Set<String> reservedTrades = Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
+                .filter(tradable -> !(tradable instanceof Trade) || ((Trade) tradable).getState().getPhase() != Trade.Phase.PAYOUT_PAID)
                 .map(tradable -> tradable.getOffer().getId())
                 .collect(Collectors.toSet());
 
-        fundedAddresses.forEach(WithdrawalListItem::cleanup);
-        fundedAddresses.setAll(walletService.getAddressEntryList().stream()
+        observableList.forEach(WithdrawalListItem::cleanup);
+        observableList.setAll(walletService.getAddressEntryList().stream()
                 .filter(e -> walletService.getBalanceForAddress(e.getAddress()).isPositive())
                 .filter(e -> !reservedTrades.contains(e.getOfferId()))
                 .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, formatter))
                 .collect(Collectors.toList()));
-
-        fundedAddresses.sort((o1, o2) -> {
-            Optional<Tradable> tradable1 = getTradable(o1);
-            Optional<Tradable> tradable2 = getTradable(o2);
-            // if we dont have a date we set it to now as it is likely a recent funding tx
-            // TODO get tx date from wallet instead
-            Date date1 = new Date();
-            Date date2 = new Date();
-            if (tradable1.isPresent())
-                date1 = tradable1.get().getDate();
-
-            if (tradable2.isPresent())
-                date2 = tradable2.get().getDate();
-
-            return date2.compareTo(date1);
-        });
-        table.setItems(fundedAddresses);
     }
 
     private void doWithdraw(Coin amount, FutureCallback<Transaction> callback) {
@@ -335,7 +331,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private void reset() {
         selectedItems = new HashSet<>();
 
-        table.getSelectionModel().clearSelection();
+        tableView.getSelectionModel().clearSelection();
 
         withdrawFromTextField.setText("");
         withdrawFromTextField.setPromptText("Select a source address from the table");
@@ -348,7 +344,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawToTextField.setPromptText("Fill in your destination address");
 
         if (BitsquareApp.DEV_MODE)
-            withdrawToTextField.setText("mi8k5f9L972VgDaT4LgjAhriC9hHEPL7EW");
+            withdrawToTextField.setText("mo6y756TnpdZQCeHStraavjqrndeXzVkxi");
     }
 
     private Optional<Tradable> getTradable(WithdrawalListItem item) {
@@ -373,92 +369,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ColumnCellFactories
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void setDateColumnCellFactory() {
-        dateColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        dateColumn.setCellFactory(new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>,
-                TableCell<WithdrawalListItem, WithdrawalListItem>>() {
-
-            @Override
-            public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
-                    WithdrawalListItem> column) {
-                return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
-
-                    @Override
-                    public void updateItem(final WithdrawalListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            if (getTradable(item).isPresent())
-                                setText(formatter.formatDateTime(getTradable(item).get().getDate()));
-                            else
-                                setText("No date available");
-                        } else {
-                            setText("");
-                        }
-                    }
-                };
-            }
-        });
-    }
-
-    private void setDetailsColumnCellFactory() {
-        detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        detailsColumn.setCellFactory(new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>,
-                TableCell<WithdrawalListItem, WithdrawalListItem>>() {
-
-            @Override
-            public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
-                    WithdrawalListItem> column) {
-                return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
-
-                    private HyperlinkWithIcon field;
-
-                    @Override
-                    public void updateItem(final WithdrawalListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        if (item != null && !empty) {
-                            Optional<Tradable> tradableOptional = getTradable(item);
-                            if (tradableOptional.isPresent()) {
-                                AddressEntry addressEntry = item.getAddressEntry();
-                                String details;
-                                if (addressEntry.getContext() == AddressEntry.Context.TRADE) {
-                                    String prefix;
-                                    Tradable tradable = tradableOptional.get();
-                                    if (tradable instanceof Trade)
-                                        prefix = "Trade ID: ";
-                                    else if (tradable instanceof OpenOffer)
-                                        prefix = "Offer ID: ";
-                                    else
-                                        prefix = "";
-
-                                    details = prefix + addressEntry.getShortOfferId();
-                                } else if (addressEntry.getContext() == AddressEntry.Context.ARBITRATOR) {
-                                    details = "Arbitration fee";
-                                } else {
-                                    details = "-";
-                                }
-
-                                field = new HyperlinkWithIcon(details, AwesomeIcon.INFO_SIGN);
-                                field.setOnAction(event -> openDetailPopup(item));
-                                field.setTooltip(new Tooltip("Open popup for details"));
-                                setGraphic(field);
-                            } else if (item.getAddressEntry().getContext() == AddressEntry.Context.ARBITRATOR) {
-                                setGraphic(new Label("Arbitrators fee"));
-                            } else {
-                                setGraphic(new Label("No details available"));
-                            }
-
-                        } else {
-                            setGraphic(null);
-                            if (field != null)
-                                field.setOnAction(null);
-                        }
-                    }
-                };
-            }
-        });
-    }
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));

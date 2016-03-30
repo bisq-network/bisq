@@ -178,7 +178,7 @@ public class TradeManager {
             else {*/
             trade.setStorage(tradableListStorage);
             trade.updateDepositTxFromWallet(tradeWalletService);
-            initTrade(trade);
+            initTrade(trade, trade.getProcessModel().getFundsNeededForTrade());
 
 
             // }
@@ -209,7 +209,7 @@ public class TradeManager {
                 trade = new SellerAsOffererTrade(offer, tradableListStorage);
 
             trade.setStorage(tradableListStorage);
-            initTrade(trade);
+            initTrade(trade, trade.getProcessModel().getFundsNeededForTrade());
             trades.add(trade);
             ((OffererTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
         } else {
@@ -220,7 +220,7 @@ public class TradeManager {
         }
     }
 
-    private void initTrade(Trade trade) {
+    private void initTrade(Trade trade, Coin fundsNeededForTrade) {
         trade.init(p2PService,
                 walletService,
                 tradeWalletService,
@@ -228,7 +228,8 @@ public class TradeManager {
                 this,
                 openOfferManager,
                 user,
-                keyRing);
+                keyRing,
+                fundsNeededForTrade);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -256,6 +257,7 @@ public class TradeManager {
 
     // First we check if offer is still available then we create the trade with the protocol
     public void onTakeOffer(Coin amount,
+                            Coin fundsNeededForTrade,
                             Offer offer,
                             String paymentAccountId,
                             TradeResultHandler tradeResultHandler) {
@@ -263,11 +265,12 @@ public class TradeManager {
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE)
-                        createTrade(amount, offer, paymentAccountId, model, tradeResultHandler);
+                        createTrade(amount, fundsNeededForTrade, offer, paymentAccountId, model, tradeResultHandler);
                 });
     }
 
     private void createTrade(Coin amount,
+                             Coin fundsNeededForTrade,
                              Offer offer,
                              String paymentAccountId,
                              OfferAvailabilityModel model,
@@ -282,7 +285,7 @@ public class TradeManager {
         trade.setTakeOfferDateAsBlockHeight(tradeWalletService.getBestChainHeight());
         trade.setTakerPaymentAccountId(paymentAccountId);
 
-        initTrade(trade);
+        initTrade(trade, fundsNeededForTrade);
 
         trades.add(trade);
         ((TakerTrade) trade).takeAvailableOffer();

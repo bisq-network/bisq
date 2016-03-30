@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class CreateAndSignDepositTxAsSeller extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(CreateAndSignDepositTxAsSeller.class);
+public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(OffererCreatesAndSignsDepositTxAsSeller.class);
 
-    public CreateAndSignDepositTxAsSeller(TaskRunner taskHandler, Trade trade) {
+    public OffererCreatesAndSignsDepositTxAsSeller(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -60,6 +60,7 @@ public class CreateAndSignDepositTxAsSeller extends TradeTask {
                     processModel.tradingPeer.getChangeOutputValue(),
                     processModel.tradingPeer.getChangeOutputAddress(),
                     processModel.getAddressEntry(),
+                    processModel.getUnusedSavingsAddress(),
                     processModel.tradingPeer.getTradeWalletPubKey(),
                     processModel.getTradeWalletPubKey(),
                     processModel.getArbitratorPubKey(trade.getArbitratorNodeAddress()));

@@ -83,7 +83,7 @@ public class DebugView extends InitializableView {
                         VerifyArbitrationSelection.class,
                         VerifyTakerAccount.class,
                         CreateAndSignContract.class,
-                        CreateAndSignDepositTxAsBuyer.class,
+                        OffererCreatesAndSignsDepositTxAsBuyer.class,
                         LoadTakeOfferFeeTx.class,
                         InitWaitPeriodForOpenDispute.class,
                         SetupDepositBalanceListener.class,
@@ -106,7 +106,7 @@ public class DebugView extends InitializableView {
                         SelectArbitrator.class,
                         CreateTakeOfferFeeTx.class,
                         BroadcastTakeOfferFeeTx.class,
-                        CreateDepositTxInputsAsSeller.class,
+                        TakerCreatesDepositTxInputsAsSeller.class,
                         SendPayDepositRequest.class,
 
                         ProcessPublishDepositTxRequest.class,
@@ -132,7 +132,7 @@ public class DebugView extends InitializableView {
                         SelectArbitrator.class,
                         CreateTakeOfferFeeTx.class,
                         BroadcastTakeOfferFeeTx.class,
-                        CreateDepositTxInputsAsSeller.class,
+                        TakerCreatesDepositTxInputsAsSeller.class,
                         SendPayDepositRequest.class,
 
                         ProcessPublishDepositTxRequest.class,
@@ -159,7 +159,7 @@ public class DebugView extends InitializableView {
                         VerifyTakerAccount.class,
                         InitWaitPeriodForOpenDispute.class,
                         CreateAndSignContract.class,
-                        CreateAndSignDepositTxAsBuyer.class,
+                        OffererCreatesAndSignsDepositTxAsBuyer.class,
                         SetupDepositBalanceListener.class,
                         SendPublishDepositTxRequest.class,
 

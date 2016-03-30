@@ -209,7 +209,7 @@ public abstract class Trade implements Tradable, Model {
             initAmountProperty();
             errorMessageProperty = new SimpleStringProperty(errorMessage);
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 
@@ -220,7 +220,8 @@ public abstract class Trade implements Tradable, Model {
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      User user,
-                     KeyRing keyRing) {
+                     KeyRing keyRing,
+                     Coin fundsNeededForTrade) {
         Log.traceCall();
         processModel.onAllServicesInitialized(offer,
                 tradeManager,
@@ -230,7 +231,8 @@ public abstract class Trade implements Tradable, Model {
                 tradeWalletService,
                 arbitratorManager,
                 user,
-                keyRing);
+                keyRing,
+                fundsNeededForTrade);
 
         createProtocol();
 

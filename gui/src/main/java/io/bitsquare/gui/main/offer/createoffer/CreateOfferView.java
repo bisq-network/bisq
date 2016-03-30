@@ -69,6 +69,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
+import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -85,13 +86,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ImageView imageView;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
-    private ProgressIndicator spinner;
     private TitledGroupBg payFundsPane;
-    private Button nextButton, cancelButton1, cancelButton2, placeOfferButton;
+    private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, placeOfferButton;
     private InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     private TextField currencyTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
-            volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, spinnerInfoLabel, currencyTextFieldLabel,
+            volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, currencyTextFieldLabel,
             currencyComboBoxLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
@@ -108,7 +108,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<Boolean> showWarningInvalidFiatDecimalPlacesPlacesListener;
     private ChangeListener<Boolean> showWarningAdjustedVolumeListener;
     private ChangeListener<String> errorMessageListener;
-    private ChangeListener<Boolean> isSpinnerVisibleListener;
     private ChangeListener<Boolean> placeOfferCompletedListener;
     private ChangeListener<Coin> feeFromFundingTxListener;
     private EventHandler<ActionEvent> paymentAccountsComboBoxSelectionHandler;
@@ -118,6 +117,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private final Preferences preferences;
     private ChangeListener<String> tradeCurrencyCodeListener;
     private ImageView qrCodeImageView;
+    private ChangeListener<Coin> balanceListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +143,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         createListeners();
 
-        balanceTextField.setup(model.address.get(), model.getFormatter());
+        balanceTextField.setFormatter(model.getFormatter());
+        balanceListener = (observable, oldValue, newValue) -> balanceTextField.setBalance(newValue);
+
         paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {
@@ -173,8 +175,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         onPaymentAccountsComboBoxSelected();
 
-        if (spinner != null && placeOfferButton.isVisible())
-            spinner.setProgress(-1);
+        balanceTextField.setBalance(model.dataModel.balance.get());
     }
 
     @Override
@@ -183,9 +184,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         removeListeners();
         if (balanceTextField != null)
             balanceTextField.cleanup();
-
-        if (spinner != null)
-            spinner.setProgress(0);
     }
 
 
@@ -216,9 +214,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     // called form parent as the view does not get notified when the tab is closed
     public void onClose() {
         // we use model.placeOfferCompleted to not react on close which was triggered by a successful placeOffer
-        if (model.dataModel.isWalletFunded.get() && !model.placeOfferCompleted.get())
+        if (model.dataModel.balance.get().isPositive() && !model.placeOfferCompleted.get()) {
+            model.dataModel.swapTradeToSavings();
             new Popup().information("You have already funds paid in.\n" +
-                    "In the \"Funds/Available for withdrawal\" section you can withdraw those funds.").show();
+                    "In the \"Funds/Available for withdrawal\" section you can withdraw those funds.")
+                    .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+                    .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                    .show();
+        }
     }
 
     public void setCloseHandler(OfferView.CloseHandler closeHandler) {
@@ -264,8 +267,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         currencyComboBox.setMouseTransparent(true);
         paymentAccountsComboBox.setMouseTransparent(true);
 
-        spinner.setProgress(-1);
-
         if (!BitsquareApp.DEV_MODE) {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
@@ -310,6 +311,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         qrCodeImageView.setVisible(true);
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
+        fundFromSavingsWalletButton.setVisible(true);
+        fundFromExternalWalletButton.setVisible(true);
         placeOfferButton.setVisible(true);
         cancelButton2.setVisible(true);
         //root.requestFocus();
@@ -392,7 +395,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.promptTextProperty().bind(model.volumePromptLabel);
 
         totalToPayTextField.textProperty().bind(model.totalToPay);
-        addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
+        addressTextField.amountAsCoinProperty().bind(model.dataModel.missingCoin);
 
         // Validation
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
@@ -403,10 +406,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // buttons
         placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
         cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
-
-        spinner.visibleProperty().bind(model.isSpinnerVisible);
-        spinnerInfoLabel.visibleProperty().bind(model.isSpinnerVisible);
-        spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
+        fundFromSavingsWalletButton.disableProperty().bind(model.dataModel.isWalletFunded);
+        fundFromExternalWalletButton.disableProperty().bind(model.dataModel.isWalletFunded);
 
         // payment account
         currencyComboBox.prefWidthProperty().bind(paymentAccountsComboBox.widthProperty());
@@ -438,9 +439,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.validationResultProperty().unbind();
         placeOfferButton.disableProperty().unbind();
         cancelButton2.disableProperty().unbind();
-        spinner.visibleProperty().unbind();
-        spinnerInfoLabel.visibleProperty().unbind();
-        spinnerInfoLabel.textProperty().unbind();
         currencyComboBox.managedProperty().unbind();
         currencyComboBoxLabel.visibleProperty().unbind();
         currencyComboBoxLabel.managedProperty().unbind();
@@ -496,7 +494,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         "Please try to restart you application and check your network connection to see if you can resolve the issue.")
                         .show(), 100, TimeUnit.MILLISECONDS);
         };
-        isSpinnerVisibleListener = (ov, oldValue, newValue) -> spinner.setProgress(newValue ? -1 : 0);
 
         feeFromFundingTxListener = (observable, oldValue, newValue) -> {
             log.debug("feeFromFundingTxListener " + newValue);
@@ -514,6 +511,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         .closeButtonText("Close")
                         .onClose(() -> {
                             close();
+                            model.dataModel.swapTradeToSavings();
                             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
                         })
                         .show();
@@ -558,6 +556,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addListeners() {
         model.tradeCurrencyCode.addListener(tradeCurrencyCodeListener);
+        model.dataModel.balance.addListener(balanceListener);
 
         // focus out
         amountTextField.focusedProperty().addListener(amountFocusedListener);
@@ -570,7 +569,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.showWarningInvalidFiatDecimalPlaces.addListener(showWarningInvalidFiatDecimalPlacesPlacesListener);
         model.showWarningAdjustedVolume.addListener(showWarningAdjustedVolumeListener);
         model.errorMessage.addListener(errorMessageListener);
-        model.isSpinnerVisible.addListener(isSpinnerVisibleListener);
         model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
 
         model.placeOfferCompleted.addListener(placeOfferCompletedListener);
@@ -582,6 +580,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void removeListeners() {
         model.tradeCurrencyCode.removeListener(tradeCurrencyCodeListener);
+        model.dataModel.balance.removeListener(balanceListener);
 
         // focus out
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
@@ -594,7 +593,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.showWarningInvalidFiatDecimalPlaces.removeListener(showWarningInvalidFiatDecimalPlacesPlacesListener);
         model.showWarningAdjustedVolume.removeListener(showWarningAdjustedVolumeListener);
         model.errorMessage.removeListener(errorMessageListener);
-        model.isSpinnerVisible.removeListener(isSpinnerVisibleListener);
         model.dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
 
         model.placeOfferCompleted.removeListener(placeOfferCompletedListener);
@@ -698,7 +696,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         //UserThread.runAfter(() -> nextButton.requestFocus(), 100, TimeUnit.MILLISECONDS);
         cancelButton1 = tuple.second;
         cancelButton1.setDefaultButton(false);
-        cancelButton1.setOnAction(e -> close());
+        cancelButton1.setOnAction(e -> {
+            close();
+            model.dataModel.swapTradeToSavings();
+        });
         cancelButton1.setId("cancel-button");
 
         GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
@@ -757,27 +758,47 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField = balanceTuple.second;
         balanceTextField.setVisible(false);
 
-        Tuple3<Button, ProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "");
-        placeOfferButton = placeOfferTuple.first;
+        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow, "Transfer from Bitsquare wallet", "Fund from external wallet");
+        fundFromSavingsWalletButton = tuple.first;
+        fundFromSavingsWalletButton.setVisible(false);
+        fundFromSavingsWalletButton.setDefaultButton(false);
+        fundFromSavingsWalletButton.setOnAction(e -> model.useSavingsWalletForFunding());
+
+        fundFromExternalWalletButton = tuple.second;
+        fundFromExternalWalletButton.setVisible(false);
+        fundFromExternalWalletButton.setDefaultButton(false);
+        fundFromExternalWalletButton.setOnAction(e -> {
+            try {
+                Utilities.openURI(URI.create(getBitcoinURI()));
+            } catch (Exception ex) {
+                log.warn(ex.getMessage());
+                new Popup().warning("Opening a default bitcoin wallet application has failed. " +
+                        "Perhaps you don't have one installed?").show();
+            }
+        });
+
+        placeOfferButton = addButton(gridPane, ++gridRow, "");
         placeOfferButton.setVisible(false);
         placeOfferButton.setOnAction(e -> onPlaceOffer());
         placeOfferButton.setMinHeight(40);
         placeOfferButton.setPadding(new Insets(0, 20, 0, 20));
 
-        spinner = placeOfferTuple.second;
-        spinnerInfoLabel = placeOfferTuple.third;
-
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
-            if (model.dataModel.isWalletFunded.get())
+            if (model.dataModel.isWalletFunded.get()) {
                 new Popup().warning("You have already paid in the funds.\n" +
                         "Are you sure you want to cancel.")
                         .actionButtonText("No")
                         .closeButtonText("Yes, close")
-                        .onClose(() -> close())
+                        .onClose(() -> {
+                            close();
+                            model.dataModel.swapTradeToSavings();
+                        })
                         .show();
-            else
+            } else {
                 close();
+                model.dataModel.swapTradeToSavings();
+            }
         });
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);
@@ -786,7 +807,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     @NotNull
     private String getBitcoinURI() {
-        return model.getAddressAsString() != null ? BitcoinURI.convertToBitcoinURI(model.getAddressAsString(), model.totalToPayAsCoin.get(),
+        return model.getAddressAsString() != null ? BitcoinURI.convertToBitcoinURI(model.getAddressAsString(), model.dataModel.missingCoin.get(),
                 model.getPaymentLabel(), null) : "";
     }
 

@@ -90,7 +90,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     private final List<Attachment> tempAttachments = new ArrayList<>();
 
-    private TableView<Dispute> disputesTable;
+    private TableView<Dispute> tableView;
+    private SortedList<Dispute> sortedList;
+
     private Dispute selectedDispute;
     private ListView<DisputeCommunicationMessage> messageListView;
     private TextArea inputTextArea;
@@ -133,28 +135,32 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        disputesTable = new TableView<>();
-        VBox.setVgrow(disputesTable, Priority.SOMETIMES);
-        disputesTable.setMinHeight(150);
-        root.getChildren().add(disputesTable);
-
-        TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
-        disputesTable.getColumns().add(tradeIdColumn);
-        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
-        disputesTable.getColumns().add(roleColumn);
-        TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
-        disputesTable.getColumns().add(dateColumn);
-        TableColumn<Dispute, Dispute> contractColumn = getContractColumn();
-        disputesTable.getColumns().add(contractColumn);
-        TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
-        disputesTable.getColumns().add(stateColumn);
-
-        disputesTable.getSortOrder().add(dateColumn);
-        disputesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView = new TableView<>();
+        VBox.setVgrow(tableView, Priority.SOMETIMES);
+        tableView.setMinHeight(150);
+        root.getChildren().add(tableView);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new Label("There are no open tickets");
         placeholder.setWrapText(true);
-        disputesTable.setPlaceholder(placeholder);
-        disputesTable.getSelectionModel().clearSelection();
+        tableView.setPlaceholder(placeholder);
+        tableView.getSelectionModel().clearSelection();
+
+        TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
+        tableView.getColumns().add(tradeIdColumn);
+        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
+        tableView.getColumns().add(roleColumn);
+        TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
+        tableView.getColumns().add(dateColumn);
+        TableColumn<Dispute, Dispute> contractColumn = getContractColumn();
+        tableView.getColumns().add(contractColumn);
+        TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
+        tableView.getColumns().add(stateColumn);
+
+        tradeIdColumn.setComparator((o1, o2) -> o1.getTradeId().compareTo(o2.getTradeId()));
+        dateColumn.setComparator((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
+
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(dateColumn);
 
         /*inputTextAreaListener = (observable, oldValue, newValue) ->
                 sendButton.setDisable(newValue.length() == 0
@@ -183,24 +189,27 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+
         FilteredList<Dispute> filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
         setFilteredListPredicate(filteredList);
-        SortedList<Dispute> sortedList = new SortedList<>(filteredList);
-        // sortedList.setComparator((o1, o2) -> o2.getOpeningDate().compareTo(o1.getOpeningDate()));
-        sortedList.comparatorProperty().bind(disputesTable.comparatorProperty());
-        disputesTable.setItems(sortedList);
-        disputesTable.sort();
-        selectedDisputeSubscription = EasyBind.subscribe(disputesTable.getSelectionModel().selectedItemProperty(), this::onSelectDispute);
 
-        Dispute selectedItem = disputesTable.getSelectionModel().getSelectedItem();
+        sortedList = new SortedList<>(filteredList);
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
+
+        // sortedList.setComparator((o1, o2) -> o2.getOpeningDate().compareTo(o1.getOpeningDate()));
+        selectedDisputeSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectDispute);
+
+        Dispute selectedItem = tableView.getSelectionModel().getSelectedItem();
         if (selectedItem != null)
-            disputesTable.getSelectionModel().select(selectedItem);
+            tableView.getSelectionModel().select(selectedItem);
 
         scrollToBottom();
     }
 
     @Override
     protected void deactivate() {
+        sortedList.comparatorProperty().unbind();
         selectedDisputeSubscription.unsubscribe();
         removeListenersOnSelectDispute();
     }
@@ -752,6 +761,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 setMinWidth(130);
             }
         };
+        column.setSortable(false);
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
@@ -809,6 +819,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 setSortable(false);
             }
         };
+        column.setSortable(false);
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
@@ -846,6 +857,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 setMinWidth(50);
             }
         };
+        column.setSortable(false);
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {

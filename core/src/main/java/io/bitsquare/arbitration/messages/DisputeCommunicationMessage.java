@@ -66,7 +66,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
             arrivedProperty = new SimpleBooleanProperty(arrived);
             storedInMailboxProperty = new SimpleBooleanProperty(storedInMailbox);
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

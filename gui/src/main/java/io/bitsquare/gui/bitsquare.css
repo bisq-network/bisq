@@ -201,6 +201,12 @@ bg color of non edit textFields: fafafa
     -fx-cursor: hand;
 }
 
+.internal-funds-icon {
+    -fx-text-fill: #999;
+    -fx-cursor: hand;
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Tooltip                                                                     *
@@ -999,4 +1005,8 @@ textfield */
     -fx-background-color: #555;
     -fx-text-fill: white;
     -fx-cursor: hand;
+}
+
+#popup-qr-code-info {
+    -fx-font-size: 11;
 }

@@ -473,7 +473,7 @@ public class MainViewModel implements ViewModel {
                     if (tuple.payload instanceof Ping &&
                             ((Ping) tuple.payload).nonce == payload.nonce &&
                             ((Ping) tuple.payload).lastRoundTripTime == payload.lastRoundTripTime)
-                        log.trace("Crypto test succeeded");
+                        log.debug("Crypto test succeeded");
                     else
                         throw new CryptoException("Payload not correct after decryption");
                 } catch (CryptoException e) {
@@ -494,9 +494,7 @@ public class MainViewModel implements ViewModel {
 
             }
         };
-        // Delay a bit the test, there was one bug report (Key length not 128//192/256 bits) where the crypto test failed. 
-        // TODO investigate
-        UserThread.runAfter(() -> checkCryptoThread.start(), 3);
+        checkCryptoThread.start();
     }
 
 

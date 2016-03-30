@@ -838,17 +838,6 @@ public class FormBuilder {
         return new Tuple3<>(button, progressIndicator, label);
     }
 
-    public static void removeRowFromGridPane(GridPane gridPane, int gridRow) {
-        removeRowsFromGridPane(gridPane, gridRow, gridRow);
-    }
-
-    public static void removeRowsFromGridPane(GridPane gridPane, int fromGridRow, int toGridRow) {
-        Set<Node> nodes = new CopyOnWriteArraySet<>(gridPane.getChildren());
-        nodes.stream()
-                .filter(e -> GridPane.getRowIndex(e) >= fromGridRow && GridPane.getRowIndex(e) <= toGridRow)
-                .forEach(e -> gridPane.getChildren().remove(e));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade: HBox, InputTextField, Label
@@ -912,5 +901,22 @@ public class FormBuilder {
 
         return new Tuple2<>(label, listView);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Remove
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static void removeRowFromGridPane(GridPane gridPane, int gridRow) {
+        removeRowsFromGridPane(gridPane, gridRow, gridRow);
+    }
+
+    public static void removeRowsFromGridPane(GridPane gridPane, int fromGridRow, int toGridRow) {
+        Set<Node> nodes = new CopyOnWriteArraySet<>(gridPane.getChildren());
+        nodes.stream()
+                .filter(e -> GridPane.getRowIndex(e) >= fromGridRow && GridPane.getRowIndex(e) <= toGridRow)
+                .forEach(e -> gridPane.getChildren().remove(e));
+    }
+
 
 }

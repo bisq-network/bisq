@@ -142,4 +142,9 @@ public class ReservedListItem {
     public String getFundsInfo() {
         return fundsInfo;
     }
+
+    public Tradable getTradable() {
+        return tradable;
+    }
+
 }

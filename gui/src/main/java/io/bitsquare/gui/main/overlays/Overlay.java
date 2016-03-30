@@ -625,7 +625,6 @@ public abstract class Overlay<T extends Overlay> {
             messageLabel = new Label(truncatedMessage);
             messageLabel.setMouseTransparent(true);
             messageLabel.setWrapText(true);
-            messageLabel.setId("popup-message");
             GridPane.setHalignment(messageLabel, HPos.LEFT);
             GridPane.setHgrow(messageLabel, Priority.ALWAYS);
             GridPane.setMargin(messageLabel, new Insets(3, 0, 0, 0));

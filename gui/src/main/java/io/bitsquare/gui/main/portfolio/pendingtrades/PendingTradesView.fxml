@@ -18,7 +18,6 @@
   -->
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView"
@@ -27,29 +26,13 @@
         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
     </padding>
 
-    <TableView fx:id="table" VBox.vgrow="SOMETIMES">
+    <TableView fx:id="tableView" VBox.vgrow="SOMETIMES">
         <columns>
-            <TableColumn text="Trade ID" fx:id="idColumn" minWidth="100" sortable="false">
-                <cellValueFactory>
-                    <PropertyValueFactory property="id"/>
-                </cellValueFactory>
-            </TableColumn>
+            <TableColumn text="Trade ID" fx:id="idColumn" minWidth="100"/>
             <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="130"/>
-            <TableColumn text="Trade amount in BTC" fx:id="tradeAmountColumn" minWidth="130">
-                <cellValueFactory>
-                    <PropertyValueFactory property="tradeAmount"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn text="Price" fx:id="priceColumn" minWidth="100">
-                <cellValueFactory>
-                    <PropertyValueFactory property="price"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn text="Trade amount" fx:id="tradeVolumeColumn" minWidth="130">
-                <cellValueFactory>
-                    <PropertyValueFactory property="tradeVolume"/>
-                </cellValueFactory>
-            </TableColumn>
+            <TableColumn text="Trade amount in BTC" fx:id="tradeAmountColumn" minWidth="130"/>
+            <TableColumn text="Price" fx:id="priceColumn" minWidth="100"/>
+            <TableColumn text="Trade amount" fx:id="tradeVolumeColumn" minWidth="130"/>
             <TableColumn text="Payment method" fx:id="paymentMethodColumn" minWidth="120"/>
             <TableColumn text="My role" fx:id="roleColumn" minWidth="120" maxWidth="120"/>
             <TableColumn text="" fx:id="avatarColumn" minWidth="32" maxWidth="32"/>

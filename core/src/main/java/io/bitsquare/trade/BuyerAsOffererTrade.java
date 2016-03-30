@@ -55,7 +55,7 @@ public final class BuyerAsOffererTrade extends BuyerTrade implements OffererTrad
             initStateProperties();
             initAmountProperty();
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

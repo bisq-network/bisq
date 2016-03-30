@@ -442,7 +442,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             else
                 result = expirableMailboxStoragePayload.receiverPubKeyForRemoveOperation.equals(protectedStorageEntry.ownerPubKey);
         } else {
-            result = protectedStorageEntry != null && protectedStorageEntry.getStoragePayload() != null &&
+            // TODO We got sometimes a nullpointer at protectedStorageEntry.ownerPubKey
+            // Probably caused by an exception at deserialization:  Offer: Cannot be deserialized.null 
+            result = protectedStorageEntry != null && protectedStorageEntry.ownerPubKey != null &&
+                    protectedStorageEntry.getStoragePayload() != null &&
                     protectedStorageEntry.ownerPubKey.equals(protectedStorageEntry.getStoragePayload().getOwnerPubKey());
         }
 

@@ -18,7 +18,6 @@
   -->
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.main.funds.transactions.TransactionsView"
@@ -26,22 +25,13 @@
     <padding>
         <Insets bottom="0.0" left="10.0" right="10.0" top="10.0"/>
     </padding>
-    <TableView fx:id="table" VBox.vgrow="ALWAYS">
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180" maxWidth="180">
-                <cellValueFactory>
-                    <PropertyValueFactory property="date"/>
-                </cellValueFactory>
-            </TableColumn>
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180" maxWidth="180"/>
             <TableColumn text="Details" fx:id="detailsColumn" minWidth="220" maxWidth="220"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="260"/>
             <TableColumn text="Transaction" fx:id="transactionColumn" minWidth="180"/>
-            <TableColumn text="Amount (BTC)" fx:id="amountColumn" minWidth="110" maxWidth="110">
-                <cellValueFactory>
-                    <PropertyValueFactory property="amount"/>
-                </cellValueFactory>
-            </TableColumn>
-
+            <TableColumn text="Amount (BTC)" fx:id="amountColumn" minWidth="110" maxWidth="110"/>
             <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="110" maxWidth="110"/>
         </columns>
     </TableView>

@@ -110,7 +110,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
                 VerifyTakerAccount.class,
                 LoadTakeOfferFeeTx.class,
                 CreateAndSignContract.class,
-                CreateAndSignDepositTxAsBuyer.class,
+                OffererCreatesAndSignsDepositTxAsBuyer.class,
                 InitWaitPeriodForOpenDispute.class,
                 SetupDepositBalanceListener.class,
                 SendPublishDepositTxRequest.class

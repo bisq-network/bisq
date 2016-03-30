@@ -28,6 +28,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
@@ -64,13 +65,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class CreateOfferDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
-    private final WalletService walletService;
+    final WalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final PriceFeed priceFeed;
+    private Navigation navigation;
     private final WalletPasswordWindow walletPasswordWindow;
     private final BlockchainService blockchainService;
     private final BSFormatter formatter;
@@ -98,12 +100,16 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
+    final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
 
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     PaymentAccount paymentAccount;
     private boolean isTabSelected;
     private Notification walletFundedNotification;
+    boolean useSavingsWallet;
+    Coin totalAvailableBalance;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -113,6 +119,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     @Inject
     CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService, TradeWalletService tradeWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeed priceFeed,
+                         Navigation navigation,
                          WalletPasswordWindow walletPasswordWindow, BlockchainService blockchainService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
@@ -122,6 +129,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.priceFeed = priceFeed;
+        this.navigation = navigation;
         this.walletPasswordWindow = walletPasswordWindow;
         this.blockchainService = blockchainService;
         this.formatter = formatter;
@@ -135,7 +143,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
-                updateBalance(balance);
+                updateBalance();
 
                 if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
                     SettableFuture<Coin> future = blockchainService.requestFee(tx.getHashAsString());
@@ -172,7 +180,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         addListeners();
 
         paymentAccounts.setAll(user.getPaymentAccounts());
-        updateBalance(walletService.getBalanceForAddress(getAddressEntry().getAddress()));
+        calculateTotalToPay();
+        updateBalance();
 
         if (direction == Offer.Direction.BUY)
             calculateTotalToPay();
@@ -290,7 +299,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void doPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        openOfferManager.placeOffer(offer, resultHandler);
+        openOfferManager.placeOffer(offer, totalToPayAsCoin.get().subtract(offerFeeAsCoin), useSavingsWallet, resultHandler);
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
@@ -309,6 +318,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
             priceFeed.setCurrencyCode(code);
         }
+    }
+
+    void useSavingsWalletForFunding() {
+        useSavingsWallet = true;
+        updateBalance();
     }
 
 
@@ -380,16 +394,30 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void calculateTotalToPay() {
         if (securityDepositAsCoin != null) {
-            if (direction == Offer.Direction.BUY)
-                totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin));
-            else
-                totalToPayAsCoin.set(offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get() == null ? Coin.ZERO : amountAsCoin.get()));
+            Coin feeAndSecDeposit = offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin);
+            Coin feeAndSecDepositAndAmount = feeAndSecDeposit.add(amountAsCoin.get() == null ? Coin.ZERO : amountAsCoin.get());
+            Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDepositAndAmount;
+            totalToPayAsCoin.set(required);
         }
     }
 
-    private void updateBalance(Coin balance) {
-        isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
+    void updateBalance() {
+        Coin tradeWalletBalance = walletService.getBalanceForAddress(getAddressEntry().getAddress());
+        if (useSavingsWallet) {
+            Coin savingWalletBalance = walletService.getSavingWalletBalance();
+            totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
 
+            if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
+                balance.set(totalToPayAsCoin.get());
+            else
+                balance.set(totalAvailableBalance);
+        } else {
+            balance.set(tradeWalletBalance);
+        }
+
+        missingCoin.set(totalToPayAsCoin.get().subtract(balance.get()));
+
+        isWalletFunded.set(isBalanceSufficient(balance.get()));
         if (isWalletFunded.get()) {
             walletService.removeBalanceListener(balanceListener);
             if (walletFundedNotification == null) {
@@ -402,6 +430,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 walletFundedNotification.show();
             }
         }
+    }
+
+    private boolean isBalanceSufficient(Coin balance) {
+        return totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0;
     }
 
     public Coin getOfferFeeAsCoin() {
@@ -422,5 +454,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     public Preferences getPreferences() {
         return preferences;
+    }
+
+    public void swapTradeToSavings() {
+        walletService.swapTradeToSavings(getOfferId());
     }
 }

@@ -111,7 +111,7 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                 LoadTakeOfferFeeTx.class,
                 InitWaitPeriodForOpenDispute.class,
                 CreateAndSignContract.class,
-                CreateAndSignDepositTxAsSeller.class,
+                OffererCreatesAndSignsDepositTxAsSeller.class,
                 SetupDepositBalanceListener.class,
                 SendPublishDepositTxRequest.class
         );

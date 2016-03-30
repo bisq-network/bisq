@@ -40,6 +40,7 @@ import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -58,12 +59,12 @@ import java.util.stream.Stream;
 public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @FXML
-    TableView<TransactionsListItem> table;
+    TableView<TransactionsListItem> tableView;
     @FXML
-    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, typeColumn,
-            confidenceColumn;
+    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, confidenceColumn;
 
-    private final ObservableList<TransactionsListItem> transactionsListItems = FXCollections.observableArrayList();
+    private final ObservableList<TransactionsListItem> observableList = FXCollections.observableArrayList();
+    private final SortedList<TransactionsListItem> sortedList = new SortedList<>(observableList);
 
     private final WalletService walletService;
     private final TradeManager tradeManager;
@@ -102,13 +103,31 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No transactions available"));
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new Label("No transactions available"));
+
+
+        setDateColumnCellFactory();
         setDetailsColumnCellFactory();
         setAddressColumnCellFactory();
         setTransactionColumnCellFactory();
+        setAmountColumnCellFactory();
         setConfidenceColumnCellFactory();
-        table.getSortOrder().add(dateColumn);
+
+        dateColumn.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
+        detailsColumn.setComparator((o1, o2) -> {
+            String id1 = o1.getTradable() != null ? o1.getTradable().getId() : o1.getDetails();
+            String id2 = o2.getTradable() != null ? o2.getTradable().getId() : o2.getDetails();
+            return id1.compareTo(id2);
+        });
+        addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
+        transactionColumn.setComparator((o1, o2) -> o1.getTxId().compareTo(o2.getTxId()));
+        amountColumn.setComparator((o1, o2) -> o1.getAmountAsCoin().compareTo(o2.getAmountAsCoin()));
+        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getProgressIndicator().getProgress())
+                .compareTo(o2.getProgressIndicator().getProgress()));
+
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(dateColumn);
 
         walletEventListener = new WalletEventListener() {
             @Override
@@ -149,13 +168,17 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
         updateList();
+
         walletService.getWallet().addEventListener(walletEventListener);
     }
 
     @Override
     protected void deactivate() {
-        transactionsListItems.forEach(TransactionsListItem::cleanup);
+        sortedList.comparatorProperty().unbind();
+        observableList.forEach(TransactionsListItem::cleanup);
         walletService.getWallet().removeEventListener(walletEventListener);
     }
 
@@ -170,7 +193,40 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         Stream<Tradable> concat3 = Stream.concat(concat2, failedTradesManager.getFailedTrades().stream());
         Set<Tradable> all = concat3.collect(Collectors.toSet());
 
-        List<TransactionsListItem> listItems = walletService.getWallet().getRecentTransactions(1000, true).stream()
+        Set<Transaction> transactions = walletService.getWallet().getTransactions(true);
+       /* List<TransactionsListItem> transactionsListItems = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            Optional<Tradable> tradableOptional = all.stream()
+                    .filter(tradable -> {
+                        String txId = transaction.getHashAsString();
+                        if (tradable instanceof OpenOffer)
+                            return tradable.getOffer().getOfferFeePaymentTxID().equals(txId);
+                        else if (tradable instanceof Trade) {
+                            Trade trade = (Trade) tradable;
+                            boolean isTakeOfferFeeTx = txId.equals(trade.getTakeOfferFeeTxId());
+                            boolean isOfferFeeTx = trade.getOffer() != null &&
+                                    txId.equals(trade.getOffer().getOfferFeePaymentTxID());
+                            boolean isDepositTx = trade.getDepositTx() != null &&
+                                    trade.getDepositTx().getHashAsString().equals(txId);
+                            boolean isPayoutTx = trade.getPayoutTx() != null &&
+                                    trade.getPayoutTx().getHashAsString().equals(txId);
+
+                            boolean isDisputedPayoutTx = disputeManager.getDisputesAsObservableList().stream()
+                                    .filter(dispute -> txId.equals(dispute.getDisputePayoutTxId()) &&
+                                            tradable.getId().equals(dispute.getTradeId()))
+                                    .findAny()
+                                    .isPresent();
+
+                            return isTakeOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx || isDisputedPayoutTx;
+                        } else
+                            return false;
+                    })
+                    .findAny();
+            // if (tradableOptional.isPresent())
+            transactionsListItems.add(new TransactionsListItem(transaction, walletService, tradableOptional, formatter));
+        }*/
+
+        List<TransactionsListItem> transactionsListItems = transactions.stream()
                 .map(transaction -> {
                     Optional<Tradable> tradableOptional = all.stream()
                             .filter(tradable -> {
@@ -202,10 +258,15 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 })
                 .collect(Collectors.toList());
 
+       /* List<TransactionsListItem> usedSavingWalletEntries = walletService.getUsedSavingWalletTransactions()
+                .stream()
+                .map(transaction -> new TransactionsListItem(transaction, walletService, Optional.<Tradable>empty(), formatter))
+                .collect(Collectors.toList());
+        transactionsListItems.addAll(usedSavingWalletEntries);*/
+
         // are sorted by getRecentTransactions
-        transactionsListItems.forEach(TransactionsListItem::cleanup);
-        transactionsListItems.setAll(listItems);
-        table.setItems(transactionsListItems);
+        observableList.forEach(TransactionsListItem::cleanup);
+        observableList.setAll(transactionsListItems);
     }
 
     private void openBlockExplorer(TransactionsListItem item) {
@@ -231,6 +292,33 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ColumnCellFactories
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setDateColumnCellFactory() {
+        dateColumn.setCellValueFactory((addressListItem) ->
+                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        dateColumn.setCellFactory(
+                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
+                        TransactionsListItem>>() {
+
+                    @Override
+                    public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
+                            TransactionsListItem> column) {
+                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+
+                            @Override
+                            public void updateItem(final TransactionsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    setText(item.getDate());
+                                } else {
+                                    setText("");
+                                }
+                            }
+                        };
+                    }
+                });
+    }
 
     private void setDetailsColumnCellFactory() {
         detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
@@ -289,7 +377,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     String addressString = item.getAddressString();
                                     field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                            AwesomeIcon.EXTERNAL_LINK, item.getReceived());
+                                            AwesomeIcon.EXTERNAL_LINK, item.getReceived(), item.isInternal());
                                     field.setOnAction(event -> openBlockExplorer(item));
                                     field.setTooltip(new Tooltip("Open external blockchain explorer for " +
                                             "address: " + addressString));
@@ -332,6 +420,33 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     setGraphic(null);
                                     if (hyperlinkWithIcon != null)
                                         hyperlinkWithIcon.setOnAction(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setAmountColumnCellFactory() {
+        amountColumn.setCellValueFactory((addressListItem) ->
+                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        amountColumn.setCellFactory(
+                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
+                        TransactionsListItem>>() {
+
+                    @Override
+                    public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
+                            TransactionsListItem> column) {
+                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+
+                            @Override
+                            public void updateItem(final TransactionsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    setText(item.getAmount());
+                                } else {
+                                    setText("");
                                 }
                             }
                         };

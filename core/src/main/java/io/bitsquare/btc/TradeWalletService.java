@@ -134,19 +134,22 @@ public class TradeWalletService {
 
     /**
      * @param addressEntry         From where we want to spend the transaction fee. Used also as change address.
+     * @param useSavingsWallet
      * @param tradingFee           The amount of the trading fee.
-     * @param feeReceiverAddresses The address of the receiver of the trading fee (arbitrator).
-     * @return The broadcasted transaction
+     * @param feeReceiverAddresses The address of the receiver of the trading fee (arbitrator).   @return The broadcasted transaction
      * @throws InsufficientMoneyException
      * @throws AddressFormatException
      */
-    public Transaction createTradingFeeTx(AddressEntry addressEntry, Coin tradingFee, String feeReceiverAddresses)
+    public Transaction createTradingFeeTx(AddressEntry addressEntry, Address changeAddress, Coin reservedFundsForOffer,
+                                          boolean useSavingsWallet, Coin tradingFee, String feeReceiverAddresses)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction tradingFeeTx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveFixedTxFeeAndDust(tradingFee),
                 "You cannot send an amount which are smaller than the fee + dust output.");
         Coin outPutAmount = tradingFee.subtract(FeePolicy.getFixedTxFeeForTrades());
         tradingFeeTx.addOutput(outPutAmount, new Address(params, feeReceiverAddresses));
+        // the reserved amount we need for the trade we send to our trade address
+        tradingFeeTx.addOutput(reservedFundsForOffer, addressEntry.getAddress());
 
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
@@ -154,13 +157,16 @@ public class TradeWalletService {
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tradingFeeTx);
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry);
+        if (useSavingsWallet)
+            sendRequest.coinSelector = new AddressBasedCoinSelector(params);
+        else
+            sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry);
         // We use a fixed fee
         sendRequest.feePerKb = Coin.ZERO;
         sendRequest.fee = FeePolicy.getFixedTxFeeForTrades();
-        // We use always the same address for all transactions in a trade to keep things simple.
-        // To be discussed if that introduce any privacy issues.
-        sendRequest.changeAddress = addressEntry.getAddress();
+
+        // Change is optional in case of overpay or use of funds from savings wallet
+        sendRequest.changeAddress = changeAddress;
 
         checkNotNull(wallet, "Wallet must not be null");
         wallet.completeTx(sendRequest);
@@ -181,20 +187,20 @@ public class TradeWalletService {
 
 
     /**
-     * The taker creates a dummy transaction to get the input(s) and optional change output for the amount and the addressEntry for that trade.
+     * The taker creates a dummy transaction to get the input(s) and optional change output for the amount and the takersAddressEntry for that trade.
      * That will be used to send to the offerer for creating the deposit transaction.
      *
-     * @param inputAmount  Amount of takers input
-     * @param addressEntry Address entry of taker
+     * @param inputAmount        Amount of takers input
+     * @param takersAddressEntry Address entry of taker
      * @return A data container holding the inputs, the output value and address
      * @throws TransactionVerificationException
      * @throws WalletException
      */
-    public InputsAndChangeOutput takerCreatesDepositsTxInputs(Coin inputAmount, AddressEntry addressEntry) throws
-            TransactionVerificationException, WalletException {
+    public InputsAndChangeOutput takerCreatesDepositsTxInputs(Coin inputAmount, AddressEntry takersAddressEntry, Address takersChangeAddress) throws
+            TransactionVerificationException, WalletException, AddressFormatException {
         log.trace("createTakerDepositTxInputs called");
         log.trace("inputAmount " + inputAmount.toFriendlyString());
-        log.trace("addressEntry " + addressEntry.toString());
+        log.trace("takersAddressEntry " + takersAddressEntry.toString());
 
         // We add the mining fee 2 times to the deposit tx:
         // 1. Will be spent when publishing the deposit tx (paid by buyer)
@@ -224,7 +230,7 @@ public class TradeWalletService {
         // Find the needed inputs to pay the output, optionally add 1 change output.
         // Normally only 1 input and no change output is used, but we support multiple inputs and 1 change output. 
         // Our spending transaction output is from the create offer fee payment. 
-        addAvailableInputsAndChangeOutputs(dummyTX, addressEntry);
+        addAvailableInputsAndChangeOutputs(dummyTX, takersAddressEntry, takersChangeAddress);
 
         // The completeTx() call signs the input, but we don't want to pass over signed tx inputs so we remove the signature
         removeSignatures(dummyTX);
@@ -261,17 +267,17 @@ public class TradeWalletService {
     /**
      * The offerer creates the deposit transaction using the takers input(s) and optional output and signs his input(s).
      *
-     * @param offererIsBuyer           The flag indicating if we are in the offerer as buyer role or the opposite.
-     * @param contractHash             The hash of the contract to be added to the OP_RETURN output.
-     * @param offererInputAmount       The input amount of the offerer.
-     * @param msOutputAmount           The output amount to our MS output.
-     * @param takerRawTransactionInputs           Raw data for the connected outputs for all inputs of the taker (normally 1 input)
-     * @param takerChangeOutputValue   Optional taker change output value
-     * @param takerChangeAddressString Optional taker change address
-     * @param offererAddressInfo       The offerers address entry.
-     * @param buyerPubKey              The public key of the buyer.
-     * @param sellerPubKey             The public key of the seller.
-     * @param arbitratorPubKey         The public key of the arbitrator.
+     * @param offererIsBuyer            The flag indicating if we are in the offerer as buyer role or the opposite.
+     * @param contractHash              The hash of the contract to be added to the OP_RETURN output.
+     * @param offererInputAmount        The input amount of the offerer.
+     * @param msOutputAmount            The output amount to our MS output.
+     * @param takerRawTransactionInputs Raw data for the connected outputs for all inputs of the taker (normally 1 input)
+     * @param takerChangeOutputValue    Optional taker change output value
+     * @param takerChangeAddressString  Optional taker change address
+     * @param offererAddressEntry       The offerers address entry.
+     * @param buyerPubKey               The public key of the buyer.
+     * @param sellerPubKey              The public key of the seller.
+     * @param arbitratorPubKey          The public key of the arbitrator.
      * @return A data container holding the serialized transaction and the offerer raw inputs
      * @throws SigningException
      * @throws TransactionVerificationException
@@ -284,7 +290,8 @@ public class TradeWalletService {
                                                                              List<RawTransactionInput> takerRawTransactionInputs,
                                                                              long takerChangeOutputValue,
                                                                              @Nullable String takerChangeAddressString,
-                                                                             AddressEntry offererAddressInfo,
+                                                                             AddressEntry offererAddressEntry,
+                                                                             Address offererChangeAddress,
                                                                              byte[] buyerPubKey,
                                                                              byte[] sellerPubKey,
                                                                              byte[] arbitratorPubKey)
@@ -308,7 +315,7 @@ public class TradeWalletService {
         Coin dummyOutputAmount = offererInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades());
         TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, dummyOutputAmount, new ECKey().toAddress(params));
         dummyTx.addOutput(dummyOutput);
-        addAvailableInputsAndChangeOutputs(dummyTx, offererAddressInfo);
+        addAvailableInputsAndChangeOutputs(dummyTx, offererAddressEntry, offererChangeAddress);
         // Normally we have only 1 input but we support multiple inputs if the user has paid in with several transactions.
         List<TransactionInput> offererInputs = dummyTx.getInputs();
         TransactionOutput offererOutput = null;
@@ -1035,7 +1042,7 @@ public class TradeWalletService {
         }
     }
 
-    private void addAvailableInputsAndChangeOutputs(Transaction transaction, AddressEntry addressEntry) throws WalletException {
+    private void addAvailableInputsAndChangeOutputs(Transaction transaction, AddressEntry addressEntry, Address changeAddress) throws WalletException {
         try {
             // Lets let the framework do the work to find the right inputs
             Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
@@ -1047,7 +1054,7 @@ public class TradeWalletService {
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
             sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry);
             // We use always the same address in a trade for all transactions
-            sendRequest.changeAddress = addressEntry.getAddress();
+            sendRequest.changeAddress = changeAddress;
             // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.
             // We don't commit that tx to the wallet as it will be changed later and it's not signed yet.
             // So it will not change the wallet balance.

@@ -134,7 +134,7 @@ public final class Dispute implements Payload {
             disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
             isClosedProperty = new SimpleBooleanProperty(isClosed);
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

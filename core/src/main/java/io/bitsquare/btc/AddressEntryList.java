@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  * The List supporting our persistence solution.
@@ -79,6 +80,17 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
         add(addressEntry);
         storage.queueUpForSave();
         return addressEntry;
+    }
+
+
+    public void swapTradeToSavings(String offerId) {
+        Optional<AddressEntry> addressEntryOptional = this.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId())).findAny();
+        if (addressEntryOptional.isPresent()) {
+            AddressEntry addressEntry = addressEntryOptional.get();
+            add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.SAVINGS));
+            remove(addressEntry);
+            storage.queueUpForSave();
+        }
     }
 
 

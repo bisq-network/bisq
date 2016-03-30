@@ -103,7 +103,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 LoadCreateOfferFeeTx.class,
                 CreateTakeOfferFeeTx.class,
                 BroadcastTakeOfferFeeTx.class,
-                CreateDepositTxInputsAsSeller.class,
+                TakerCreatesDepositTxInputsAsSeller.class,
                 SendPayDepositRequest.class
         );
         startTimeout();

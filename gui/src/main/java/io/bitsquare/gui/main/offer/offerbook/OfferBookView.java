@@ -66,7 +66,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private Button createOfferButton;
-    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, priceColumn, paymentMethodColumn;
+    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, priceColumn, paymentMethodColumn, avatarColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -155,7 +155,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
         tableView.getColumns().add(getActionColumn());
-        tableView.getColumns().add(getAvatarColumn());
+        avatarColumn = getAvatarColumn();
+        tableView.getColumns().add(avatarColumn);
 
         tableView.getSortOrder().add(priceColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -167,6 +168,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
         volumeColumn.setComparator((o1, o2) -> o1.getOffer().getOfferVolume().compareTo(o2.getOffer().getOfferVolume()));
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
+        avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().hostName.compareTo(o2.getOffer().getOwnerNodeAddress().hostName));
 
         createOfferButton = addButton(root, ++gridRow, "");
         createOfferButton.setMinHeight(40);
@@ -218,7 +220,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         tableView.setItems(model.getOfferList());
         priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
-        tableView.sort();
     }
 
     @Override
@@ -572,7 +573,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (button != null)
                                         button.setOnAction(null);
                                     TableRow tableRow = getTableRow();
-                                    if (tableRow != null) tableRow.setOpacity(1);
+                                    if (tableRow != null) {
+                                        tableRow.setOpacity(1);
+                                        tableRow.setOnMouseClicked(null);
+                                    }
                                 }
                             }
                         };

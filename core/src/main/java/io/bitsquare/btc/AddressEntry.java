@@ -101,7 +101,7 @@ public final class AddressEntry implements Persistable {
                 params = RegTestParams.get();
 
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

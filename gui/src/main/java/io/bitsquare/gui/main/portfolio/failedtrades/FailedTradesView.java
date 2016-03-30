@@ -22,6 +22,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -33,11 +34,12 @@ import javax.inject.Inject;
 public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTradesViewModel> {
 
     @FXML
-    TableView<FailedTradesListItem> table;
+    TableView<FailedTradesListItem> tableView;
     @FXML
     TableColumn<FailedTradesListItem, FailedTradesListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn, stateColumn;
     private final TradeDetailsWindow tradeDetailsWindow;
+    private SortedList<FailedTradesListItem> sortedList;
 
     @Inject
     public FailedTradesView(FailedTradesViewModel model, TradeDetailsWindow tradeDetailsWindow) {
@@ -47,6 +49,9 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     @Override
     public void initialize() {
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new Label("No closed trades available"));
+
         setTradeIdColumnCellFactory();
         setDirectionColumnCellFactory();
         setAmountColumnCellFactory();
@@ -55,14 +60,30 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         setDateColumnCellFactory();
         setStateColumnCellFactory();
 
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No closed trades available"));
+        tradeIdColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
+        dateColumn.setComparator((o1, o2) -> o1.getTrade().getDate().compareTo(o2.getTrade().getDate()));
+        priceColumn.setComparator((o1, o2) -> o1.getTrade().getOffer().getPrice().compareTo(o2.getTrade().getOffer().getPrice()));
+        volumeColumn.setComparator((o1, o2) -> o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume()));
+        amountColumn.setComparator((o1, o2) -> o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount()));
+        stateColumn.setComparator((o1, o2) -> model.getState(o1).compareTo(model.getState(o2)));
+
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(dateColumn);
+
     }
 
     @Override
     protected void activate() {
-        table.setItems(model.getList());
+        sortedList = new SortedList<>(model.getList());
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
     }
+
+    @Override
+    protected void deactivate() {
+        sortedList.comparatorProperty().unbind();
+    }
+
 
     private void setTradeIdColumnCellFactory() {
         tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));

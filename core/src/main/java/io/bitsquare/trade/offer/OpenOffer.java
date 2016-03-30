@@ -65,7 +65,7 @@ public final class OpenOffer implements Tradable {
                 setState(State.AVAILABLE);
 
         } catch (Throwable t) {
-            log.error("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
     public Date getDate() {

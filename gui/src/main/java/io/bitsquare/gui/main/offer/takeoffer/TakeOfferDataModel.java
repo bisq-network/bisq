@@ -232,6 +232,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     private void doTakeOffer(TradeResultHandler tradeResultHandler) {
         tradeManager.onTakeOffer(amountAsCoin.get(),
+                totalToPayAsCoin.get().subtract(takerFeeAsCoin),
                 offer,
                 paymentAccount.getId(),
                 tradeResultHandler

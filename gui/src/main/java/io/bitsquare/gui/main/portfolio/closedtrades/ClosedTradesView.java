@@ -24,15 +24,19 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
 
@@ -40,13 +44,14 @@ import javax.inject.Inject;
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
 
     @FXML
-    TableView<ClosedTradableListItem> table;
+    TableView<ClosedTradableListItem> tableView;
     @FXML
     TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     private final BSFormatter formatter;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
+    private SortedList<ClosedTradableListItem> sortedList;
 
     @Inject
     public ClosedTradesView(ClosedTradesViewModel model, BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
@@ -58,6 +63,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     @Override
     public void initialize() {
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new Label("No closed trades available"));
+
         setTradeIdColumnCellFactory();
         setDirectionColumnCellFactory();
         setAmountColumnCellFactory();
@@ -67,13 +75,55 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         setStateColumnCellFactory();
         setAvatarColumnCellFactory();
 
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No closed trades available"));
+       /* , , ,
+                , , , , avatarColumn;
+        */
+        tradeIdColumn.setComparator((o1, o2) -> o1.getTradable().getId().compareTo(o2.getTradable().getId()));
+        dateColumn.setComparator((o1, o2) -> o1.getTradable().getDate().compareTo(o2.getTradable().getDate()));
+        directionColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getDirection().compareTo(o2.getTradable().getOffer().getDirection()));
+        priceColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getPrice().compareTo(o2.getTradable().getOffer().getPrice()));
+        volumeColumn.setComparator((o1, o2) -> {
+            if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
+                Fiat tradeVolume1 = ((Trade) o1.getTradable()).getTradeVolume();
+                Fiat tradeVolume2 = ((Trade) o2.getTradable()).getTradeVolume();
+                return tradeVolume1 != null && tradeVolume2 != null ? tradeVolume1.compareTo(tradeVolume2) : 0;
+            } else
+                return 0;
+        });
+        amountColumn.setComparator((o1, o2) -> {
+            if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
+                Coin amount1 = ((Trade) o1.getTradable()).getTradeAmount();
+                Coin amount2 = ((Trade) o2.getTradable()).getTradeAmount();
+                return amount1 != null && amount2 != null ? amount1.compareTo(amount2) : 0;
+            } else
+                return 0;
+        });
+        avatarColumn.setComparator((o1, o2) -> {
+            if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
+                NodeAddress tradingPeerNodeAddress1 = ((Trade) o1.getTradable()).getTradingPeerNodeAddress();
+                NodeAddress tradingPeerNodeAddress2 = ((Trade) o2.getTradable()).getTradingPeerNodeAddress();
+                String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.hostName : "";
+                String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.hostName : "";
+                return address1 != null && address2 != null ? address1.compareTo(address2) : 0;
+            } else
+                return 0;
+        });
+        stateColumn.setComparator((o1, o2) -> model.getState(o1).compareTo(model.getState(o2)));
+
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(dateColumn);
     }
 
     @Override
     protected void activate() {
-        table.setItems(model.getList());
+        sortedList = new SortedList<>(model.getList());
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
+    }
+
+    @Override
+    protected void deactivate() {
+        sortedList.comparatorProperty().unbind();
     }
 
 

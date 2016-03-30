@@ -23,6 +23,7 @@ import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -38,7 +39,8 @@ import javax.inject.Inject;
 public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, MarketsStatisticViewModel> {
     private final BSFormatter formatter;
     private final int gridRow = 0;
-    private TableView<MarketStatisticItem> statisticsTableView;
+    private TableView<MarketStatisticItem> tableView;
+    private SortedList<MarketStatisticItem> sortedList;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -58,29 +60,44 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
         GridPane.setMargin(header, new Insets(0, -10, -10, -10));
         root.getChildren().add(header);
 
-        statisticsTableView = new TableView<>();
-        GridPane.setRowIndex(statisticsTableView, gridRow);
-        GridPane.setMargin(statisticsTableView, new Insets(20, -10, -10, -10));
-        GridPane.setVgrow(statisticsTableView, Priority.ALWAYS);
-        GridPane.setHgrow(statisticsTableView, Priority.ALWAYS);
-        root.getChildren().add(statisticsTableView);
-        statisticsTableView.getColumns().add(getCurrencyColumn());
-        statisticsTableView.getColumns().add(getNumberOfOffersColumn());
-        statisticsTableView.getColumns().add(getTotalAmountColumn());
-        statisticsTableView.getColumns().add(getSpreadColumn());
-        statisticsTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView = new TableView<>();
+        GridPane.setRowIndex(tableView, gridRow);
+        GridPane.setMargin(tableView, new Insets(20, -10, -10, -10));
+        GridPane.setVgrow(tableView, Priority.ALWAYS);
+        GridPane.setHgrow(tableView, Priority.ALWAYS);
+        root.getChildren().add(tableView);
         Label placeholder = new Label("Currently there is no data available");
         placeholder.setWrapText(true);
-        statisticsTableView.setPlaceholder(placeholder);
+        tableView.setPlaceholder(placeholder);
+
+        TableColumn<MarketStatisticItem, MarketStatisticItem> currencyColumn = getCurrencyColumn();
+        tableView.getColumns().add(currencyColumn);
+        TableColumn<MarketStatisticItem, MarketStatisticItem> numberOfOffersColumn = getNumberOfOffersColumn();
+        tableView.getColumns().add(numberOfOffersColumn);
+        TableColumn<MarketStatisticItem, MarketStatisticItem> totalAmountColumn = getTotalAmountColumn();
+        tableView.getColumns().add(totalAmountColumn);
+        TableColumn<MarketStatisticItem, MarketStatisticItem> spreadColumn = getSpreadColumn();
+        tableView.getColumns().add(spreadColumn);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        currencyColumn.setComparator((o1, o2) -> o1.currencyCode.compareTo(o2.currencyCode));
+        numberOfOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfOffers).compareTo(o2.numberOfOffers));
+        totalAmountColumn.setComparator((o1, o2) -> o1.totalAmount.compareTo(o2.totalAmount));
+        spreadColumn.setComparator((o1, o2) -> o1.spread != null && o2.spread != null ? o1.spread.compareTo(o2.spread) : 0);
+
+        tableView.getSortOrder().add(numberOfOffersColumn);
     }
 
     @Override
     protected void activate() {
-        statisticsTableView.setItems(model.marketStatisticItems);
+        sortedList = new SortedList<>(model.marketStatisticItems);
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
     }
 
     @Override
     protected void deactivate() {
+        sortedList.comparatorProperty().unbind();
     }
 
 

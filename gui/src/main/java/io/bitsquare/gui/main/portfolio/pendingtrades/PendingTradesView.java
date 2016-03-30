@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
-import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -27,12 +26,12 @@ import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -40,9 +39,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import javafx.util.StringConverter;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -54,14 +50,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final TradeDetailsWindow tradeDetailsWindow;
     private final BSFormatter formatter;
     @FXML
-    TableView<PendingTradesListItem> table;
+    TableView<PendingTradesListItem> tableView;
     @FXML
-    TableColumn<PendingTradesListItem, Fiat> priceColumn, tradeVolumeColumn;
+    TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, tradeVolumeColumn, tradeAmountColumn, avatarColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
     @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> avatarColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
-    @FXML
-    TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
 
+    private SortedList<PendingTradesListItem> sortedList;
     private TradeSubView selectedSubView;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
@@ -92,9 +86,22 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         setRoleColumnCellFactory();
         setAvatarColumnCellFactory();
 
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No pending trades available"));
-        table.setMinHeight(100);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new Label("No pending trades available"));
+        tableView.setMinHeight(100);
+
+        idColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
+        dateColumn.setComparator((o1, o2) -> o1.getTrade().getDate().compareTo(o2.getTrade().getDate()));
+        tradeVolumeColumn.setComparator((o1, o2) -> o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume()));
+        tradeAmountColumn.setComparator((o1, o2) -> o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount()));
+        priceColumn.setComparator((o1, o2) -> o1.getPrice().compareTo(o2.getPrice()));
+        paymentMethodColumn.setComparator((o1, o2) -> o1.getTrade().getOffer().getPaymentMethod().getId().compareTo(o2.getTrade().getOffer().getPaymentMethod().getId()));
+        avatarColumn.setComparator((o1, o2) -> o1.getTrade().getTradingPeerNodeAddress().hostName.compareTo(o2.getTrade().getTradingPeerNodeAddress().hostName));
+        roleColumn.setComparator((o1, o2) -> model.getMyRole(o1).compareTo(model.getMyRole(o2)));
+
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(dateColumn);
+
 
         // we use a hidden emergency shortcut to open support ticket
         keyEventEventHandler = event -> {
@@ -116,7 +123,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     protected void activate() {
-        Log.traceCall();
+        sortedList = new SortedList<>(model.dataModel.list);
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
+
         scene = root.getScene();
         if (scene != null) {
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
@@ -133,7 +143,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 }
             });*/
         }
-        table.setItems(model.dataModel.list);
 
         selectedItemSubscription = EasyBind.subscribe(model.dataModel.selectedItemProperty, selectedItem -> {
             if (selectedItem != null) {
@@ -164,7 +173,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 selectedSubView.activate();
         });
 
-        selectedTableItemSubscription = EasyBind.subscribe(table.getSelectionModel().selectedItemProperty(),
+        selectedTableItemSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
                 selectedItem -> {
                     if (selectedItem != null && !selectedItem.equals(model.dataModel.selectedItemProperty.get()))
                         model.dataModel.onSelectItem(selectedItem);
@@ -175,6 +184,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     protected void deactivate() {
+        sortedList.comparatorProperty().unbind();
         selectedItemSubscription.unsubscribe();
         selectedTableItemSubscription.unsubscribe();
         if (appFocusSubscription != null)
@@ -203,10 +213,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         PendingTradesListItem selectedItemFromModel = model.dataModel.selectedItemProperty.get();
         if (selectedItemFromModel != null) {
             // Select and focus selectedItem from model
-            int index = table.getItems().indexOf(selectedItemFromModel);
+            int index = tableView.getItems().indexOf(selectedItemFromModel);
             UserThread.execute(() -> {
                 //TODO app wide focus
-                table.getSelectionModel().select(index);
+                tableView.getSelectionModel().select(index);
                 //table.requestFocus();
                 //UserThread.execute(() -> table.getFocusModel().focus(index));
             });
@@ -280,49 +290,69 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setAmountColumnCellFactory() {
-        tradeAmountColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, Coin>forTableColumn(
-                new StringConverter<Coin>() {
+        tradeAmountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        tradeAmountColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
+                        PendingTradesListItem>>() {
                     @Override
-                    public String toString(Coin value) {
-                        return formatter.formatCoinWithCode(value);
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
+                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                            @Override
+                            public void updateItem(final PendingTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(formatter.formatCoinWithCode(item.getTrade().getPayoutAmount()));
+                                else
+                                    setText(null);
+                            }
+                        };
                     }
-
-                    @Override
-                    public Coin fromString(String string) {
-                        return null;
-                    }
-                }));
+                });
     }
 
     private void setPriceColumnCellFactory() {
-        priceColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, Fiat>forTableColumn(
-                new StringConverter<Fiat>() {
+        priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        priceColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
+                        PendingTradesListItem>>() {
                     @Override
-                    public String toString(Fiat value) {
-                        return formatter.formatPriceWithCode(value);
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
+                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                            @Override
+                            public void updateItem(final PendingTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(formatter.formatPriceWithCode(item.getPrice()));
+                                else
+                                    setText(null);
+                            }
+                        };
                     }
-
-                    @Override
-                    public Fiat fromString(String string) {
-                        return null;
-                    }
-                }));
-
+                });
     }
 
     private void setVolumeColumnCellFactory() {
-        tradeVolumeColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, Fiat>forTableColumn(
-                new StringConverter<Fiat>() {
+        tradeVolumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        tradeVolumeColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
+                        PendingTradesListItem>>() {
                     @Override
-                    public String toString(Fiat value) {
-                        return formatter.formatFiatWithCode(value);
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
+                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                            @Override
+                            public void updateItem(final PendingTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(formatter.formatPriceWithCode(item.getTrade().getTradeVolume()));
+                                else
+                                    setText(null);
+                            }
+                        };
                     }
-
-                    @Override
-                    public Fiat fromString(String string) {
-                        return null;
-                    }
-                }));
+                });
     }
 
     private void setPaymentMethodColumnCellFactory() {

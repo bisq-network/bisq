@@ -26,10 +26,10 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateDepositTxInputsAsBuyer extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(CreateDepositTxInputsAsBuyer.class);
+public class TakerCreatesDepositTxInputsAsBuyer extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(TakerCreatesDepositTxInputsAsBuyer.class);
 
-    public CreateDepositTxInputsAsBuyer(TaskRunner taskHandler, Trade trade) {
+    public TakerCreatesDepositTxInputsAsBuyer(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -38,7 +38,9 @@ public class CreateDepositTxInputsAsBuyer extends TradeTask {
         try {
             runInterceptHook();
             Coin takerInputAmount = FeePolicy.getSecurityDeposit().add(FeePolicy.getFixedTxFeeForTrades());
-            InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(takerInputAmount, processModel.getAddressEntry());
+            InputsAndChangeOutput result = processModel.getTradeWalletService()
+                    .takerCreatesDepositsTxInputs(takerInputAmount, processModel.getAddressEntry(),
+                            processModel.getUnusedSavingsAddress());
             processModel.setRawTransactionInputs(result.rawTransactionInputs);
             processModel.setChangeOutputValue(result.changeOutputValue);
             processModel.setChangeOutputAddress(result.changeOutputAddress);

@@ -64,7 +64,7 @@ public final class TradingPeer implements Persistable {
         try {
             in.defaultReadObject();
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

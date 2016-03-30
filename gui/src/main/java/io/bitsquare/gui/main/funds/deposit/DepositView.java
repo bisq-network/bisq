@@ -18,7 +18,9 @@
 package io.bitsquare.gui.main.funds.deposit;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.util.Tuple2;
@@ -27,26 +29,20 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
-import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
-import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.gui.util.validation.BtcAddressValidator;
-import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.closed.ClosedTradableManager;
-import io.bitsquare.trade.failed.FailedTradesManager;
-import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -58,6 +54,8 @@ import net.glxn.qrgen.image.ImageType;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.uri.BitcoinURI;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -72,30 +70,27 @@ public class DepositView extends ActivatableView<VBox, Void> {
     GridPane gridPane;
 
     @FXML
-    TableView<DepositListItem> table;
+    TableView<DepositListItem> tableView;
     @FXML
-    TableColumn<DepositListItem, DepositListItem> selectColumn, addressColumn, balanceColumn, confidenceColumn, statusColumn;
+    TableColumn<DepositListItem, DepositListItem> selectColumn, addressColumn, balanceColumn, confidenceColumn, usageColumn;
     private ImageView qrCodeImageView;
     private int gridRow = 0;
     private AddressTextField addressTextField;
     Button generateNewAddressButton;
 
     private final WalletService walletService;
-    private final TradeManager tradeManager;
-    private final ClosedTradableManager closedTradableManager;
-    private final FailedTradesManager failedTradesManager;
-    private final OpenOfferManager openOfferManager;
     private final BSFormatter formatter;
     private final Preferences preferences;
-    private final BtcAddressValidator btcAddressValidator;
-    private final WalletPasswordWindow walletPasswordWindow;
-    private final OfferDetailsWindow offerDetailsWindow;
-    private final TradeDetailsWindow tradeDetailsWindow;
-    private final ObservableList<DepositListItem> depositAddresses = FXCollections.observableArrayList();
+    private final ObservableList<DepositListItem> observableList = FXCollections.observableArrayList();
+    private final SortedList<DepositListItem> sortedList = new SortedList<>(observableList);
+
     private BalanceListener balanceListener;
     private TitledGroupBg titledGroupBg;
-    private Label addressLabel;
+    private Label addressLabel, amountLabel;
     private Label qrCodeLabel;
+    private InputTextField amountTextField;
+    private Subscription amountTextFieldSubscription;
+    private String paymentLabel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,36 +98,34 @@ public class DepositView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private DepositView(WalletService walletService, TradeManager tradeManager,
-                        ClosedTradableManager closedTradableManager,
-                        FailedTradesManager failedTradesManager, OpenOfferManager openOfferManager,
-                        BSFormatter formatter, Preferences preferences,
-                        BtcAddressValidator btcAddressValidator, WalletPasswordWindow walletPasswordWindow,
-                        OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
+    private DepositView(WalletService walletService,
+                        BSFormatter formatter,
+                        Preferences preferences) {
         this.walletService = walletService;
-        this.tradeManager = tradeManager;
-        this.closedTradableManager = closedTradableManager;
-        this.failedTradesManager = failedTradesManager;
-        this.openOfferManager = openOfferManager;
         this.formatter = formatter;
         this.preferences = preferences;
-        this.btcAddressValidator = btcAddressValidator;
-        this.walletPasswordWindow = walletPasswordWindow;
-        this.offerDetailsWindow = offerDetailsWindow;
-        this.tradeDetailsWindow = tradeDetailsWindow;
     }
 
     @Override
     public void initialize() {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setPlaceholder(new Label("No deposit addresses are generated yet"));
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new Label("No deposit addresses are generated yet"));
 
         setSelectColumnCellFactory();
         setAddressColumnCellFactory();
-        setStatusColumnCellFactory();
+        setBalanceColumnCellFactory();
+        setUsageColumnCellFactory();
         setConfidenceColumnCellFactory();
 
-        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Fund your wallet");
+        addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
+        balanceColumn.setComparator((o1, o2) -> o1.getBalanceAsCoin().compareTo(o2.getBalanceAsCoin()));
+        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getProgressIndicator().getProgress())
+                .compareTo(o2.getProgressIndicator().getProgress()));
+        usageColumn.setComparator((a, b) -> (a.getNumTxOutputs() < b.getNumTxOutputs()) ? -1 : ((a.getNumTxOutputs() == b.getNumTxOutputs()) ? 0 : 1));
+        tableView.getSortOrder().add(usageColumn);
+
+
+        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, "Fund your wallet");
 
         qrCodeLabel = addLabel(gridPane, gridRow, "QR-Code:", 0);
         //GridPane.setMargin(qrCodeLabel, new Insets(Layout.FIRST_ROW_DISTANCE - 9, 0, 0, 5));
@@ -148,9 +141,18 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
         Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, "Address:");
         addressLabel = addressTuple.first;
-        GridPane.setValignment(addressLabel, VPos.TOP);
-        GridPane.setMargin(addressLabel, new Insets(3, 0, 0, 0));
+        //GridPane.setValignment(addressLabel, VPos.TOP);
+        //GridPane.setMargin(addressLabel, new Insets(3, 0, 0, 0));
         addressTextField = addressTuple.second;
+        paymentLabel = "Fund Bitsquare wallet";
+        addressTextField.setPaymentLabel(paymentLabel);
+
+
+        Tuple2<Label, InputTextField> amountTuple = addLabelInputTextField(gridPane, ++gridRow, "Amount in BTC (optional):");
+        amountLabel = amountTuple.first;
+        amountTextField = amountTuple.second;
+        if (BitsquareApp.DEV_MODE)
+            amountTextField.setText("1");
 
         titledGroupBg.setVisible(false);
         titledGroupBg.setManaged(false);
@@ -162,16 +164,18 @@ public class DepositView extends ActivatableView<VBox, Void> {
         addressLabel.setManaged(false);
         addressTextField.setVisible(false);
         addressTextField.setManaged(false);
+        amountLabel.setVisible(false);
+        amountTextField.setManaged(false);
 
         generateNewAddressButton = addButton(gridPane, ++gridRow, "Generate new address", -20);
+        GridPane.setColumnIndex(generateNewAddressButton, 0);
+        GridPane.setHalignment(generateNewAddressButton, HPos.LEFT);
 
         generateNewAddressButton.setOnAction(event -> {
-            boolean hasUnUsedAddress = walletService.getSavingsAddressEntryList().stream()
-                    .filter(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
-                    .findAny().isPresent();
+            boolean hasUnUsedAddress = observableList.stream().filter(e -> e.getNumTxOutputs() == 0).findAny().isPresent();
             if (hasUnUsedAddress) {
-                new Popup().warning("You have already addresses generated which are still not used.\n" +
-                        "Please select in the address table an unused address.").show();
+                new Popup().warning("You have addresses which are not used in any transaction.\n" +
+                        "Please select in the address table any unused address.").show();
             } else {
                 AddressEntry newSavingsAddressEntry = walletService.getNewSavingsAddressEntry();
                 fillForm(newSavingsAddressEntry.getAddressString());
@@ -187,25 +191,44 @@ public class DepositView extends ActivatableView<VBox, Void> {
         };
     }
 
+    private Coin getAmountAsCoin() {
+        Coin senderAmount = formatter.parseToCoin(amountTextField.getText());
+        if (!Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
+            senderAmount = Coin.ZERO;
+           /* new Popup()
+                    .warning("The amount is lower than the transaction fee and the min. possible tx value (dust).")
+                    .show();*/
+        }
+        return senderAmount;
+    }
+
     @NotNull
     private String getBitcoinURI() {
         return BitcoinURI.convertToBitcoinURI(addressTextField.getAddress(),
-                null,
-                null,
+                getAmountAsCoin(),
+                paymentLabel,
                 null);
     }
 
     @Override
     protected void activate() {
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
         updateList();
 
         walletService.addBalanceListener(balanceListener);
+        amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> {
+            addressTextField.setAmountAsCoin(formatter.parseToCoin(t));
+            updateQRCode();
+        });
     }
 
     @Override
     protected void deactivate() {
-        depositAddresses.forEach(DepositListItem::cleanup);
+        sortedList.comparatorProperty().unbind();
+        observableList.forEach(DepositListItem::cleanup);
         walletService.removeBalanceListener(balanceListener);
+        amountTextFieldSubscription.unsubscribe();
     }
 
 
@@ -225,20 +248,28 @@ public class DepositView extends ActivatableView<VBox, Void> {
         addressLabel.setManaged(true);
         addressTextField.setVisible(true);
         addressTextField.setManaged(true);
+        amountLabel.setVisible(true);
+        amountTextField.setManaged(true);
 
         GridPane.setMargin(generateNewAddressButton, new Insets(15, 0, 0, 0));
 
         addressTextField.setAddress(address);
 
-        final byte[] imageBytes = QRCode
-                .from(getBitcoinURI())
-                .withSize(150, 150) // code has 41 elements 8 px is border with 150 we get 3x scale and min. border
-                .to(ImageType.PNG)
-                .stream()
-                .toByteArray();
-        Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
-        qrCodeImageView.setImage(qrImage);
+        updateQRCode();
 
+    }
+
+    private void updateQRCode() {
+        if (addressTextField.getAddress() != null && !addressTextField.getAddress().isEmpty()) {
+            final byte[] imageBytes = QRCode
+                    .from(getBitcoinURI())
+                    .withSize(150, 150) // code has 41 elements 8 px is border with 150 we get 3x scale and min. border
+                    .to(ImageType.PNG)
+                    .stream()
+                    .toByteArray();
+            Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
+            qrCodeImageView.setImage(qrImage);
+        }
     }
 
     private void openBlockExplorer(DepositListItem item) {
@@ -258,10 +289,9 @@ public class DepositView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
-        depositAddresses.clear();
+        observableList.clear();
         walletService.getSavingsAddressEntryList().stream()
-                .forEach(e -> depositAddresses.add(new DepositListItem(e, walletService, formatter)));
-        table.setItems(depositAddresses);
+                .forEach(e -> observableList.add(new DepositListItem(e, walletService, formatter)));
     }
 
 
@@ -269,9 +299,9 @@ public class DepositView extends ActivatableView<VBox, Void> {
     // ColumnCellFactories
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setStatusColumnCellFactory() {
-        statusColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        statusColumn.setCellFactory(new Callback<TableColumn<DepositListItem, DepositListItem>,
+    private void setUsageColumnCellFactory() {
+        usageColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        usageColumn.setCellFactory(new Callback<TableColumn<DepositListItem, DepositListItem>,
                 TableCell<DepositListItem, DepositListItem>>() {
 
             @Override
@@ -283,7 +313,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                     public void updateItem(final DepositListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setGraphic(new Label(item.getStatus()));
+                            setGraphic(new Label(item.getUsage()));
                         } else {
                             setGraphic(null);
                         }
@@ -363,6 +393,33 @@ public class DepositView extends ActivatableView<VBox, Void> {
                     }
                 });
     }
+
+    private void setBalanceColumnCellFactory() {
+        balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        balanceColumn.setCellFactory(new Callback<TableColumn<DepositListItem, DepositListItem>,
+                TableCell<DepositListItem, DepositListItem>>() {
+
+            @Override
+            public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
+                    DepositListItem> column) {
+                return new TableCell<DepositListItem, DepositListItem>() {
+
+                    @Override
+                    public void updateItem(final DepositListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            if (!textProperty().isBound())
+                                textProperty().bind(item.balanceProperty());
+                        } else {
+                            textProperty().unbind();
+                            setText("");
+                        }
+                    }
+                };
+            }
+        });
+    }
+
 
     private void setConfidenceColumnCellFactory() {
         confidenceColumn.setCellValueFactory((addressListItem) ->

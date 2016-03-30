@@ -24,24 +24,24 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.OpenOffer;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.scene.control.Tooltip;
 import org.bitcoinj.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 public class TransactionsListItem {
-
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final StringProperty date = new SimpleStringProperty();
-    private final StringProperty amount = new SimpleStringProperty();
+
+    private String date;
     private final String txId;
     private final WalletService walletService;
     private final ConfidenceProgressIndicator progressIndicator;
     private final Tooltip tooltip;
+    private boolean isInternal;
+    @Nullable
     private Tradable tradable;
     private String details;
     private String addressString;
@@ -49,18 +49,19 @@ public class TransactionsListItem {
     private TxConfidenceListener txConfidenceListener;
     private boolean received;
     private boolean detailsAvailable;
+    private Coin amountAsCoin = Coin.ZERO;
+    private BSFormatter formatter;
 
     public TransactionsListItem(Transaction transaction, WalletService walletService, Optional<Tradable> tradableOptional, BSFormatter formatter) {
+        this.formatter = formatter;
         txId = transaction.getHashAsString();
         this.walletService = walletService;
 
         Coin valueSentToMe = transaction.getValueSentToMe(walletService.getWallet());
         Coin valueSentFromMe = transaction.getValueSentFromMe(walletService.getWallet());
-        Coin amountAsCoin;
         Address address = null;
         if (valueSentToMe.isZero()) {
-            amountAsCoin = valueSentFromMe;
-            amount.set("-" + formatter.formatCoin(amountAsCoin));
+            amountAsCoin = valueSentFromMe.multiply(-1);
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!transactionOutput.isMine(walletService.getWallet())) {
@@ -75,7 +76,7 @@ public class TransactionsListItem {
             }
         } else if (valueSentFromMe.isZero()) {
             amountAsCoin = valueSentToMe;
-            amount.set(formatter.formatCoin(amountAsCoin));
+
             direction = "Received with:";
             received = true;
 
@@ -88,9 +89,8 @@ public class TransactionsListItem {
                     }
                 }
             }
-        } else {
+        } else/* if (tradableOptional.isPresent())*/ {
             amountAsCoin = valueSentToMe.subtract(valueSentFromMe);
-            amount.set(formatter.formatCoin(amountAsCoin));
             boolean outgoing = false;
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!transactionOutput.isMine(walletService.getWallet())) {
@@ -107,7 +107,25 @@ public class TransactionsListItem {
                 direction = "Sent to:";
                 received = false;
             }
-        }
+        } /*else {
+            // savings wallet tx
+            for (TransactionOutput transactionOutput : transaction.getOutputs()) {
+                if (transactionOutput.isMine(walletService.getWallet())) {
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() ||
+                            transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
+                        addressString = address.toString();
+
+                        amountAsCoin = transactionOutput.getValue().multiply(-1);
+                    }
+                }
+            }
+
+            direction = "Transferred to:";
+            received = false;
+            isInternal = true;
+            details = "Change output";
+        }*/
 
 
         if (tradableOptional.isPresent()) {
@@ -141,11 +159,11 @@ public class TransactionsListItem {
         } else {
             if (amountAsCoin.isZero())
                 details = "No refund from dispute";
-            else
+            else if (!isInternal)
                 details = received ? "Received funds" : "Withdrawn from wallet";
         }
 
-        date.set(formatter.formatDateTime(transaction.getUpdateTime()));
+        date = formatter.formatDateTime(transaction.getUpdateTime());
 
         // confidence
         progressIndicator = new ConfidenceProgressIndicator();
@@ -202,13 +220,19 @@ public class TransactionsListItem {
         return progressIndicator;
     }
 
-    public final StringProperty dateProperty() {
-        return this.date;
+    public final String getDate() {
+        return date;
     }
 
-    public final StringProperty amountProperty() {
-        return this.amount;
+
+    public String getAmount() {
+        return formatter.formatCoin(amountAsCoin);
     }
+
+    public Coin getAmountAsCoin() {
+        return amountAsCoin;
+    }
+
 
     public String getAddressString() {
         return addressString;
@@ -216,6 +240,10 @@ public class TransactionsListItem {
 
     public String getDirection() {
         return direction;
+    }
+
+    public boolean isInternal() {
+        return isInternal;
     }
 
     public String getTxId() {
@@ -234,6 +262,7 @@ public class TransactionsListItem {
         return detailsAvailable;
     }
 
+    @Nullable
     public Tradable getTradable() {
         return tradable;
     }

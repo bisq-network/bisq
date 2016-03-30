@@ -29,6 +29,8 @@ import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class CreateTakeOfferFeeTx extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(CreateTakeOfferFeeTx.class);
 
@@ -45,8 +47,12 @@ public class CreateTakeOfferFeeTx extends TradeTask {
             NodeAddress selectedArbitratorNodeAddress = ArbitrationSelectionRule.select(user.getAcceptedArbitratorAddresses(), processModel.getOffer());
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
             Arbitrator selectedArbitrator = user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
+            checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateTakeOfferFeeTx");
             Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createTradingFeeTx(
                     processModel.getAddressEntry(),
+                    processModel.getUnusedSavingsAddress(),
+                    processModel.getFundsNeededForTrade(),
+                    processModel.useSavingsWallet,
                     FeePolicy.getTakeOfferFee(),
                     selectedArbitrator.getBtcAddress());
 

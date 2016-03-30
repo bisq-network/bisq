@@ -18,13 +18,10 @@
 package io.bitsquare.trade.protocol.placeoffer.tasks;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -44,67 +41,59 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     protected void run() {
         try {
             runInterceptHook();
-            Coin totalsNeeded = FeePolicy.getSecurityDeposit().add(FeePolicy.getCreateOfferFee()).add(FeePolicy.getFixedTxFeeForTrades());
-            AddressEntry addressEntry = model.walletService.getTradeAddressEntry(model.offer.getId());
-            Coin balance = model.walletService.getBalanceForAddress(addressEntry.getAddress());
-            if (balance.compareTo(totalsNeeded) >= 0) {
-                model.tradeWalletService.broadcastTx(model.getTransaction(), new FutureCallback<Transaction>() {
-                    @Override
-                    public void onSuccess(Transaction transaction) {
-                        log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
+            model.tradeWalletService.broadcastTx(model.getTransaction(), new FutureCallback<Transaction>() {
+                @Override
+                public void onSuccess(Transaction transaction) {
+                    log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
 
-                        if (model.getTransaction().getHashAsString().equals(transaction.getHashAsString())) {
-                            model.offer.setState(Offer.State.OFFER_FEE_PAID);
-                            // No tx malleability happened after broadcast (still not in blockchain)
-                            complete();
-                        } else {
-                            log.warn("Tx malleability happened after broadcast. We publish the changed offer to the P2P network again.");
-                            // Tx malleability happened after broadcast. We first remove the malleable offer.
-                            // Then we publish the changed offer to the P2P network again after setting the new TxId.
-                            // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
-                            model.offerBookService.removeOffer(model.offer,
-                                    () -> {
-                                        log.info("We store now the changed txID to the offer and add that again.");
-                                        // We store now the changed txID to the offer and add that again.
-                                        model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
-                                        model.setTransaction(transaction);
-                                        model.offerBookService.addOffer(model.offer,
-                                                () -> complete(),
-                                                errorMessage -> {
-                                                    log.error("addOffer failed");
-                                                    addOfferFailed = true;
-                                                    updateStateOnFault();
-                                                    model.offer.setErrorMessage("An error occurred when adding the offer to the P2P network.\n" +
-                                                            "Error message:\n"
-                                                            + errorMessage);
-                                                    failed(errorMessage);
-                                                });
-                                    },
-                                    errorMessage -> {
-                                        log.error("removeOffer failed");
-                                        removeOfferFailed = true;
-                                        updateStateOnFault();
-                                        model.offer.setErrorMessage("An error occurred when removing the offer from the P2P network.\n" +
-                                                "Error message:\n"
-                                                + errorMessage);
-                                        failed(errorMessage);
-                                    });
-                        }
+                    if (model.getTransaction().getHashAsString().equals(transaction.getHashAsString())) {
+                        model.offer.setState(Offer.State.OFFER_FEE_PAID);
+                        // No tx malleability happened after broadcast (still not in blockchain)
+                        complete();
+                    } else {
+                        log.warn("Tx malleability happened after broadcast. We publish the changed offer to the P2P network again.");
+                        // Tx malleability happened after broadcast. We first remove the malleable offer.
+                        // Then we publish the changed offer to the P2P network again after setting the new TxId.
+                        // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
+                        model.offerBookService.removeOffer(model.offer,
+                                () -> {
+                                    log.info("We store now the changed txID to the offer and add that again.");
+                                    // We store now the changed txID to the offer and add that again.
+                                    model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
+                                    model.setTransaction(transaction);
+                                    model.offerBookService.addOffer(model.offer,
+                                            () -> complete(),
+                                            errorMessage -> {
+                                                log.error("addOffer failed");
+                                                addOfferFailed = true;
+                                                updateStateOnFault();
+                                                model.offer.setErrorMessage("An error occurred when adding the offer to the P2P network.\n" +
+                                                        "Error message:\n"
+                                                        + errorMessage);
+                                                failed(errorMessage);
+                                            });
+                                },
+                                errorMessage -> {
+                                    log.error("removeOffer failed");
+                                    removeOfferFailed = true;
+                                    updateStateOnFault();
+                                    model.offer.setErrorMessage("An error occurred when removing the offer from the P2P network.\n" +
+                                            "Error message:\n"
+                                            + errorMessage);
+                                    failed(errorMessage);
+                                });
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NotNull Throwable t) {
-                        updateStateOnFault();
-                        model.offer.setErrorMessage("An error occurred.\n" +
-                                "Error message:\n"
-                                + t.getMessage());
-                        failed(t);
-                    }
-                });
-            } else {
-                updateStateOnFault();
-                model.offer.setErrorMessage("You don't have enough balance in your wallet for placing the offer.");
-            }
+                @Override
+                public void onFailure(@NotNull Throwable t) {
+                    updateStateOnFault();
+                    model.offer.setErrorMessage("An error occurred.\n" +
+                            "Error message:\n"
+                            + t.getMessage());
+                    failed(t);
+                }
+            });
         } catch (Throwable t) {
             model.offer.setErrorMessage("An error occurred.\n" +
                     "Error message:\n"

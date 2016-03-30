@@ -59,7 +59,7 @@ public final class TradableList<T extends Tradable> extends ArrayList<T> impleme
         try {
             in.defaultReadObject();
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

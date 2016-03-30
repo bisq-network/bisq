@@ -44,6 +44,7 @@ import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.user.User;
 import javafx.collections.ObservableList;
+import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -227,9 +228,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void placeOffer(Offer offer,
-                           TransactionResultHandler resultHandler) {
-        PlaceOfferModel model = new PlaceOfferModel(offer, walletService, tradeWalletService, offerBookService, user);
+    public void placeOffer(Offer offer, Coin reservedFundsForOffer, boolean useSavingsWallet, TransactionResultHandler resultHandler) {
+        PlaceOfferModel model = new PlaceOfferModel(offer, reservedFundsForOffer, useSavingsWallet, walletService, tradeWalletService, offerBookService, user);
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 transaction -> {
@@ -272,6 +272,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     openOffer.setState(OpenOffer.State.CANCELED);
                     openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
+                    walletService.swapTradeToSavings(offer.getId());
                     resultHandler.handleResult();
                 },
                 errorMessageHandler);

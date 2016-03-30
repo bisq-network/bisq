@@ -23,6 +23,7 @@ import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.user.User;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,8 @@ public class PlaceOfferModel implements Model {
     private static final Logger log = LoggerFactory.getLogger(PlaceOfferModel.class);
 
     public final Offer offer;
+    public final Coin reservedFundsForOffer;
+    public final boolean useSavingsWallet;
     public final WalletService walletService;
     public final TradeWalletService tradeWalletService;
     public final OfferBookService offerBookService;
@@ -39,11 +42,15 @@ public class PlaceOfferModel implements Model {
     private Transaction transaction;
 
     public PlaceOfferModel(Offer offer,
+                           Coin reservedFundsForOffer,
+                           boolean useSavingsWallet, 
                            WalletService walletService,
                            TradeWalletService tradeWalletService,
                            OfferBookService offerBookService,
                            User user) {
         this.offer = offer;
+        this.reservedFundsForOffer = reservedFundsForOffer;
+        this.useSavingsWallet = useSavingsWallet;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
         this.offerBookService = offerBookService;

@@ -48,7 +48,7 @@ public class BuyerStep5View extends TradeStepView {
     protected Label btcTradeAmountLabel;
     protected Label fiatTradeAmountLabel;
     private InputTextField withdrawAddressTextField;
-    private Button withdrawButton;
+    private Button withdrawToExternalWalletButton, useSavingsWalletButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,11 +116,19 @@ public class BuyerStep5View extends TradeStepView {
         addTitledGroupBg(gridPane, ++gridRow, 2, "Withdraw your bitcoins", Layout.GROUP_DISTANCE);
         addLabelTextField(gridPane, gridRow, "Amount to withdraw:", model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
-        withdrawButton = addButtonAfterGroup(gridPane, ++gridRow, "Withdraw to external wallet");
-        withdrawButton.setOnAction(e -> reviewWithdrawal());
+
+        Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(gridPane, ++gridRow, "Move to Bitsquare wallet", "Withdraw to external wallet");
+        useSavingsWalletButton = tuple2.first;
+        withdrawToExternalWalletButton = tuple2.second;
+        useSavingsWalletButton.setOnAction(e -> {
+            model.dataModel.walletService.swapTradeToSavings(trade.getId());
+            handleTradeCompleted();
+            model.dataModel.tradeManager.addTradeToClosedTrades(trade);
+        });
+        withdrawToExternalWalletButton.setOnAction(e -> reviewWithdrawal());
 
         if (BitsquareApp.DEV_MODE) {
-            withdrawAddressTextField.setText("mi8k5f9L972VgDaT4LgjAhriC9hHEPL7EW");
+            withdrawAddressTextField.setText("mo6y756TnpdZQCeHStraavjqrndeXzVkxi");
         } else {
             String key = "tradeCompleted" + trade.getId();
             if (preferences.showAgain(key)) {
@@ -131,29 +139,6 @@ public class BuyerStep5View extends TradeStepView {
                         .show();
             }
         }
-    }
-
-    private void doWithdrawal() {
-        withdrawButton.setDisable(true);
-        model.dataModel.onWithdrawRequest(withdrawAddressTextField.getText(),
-                () -> {
-                    String key = "tradeCompleteWithdrawCompletedInfo";
-                    new Popup().headLine("Withdrawal completed")
-                            .feedback("Your completed trades are stored under \"Portfolio/History\".\n" +
-                                    "You can review all your bitcoin transactions under \"Funds/Transactions\"")
-                            .actionButtonText("Go to \"Transactions\"")
-                            .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
-                            .dontShowAgainId(key, preferences)
-                            .show();
-                    withdrawButton.setDisable(true);
-                },
-                (errorMessage, throwable) -> {
-                    withdrawButton.setDisable(false);
-                    if (throwable != null && throwable.getMessage() != null)
-                        new Popup().error(errorMessage + "\n\n" + throwable.getMessage()).show();
-                    else
-                        new Popup().error(errorMessage).show();
-                });
     }
 
     private void reviewWithdrawal() {
@@ -174,11 +159,11 @@ public class BuyerStep5View extends TradeStepView {
                 validateWithdrawAddress();
             } else if (Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
                 try {
-                    Coin requiredFee = walletService.getRequiredFee(fromAddresses, toAddresses, senderAmount, null);
-                    Coin receiverAmount = senderAmount.subtract(requiredFee);
                     if (BitsquareApp.DEV_MODE) {
                         doWithdrawal();
                     } else {
+                        Coin requiredFee = walletService.getRequiredFee(fromAddresses, toAddresses, senderAmount, null);
+                        Coin receiverAmount = senderAmount.subtract(requiredFee);
                         BSFormatter formatter = model.formatter;
                         String key = "reviewWithdrawalAtTradeComplete";
                         if (preferences.showAgain(key)) {
@@ -190,9 +175,12 @@ public class BuyerStep5View extends TradeStepView {
                                             "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
                                             "Are you sure you want to proceed with the withdrawal?")
                                     .closeButtonText("Cancel")
-                                    .onClose(() -> withdrawButton.setDisable(false))
+                                    .onClose(() -> {
+                                        useSavingsWalletButton.setDisable(false);
+                                        withdrawToExternalWalletButton.setDisable(false);
+                                    })
                                     .actionButtonText("Yes")
-                                    .onAction(this::doWithdrawal)
+                                    .onAction(() -> doWithdrawal())
                                     .dontShowAgainId(key, preferences)
                                     .show();
                         } else {
@@ -210,10 +198,41 @@ public class BuyerStep5View extends TradeStepView {
         }
     }
 
+    private void doWithdrawal() {
+        useSavingsWalletButton.setDisable(true);
+        withdrawToExternalWalletButton.setDisable(true);
+
+        model.dataModel.onWithdrawRequest(withdrawAddressTextField.getText(),
+                () -> {
+                    handleTradeCompleted();
+                },
+                (errorMessage, throwable) -> {
+                    useSavingsWalletButton.setDisable(false);
+                    withdrawToExternalWalletButton.setDisable(false);
+                    if (throwable != null && throwable.getMessage() != null)
+                        new Popup().error(errorMessage + "\n\n" + throwable.getMessage()).show();
+                    else
+                        new Popup().error(errorMessage).show();
+                });
+    }
+
+    private void handleTradeCompleted() {
+        String key = "tradeCompleteWithdrawCompletedInfo";
+        new Popup().headLine("Withdrawal completed")
+                .feedback("Your completed trades are stored under \"Portfolio/History\".\n" +
+                        "You can review all your bitcoin transactions under \"Funds/Transactions\"")
+                .actionButtonText("Go to \"Transactions\"")
+                .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
+                .dontShowAgainId(key, preferences)
+                .show();
+        useSavingsWalletButton.setDisable(true);
+        withdrawToExternalWalletButton.setDisable(true);
+    }
+
     private void validateWithdrawAddress() {
         withdrawAddressTextField.setValidator(model.btcAddressValidator);
         withdrawAddressTextField.requestFocus();
-        withdrawButton.requestFocus();
+        useSavingsWalletButton.requestFocus();
     }
 
     protected String getBtcTradeAmountLabel() {

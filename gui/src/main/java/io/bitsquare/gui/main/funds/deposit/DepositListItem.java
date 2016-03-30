@@ -37,6 +37,8 @@ public class DepositListItem {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final StringProperty balance = new SimpleStringProperty();
     private final WalletService walletService;
+
+    private Coin balanceAsCoin;
     private BSFormatter formatter;
     private final ConfidenceProgressIndicator progressIndicator;
     private final Tooltip tooltip;
@@ -44,8 +46,9 @@ public class DepositListItem {
 
     private String balanceString;
     private String addressString;
-    private String status = "Unused";
+    private String usage = "-";
     private TxConfidenceListener txConfidenceListener;
+    private int numTxOutputs = 0;
 
     // public DepositListItem(AddressEntry addressEntry, Transaction transaction, WalletService walletService, Optional<Tradable> tradableOptional, BSFormatter formatter) {
     public DepositListItem(AddressEntry addressEntry, WalletService walletService, BSFormatter formatter) {
@@ -67,17 +70,17 @@ public class DepositListItem {
         walletService.addBalanceListener(new BalanceListener(address) {
             @Override
             public void onBalanceChanged(Coin balanceAsCoin, Transaction tx) {
+                DepositListItem.this.balanceAsCoin = balanceAsCoin;
                 DepositListItem.this.balance.set(formatter.formatCoin(balanceAsCoin));
                 updateConfidence(walletService.getConfidenceForTxId(tx.getHashAsString()));
-                if (balanceAsCoin.isPositive())
-                    status = "Funded";
+                updateUsage(address);
             }
         });
 
-        Coin balanceAsCoin = walletService.getBalanceForAddress(address);
+        balanceAsCoin = walletService.getBalanceForAddress(address);
         balance.set(formatter.formatCoin(balanceAsCoin));
-        if (balanceAsCoin.isPositive())
-            status = "Funded";
+
+        updateUsage(address);
 
         TransactionConfidence transactionConfidence = walletService.getConfidenceForAddress(address);
         if (transactionConfidence != null) {
@@ -93,8 +96,9 @@ public class DepositListItem {
         }
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    private void updateUsage(Address address) {
+        numTxOutputs = walletService.getNumTxOutputsForAddress(address);
+        usage = numTxOutputs == 0 ? "Unused" : "Used in " + numTxOutputs + " transactions";
     }
 
     public void cleanup() {
@@ -134,8 +138,8 @@ public class DepositListItem {
         return addressString;
     }
 
-    public String getStatus() {
-        return status;
+    public String getUsage() {
+        return usage;
     }
 
     public final StringProperty balanceProperty() {
@@ -146,4 +150,11 @@ public class DepositListItem {
         return balance.get();
     }
 
+    public Coin getBalanceAsCoin() {
+        return balanceAsCoin;
+    }
+
+    public int getNumTxOutputs() {
+        return numTxOutputs;
+    }
 }

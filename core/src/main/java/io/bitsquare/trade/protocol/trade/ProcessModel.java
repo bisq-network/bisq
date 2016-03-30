@@ -36,6 +36,8 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.user.User;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +66,7 @@ public class ProcessModel implements Model, Serializable {
     transient private KeyRing keyRing;
     transient private P2PService p2PService;
 
+
     // Mutable
     public final TradingPeer tradingPeer;
     transient private TradeMessage tradeMessage;
@@ -80,6 +83,8 @@ public class ProcessModel implements Model, Serializable {
     @Nullable
     private String changeOutputAddress;
     private Transaction takeOfferFeeTx;
+    public boolean useSavingsWallet;
+    private Coin fundsNeededForTrade;
 
     public ProcessModel() {
         tradingPeer = new TradingPeer();
@@ -89,7 +94,7 @@ public class ProcessModel implements Model, Serializable {
         try {
             in.defaultReadObject();
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 
@@ -101,7 +106,8 @@ public class ProcessModel implements Model, Serializable {
                                          TradeWalletService tradeWalletService,
                                          ArbitratorManager arbitratorManager,
                                          User user,
-                                         KeyRing keyRing) {
+                                         KeyRing keyRing,
+                                         Coin fundsNeededForTrade) {
         this.offer = offer;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -111,6 +117,7 @@ public class ProcessModel implements Model, Serializable {
         this.user = user;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
+        this.fundsNeededForTrade = fundsNeededForTrade;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +161,10 @@ public class ProcessModel implements Model, Serializable {
         return p2PService.getAddress();
     }
 
+    public Coin getFundsNeededForTrade() {
+        return fundsNeededForTrade;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter/Setter for Mutable objects
@@ -181,6 +192,10 @@ public class ProcessModel implements Model, Serializable {
 
     public AddressEntry getAddressEntry() {
         return walletService.getTradeAddressEntry(offer.getId());
+    }
+
+    public Address getUnusedSavingsAddress() {
+        return walletService.getUnusedSavingsAddressEntry().getAddress();
     }
 
     public byte[] getTradeWalletPubKey() {

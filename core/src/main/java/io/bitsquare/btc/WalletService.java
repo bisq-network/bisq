@@ -305,17 +305,11 @@ public class WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // AddressInfo 
+    // Trade AddressEntry
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public List<AddressEntry> getAddressEntryList() {
         return ImmutableList.copyOf(addressEntryList);
-    }
-
-    public List<AddressEntry> getSavingsAddressEntryList() {
-        return getAddressEntryList().stream()
-                .filter(e -> e.getContext().equals(AddressEntry.Context.SAVINGS))
-                .collect(Collectors.toList());
     }
 
     public AddressEntry getArbitratorAddressEntry() {
@@ -332,14 +326,76 @@ public class WalletService {
             return addressEntryList.getNewTradeAddressEntry(offerId);
     }
 
-    public AddressEntry getNewSavingsAddressEntry() {
-        return addressEntryList.getNewSavingsAddressEntry();
-    }
-
     private Optional<AddressEntry> getAddressEntryByAddress(String address) {
         return getAddressEntryList().stream()
                 .filter(e -> e.getAddressString() != null && e.getAddressString().equals(address))
                 .findAny();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // SavingsAddressEntry 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public AddressEntry getNewSavingsAddressEntry() {
+        return addressEntryList.getNewSavingsAddressEntry();
+    }
+
+    public List<AddressEntry> getSavingsAddressEntryList() {
+        return getAddressEntryList().stream()
+                .filter(e -> e.getContext().equals(AddressEntry.Context.SAVINGS))
+                .collect(Collectors.toList());
+    }
+
+    public AddressEntry getUnusedSavingsAddressEntry() {
+        List<AddressEntry> unusedSavingsAddressEntries = getUnusedSavingsAddressEntries();
+        if (!unusedSavingsAddressEntries.isEmpty())
+            return unusedSavingsAddressEntries.get(0);
+        else
+            return getNewSavingsAddressEntry();
+    }
+
+    public List<AddressEntry> getUnusedSavingsAddressEntries() {
+        return getSavingsAddressEntryList().stream()
+                .filter(addressEntry -> getNumTxOutputsForAddress(addressEntry.getAddress()) == 0)
+                .collect(Collectors.toList());
+    }
+
+    public List<AddressEntry> getUsedSavingsAddressEntries() {
+        return getSavingsAddressEntryList().stream()
+                .filter(addressEntry -> getNumTxOutputsForAddress(addressEntry.getAddress()) > 0)
+                .collect(Collectors.toList());
+    }
+
+    public List<Address> getUsedSavingsAddresses() {
+        return getSavingsAddressEntryList().stream()
+                .filter(addressEntry -> getNumTxOutputsForAddress(addressEntry.getAddress()) > 0)
+                .map(addressEntry -> addressEntry.getAddress())
+                .collect(Collectors.toList());
+    }
+
+    public List<Transaction> getUsedSavingWalletTransactions() {
+        List<Transaction> transactions = new ArrayList<>();
+        List<TransactionOutput> transactionOutputs = new ArrayList<>();
+        List<Address> usedSavingsAddresses = getUsedSavingsAddresses();
+        log.debug("usedSavingsAddresses = " + usedSavingsAddresses);
+        wallet.getTransactions(true).stream().forEach(transaction -> transactionOutputs.addAll(transaction.getOutputs()));
+        for (TransactionOutput transactionOutput : transactionOutputs) {
+            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+                Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
+
+                if (usedSavingsAddresses.contains(addressOutput) && transactionOutput.getParentTransaction() != null) {
+                    log.debug("transactionOutput.getParentTransaction() = " + transactionOutput.getParentTransaction().getHashAsString());
+                    transactions.add(transactionOutput.getParentTransaction());
+                }
+            }
+        }
+
+        return transactions;
+    }
+
+    public void swapTradeToSavings(String offerId) {
+        addressEntryList.swapTradeToSavings(offerId);
     }
 
 
@@ -446,6 +502,28 @@ public class WalletService {
             }
         }
         return balance;
+    }
+
+    public Coin getSavingWalletBalance() {
+        Coin balance = Coin.ZERO;
+        for (AddressEntry addressEntry : getSavingsAddressEntryList()) {
+            balance = balance.add(getBalanceForAddress(addressEntry.getAddress()));
+        }
+        return balance;
+    }
+
+    public int getNumTxOutputsForAddress(Address address) {
+        List<TransactionOutput> transactionOutputs = new ArrayList<>();
+        wallet.getTransactions(true).stream().forEach(t -> transactionOutputs.addAll(t.getOutputs()));
+        int outputs = 0;
+        for (TransactionOutput transactionOutput : transactionOutputs) {
+            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+                Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
+                if (addressOutput.equals(address))
+                    outputs++;
+            }
+        }
+        return outputs;
     }
 
 

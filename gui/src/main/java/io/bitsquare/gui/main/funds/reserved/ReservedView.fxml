@@ -18,7 +18,6 @@
   -->
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.main.funds.reserved.ReservedView"
@@ -27,15 +26,11 @@
         <Insets bottom="0.0" left="10.0" right="10.0" top="10.0"/>
     </padding>
 
-    <TableView fx:id="table" VBox.vgrow="ALWAYS">
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180" maxWidth="180"/>
             <TableColumn text="Details" fx:id="detailsColumn" minWidth="260"/>
-            <TableColumn text="Address" fx:id="addressColumn" minWidth="320">
-                <cellValueFactory>
-                    <PropertyValueFactory property="addressString"/>
-                </cellValueFactory>
-            </TableColumn>
+            <TableColumn text="Address" fx:id="addressColumn" minWidth="320"/>
             <TableColumn text="Balance (BTC)" fx:id="balanceColumn" minWidth="110"/>
         </columns>
     </TableView>

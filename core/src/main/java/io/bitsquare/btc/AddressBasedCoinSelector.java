@@ -46,7 +46,11 @@ class AddressBasedCoinSelector implements CoinSelector {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressBasedCoinSelector(NetworkParameters params, AddressEntry addressEntry) {
+    public AddressBasedCoinSelector(NetworkParameters params) {
+        this.params = params;
+    }
+
+    public AddressBasedCoinSelector(NetworkParameters params, @Nullable AddressEntry addressEntry) {
         this.params = params;
         this.addressEntry = addressEntry;
     }
@@ -119,6 +123,9 @@ class AddressBasedCoinSelector implements CoinSelector {
 
                 log.trace("No match found at matchesRequiredAddress addressOutput / addressEntries " + addressOutput.toString
                         () + " / " + addressEntries.toString());
+            } else {
+                // use savings wallet
+                return true;
             }
         }
         return false;

@@ -84,7 +84,7 @@ public final class DisputeResult implements Payload {
             in.defaultReadObject();
             init();
         } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
+            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

@@ -66,7 +66,7 @@
     </TextField>
 
     <Label fx:id="p2PPeersLabel" text="Connected peers:" GridPane.rowIndex="4"/>
-    <TableView fx:id="p2PPeerTable" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+    <TableView fx:id="tableView" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
                GridPane.vgrow="ALWAYS">
         <columns>
             <TableColumn text="Onion address" fx:id="onionAddressColumn" minWidth="220">

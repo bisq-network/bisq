@@ -26,9 +26,9 @@
         <Insets bottom="0.0" left="10.0" right="10.0" top="10.0"/>
     </padding>
 
-    <TableView fx:id="table" VBox.vgrow="ALWAYS">
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Offer ID" fx:id="offerIdColumn" minWidth="100" sortable="false"/>
+            <TableColumn text="Offer ID" fx:id="offerIdColumn" minWidth="100"/>
             <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="130"/>
             <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="130"/>
             <TableColumn text="Price" fx:id="priceColumn" minWidth="100"/>

@@ -53,8 +53,7 @@ public final class Alert implements StoragePayload {
             in.defaultReadObject();
             storagePublicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(storagePublicKeyBytes));
         } catch (Throwable t) {
-            log.error("Exception at readObject: " + t.getMessage());
-            t.printStackTrace();
+            log.warn("Exception at readObject: " + t.getMessage());
         }
     }
 

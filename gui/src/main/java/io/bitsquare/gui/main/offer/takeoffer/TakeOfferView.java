@@ -353,7 +353,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             takeOfferButton.setText("Review take offer for selling bitcoin");
         }
 
-        balanceTextField.setup(model.address.get(), model.getFormatter());
+        balanceTextField.setFormatter(model.getFormatter());
+        balanceTextField.setupBalanceListener(model.address.get());
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
         paymentAccountsLabel.setVisible(showComboBox);

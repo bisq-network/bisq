@@ -28,6 +28,8 @@ import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferFeeTx.class);
 
@@ -43,8 +45,12 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
             NodeAddress selectedArbitratorNodeAddress = ArbitrationSelectionRule.select(model.user.getAcceptedArbitratorAddresses(), model.offer);
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
             Arbitrator selectedArbitrator = model.user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
+            checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateOfferFeeTx");
             Transaction transaction = model.tradeWalletService.createTradingFeeTx(
                     model.walletService.getTradeAddressEntry(model.offer.getId()),
+                    model.walletService.getUnusedSavingsAddressEntry().getAddress(),
+                    model.reservedFundsForOffer,
+                    model.useSavingsWallet,
                     FeePolicy.getCreateOfferFee(),
                     selectedArbitrator.getBtcAddress());
 
