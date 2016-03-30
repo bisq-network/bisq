@@ -118,6 +118,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<String> tradeCurrencyCodeListener;
     private ImageView qrCodeImageView;
     private ChangeListener<Coin> balanceListener;
+    private HBox fundingHBox;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -311,8 +312,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         qrCodeImageView.setVisible(true);
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
-        fundFromSavingsWalletButton.setVisible(true);
-        fundFromExternalWalletButton.setVisible(true);
+        fundingHBox.setVisible(true);
         placeOfferButton.setVisible(true);
         cancelButton2.setVisible(true);
         //root.requestFocus();
@@ -406,8 +406,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // buttons
         placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
         cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
-        fundFromSavingsWalletButton.disableProperty().bind(model.dataModel.isWalletFunded);
-        fundFromExternalWalletButton.disableProperty().bind(model.dataModel.isWalletFunded);
+        fundingHBox.disableProperty().bind(model.dataModel.isWalletFunded);
 
         // payment account
         currencyComboBox.prefWidthProperty().bind(paymentAccountsComboBox.widthProperty());
@@ -439,6 +438,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.validationResultProperty().unbind();
         placeOfferButton.disableProperty().unbind();
         cancelButton2.disableProperty().unbind();
+        fundingHBox.disableProperty().unbind();
         currencyComboBox.managedProperty().unbind();
         currencyComboBoxLabel.visibleProperty().unbind();
         currencyComboBoxLabel.managedProperty().unbind();
@@ -758,14 +758,17 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField = balanceTuple.second;
         balanceTextField.setVisible(false);
 
-        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow, "Transfer from Bitsquare wallet", "Fund from external wallet");
-        fundFromSavingsWalletButton = tuple.first;
-        fundFromSavingsWalletButton.setVisible(false);
+
+        fundingHBox = new HBox();
+        fundingHBox.setSpacing(10);
+        fundFromSavingsWalletButton = new Button("Transfer funds from Bitsquare wallet");
+        fundFromSavingsWalletButton.setDefaultButton(true);
+        fundingHBox.setVisible(false);
         fundFromSavingsWalletButton.setDefaultButton(false);
         fundFromSavingsWalletButton.setOnAction(e -> model.useSavingsWalletForFunding());
-
-        fundFromExternalWalletButton = tuple.second;
-        fundFromExternalWalletButton.setVisible(false);
+        Label label = new Label("OR");
+        label.setPadding(new Insets(5, 0, 0, 0));
+        fundFromExternalWalletButton = new Button("Pay in funds from external wallet");
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> {
             try {
@@ -776,6 +779,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         "Perhaps you don't have one installed?").show();
             }
         });
+        fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton);
+        GridPane.setRowIndex(fundingHBox, ++gridRow);
+        GridPane.setColumnIndex(fundingHBox, 1);
+        GridPane.setMargin(fundingHBox, new Insets(15, 10, 0, 0));
+        gridPane.getChildren().add(fundingHBox);
+
 
         placeOfferButton = addButton(gridPane, ++gridRow, "");
         placeOfferButton.setVisible(false);

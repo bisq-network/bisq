@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
 import io.bitsquare.arbitration.Dispute;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
@@ -30,9 +31,15 @@ import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.offer.Offer;
 import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
 import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +100,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
 
-        int rows = 16;
+        int rows = 17;
         if (dispute.getDepositTxSerialized() != null)
             rows++;
         if (dispute.getPayoutTxSerialized() != null)
@@ -166,6 +173,36 @@ public class ContractWindow extends Overlay<ContractWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, "Deposit transaction ID:", dispute.getDepositTxId());
         if (dispute.getPayoutTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Payout transaction ID:", dispute.getPayoutTxId());
+
+        if (contract != null) {
+            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, "Contract in JSON format:", "View contract in JSON format", 0).second;
+            viewContractButton.setDefaultButton(false);
+            viewContractButton.setOnAction(e -> {
+                TextArea textArea = new TextArea();
+                textArea.setText(dispute.getContractAsJson());
+                textArea.setPrefHeight(50);
+                textArea.setEditable(false);
+                textArea.setWrapText(true);
+                textArea.setPrefSize(800, 600);
+
+                Scene viewContractScene = new Scene(textArea);
+                Stage viewContractStage = new Stage();
+                viewContractStage.setTitle("Contract for trade with ID: " + dispute.getShortTradeId());
+                viewContractStage.setScene(viewContractScene);
+                if (owner == null)
+                    owner = MainView.getRootContainer();
+                Scene rootScene = owner.getScene();
+                viewContractStage.initOwner(rootScene.getWindow());
+                viewContractStage.initModality(Modality.NONE);
+                viewContractStage.initStyle(StageStyle.UTILITY);
+                viewContractStage.show();
+
+                Window window = rootScene.getWindow();
+                double titleBarHeight = window.getHeight() - rootScene.getHeight();
+                viewContractStage.setX(Math.round(window.getX() + (owner.getWidth() - viewContractStage.getWidth()) / 2) + 200);
+                viewContractStage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - viewContractStage.getHeight()) / 2) + 50);
+            });
+        }
 
         Button cancelButton = addButtonAfterGroup(gridPane, ++rowIndex, "Close");
         //TODO app wide focus

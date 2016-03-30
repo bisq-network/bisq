@@ -34,9 +34,12 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import javafx.beans.value.ChangeListener;
+import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 
@@ -117,9 +120,20 @@ public class BuyerStep5View extends TradeStepView {
         addLabelTextField(gridPane, gridRow, "Amount to withdraw:", model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
 
-        Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(gridPane, ++gridRow, "Move to Bitsquare wallet", "Withdraw to external wallet");
-        useSavingsWalletButton = tuple2.first;
-        withdrawToExternalWalletButton = tuple2.second;
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        useSavingsWalletButton = new Button("Move funds to Bitsquare wallet");
+        useSavingsWalletButton.setDefaultButton(false);
+        Label label = new Label("OR");
+        label.setPadding(new Insets(5, 0, 0, 0));
+        withdrawToExternalWalletButton = new Button("Withdraw to external wallet");
+        withdrawToExternalWalletButton.setDefaultButton(false);
+        hBox.getChildren().addAll(useSavingsWalletButton, label, withdrawToExternalWalletButton);
+        GridPane.setRowIndex(hBox, ++gridRow);
+        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(15, 10, 0, 0));
+        gridPane.getChildren().add(hBox);
+
         useSavingsWalletButton.setOnAction(e -> {
             model.dataModel.walletService.swapTradeToSavings(trade.getId());
             handleTradeCompleted();

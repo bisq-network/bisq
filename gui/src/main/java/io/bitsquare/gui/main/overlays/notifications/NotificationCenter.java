@@ -147,36 +147,29 @@ public class NotificationCenter {
     private void onTradeStateChanged(Trade trade, Trade.State tradeState) {
         Log.traceCall(tradeState.toString());
         String message = null;
-        if (tradeManager.isBuyer(trade.getOffer())) {
-            switch (tradeState) {
-                case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
-                    message = "Your offer has been accepted by a seller.";
-                    break;
-                case DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN:
-                    message = "Your trade has at least one blockchain confirmation.\n" +
-                            "You can start the payment now.";
 
-                    break;
-               /* case FIAT_PAYMENT_RECEIPT_MSG_RECEIVED:
-                case PAYOUT_TX_COMMITTED:
-                case PAYOUT_TX_SENT:*/
-                case PAYOUT_BROAD_CASTED:
-                    message = "The trade is now completed and you can withdraw your funds.";
-                    break;
-            }
+        if (tradeState == Trade.State.PAYOUT_BROAD_CASTED) {
+            message = "The trade is now completed and you can withdraw your funds.";
         } else {
-            switch (tradeState) {
-                case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
-                    message = "Your offer has been accepted by a buyer.";
-                    break;
-                case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG:
-                    message = "The bitcoin buyer has started the payment.";
-                    break;
-               /* case FIAT_PAYMENT_RECEIPT_MSG_SENT:
-                case PAYOUT_TX_RECEIVED:
-                case PAYOUT_TX_COMMITTED:*/
-                case PAYOUT_BROAD_CASTED:
-                    message = "The trade is now completed and you can withdraw your funds.";
+            if (tradeManager.isBuyer(trade.getOffer())) {
+                switch (tradeState) {
+                    case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
+                        message = "Your offer has been accepted by a seller.";
+                        break;
+                    case DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN:
+                        message = "Your trade has at least one blockchain confirmation.\n" +
+                                "You can start the payment now.";
+                        break;
+                }
+            } else {
+                switch (tradeState) {
+                    case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
+                        message = "Your offer has been accepted by a buyer.";
+                        break;
+                    case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG:
+                        message = "The bitcoin buyer has started the payment.";
+                        break;
+                }
             }
         }
 

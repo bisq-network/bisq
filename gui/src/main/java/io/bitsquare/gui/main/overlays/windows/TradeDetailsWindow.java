@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
@@ -32,10 +33,15 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,6 +122,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
 
+        // second group
         rows = 5;
         PaymentAccountContractData buyerPaymentAccountContractData = null;
         PaymentAccountContractData sellerPaymentAccountContractData = null;
@@ -146,7 +153,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             rows++;
         if (trade.getPayoutTx() != null)
             rows++;
-        if (disputeManager.findOwnDispute(trade.getId()).isPresent())
+        boolean showDisputedTx = disputeManager.findOwnDispute(trade.getId()).isPresent() && disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId() != null;
+        if (showDisputedTx)
             rows++;
         if (trade.errorMessageProperty().get() != null)
             rows += 2;
@@ -186,14 +194,37 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, "Deposit transaction ID:", trade.getDepositTx().getHashAsString());
         if (trade.getPayoutTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Payout transaction ID:", trade.getPayoutTx().getHashAsString());
-        if (disputeManager.findOwnDispute(trade.getId()).isPresent() && disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId() != null)
+        if (showDisputedTx)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Disputed payout transaction ID:", disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId());
 
         if (contract != null) {
-            TextArea textArea = addLabelTextArea(gridPane, ++rowIndex, "Contract in JSON format:", trade.getContractAsJson()).second;
-            textArea.setText(trade.getContractAsJson());
-            textArea.setPrefHeight(50);
-            textArea.setEditable(false);
+            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, "Contract in JSON format:", "View contract", 0).second;
+            viewContractButton.setDefaultButton(false);
+            viewContractButton.setOnAction(e -> {
+                TextArea textArea = new TextArea();
+                textArea.setText(trade.getContractAsJson());
+                textArea.setPrefHeight(50);
+                textArea.setEditable(false);
+                textArea.setWrapText(true);
+                textArea.setPrefSize(800, 600);
+
+                Scene viewContractScene = new Scene(textArea);
+                Stage viewContractStage = new Stage();
+                viewContractStage.setTitle("Contract for trade with ID: " + trade.getShortId());
+                viewContractStage.setScene(viewContractScene);
+                if (owner == null)
+                    owner = MainView.getRootContainer();
+                Scene rootScene = owner.getScene();
+                viewContractStage.initOwner(rootScene.getWindow());
+                viewContractStage.initModality(Modality.NONE);
+                viewContractStage.initStyle(StageStyle.UTILITY);
+                viewContractStage.show();
+
+                Window window = rootScene.getWindow();
+                double titleBarHeight = window.getHeight() - rootScene.getHeight();
+                viewContractStage.setX(Math.round(window.getX() + (owner.getWidth() - viewContractStage.getWidth()) / 2) + 200);
+                viewContractStage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - viewContractStage.getHeight()) / 2) + 50);
+            });
         }
 
         if (trade.errorMessageProperty().get() != null) {
