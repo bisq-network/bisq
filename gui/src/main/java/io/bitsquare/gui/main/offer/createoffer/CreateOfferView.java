@@ -268,6 +268,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         currencyComboBox.setMouseTransparent(true);
         paymentAccountsComboBox.setMouseTransparent(true);
 
+        fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not());
+        fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not());
+
         if (!BitsquareApp.DEV_MODE) {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
@@ -312,8 +315,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         qrCodeImageView.setVisible(true);
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
-        fundingHBox.setVisible(true);
-        placeOfferButton.setVisible(true);
         cancelButton2.setVisible(true);
         //root.requestFocus();
 
@@ -404,9 +405,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.validationResultProperty().bind(model.volumeValidationResult);
 
         // buttons
+        placeOfferButton.visibleProperty().bind(model.dataModel.isWalletFunded);
+        placeOfferButton.managedProperty().bind(model.dataModel.isWalletFunded);
         placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
         cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
-        fundingHBox.disableProperty().bind(model.dataModel.isWalletFunded);
 
         // payment account
         currencyComboBox.prefWidthProperty().bind(paymentAccountsComboBox.widthProperty());
@@ -436,9 +438,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         minAmountTextField.validationResultProperty().unbind();
         priceTextField.validationResultProperty().unbind();
         volumeTextField.validationResultProperty().unbind();
+        fundingHBox.visibleProperty().unbind();
+        fundingHBox.managedProperty().unbind();
+        placeOfferButton.visibleProperty().unbind();
+        placeOfferButton.managedProperty().unbind();
         placeOfferButton.disableProperty().unbind();
         cancelButton2.disableProperty().unbind();
-        fundingHBox.disableProperty().unbind();
         currencyComboBox.managedProperty().unbind();
         currencyComboBoxLabel.visibleProperty().unbind();
         currencyComboBoxLabel.managedProperty().unbind();
@@ -758,12 +763,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField = balanceTuple.second;
         balanceTextField.setVisible(false);
 
-
         fundingHBox = new HBox();
+        fundingHBox.setVisible(false);
+        fundingHBox.setManaged(false);
         fundingHBox.setSpacing(10);
         fundFromSavingsWalletButton = new Button("Transfer funds from Bitsquare wallet");
         fundFromSavingsWalletButton.setDefaultButton(true);
-        fundingHBox.setVisible(false);
         fundFromSavingsWalletButton.setDefaultButton(false);
         fundFromSavingsWalletButton.setOnAction(e -> model.useSavingsWalletForFunding());
         Label label = new Label("OR");
@@ -786,8 +791,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         gridPane.getChildren().add(fundingHBox);
 
 
-        placeOfferButton = addButton(gridPane, ++gridRow, "");
-        placeOfferButton.setVisible(false);
+        placeOfferButton = addButtonAfterGroup(gridPane, gridRow, "");
         placeOfferButton.setOnAction(e -> onPlaceOffer());
         placeOfferButton.setMinHeight(40);
         placeOfferButton.setPadding(new Insets(0, 20, 0, 20));
@@ -811,7 +815,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         });
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);
-        cancelButton2.setId("cancel-button");
     }
 
     @NotNull
