@@ -26,6 +26,7 @@ import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Transitions;
+import io.bitsquare.trade.offer.OpenOfferManager;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -48,6 +49,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private static final Logger log = LoggerFactory.getLogger(EmptyWalletWindow.class);
     private final WalletService walletService;
     private final WalletPasswordWindow walletPasswordWindow;
+    private OpenOfferManager openOfferManager;
     private final BSFormatter formatter;
     private Button emptyWalletButton;
     private InputTextField addressInputTextField;
@@ -59,9 +61,10 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public EmptyWalletWindow(WalletService walletService, WalletPasswordWindow walletPasswordWindow, BSFormatter formatter) {
+    public EmptyWalletWindow(WalletService walletService, WalletPasswordWindow walletPasswordWindow, OpenOfferManager openOfferManager, BSFormatter formatter) {
         this.walletService = walletService;
         this.walletPasswordWindow = walletPasswordWindow;
+        this.openOfferManager = openOfferManager;
         this.formatter = formatter;
 
         type = Type.Instruction;
@@ -86,10 +89,11 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
 
     private void addContent() {
         addMultilineLabel(gridPane, ++rowIndex,
-                "Please use that only in emergency case if you cannot access your fund from the UI.\n" +
-                        "Before you use this tool, you should backup your data directory. After you have successfully transferred your wallet balance, remove" +
-                        " the db directory inside the data directory to start with a newly created and consistent data structure.\n" +
-                        "Please make a bug report on Github so that we can investigate what was causing the problem.",
+                "Please use that only in emergency case if you cannot access your fund from the UI.\n\n" +
+                        "Please note that all open offers will be closed automatically when using this tool.\n\n" +
+                        "Before you use this tool, please backup your data directory. " +
+                        "You can do this under \"Account/Backup\".\n\n" +
+                        "Please file a bug report on Github so that we can investigate what was causing the problem.",
                 10);
 
         Coin totalBalance = walletService.getAvailableBalance();
@@ -105,8 +109,8 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             if (addressInputTextField.getText().length() > 0 && isBalanceSufficient) {
                 if (walletService.getWallet().isEncrypted()) {
                     walletPasswordWindow
-                            .onClose(() -> blurAgain())
-                            .onAesKey(aesKey -> doEmptyWallet(aesKey))
+                            .onAesKey(this::doEmptyWallet)
+                            .onClose(this::blurAgain)
                             .show();
                 } else {
                     doEmptyWallet(null);
@@ -117,7 +121,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         closeButton = new Button("Cancel");
         closeButton.setOnAction(e -> {
             hide();
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            closeHandlerOptional.ifPresent(Runnable::run);
         });
         closeButton.setDefaultButton(!isBalanceSufficient);
 
@@ -132,27 +136,29 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
 
     private void doEmptyWallet(KeyParameter aesKey) {
         emptyWalletButton.setDisable(true);
-        try {
-            walletService.emptyWallet(addressInputTextField.getText(),
-                    aesKey,
-                    () -> {
-                        closeButton.setText("Close");
-                        addressTextField.setText(formatter.formatCoinWithCode(walletService.getAvailableBalance()));
-                        emptyWalletButton.setDisable(true);
-                        log.debug("wallet empty successful");
-                        UserThread.runAfter(() -> new Popup()
-                                .feedback("The balance of your wallet was successfully transferred.")
-                                .onClose(() -> blurAgain()).show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
-                    },
-                    (errorMessage) -> {
-                        emptyWalletButton.setDisable(false);
-                        log.debug("wallet empty failed " + errorMessage);
-                    });
-        } catch (InsufficientMoneyException | AddressFormatException e1) {
-            e1.printStackTrace();
-            log.error(e1.getMessage());
-            emptyWalletButton.setDisable(false);
-        }
+        openOfferManager.closeAllOpenOffers(() -> {
+            try {
+                walletService.emptyWallet(addressInputTextField.getText(),
+                        aesKey,
+                        () -> {
+                            closeButton.setText("Close");
+                            addressTextField.setText(formatter.formatCoinWithCode(walletService.getAvailableBalance()));
+                            emptyWalletButton.setDisable(true);
+                            log.debug("wallet empty successful");
+                            UserThread.runAfter(() -> new Popup()
+                                    .feedback("The balance of your wallet was successfully transferred.")
+                                    .onClose(this::hide)
+                                    .show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                        },
+                        (errorMessage) -> {
+                            emptyWalletButton.setDisable(false);
+                            log.debug("wallet empty failed " + errorMessage);
+                        });
+            } catch (InsufficientMoneyException | AddressFormatException e1) {
+                e1.printStackTrace();
+                log.error(e1.getMessage());
+                emptyWalletButton.setDisable(false);
+            }
+        });
     }
-
 }
