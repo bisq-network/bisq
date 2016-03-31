@@ -62,7 +62,6 @@ import javafx.stage.Window;
 import javafx.util.StringConverter;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.easybind.EasyBind;
@@ -120,10 +119,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private final Preferences preferences;
     private ChangeListener<String> tradeCurrencyCodeListener;
     private ImageView qrCodeImageView;
-    private ChangeListener<Coin> balanceListener;
     private HBox fundingHBox;
     private Subscription isSpinnerVisibleSubscription;
     private Subscription cancelButton2StyleSubscription;
+    private Subscription balanceSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +149,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         createListeners();
 
         balanceTextField.setFormatter(model.getFormatter());
-        balanceListener = (observable, oldValue, newValue) -> balanceTextField.setBalance(newValue);
 
         paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
             @Override
@@ -185,7 +183,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         onPaymentAccountsComboBoxSelected();
 
-        balanceTextField.setBalance(model.dataModel.balance.get());
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
     }
 
@@ -197,9 +194,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         if (spinner != null)
             spinner.setProgress(0);
-
-        if (balanceTextField != null)
-            balanceTextField.cleanup();
     }
 
 
@@ -487,11 +481,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         cancelButton2StyleSubscription = EasyBind.subscribe(placeOfferButton.visibleProperty(),
                 isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
+
+        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, newValue -> balanceTextField.setBalance(newValue));
     }
 
     private void removeSubscriptions() {
         isSpinnerVisibleSubscription.unsubscribe();
         cancelButton2StyleSubscription.unsubscribe();
+        balanceSubscription.unsubscribe();
     }
 
     private void createListeners() {
@@ -600,7 +597,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addListeners() {
         model.tradeCurrencyCode.addListener(tradeCurrencyCodeListener);
-        model.dataModel.balance.addListener(balanceListener);
 
         // focus out
         amountTextField.focusedProperty().addListener(amountFocusedListener);
@@ -624,7 +620,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void removeListeners() {
         model.tradeCurrencyCode.removeListener(tradeCurrencyCodeListener);
-        model.dataModel.balance.removeListener(balanceListener);
 
         // focus out
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
@@ -846,9 +841,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             if (model.dataModel.isWalletFunded.get()) {
                 new Popup().warning("You have already paid in the funds.\n" +
                         "Are you sure you want to cancel.")
-                        .actionButtonText("No")
-                        .closeButtonText("Yes, close")
-                        .onClose(() -> {
+                        .closeButtonText("No")
+                        .actionButtonText("Yes, cancel")
+                        .onAction(() -> {
                             close();
                             model.dataModel.swapTradeToSavings();
                         })

@@ -40,7 +40,6 @@ import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -57,7 +56,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final BSFormatter formatter;
 
     private String amountRange;
-    private String addressAsString;
     private String paymentLabel;
     private boolean takeOfferRequested;
     private Trade trade;
@@ -85,9 +83,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
-
-    // Those are needed for the addressTextField
-    final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
     private ChangeListener<String> amountListener;
     private ChangeListener<Coin> amountAsCoinListener;
@@ -168,9 +163,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getId());
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");
-
-        addressAsString = dataModel.getAddressEntry().getAddressString();
-        address.set(dataModel.getAddressEntry().getAddress());
 
         offerErrorListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
@@ -558,10 +550,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getPaymentLabel() {
         return paymentLabel;
-    }
-
-    public String getAddressAsString() {
-        return addressAsString;
     }
 
     public String getPrice() {

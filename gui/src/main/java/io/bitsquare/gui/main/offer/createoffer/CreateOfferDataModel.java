@@ -178,11 +178,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
         addListeners();
 
         paymentAccounts.setAll(user.getPaymentAccounts());
-        calculateTotalToPay();
-        updateBalance();
 
         if (isTabSelected)
             priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+
+        updateBalance();
     }
 
     @Override
@@ -225,6 +225,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
             paymentAccount = account;
 
         priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+
+        calculateVolume();
+        calculateTotalToPay();
+        updateBalance();
     }
 
     void onTabSelected(boolean isSelected) {
@@ -373,6 +377,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 !priceAsFiat.get().isZero()) {
             volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
         }
+
+        updateBalance();
     }
 
     void calculateAmount() {
@@ -402,7 +408,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             Coin savingWalletBalance = walletService.getSavingWalletBalance();
             totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
 
-            if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
+            if (totalToPayAsCoin.get() != null && totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
                 balance.set(totalToPayAsCoin.get());
             else
                 balance.set(totalAvailableBalance);
@@ -410,22 +416,21 @@ class CreateOfferDataModel extends ActivatableDataModel {
             balance.set(tradeWalletBalance);
         }
 
-        missingCoin.set(totalToPayAsCoin.get().subtract(balance.get()));
-        if (missingCoin.get().isNegative())
-            missingCoin.set(Coin.ZERO);
+        if (totalToPayAsCoin.get() != null) {
+            missingCoin.set(totalToPayAsCoin.get().subtract(balance.get()));
+            if (missingCoin.get().isNegative())
+                missingCoin.set(Coin.ZERO);
+        }
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
-        if (isWalletFunded.get()) {
-            //walletService.removeBalanceListener(balanceListener);
-            if (walletFundedNotification == null) {
-                walletFundedNotification = new Notification()
-                        .headLine("Trading wallet update")
-                        .notification("Your trading wallet is sufficiently funded.\n" +
-                                "Amount: " + formatter.formatCoinWithCode(totalToPayAsCoin.get()))
-                        .autoClose();
+        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null) {
+            walletFundedNotification = new Notification()
+                    .headLine("Trading wallet update")
+                    .notification("Your trading wallet is sufficiently funded.\n" +
+                            "Amount: " + formatter.formatCoinWithCode(totalToPayAsCoin.get()))
+                    .autoClose();
 
-                walletFundedNotification.show();
-            }
+            walletFundedNotification.show();
         }
     }
 

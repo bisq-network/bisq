@@ -131,7 +131,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         addBindings();
         addListeners();
 
-        calculateTotalToPay();
         updateBalance();
 
         // TODO In case that we have funded but restarted, or canceled but took again the offer we would need to 
@@ -353,9 +352,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         }
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
-        if (isWalletFunded.get()) {
-            // walletService.removeBalanceListener(balanceListener);
-            if (totalToPayAsCoin.get() != null && walletFundedNotification == null) {
+        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null) {
                 walletFundedNotification = new Notification()
                         .headLine("Trading wallet update")
                         .notification("Your trading wallet is sufficiently funded.\n" +
@@ -364,7 +361,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
                 walletFundedNotification.show();
             }
-        }
     }
 
     private boolean isBalanceSufficient(Coin balance) {

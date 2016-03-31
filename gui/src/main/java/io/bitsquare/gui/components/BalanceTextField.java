@@ -18,7 +18,6 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.BlurType;
@@ -26,14 +25,11 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 public class BalanceTextField extends AnchorPane {
 
     private static WalletService walletService;
-    private BalanceListener balanceListener;
     private Coin targetAmount;
 
     public static void setWalletService(WalletService walletService) {
@@ -63,22 +59,6 @@ public class BalanceTextField extends AnchorPane {
 
     public void setFormatter(BSFormatter formatter) {
         this.formatter = formatter;
-    }
-
-    public void setupBalanceListener(Address address) {
-        balanceListener = new BalanceListener(address) {
-            @Override
-            public void onBalanceChanged(Coin balance, Transaction tx) {
-                updateBalance(balance);
-            }
-        };
-        walletService.addBalanceListener(balanceListener);
-        updateBalance(walletService.getBalanceForAddress(address));
-    }
-
-    public void cleanup() {
-        if (balanceListener != null)
-            walletService.removeBalanceListener(balanceListener);
     }
 
     public void setBalance(Coin balance) {

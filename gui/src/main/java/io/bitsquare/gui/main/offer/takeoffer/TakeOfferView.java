@@ -116,7 +116,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Subscription balanceSubscription;
     // private Subscription noSufficientFeeSubscription;
     //  private MonadicBinding<Boolean> noSufficientFeeBinding;
-    private Subscription totalToPaySubscription;
     private Subscription cancelButton2StyleSubscription;
 
 
@@ -142,6 +141,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addPaymentGroup();
         addAmountPriceGroup();
         addFundingGroup();
+
+        balanceTextField.setFormatter(model.getFormatter());
 
         amountFocusedListener = (o, oldValue, newValue) -> {
             model.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
@@ -170,6 +171,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             paymentAccountsComboBox.setItems(model.getPossiblePaymentAccounts());
             paymentAccountsComboBox.getSelectionModel().select(0);
         }
+
+        balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
     }
 
     @Override
@@ -183,9 +186,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (spinner != null)
             spinner.setProgress(0);
-
-        if (balanceTextField != null)
-            balanceTextField.cleanup();
     }
 
 
@@ -212,8 +212,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             takeOfferButton.setText("Review take offer for selling bitcoin");
         }
 
-        balanceTextField.setFormatter(model.getFormatter());
-        balanceTextField.setupBalanceListener(model.address.get());
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
         paymentAccountsLabel.setVisible(showComboBox);
@@ -232,7 +230,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         amountRangeTextField.setText(model.getAmountRange());
         priceTextField.setText(model.getPrice());
         addressTextField.setPaymentLabel(model.getPaymentLabel());
-        addressTextField.setAddress(model.getAddressAsString());
+        addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
     }
 
     public void setCloseHandler(OfferView.CloseHandler closeHandler) {
@@ -290,6 +288,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceTextField.setMouseTransparent(true);
         volumeTextField.setMouseTransparent(true);
 
+        balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
+
+
         if (!BitsquareApp.DEV_MODE) {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
@@ -309,7 +310,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                             "The amount is the sum of " + tradeAmountText + "the security deposit, the trading fee and " +
                             "the bitcoin mining fee.\n\n" +
                             "Please send from your external Bitcoin wallet the exact amount to the address: " +
-                            model.getAddressAsString() + "\n(you can copy the address in the screen below after closing that popup)\n\n" +
+                            model.dataModel.getAddressEntry().getAddressString() + "\n(you can copy the address in the screen below after closing that popup)\n\n" +
                             "Make sure you use a sufficiently high mining fee of at least " +
                             model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) +
                             " to avoid problems that your transaction does not get confirmed in the blockchain.\n" +
@@ -530,7 +531,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });*/
 
         balanceSubscription = EasyBind.subscribe(model.dataModel.balance, newValue -> balanceTextField.setBalance(newValue));
-        totalToPaySubscription = EasyBind.subscribe(model.dataModel.totalToPayAsCoin, newValue -> balanceTextField.setTargetAmount(newValue));
         cancelButton2StyleSubscription = EasyBind.subscribe(takeOfferButton.visibleProperty(),
                 isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
     }
@@ -544,7 +544,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         showTransactionPublishedScreenSubscription.unsubscribe();
         // noSufficientFeeSubscription.unsubscribe();
         balanceSubscription.unsubscribe();
-        totalToPaySubscription.unsubscribe();
         cancelButton2StyleSubscription.unsubscribe();
     }
 
@@ -757,22 +756,19 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takeOfferButton.setManaged(false);
         takeOfferButton.setMinHeight(40);
         takeOfferButton.setPadding(new Insets(0, 20, 0, 20));
-        takeOfferButton.setOnAction(e -> {
-            onTakeOffer();
-            balanceTextField.cleanup();
-        });
+        takeOfferButton.setOnAction(e -> onTakeOffer());
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.isWalletFunded.get()) {
                 new Popup().warning("You have already paid in the funds.\n" +
                         "Are you sure you want to cancel.")
-                        .actionButtonText("No")
-                        .onClose(() -> {
+                        .closeButtonText("No")
+                        .actionButtonText("Yes, cancel")
+                        .onAction(() -> {
                             model.dataModel.swapTradeToSavings();
                             close();
                         })
-                        .closeButtonText("Yes, cancel")
                         .show();
             } else {
                 close();
@@ -785,7 +781,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     @NotNull
     private String getBitcoinURI() {
-        return model.getAddressAsString() != null ? BitcoinURI.convertToBitcoinURI(model.getAddressAsString(), model.dataModel.missingCoin.get(),
+        String addressString = model.dataModel.getAddressEntry().getAddressString();
+        return addressString != null ? BitcoinURI.convertToBitcoinURI(addressString, model.dataModel.missingCoin.get(),
                 model.getPaymentLabel(), null) : "";
     }
 

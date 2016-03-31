@@ -158,7 +158,7 @@ public class TradeWalletService {
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         if (useSavingsWallet)
-            sendRequest.coinSelector = new AddressBasedCoinSelector(params);
+            sendRequest.coinSelector = new SavingsWalletCoinSelector(params);
         else
             sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry);
         // We use a fixed fee

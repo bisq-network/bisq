@@ -37,6 +37,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -91,6 +92,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private InputTextField amountTextField;
     private Subscription amountTextFieldSubscription;
     private String paymentLabel;
+    private ChangeListener<DepositListItem> tableViewSelectionListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -108,8 +110,15 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        // trigger creation of at least 1 savings address
+        walletService.getUnusedSavingsAddressEntry();
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No deposit addresses are generated yet"));
+        tableViewSelectionListener = (observableValue, oldValue, newValue) -> {
+            if (newValue != null)
+                fillForm(newValue.getAddressString());
+        };
 
         setSelectColumnCellFactory();
         setAddressColumnCellFactory();
@@ -174,12 +183,17 @@ public class DepositView extends ActivatableView<VBox, Void> {
         generateNewAddressButton.setOnAction(event -> {
             boolean hasUnUsedAddress = observableList.stream().filter(e -> e.getNumTxOutputs() == 0).findAny().isPresent();
             if (hasUnUsedAddress) {
-                new Popup().warning("You have addresses which are not used in any transaction.\n" +
-                        "Please select in the address table any unused address.").show();
+                new Popup().warning("You have already at least one address which is not used yet in any transaction.\n" +
+                        "Please select in the address table an unused address.").show();
             } else {
                 AddressEntry newSavingsAddressEntry = walletService.getNewSavingsAddressEntry();
-                fillForm(newSavingsAddressEntry.getAddressString());
+                //fillForm(newSavingsAddressEntry.getAddressString());
                 updateList();
+                observableList.stream()
+                        .filter(depositListItem -> depositListItem.getAddressString().equals(newSavingsAddressEntry.getAddressString()))
+                        .findAny()
+                        .ifPresent(depositListItem -> tableView.getSelectionModel().select(depositListItem));
+
             }
         });
 
@@ -212,6 +226,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        tableView.getSelectionModel().selectedItemProperty().addListener(tableViewSelectionListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
@@ -225,6 +240,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
+        tableView.getSelectionModel().selectedItemProperty().removeListener(tableViewSelectionListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(DepositListItem::cleanup);
         walletService.removeBalanceListener(balanceListener);
@@ -256,7 +272,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
         addressTextField.setAddress(address);
 
         updateQRCode();
-
     }
 
     private void updateQRCode() {
@@ -343,7 +358,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         button = new Button("Select");
-                                        button.setOnAction(e -> fillForm(item.getAddressString()));
+                                        button.setOnAction(e -> tableView.getSelectionModel().select(item));
                                         setGraphic(button);
                                     }
                                 } else {
@@ -379,7 +394,10 @@ public class DepositView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     String addressString = item.getAddressString();
                                     field = new HyperlinkWithIcon(addressString, AwesomeIcon.EXTERNAL_LINK);
-                                    field.setOnAction(event -> openBlockExplorer(item));
+                                    field.setOnAction(event -> {
+                                        openBlockExplorer(item);
+                                        tableView.getSelectionModel().select(item);
+                                    });
                                     field.setTooltip(new Tooltip("Open external blockchain explorer for " +
                                             "address: " + addressString));
                                     setGraphic(field);
