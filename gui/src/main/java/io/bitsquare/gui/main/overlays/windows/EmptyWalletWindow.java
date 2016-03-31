@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
@@ -53,7 +54,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private final BSFormatter formatter;
     private Button emptyWalletButton;
     private InputTextField addressInputTextField;
-    private TextField addressTextField;
+    private TextField balanceTextField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,10 +98,14 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                 10);
 
         Coin totalBalance = walletService.getAvailableBalance();
-        addressTextField = addLabelTextField(gridPane, ++rowIndex, "Your available wallet balance:",
+        balanceTextField = addLabelTextField(gridPane, ++rowIndex, "Your available wallet balance:",
                 formatter.formatCoinWithCode(totalBalance), 10).second;
+
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, "Your destination address:");
         addressInputTextField = tuple.second;
+        if (BitsquareApp.DEV_MODE)
+            addressInputTextField.setText("mo6y756TnpdZQCeHStraavjqrndeXzVkxi");
+
         emptyWalletButton = new Button("Empty wallet");
         boolean isBalanceSufficient = Restrictions.isAboveDust(totalBalance);
         emptyWalletButton.setDefaultButton(isBalanceSufficient);
@@ -142,13 +147,13 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                         aesKey,
                         () -> {
                             closeButton.setText("Close");
-                            addressTextField.setText(formatter.formatCoinWithCode(walletService.getAvailableBalance()));
+                            balanceTextField.setText(formatter.formatCoinWithCode(walletService.getAvailableBalance()));
                             emptyWalletButton.setDisable(true);
                             log.debug("wallet empty successful");
-                            UserThread.runAfter(() -> new Popup()
+                            onClose(() -> UserThread.runAfter(() -> new Popup()
                                     .feedback("The balance of your wallet was successfully transferred.")
-                                    .onClose(this::hide)
-                                    .show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                                    .show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS));
+                            doClose();
                         },
                         (errorMessage) -> {
                             emptyWalletButton.setDisable(false);

@@ -59,17 +59,20 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private Preferences preferences;
 
     private Button restoreButton;
-    private TextArea seedWordsTextArea;
-    private DatePicker datePicker;
+    private TextArea displaySeedWordsTextArea, restorSeedWordsTextArea;
+    private DatePicker datePicker, restoreDatePicker;
 
     private int gridRow = 0;
     private DeterministicSeed keyChainSeed;
     private ChangeListener<Boolean> seedWordsValidChangeListener;
-    private SimpleBooleanProperty seedWordsValid;
-    private SimpleBooleanProperty dateValid;
+    private SimpleBooleanProperty seedWordsValid = new SimpleBooleanProperty(false);
+    private SimpleBooleanProperty dateValid = new SimpleBooleanProperty(false);
     private ChangeListener<String> seedWordsTextAreaChangeListener;
     private ChangeListener<Boolean> datePickerChangeListener;
     private ChangeListener<LocalDate> dateChangeListener;
+    BooleanProperty seedWordsEdited = new SimpleBooleanProperty();
+    private String seedWordText;
+    private LocalDate walletCreationDate;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -85,105 +88,31 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void initialize() {
-        addTitledGroupBg(root, gridRow, 3, "Backup or restore your wallet seed words");
-        seedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_DISTANCE).second;
-        seedWordsTextArea.setPrefHeight(60);
+        addTitledGroupBg(root, gridRow, 2, "Backup your wallet seed words");
+        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_DISTANCE).second;
+        displaySeedWordsTextArea.setPrefHeight(60);
         datePicker = addLabelDatePicker(root, ++gridRow, "Creation Date:").second;
+        datePicker.setMouseTransparent(true);
+
+        addTitledGroupBg(root, ++gridRow, 3, "Restore your wallet seed words", Layout.GROUP_DISTANCE);
+        restorSeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        restorSeedWordsTextArea.setPrefHeight(60);
+        restoreDatePicker = addLabelDatePicker(root, ++gridRow, "Creation Date:").second;
         restoreButton = addButton(root, ++gridRow, "Restore wallet");
 
         addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
         addMultilineLabel(root, gridRow, "Please write down you wallet seed words and the creation date.\n" +
-                        "You can recover your wallet with those words and the date in emergency case.",
+                        "You can recover your wallet with those seed words and the creation date.",
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-    }
 
-    @Override
-    public void activate() {
-        seedWordsTextArea.getStyleClass().remove("validation_error");
-        datePicker.getStyleClass().remove("validation_error");
 
-        DeterministicSeed keyChainSeed = walletService.getWallet().getKeyChainSeed();
-        if (keyChainSeed.isEncrypted()) {
-            restoreButton.setDisable(true);
-            seedWordsTextArea.setDisable(true);
-            datePicker.setDisable(true);
-            askForPassword();
-        } else {
-            String key = "showSeedWordsWarning";
-            if (preferences.showAgain(key)) {
-                new Popup().warning("You have not setup a wallet password which would protect the display of the seed words.\n\n" +
-                        "Do you want to display the seed words?")
-                        .actionButtonText("Yes, and don't ask me again")
-                        .onAction(() -> {
-                            preferences.dontShowAgain(key, true);
-                            showSeedScreen(keyChainSeed);
-                        })
-                        .closeButtonText("No")
-                        .show();
-            } else {
-                showSeedScreen(keyChainSeed);
-            }
-        }
-    }
-
-    @Override
-    protected void deactivate() {
-        if (seedWordsTextAreaChangeListener != null)
-            seedWordsTextArea.textProperty().removeListener(seedWordsTextAreaChangeListener);
-
-        seedWordsTextArea.setText("");
-        seedWordsTextArea.getStyleClass().remove("validation_error");
-
-        if (dateChangeListener != null)
-            datePicker.valueProperty().removeListener(dateChangeListener);
-
-        datePicker.setValue(null);
-        datePicker.getStyleClass().remove("validation_error");
-
-        restoreButton.disableProperty().unbind();
-
-        if (seedWordsValid != null && seedWordsValidChangeListener != null)
-            seedWordsValid.removeListener(seedWordsValidChangeListener);
-
-        if (dateValid != null && datePickerChangeListener != null)
-            dateValid.removeListener(datePickerChangeListener);
-    }
-
-    private void askForPassword() {
-        walletPasswordWindow.onAesKey(aesKey -> {
-            Wallet wallet = walletService.getWallet();
-            KeyCrypter keyCrypter = wallet.getKeyCrypter();
-            keyChainSeed = wallet.getKeyChainSeed();
-            if (keyCrypter != null) {
-                DeterministicSeed decryptedSeed = keyChainSeed.decrypt(keyCrypter, "", aesKey);
-                showSeedScreen(decryptedSeed);
-            } else {
-                log.warn("keyCrypter is null");
-            }
-        }).show();
-    }
-
-    private void showSeedScreen(DeterministicSeed seed) {
-        seedWordsTextArea.setDisable(false);
-        datePicker.setDisable(false);
-        List<String> mnemonicCode = seed.getMnemonicCode();
-        if (mnemonicCode != null)
-            seedWordsTextArea.setText(Joiner.on(" ").join(mnemonicCode));
-        LocalDate creationDate = Instant.ofEpochSecond(seed.getCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
-        datePicker.setValue(creationDate);
-        restoreButton.setOnAction(e -> onRestore());
-
-        BooleanProperty seedWordsEdited = new SimpleBooleanProperty();
-
-        seedWordsValid = new SimpleBooleanProperty(true);
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {
-                seedWordsTextArea.getStyleClass().remove("validation_error");
+                restorSeedWordsTextArea.getStyleClass().remove("validation_error");
             } else {
-                seedWordsTextArea.getStyleClass().add("validation_error");
+                restorSeedWordsTextArea.getStyleClass().add("validation_error");
             }
         };
-        seedWordsValid.addListener(seedWordsValidChangeListener);
 
         seedWordsTextAreaChangeListener = (observable, oldValue, newValue) -> {
             seedWordsEdited.set(true);
@@ -194,28 +123,108 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
             } catch (IOException | MnemonicException e) {
                 seedWordsValid.set(false);
             }
-
-            if (creationDate.equals(datePicker.getValue()))
-                datePicker.setValue(null);
         };
-        seedWordsTextArea.textProperty().addListener(seedWordsTextAreaChangeListener);
 
-        dateValid = new SimpleBooleanProperty(true);
+
         datePickerChangeListener = (observable, oldValue, newValue) -> {
             if (newValue)
-                datePicker.getStyleClass().remove("validation_error");
+                restoreDatePicker.getStyleClass().remove("validation_error");
             else
-                datePicker.getStyleClass().add("validation_error");
+                restoreDatePicker.getStyleClass().add("validation_error");
         };
-        dateValid.addListener(datePickerChangeListener);
 
         dateChangeListener = (observable, oldValue, newValue) -> {
-            dateValid.set(newValue != null && !newValue.isAfter(LocalDate.now()));
+            dateValid.set(walletCreationDate.equals(newValue));
         };
-        datePicker.valueProperty().addListener(dateChangeListener);
+    }
 
+    @Override
+    public void activate() {
+        seedWordsValid.addListener(seedWordsValidChangeListener);
+        dateValid.addListener(datePickerChangeListener);
+        restorSeedWordsTextArea.textProperty().addListener(seedWordsTextAreaChangeListener);
+        restoreDatePicker.valueProperty().addListener(dateChangeListener);
         restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !dateValid.get() || !seedWordsEdited.get(),
                 seedWordsValid, dateValid, seedWordsEdited));
+
+        restoreButton.setOnAction(e -> onRestore());
+
+        restorSeedWordsTextArea.getStyleClass().remove("validation_error");
+        restoreDatePicker.getStyleClass().remove("validation_error");
+
+
+        DeterministicSeed keyChainSeed = walletService.getWallet().getKeyChainSeed();
+        // wallet creation date is not encrypted
+        walletCreationDate = Instant.ofEpochSecond(keyChainSeed.getCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
+        log.error("walletCreationDate " + walletCreationDate);
+        if (keyChainSeed.isEncrypted()) {
+            askForPassword();
+        } else {
+            String key = "showSeedWordsWarning";
+            if (preferences.showAgain(key)) {
+                new Popup().warning("You have not setup a wallet password which would protect the display of the seed words.\n\n" +
+                        "Do you want to display the seed words?")
+                        .actionButtonText("Yes, and don't ask me again")
+                        .onAction(() -> {
+                            preferences.dontShowAgain(key, true);
+                            initSeedWords(keyChainSeed);
+                            showSeedScreen();
+                        })
+                        .closeButtonText("No")
+                        .show();
+            } else {
+                initSeedWords(keyChainSeed);
+                showSeedScreen();
+            }
+        }
+    }
+
+    @Override
+    protected void deactivate() {
+        seedWordsValid.removeListener(seedWordsValidChangeListener);
+        dateValid.removeListener(datePickerChangeListener);
+        restorSeedWordsTextArea.textProperty().removeListener(seedWordsTextAreaChangeListener);
+        restoreDatePicker.valueProperty().removeListener(dateChangeListener);
+        restoreButton.disableProperty().unbind();
+
+        restoreButton.setOnAction(null);
+
+
+        displaySeedWordsTextArea.setText("");
+        restorSeedWordsTextArea.setText("");
+
+        restoreDatePicker.setValue(null);
+        datePicker.setValue(null);
+
+        restorSeedWordsTextArea.getStyleClass().remove("validation_error");
+        restoreDatePicker.getStyleClass().remove("validation_error");
+    }
+
+    private void askForPassword() {
+        walletPasswordWindow.headLine("Enter password to view seed words").onAesKey(aesKey -> {
+            Wallet wallet = walletService.getWallet();
+            KeyCrypter keyCrypter = wallet.getKeyCrypter();
+            keyChainSeed = wallet.getKeyChainSeed();
+            if (keyCrypter != null) {
+                DeterministicSeed decryptedSeed = keyChainSeed.decrypt(keyCrypter, "", aesKey);
+                initSeedWords(decryptedSeed);
+                showSeedScreen();
+            } else {
+                log.warn("keyCrypter is null");
+            }
+        }).show();
+    }
+
+    private void initSeedWords(DeterministicSeed seed) {
+        List<String> mnemonicCode = seed.getMnemonicCode();
+        if (mnemonicCode != null) {
+            seedWordText = Joiner.on(" ").join(mnemonicCode);
+        }
+    }
+
+    private void showSeedScreen() {
+        displaySeedWordsTextArea.setText(seedWordText);
+        datePicker.setValue(walletCreationDate);
     }
 
     private void onRestore() {
@@ -241,9 +250,9 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     }
 
     private void doRestore() {
-        log.info("Attempting wallet restore using seed '{}' from date {}", seedWordsTextArea.getText(), datePicker.getValue());
-        long date = datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
-        DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
+        log.info("Attempting wallet restore using seed '{}' from date {}", restorSeedWordsTextArea.getText(), restoreDatePicker.getValue());
+        long date = restoreDatePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+        DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(restorSeedWordsTextArea.getText()), null, "", date);
         walletService.restoreSeedWords(seed,
                 () -> UserThread.execute(() -> {
                     log.debug("Wallet restored with seed words");
@@ -253,20 +262,9 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                                     "You need to shut down and restart the application.")
                             .closeButtonText("Shut down")
                             .onClose(() -> BitsquareApp.shutDownHandler.run()).show();
-                    //TODO
-                   /* new Popup()
-                            .information("Wallet restored successfully with the new seed words.\n\n" +
-                                    "You need to restart now the application.")
-                            .closeButtonText("Restart")
-                            .onClose(() -> BitsquareApp.restartDownHandler.run()).show();*/
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());
-                    new Popup()
-                            .warning("You entered the wrong password.\n\n" +
-                                    "Please try entering your password again, carefully checking for typos or spelling errors.")
-                            .show();
-
                     new Popup()
                             .error("An error occurred when restoring the wallet with seed words.\n" +
                                     "Error message: " + throwable.getMessage())
