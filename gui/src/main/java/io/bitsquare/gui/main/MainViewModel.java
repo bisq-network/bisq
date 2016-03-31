@@ -26,7 +26,6 @@ import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
@@ -56,6 +55,7 @@ import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.payment.OKPayAccount;
+import io.bitsquare.trade.TradableCollections;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -73,11 +73,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
@@ -682,7 +684,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateReservedBalance() {
-        Coin sum = Coin.valueOf(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
+        Coin sum = Coin.valueOf(TradableCollections.getNotCompletedTradableItems(openOfferManager, tradeManager).stream()
                 .map(tradable -> walletService.getTradeAddressEntry(tradable.getId()))
                 .map(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()))
                 .mapToLong(Coin::getValue)
@@ -716,18 +718,9 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateAvailableBalance() {
-        List<AddressEntry> result = new ArrayList<>();
-
-        List<String> reservedTrades = Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
-                .map(tradable -> tradable.getOffer().getId())
-                .collect(Collectors.toList());
-
-        result.addAll(walletService.getAddressEntryList().stream()
-                .filter(e -> walletService.getBalanceForAddress(e.getAddress()).isPositive())
-                .filter(e -> !reservedTrades.contains(e.getOfferId()))
-                .collect(Collectors.toList()));
-
-        Optional<Coin> totalAvailableOptional = result.stream().map(e -> walletService.getBalanceForAddress(e.getAddress())).reduce(Coin::add);
+        Optional<Coin> totalAvailableOptional = TradableCollections.getAddressEntriesForAvailableBalance(openOfferManager, tradeManager, walletService)
+                .stream()
+                .map(e -> walletService.getBalanceForAddress(e.getAddress())).reduce(Coin::add);
         if (totalAvailableOptional.isPresent())
             availableBalance.set(formatter.formatCoinWithCode(totalAvailableOptional.get()));
         else

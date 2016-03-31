@@ -34,11 +34,11 @@ import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.trade.Tradable;
+import io.bitsquare.trade.TradableCollections;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
-import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
 import javafx.beans.binding.Bindings;
@@ -61,7 +61,6 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
@@ -277,32 +276,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void openDetailPopup(WithdrawalListItem item) {
-        Optional<Tradable> tradableOptional = getTradable(item);
-        if (tradableOptional.isPresent()) {
-            Tradable tradable = tradableOptional.get();
-            if (tradable instanceof Trade) {
-                tradeDetailsWindow.show((Trade) tradable);
-            } else if (tradable instanceof OpenOffer) {
-                offerDetailsWindow.show(tradable.getOffer());
-            }
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
-        Set<String> reservedTrades = Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
-                .filter(tradable -> !(tradable instanceof Trade) || ((Trade) tradable).getState().getPhase() != Trade.Phase.PAYOUT_PAID)
-                .map(tradable -> tradable.getOffer().getId())
-                .collect(Collectors.toSet());
-
         observableList.forEach(WithdrawalListItem::cleanup);
-        observableList.setAll(walletService.getAddressEntryList().stream()
-                .filter(e -> walletService.getBalanceForAddress(e.getAddress()).isPositive())
-                .filter(e -> !reservedTrades.contains(e.getOfferId()))
+        observableList.setAll(TradableCollections.getAddressEntriesForAvailableBalance(openOfferManager, tradeManager, walletService).stream()
                 .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, formatter))
                 .collect(Collectors.toList()));
     }

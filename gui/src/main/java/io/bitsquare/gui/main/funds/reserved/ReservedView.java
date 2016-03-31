@@ -30,6 +30,7 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
+import io.bitsquare.trade.TradableCollections;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -49,7 +50,6 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @FxmlView
 public class ReservedView extends ActivatableView<VBox, Void> {
@@ -135,9 +135,9 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(ReservedListItem::cleanup);
-        observableList.clear();
-        observableList.setAll(Stream.concat(openOfferManager.getOpenOffers().stream(), tradeManager.getTrades().stream())
-                .filter(tradable -> !(tradable instanceof Trade) || ((Trade) tradable).getState().getPhase() != Trade.Phase.PAYOUT_PAID)
+
+
+        observableList.setAll(TradableCollections.getNotCompletedTradableItems(openOfferManager, tradeManager).stream()
                 .map(tradable -> new ReservedListItem(tradable, walletService.getTradeAddressEntry(tradable.getOffer().getId()), walletService, formatter))
                 .collect(Collectors.toList()));
     }
