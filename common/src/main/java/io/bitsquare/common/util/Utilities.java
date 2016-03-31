@@ -144,6 +144,23 @@ public class Utilities {
         }
     }
 
+    public static void openDirectory(File directory) throws IOException {
+        if (!isLinux()
+                && Desktop.isDesktopSupported()
+                && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+            Desktop.getDesktop().open(directory);
+        } else {
+            // Maybe Application.HostServices works in those cases?
+            // HostServices hostServices = getHostServices();
+            // hostServices.showDocument(uri.toString());
+
+            // On Linux Desktop is poorly implemented.
+            // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
+            if (!DesktopUtil.open(directory))
+                throw new IOException("Failed to open directory: " + directory.toString());
+        }
+    }
+
     public static void printSystemLoad() {
         Runtime runtime = Runtime.getRuntime();
         long free = runtime.freeMemory() / 1024 / 1024;
