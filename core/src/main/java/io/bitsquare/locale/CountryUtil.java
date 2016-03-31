@@ -31,7 +31,7 @@ public class CountryUtil {
         String[] codes = {"AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES"};
         populateCountryListByCodes(list, codes);
-        list.sort((a, b) -> a.code.compareTo(b.code));
+        list.sort((a, b) -> a.name.compareTo(b.name));
 
         return list;
     }
@@ -57,7 +57,7 @@ public class CountryUtil {
         String[] codes = {"BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
                 "SE", "IS", "NO", "LI", "CH"};
         populateCountryListByCodes(list, codes);
-        list.sort((a, b) -> a.code.compareTo(b.code));
+        list.sort((a, b) -> a.name.compareTo(b.name));
         return list;
     }
 
