@@ -149,145 +149,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         };
     }
 
+
     @Override
     protected void activate() {
-        paymentAccountsComboBox.setOnAction(e -> onPaymentAccountsComboBoxSelected());
-
+        addBindings();
+        addSubscriptions();
         amountTextField.focusedProperty().addListener(amountFocusedListener);
-
-        amountBtcLabel.textProperty().bind(model.btcCode);
-        amountTextField.textProperty().bindBidirectional(model.amount);
-        volumeTextField.textProperty().bindBidirectional(model.volume);
-        totalToPayTextField.textProperty().bind(model.totalToPay);
-        addressTextField.amountAsCoinProperty().bind(model.dataModel.missingCoin);
-        amountTextField.validationResultProperty().bind(model.amountValidationResult);
-        takeOfferButton.disableProperty().bind(model.isTakeOfferButtonDisabled);
-        takeOfferButton.visibleProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
-        takeOfferButton.managedProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
-        fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
-        fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
-
-        spinner.visibleProperty().bind(model.isSpinnerVisible);
-        spinner.managedProperty().bind(model.isSpinnerVisible);
-
-        spinnerInfoLabel.visibleProperty().bind(model.isSpinnerVisible);
-        spinnerInfoLabel.managedProperty().bind(model.isSpinnerVisible);
-        spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
-
-        priceCurrencyLabel.textProperty().bind(createStringBinding(() ->
-                model.dataModel.getCurrencyCode() + "/" + model.btcCode.get(), model.btcCode));
-
-        volumeCurrencyLabel.setText(model.dataModel.getCurrencyCode());
-        amountRangeBtcLabel.textProperty().bind(model.btcCode);
-
-        priceDescriptionLabel.setText(BSResources.get("createOffer.amountPriceBox.priceDescription", model.dataModel.getCurrencyCode()));
-        volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
-
-        errorPopupDisplayed = new SimpleBooleanProperty();
-        offerWarningSubscription = EasyBind.subscribe(model.offerWarning, newValue -> {
-            if (newValue != null) {
-                if (offerDetailsWindowDisplayed)
-                    offerDetailsWindow.hide();
-
-                UserThread.runAfter(() -> new Popup().warning(newValue + "\n\n" +
-                        "If you have already paid in funds you can withdraw it in the " +
-                        "\"Funds/Available for withdrawal\" screen.")
-                        .actionButtonText("Go to \"Available for withdrawal\"")
-                        .onAction(() -> {
-                            errorPopupDisplayed.set(true);
-                            model.resetOfferWarning();
-                            close();
-                            navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
-                        })
-                        .onClose(() -> {
-                            errorPopupDisplayed.set(true);
-                            model.resetOfferWarning();
-                            close();
-                        })
-                        .show(), 100, TimeUnit.MILLISECONDS);
-            }
-        });
-
-        errorMessageSubscription = EasyBind.subscribe(model.errorMessage, newValue -> {
-            if (newValue != null) {
-                new Popup().error(BSResources.get("takeOffer.error.message", model.errorMessage.get()) +
-                        "Please try to restart you application and check your network connection to see if you can resolve the issue.")
-                        .onClose(() -> {
-                            errorPopupDisplayed.set(true);
-                            model.resetErrorMessage();
-                            close();
-                        })
-                        .show();
-            }
-        });
-        isOfferAvailableSubscription = EasyBind.subscribe(model.isOfferAvailable, newValue -> {
-            if (newValue) {
-                offerAvailabilitySpinner.setProgress(0);
-                offerAvailabilitySpinner.setVisible(false);
-                offerAvailabilitySpinnerLabel.setVisible(false);
-            }
-        });
-
-        isSpinnerVisibleSubscription = EasyBind.subscribe(model.isSpinnerVisible,
-                isSpinnerVisible -> spinner.setProgress(isSpinnerVisible ? -1 : 0));
-
-        showWarningInvalidBtcDecimalPlacesSubscription = EasyBind.subscribe(model.showWarningInvalidBtcDecimalPlaces, newValue -> {
-            if (newValue) {
-                new Popup().warning(BSResources.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces")).show();
-                model.showWarningInvalidBtcDecimalPlaces.set(false);
-            }
-        });
-        showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
-            if (newValue && BitsquareApp.DEV_MODE) {
-                close();
-                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
-            } else if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
-                String key = "takeOfferSuccessInfo";
-                if (preferences.showAgain(key)) {
-                    UserThread.runAfter(() -> new Popup().headLine(BSResources.get("takeOffer.success.headline"))
-                            .feedback(BSResources.get("takeOffer.success.info"))
-                            .actionButtonText("Go to \"Open trades\"")
-                            .dontShowAgainId(key, preferences)
-                            .onAction(() -> {
-                                UserThread.runAfter(
-                                        () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
-                                        , 100, TimeUnit.MILLISECONDS);
-                                close();
-                            })
-                            .onClose(this::close)
-                            .show(), 1);
-                } else {
-                    close();
-                }
-            }
-        });
-
-        if (model.getPossiblePaymentAccounts().size() > 1) {
-            paymentAccountsComboBox.setItems(model.getPossiblePaymentAccounts());
-            paymentAccountsComboBox.getSelectionModel().select(0);
-        }
-
-        noSufficientFeeBinding = EasyBind.combine(model.dataModel.isWalletFunded, model.dataModel.isMainNet, model.dataModel.isFeeFromFundingTxSufficient,
-                (isWalletFunded, isMainNet, isFeeSufficient) -> isWalletFunded && isMainNet && !isFeeSufficient);
-        noSufficientFeeSubscription = noSufficientFeeBinding.subscribe((observable, oldValue, newValue) -> {
-            if (newValue)
-                new Popup().warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
-                        "You need to use at least a mining fee of " +
-                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + ".\n\n" +
-                        "The fee used in your funding transaction was only " +
-                        model.formatter.formatCoinWithCode(model.dataModel.feeFromFundingTx) + ".\n\n" +
-                        "The trade transactions might take too much time to be included in " +
-                        "a block if the fee is too low.\n" +
-                        "Please check at your external wallet that you set the required fee and " +
-                        "do a funding again with the correct fee.\n\n" +
-                        "In the \"Funds/Open for withdrawal\" section you can withdraw those funds.")
-                        .closeButtonText("Close")
-                        .onClose(() -> {
-                            close();
-                            navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
-                        })
-                        .show();
-        });
 
         if (offerAvailabilitySpinner != null && offerAvailabilitySpinner.isVisible())
             offerAvailabilitySpinner.setProgress(-1);
@@ -295,49 +162,21 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (spinner != null && spinner.isVisible())
             spinner.setProgress(-1);
 
-        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, newValue -> balanceTextField.setBalance(newValue));
-        totalToPaySubscription = EasyBind.subscribe(model.dataModel.totalToPayAsCoin, newValue -> balanceTextField.setTargetAmount(newValue));
+        volumeCurrencyLabel.setText(model.dataModel.getCurrencyCode());
+        priceDescriptionLabel.setText(BSResources.get("createOffer.amountPriceBox.priceDescription", model.dataModel.getCurrencyCode()));
+        volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
+
+        if (model.getPossiblePaymentAccounts().size() > 1) {
+            paymentAccountsComboBox.setItems(model.getPossiblePaymentAccounts());
+            paymentAccountsComboBox.getSelectionModel().select(0);
+        }
     }
 
     @Override
     protected void deactivate() {
-        paymentAccountsComboBox.setOnAction(null);
-
+        removeBindings();
+        removeSubscriptions();
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
-
-        amountBtcLabel.textProperty().unbind();
-        amountTextField.textProperty().unbindBidirectional(model.amount);
-        volumeTextField.textProperty().unbindBidirectional(model.volume);
-        totalToPayTextField.textProperty().unbind();
-        addressTextField.amountAsCoinProperty().unbind();
-        amountTextField.validationResultProperty().unbind();
-        priceCurrencyLabel.textProperty().unbind();
-        volumeCurrencyLabel.textProperty().unbind();
-        amountRangeBtcLabel.textProperty().unbind();
-        priceDescriptionLabel.textProperty().unbind();
-        volumeDescriptionLabel.textProperty().unbind();
-
-        fundingHBox.visibleProperty().unbind();
-        fundingHBox.managedProperty().unbind();
-        takeOfferButton.visibleProperty().unbind();
-        takeOfferButton.managedProperty().unbind();
-        takeOfferButton.disableProperty().unbind();
-        spinner.visibleProperty().unbind();
-        spinner.managedProperty().unbind();
-        spinnerInfoLabel.visibleProperty().unbind();
-        spinnerInfoLabel.managedProperty().unbind();
-        spinnerInfoLabel.textProperty().unbind();
-
-        offerWarningSubscription.unsubscribe();
-        errorMessageSubscription.unsubscribe();
-        isOfferAvailableSubscription.unsubscribe();
-        isSpinnerVisibleSubscription.unsubscribe();
-        showWarningInvalidBtcDecimalPlacesSubscription.unsubscribe();
-        showTransactionPublishedScreenSubscription.unsubscribe();
-
-        noSufficientFeeSubscription.unsubscribe();
-        if (balanceTextField != null)
-            balanceTextField.cleanup();
 
         if (offerAvailabilitySpinner != null)
             offerAvailabilitySpinner.setProgress(0);
@@ -345,8 +184,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (spinner != null)
             spinner.setProgress(0);
 
-        balanceSubscription.unsubscribe();
-        totalToPaySubscription.unsubscribe();
+        if (balanceTextField != null)
+            balanceTextField.cleanup();
     }
 
 
@@ -444,10 +283,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         }
     }
 
-    private void onPaymentAccountsComboBoxSelected() {
-        model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
-    }
-
     private void onShowPayFundsScreen() {
         model.onShowPayFundsScreen();
 
@@ -537,7 +372,180 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             closeHandler.close();
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Bindings, Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void addBindings() {
+        amountBtcLabel.textProperty().bind(model.btcCode);
+        amountTextField.textProperty().bindBidirectional(model.amount);
+        volumeTextField.textProperty().bindBidirectional(model.volume);
+        totalToPayTextField.textProperty().bind(model.totalToPay);
+        addressTextField.amountAsCoinProperty().bind(model.dataModel.missingCoin);
+        amountTextField.validationResultProperty().bind(model.amountValidationResult);
+        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> model.dataModel.getCurrencyCode() + "/" + model.btcCode.get(), model.btcCode));
+        amountRangeBtcLabel.textProperty().bind(model.btcCode);
+        nextButton.disableProperty().bind(model.isNextButtonDisabled);
+
+
+        // funding
+        fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
+        fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
+        spinner.visibleProperty().bind(model.isSpinnerVisible);
+        spinner.managedProperty().bind(model.isSpinnerVisible);
+        spinnerInfoLabel.visibleProperty().bind(model.isSpinnerVisible);
+        spinnerInfoLabel.managedProperty().bind(model.isSpinnerVisible);
+        spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
+        takeOfferButton.disableProperty().bind(model.isTakeOfferButtonDisabled);
+        takeOfferButton.visibleProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
+        takeOfferButton.managedProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
+    }
+
+    private void removeBindings() {
+        amountBtcLabel.textProperty().unbind();
+        amountTextField.textProperty().unbindBidirectional(model.amount);
+        volumeTextField.textProperty().unbindBidirectional(model.volume);
+        totalToPayTextField.textProperty().unbind();
+        addressTextField.amountAsCoinProperty().unbind();
+        amountTextField.validationResultProperty().unbind();
+        priceCurrencyLabel.textProperty().unbind();
+        amountRangeBtcLabel.textProperty().unbind();
+        nextButton.disableProperty().unbind();
+
+        // funding
+        fundingHBox.visibleProperty().unbind();
+        fundingHBox.managedProperty().unbind();
+        spinner.visibleProperty().unbind();
+        spinner.managedProperty().unbind();
+        spinnerInfoLabel.visibleProperty().unbind();
+        spinnerInfoLabel.managedProperty().unbind();
+        spinnerInfoLabel.textProperty().unbind();
+        takeOfferButton.visibleProperty().unbind();
+        takeOfferButton.managedProperty().unbind();
+        takeOfferButton.disableProperty().unbind();
+    }
+
+    private void addSubscriptions() {
+        errorPopupDisplayed = new SimpleBooleanProperty();
+        offerWarningSubscription = EasyBind.subscribe(model.offerWarning, newValue -> {
+            if (newValue != null) {
+                if (offerDetailsWindowDisplayed)
+                    offerDetailsWindow.hide();
+
+                UserThread.runAfter(() -> new Popup().warning(newValue + "\n\n" +
+                        "If you have already paid in funds you can withdraw it in the " +
+                        "\"Funds/Available for withdrawal\" screen.")
+                        .actionButtonText("Go to \"Available for withdrawal\"")
+                        .onAction(() -> {
+                            errorPopupDisplayed.set(true);
+                            model.resetOfferWarning();
+                            close();
+                            navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+                        })
+                        .onClose(() -> {
+                            errorPopupDisplayed.set(true);
+                            model.resetOfferWarning();
+                            close();
+                        })
+                        .show(), 100, TimeUnit.MILLISECONDS);
+            }
+        });
+
+        errorMessageSubscription = EasyBind.subscribe(model.errorMessage, newValue -> {
+            if (newValue != null) {
+                new Popup().error(BSResources.get("takeOffer.error.message", model.errorMessage.get()) +
+                        "Please try to restart you application and check your network connection to see if you can resolve the issue.")
+                        .onClose(() -> {
+                            errorPopupDisplayed.set(true);
+                            model.resetErrorMessage();
+                            close();
+                        })
+                        .show();
+            }
+        });
+
+        isOfferAvailableSubscription = EasyBind.subscribe(model.isOfferAvailable, newValue -> {
+            if (newValue) {
+                offerAvailabilitySpinner.setProgress(0);
+                offerAvailabilitySpinner.setVisible(false);
+                offerAvailabilitySpinnerLabel.setVisible(false);
+            }
+        });
+
+        isSpinnerVisibleSubscription = EasyBind.subscribe(model.isSpinnerVisible,
+                isSpinnerVisible -> spinner.setProgress(isSpinnerVisible ? -1 : 0));
+
+        showWarningInvalidBtcDecimalPlacesSubscription = EasyBind.subscribe(model.showWarningInvalidBtcDecimalPlaces, newValue -> {
+            if (newValue) {
+                new Popup().warning(BSResources.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces")).show();
+                model.showWarningInvalidBtcDecimalPlaces.set(false);
+            }
+        });
+
+        showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
+            if (newValue && BitsquareApp.DEV_MODE) {
+                close();
+                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
+            } else if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
+                String key = "takeOfferSuccessInfo";
+                if (preferences.showAgain(key)) {
+                    UserThread.runAfter(() -> new Popup().headLine(BSResources.get("takeOffer.success.headline"))
+                            .feedback(BSResources.get("takeOffer.success.info"))
+                            .actionButtonText("Go to \"Open trades\"")
+                            .dontShowAgainId(key, preferences)
+                            .onAction(() -> {
+                                UserThread.runAfter(
+                                        () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
+                                        , 100, TimeUnit.MILLISECONDS);
+                                close();
+                            })
+                            .onClose(this::close)
+                            .show(), 1);
+                } else {
+                    close();
+                }
+            }
+        });
+
+        noSufficientFeeBinding = EasyBind.combine(model.dataModel.isWalletFunded, model.dataModel.isMainNet, model.dataModel.isFeeFromFundingTxSufficient,
+                (isWalletFunded, isMainNet, isFeeSufficient) -> isWalletFunded && isMainNet && !isFeeSufficient);
+        noSufficientFeeSubscription = noSufficientFeeBinding.subscribe((observable, oldValue, newValue) -> {
+            if (newValue)
+                new Popup().warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
+                        "You need to use at least a mining fee of " +
+                        model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + ".\n\n" +
+                        "The fee used in your funding transaction was only " +
+                        model.formatter.formatCoinWithCode(model.dataModel.feeFromFundingTx) + ".\n\n" +
+                        "The trade transactions might take too much time to be included in " +
+                        "a block if the fee is too low.\n" +
+                        "Please check at your external wallet that you set the required fee and " +
+                        "do a funding again with the correct fee.\n\n" +
+                        "In the \"Funds/Open for withdrawal\" section you can withdraw those funds.")
+                        .closeButtonText("Close")
+                        .onClose(() -> {
+                            close();
+                            navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+                        })
+                        .show();
+        });
+
+        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, newValue -> balanceTextField.setBalance(newValue));
+        totalToPaySubscription = EasyBind.subscribe(model.dataModel.totalToPayAsCoin, newValue -> balanceTextField.setTargetAmount(newValue));
+    }
+
+    private void removeSubscriptions() {
+        offerWarningSubscription.unsubscribe();
+        errorMessageSubscription.unsubscribe();
+        isOfferAvailableSubscription.unsubscribe();
+        isSpinnerVisibleSubscription.unsubscribe();
+        showWarningInvalidBtcDecimalPlacesSubscription.unsubscribe();
+        showTransactionPublishedScreenSubscription.unsubscribe();
+        noSufficientFeeSubscription.unsubscribe();
+        balanceSubscription.unsubscribe();
+        totalToPaySubscription.unsubscribe();
+    }
+
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Build UI elements
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -597,6 +605,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
         paymentAccountsComboBox.setVisible(false);
         paymentAccountsComboBox.setManaged(false);
+        paymentAccountsComboBox.setOnAction(e -> model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem()));
+
         Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, gridRow, "Payment method:", "", Layout.FIRST_ROW_DISTANCE);
         paymentMethodLabel = tuple2.first;
         paymentMethodTextField = tuple2.second;
@@ -630,14 +640,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         nextButton = new Button(BSResources.get("takeOffer.amountPriceBox.next"));
         nextButton.setDefaultButton(true);
-        nextButton.disableProperty().bind(model.isNextButtonDisabled);
         nextButton.setOnAction(e -> onShowPayFundsScreen());
+
         //UserThread.runAfter(() -> nextButton.requestFocus(), 100, TimeUnit.MILLISECONDS);
 
         cancelButton1 = new Button(BSResources.get("shared.cancel"));
-        cancelButton1.setOnAction(e -> close());
         cancelButton1.setDefaultButton(false);
         cancelButton1.setId("cancel-button");
+        cancelButton1.setOnAction(e -> close());
 
         offerAvailabilitySpinner = new ProgressIndicator(0);
         offerAvailabilitySpinner.setPrefSize(18, 18);

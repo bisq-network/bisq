@@ -92,9 +92,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final StringProperty btcCode = new SimpleStringProperty();
 
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
-    final BooleanProperty useMBTC = new SimpleBooleanProperty();
+    final BooleanProperty isMainNet = new SimpleBooleanProperty();
+    final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
+    
     final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
-
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
@@ -133,6 +134,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.walletPasswordWindow = walletPasswordWindow;
         this.blockchainService = blockchainService;
         this.formatter = formatter;
+
+        isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
 
         offerId = UUID.randomUUID().toString();
         addressEntry = walletService.getTradeAddressEntry(offerId);

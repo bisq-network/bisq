@@ -78,6 +78,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
+    final StringProperty spinnerInfoText = new SimpleStringProperty("");
 
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
@@ -87,6 +88,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
+    final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
+    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new
@@ -151,8 +154,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             setMinAmountToModel();
             setPriceToModel();
             calculateVolume();
+
             dataModel.calculateTotalToPay();
             updateButtonDisableState();
+            updateSpinnerInfo();
         }
 
         addBindings();
@@ -345,6 +350,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             placeOfferCompleted.set(true);
             errorMessage.set(null);
         });
+
+        updateSpinnerInfo();
     }
 
     private void stopTimeoutTimer() {
@@ -392,6 +399,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     void onShowPayFundsScreen() {
         showPayFundsScreenDisplayed.set(true);
+        updateSpinnerInfo();
     }
 
     boolean useSavingsWalletForFunding() {
@@ -624,6 +632,24 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private InputValidator.ValidationResult isFiatInputValid(String input) {
         return fiatValidator.validate(input);
+    }
+
+    private void updateSpinnerInfo() {
+        if (!showPayFundsScreenDisplayed.get() ||
+                errorMessage.get() != null ||
+                showTransactionPublishedScreen.get()) {
+            spinnerInfoText.set("");
+        } else if (dataModel.isWalletFunded.get()) {
+            if (dataModel.isFeeFromFundingTxSufficient.get()) {
+                spinnerInfoText.set("");
+            } else {
+                spinnerInfoText.set("Check if funding tx miner fee is sufficient...");
+            }
+        } else {
+            spinnerInfoText.set("Waiting for funds...");
+        }
+
+        isSpinnerVisible.set(!spinnerInfoText.get().isEmpty());
     }
 
     private void updateButtonDisableState() {
