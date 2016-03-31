@@ -41,7 +41,7 @@ public class AddressTextField extends AnchorPane {
 
     private final StringProperty address = new SimpleStringProperty();
     private final StringProperty paymentLabel = new SimpleStringProperty();
-    private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
+    private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>(Coin.ZERO);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +142,11 @@ public class AddressTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private String getBitcoinURI() {
+        if (amountAsCoin.get().isNegative()) {
+            log.warn("Amount must not be negative");
+            setAmountAsCoin(Coin.ZERO);
+        }
+
         return address.get() != null ? BitcoinURI.convertToBitcoinURI(address.get(), amountAsCoin.get(),
                 paymentLabel.get(), null) : "";
     }
