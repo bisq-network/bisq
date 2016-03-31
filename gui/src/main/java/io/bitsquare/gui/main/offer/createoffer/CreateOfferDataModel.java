@@ -183,9 +183,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         calculateTotalToPay();
         updateBalance();
 
-        if (direction == Offer.Direction.BUY)
-            calculateTotalToPay();
-
         if (isTabSelected)
             priceFeed.setCurrencyCode(tradeCurrencyCode.get());
     }
@@ -402,7 +399,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void updateBalance() {
-        Coin tradeWalletBalance = walletService.getBalanceForAddress(getAddressEntry().getAddress());
+        Coin tradeWalletBalance = walletService.getBalanceForAddress(addressEntry.getAddress());
         if (useSavingsWallet) {
             Coin savingWalletBalance = walletService.getSavingWalletBalance();
             totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
@@ -419,7 +416,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
         if (isWalletFunded.get()) {
-            walletService.removeBalanceListener(balanceListener);
+            //walletService.removeBalanceListener(balanceListener);
             if (walletFundedNotification == null) {
                 walletFundedNotification = new Notification()
                         .headLine("Trading wallet update")
@@ -457,6 +454,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        walletService.swapTradeToSavings(getOfferId());
+        walletService.swapTradeToSavings(offerId);
     }
 }

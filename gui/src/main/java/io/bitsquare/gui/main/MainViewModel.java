@@ -454,8 +454,10 @@ public class MainViewModel implements ViewModel {
         updateBalance();
         setupDevDummyPaymentAccount();
         setupMarketPriceFeed();
+        swapPendingTradeAddressEntriesToSavingsWallet();
 
         showAppScreen.set(true);
+
 
         // We want to test if the client is compiled with the correct crypto provider (BountyCastle) 
         // and if the unlimited Strength for cryptographic keys is set.
@@ -665,6 +667,12 @@ public class MainViewModel implements ViewModel {
                 });
         marketPriceCurrency.bind(priceFeed.currencyCodeProperty());
         typeProperty.bind(priceFeed.typeProperty());
+    }
+
+    private void swapPendingTradeAddressEntriesToSavingsWallet() {
+        TradableCollections.getAddressEntriesForAvailableBalance(openOfferManager, tradeManager, walletService).stream()
+                .filter(addressEntry -> addressEntry.getOfferId() != null)
+                .forEach(addressEntry -> walletService.swapTradeToSavings(addressEntry.getOfferId()));
     }
 
     private void displayAlertIfPresent(Alert alert) {

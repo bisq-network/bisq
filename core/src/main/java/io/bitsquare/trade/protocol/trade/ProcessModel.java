@@ -83,7 +83,7 @@ public class ProcessModel implements Model, Serializable {
     @Nullable
     private String changeOutputAddress;
     private Transaction takeOfferFeeTx;
-    public boolean useSavingsWallet;
+    private boolean useSavingsWallet;
     private Coin fundsNeededForTrade;
 
     public ProcessModel() {
@@ -107,6 +107,7 @@ public class ProcessModel implements Model, Serializable {
                                          ArbitratorManager arbitratorManager,
                                          User user,
                                          KeyRing keyRing,
+                                         boolean useSavingsWallet,
                                          Coin fundsNeededForTrade) {
         this.offer = offer;
         this.tradeManager = tradeManager;
@@ -117,6 +118,7 @@ public class ProcessModel implements Model, Serializable {
         this.user = user;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
+        this.useSavingsWallet = useSavingsWallet;
         this.fundsNeededForTrade = fundsNeededForTrade;
     }
 
@@ -290,5 +292,9 @@ public class ProcessModel implements Model, Serializable {
 
     public Transaction getTakeOfferFeeTx() {
         return takeOfferFeeTx;
+    }
+
+    public boolean getUseSavingsWallet() {
+        return useSavingsWallet;
     }
 }

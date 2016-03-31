@@ -29,6 +29,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
@@ -46,6 +47,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
@@ -75,21 +77,27 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final Coin takerFeeAsCoin;
     private final Coin networkFeeAsCoin;
     private final Coin securityDepositAsCoin;
-
+    Coin feeFromFundingTx = Coin.NEGATIVE_SATOSHI;
+    
     private Offer offer;
-    private AddressEntry addressEntry;
 
+    private AddressEntry addressEntry;
     final StringProperty btcCode = new SimpleStringProperty();
-    final BooleanProperty useMBTC = new SimpleBooleanProperty();
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
+    final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
+    final BooleanProperty isMainNet = new SimpleBooleanProperty();
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
+    final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
 
     private BalanceListener balanceListener;
     PaymentAccount paymentAccount;
     private boolean isTabSelected;
+    boolean useSavingsWallet;
+    Coin totalAvailableBalance;
+    private Notification walletFundedNotification;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -115,6 +123,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
         takerFeeAsCoin = FeePolicy.getTakeOfferFee();
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
         securityDepositAsCoin = FeePolicy.getSecurityDeposit();
+
+        isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
     }
 
     @Override
@@ -124,13 +134,15 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         addBindings();
         addListeners();
-        updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
+
+        calculateTotalToPay();
+        updateBalance();
 
         // TODO In case that we have funded but restarted, or canceled but took again the offer we would need to 
         // store locally the result when we received the funding tx(s).
         // For now we just ignore that rare case and bypass the check by setting a sufficient value
-        if (isWalletFunded.get())
-            feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
+        // if (isWalletFunded.get())
+        //     feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
 
         if (isTabSelected)
             priceFeed.setCurrencyCode(offer.getCurrencyCode());
@@ -167,19 +179,24 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (BitsquareApp.DEV_MODE)
             amountAsCoin.set(offer.getAmount());
 
+        calculateTotalToPay();
         calculateVolume();
         calculateTotalToPay();
 
         balanceListener = new BalanceListener(addressEntry.getAddress()) {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
-                updateBalance(balance);
+                updateBalance();
 
-                if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
+                if (tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+
+                }
+
+                if (isMainNet.get()) {
                     SettableFuture<Coin> future = blockchainService.requestFee(tx.getHashAsString());
                     Futures.addCallback(future, new FutureCallback<Coin>() {
                         public void onSuccess(Coin fee) {
-                            UserThread.execute(() -> feeFromFundingTxProperty.set(fee));
+                            UserThread.execute(() -> setFeeFromFundingTx(fee));
                         }
 
                         public void onFailure(@NotNull Throwable throwable) {
@@ -189,14 +206,15 @@ class TakeOfferDataModel extends ActivatableDataModel {
                                             "Are you sure you used a sufficiently high fee of at least " +
                                             formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + "?")
                                     .actionButtonText("Yes, I used a sufficiently high fee.")
-                                    .onAction(() -> feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx()))
+                                    .onAction(() -> setFeeFromFundingTx(FeePolicy.getMinRequiredFeeForFundingTx()))
                                     .closeButtonText("No. Let's cancel that payment.")
-                                    .onClose(() -> feeFromFundingTxProperty.set(Coin.ZERO))
+                                    .onClose(() -> setFeeFromFundingTx(Coin.NEGATIVE_SATOSHI))
                                     .show());
                         }
                     });
                 } else {
-                    feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
+                    setFeeFromFundingTx(FeePolicy.getMinRequiredFeeForFundingTx());
+                    isFeeFromFundingTxSufficient.set(feeFromFundingTx.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0);
                 }
             }
         };
@@ -204,7 +222,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         offer.resetState();
         priceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
-
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
@@ -235,6 +252,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 totalToPayAsCoin.get().subtract(takerFeeAsCoin),
                 offer,
                 paymentAccount.getId(),
+                useSavingsWallet,
                 tradeResultHandler
         );
     }
@@ -242,6 +260,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         if (paymentAccount != null)
             this.paymentAccount = paymentAccount;
+    }
+
+    void useSavingsWalletForFunding() {
+        useSavingsWallet = true;
+        updateBalance();
     }
 
 
@@ -273,10 +296,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     boolean hasAcceptedArbitrators() {
         return user.getAcceptedArbitrators().size() > 0;
-    }
-
-    boolean isFeeFromFundingTxSufficient() {
-        return feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0;
     }
 
 
@@ -311,7 +330,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 !amountAsCoin.get().isZero()) {
             volumeAsFiat.set(new ExchangeRate(offer.getPrice()).coinToFiat(amountAsCoin.get()));
 
-            updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
+            updateBalance();
         }
     }
 
@@ -322,11 +341,49 @@ class TakeOfferDataModel extends ActivatableDataModel {
             totalToPayAsCoin.set(takerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
     }
 
-    private void updateBalance(@NotNull Coin balance) {
-        isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
+    void updateBalance() {
+        Coin tradeWalletBalance = walletService.getBalanceForAddress(addressEntry.getAddress());
+        if (useSavingsWallet) {
+            Coin savingWalletBalance = walletService.getSavingWalletBalance();
+            totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
 
-        if (isWalletFunded.get())
-            walletService.removeBalanceListener(balanceListener);
+            if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
+                balance.set(totalToPayAsCoin.get());
+            else
+                balance.set(totalAvailableBalance);
+        } else {
+            balance.set(tradeWalletBalance);
+        }
+
+        missingCoin.set(totalToPayAsCoin.get().subtract(balance.get()));
+
+        isWalletFunded.set(isBalanceSufficient(balance.get()));
+        if (isWalletFunded.get()) {
+            // walletService.removeBalanceListener(balanceListener);
+            if (walletFundedNotification == null) {
+                walletFundedNotification = new Notification()
+                        .headLine("Trading wallet update")
+                        .notification("Your trading wallet is sufficiently funded.\n" +
+                                "Amount: " + formatter.formatCoinWithCode(totalToPayAsCoin.get()))
+                        .autoClose();
+
+                walletFundedNotification.show();
+            }
+        }
+    }
+
+    private boolean isBalanceSufficient(Coin balance) {
+        return totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0;
+    }
+
+    public void swapTradeToSavings() {
+        walletService.swapTradeToSavings(offer.getId());
+        setFeeFromFundingTx(Coin.NEGATIVE_SATOSHI);
+    }
+
+    private void setFeeFromFundingTx(Coin fee) {
+        feeFromFundingTx = fee;
+        isFeeFromFundingTxSufficient.set(feeFromFundingTx.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0);
     }
 
     boolean isMinAmountLessOrEqualAmount() {

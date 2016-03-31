@@ -178,7 +178,7 @@ public class TradeManager {
             else {*/
             trade.setStorage(tradableListStorage);
             trade.updateDepositTxFromWallet(tradeWalletService);
-            initTrade(trade, trade.getProcessModel().getFundsNeededForTrade());
+            initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
 
 
             // }
@@ -209,7 +209,7 @@ public class TradeManager {
                 trade = new SellerAsOffererTrade(offer, tradableListStorage);
 
             trade.setStorage(tradableListStorage);
-            initTrade(trade, trade.getProcessModel().getFundsNeededForTrade());
+            initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
             trades.add(trade);
             ((OffererTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
         } else {
@@ -220,7 +220,7 @@ public class TradeManager {
         }
     }
 
-    private void initTrade(Trade trade, Coin fundsNeededForTrade) {
+    private void initTrade(Trade trade, boolean useSavingsWallet, Coin fundsNeededForTrade) {
         trade.init(p2PService,
                 walletService,
                 tradeWalletService,
@@ -229,6 +229,7 @@ public class TradeManager {
                 openOfferManager,
                 user,
                 keyRing,
+                useSavingsWallet,
                 fundsNeededForTrade);
     }
 
@@ -260,12 +261,13 @@ public class TradeManager {
                             Coin fundsNeededForTrade,
                             Offer offer,
                             String paymentAccountId,
+                            boolean useSavingsWallet,
                             TradeResultHandler tradeResultHandler) {
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE)
-                        createTrade(amount, fundsNeededForTrade, offer, paymentAccountId, model, tradeResultHandler);
+                        createTrade(amount, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
                 });
     }
 
@@ -273,6 +275,7 @@ public class TradeManager {
                              Coin fundsNeededForTrade,
                              Offer offer,
                              String paymentAccountId,
+                             boolean useSavingsWallet,
                              OfferAvailabilityModel model,
                              TradeResultHandler tradeResultHandler) {
         Trade trade;
@@ -285,7 +288,7 @@ public class TradeManager {
         trade.setTakeOfferDateAsBlockHeight(tradeWalletService.getBestChainHeight());
         trade.setTakerPaymentAccountId(paymentAccountId);
 
-        initTrade(trade, fundsNeededForTrade);
+        initTrade(trade, useSavingsWallet, fundsNeededForTrade);
 
         trades.add(trade);
         ((TakerTrade) trade).takeAvailableOffer();

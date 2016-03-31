@@ -52,7 +52,7 @@ public class CreateTakeOfferFeeTx extends TradeTask {
                     processModel.getAddressEntry(),
                     processModel.getUnusedSavingsAddress(),
                     processModel.getFundsNeededForTrade(),
-                    processModel.useSavingsWallet,
+                    processModel.getUseSavingsWallet(),
                     FeePolicy.getTakeOfferFee(),
                     selectedArbitrator.getBtcAddress());
 

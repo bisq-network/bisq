@@ -60,15 +60,16 @@ import javafx.stage.Window;
 import javafx.util.StringConverter;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
+import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -89,7 +90,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private BalanceTextField balanceTextField;
     private ProgressIndicator spinner, offerAvailabilitySpinner;
     private TitledGroupBg payFundsPane;
-    private Button nextButton, takeOfferButton, cancelButton1, cancelButton2;
+    private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, takeOfferButton;
     private InputTextField amountTextField;
     private TextField paymentMethodTextField, currencyTextField, priceTextField, volumeTextField, amountRangeTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
@@ -109,11 +110,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Subscription showWarningInvalidBtcDecimalPlacesSubscription;
     private Subscription showTransactionPublishedScreenSubscription;
     private SimpleBooleanProperty errorPopupDisplayed;
-    private ChangeListener<Coin> feeFromFundingTxListener;
     private boolean offerDetailsWindowDisplayed;
     private Notification walletFundedNotification;
-    private Subscription isWalletFundedSubscription;
     private ImageView qrCodeImageView;
+    private HBox fundingHBox;
+    private Subscription balanceSubscription;
+    private Subscription noSufficientFeeSubscription;
+    private MonadicBinding<Boolean> noSufficientFeeBinding;
+    private Subscription totalToPaySubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -155,12 +159,19 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         amountTextField.textProperty().bindBidirectional(model.amount);
         volumeTextField.textProperty().bindBidirectional(model.volume);
         totalToPayTextField.textProperty().bind(model.totalToPay);
-        addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
+        addressTextField.amountAsCoinProperty().bind(model.dataModel.missingCoin);
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
         takeOfferButton.disableProperty().bind(model.isTakeOfferButtonDisabled);
+        takeOfferButton.visibleProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
+        takeOfferButton.managedProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
+        fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
+        fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
 
         spinner.visibleProperty().bind(model.isSpinnerVisible);
+        spinner.managedProperty().bind(model.isSpinnerVisible);
+
         spinnerInfoLabel.visibleProperty().bind(model.isSpinnerVisible);
+        spinnerInfoLabel.managedProperty().bind(model.isSpinnerVisible);
         spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
 
         priceCurrencyLabel.textProperty().bind(createStringBinding(() ->
@@ -256,14 +267,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             paymentAccountsComboBox.getSelectionModel().select(0);
         }
 
-        feeFromFundingTxListener = (observable, oldValue, newValue) -> {
-            log.debug("feeFromFundingTxListener " + newValue);
-            if (!model.dataModel.isFeeFromFundingTxSufficient()) {
+        noSufficientFeeBinding = EasyBind.combine(model.dataModel.isWalletFunded, model.dataModel.isMainNet, model.dataModel.isFeeFromFundingTxSufficient,
+                (isWalletFunded, isMainNet, isFeeSufficient) -> isWalletFunded && isMainNet && !isFeeSufficient);
+        noSufficientFeeSubscription = noSufficientFeeBinding.subscribe((observable, oldValue, newValue) -> {
+            if (newValue)
                 new Popup().warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
                         "You need to use at least a mining fee of " +
                         model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + ".\n\n" +
                         "The fee used in your funding transaction was only " +
-                        model.formatter.formatCoinWithCode(newValue) + ".\n\n" +
+                        model.formatter.formatCoinWithCode(model.dataModel.feeFromFundingTx) + ".\n\n" +
                         "The trade transactions might take too much time to be included in " +
                         "a block if the fee is too low.\n" +
                         "Please check at your external wallet that you set the required fee and " +
@@ -275,15 +287,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
                         })
                         .show();
-            }
-        };
-        model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
+        });
 
         if (offerAvailabilitySpinner != null && offerAvailabilitySpinner.isVisible())
             offerAvailabilitySpinner.setProgress(-1);
 
         if (spinner != null && spinner.isVisible())
             spinner.setProgress(-1);
+
+        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, newValue -> balanceTextField.setBalance(newValue));
+        totalToPaySubscription = EasyBind.subscribe(model.dataModel.totalToPayAsCoin, newValue -> balanceTextField.setTargetAmount(newValue));
     }
 
     @Override
@@ -298,15 +311,22 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         totalToPayTextField.textProperty().unbind();
         addressTextField.amountAsCoinProperty().unbind();
         amountTextField.validationResultProperty().unbind();
-        takeOfferButton.disableProperty().unbind();
-        spinner.visibleProperty().unbind();
-        spinnerInfoLabel.visibleProperty().unbind();
-        spinnerInfoLabel.textProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
         volumeCurrencyLabel.textProperty().unbind();
         amountRangeBtcLabel.textProperty().unbind();
         priceDescriptionLabel.textProperty().unbind();
         volumeDescriptionLabel.textProperty().unbind();
+
+        fundingHBox.visibleProperty().unbind();
+        fundingHBox.managedProperty().unbind();
+        takeOfferButton.visibleProperty().unbind();
+        takeOfferButton.managedProperty().unbind();
+        takeOfferButton.disableProperty().unbind();
+        spinner.visibleProperty().unbind();
+        spinner.managedProperty().unbind();
+        spinnerInfoLabel.visibleProperty().unbind();
+        spinnerInfoLabel.managedProperty().unbind();
+        spinnerInfoLabel.textProperty().unbind();
 
         offerWarningSubscription.unsubscribe();
         errorMessageSubscription.unsubscribe();
@@ -315,7 +335,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         showWarningInvalidBtcDecimalPlacesSubscription.unsubscribe();
         showTransactionPublishedScreenSubscription.unsubscribe();
 
-        model.dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
+        noSufficientFeeSubscription.unsubscribe();
         if (balanceTextField != null)
             balanceTextField.cleanup();
 
@@ -325,8 +345,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (spinner != null)
             spinner.setProgress(0);
 
-        if (isWalletFundedSubscription != null)
-            isWalletFundedSubscription.unsubscribe();
+        balanceSubscription.unsubscribe();
+        totalToPaySubscription.unsubscribe();
     }
 
 
@@ -382,6 +402,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     // called form parent as the view does not get notified when the tab is closed
     public void onClose() {
+        if (model.dataModel.balance.get().isPositive() && !model.takeOfferCompleted.get()) {
+            model.dataModel.swapTradeToSavings();
+            new Popup().information("You have already funds paid in.\n" +
+                    "In the \"Funds/Available for withdrawal\" section you can withdraw those funds.")
+                    .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+                    .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                    .show();
+        }
+
         // TODO need other implementation as it is displayed also if there are old funds in the wallet
         /*
         if (model.dataModel.isWalletFunded.get())
@@ -461,7 +490,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         offerAvailabilitySpinnerLabel.setVisible(false);
         cancelButton1.setVisible(false);
         cancelButton1.setOnAction(null);
-        takeOfferButton.setVisible(true);
         cancelButton2.setVisible(true);
 
         spinner.setProgress(-1);
@@ -487,19 +515,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         .autoClose();
                 walletFundedNotification.show();
             }
-        } else {
-            isWalletFundedSubscription = EasyBind.subscribe(model.dataModel.isWalletFunded, isFunded -> {
-                if (isFunded) {
-                    if (walletFundedNotification == null) {
-                        walletFundedNotification = new Notification()
-                                .headLine("Trading wallet update")
-                                .notification("Your trading wallet is sufficiently funded.\n" +
-                                        "Amount: " + formatter.formatCoinWithCode(model.dataModel.totalToPayAsCoin.get()))
-                                .autoClose();
-                        walletFundedNotification.show();
-                    }
-                }
-            });
         }
 
         final byte[] imageBytes = QRCode
@@ -689,18 +704,47 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         balanceTextField = balanceTuple.second;
         balanceTextField.setVisible(false);
 
-        Tuple3<Button, ProgressIndicator, Label> takeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "");
-        takeOfferButton = takeOfferTuple.first;
+        fundingHBox = new HBox();
+        fundingHBox.setVisible(false);
+        fundingHBox.setManaged(false);
+        fundingHBox.setSpacing(10);
+        fundFromSavingsWalletButton = new Button("Transfer funds from Bitsquare wallet");
+        fundFromSavingsWalletButton.setDefaultButton(true);
+        fundFromSavingsWalletButton.setDefaultButton(false);
+        fundFromSavingsWalletButton.setOnAction(e -> model.useSavingsWalletForFunding());
+        Label label = new Label("OR");
+        label.setPadding(new Insets(5, 0, 0, 0));
+        fundFromExternalWalletButton = new Button("Pay in funds from external wallet");
+        fundFromExternalWalletButton.setDefaultButton(false);
+        fundFromExternalWalletButton.setOnAction(e -> {
+            try {
+                Utilities.openURI(URI.create(getBitcoinURI()));
+            } catch (Exception ex) {
+                log.warn(ex.getMessage());
+                new Popup().warning("Opening a default bitcoin wallet application has failed. " +
+                        "Perhaps you don't have one installed?").show();
+            }
+        });
+        spinner = new ProgressIndicator(0);
+        spinner.setPrefHeight(18);
+        spinner.setPrefWidth(18);
+        spinnerInfoLabel = new Label();
+        spinnerInfoLabel.setPadding(new Insets(5, 0, 0, 0));
+        fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, spinner, spinnerInfoLabel);
+        GridPane.setRowIndex(fundingHBox, ++gridRow);
+        GridPane.setColumnIndex(fundingHBox, 1);
+        GridPane.setMargin(fundingHBox, new Insets(15, 10, 0, 0));
+        gridPane.getChildren().add(fundingHBox);
+
+        takeOfferButton = addButtonAfterGroup(gridPane, gridRow, "");
         takeOfferButton.setVisible(false);
+        takeOfferButton.setManaged(false);
         takeOfferButton.setMinHeight(40);
         takeOfferButton.setPadding(new Insets(0, 20, 0, 20));
         takeOfferButton.setOnAction(e -> {
             onTakeOffer();
             balanceTextField.cleanup();
         });
-
-        spinner = takeOfferTuple.second;
-        spinnerInfoLabel = takeOfferTuple.third;
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
@@ -716,12 +760,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);
-        cancelButton2.setId("cancel-button");
     }
 
     @NotNull
     private String getBitcoinURI() {
-        return model.getAddressAsString() != null ? BitcoinURI.convertToBitcoinURI(model.getAddressAsString(), model.totalToPayAsCoin.get(),
+        return model.getAddressAsString() != null ? BitcoinURI.convertToBitcoinURI(model.getAddressAsString(), model.dataModel.missingCoin.get(),
                 model.getPaymentLabel(), null) : "";
     }
 

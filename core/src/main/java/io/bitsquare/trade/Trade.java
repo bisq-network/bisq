@@ -221,6 +221,7 @@ public abstract class Trade implements Tradable, Model {
                      OpenOfferManager openOfferManager,
                      User user,
                      KeyRing keyRing,
+                     boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
         Log.traceCall();
         processModel.onAllServicesInitialized(offer,
@@ -232,6 +233,7 @@ public abstract class Trade implements Tradable, Model {
                 arbitratorManager,
                 user,
                 keyRing,
+                useSavingsWallet,
                 fundsNeededForTrade);
 
         createProtocol();

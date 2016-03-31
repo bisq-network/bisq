@@ -86,6 +86,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
+    final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new
@@ -109,7 +110,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private ChangeListener<String> errorMessageListener;
     private Offer offer;
     private Timer timeoutTimer;
-    private boolean showPayFundsScreenDisplayed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -391,7 +391,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     void onShowPayFundsScreen() {
-        showPayFundsScreenDisplayed = true;
+        showPayFundsScreenDisplayed.set(true);
     }
 
     boolean useSavingsWalletForFunding() {

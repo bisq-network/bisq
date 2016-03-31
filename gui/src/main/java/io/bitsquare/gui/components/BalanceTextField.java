@@ -34,6 +34,7 @@ public class BalanceTextField extends AnchorPane {
 
     private static WalletService walletService;
     private BalanceListener balanceListener;
+    private Coin targetAmount;
 
     public static void setWalletService(WalletService walletService) {
         BalanceTextField.walletService = walletService;
@@ -84,6 +85,10 @@ public class BalanceTextField extends AnchorPane {
         updateBalance(balance);
     }
 
+    public void setTargetAmount(Coin targetAmount) {
+        this.targetAmount = targetAmount;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -91,10 +96,12 @@ public class BalanceTextField extends AnchorPane {
     private void updateBalance(Coin balance) {
         if (formatter != null)
             textField.setText(formatter.formatCoinWithCode(balance));
-        if (balance.isPositive())
-            textField.setEffect(fundedEffect);
-        else
-            textField.setEffect(notFundedEffect);
+        if (targetAmount != null) {
+            if (balance.compareTo(targetAmount) >= 0)
+                textField.setEffect(fundedEffect);
+            else
+                textField.setEffect(notFundedEffect);
+        }
     }
 
 }

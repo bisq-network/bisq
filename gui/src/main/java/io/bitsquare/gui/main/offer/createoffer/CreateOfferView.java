@@ -177,6 +177,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         onPaymentAccountsComboBoxSelected();
 
         balanceTextField.setBalance(model.dataModel.balance.get());
+        balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
     }
 
     @Override
@@ -268,9 +269,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         currencyComboBox.setMouseTransparent(true);
         paymentAccountsComboBox.setMouseTransparent(true);
 
-        fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not());
-        fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not());
-
+        balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
+      
         if (!BitsquareApp.DEV_MODE) {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
@@ -405,8 +405,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.validationResultProperty().bind(model.volumeValidationResult);
 
         // buttons
-        placeOfferButton.visibleProperty().bind(model.dataModel.isWalletFunded);
-        placeOfferButton.managedProperty().bind(model.dataModel.isWalletFunded);
+        fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
+        fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
+
+        placeOfferButton.visibleProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
+        placeOfferButton.managedProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
         placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
         cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
 
