@@ -224,14 +224,6 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave(1000);
     }
 
-    private void updateTradeCurrencies(ListChangeListener.Change<? extends TradeCurrency> change) {
-        change.next();
-        if (change.wasAdded() && change.getAddedSize() == 1)
-            tradeCurrenciesAsObservable.add(change.getAddedSubList().get(0));
-        else if (change.wasRemoved() && change.getRemovedSize() == 1)
-            tradeCurrenciesAsObservable.remove(change.getRemoved().get(0));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter
@@ -252,14 +244,6 @@ public final class Preferences implements Persistable {
         this.bitcoinNetwork = bitcoinNetwork;
 
         // We don't store the bitcoinNetwork locally as BitcoinNetwork is not serializable!
-    }
-
-    private void setFiatCurrencies(List<FiatCurrency> currencies) {
-        fiatCurrenciesAsObservable.setAll(currencies);
-    }
-
-    private void setCryptoCurrencies(List<CryptoCurrency> currencies) {
-        cryptoCurrenciesAsObservable.setAll(currencies);
     }
 
     public void addFiatCurrency(FiatCurrency tradeCurrency) {
@@ -294,16 +278,6 @@ public final class Preferences implements Persistable {
         } else {
             log.error("you cannot remove the last currency");
         }
-    }
-
-    private void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
-        this.blockChainExplorerTestNet = blockChainExplorerTestNet;
-        storage.queueUpForSave(2000);
-    }
-
-    private void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
-        this.blockChainExplorerMainNet = blockChainExplorerMainNet;
-        storage.queueUpForSave(2000);
     }
 
     public void setBlockChainExplorer(BlockChainExplorer blockChainExplorer) {
@@ -349,6 +323,26 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook) {
+        this.showOwnOffersInOfferBook = showOwnOffersInOfferBook;
+        storage.queueUpForSave();
+    }
+
+    public void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent) {
+        this.maxPriceDistanceInPercent = maxPriceDistanceInPercent;
+        storage.queueUpForSave();
+    }
+
+    public void setBackupDirectory(String backupDirectory) {
+        this.backupDirectory = backupDirectory;
+        storage.queueUpForSave();
+    }
+
+    public void setAutoSelectArbitrators(boolean autoSelectArbitrators) {
+        this.autoSelectArbitrators = autoSelectArbitrators;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -390,11 +384,11 @@ public final class Preferences implements Persistable {
         return tradeCurrenciesAsObservable;
     }
 
-    private BlockChainExplorer getBlockChainExplorerTestNet() {
+    public BlockChainExplorer getBlockChainExplorerTestNet() {
         return blockChainExplorerTestNet;
     }
 
-    private BlockChainExplorer getBlockChainExplorerMainNet() {
+    public BlockChainExplorer getBlockChainExplorerMainNet() {
         return blockChainExplorerMainNet;
     }
 
@@ -416,15 +410,6 @@ public final class Preferences implements Persistable {
         return backupDirectory;
     }
 
-    public void setBackupDirectory(String backupDirectory) {
-        this.backupDirectory = backupDirectory;
-        storage.queueUpForSave();
-    }
-
-    public void setAutoSelectArbitrators(boolean autoSelectArbitrators) {
-        this.autoSelectArbitrators = autoSelectArbitrators;
-        storage.queueUpForSave();
-    }
 
     public boolean getAutoSelectArbitrators() {
         return autoSelectArbitrators;
@@ -462,15 +447,38 @@ public final class Preferences implements Persistable {
         return showOwnOffersInOfferBook;
     }
 
-    public void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook) {
-        this.showOwnOffersInOfferBook = showOwnOffersInOfferBook;
-    }
-
     public double getMaxPriceDistanceInPercent() {
         return maxPriceDistanceInPercent;
     }
 
-    public void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent) {
-        this.maxPriceDistanceInPercent = maxPriceDistanceInPercent;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void updateTradeCurrencies(ListChangeListener.Change<? extends TradeCurrency> change) {
+        change.next();
+        if (change.wasAdded() && change.getAddedSize() == 1)
+            tradeCurrenciesAsObservable.add(change.getAddedSubList().get(0));
+        else if (change.wasRemoved() && change.getRemovedSize() == 1)
+            tradeCurrenciesAsObservable.remove(change.getRemoved().get(0));
+    }
+
+    private void setFiatCurrencies(List<FiatCurrency> currencies) {
+        fiatCurrenciesAsObservable.setAll(currencies);
+    }
+
+    private void setCryptoCurrencies(List<CryptoCurrency> currencies) {
+        cryptoCurrenciesAsObservable.setAll(currencies);
+    }
+
+    private void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
+        this.blockChainExplorerTestNet = blockChainExplorerTestNet;
+        storage.queueUpForSave(2000);
+    }
+
+    private void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
+        this.blockChainExplorerMainNet = blockChainExplorerMainNet;
+        storage.queueUpForSave(2000);
     }
 }
