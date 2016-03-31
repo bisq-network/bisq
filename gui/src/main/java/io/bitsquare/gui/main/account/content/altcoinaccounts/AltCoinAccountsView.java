@@ -164,7 +164,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void buildForm() {
-        addTitledGroupBg(root, gridRow, 2, "Manage accounts");
+        addTitledGroupBg(root, gridRow, 1, "Manage accounts");
 
         Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your cryptocurrency accounts:", Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
@@ -200,7 +200,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
             }
         });
 
-        addAccountButton = addButton(root, ++gridRow, "Add new account");
+        addAccountButton = addButtonAfterGroup(root, ++gridRow, "Add new account");
         addAccountButton.setOnAction(event -> addNewAccount());
     }
 

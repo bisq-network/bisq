@@ -94,11 +94,11 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         datePicker = addLabelDatePicker(root, ++gridRow, "Creation Date:").second;
         datePicker.setMouseTransparent(true);
 
-        addTitledGroupBg(root, ++gridRow, 3, "Restore your wallet seed words", Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 2, "Restore your wallet seed words", Layout.GROUP_DISTANCE);
         restorSeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         restorSeedWordsTextArea.setPrefHeight(60);
         restoreDatePicker = addLabelDatePicker(root, ++gridRow, "Creation Date:").second;
-        restoreButton = addButton(root, ++gridRow, "Restore wallet");
+        restoreButton = addButtonAfterGroup(root, ++gridRow, "Restore wallet");
 
         addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
         addMultilineLabel(root, gridRow, "Please write down you wallet seed words and the creation date.\n" +

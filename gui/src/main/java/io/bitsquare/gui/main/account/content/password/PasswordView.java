@@ -72,7 +72,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        headline = addTitledGroupBg(root, gridRow, 3, "");
+        headline = addTitledGroupBg(root, gridRow, 2, "");
         passwordField = addLabelPasswordTextField(root, gridRow, "Enter password:", Layout.FIRST_ROW_DISTANCE).second;
         passwordField.setValidator(passwordValidator);
         passwordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
@@ -83,7 +83,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         repeatedPasswordField.setValidator(passwordValidator);
         repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
-        Tuple3<Button, ProgressIndicator, Label> tuple = addButtonWithStatus(root, ++gridRow, "", 0);
+        Tuple3<Button, ProgressIndicator, Label> tuple = addButtonWithStatus(root, ++gridRow, "", 15);
         pwButton = tuple.first;
         ProgressIndicator progressIndicator = tuple.second;
         progressIndicator.setVisible(false);

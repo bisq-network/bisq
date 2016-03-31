@@ -128,7 +128,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addLanguageGroup() {
-        addTitledGroupBg(root, gridRow, 2, "Which languages do you speak?");
+        addTitledGroupBg(root, gridRow, 1, "Which languages do you speak?");
 
         Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your languages:", Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
@@ -165,7 +165,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
             }
         });
 
-        languageComboBox = addLabelComboBox(root, ++gridRow).second;
+        languageComboBox = addLabelComboBox(root, ++gridRow, "", 15).second;
         languageComboBox.setPromptText("Add language");
         languageComboBox.setConverter(new StringConverter<String>() {
             @Override
