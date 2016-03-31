@@ -101,7 +101,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     .closeButtonText("Don't remove the offer")
                     .show();
         } else {
-            new Popup().information("You need to wait until your are bootstrapped to the network.\n" +
+            new Popup().information("You need to wait until bootstrapping to the network is completed.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
     }
