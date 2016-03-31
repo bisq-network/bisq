@@ -112,7 +112,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<Boolean> showWarningAdjustedVolumeListener;
     private ChangeListener<String> errorMessageListener;
     private ChangeListener<Boolean> placeOfferCompletedListener;
-    private ChangeListener<Coin> feeFromFundingTxListener;
+    // private ChangeListener<Coin> feeFromFundingTxListener;
     private EventHandler<ActionEvent> paymentAccountsComboBoxSelectionHandler;
 
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler;
@@ -123,6 +123,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<Coin> balanceListener;
     private HBox fundingHBox;
     private Subscription isSpinnerVisibleSubscription;
+    private Subscription cancelButton2StyleSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +268,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         .show();
             }
         } else {
-            new Popup().information("You need to wait until your are bootstrapped to the network.\n" +
+            new Popup().information("You need to wait until bootstrapping to the network is completed.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
     }
@@ -484,10 +485,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         isSpinnerVisibleSubscription = EasyBind.subscribe(model.isSpinnerVisible,
                 isSpinnerVisible -> spinner.setProgress(isSpinnerVisible ? -1 : 0));
 
+        cancelButton2StyleSubscription = EasyBind.subscribe(placeOfferButton.visibleProperty(),
+                isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
     }
 
     private void removeSubscriptions() {
         isSpinnerVisibleSubscription.unsubscribe();
+        cancelButton2StyleSubscription.unsubscribe();
     }
 
     private void createListeners() {
@@ -535,7 +539,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         .show(), 100, TimeUnit.MILLISECONDS);
         };
 
-        feeFromFundingTxListener = (observable, oldValue, newValue) -> {
+       /* feeFromFundingTxListener = (observable, oldValue, newValue) -> {
             log.debug("feeFromFundingTxListener " + newValue);
             if (!model.dataModel.isFeeFromFundingTxSufficient()) {
                 new Popup().warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
@@ -556,7 +560,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         })
                         .show();
             }
-        };
+        };*/
 
         paymentAccountsComboBoxSelectionHandler = e -> onPaymentAccountsComboBoxSelected();
         currencyComboBoxSelectionHandler = e -> onCurrencyComboBoxSelected();
@@ -609,7 +613,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.showWarningInvalidFiatDecimalPlaces.addListener(showWarningInvalidFiatDecimalPlacesPlacesListener);
         model.showWarningAdjustedVolume.addListener(showWarningAdjustedVolumeListener);
         model.errorMessage.addListener(errorMessageListener);
-        model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
+        // model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
 
         model.placeOfferCompleted.addListener(placeOfferCompletedListener);
 
@@ -633,7 +637,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.showWarningInvalidFiatDecimalPlaces.removeListener(showWarningInvalidFiatDecimalPlacesPlacesListener);
         model.showWarningAdjustedVolume.removeListener(showWarningAdjustedVolumeListener);
         model.errorMessage.removeListener(errorMessageListener);
-        model.dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
+        // model.dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
 
         model.placeOfferCompleted.removeListener(placeOfferCompletedListener);
 

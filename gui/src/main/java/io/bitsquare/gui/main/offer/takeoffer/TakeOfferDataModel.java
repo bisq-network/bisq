@@ -17,20 +17,18 @@
 
 package io.bitsquare.gui.main.offer.takeoffer;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.PriceFeed;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
-import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
@@ -47,10 +45,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,15 +73,15 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final Coin takerFeeAsCoin;
     private final Coin networkFeeAsCoin;
     private final Coin securityDepositAsCoin;
-    Coin feeFromFundingTx = Coin.NEGATIVE_SATOSHI;
-    
+    // Coin feeFromFundingTx = Coin.NEGATIVE_SATOSHI;
+
     private Offer offer;
 
     private AddressEntry addressEntry;
     final StringProperty btcCode = new SimpleStringProperty();
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
-    final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
-    final BooleanProperty isMainNet = new SimpleBooleanProperty();
+    // final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
+    // final BooleanProperty isMainNet = new SimpleBooleanProperty();
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
@@ -124,7 +120,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
         securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
-        isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
+        // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
     }
 
     @Override
@@ -179,20 +175,16 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (BitsquareApp.DEV_MODE)
             amountAsCoin.set(offer.getAmount());
 
-        calculateTotalToPay();
         calculateVolume();
         calculateTotalToPay();
+        updateBalance();
 
         balanceListener = new BalanceListener(addressEntry.getAddress()) {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance();
 
-                if (tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-
-                }
-
-                if (isMainNet.get()) {
+                /*if (isMainNet.get()) {
                     SettableFuture<Coin> future = blockchainService.requestFee(tx.getHashAsString());
                     Futures.addCallback(future, new FutureCallback<Coin>() {
                         public void onSuccess(Coin fee) {
@@ -215,7 +207,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 } else {
                     setFeeFromFundingTx(FeePolicy.getMinRequiredFeeForFundingTx());
                     isFeeFromFundingTxSufficient.set(feeFromFundingTx.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0);
-                }
+                }*/
             }
         };
 
@@ -347,20 +339,23 @@ class TakeOfferDataModel extends ActivatableDataModel {
             Coin savingWalletBalance = walletService.getSavingWalletBalance();
             totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
 
-            if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
+            if (totalToPayAsCoin.get() != null && totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
                 balance.set(totalToPayAsCoin.get());
             else
                 balance.set(totalAvailableBalance);
         } else {
             balance.set(tradeWalletBalance);
         }
-
-        missingCoin.set(totalToPayAsCoin.get().subtract(balance.get()));
+        if (totalToPayAsCoin.get() != null) {
+            missingCoin.set(totalToPayAsCoin.get().subtract(balance.get()));
+            if (missingCoin.get().isNegative())
+                missingCoin.set(Coin.ZERO);
+        }
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
         if (isWalletFunded.get()) {
             // walletService.removeBalanceListener(balanceListener);
-            if (walletFundedNotification == null) {
+            if (totalToPayAsCoin.get() != null && walletFundedNotification == null) {
                 walletFundedNotification = new Notification()
                         .headLine("Trading wallet update")
                         .notification("Your trading wallet is sufficiently funded.\n" +
@@ -378,13 +373,13 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     public void swapTradeToSavings() {
         walletService.swapTradeToSavings(offer.getId());
-        setFeeFromFundingTx(Coin.NEGATIVE_SATOSHI);
+        //setFeeFromFundingTx(Coin.NEGATIVE_SATOSHI);
     }
 
-    private void setFeeFromFundingTx(Coin fee) {
+  /*  private void setFeeFromFundingTx(Coin fee) {
         feeFromFundingTx = fee;
         isFeeFromFundingTxSufficient.set(feeFromFundingTx.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0);
-    }
+    }*/
 
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement

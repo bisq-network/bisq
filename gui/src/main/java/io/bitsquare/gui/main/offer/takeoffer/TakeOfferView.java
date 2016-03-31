@@ -64,7 +64,6 @@ import org.bitcoinj.uri.BitcoinURI;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -115,9 +114,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private ImageView qrCodeImageView;
     private HBox fundingHBox;
     private Subscription balanceSubscription;
-    private Subscription noSufficientFeeSubscription;
-    private MonadicBinding<Boolean> noSufficientFeeBinding;
+    // private Subscription noSufficientFeeSubscription;
+    //  private MonadicBinding<Boolean> noSufficientFeeBinding;
     private Subscription totalToPaySubscription;
+    private Subscription cancelButton2StyleSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -507,7 +507,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             }
         });
 
-        noSufficientFeeBinding = EasyBind.combine(model.dataModel.isWalletFunded, model.dataModel.isMainNet, model.dataModel.isFeeFromFundingTxSufficient,
+ /*       noSufficientFeeBinding = EasyBind.combine(model.dataModel.isWalletFunded, model.dataModel.isMainNet, model.dataModel.isFeeFromFundingTxSufficient,
                 (isWalletFunded, isMainNet, isFeeSufficient) -> isWalletFunded && isMainNet && !isFeeSufficient);
         noSufficientFeeSubscription = noSufficientFeeBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue)
@@ -527,10 +527,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
                         })
                         .show();
-        });
+        });*/
 
         balanceSubscription = EasyBind.subscribe(model.dataModel.balance, newValue -> balanceTextField.setBalance(newValue));
         totalToPaySubscription = EasyBind.subscribe(model.dataModel.totalToPayAsCoin, newValue -> balanceTextField.setTargetAmount(newValue));
+        cancelButton2StyleSubscription = EasyBind.subscribe(takeOfferButton.visibleProperty(),
+                isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
     }
 
     private void removeSubscriptions() {
@@ -540,12 +542,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         isSpinnerVisibleSubscription.unsubscribe();
         showWarningInvalidBtcDecimalPlacesSubscription.unsubscribe();
         showTransactionPublishedScreenSubscription.unsubscribe();
-        noSufficientFeeSubscription.unsubscribe();
+        // noSufficientFeeSubscription.unsubscribe();
         balanceSubscription.unsubscribe();
         totalToPaySubscription.unsubscribe();
+        cancelButton2StyleSubscription.unsubscribe();
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Build UI elements
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -647,7 +650,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton1 = new Button(BSResources.get("shared.cancel"));
         cancelButton1.setDefaultButton(false);
         cancelButton1.setId("cancel-button");
-        cancelButton1.setOnAction(e -> close());
+        cancelButton1.setOnAction(e -> {
+            model.dataModel.swapTradeToSavings();
+            close();
+        });
 
         offerAvailabilitySpinner = new ProgressIndicator(0);
         offerAvailabilitySpinner.setPrefSize(18, 18);
@@ -758,15 +764,20 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
-            if (model.dataModel.isWalletFunded.get())
+            if (model.dataModel.isWalletFunded.get()) {
                 new Popup().warning("You have already paid in the funds.\n" +
                         "Are you sure you want to cancel.")
-                        .actionButtonText("Yes, cancel")
-                        .onAction(() -> close())
-                        .closeButtonText("No")
+                        .actionButtonText("No")
+                        .onClose(() -> {
+                            model.dataModel.swapTradeToSavings();
+                            close();
+                        })
+                        .closeButtonText("Yes, cancel")
                         .show();
-            else
+            } else {
                 close();
+                model.dataModel.swapTradeToSavings();
+            }
         });
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);

@@ -17,21 +17,19 @@
 
 package io.bitsquare.gui.main.offer.createoffer;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.PriceFeed;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
-import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.TradeCurrency;
@@ -50,7 +48,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,10 +89,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final StringProperty btcCode = new SimpleStringProperty();
 
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
-    final BooleanProperty isMainNet = new SimpleBooleanProperty();
+    //final BooleanProperty isMainNet = new SimpleBooleanProperty();
     final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
-    
-    final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
+
+    // final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
@@ -135,7 +132,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
-        isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
+        // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
 
         offerId = UUID.randomUUID().toString();
         addressEntry = walletService.getTradeAddressEntry(offerId);
@@ -148,7 +145,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance();
 
-                if (preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
+               /* if (isMainNet.get()) {
                     SettableFuture<Coin> future = blockchainService.requestFee(tx.getHashAsString());
                     Futures.addCallback(future, new FutureCallback<Coin>() {
                         public void onSuccess(Coin fee) {
@@ -168,9 +165,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                                     .show());
                         }
                     });
-                } else {
-                    feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
-                }
+                }*/
             }
         };
 
@@ -362,9 +357,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return user.getAcceptedArbitrators().size() > 0;
     }
 
-    boolean isFeeFromFundingTxSufficient() {
-        return feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0;
-    }
+    /*boolean isFeeFromFundingTxSufficient() {
+        return !isMainNet.get() || feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0;
+    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -416,6 +411,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         }
 
         missingCoin.set(totalToPayAsCoin.get().subtract(balance.get()));
+        if (missingCoin.get().isNegative())
+            missingCoin.set(Coin.ZERO);
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
         if (isWalletFunded.get()) {

@@ -66,6 +66,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private String directionLabel;
     private String addressAsString;
     private final String paymentLabel;
+    private boolean createOfferRequested;
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty minAmount = new SimpleStringProperty();
@@ -109,7 +110,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private ChangeListener<Fiat> priceAsFiatListener;
     private ChangeListener<Fiat> volumeAsFiatListener;
     private ChangeListener<Boolean> isWalletFundedListener;
-    private ChangeListener<Coin> feeFromFundingTxListener;
+    //private ChangeListener<Coin> feeFromFundingTxListener;
     private ChangeListener<String> errorMessageListener;
     private Offer offer;
     private Timer timeoutTimer;
@@ -254,9 +255,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         isWalletFundedListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
         };
-        feeFromFundingTxListener = (ov, oldValue, newValue) -> {
+       /* feeFromFundingTxListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
-        };
+        };*/
     }
 
     private void addListeners() {
@@ -273,7 +274,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.priceAsFiat.addListener(priceAsFiatListener);
         dataModel.volumeAsFiat.addListener(volumeAsFiatListener);
 
-        dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
+        // dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
     }
 
@@ -289,7 +290,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.priceAsFiat.removeListener(priceAsFiatListener);
         dataModel.volumeAsFiat.removeListener(volumeAsFiatListener);
 
-        dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
+        //dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.removeListener(isWalletFundedListener);
 
         if (offer != null && errorMessageListener != null)
@@ -314,24 +315,24 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     void onPlaceOffer(Offer offer, Runnable resultHandler) {
         errorMessage.set(null);
-
-        isPlaceOfferButtonDisabled.set(true);
-        cancelButtonDisabled.set(true);
+        createOfferRequested = true;
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {
                 stopTimeoutTimer();
-                isPlaceOfferButtonDisabled.set(false);
-                cancelButtonDisabled.set(false);
+                createOfferRequested = false;
                 errorMessage.set("A timeout occurred at publishing the offer.");
+
+                updateButtonDisableState();
+                updateSpinnerInfo();
+
                 resultHandler.run();
             }, 30);
         }
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 stopTimeoutTimer();
-                isPlaceOfferButtonDisabled.set(false);
-                cancelButtonDisabled.set(false);
+                createOfferRequested = false;
                 if (offer.getState() == Offer.State.OFFER_FEE_PAID)
                     errorMessage.set(newValue +
                             "\n\nThe offer fee is already paid. In the worst case you have lost that fee. " +
@@ -340,10 +341,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 else
                     errorMessage.set(newValue);
 
+                updateButtonDisableState();
+                updateSpinnerInfo();
+
                 resultHandler.run();
             }
         };
+
         offer.errorMessageProperty().addListener(errorMessageListener);
+
         dataModel.onPlaceOffer(offer, transaction -> {
             stopTimeoutTimer();
             resultHandler.run();
@@ -351,14 +357,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             errorMessage.set(null);
         });
 
+        updateButtonDisableState();
         updateSpinnerInfo();
-    }
-
-    private void stopTimeoutTimer() {
-        if (timeoutTimer != null) {
-            timeoutTimer.stop();
-            timeoutTimer = null;
-        }
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
@@ -368,33 +368,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         dataModel.onCurrencySelected(tradeCurrency);
-    }
-
-    public boolean isPriceInRange() {
-        MarketPrice marketPrice = priceFeed.getMarketPrice(getTradeCurrency().getCode());
-        if (marketPrice != null) {
-            double marketPriceAsDouble = marketPrice.getPrice(PriceFeed.Type.LAST);
-            Fiat priceAsFiat = dataModel.priceAsFiat.get();
-            long shiftDivisor = checkedPow(10, priceAsFiat.smallestUnitExponent());
-            double offerPrice = ((double) priceAsFiat.longValue()) / ((double) shiftDivisor);
-            if (marketPriceAsDouble != 0 && Math.abs(1 - (offerPrice / marketPriceAsDouble)) > preferences.getMaxPriceDistanceInPercent()) {
-                Popup popup = new Popup();
-                popup.warning("The price you have entered is outside the max. allowed deviation from the market price.\n" +
-                        "The max. allowed deviation is " +
-                        formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent()) +
-                        " and can be adjusted in the preferences.")
-                        .actionButtonText("Change price")
-                        .onAction(() -> popup.hide())
-                        .closeButtonText("Go to \"Preferences\"")
-                        .onClose(() -> navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class))
-                        .show();
-                return false;
-            } else {
-                return true;
-            }
-        } else {
-            return true;
-        }
     }
 
     void onShowPayFundsScreen() {
@@ -514,6 +487,33 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public boolean isPriceInRange() {
+        MarketPrice marketPrice = priceFeed.getMarketPrice(getTradeCurrency().getCode());
+        if (marketPrice != null) {
+            double marketPriceAsDouble = marketPrice.getPrice(PriceFeed.Type.LAST);
+            Fiat priceAsFiat = dataModel.priceAsFiat.get();
+            long shiftDivisor = checkedPow(10, priceAsFiat.smallestUnitExponent());
+            double offerPrice = ((double) priceAsFiat.longValue()) / ((double) shiftDivisor);
+            if (marketPriceAsDouble != 0 && Math.abs(1 - (offerPrice / marketPriceAsDouble)) > preferences.getMaxPriceDistanceInPercent()) {
+                Popup popup = new Popup();
+                popup.warning("The price you have entered is outside the max. allowed deviation from the market price.\n" +
+                        "The max. allowed deviation is " +
+                        formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent()) +
+                        " and can be adjusted in the preferences.")
+                        .actionButtonText("Change price")
+                        .onAction(() -> popup.hide())
+                        .closeButtonText("Go to \"Preferences\"")
+                        .onClose(() -> navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class))
+                        .show();
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
     BSFormatter getFormatter() {
         return formatter;
     }
@@ -578,6 +578,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     boolean isBootstrapped() {
         return p2PService.isBootstrapped();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -660,9 +661,16 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 isFiatInputValid(volume.get()).isValid &&
                 dataModel.isMinAmountLessOrEqualAmount();
         isNextButtonDisabled.set(!inputDataValid);
-        isPlaceOfferButtonDisabled.set(!(inputDataValid &&
-                        dataModel.isWalletFunded.get() &&
-                        (dataModel.useSavingsWallet || dataModel.isFeeFromFundingTxSufficient()))
-        );
+        // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
+        //isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || notSufficientFees);
+        isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || !dataModel.isWalletFunded.get());
+    }
+
+
+    private void stopTimeoutTimer() {
+        if (timeoutTimer != null) {
+            timeoutTimer.stop();
+            timeoutTimer = null;
+        }
     }
 }

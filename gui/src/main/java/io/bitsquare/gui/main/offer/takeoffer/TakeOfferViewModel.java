@@ -42,8 +42,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -99,7 +97,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<Offer.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
     private ConnectionListener connectionListener;
-    private Subscription isFeeSufficientSubscription;
+    //  private Subscription isFeeSufficientSubscription;
     private Runnable takeOfferSucceededHandler;
 
 
@@ -199,9 +197,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             applyTradeState(trade.getState());
             trade.errorMessageProperty().addListener(tradeErrorListener);
             applyTradeErrorMessage(trade.errorMessageProperty().get());
-            updateButtonDisableState();
             takeOfferCompleted.set(true);
         });
+
+        updateButtonDisableState();
+        updateSpinnerInfo();
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
@@ -390,8 +390,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 && !dataModel.isAmountLargerThanOfferAmount()
                 && isOfferAvailable.get();
         isNextButtonDisabled.set(!inputDataValid);
-        boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
-        isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || notSufficientFees);
+        // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
+        // isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || notSufficientFees);
+        isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || !dataModel.isWalletFunded.get());
     }
 
 
@@ -467,11 +468,12 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 showTransactionPublishedScreen.get()) {
             spinnerInfoText.set("");
         } else if (dataModel.isWalletFunded.get()) {
-            if (dataModel.isFeeFromFundingTxSufficient.get()) {
+            spinnerInfoText.set("");
+           /* if (dataModel.isFeeFromFundingTxSufficient.get()) {
                 spinnerInfoText.set("");
             } else {
                 spinnerInfoText.set("Check if funding tx miner fee is sufficient...");
-            }
+            }*/
         } else {
             spinnerInfoText.set("Waiting for funds...");
         }
@@ -489,10 +491,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
         p2PService.getNetworkNode().addConnectionListener(connectionListener);
-        isFeeSufficientSubscription = EasyBind.subscribe(dataModel.isFeeFromFundingTxSufficient, newValue -> {
+       /* isFeeSufficientSubscription = EasyBind.subscribe(dataModel.isFeeFromFundingTxSufficient, newValue -> {
             updateButtonDisableState();
             updateSpinnerInfo();
-        });
+        });*/
     }
 
     private void removeListeners() {
@@ -512,7 +514,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             trade.errorMessageProperty().removeListener(tradeErrorListener);
         }
         p2PService.getNetworkNode().removeConnectionListener(connectionListener);
-        isFeeSufficientSubscription.unsubscribe();
+        //isFeeSufficientSubscription.unsubscribe();
     }
 
 
