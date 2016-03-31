@@ -57,17 +57,18 @@ public class SpecificBankForm extends BankForm {
     protected void addAcceptedBanksForAddAccount() {
         Tuple3<Label, InputTextField, Button> addBankTuple = addLabelInputTextFieldButton(gridPane, ++gridRow, "Add name of accepted bank:", "Add accepted bank");
         InputTextField addBankInputTextField = addBankTuple.second;
-        addBankInputTextField.setMinWidth(300);
         Button addButton = addBankTuple.third;
+        addButton.setMinWidth(200);
         addButton.disableProperty().bind(Bindings.createBooleanBinding(() -> addBankInputTextField.getText().isEmpty(), addBankInputTextField.textProperty()));
 
         Tuple3<Label, TextField, Button> acceptedBanksTuple = addLabelTextFieldButton(gridPane, ++gridRow, "Accepted banks:", "Clear accepted banks");
         acceptedBanksTextField = acceptedBanksTuple.second;
-        acceptedBanksTextField.setMinWidth(addBankInputTextField.getMinWidth());
         acceptedBanksTextField.setMouseTransparent(false);
         acceptedBanksTooltip = new Tooltip();
         acceptedBanksTextField.setTooltip(acceptedBanksTooltip);
         Button clearButton = acceptedBanksTuple.third;
+        clearButton.setMinWidth(200);
+        clearButton.setDefaultButton(false);
         clearButton.disableProperty().bind(Bindings.createBooleanBinding(() -> acceptedBanksTextField.getText().isEmpty(), acceptedBanksTextField.textProperty()));
         addButton.setOnAction(e -> {
             specificBanksAccountContractData.addAcceptedBank(addBankInputTextField.getText());

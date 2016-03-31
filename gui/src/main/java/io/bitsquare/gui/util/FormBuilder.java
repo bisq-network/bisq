@@ -336,10 +336,12 @@ public class FormBuilder {
 
         InputTextField inputTextField = new InputTextField();
         Button button = new Button(buttonTitle);
+        button.setDefaultButton(true);
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         hBox.getChildren().addAll(inputTextField, button);
+        HBox.setHgrow(inputTextField, Priority.ALWAYS);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         gridPane.getChildren().add(hBox);
@@ -353,19 +355,26 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple3<Label, TextField, Button> addLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+        return addLabelTextFieldButton(gridPane, rowIndex, title, buttonTitle, 0);
+    }
+
+    public static Tuple3<Label, TextField, Button> addLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle, double top) {
+        Label label = addLabel(gridPane, rowIndex, title, top);
 
         TextField textField = new TextField();
         textField.setEditable(false);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
         Button button = new Button(buttonTitle);
+        button.setDefaultButton(true);
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         hBox.getChildren().addAll(textField, button);
+        HBox.setHgrow(textField, Priority.ALWAYS);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(hBox);
 
         return new Tuple3<>(label, textField, button);
