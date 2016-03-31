@@ -736,7 +736,7 @@ public abstract class Overlay<T extends Overlay> {
             truncatedMessage = message;
     }
 
-    protected int getDuration(int duration) {
+    protected double getDuration(double duration) {
         return Preferences.useAnimations() ? duration : 1;
     }
 

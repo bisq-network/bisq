@@ -33,7 +33,7 @@ public class Notification extends Overlay<Notification> {
     public void onReadyForDisplay() {
         super.display();
         if (autoClose && autoCloseTimer == null)
-            autoCloseTimer = UserThread.runAfter(() -> doClose(), 5);
+            autoCloseTimer = UserThread.runAfter(() -> doClose(), 4);
     }
 
     @Override
