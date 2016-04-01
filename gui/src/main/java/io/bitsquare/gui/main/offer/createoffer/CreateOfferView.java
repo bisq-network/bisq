@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.offer.createoffer;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
@@ -296,13 +295,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     model.totalToPay.get() + " to your local Bitsquare trading wallet.\n" +
                     "The amount is the sum of " + tradeAmountText + "the security deposit, the trading fee and " +
                     "the bitcoin mining fee.\n\n" +
-                    "Please send from your external Bitcoin wallet the exact amount to the address: " +
+                    "You can choose between 2 options:\n" +
+                    "Either you transfer from your Bitsquare wallet the funds or if you prefer better privacy by " +
+                    "separating all trade transactions you can send from your external Bitcoin wallet the exact amount to the address: " +
                     model.getAddressAsString() + "\n" +
                     "(you can copy the address in the screen below after closing that popup)\n\n" +
-                    "Make sure you use a sufficiently high mining fee of at least " +
-                    model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) +
-                    " to avoid problems that your transaction does not get confirmed in the blockchain.\n" +
-                    "Transactions with a lower fee will not be accepted.\n\n" +
                     "You can see the status of your incoming payment and all the details in the screen below.")
                     .dontShowAgainId(key, preferences)
                     .show();
@@ -804,7 +801,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundFromSavingsWalletButton = new Button("Transfer funds from Bitsquare wallet");
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.setDefaultButton(false);
-        fundFromSavingsWalletButton.setOnAction(e -> model.useSavingsWalletForFunding());
+        fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
         Label label = new Label("OR");
         label.setPadding(new Insets(5, 0, 0, 0));
         fundFromExternalWalletButton = new Button("Pay in funds from external wallet");

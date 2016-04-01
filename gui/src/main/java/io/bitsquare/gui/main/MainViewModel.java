@@ -55,9 +55,11 @@ import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.payment.OKPayAccount;
-import io.bitsquare.trade.TradableCollections;
+import io.bitsquare.trade.TradableHelper;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.closed.ClosedTradableManager;
+import io.bitsquare.trade.failed.FailedTradesManager;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
@@ -80,6 +82,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
@@ -137,6 +140,8 @@ public class MainViewModel implements ViewModel {
 
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
     private final PriceFeed priceFeed;
+    private final ClosedTradableManager closedTradableManager;
+    private final FailedTradesManager failedTradesManager;
     private final User user;
     private int numBtcPeers = 0;
     private Timer checkNumberOfBtcPeersTimer;
@@ -153,11 +158,14 @@ public class MainViewModel implements ViewModel {
     public MainViewModel(WalletService walletService, TradeWalletService tradeWalletService,
                          PriceFeed priceFeed,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
-                         OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
+                         OpenOfferManager openOfferManager, ClosedTradableManager closedTradableManager,
+                         FailedTradesManager failedTradesManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.priceFeed = priceFeed;
+        this.closedTradableManager = closedTradableManager;
+        this.failedTradesManager = failedTradesManager;
         this.user = user;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -670,7 +678,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void swapPendingTradeAddressEntriesToSavingsWallet() {
-        TradableCollections.getAddressEntriesForAvailableBalance(openOfferManager, tradeManager, walletService).stream()
+        TradableHelper.getAddressEntriesForAvailableBalance(openOfferManager, tradeManager, walletService).stream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)
                 .forEach(addressEntry -> walletService.swapTradeToSavings(addressEntry.getOfferId()));
     }
@@ -691,12 +699,36 @@ public class MainViewModel implements ViewModel {
         updateLockedBalance();
     }
 
+    private void updateAvailableBalance() {
+        Optional<Coin> totalAvailableOptional = Stream.concat(walletService.getSavingsAddressEntryList().stream(), walletService.getTradeAddressEntryList().stream())
+                .filter(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()).isPositive())
+                .map(addressEntry -> TradableHelper.getAvailableBalance(addressEntry,
+                        walletService,
+                        openOfferManager,
+                        tradeManager,
+                        closedTradableManager,
+                        failedTradesManager))
+                .filter(balance -> balance.isPositive())
+                .reduce(Coin::add);
+
+
+        /*Optional<Coin> totalAvailableOptional = TradableHelper.getAddressEntriesForAvailableBalance(openOfferManager, tradeManager, walletService)
+                .stream()
+                .map(e -> walletService.getBalanceForAddress(e.getAddress()))
+                .reduce(Coin::add);*/
+        if (totalAvailableOptional.isPresent())
+            availableBalance.set(formatter.formatCoinWithCode(totalAvailableOptional.get()));
+        else
+            availableBalance.set(formatter.formatCoinWithCode(Coin.ZERO));
+    }
+
     private void updateReservedBalance() {
-        Coin sum = Coin.valueOf(TradableCollections.getNotCompletedTradableItems(openOfferManager, tradeManager).stream()
-                .map(tradable -> walletService.getTradeAddressEntry(tradable.getId()))
-                .map(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()))
+        Coin sum = Coin.valueOf(TradableHelper.getNotCompletedTradableItems(openOfferManager, tradeManager).stream()
+                .filter(tradable -> tradable instanceof OpenOffer)
+                .map(tradable -> TradableHelper.getReservedBalance(tradable, walletService))
                 .mapToLong(Coin::getValue)
                 .sum());
+
         reservedBalance.set(formatter.formatCoinWithCode(sum));
     }
 
@@ -724,17 +756,6 @@ public class MainViewModel implements ViewModel {
                 .sum());
         lockedBalance.set(formatter.formatCoinWithCode(sum));
     }
-
-    private void updateAvailableBalance() {
-        Optional<Coin> totalAvailableOptional = TradableCollections.getAddressEntriesForAvailableBalance(openOfferManager, tradeManager, walletService)
-                .stream()
-                .map(e -> walletService.getBalanceForAddress(e.getAddress())).reduce(Coin::add);
-        if (totalAvailableOptional.isPresent())
-            availableBalance.set(formatter.formatCoinWithCode(totalAvailableOptional.get()));
-        else
-            availableBalance.set(formatter.formatCoinWithCode(Coin.ZERO));
-    }
-
 
     private void onDisputesChangeListener(List<? extends Dispute> addedList, @Nullable List<? extends Dispute> removedList) {
         if (removedList != null) {

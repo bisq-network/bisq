@@ -375,8 +375,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         updateSpinnerInfo();
     }
 
-    boolean useSavingsWalletForFunding() {
-        dataModel.useSavingsWalletForFunding();
+    boolean fundFromSavingsWallet() {
+        dataModel.fundFromSavingsWallet();
         if (dataModel.isWalletFunded.get()) {
             updateButtonDisableState();
             return true;

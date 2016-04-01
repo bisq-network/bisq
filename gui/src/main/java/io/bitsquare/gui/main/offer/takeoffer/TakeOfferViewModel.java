@@ -207,8 +207,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         updateSpinnerInfo();
     }
 
-    boolean useSavingsWalletForFunding() {
-        dataModel.useSavingsWalletForFunding();
+    boolean fundFromSavingsWallet() {
+        dataModel.fundFromSavingsWallet();
         if (dataModel.isWalletFunded.get()) {
             updateButtonDisableState();
             return true;

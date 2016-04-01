@@ -333,6 +333,12 @@ public class WalletService {
                 .findAny();
     }
 
+    public List<AddressEntry> getTradeAddressEntryList() {
+        return getAddressEntryList().stream()
+                .filter(e -> e.getContext().equals(AddressEntry.Context.TRADE))
+                .collect(Collectors.toList());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // SavingsAddressEntry 
@@ -493,6 +499,10 @@ public class WalletService {
         return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(), address) : Coin.ZERO;
     }
 
+    public Coin getBalanceForAddressEntryWithTradeId(String tradeId) {
+        return getBalanceForAddress(getTradeAddressEntry(tradeId).getAddress());
+    }
+   
     private Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
         for (TransactionOutput transactionOutput : transactionOutputs) {
@@ -539,7 +549,8 @@ public class WalletService {
         Coin fee;
         try {
             wallet.completeTx(getSendRequest(fromAddress, toAddress, amount, aesKey));
-            fee = Coin.ZERO;
+            // We use the min fee for now as the mix of savingswallet/trade wallet has some nasty edge cases...
+            fee = FeePolicy.getFixedTxFeeForTrades();
         } catch (InsufficientMoneyException e) {
             log.info("The amount to be transferred is not enough to pay the transaction fees of {}. " +
                     "We subtract that fee from the receivers amount to make the transaction possible.");
@@ -556,7 +567,8 @@ public class WalletService {
         Coin fee;
         try {
             wallet.completeTx(getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, aesKey));
-            fee = Coin.ZERO;
+            // We use the min fee for now as the mix of savingswallet/trade wallet has some nasty edge cases...
+            fee = FeePolicy.getFixedTxFeeForTrades();
         } catch (InsufficientMoneyException e) {
             log.info("The amount to be transferred is not enough to pay the transaction fees of {}. " +
                     "We subtract that fee from the receivers amount to make the transaction possible.");

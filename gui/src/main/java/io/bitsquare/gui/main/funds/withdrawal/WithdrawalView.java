@@ -34,7 +34,6 @@ import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.trade.Tradable;
-import io.bitsquare.trade.TradableCollections;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.closed.ClosedTradableManager;
@@ -61,6 +60,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
@@ -197,7 +197,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         withdrawToTextField.getText(), senderAmount, null);
                 Coin receiverAmount = senderAmount.subtract(requiredFee);
                 if (BitsquareApp.DEV_MODE) {
-                    doWithdraw(receiverAmount, callback);
+                    doWithdraw(senderAmount, callback);
                 } else {
                     new Popup().headLine("Confirm withdrawal request")
                             .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
@@ -283,8 +283,11 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(WithdrawalListItem::cleanup);
-        observableList.setAll(TradableCollections.getAddressEntriesForAvailableBalance(openOfferManager, tradeManager, walletService).stream()
-                .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, formatter))
+        observableList.setAll(Stream.concat(walletService.getSavingsAddressEntryList().stream(), walletService.getTradeAddressEntryList().stream())
+                .filter(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()).isPositive())
+                .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, openOfferManager, tradeManager,
+                        closedTradableManager, failedTradesManager, formatter))
+                .filter(item -> item.getBalance().isPositive())
                 .collect(Collectors.toList()));
     }
 

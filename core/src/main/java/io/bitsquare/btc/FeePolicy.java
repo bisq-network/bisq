@@ -36,12 +36,12 @@ public class FeePolicy {
     // disputed payout tx: 408 bytes
 
     // We set a fixed fee to make the needed amounts in the trade predictable.
-    // We use 0.0003 BTC (0.12 EUR @ 400 EUR/BTC) which is for our tx sizes about 75-150 satoshi/byte
+    // We use 0.0002 BTC (0.08 EUR @ 400 EUR/BTC) which is for our tx sizes about 50-90 satoshi/byte
     // We cannot make that user defined as it need to be the same for both users, so we can only change that in 
     // software updates 
     // TODO before Beta we should get a good future proof guess as a change causes incompatible versions
     public static Coin getFixedTxFeeForTrades() {
-        return Coin.valueOf(30_000);
+        return Coin.valueOf(20_000);
     }
 
     // For non trade transactions (withdrawal) we use the default fee calculation 
@@ -50,7 +50,7 @@ public class FeePolicy {
     // The BitcoinJ fee calculation use kb so a tx size  < 1kb will still pay the fee for a kb tx.
     // Our payout tx has about 370 bytes so we get a fee/kb value of about 90 satoshi/byte making it high priority
     // Other payout transactions (E.g. arbitrators many collected transactions) will go with 30 satoshi/byte if > 1kb
-    private static Coin FEE_PER_KB = Coin.valueOf(30_000); // 0.0003 BTC about 0.12 EUR @ 400 EUR/BTC 
+    private static Coin FEE_PER_KB = Coin.valueOf(20_000); // 0.0002 BTC about 0.08 EUR @ 400 EUR/BTC 
 
     public static void setFeePerKb(Coin feePerKb) {
         FEE_PER_KB = feePerKb;
@@ -84,8 +84,8 @@ public class FeePolicy {
 
 
     // TODO will be increased once we get higher limits
-    // 0.01 BTC; about 0.4 EUR @ 400 EUR/BTC
+    // 0.02 BTC; about 8 EUR @ 400 EUR/BTC
     public static Coin getSecurityDeposit() {
-        return Coin.valueOf(1_000_000);
+        return Coin.valueOf(2_000_000);
     }
 }

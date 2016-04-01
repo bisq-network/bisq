@@ -132,7 +132,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                 .compareTo(o2.getProgressIndicator().getProgress()));
         usageColumn.setComparator((a, b) -> (a.getNumTxOutputs() < b.getNumTxOutputs()) ? -1 : ((a.getNumTxOutputs() == b.getNumTxOutputs()) ? 0 : 1));
         tableView.getSortOrder().add(usageColumn);
-
+        tableView.setItems(sortedList);
 
         titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, "Fund your wallet");
 
@@ -209,7 +209,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     protected void activate() {
         tableView.getSelectionModel().selectedItemProperty().addListener(tableViewSelectionListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.setItems(sortedList);
+
         updateList();
 
         walletService.addBalanceListener(balanceListener);

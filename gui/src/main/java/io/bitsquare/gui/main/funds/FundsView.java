@@ -83,19 +83,6 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
             navigation.navigateTo(MainView.class, FundsView.class, ReservedView.class);
         else if (root.getSelectionModel().getSelectedItem() == transactionsTab)
             navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
-
-        String key = "tradeWalletInfoAtFunds";
-      /*  if (!BitsquareApp.DEV_MODE)
-            new Popup().backgroundInfo("Bitsquare does not use a single application wallet, but dedicated wallets for every trade.\n\n" +
-                    "Funding of the wallet will be done when needed, for instance when you create or take an offer.\n" +
-                    "Withdrawing funds can be done after a trade is completed.\n\n" +
-                    "Dedicated wallets help protect user privacy and prevent leaking information of previous trades to other " +
-                    "traders.")
-                    .actionButtonText("Visit FAQ web page")
-                    .onAction(() -> Utilities.openWebPage("https://bitsquare.io/faq"))
-                    .closeButtonText("I understand")
-                    .dontShowAgainId(key, preferences)
-                    .show();*/
     }
 
     @Override

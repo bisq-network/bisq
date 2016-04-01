@@ -318,9 +318,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
         }
     }
 
-    void useSavingsWalletForFunding() {
-        useSavingsWallet = true;
+    void fundFromSavingsWallet() {
+        this.useSavingsWallet = true;
         updateBalance();
+        if (!isWalletFunded.get())
+            this.useSavingsWallet = false;
     }
 
 

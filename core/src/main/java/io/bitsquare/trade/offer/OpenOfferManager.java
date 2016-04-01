@@ -147,7 +147,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public void closeAllOpenOffers(@Nullable Runnable completeHandler) {
         openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
         if (completeHandler != null)
-            UserThread.runAfter(completeHandler::run, openOffers.size() * 200 + 300, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(completeHandler::run, openOffers.size() * 100 + 200, TimeUnit.MILLISECONDS);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

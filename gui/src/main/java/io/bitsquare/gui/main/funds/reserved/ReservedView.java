@@ -30,7 +30,7 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
-import io.bitsquare.trade.TradableCollections;
+import io.bitsquare.trade.TradableHelper;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -38,6 +38,7 @@ import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
@@ -68,6 +69,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private final ObservableList<ReservedListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<ReservedListItem> sortedList = new SortedList<>(observableList);
     private BalanceListener balanceListener;
+    private ListChangeListener<OpenOffer> openOfferListChangeListener;
+    private ListChangeListener<Trade> tradeListChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +89,6 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         this.tradeDetailsWindow = tradeDetailsWindow;
     }
 
-
     @Override
     public void initialize() {
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -100,7 +102,12 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
         detailsColumn.setComparator((o1, o2) -> o1.getTradable().getId().compareTo(o2.getTradable().getId()));
         balanceColumn.setComparator((o1, o2) -> o1.getBalance().compareTo(o2.getBalance()));
-        dateColumn.setComparator((o1, o2) -> getTradable(o2).get().getDate().compareTo(getTradable(o1).get().getDate()));
+        dateColumn.setComparator((o1, o2) -> {
+            if (getTradable(o1).isPresent() && getTradable(o2).isPresent())
+                return getTradable(o2).get().getDate().compareTo(getTradable(o1).get().getDate());
+            else
+                return 0;
+        });
         tableView.getSortOrder().add(dateColumn);
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
 
@@ -110,10 +117,14 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                 updateList();
             }
         };
+        openOfferListChangeListener = c -> updateList();
+        tradeListChangeListener = c -> updateList();
     }
 
     @Override
     protected void activate() {
+        openOfferManager.getOpenOffers().addListener(openOfferListChangeListener);
+        tradeManager.getTrades().addListener(tradeListChangeListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
@@ -123,6 +134,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
+        openOfferManager.getOpenOffers().removeListener(openOfferListChangeListener);
+        tradeManager.getTrades().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(ReservedListItem::cleanup);
         walletService.removeBalanceListener(balanceListener);
@@ -135,9 +148,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(ReservedListItem::cleanup);
-
-
-        observableList.setAll(TradableCollections.getNotCompletedTradableItems(openOfferManager, tradeManager).stream()
+        observableList.setAll(TradableHelper.getNotCompletedTradableItems(openOfferManager, tradeManager).stream()
                 .map(tradable -> new ReservedListItem(tradable, walletService.getTradeAddressEntry(tradable.getOffer().getId()), walletService, formatter))
                 .collect(Collectors.toList()));
     }

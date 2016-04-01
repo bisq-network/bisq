@@ -252,9 +252,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
             this.paymentAccount = paymentAccount;
     }
 
-    void useSavingsWalletForFunding() {
+    void fundFromSavingsWallet() {
         useSavingsWallet = true;
         updateBalance();
+        if (!isWalletFunded.get())
+            this.useSavingsWallet = false;
     }
 
 
