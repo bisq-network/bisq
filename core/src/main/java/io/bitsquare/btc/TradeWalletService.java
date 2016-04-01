@@ -101,6 +101,7 @@ public class TradeWalletService {
     private WalletAppKit walletAppKit;
     @Nullable
     private KeyParameter aesKey;
+    private AddressEntryList addressEntryList;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +159,7 @@ public class TradeWalletService {
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         if (useSavingsWallet)
-            sendRequest.coinSelector = new SavingsWalletCoinSelector(params);
+            sendRequest.coinSelector = new SavingsWalletCoinSelector(params, addressEntryList);
         else
             sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry);
         // We use a fixed fee
@@ -1063,5 +1064,9 @@ public class TradeWalletService {
         } catch (Throwable t) {
             throw new WalletException(t);
         }
+    }
+
+    public void setAddressEntryList(AddressEntryList addressEntryList) {
+        this.addressEntryList = addressEntryList;
     }
 }

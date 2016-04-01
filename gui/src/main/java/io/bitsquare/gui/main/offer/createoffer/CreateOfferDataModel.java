@@ -228,7 +228,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         calculateVolume();
         calculateTotalToPay();
-        updateBalance();
     }
 
     void onTabSelected(boolean isSelected) {
@@ -394,11 +393,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void calculateTotalToPay() {
-        if (securityDepositAsCoin != null) {
+        if (direction != null && amountAsCoin.get() != null) {
             Coin feeAndSecDeposit = offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin);
-            Coin feeAndSecDepositAndAmount = feeAndSecDeposit.add(amountAsCoin.get() == null ? Coin.ZERO : amountAsCoin.get());
+            Coin feeAndSecDepositAndAmount = feeAndSecDeposit.add(amountAsCoin.get());
             Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDepositAndAmount;
             totalToPayAsCoin.set(required);
+            log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
+            updateBalance();
         }
     }
 
@@ -407,11 +408,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
         if (useSavingsWallet) {
             Coin savingWalletBalance = walletService.getSavingWalletBalance();
             totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
-
-            if (totalToPayAsCoin.get() != null && totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
-                balance.set(totalToPayAsCoin.get());
-            else
-                balance.set(totalAvailableBalance);
+            if (totalToPayAsCoin.get() != null) {
+                if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
+                    balance.set(totalToPayAsCoin.get());
+                else
+                    balance.set(totalAvailableBalance);
+            }
         } else {
             balance.set(tradeWalletBalance);
         }
@@ -421,6 +423,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
             if (missingCoin.get().isNegative())
                 missingCoin.set(Coin.ZERO);
         }
+
+        log.debug("missingCoin " + missingCoin.get().toFriendlyString());
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
         if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null) {

@@ -228,7 +228,7 @@ public class SellerStep3View extends TradeStepView {
         if (model.p2PService.isBootstrapped()) {
             Preferences preferences = model.dataModel.preferences;
             String key = "confirmPaymentReceived";
-            if (preferences.showAgain(key)) {
+            if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
                 new Popup()
                         .headLine("Confirm that you have received the payment")
                         .confirmation("Have you received the " + CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()) +

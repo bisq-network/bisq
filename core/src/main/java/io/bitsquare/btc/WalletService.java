@@ -188,6 +188,7 @@ public class WalletService {
 
                 // set after wallet is ready
                 tradeWalletService.setWalletAppKit(walletAppKit);
+                tradeWalletService.setAddressEntryList(addressEntryList);
                 timeoutTimer.stop();
 
                 // onSetupCompleted in walletAppKit is not the called on the last invocations, so we add a bit of delay

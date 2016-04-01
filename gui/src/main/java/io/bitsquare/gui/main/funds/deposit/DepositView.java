@@ -205,25 +205,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
         };
     }
 
-    private Coin getAmountAsCoin() {
-        Coin senderAmount = formatter.parseToCoin(amountTextField.getText());
-        if (!Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
-            senderAmount = Coin.ZERO;
-           /* new Popup()
-                    .warning("The amount is lower than the transaction fee and the min. possible tx value (dust).")
-                    .show();*/
-        }
-        return senderAmount;
-    }
-
-    @NotNull
-    private String getBitcoinURI() {
-        return BitcoinURI.convertToBitcoinURI(addressTextField.getAddress(),
-                getAmountAsCoin(),
-                paymentLabel,
-                null);
-    }
-
     @Override
     protected void activate() {
         tableView.getSelectionModel().selectedItemProperty().addListener(tableViewSelectionListener);
@@ -236,6 +217,9 @@ public class DepositView extends ActivatableView<VBox, Void> {
             addressTextField.setAmountAsCoin(formatter.parseToCoin(t));
             updateQRCode();
         });
+
+        if (tableView.getSelectionModel().getSelectedItem() == null && !sortedList.isEmpty())
+            tableView.getSelectionModel().select(0);
     }
 
     @Override
@@ -309,6 +293,24 @@ public class DepositView extends ActivatableView<VBox, Void> {
                 .forEach(e -> observableList.add(new DepositListItem(e, walletService, formatter)));
     }
 
+    private Coin getAmountAsCoin() {
+        Coin senderAmount = formatter.parseToCoin(amountTextField.getText());
+        if (!Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
+            senderAmount = Coin.ZERO;
+           /* new Popup()
+                    .warning("The amount is lower than the transaction fee and the min. possible tx value (dust).")
+                    .show();*/
+        }
+        return senderAmount;
+    }
+
+    @NotNull
+    private String getBitcoinURI() {
+        return BitcoinURI.convertToBitcoinURI(addressTextField.getAddress(),
+                getAmountAsCoin(),
+                paymentLabel,
+                null);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ColumnCellFactories

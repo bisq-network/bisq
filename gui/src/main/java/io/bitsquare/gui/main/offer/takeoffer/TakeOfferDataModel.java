@@ -176,7 +176,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         calculateVolume();
         calculateTotalToPay();
-        updateBalance();
 
         balanceListener = new BalanceListener(addressEntry.getAddress()) {
             @Override
@@ -325,11 +324,21 @@ class TakeOfferDataModel extends ActivatableDataModel {
         }
     }
 
+    void setAmount(Coin amount) {
+        amountAsCoin.set(amount);
+        calculateTotalToPay();
+    }
+
     void calculateTotalToPay() {
-        if (getDirection() == Offer.Direction.SELL)
-            totalToPayAsCoin.set(takerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin));
-        else
-            totalToPayAsCoin.set(takerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
+        if (offer != null && amountAsCoin.get() != null) {
+            if (getDirection() == Offer.Direction.SELL)
+                totalToPayAsCoin.set(takerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin));
+            else
+                totalToPayAsCoin.set(takerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
+
+            updateBalance();
+            log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
+        }
     }
 
     void updateBalance() {
@@ -337,11 +346,12 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (useSavingsWallet) {
             Coin savingWalletBalance = walletService.getSavingWalletBalance();
             totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
-
-            if (totalToPayAsCoin.get() != null && totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
-                balance.set(totalToPayAsCoin.get());
-            else
-                balance.set(totalAvailableBalance);
+            if (totalToPayAsCoin.get() != null) {
+                if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
+                    balance.set(totalToPayAsCoin.get());
+                else
+                    balance.set(totalAvailableBalance);
+            }
         } else {
             balance.set(tradeWalletBalance);
         }
@@ -350,17 +360,18 @@ class TakeOfferDataModel extends ActivatableDataModel {
             if (missingCoin.get().isNegative())
                 missingCoin.set(Coin.ZERO);
         }
+        log.debug("missingCoin " + missingCoin.get().toFriendlyString());
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
         if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null) {
-                walletFundedNotification = new Notification()
-                        .headLine("Trading wallet update")
-                        .notification("Your trading wallet is sufficiently funded.\n" +
-                                "Amount: " + formatter.formatCoinWithCode(totalToPayAsCoin.get()))
-                        .autoClose();
+            walletFundedNotification = new Notification()
+                    .headLine("Trading wallet update")
+                    .notification("Your trading wallet is sufficiently funded.\n" +
+                            "Amount: " + formatter.formatCoinWithCode(totalToPayAsCoin.get()))
+                    .autoClose();
 
-                walletFundedNotification.show();
-            }
+            walletFundedNotification.show();
+        }
     }
 
     private boolean isBalanceSufficient(Coin balance) {

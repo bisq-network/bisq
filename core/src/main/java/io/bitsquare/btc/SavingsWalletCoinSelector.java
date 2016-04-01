@@ -24,11 +24,10 @@ import org.bitcoinj.wallet.CoinSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -39,13 +38,100 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class SavingsWalletCoinSelector implements CoinSelector {
     private static final Logger log = LoggerFactory.getLogger(SavingsWalletCoinSelector.class);
     protected final NetworkParameters params;
+    @Nullable
+    private AddressEntryList addressEntryList;
+    @Nullable
+    private Set<Address> savingsWalletAddressSet;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SavingsWalletCoinSelector(NetworkParameters params) {
+    public SavingsWalletCoinSelector(NetworkParameters params, AddressEntryList addressEntryList) {
         this.params = params;
+        this.addressEntryList = addressEntryList;
+    }
+
+    protected SavingsWalletCoinSelector(NetworkParameters params) {
+        this.params = params;
+    }
+
+    protected boolean matchesRequirement(TransactionOutput transactionOutput) {
+        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+            Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
+            log.trace("only lookup in savings wallet address entries");
+            log.trace(addressOutput.toString());
+
+            if (savingsWalletAddressSet != null && savingsWalletAddressSet.contains(addressOutput)) {
+                return true;
+            } else {
+                log.trace("No match found at matchesRequiredAddress addressOutput / addressEntry " +
+                        addressOutput.toString() + " / " + addressOutput.toString());
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    private static boolean isInBlockChainOrPending(Transaction tx) {
+        // Pick chain-included transactions and transactions that are pending.
+        TransactionConfidence confidence = tx.getConfidence();
+        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+
+        log.debug("numBroadcastPeers = " + confidence.numBroadcastPeers());
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
+                type.equals(TransactionConfidence.ConfidenceType.PENDING);
+    }
+
+    /**
+     * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
+     */
+    protected boolean shouldSelect(Transaction tx) {
+        return isInBlockChainOrPending(tx);
+    }
+
+    @Override
+    public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
+        log.trace("candidates.size: " + candidates.size());
+        long targetAsLong = target.longValue();
+        log.trace("value needed: " + targetAsLong);
+        HashSet<TransactionOutput> selected = new HashSet<>();
+        // Sort the inputs by age*value so we get the highest "coindays" spent.
+        ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
+        // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
+        // them in order to improve performance.
+        if (!target.equals(NetworkParameters.MAX_MONEY)) {
+            sortOutputs(sortedOutputs);
+        }
+        // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
+        // bit over (excessive value will be change).
+        long total = 0;
+        if (addressEntryList != null) {
+            savingsWalletAddressSet = addressEntryList.stream()
+                    .filter(addressEntry1 -> addressEntry1.getContext() == AddressEntry.Context.SAVINGS)
+                    .map(AddressEntry::getAddress)
+                    .collect(Collectors.toSet());
+        }
+        for (TransactionOutput output : sortedOutputs) {
+            if (total >= targetAsLong) {
+                break;
+            }
+            // Only pick chain-included transactions, or transactions that are ours and pending.
+            // Only select outputs from our defined address(es)
+            if (!shouldSelect(output.getParentTransaction()) || !matchesRequirement(output)) {
+                continue;
+            }
+
+            selected.add(output);
+            total += output.getValue().longValue();
+
+            log.debug("adding up outputs: output/total: " + output.getValue().longValue() + "/" + total);
+        }
+        // Total may be lower than target here, if the given candidates were insufficient to create to requested
+        // transaction.
+        return new CoinSelection(Coin.valueOf(total), selected);
     }
 
     @VisibleForTesting
@@ -69,63 +155,6 @@ class SavingsWalletCoinSelector implements CoinSelector {
             BigInteger bHash = b.getParentTransactionHash().toBigInteger();
             return aHash.compareTo(bHash);
         });
-    }
-
-    private static boolean isInBlockChainOrPending(Transaction tx) {
-        // Pick chain-included transactions and transactions that are pending.
-        TransactionConfidence confidence = tx.getConfidence();
-        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-
-        log.debug("numBroadcastPeers = " + confidence.numBroadcastPeers());
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                type.equals(TransactionConfidence.ConfidenceType.PENDING);
-    }
-
-    /**
-     * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
-     */
-    protected boolean shouldSelect(Transaction tx) {
-        return isInBlockChainOrPending(tx);
-    }
-
-    protected boolean matchesRequirement(TransactionOutput transactionOutput) {
-        return (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash());
-    }
-
-    @Override
-    public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
-        log.trace("candidates.size: " + candidates.size());
-        long targetAsLong = target.longValue();
-        log.trace("value needed: " + targetAsLong);
-        HashSet<TransactionOutput> selected = new HashSet<>();
-        // Sort the inputs by age*value so we get the highest "coindays" spent.
-        ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
-        // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
-        // them in order to improve performance.
-        if (!target.equals(NetworkParameters.MAX_MONEY)) {
-            sortOutputs(sortedOutputs);
-        }
-        // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
-        // bit over (excessive value will be change).
-        long total = 0;
-        for (TransactionOutput output : sortedOutputs) {
-            if (total >= targetAsLong) {
-                break;
-            }
-            // Only pick chain-included transactions, or transactions that are ours and pending.
-            // Only select outputs from our defined address(es)
-            if (!shouldSelect(output.getParentTransaction()) || !matchesRequirement(output)) {
-                continue;
-            }
-
-            selected.add(output);
-            total += output.getValue().longValue();
-
-            log.debug("adding up outputs: output/total: " + output.getValue().longValue() + "/" + total);
-        }
-        // Total may be lower than target here, if the given candidates were insufficient to create to requested
-        // transaction.
-        return new CoinSelection(Coin.valueOf(total), selected);
     }
 
 }
