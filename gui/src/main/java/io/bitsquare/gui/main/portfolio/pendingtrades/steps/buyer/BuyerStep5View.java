@@ -145,7 +145,7 @@ public class BuyerStep5View extends TradeStepView {
             withdrawAddressTextField.setText("mo6y756TnpdZQCeHStraavjqrndeXzVkxi");
         } else {
             String key = "tradeCompleted" + trade.getId();
-            if (preferences.showAgain(key)) {
+            if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
                 preferences.dontShowAgain(key, true);
                 new Notification().headLine("Trade completed")
                         .notification("You can withdraw your funds now to your external Bitcoin wallet.")
@@ -180,7 +180,7 @@ public class BuyerStep5View extends TradeStepView {
                         Coin receiverAmount = senderAmount.subtract(requiredFee);
                         BSFormatter formatter = model.formatter;
                         String key = "reviewWithdrawalAtTradeComplete";
-                        if (preferences.showAgain(key)) {
+                        if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
                             new Popup().headLine("Confirm withdrawal request")
                                     .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
                                             "From address: " + fromAddresses + "\n" +
@@ -231,14 +231,16 @@ public class BuyerStep5View extends TradeStepView {
     }
 
     private void handleTradeCompleted() {
-        String key = "tradeCompleteWithdrawCompletedInfo";
-        new Popup().headLine("Withdrawal completed")
-                .feedback("Your completed trades are stored under \"Portfolio/History\".\n" +
-                        "You can review all your bitcoin transactions under \"Funds/Transactions\"")
-                .actionButtonText("Go to \"Transactions\"")
-                .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
-                .dontShowAgainId(key, preferences)
-                .show();
+        if (!BitsquareApp.DEV_MODE) {
+            String key = "tradeCompleteWithdrawCompletedInfo";
+            new Popup().headLine("Withdrawal completed")
+                    .feedback("Your completed trades are stored under \"Portfolio/History\".\n" +
+                            "You can review all your bitcoin transactions under \"Funds/Transactions\"")
+                    .actionButtonText("Go to \"Transactions\"")
+                    .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
+                    .dontShowAgainId(key, preferences)
+                    .show();
+        }
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);
     }

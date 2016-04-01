@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
@@ -84,7 +85,7 @@ public class SellerStep3View extends TradeStepView {
                             tradeAmountWithCode + " from the bitcoin buyer.\n\n" +
                             "The reference text of the transaction is: \"" + trade.getShortId() + "\"";
                 }
-                if (preferences.showAgain(key)) {
+                if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
                     preferences.dontShowAgain(key, true);
                     new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
                             .attention(message)

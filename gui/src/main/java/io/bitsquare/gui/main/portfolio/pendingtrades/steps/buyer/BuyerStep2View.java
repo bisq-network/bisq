@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
@@ -88,7 +89,7 @@ public class BuyerStep2View extends TradeStepView {
                                 "DO NOT use any additional notice in the reference text like " +
                                 "Bitcoin, Btc or Bitsquare.";
 
-                    if (preferences.showAgain(key)) {
+                    if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
                         preferences.dontShowAgain(key, true);
                         new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
                                 .attention(message)
@@ -219,7 +220,7 @@ public class BuyerStep2View extends TradeStepView {
     private void onPaymentStarted() {
         if (model.p2PService.isBootstrapped()) {
             String key = "confirmPaymentStarted";
-            if (preferences.showAgain(key)) {
+            if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
                 Popup popup = new Popup();
                 popup.headLine("Confirm that you have started the payment")
                         .confirmation("Have you initiated the " + model.dataModel.getCurrencyCode() +
