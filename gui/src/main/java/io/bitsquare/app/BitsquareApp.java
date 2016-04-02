@@ -75,7 +75,7 @@ import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
 
-    public static final boolean DEV_MODE = true;
+    public static final boolean DEV_MODE = false;
     public static final boolean IS_RELEASE_VERSION = !DEV_MODE && true;
 
     private static Environment env;
