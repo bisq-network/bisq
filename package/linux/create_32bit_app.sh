@@ -31,8 +31,8 @@ $JAVA_HOME/bin/javapackager \
 rm gui/deploy/Bitsquare.html
 rm gui/deploy/Bitsquare.jnlp
 rm gui/deploy/LICENSE
-mv "gui/deploy/bundles/bitsquare-$fullVersion.deb" "gui/deploy/Bitsquare-$fullVersion.deb"
+mv "gui/deploy/bundles/bitsquare-$fullVersion.deb" "gui/deploy/Bitsquare-32bit-$fullVersion.deb"
 rmdir gui/deploy/bundles
-cp "gui/deploy/Bitsquare-$fullVersion.deb" "/home/bitsquare/Desktop/sf_vm_shared_ubuntu14_32bit/Bitsquare-$fullVersion.deb"
+cp "gui/deploy/Bitsquare-32bit-$fullVersion.deb" "/home/bitsquare/Desktop/sf_vm_shared_ubuntu14_32bit/Bitsquare-32bit-$fullVersion.deb"
 
 cd package/linux
