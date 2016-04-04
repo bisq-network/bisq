@@ -23,6 +23,8 @@ bg color of non edit textFields: fafafa
 /* Splash */
 
 .root {
+    -fx-font-family: Lucida Grande;
+
     -bs-grey: #666666;
     -bs-bg-grey: #dddddd;
     -bs-light-grey: #cccccc;

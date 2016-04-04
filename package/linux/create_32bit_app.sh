@@ -34,5 +34,6 @@ rm gui/deploy/LICENSE
 mv "gui/deploy/bundles/bitsquare-$fullVersion.deb" "gui/deploy/Bitsquare-32bit-$fullVersion.deb"
 rmdir gui/deploy/bundles
 cp "gui/deploy/Bitsquare-32bit-$fullVersion.deb" "/home/bitsquare/Desktop/sf_vm_shared_ubuntu14_32bit/Bitsquare-32bit-$fullVersion.deb"
+cp "gui/deploy/Bitsquare-32bit-$fullVersion.deb" "/home/bitsquare/Desktop/Bitsquare-32bit-$fullVersion.deb"
 
 cd package/linux

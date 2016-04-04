@@ -46,7 +46,7 @@ public class Log {
         rollingPolicy.start();
 
         triggeringPolicy = new SizeBasedTriggeringPolicy();
-        triggeringPolicy.setMaxFileSize("1MB");
+        triggeringPolicy.setMaxFileSize("10MB");
         triggeringPolicy.start();
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
@@ -60,7 +60,7 @@ public class Log {
         appender.start();
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.TRACE);
+        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.WARN);
         logbackLogger.addAppender(appender);
 
         // log errors in separate file

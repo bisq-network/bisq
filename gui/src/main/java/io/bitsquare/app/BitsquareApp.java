@@ -54,6 +54,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -136,6 +137,8 @@ public class BitsquareApp extends Application {
 
             Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
 
+            Font.loadFont(BitsquareAppMain.class.getResource("../../../lucida-grande.ttf").toExternalForm(), 12);
+       
             Storage.setDatabaseCorruptionHandler((String fileName) -> {
                 corruptedDatabaseFiles.add(fileName);
                 if (mainView != null)
@@ -202,6 +205,9 @@ public class BitsquareApp extends Application {
 
             // make the UI visible
             primaryStage.show();
+
+            Font fon = Font.getDefault();
+            Font fonds = Font.getDefault();
 
             //showDebugWindow();
         } catch (Throwable throwable) {
