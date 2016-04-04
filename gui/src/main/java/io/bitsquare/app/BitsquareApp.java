@@ -140,8 +140,6 @@ public class BitsquareApp extends Application {
             if (Utilities.isLinux())
                 System.setProperty("prism.lcdtext", "false");
 
-            Font.loadFont(BitsquareAppMain.class.getResource("../../../lucida-grande.ttf").toExternalForm(), 12);
-
             Storage.setDatabaseCorruptionHandler((String fileName) -> {
                 corruptedDatabaseFiles.add(fileName);
                 if (mainView != null)
