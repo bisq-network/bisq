@@ -547,45 +547,45 @@ public class MainViewModel implements ViewModel {
     private void updateTradePeriodState() {
         tradeManager.getTrades().stream().forEach(trade -> {
             if (trade.getState().getPhase().ordinal() < Trade.Phase.PAYOUT_PAID.ordinal()) {
-                long maxTradePeriod = trade.getOffer().getPaymentMethod().getMaxTradePeriod();
-                Date maxTradePeriodDate = new Date(trade.getDate().getTime() + maxTradePeriod);
-                Date halfTradePeriodDate = new Date(trade.getDate().getTime() + maxTradePeriod / 2);
-                Date now = new Date();
+                Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
+                Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
+                if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
+                    Date now = new Date();
+                    if (now.after(maxTradePeriodDate))
+                        trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
+                    else if (now.after(halfTradePeriodDate))
+                        trade.setTradePeriodState(Trade.TradePeriodState.HALF_REACHED);
 
-                if (now.after(maxTradePeriodDate))
-                    trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-                else if (now.after(halfTradePeriodDate))
-                    trade.setTradePeriodState(Trade.TradePeriodState.HALF_REACHED);
-
-                String key;
-                switch (trade.getTradePeriodState()) {
-                    case NORMAL:
-                        break;
-                    case HALF_REACHED:
-                        key = "displayHalfTradePeriodOver" + trade.getId();
-                        if (preferences.showAgain(key)) {
-                            preferences.dontShowAgain(key, true);
-                            new Popup().warning("Your trade with ID " + trade.getShortId() +
-                                    " has reached the half of the max. allowed trading period and " +
-                                    "is still not completed.\n\n" +
-                                    "The trade period ends on " + formatter.formatDateTime(maxTradePeriodDate) + "\n\n" +
-                                    "Please check your trade state at \"Portfolio/Open trades\" for further information.")
-                                    .show();
-                        }
-                        break;
-                    case TRADE_PERIOD_OVER:
-                        key = "displayTradePeriodOver" + trade.getId();
-                        if (preferences.showAgain(key)) {
-                            preferences.dontShowAgain(key, true);
-                            new Popup().warning("Your trade with ID " + trade.getShortId() +
-                                    " has reached the max. allowed trading period and is " +
-                                    "not completed.\n\n" +
-                                    "The trade period ended on " + formatter.formatDateTime(maxTradePeriodDate) + "\n\n" +
-                                    "Please check your trade at \"Portfolio/Open trades\" for contacting " +
-                                    "the arbitrator.")
-                                    .show();
-                        }
-                        break;
+                    String key;
+                    switch (trade.getTradePeriodState()) {
+                        case NORMAL:
+                            break;
+                        case HALF_REACHED:
+                            key = "displayHalfTradePeriodOver" + trade.getId();
+                            if (preferences.showAgain(key)) {
+                                preferences.dontShowAgain(key, true);
+                                new Popup().warning("Your trade with ID " + trade.getShortId() +
+                                        " has reached the half of the max. allowed trading period and " +
+                                        "is still not completed.\n\n" +
+                                        "The trade period ends on " + formatter.formatDateTime(maxTradePeriodDate) + "\n\n" +
+                                        "Please check your trade state at \"Portfolio/Open trades\" for further information.")
+                                        .show();
+                            }
+                            break;
+                        case TRADE_PERIOD_OVER:
+                            key = "displayTradePeriodOver" + trade.getId();
+                            if (preferences.showAgain(key)) {
+                                preferences.dontShowAgain(key, true);
+                                new Popup().warning("Your trade with ID " + trade.getShortId() +
+                                        " has reached the max. allowed trading period and is " +
+                                        "not completed.\n\n" +
+                                        "The trade period ended on " + formatter.formatDateTime(maxTradePeriodDate) + "\n\n" +
+                                        "Please check your trade at \"Portfolio/Open trades\" for contacting " +
+                                        "the arbitrator.")
+                                        .show();
+                            }
+                            break;
+                    }
                 }
             }
         });

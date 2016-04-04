@@ -49,7 +49,7 @@ public class BuyerStep4View extends TradeStepView {
 
             @Override
             public void reorganize(StoredBlock splitPoint, List<StoredBlock> oldBlocks, List<StoredBlock> newBlocks) throws VerificationException {
-                updateDateFromBlockHeight(model.getBestChainHeight());
+                updateDateFromBlockHeight(model.dataModel.getBestChainHeight());
             }
 
             @Override
@@ -75,7 +75,7 @@ public class BuyerStep4View extends TradeStepView {
         super.activate();
 
         model.addBlockChainListener(blockChainListener);
-        updateDateFromBlockHeight(model.getBestChainHeight());
+        updateDateFromBlockHeight(model.dataModel.getBestChainHeight());
     }
 
     @Override

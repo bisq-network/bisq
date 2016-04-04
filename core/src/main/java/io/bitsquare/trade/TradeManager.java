@@ -284,8 +284,6 @@ public class TradeManager {
         else
             trade = new BuyerAsTakerTrade(offer, amount, model.getPeerNodeAddress(), tradableListStorage);
 
-        //trade.setTakeOfferDate(new Date());
-        trade.setTakeOfferDateAsBlockHeight(tradeWalletService.getBestChainHeight());
         trade.setTakerPaymentAccountId(paymentAccountId);
 
         initTrade(trade, useSavingsWallet, fundsNeededForTrade);

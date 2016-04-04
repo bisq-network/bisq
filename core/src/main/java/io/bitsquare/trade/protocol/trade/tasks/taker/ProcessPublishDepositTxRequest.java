@@ -66,17 +66,6 @@ public class ProcessPublishDepositTxRequest extends TradeTask {
             processModel.tradingPeer.setRawTransactionInputs(checkNotNull(publishDepositTxRequest.offererInputs));
             processModel.setPreparedDepositTx(checkNotNull(publishDepositTxRequest.preparedDepositTx));
             checkArgument(publishDepositTxRequest.offererInputs.size() > 0);
-            /*if (publishDepositTxRequest.openDisputeTimeAsBlockHeight != 0) {
-                trade.setOpenDisputeTimeAsBlockHeight(publishDepositTxRequest.openDisputeTimeAsBlockHeight);
-            } else {
-                failed("waitPeriodForOpenDisputeAsBlockHeight = 0");
-            }
-
-            if (publishDepositTxRequest.checkPaymentTimeAsBlockHeight != 0) {
-                trade.setCheckPaymentTimeAsBlockHeight(publishDepositTxRequest.checkPaymentTimeAsBlockHeight);
-            } else {
-                failed("notificationTimeAsBlockHeight = 0");
-            }*/
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

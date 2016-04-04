@@ -239,10 +239,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getLockTime();
     }
 
-    public int getBestChainHeight() {
-        return dataModel.getBestChainHeight();
-    }
-
     public String getPaymentMethod() {
         if (dataModel.getTrade() != null && dataModel.getTrade().getContract() != null)
             return BSResources.get(dataModel.getTrade().getContract().getPaymentMethodName());

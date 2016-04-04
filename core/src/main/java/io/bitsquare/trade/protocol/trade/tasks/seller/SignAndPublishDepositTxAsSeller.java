@@ -60,8 +60,6 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
                             log.trace("takerSignAndPublishTx succeeded " + transaction);
 
                             trade.setDepositTx(transaction);
-                            //trade.setTakeOfferDate(new Date());
-                            trade.setTakeOfferDateAsBlockHeight(processModel.getTradeWalletService().getBestChainHeight());
                             trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
 
                             complete();

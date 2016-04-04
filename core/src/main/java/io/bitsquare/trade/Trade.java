@@ -138,6 +138,7 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     transient private Storage<? extends TradableList> storage;
     transient protected TradeProtocol tradeProtocol;
+    private transient Date maxTradePeriodDate, halfTradePeriodDate;
 
     // Immutable
     private final Offer offer;
@@ -146,7 +147,6 @@ public abstract class Trade implements Tradable, Model {
     // Mutable
     private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
     private Date takeOfferDate;
-    private int takeOfferDateAsBlockHeight;
     private Coin tradeAmount;
     private NodeAddress tradingPeerNodeAddress;
     protected State state;
@@ -390,6 +390,22 @@ public abstract class Trade implements Tradable, Model {
             return null;
     }
 
+    @Nullable
+    public Date getMaxTradePeriodDate() {
+        if (maxTradePeriodDate == null && takeOfferDate != null)
+            maxTradePeriodDate = new Date(takeOfferDate.getTime() + getOffer().getPaymentMethod().getMaxTradePeriod());
+
+        return maxTradePeriodDate;
+    }
+
+    @Nullable
+    public Date getHalfTradePeriodDate() {
+        if (halfTradePeriodDate == null && takeOfferDate != null)
+            halfTradePeriodDate = new Date(takeOfferDate.getTime() + getOffer().getPaymentMethod().getMaxTradePeriod() / 2);
+
+        return halfTradePeriodDate;
+    }
+
 
     public ReadOnlyObjectProperty<? extends State> stateProperty() {
         return stateProperty;
@@ -412,24 +428,13 @@ public abstract class Trade implements Tradable, Model {
         return tradePeriodStateProperty;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter/Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Date getDate() {
         return takeOfferDate;
-    }
-
-    /*public void setTakeOfferDate(Date takeOfferDate) {
-        this.takeOfferDate = takeOfferDate;
-    }*/
-
-    public int getTakeOfferDateAsBlockHeight() {
-        return takeOfferDateAsBlockHeight;
-    }
-
-    public void setTakeOfferDateAsBlockHeight(int blockHeight) {
-        takeOfferDateAsBlockHeight = blockHeight;
     }
 
     public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {

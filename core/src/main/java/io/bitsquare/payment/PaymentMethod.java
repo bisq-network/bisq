@@ -37,7 +37,7 @@ public final class PaymentMethod implements Persistable, Comparable {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     // time in blocks (average 10 min for one block confirmation
-    private static final long HOUR = 3600 * 1000;
+    private static final long HOUR = 3600_000;
     private static final long DAY = HOUR * 24;
 
     public static final String OK_PAY_ID = "OK_PAY";

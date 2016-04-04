@@ -52,9 +52,6 @@ public class ProcessDepositTxPublishedMessage extends TradeTask {
             // update with full tx
             trade.setDepositTx(processModel.getTradeWalletService().addTransactionToWallet(transactionFromSerializedTx));
 
-            //trade.setTakeOfferDate(new Date());
-            trade.setTakeOfferDateAsBlockHeight(processModel.getTradeWalletService().getBestChainHeight());
-            
             if (trade instanceof OffererTrade)
                 processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
 
