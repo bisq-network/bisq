@@ -137,8 +137,11 @@ public class BitsquareApp extends Application {
 
             Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
 
+            if (Utilities.isLinux())
+                System.setProperty("prism.lcdtext", "false");
+
             Font.loadFont(BitsquareAppMain.class.getResource("../../../lucida-grande.ttf").toExternalForm(), 12);
-       
+
             Storage.setDatabaseCorruptionHandler((String fileName) -> {
                 corruptedDatabaseFiles.add(fileName);
                 if (mainView != null)
