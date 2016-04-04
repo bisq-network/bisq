@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.account.arbitratorregistration;
 
 
-import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
@@ -130,9 +129,6 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         addTitledGroupBg(gridPane, gridRow, 3, "Arbitrator registration");
         pubKeyTextField = FormBuilder.addLabelTextField(gridPane, gridRow, "Public key:",
                 model.registrationPubKeyAsHex.get(), Layout.FIRST_ROW_DISTANCE).second;
-
-        if (BitsquareApp.DEV_MODE)
-            pubKeyTextField.setText("6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a");
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
 

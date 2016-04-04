@@ -58,7 +58,7 @@ public class SellerStep3bView extends TradeStepView {
         return "The trading peer has not finalized the payout transaction!\n" +
                 "He might be offline. You need to wait until he finalizes the payout transaction.\n" +
                 "If the trade has not been completed on " +
-                model.getOpenDisputeTimeAsFormattedDate() +
+                model.getDateForOpenDispute() +
                 " the arbitrator will investigate.";
     }
 

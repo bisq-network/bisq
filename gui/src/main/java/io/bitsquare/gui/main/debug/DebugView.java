@@ -36,7 +36,6 @@ import io.bitsquare.trade.protocol.trade.tasks.buyer.*;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
 import io.bitsquare.trade.protocol.trade.tasks.seller.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
-import io.bitsquare.trade.protocol.trade.tasks.shared.InitWaitPeriodForOpenDispute;
 import io.bitsquare.trade.protocol.trade.tasks.taker.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -85,7 +84,6 @@ public class DebugView extends InitializableView {
                         CreateAndSignContract.class,
                         OffererCreatesAndSignsDepositTxAsBuyer.class,
                         LoadTakeOfferFeeTx.class,
-                        InitWaitPeriodForOpenDispute.class,
                         SetupDepositBalanceListener.class,
                         SendPublishDepositTxRequest.class,
 
@@ -157,7 +155,6 @@ public class DebugView extends InitializableView {
                         ProcessPayDepositRequest.class,
                         VerifyArbitrationSelection.class,
                         VerifyTakerAccount.class,
-                        InitWaitPeriodForOpenDispute.class,
                         CreateAndSignContract.class,
                         OffererCreatesAndSignsDepositTxAsBuyer.class,
                         SetupDepositBalanceListener.class,

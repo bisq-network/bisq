@@ -191,7 +191,7 @@ public class BuyerStep2View extends TradeStepView {
         setWarningHeadline();
         return "You still have not done your " + model.dataModel.getCurrencyCode() + " payment!\n" +
                 "Please note that the trade has to be completed until " +
-                model.getOpenDisputeTimeAsFormattedDate() +
+                model.getDateForOpenDispute() +
                 " otherwise the trade will be investigated by the arbitrator.";
     }
 

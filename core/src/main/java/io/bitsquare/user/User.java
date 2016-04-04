@@ -201,6 +201,7 @@ public final class User implements Persistable {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     public PaymentAccount getPaymentAccount(String paymentAccountId) {
         Optional<PaymentAccount> optional = paymentAccounts.stream().filter(e -> e.getId().equals(paymentAccountId)).findAny();
         if (optional.isPresent())

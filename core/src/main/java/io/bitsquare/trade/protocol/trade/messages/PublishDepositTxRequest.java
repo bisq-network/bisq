@@ -43,8 +43,6 @@ public final class PublishDepositTxRequest extends TradeMessage {
     public final String offererPayoutAddressString;
     public final byte[] preparedDepositTx;
     public final ArrayList<RawTransactionInput> offererInputs;
-    public final int openDisputeTimeAsBlockHeight;
-    public final int checkPaymentTimeAsBlockHeight;
     public final byte[] offererTradeWalletPubKey;
 
     public PublishDepositTxRequest(String tradeId,
@@ -55,9 +53,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
                                    String offererContractSignature,
                                    String offererPayoutAddressString,
                                    byte[] preparedDepositTx,
-                                   ArrayList<RawTransactionInput> offererInputs,
-                                   int openDisputeTimeAsBlockHeight,
-                                   int checkPaymentTimeAsBlockHeight) {
+                                   ArrayList<RawTransactionInput> offererInputs) {
         super(tradeId);
         this.offererPaymentAccountContractData = offererPaymentAccountContractData;
         this.offererAccountId = offererAccountId;
@@ -67,8 +63,6 @@ public final class PublishDepositTxRequest extends TradeMessage {
         this.offererPayoutAddressString = offererPayoutAddressString;
         this.preparedDepositTx = preparedDepositTx;
         this.offererInputs = offererInputs;
-        this.openDisputeTimeAsBlockHeight = openDisputeTimeAsBlockHeight;
-        this.checkPaymentTimeAsBlockHeight = checkPaymentTimeAsBlockHeight;
 
         log.trace("offererPaymentAccount size " + Utilities.serialize(offererPaymentAccountContractData).length);
         log.trace("offererTradeWalletPubKey size " + offererTradeWalletPubKey.length);

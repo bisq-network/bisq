@@ -113,6 +113,7 @@ public abstract class TradeStepView extends AnchorPane {
         clockListener = new Clock.Listener() {
             @Override
             public void onSecondTick() {
+                updateTimeLeft();
             }
 
             @Override
@@ -165,7 +166,7 @@ public abstract class TradeStepView extends AnchorPane {
         txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).second;
 
         PaymentMethodForm.addAllowedPeriod(gridPane, ++gridRow, model.dataModel.getSellersPaymentAccountContractData(),
-                model.getOpenDisputeTimeAsFormattedDate());
+                model.getDateForOpenDispute());
 
         timeLeftTextField = addLabelTextField(gridPane, ++gridRow, "Remaining time:").second;
 
@@ -198,16 +199,16 @@ public abstract class TradeStepView extends AnchorPane {
 
     private void updateTimeLeft() {
         if (timeLeftTextField != null) {
-            String remainingTime = model.getRemainingTime();
-            timeLeftProgressBar.setProgress(model.getRemainingTimeAsPercentage());
+            String remainingTime = model.getRemainingTradeDurationAsWords();
+            timeLeftProgressBar.setProgress(model.getRemainingTradeDurationAsPercentage());
             if (remainingTime != null) {
                 timeLeftTextField.setText(remainingTime);
-                if (model.showWarning(trade) || model.showDispute(trade)) {
+                if (model.showWarning() || model.showDispute()) {
                     timeLeftTextField.setStyle("-fx-text-fill: -bs-error-red");
                     timeLeftProgressBar.setStyle("-fx-accent: -bs-error-red;");
                 }
             } else {
-                timeLeftTextField.setText("Trade not completed in time (" + model.getOpenDisputeTimeAsFormattedDate() + ")");
+                timeLeftTextField.setText("Trade not completed in time (" + model.getDateForOpenDispute() + ")");
                 timeLeftTextField.setStyle("-fx-text-fill: -bs-error-red");
                 timeLeftProgressBar.setStyle("-fx-accent: -bs-error-red;");
             }

@@ -145,6 +145,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         tableView.setPlaceholder(placeholder);
         tableView.getSelectionModel().clearSelection();
 
+        tableView.getColumns().add(getSelectColumn());
         TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
         tableView.getColumns().add(tradeIdColumn);
         TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
@@ -713,6 +714,49 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Table
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private TableColumn<Dispute, Dispute> getSelectColumn() {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Select") {
+            {
+                setMinWidth(110);
+                setMaxWidth(110);
+            }
+        };
+        column.setCellValueFactory((addressListItem) ->
+                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute,
+                        Dispute>>() {
+
+                    @Override
+                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute,
+                            Dispute> column) {
+                        return new TableCell<Dispute, Dispute>() {
+
+                            Button button;
+
+                            @Override
+                            public void updateItem(final Dispute item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    if (button == null) {
+                                        button = new Button("Select");
+                                        button.setOnAction(e -> tableView.getSelectionModel().select(item));
+                                        setGraphic(button);
+                                    }
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
+                                }
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
 
     private TableColumn<Dispute, Dispute> getTradeIdColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Trade ID") {

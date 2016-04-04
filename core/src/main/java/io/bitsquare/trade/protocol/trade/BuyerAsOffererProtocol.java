@@ -31,7 +31,6 @@ import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.*;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
-import io.bitsquare.trade.protocol.trade.tasks.shared.InitWaitPeriodForOpenDispute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +110,6 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
                 LoadTakeOfferFeeTx.class,
                 CreateAndSignContract.class,
                 OffererCreatesAndSignsDepositTxAsBuyer.class,
-                InitWaitPeriodForOpenDispute.class,
                 SetupDepositBalanceListener.class,
                 SendPublishDepositTxRequest.class
         );

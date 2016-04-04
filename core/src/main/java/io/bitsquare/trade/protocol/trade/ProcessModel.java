@@ -28,6 +28,7 @@ import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
+import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.Trade;
@@ -181,11 +182,14 @@ public class ProcessModel implements Model, Serializable {
         return tradeMessage;
     }
 
+    @Nullable
     public PaymentAccountContractData getPaymentAccountContractData(Trade trade) {
+        PaymentAccount paymentAccount;
         if (trade instanceof OffererTrade)
-            return user.getPaymentAccount(offer.getOffererPaymentAccountId()).getContractData();
+            paymentAccount = user.getPaymentAccount(offer.getOffererPaymentAccountId());
         else
-            return user.getPaymentAccount(trade.getTakerPaymentAccountId()).getContractData();
+            paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
+        return paymentAccount != null ? paymentAccount.getContractData() : null;
     }
 
     public String getAccountId() {

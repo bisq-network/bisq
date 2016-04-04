@@ -39,6 +39,7 @@ import org.bitcoinj.core.BlockChainListener;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Date;
 import java.util.stream.Collectors;
 
 import static io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.*;
@@ -148,35 +149,59 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getTrade() != null ? formatter.formatCoinWithCode(dataModel.getTrade().getPayoutAmount()) : "";
     }
 
-    // columns
-    public String getRemainingTime() {
-        if (dataModel.getTrade() != null)
-            return formatter.getPeriodBetweenBlockHeights(getBestChainHeight(),
-                    dataModel.getTrade().getOpenDisputeTimeAsBlockHeight());
-        else
-            return "";
+    // trade period
+
+    private long getMaxTradePeriod() {
+        return dataModel.getOffer() != null ? dataModel.getOffer().getPaymentMethod().getMaxTradePeriod() : 0;
     }
 
-    public double getRemainingTimeAsPercentage() {
-        if (dataModel.getTrade() != null && dataModel.getOffer() != null) {
-            double remainingBlocks = dataModel.getTrade().getOpenDisputeTimeAsBlockHeight() - getBestChainHeight();
-            double maxPeriod = dataModel.getOffer().getPaymentMethod().getMaxTradePeriod();
-            if (maxPeriod != 0)
-                return 1 - remainingBlocks / maxPeriod;
-            else
-                return 0;
-        } else {
+    private long getTimeWhenDisputeOpens() {
+        return dataModel.getTrade() != null ? dataModel.getTrade().getDate().getTime() + getMaxTradePeriod() : 0;
+    }
+
+    private long getTimeWhenHalfPeriodReached() {
+        return dataModel.getTrade() != null ? dataModel.getTrade().getDate().getTime() + getMaxTradePeriod() / 2 : 0;
+    }
+
+    private Date getDateWhenDisputeOpens() {
+        return new Date(getTimeWhenDisputeOpens());
+    }
+
+    private Date getDateWhenHalfPeriodReached() {
+        return new Date(getTimeWhenHalfPeriodReached());
+    }
+
+    private long getRemainingTradeDuration() {
+        return getDateWhenDisputeOpens().getTime() - new Date().getTime();
+    }
+
+    public String getRemainingTradeDurationAsWords() {
+        return formatter.getDurationAsWords(Math.max(0, getRemainingTradeDuration()));
+    }
+
+    public double getRemainingTradeDurationAsPercentage() {
+        long maxPeriod = getMaxTradePeriod();
+        long remaining = getRemainingTradeDuration();
+        if (maxPeriod != 0) {
+            double v = 1 - (double) remaining / (double) maxPeriod;
+            return v;
+        } else
             return 0;
-        }
     }
 
-    public boolean showWarning(Trade trade) {
-        return getBestChainHeight() >= trade.getCheckPaymentTimeAsBlockHeight();
+    public String getDateForOpenDispute() {
+        return formatter.formatDateTime(new Date(new Date().getTime() + getRemainingTradeDuration()));
     }
 
-    public boolean showDispute(Trade trade) {
-        return getBestChainHeight() >= trade.getOpenDisputeTimeAsBlockHeight();
+    public boolean showWarning() {
+        return new Date().after(getDateWhenHalfPeriodReached());
     }
+
+    public boolean showDispute() {
+        return new Date().after(getDateWhenDisputeOpens());
+    }
+
+    //
 
     String getMyRole(PendingTradesListItem item) {
         Trade trade = item.getTrade();
@@ -214,20 +239,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getLockTime();
     }
 
-    private long getOpenDisputeTimeAsBlockHeight() {
-        return dataModel.getOpenDisputeTimeAsBlockHeight();
-    }
-
     public int getBestChainHeight() {
         return dataModel.getBestChainHeight();
-    }
-
-    public String getOpenDisputeTimeAsFormattedDate() {
-        if (dataModel.getOffer() != null)
-            return formatter.addBlocksToNowDateFormatted(getOpenDisputeTimeAsBlockHeight() - getBestChainHeight() +
-                    (dataModel.getOffer().getPaymentMethod().getLockTime()));
-        else
-            return "";
     }
 
     public String getPaymentMethod() {

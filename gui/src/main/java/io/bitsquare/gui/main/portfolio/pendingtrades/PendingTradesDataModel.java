@@ -220,10 +220,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return getTrade() != null ? getTrade().getLockTimeAsBlockHeight() : 0;
     }
 
-    public long getOpenDisputeTimeAsBlockHeight() {
-        return getTrade() != null ? getTrade().getOpenDisputeTimeAsBlockHeight() : 0;
-    }
-
     public int getBestChainHeight() {
         return tradeWalletService.getBestChainHeight();
     }

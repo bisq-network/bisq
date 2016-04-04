@@ -727,7 +727,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
         Label label = new Label("OR");
         label.setPadding(new Insets(5, 0, 0, 0));
-        fundFromExternalWalletButton = new Button("Pay in funds from external wallet");
+        fundFromExternalWalletButton = new Button("Open your external wallet for funding");
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> {
             try {

@@ -197,7 +197,7 @@ public class SellerStep3View extends TradeStepView {
         return "You still have not confirmed the receipt of the payment!\n" +
                 "Please check " + substitute + " if you have received the payment.\n" +
                 "If you do not confirm receipt until " +
-                model.getOpenDisputeTimeAsFormattedDate() +
+                model.getDateForOpenDispute() +
                 " the trade will be investigated by the arbitrator.";
     }
 

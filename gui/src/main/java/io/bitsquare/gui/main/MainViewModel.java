@@ -66,7 +66,8 @@ import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
 import javafx.collections.ListChangeListener;
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.store.BlockStoreException;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -75,10 +76,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -529,75 +527,66 @@ public class MainViewModel implements ViewModel {
 
     private void applyTradePeriodState() {
         updateTradePeriodState();
-        tradeWalletService.addBlockChainListener(new BlockChainListener() {
+        clock.addListener(new Clock.Listener() {
             @Override
-            public void notifyNewBestBlock(StoredBlock block) throws VerificationException {
+            public void onSecondTick() {
                 updateTradePeriodState();
             }
 
             @Override
-            public void reorganize(StoredBlock splitPoint, List<StoredBlock> oldBlocks, List<StoredBlock> newBlocks)
-                    throws VerificationException {
+            public void onMinuteTick() {
+                updateTradePeriodState();
             }
 
             @Override
-            public boolean isTransactionRelevant(Transaction tx) throws ScriptException {
-                return false;
-            }
-
-            @Override
-            public void receiveFromBlock(Transaction tx, StoredBlock block, AbstractBlockChain.NewBlockType blockType, int relativityOffset)
-                    throws VerificationException {
-
-            }
-
-            @Override
-            public boolean notifyTransactionIsInBlock(Sha256Hash txHash, StoredBlock block, AbstractBlockChain.NewBlockType blockType,
-                                                      int relativityOffset) throws VerificationException {
-                return false;
+            public void onMissedSecondTick(long missed) {
             }
         });
     }
 
     private void updateTradePeriodState() {
         tradeManager.getTrades().stream().forEach(trade -> {
-            int bestChainHeight = tradeWalletService.getBestChainHeight();
+            if (trade.getState().getPhase().ordinal() < Trade.Phase.PAYOUT_PAID.ordinal()) {
+                long maxTradePeriod = trade.getOffer().getPaymentMethod().getMaxTradePeriod();
+                Date maxTradePeriodDate = new Date(trade.getDate().getTime() + maxTradePeriod);
+                Date halfTradePeriodDate = new Date(trade.getDate().getTime() + maxTradePeriod / 2);
+                Date now = new Date();
 
-            if (trade.getOpenDisputeTimeAsBlockHeight() > 0 && bestChainHeight >= trade.getOpenDisputeTimeAsBlockHeight())
-                trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-            else if (trade.getCheckPaymentTimeAsBlockHeight() > 0 && bestChainHeight >= trade.getCheckPaymentTimeAsBlockHeight())
-                trade.setTradePeriodState(Trade.TradePeriodState.HALF_REACHED);
+                if (now.after(maxTradePeriodDate))
+                    trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
+                else if (now.after(halfTradePeriodDate))
+                    trade.setTradePeriodState(Trade.TradePeriodState.HALF_REACHED);
 
-            String key;
-            String limitDate = formatter.addBlocksToNowDateFormatted(trade.getOpenDisputeTimeAsBlockHeight() - tradeWalletService.getBestChainHeight());
-            switch (trade.getTradePeriodState()) {
-                case NORMAL:
-                    break;
-                case HALF_REACHED:
-                    key = "displayHalfTradePeriodOver" + trade.getId();
-                    if (preferences.showAgain(key)) {
-                        preferences.dontShowAgain(key, true);
-                        new Popup().warning("Your trade with ID " + trade.getShortId() +
-                                " has reached the half of the max. allowed trading period and " +
-                                "is still not completed.\n\n" +
-                                "The trade period ends on " + limitDate + "\n\n" +
-                                "Please check your trade state at \"Portfolio/Open trades\" for further information.")
-                                .show();
-                    }
-                    break;
-                case TRADE_PERIOD_OVER:
-                    key = "displayTradePeriodOver" + trade.getId();
-                    if (preferences.showAgain(key)) {
-                        preferences.dontShowAgain(key, true);
-                        new Popup().warning("Your trade with ID " + trade.getShortId() +
-                                " has reached the max. allowed trading period and is " +
-                                "not completed.\n\n" +
-                                "The trade period ended on " + limitDate + "\n\n" +
-                                "Please check your trade at \"Portfolio/Open trades\" for contacting " +
-                                "the arbitrator.")
-                                .show();
-                    }
-                    break;
+                String key;
+                switch (trade.getTradePeriodState()) {
+                    case NORMAL:
+                        break;
+                    case HALF_REACHED:
+                        key = "displayHalfTradePeriodOver" + trade.getId();
+                        if (preferences.showAgain(key)) {
+                            preferences.dontShowAgain(key, true);
+                            new Popup().warning("Your trade with ID " + trade.getShortId() +
+                                    " has reached the half of the max. allowed trading period and " +
+                                    "is still not completed.\n\n" +
+                                    "The trade period ends on " + formatter.formatDateTime(maxTradePeriodDate) + "\n\n" +
+                                    "Please check your trade state at \"Portfolio/Open trades\" for further information.")
+                                    .show();
+                        }
+                        break;
+                    case TRADE_PERIOD_OVER:
+                        key = "displayTradePeriodOver" + trade.getId();
+                        if (preferences.showAgain(key)) {
+                            preferences.dontShowAgain(key, true);
+                            new Popup().warning("Your trade with ID " + trade.getShortId() +
+                                    " has reached the max. allowed trading period and is " +
+                                    "not completed.\n\n" +
+                                    "The trade period ended on " + formatter.formatDateTime(maxTradePeriodDate) + "\n\n" +
+                                    "Please check your trade at \"Portfolio/Open trades\" for contacting " +
+                                    "the arbitrator.")
+                                    .show();
+                        }
+                        break;
+                }
             }
         });
     }

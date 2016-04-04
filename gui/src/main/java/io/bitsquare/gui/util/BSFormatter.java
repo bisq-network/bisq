@@ -356,15 +356,8 @@ public class BSFormatter {
         return new Date(new Date().getTime() + blocks * TimeUnit.MINUTES.toMillis(10));
     }
 
-    public String addBlocksToNowDateFormatted(long blocks) {
-        DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
-        DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.SHORT, locale);
-        Date date = addBlocksToNowDate(blocks);
-        return dateFormatter.format(date) + " " + timeFormatter.format(date);
-    }
-
-    public String getPeriodBetweenBlockHeights(long startBlockHeight, long endBlockHeight) {
-        return getDaysHoursMinutes(addBlocksToNowDate(startBlockHeight), addBlocksToNowDate(endBlockHeight));
+    public String getDurationAsWords(long duration) {
+        return DurationFormatUtils.formatDurationWords(duration, true, true);
     }
 
     public String getDaysHoursMinutes(Date startDate, Date endDate) {

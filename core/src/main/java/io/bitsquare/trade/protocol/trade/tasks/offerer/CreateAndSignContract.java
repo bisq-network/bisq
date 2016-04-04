@@ -47,6 +47,7 @@ public class CreateAndSignContract extends TradeTask {
 
             TradingPeer taker = processModel.tradingPeer;
             PaymentAccountContractData offererPaymentAccountContractData = processModel.getPaymentAccountContractData(trade);
+            checkNotNull(offererPaymentAccountContractData, "offererPaymentAccountContractData must not be null");
             PaymentAccountContractData takerPaymentAccountContractData = taker.getPaymentAccountContractData();
             boolean isBuyerOffererAndSellerTaker = trade instanceof BuyerAsOffererTrade;
 

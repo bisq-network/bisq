@@ -160,8 +160,6 @@ public abstract class Trade implements Tradable, Model {
     private String offererContractSignature;
     private Transaction payoutTx;
     private long lockTimeAsBlockHeight;
-    private int openDisputeTimeAsBlockHeight;
-    private int checkPaymentTimeAsBlockHeight;
     private NodeAddress arbitratorNodeAddress;
     private String takerPaymentAccountId;
     private String errorMessage;
@@ -176,6 +174,7 @@ public abstract class Trade implements Tradable, Model {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // offerer
     protected Trade(Offer offer, Storage<? extends TradableList> storage) {
         this.offer = offer;
         this.storage = storage;
@@ -464,22 +463,6 @@ public abstract class Trade implements Tradable, Model {
         return lockTimeAsBlockHeight;
     }
 
-    public int getOpenDisputeTimeAsBlockHeight() {
-        return openDisputeTimeAsBlockHeight;
-    }
-
-    public void setOpenDisputeTimeAsBlockHeight(int openDisputeTimeAsBlockHeight) {
-        this.openDisputeTimeAsBlockHeight = openDisputeTimeAsBlockHeight;
-    }
-
-    public int getCheckPaymentTimeAsBlockHeight() {
-        return checkPaymentTimeAsBlockHeight;
-    }
-
-    public void setCheckPaymentTimeAsBlockHeight(int checkPaymentTimeAsBlockHeight) {
-        this.checkPaymentTimeAsBlockHeight = checkPaymentTimeAsBlockHeight;
-    }
-
     public void setTakerContractSignature(String takerSignature) {
         this.takerContractSignature = takerSignature;
     }
@@ -633,8 +616,6 @@ public abstract class Trade implements Tradable, Model {
                 "\n\toffererContractSignature.hashCode()='" + (offererContractSignature != null ? offererContractSignature.hashCode() : "") + '\'' +
                 "\n\tpayoutTx=" + payoutTx +
                 "\n\tlockTimeAsBlockHeight=" + lockTimeAsBlockHeight +
-                "\n\topenDisputeTimeAsBlockHeight=" + openDisputeTimeAsBlockHeight +
-                "\n\tcheckPaymentTimeAsBlockHeight=" + checkPaymentTimeAsBlockHeight +
                 "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +
                 "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 "\n\terrorMessage='" + errorMessage + '\'' +

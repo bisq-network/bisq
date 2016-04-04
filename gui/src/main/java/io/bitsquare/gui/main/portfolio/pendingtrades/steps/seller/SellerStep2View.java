@@ -57,7 +57,7 @@ public class SellerStep2View extends TradeStepView {
         return "The buyer still has not done the " + model.dataModel.getCurrencyCode() + " payment.\n" +
                 "You need to wait until he starts the payment.\n" +
                 "If the trade has not been completed on " +
-                model.getOpenDisputeTimeAsFormattedDate() +
+                model.getDateForOpenDispute() +
                 " the arbitrator will investigate.";
     }
 

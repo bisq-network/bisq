@@ -108,23 +108,12 @@ public abstract class PaymentMethodForm {
     public static void addAllowedPeriod(GridPane gridPane, int gridRow,
                                         @Nullable PaymentAccountContractData paymentAccountContractData, String dateFromBlocks) {
         if (paymentAccountContractData != null) {
-            long hours = paymentAccountContractData.getMaxTradePeriod() / 3600;
-            String displayText;
-            if (hours == 1)
-                displayText = hours + " hour";
-            else
-                displayText = hours + " hours";
-            if (hours == 24)
-                displayText = "1 day";
-            if (hours > 24)
-                displayText = hours / 24 + " days";
-
-            addLabelTextField(gridPane, gridRow, "Max. allowed trade period / date:", displayText + " / " + dateFromBlocks);
+            long hours = paymentAccountContractData.getMaxTradePeriod() / 3600_000;
+            addLabelTextField(gridPane, gridRow, "Max. allowed trade period / date:", getTimeText(hours) + " / " + dateFromBlocks);
         }
     }
 
-    protected void addAllowedPeriod() {
-        long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 6;
+    protected static String getTimeText(long hours) {
         String time = hours + " hours";
         if (hours == 1)
             time = "1 hour";
@@ -133,7 +122,12 @@ public abstract class PaymentMethodForm {
         else if (hours > 24)
             time = hours / 24 + " days";
 
-        String displayText = "Max. trade duration: " + time + " / Max. trade limit: " +
+        return time;
+    }
+
+    protected void addAllowedPeriod() {
+        long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 3600_000;
+        String displayText = "Max. trade duration: " + getTimeText(hours) + " / Max. trade limit: " +
                 formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimit());
 
         addLabelTextField(gridPane, ++gridRow, "Limitations:", displayText);

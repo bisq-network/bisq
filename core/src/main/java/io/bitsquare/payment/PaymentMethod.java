@@ -37,7 +37,7 @@ public final class PaymentMethod implements Persistable, Comparable {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     // time in blocks (average 10 min for one block confirmation
-    private static final long HOUR = 3600;
+    private static final long HOUR = 3600 * 1000;
     private static final long DAY = HOUR * 24;
 
     public static final String OK_PAY_ID = "OK_PAY";
@@ -89,12 +89,12 @@ public final class PaymentMethod implements Persistable, Comparable {
 
     /**
      * @param id
-     * @param lockTime               lock time when seller release BTC until the payout tx gets valid (bitcoin tx lockTime). Serves as protection
-     *                               against charge back risk. If Bank do the charge back quickly the Arbitrator and the seller can push another
-     *                               double spend tx to invalidate the time locked payout tx. For the moment we set all to 0 but will have it in
-     *                               place when needed.
-     * @param maxTradePeriod         The min. period a trader need to wait until he gets displayed the contact form for opening a dispute.
-     * @param maxTradeLimit The max. allowed trade amount in Bitcoin for that payment method (depending on charge back risk)
+     * @param lockTime       lock time when seller release BTC until the payout tx gets valid (bitcoin tx lockTime). Serves as protection
+     *                       against charge back risk. If Bank do the charge back quickly the Arbitrator and the seller can push another
+     *                       double spend tx to invalidate the time locked payout tx. For the moment we set all to 0 but will have it in
+     *                       place when needed.
+     * @param maxTradePeriod The min. period a trader need to wait until he gets displayed the contact form for opening a dispute.
+     * @param maxTradeLimit  The max. allowed trade amount in Bitcoin for that payment method (depending on charge back risk)
      */
     public PaymentMethod(String id, long lockTime, long maxTradePeriod, Coin maxTradeLimit) {
         this.id = id;

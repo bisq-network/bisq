@@ -138,7 +138,7 @@ public class BuyerStep4View extends TradeStepView {
         setInformationHeadline();
         return "The payout transaction is still blocked by the lock time!\n" +
                 "If the trade has not been completed on " +
-                model.getOpenDisputeTimeAsFormattedDate() +
+                model.getDateForOpenDispute() +
                 " the arbitrator will investigate.";
     }
 
@@ -151,7 +151,7 @@ public class BuyerStep4View extends TradeStepView {
             long missingBlocks = model.getLockTime() - bestBlocKHeight;
 
             blockTextField.setText(String.valueOf(missingBlocks));
-            timeTextField.setText(model.getOpenDisputeTimeAsFormattedDate());
+            timeTextField.setText(model.getDateForOpenDispute());
         }
     }
 

@@ -52,7 +52,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, tradeVolumeColumn, tradeAmountColumn, avatarColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
+    TableColumn<PendingTradesListItem, PendingTradesListItem> selectColumn, priceColumn, tradeVolumeColumn, tradeAmountColumn, avatarColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
     @FXML
 
     private SortedList<PendingTradesListItem> sortedList;
@@ -77,6 +77,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     public void initialize() {
+        setSelectColumnCellFactory();
         setTradeIdColumnCellFactory();
         setDateColumnCellFactory();
         setAmountColumnCellFactory();
@@ -227,6 +228,39 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
     // CellFactories
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setSelectColumnCellFactory() {
+        selectColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
+        selectColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem, PendingTradesListItem>>() {
+
+                    @Override
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem,
+                            PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                            Button button;
+
+                            @Override
+                            public void updateItem(final PendingTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    if (button == null) {
+                                        button = new Button("Select");
+                                        button.setOnAction(e -> tableView.getSelectionModel().select(item));
+                                        setGraphic(button);
+                                    }
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
+                                }
+                            }
+                        };
+                    }
+                });
+    }
 
     private void setTradeIdColumnCellFactory() {
         idColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
