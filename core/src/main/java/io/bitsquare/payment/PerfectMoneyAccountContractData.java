@@ -25,7 +25,7 @@ public final class PerfectMoneyAccountContractData extends PaymentAccountContrac
 
     private String accountNr;
 
-    public PerfectMoneyAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
+    public PerfectMoneyAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 

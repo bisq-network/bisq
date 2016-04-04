@@ -40,7 +40,7 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
     @Nullable
     protected String holderTaxId;
 
-    public BankAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
+    public BankAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 

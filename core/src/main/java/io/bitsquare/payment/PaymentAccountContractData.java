@@ -26,14 +26,14 @@ public abstract class PaymentAccountContractData implements Payload {
 
     protected final String paymentMethodName;
     protected final String id;
-    protected final int maxTradePeriod;
+    protected final long maxTradePeriod;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    PaymentAccountContractData(String paymentMethodName, String id, int maxTradePeriod) {
+    PaymentAccountContractData(String paymentMethodName, String id, long maxTradePeriod) {
         this.paymentMethodName = paymentMethodName;
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;
@@ -55,10 +55,9 @@ public abstract class PaymentAccountContractData implements Payload {
 
     abstract public String getPaymentDetailsForTradePopup();
 
-    public int getMaxTradePeriod() {
+    public long getMaxTradePeriod() {
         return maxTradePeriod;
     }
-
 
     @Override
     public boolean equals(Object o) {
@@ -78,7 +77,7 @@ public abstract class PaymentAccountContractData implements Payload {
     public int hashCode() {
         int result = paymentMethodName != null ? paymentMethodName.hashCode() : 0;
         result = 31 * result + (id != null ? id.hashCode() : 0);
-        result = 31 * result + maxTradePeriod;
+        result = 31 * result + (int) (maxTradePeriod ^ (maxTradePeriod >>> 32));
         return result;
     }
 

@@ -34,7 +34,7 @@ public abstract class CountryBasedPaymentAccountContractData extends PaymentAcco
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    CountryBasedPaymentAccountContractData(String paymentMethodName, String id, int maxTradePeriod) {
+    CountryBasedPaymentAccountContractData(String paymentMethodName, String id, long maxTradePeriod) {
         super(paymentMethodName, id, maxTradePeriod);
     }
 

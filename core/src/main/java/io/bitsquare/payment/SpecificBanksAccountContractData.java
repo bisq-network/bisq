@@ -36,7 +36,7 @@ public final class SpecificBanksAccountContractData extends BankAccountContractD
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private ArrayList<String> acceptedBanks;
 
-    public SpecificBanksAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
+    public SpecificBanksAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
         acceptedBanks = new ArrayList<>();
     }

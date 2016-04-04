@@ -27,7 +27,7 @@ public final class NationalBankAccountContractData extends BankAccountContractDa
 
     private static final Logger log = LoggerFactory.getLogger(NationalBankAccountContractData.class);
 
-    public NationalBankAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
+    public NationalBankAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 

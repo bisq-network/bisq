@@ -25,7 +25,7 @@ public final class AliPayAccountContractData extends PaymentAccountContractData 
 
     private String accountNr;
 
-    public AliPayAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
+    public AliPayAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 

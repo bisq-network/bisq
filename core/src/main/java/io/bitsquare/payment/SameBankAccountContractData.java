@@ -28,7 +28,7 @@ public final class SameBankAccountContractData extends BankAccountContractData {
     private static final Logger log = LoggerFactory.getLogger(SameBankAccountContractData.class);
 
 
-    public SameBankAccountContractData(String paymentMethod, String id, int maxTradePeriod) {
+    public SameBankAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 

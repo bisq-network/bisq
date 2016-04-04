@@ -135,10 +135,6 @@ public abstract class PaymentAccount implements Persistable {
         return contractData.getPaymentDetails();
     }
 
-    public int getMaxTradePeriod() {
-        return contractData.getMaxTradePeriod();
-    }
-
     public Date getCreationDate() {
         return creationDate;
     }

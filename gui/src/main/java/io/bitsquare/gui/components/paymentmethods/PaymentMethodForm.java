@@ -108,7 +108,7 @@ public abstract class PaymentMethodForm {
     public static void addAllowedPeriod(GridPane gridPane, int gridRow,
                                         @Nullable PaymentAccountContractData paymentAccountContractData, String dateFromBlocks) {
         if (paymentAccountContractData != null) {
-            long hours = paymentAccountContractData.getMaxTradePeriod() / 6;
+            long hours = paymentAccountContractData.getMaxTradePeriod() / 3600;
             String displayText;
             if (hours == 1)
                 displayText = hours + " hour";
