@@ -134,7 +134,7 @@ public abstract class PaymentMethodForm {
             time = hours / 24 + " days";
 
         String displayText = "Max. trade duration: " + time + " / Max. trade limit: " +
-                formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimitInBitcoin());
+                formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimit());
 
         addLabelTextField(gridPane, ++gridRow, "Limitations:", displayText);
     }

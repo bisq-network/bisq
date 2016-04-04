@@ -37,8 +37,8 @@ public final class PaymentMethod implements Persistable, Comparable {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     // time in blocks (average 10 min for one block confirmation
-    private static final int HOUR = 6;
-    private static final int DAY = HOUR * 24; // 144
+    private static final long HOUR = 3600;
+    private static final long DAY = HOUR * 24;
 
     public static final String OK_PAY_ID = "OK_PAY";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";
@@ -83,11 +83,9 @@ public final class PaymentMethod implements Persistable, Comparable {
 
 
     private final String id;
-
     private long lockTime;
-
-    private int maxTradePeriod;
-    private Coin maxTradeLimitInBitcoin;
+    private long maxTradePeriod;
+    private Coin maxTradeLimit;
 
     /**
      * @param id
@@ -96,13 +94,13 @@ public final class PaymentMethod implements Persistable, Comparable {
      *                               double spend tx to invalidate the time locked payout tx. For the moment we set all to 0 but will have it in
      *                               place when needed.
      * @param maxTradePeriod         The min. period a trader need to wait until he gets displayed the contact form for opening a dispute.
-     * @param maxTradeLimitInBitcoin The max. allowed trade amount in Bitcoin for that payment method (depending on charge back risk)
+     * @param maxTradeLimit The max. allowed trade amount in Bitcoin for that payment method (depending on charge back risk)
      */
-    public PaymentMethod(String id, long lockTime, int maxTradePeriod, Coin maxTradeLimitInBitcoin) {
+    public PaymentMethod(String id, long lockTime, long maxTradePeriod, Coin maxTradeLimit) {
         this.id = id;
         this.lockTime = lockTime;
         this.maxTradePeriod = maxTradePeriod;
-        this.maxTradeLimitInBitcoin = maxTradeLimitInBitcoin;
+        this.maxTradeLimit = maxTradeLimit;
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -113,7 +111,7 @@ public final class PaymentMethod implements Persistable, Comparable {
             PaymentMethod paymentMethod = PaymentMethod.getPaymentMethodById(id);
             this.lockTime = paymentMethod.getLockTime();
             this.maxTradePeriod = paymentMethod.getMaxTradePeriod();
-            this.maxTradeLimitInBitcoin = paymentMethod.getMaxTradeLimitInBitcoin();
+            this.maxTradeLimit = paymentMethod.getMaxTradeLimit();
         } catch (Throwable t) {
             log.warn("Cannot be deserialized." + t.getMessage());
         }
@@ -127,7 +125,7 @@ public final class PaymentMethod implements Persistable, Comparable {
         return id;
     }
 
-    public int getMaxTradePeriod() {
+    public long getMaxTradePeriod() {
         return maxTradePeriod;
     }
 
@@ -135,8 +133,8 @@ public final class PaymentMethod implements Persistable, Comparable {
         return lockTime;
     }
 
-    public Coin getMaxTradeLimitInBitcoin() {
-        return maxTradeLimitInBitcoin;
+    public Coin getMaxTradeLimit() {
+        return maxTradeLimit;
     }
 
     @Override
@@ -157,7 +155,7 @@ public final class PaymentMethod implements Persistable, Comparable {
         if (lockTime != that.lockTime) return false;
         if (maxTradePeriod != that.maxTradePeriod) return false;
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        return !(maxTradeLimitInBitcoin != null ? !maxTradeLimitInBitcoin.equals(that.maxTradeLimitInBitcoin) : that.maxTradeLimitInBitcoin != null);
+        return !(maxTradeLimit != null ? !maxTradeLimit.equals(that.maxTradeLimit) : that.maxTradeLimit != null);
 
     }
 
@@ -165,8 +163,8 @@ public final class PaymentMethod implements Persistable, Comparable {
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (int) (lockTime ^ (lockTime >>> 32));
-        result = 31 * result + maxTradePeriod;
-        result = 31 * result + (maxTradeLimitInBitcoin != null ? maxTradeLimitInBitcoin.hashCode() : 0);
+        result = 31 * result + (int) (maxTradePeriod ^ (maxTradePeriod >>> 32));
+        result = 31 * result + (maxTradeLimit != null ? maxTradeLimit.hashCode() : 0);
         return result;
     }
 
@@ -176,7 +174,7 @@ public final class PaymentMethod implements Persistable, Comparable {
                 "id='" + id + '\'' +
                 ", lockTime=" + lockTime +
                 ", maxTradePeriod=" + maxTradePeriod +
-                ", maxTradeLimitInBitcoin=" + maxTradeLimitInBitcoin +
+                ", maxTradeLimitInBitcoin=" + maxTradeLimit +
                 '}';
     }
 }

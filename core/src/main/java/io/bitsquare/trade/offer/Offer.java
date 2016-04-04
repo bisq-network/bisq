@@ -200,8 +200,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
         checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then "
                 + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
-        checkArgument(getAmount().compareTo(getPaymentMethod().getMaxTradeLimitInBitcoin()) <= 0, "Amount is larger then "
-                + getPaymentMethod().getMaxTradeLimitInBitcoin().toFriendlyString());
+        checkArgument(getAmount().compareTo(getPaymentMethod().getMaxTradeLimit()) <= 0, "Amount is larger then "
+                + getPaymentMethod().getMaxTradeLimit().toFriendlyString());
         checkArgument(getAmount().compareTo(getMinAmount()) >= 0, "MinAmount is larger then Amount");
 
         checkArgument(getPrice().isPositive(), "Price is not a positive value");
