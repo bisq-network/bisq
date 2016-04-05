@@ -23,7 +23,10 @@ public class FileUtil {
 
         File origFile = new File(Paths.get(dir.getAbsolutePath(), fileName).toString());
         if (origFile.exists()) {
-            File backupFileDir = new File(Paths.get(backupDir.getAbsolutePath(), fileName.replace(".", "_")).toString());
+            String dirName = "backups_" + fileName;
+            if (dirName.contains("."))
+                dirName = dirName.replace(".", "_");
+            File backupFileDir = new File(Paths.get(backupDir.getAbsolutePath(), dirName).toString());
             if (!backupFileDir.exists())
                 if (!backupFileDir.mkdir())
                     log.warn("make backupFileDir failed");
