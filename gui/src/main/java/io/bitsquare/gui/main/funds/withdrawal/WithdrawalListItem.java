@@ -21,7 +21,6 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.trade.TradableHelper;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
@@ -76,25 +75,20 @@ public class WithdrawalListItem {
     }
 
     private void updateBalance() {
-        balance = TradableHelper.getAvailableBalance(addressEntry,
-                walletService,
-                openOfferManager,
-                tradeManager,
-                closedTradableManager,
-                failedTradesManager);
-
+        balance = walletService.getBalanceForAddress(addressEntry.getAddress());
         if (balance != null)
             balanceLabel.setText(formatter.formatCoin(this.balance));
     }
 
     public final String getLabel() {
-        switch (addressEntry.getContext()) {
-            case TRADE:
-                return addressEntry.getShortOfferId();
-            case ARBITRATOR:
-                return "Arbitration fee";
-        }
-        return "";
+        if (addressEntry.isOpenOffer())
+            return "Offer ID: " + addressEntry.getShortOfferId();
+        else if (addressEntry.isTrade())
+            return "Trade ID: " + addressEntry.getShortOfferId();
+        else if (addressEntry.getContext() == AddressEntry.Context.ARBITRATOR)
+            return "Arbitration fee";
+        else
+            return "-";
     }
 
     @Override

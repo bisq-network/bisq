@@ -17,7 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
@@ -53,15 +55,18 @@ public class SignPayoutTx extends TradeTask {
                 lockTimeAsBlockHeight = processModel.getTradeWalletService().getLastBlockSeenHeight() + lockTime;
             trade.setLockTimeAsBlockHeight(lockTimeAsBlockHeight);
 
+            WalletService walletService = processModel.getWalletService();
+            String id = processModel.getOffer().getId();
             byte[] payoutTxSignature = processModel.getTradeWalletService().sellerSignsPayoutTx(
                     trade.getDepositTx(),
                     buyerPayoutAmount,
                     sellerPayoutAmount,
                     processModel.tradingPeer.getPayoutAddressString(),
-                    processModel.getAddressEntry(),
+                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT),
+                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG),
                     lockTimeAsBlockHeight,
-                    processModel.tradingPeer.getTradeWalletPubKey(),
-                    processModel.getTradeWalletPubKey(),
+                    processModel.tradingPeer.getMultiSigPubKey(),
+                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey(),
                     processModel.getArbitratorPubKey(trade.getArbitratorNodeAddress()));
 
             processModel.setPayoutTxSignature(payoutTxSignature);

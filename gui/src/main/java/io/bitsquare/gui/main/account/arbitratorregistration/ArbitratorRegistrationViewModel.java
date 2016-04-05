@@ -139,7 +139,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     void onRegister(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         updateDisableStates();
         if (allDataValid) {
-            AddressEntry arbitratorDepositAddressEntry = walletService.getArbitratorAddressEntry();
+            AddressEntry arbitratorDepositAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
             String registrationSignature = arbitratorManager.signStorageSignaturePubKey(registrationKey);
             Arbitrator arbitrator = new Arbitrator(
                     p2PService.getAddress(),

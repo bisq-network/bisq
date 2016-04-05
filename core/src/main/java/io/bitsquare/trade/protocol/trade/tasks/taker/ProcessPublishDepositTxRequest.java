@@ -59,7 +59,7 @@ public class ProcessPublishDepositTxRequest extends TradeTask {
             }
 
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(publishDepositTxRequest.offererAccountId));
-            processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(publishDepositTxRequest.offererTradeWalletPubKey));
+            processModel.tradingPeer.setMultiSigPubKey(checkNotNull(publishDepositTxRequest.offererMultiSigPubKey));
             processModel.tradingPeer.setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.offererContractAsJson));
             processModel.tradingPeer.setContractSignature(nonEmptyStringOf(publishDepositTxRequest.offererContractSignature));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.offererPayoutAddressString));

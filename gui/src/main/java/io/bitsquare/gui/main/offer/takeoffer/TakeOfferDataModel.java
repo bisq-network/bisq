@@ -162,7 +162,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void initWithData(Offer offer) {
         this.offer = offer;
 
-        addressEntry = walletService.getTradeAddressEntry(offer.getId());
+        addressEntry = walletService.getOrCreateAddressEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
         checkNotNull(addressEntry, "addressEntry must not be null");
 
         ObservableList<PaymentAccount> possiblePaymentAccounts = getPossiblePaymentAccounts();
@@ -381,8 +381,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        walletService.swapTradeToSavings(offer.getId());
-        //setFeeFromFundingTx(Coin.NEGATIVE_SATOSHI);
+        walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
+        walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 
   /*  private void setFeeFromFundingTx(Coin fee) {

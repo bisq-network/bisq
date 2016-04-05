@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.messages.*;
 import io.bitsquare.arbitration.payload.Attachment;
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
@@ -490,7 +491,7 @@ public class DisputeManager {
                             try {
                                 log.debug("do payout Transaction ");
 
-                                Transaction signedDisputedPayoutTx = tradeWalletService.signAndFinalizeDisputedPayoutTx(
+                                Transaction signedDisputedPayoutTx = tradeWalletService.traderSignAndFinalizeDisputedPayoutTx(
                                         dispute.getDepositTxSerialized(),
                                         disputeResult.getArbitratorSignature(),
                                         disputeResult.getBuyerPayoutAmount(),
@@ -499,7 +500,7 @@ public class DisputeManager {
                                         contract.getBuyerPayoutAddressString(),
                                         contract.getSellerPayoutAddressString(),
                                         disputeResult.getArbitratorAddressAsString(),
-                                        walletService.getTradeAddressEntry(dispute.getTradeId()),
+                                        walletService.getOrCreateAddressEntry(dispute.getTradeId(), AddressEntry.Context.MULTI_SIG),
                                         contract.getBuyerBtcPubKey(),
                                         contract.getSellerBtcPubKey(),
                                         disputeResult.getArbitratorPubKey()
@@ -576,7 +577,7 @@ public class DisputeManager {
     }
 
     private boolean isArbitrator(DisputeResult disputeResult) {
-        return disputeResult.getArbitratorAddressAsString().equals(walletService.getArbitratorAddressEntry().getAddressString());
+        return disputeResult.getArbitratorAddressAsString().equals(walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR).getAddressString());
     }
 
 

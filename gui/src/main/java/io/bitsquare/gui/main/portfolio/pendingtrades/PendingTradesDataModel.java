@@ -354,7 +354,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 payoutTxSerialized = payoutTx.bitcoinSerialize();
                 payoutTxHashAsString = payoutTx.getHashAsString();
             } else {
-                log.warn("payoutTx is null at doOpenDispute");
+                log.debug("payoutTx is null at doOpenDispute");
             }
 
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),

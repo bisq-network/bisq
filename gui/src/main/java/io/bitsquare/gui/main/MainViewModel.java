@@ -26,7 +26,6 @@ import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -76,11 +75,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
@@ -450,6 +451,7 @@ public class MainViewModel implements ViewModel {
         });
 
         openOfferManager.getOpenOffers().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
+        tradeManager.getTrades().addListener((ListChangeListener<Trade>) c -> updateBalance());
         openOfferManager.onAllServicesInitialized();
         arbitratorManager.onAllServicesInitialized();
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue));
@@ -460,7 +462,6 @@ public class MainViewModel implements ViewModel {
         updateBalance();
         setupDevDummyPaymentAccount();
         setupMarketPriceFeed();
-        swapPendingTradeAddressEntriesToSavingsWallet();
 
         showAppScreen.set(true);
 
@@ -666,12 +667,6 @@ public class MainViewModel implements ViewModel {
         typeProperty.bind(priceFeed.typeProperty());
     }
 
-    private void swapPendingTradeAddressEntriesToSavingsWallet() {
-        TradableHelper.getAddressEntriesForAvailableBalance(openOfferManager, tradeManager, walletService).stream()
-                .filter(addressEntry -> addressEntry.getOfferId() != null)
-                .forEach(addressEntry -> walletService.swapTradeToSavings(addressEntry.getOfferId()));
-    }
-
     private void displayAlertIfPresent(Alert alert) {
         boolean alreadyDisplayed = alert != null && alert.equals(user.getDisplayedAlert());
         user.setDisplayedAlert(alert);
@@ -689,32 +684,15 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateAvailableBalance() {
-        Optional<Coin> totalAvailableOptional = Stream.concat(walletService.getSavingsAddressEntryList().stream(), walletService.getTradeAddressEntryList().stream())
-                .filter(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()).isPositive())
-                .map(addressEntry -> TradableHelper.getAvailableBalance(addressEntry,
-                        walletService,
-                        openOfferManager,
-                        tradeManager,
-                        closedTradableManager,
-                        failedTradesManager))
-                .filter(balance -> balance.isPositive())
-                .reduce(Coin::add);
-
-
-        /*Optional<Coin> totalAvailableOptional = TradableHelper.getAddressEntriesForAvailableBalance(openOfferManager, tradeManager, walletService)
-                .stream()
-                .map(e -> walletService.getBalanceForAddress(e.getAddress()))
-                .reduce(Coin::add);*/
-        if (totalAvailableOptional.isPresent())
-            availableBalance.set(formatter.formatCoinWithCode(totalAvailableOptional.get()));
-        else
-            availableBalance.set(formatter.formatCoinWithCode(Coin.ZERO));
+        Coin totalAvailableBalance = Coin.valueOf(TradableHelper.getAddressEntriesForAvailableBalanceStream(walletService)
+                .mapToLong(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()).getValue())
+                .sum());
+        availableBalance.set(formatter.formatCoinWithCode(totalAvailableBalance));
     }
 
     private void updateReservedBalance() {
-        Coin sum = Coin.valueOf(TradableHelper.getNotCompletedTradableItems(openOfferManager, tradeManager).stream()
-                .filter(tradable -> tradable instanceof OpenOffer)
-                .map(tradable -> TradableHelper.getReservedBalance(tradable, walletService))
+        Coin sum = Coin.valueOf(openOfferManager.getOpenOffers().stream()
+                .map(openOffer -> TradableHelper.getReservedBalance(openOffer, walletService))
                 .mapToLong(Coin::getValue)
                 .sum());
 
@@ -722,26 +700,8 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateLockedBalance() {
-        Coin sum = Coin.valueOf(tradeManager.getTrades().stream()
-                .map(trade -> {
-                    switch (trade.getState().getPhase()) {
-                        case DEPOSIT_REQUESTED:
-                        case DEPOSIT_PAID:
-                        case FIAT_SENT:
-                        case FIAT_RECEIVED:
-                            Coin balanceInDeposit = FeePolicy.getSecurityDeposit().add(FeePolicy.getFeePerKb());
-                            if (trade.getContract() != null &&
-                                    trade.getTradeAmount() != null &&
-                                    trade.getContract().getSellerPayoutAddressString()
-                                            .equals(walletService.getTradeAddressEntry(trade.getId()).getAddressString())) {
-                                balanceInDeposit = balanceInDeposit.add(trade.getTradeAmount());
-                            }
-                            return balanceInDeposit;
-                        default:
-                            return Coin.ZERO;
-                    }
-                })
-                .mapToLong(Coin::getValue)
+        Coin sum = Coin.valueOf(TradableHelper.getLockedTradeStream(tradeManager)
+                .mapToLong(trade -> TradableHelper.getLockedTradeAddressEntry(trade, walletService).getLockedTradeAmount().getValue())
                 .sum());
         lockedBalance.set(formatter.formatCoinWithCode(sum));
     }

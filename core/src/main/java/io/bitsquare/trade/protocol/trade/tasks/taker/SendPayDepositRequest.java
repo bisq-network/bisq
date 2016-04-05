@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.Trade;
@@ -43,7 +44,6 @@ public class SendPayDepositRequest extends TradeTask {
 
             checkNotNull(trade.getTradeAmount(), "TradeAmount must not be null");
             checkNotNull(trade.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
-            checkNotNull(processModel.getAddressEntry(), "AddressEntry must not be null");
 
             PayDepositRequest payDepositRequest = new PayDepositRequest(
                     processModel.getMyAddress(),
@@ -52,8 +52,8 @@ public class SendPayDepositRequest extends TradeTask {
                     processModel.getRawTransactionInputs(),
                     processModel.getChangeOutputValue(),
                     processModel.getChangeOutputAddress(),
-                    processModel.getTradeWalletPubKey(),
-                    processModel.getAddressEntry().getAddressString(),
+                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG).getPubKey(),
+                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString(),
                     processModel.getPubKeyRing(),
                     processModel.getPaymentAccountContractData(trade),
                     processModel.getAccountId(),

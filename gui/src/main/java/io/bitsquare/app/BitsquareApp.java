@@ -235,7 +235,6 @@ public class BitsquareApp extends Application {
             primaryStage.show();
         }
         try {
-            throwable.printStackTrace();
             try {
                 if (!popupOpened) {
                     String message = throwable.getMessage();

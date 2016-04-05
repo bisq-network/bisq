@@ -43,12 +43,12 @@ public final class PublishDepositTxRequest extends TradeMessage {
     public final String offererPayoutAddressString;
     public final byte[] preparedDepositTx;
     public final ArrayList<RawTransactionInput> offererInputs;
-    public final byte[] offererTradeWalletPubKey;
+    public final byte[] offererMultiSigPubKey;
 
     public PublishDepositTxRequest(String tradeId,
                                    PaymentAccountContractData offererPaymentAccountContractData,
                                    String offererAccountId,
-                                   byte[] offererTradeWalletPubKey,
+                                   byte[] offererMultiSigPubKey,
                                    String offererContractAsJson,
                                    String offererContractSignature,
                                    String offererPayoutAddressString,
@@ -57,7 +57,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
         super(tradeId);
         this.offererPaymentAccountContractData = offererPaymentAccountContractData;
         this.offererAccountId = offererAccountId;
-        this.offererTradeWalletPubKey = offererTradeWalletPubKey;
+        this.offererMultiSigPubKey = offererMultiSigPubKey;
         this.offererContractAsJson = offererContractAsJson;
         this.offererContractSignature = offererContractSignature;
         this.offererPayoutAddressString = offererPayoutAddressString;
@@ -65,7 +65,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
         this.offererInputs = offererInputs;
 
         log.trace("offererPaymentAccount size " + Utilities.serialize(offererPaymentAccountContractData).length);
-        log.trace("offererTradeWalletPubKey size " + offererTradeWalletPubKey.length);
+        log.trace("offererTradeWalletPubKey size " + offererMultiSigPubKey.length);
         log.trace("preparedDepositTx size " + preparedDepositTx.length);
         log.trace("offererInputs size " + Utilities.serialize(new ArrayList<>(offererInputs)).length);
     }

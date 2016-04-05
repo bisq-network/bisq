@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.messaging.SendDirectMessageListener;
 import io.bitsquare.trade.Trade;
@@ -40,10 +41,10 @@ public class SendPublishDepositTxRequest extends TradeTask {
                     processModel.getId(),
                     processModel.getPaymentAccountContractData(trade),
                     processModel.getAccountId(),
-                    processModel.getTradeWalletPubKey(),
+                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG).getPubKey(),
                     trade.getContractAsJson(),
                     trade.getOffererContractSignature(),
-                    processModel.getAddressEntry().getAddressString(),
+                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString(),
                     processModel.getPreparedDepositTx(),
                     processModel.getRawTransactionInputs()
             );

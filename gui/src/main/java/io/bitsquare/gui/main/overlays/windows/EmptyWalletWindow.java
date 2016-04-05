@@ -104,7 +104,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, "Your destination address:");
         addressInputTextField = tuple.second;
         if (BitsquareApp.DEV_MODE)
-            addressInputTextField.setText("mo6y756TnpdZQCeHStraavjqrndeXzVkxi");
+            addressInputTextField.setText("mjYhQYSbET2bXJDyCdNqYhqSye5QX2WHPz");
 
         emptyWalletButton = new Button("Empty wallet");
         boolean isBalanceSufficient = Restrictions.isAboveDust(totalBalance);

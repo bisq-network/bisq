@@ -135,7 +135,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
 
         offerId = UUID.randomUUID().toString();
-        addressEntry = walletService.getTradeAddressEntry(offerId);
+        addressEntry = walletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
         offerFeeAsCoin = FeePolicy.getCreateOfferFee();
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
         securityDepositAsCoin = FeePolicy.getSecurityDeposit();
@@ -467,6 +467,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        walletService.swapTradeToSavings(offerId);
+        walletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
+        walletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 }

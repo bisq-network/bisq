@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.common.util.Utilities;
@@ -72,9 +73,9 @@ public class VerifyAndSignContract extends TradeTask {
                     offerer.getPubKeyRing(),
                     processModel.getPubKeyRing(),
                     offerer.getPayoutAddressString(),
-                    processModel.getAddressEntry().getAddressString(),
-                    offerer.getTradeWalletPubKey(),
-                    processModel.getTradeWalletPubKey()
+                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString(),
+                    offerer.getMultiSigPubKey(),
+                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG).getPubKey()
             );
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);

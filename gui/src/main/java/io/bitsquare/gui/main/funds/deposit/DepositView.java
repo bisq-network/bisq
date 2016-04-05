@@ -111,7 +111,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     @Override
     public void initialize() {
         // trigger creation of at least 1 savings address
-        walletService.getUnusedSavingsAddressEntry();
+        walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No deposit addresses are generated yet"));
@@ -186,8 +186,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                 new Popup().warning("You have already at least one address which is not used yet in any transaction.\n" +
                         "Please select in the address table an unused address.").show();
             } else {
-                AddressEntry newSavingsAddressEntry = walletService.getNewSavingsAddressEntry();
-                //fillForm(newSavingsAddressEntry.getAddressString());
+                AddressEntry newSavingsAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
                 updateList();
                 observableList.stream()
                         .filter(depositListItem -> depositListItem.getAddressString().equals(newSavingsAddressEntry.getAddressString()))
@@ -289,7 +288,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.clear();
-        walletService.getSavingsAddressEntryList().stream()
+        walletService.getAvailableAddressEntries().stream()
                 .forEach(e -> observableList.add(new DepositListItem(e, walletService, formatter)));
     }
 

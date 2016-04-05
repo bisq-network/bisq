@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.Trade;
@@ -40,7 +41,7 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
                 FinalizePayoutTxRequest message = new FinalizePayoutTxRequest(
                         processModel.getId(),
                         processModel.getPayoutTxSignature(),
-                        processModel.getAddressEntry().getAddressString(),
+                        processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString(),
                         trade.getLockTimeAsBlockHeight(),
                         processModel.getMyAddress()
                 );

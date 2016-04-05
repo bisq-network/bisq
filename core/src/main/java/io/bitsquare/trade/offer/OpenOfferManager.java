@@ -19,6 +19,7 @@ package io.bitsquare.trade.offer;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.Log;
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.Timer;
@@ -275,7 +276,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     openOffer.setState(OpenOffer.State.CANCELED);
                     openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
-                    walletService.swapTradeToSavings(offer.getId());
+                    walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
+                    walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
                     resultHandler.handleResult();
                 },
                 errorMessageHandler);

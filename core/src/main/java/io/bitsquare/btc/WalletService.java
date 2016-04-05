@@ -89,7 +89,6 @@ public class WalletService {
 
     private WalletAppKit walletAppKit;
     private Wallet wallet;
-    private AddressEntry arbitratorAddressEntry;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
@@ -149,7 +148,6 @@ public class WalletService {
                 wallet.addEventListener(walletEventListener);
 
                 addressEntryList.onWalletReady(wallet);
-                arbitratorAddressEntry = addressEntryList.getArbitratorAddressEntry();
 
                 walletAppKit.peerGroup().addEventListener(new PeerEventListener() {
                     @Override
@@ -325,103 +323,74 @@ public class WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Trade AddressEntry
+    // AddressEntry
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<AddressEntry> getAddressEntryList() {
-        return ImmutableList.copyOf(addressEntryList);
-    }
-
-    public AddressEntry getArbitratorAddressEntry() {
-        return arbitratorAddressEntry;
-    }
-
-    public AddressEntry getTradeAddressEntry(String offerId) {
-        Optional<AddressEntry> addressEntry = getAddressEntryList().stream()
+    public AddressEntry getOrCreateAddressEntry(String offerId, AddressEntry.Context context) {
+        Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
+                .filter(e -> context == e.getContext())
                 .findAny();
         if (addressEntry.isPresent())
             return addressEntry.get();
         else
-            return addressEntryList.getNewTradeAddressEntry(offerId);
+            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context, offerId));
     }
 
-    private Optional<AddressEntry> getAddressEntryByAddress(String address) {
-        return getAddressEntryList().stream()
-                .filter(e -> e.getAddressString() != null && e.getAddressString().equals(address))
+    public AddressEntry getOrCreateAddressEntry(AddressEntry.Context context) {
+        Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
+                .filter(e -> context == e.getContext())
+                .findAny();
+        if (addressEntry.isPresent())
+            return addressEntry.get();
+        else
+            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+    }
+
+    public Optional<AddressEntry> findAddressEntry(String address, AddressEntry.Context context) {
+        return getAddressEntryListAsImmutableList().stream()
+                .filter(e -> address.equals(e.getAddressString()))
+                .filter(e -> context == e.getContext())
                 .findAny();
     }
 
-    public List<AddressEntry> getTradeAddressEntryList() {
-        return getAddressEntryList().stream()
-                .filter(e -> e.getContext().equals(AddressEntry.Context.TRADE))
+    public List<AddressEntry> getAvailableAddressEntries() {
+        return getAddressEntryListAsImmutableList().stream()
+                .filter(addressEntry -> AddressEntry.Context.AVAILABLE == addressEntry.getContext())
                 .collect(Collectors.toList());
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // SavingsAddressEntry 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public AddressEntry getNewSavingsAddressEntry() {
-        return addressEntryList.getNewSavingsAddressEntry();
-    }
-
-    public List<AddressEntry> getSavingsAddressEntryList() {
-        return getAddressEntryList().stream()
-                .filter(e -> e.getContext().equals(AddressEntry.Context.SAVINGS))
+    public List<AddressEntry> getAddressEntries(AddressEntry.Context context) {
+        return getAddressEntryListAsImmutableList().stream()
+                .filter(addressEntry -> context == addressEntry.getContext())
                 .collect(Collectors.toList());
     }
 
-    public AddressEntry getUnusedSavingsAddressEntry() {
-        List<AddressEntry> unusedSavingsAddressEntries = getUnusedSavingsAddressEntries();
-        if (!unusedSavingsAddressEntries.isEmpty())
-            return unusedSavingsAddressEntries.get(0);
-        else
-            return getNewSavingsAddressEntry();
-    }
-
-    public List<AddressEntry> getUnusedSavingsAddressEntries() {
-        return getSavingsAddressEntryList().stream()
-                .filter(addressEntry -> getNumTxOutputsForAddress(addressEntry.getAddress()) == 0)
+    public List<AddressEntry> getFundedAvailableAddressEntries() {
+        return getAvailableAddressEntries().stream()
+                .filter(addressEntry -> getBalanceForAddress(addressEntry.getAddress()).isPositive())
                 .collect(Collectors.toList());
     }
 
-    public List<AddressEntry> getUsedSavingsAddressEntries() {
-        return getSavingsAddressEntryList().stream()
-                .filter(addressEntry -> getNumTxOutputsForAddress(addressEntry.getAddress()) > 0)
-                .collect(Collectors.toList());
-    }
-
-    public List<Address> getUsedSavingsAddresses() {
-        return getSavingsAddressEntryList().stream()
-                .filter(addressEntry -> getNumTxOutputsForAddress(addressEntry.getAddress()) > 0)
-                .map(addressEntry -> addressEntry.getAddress())
-                .collect(Collectors.toList());
-    }
-
-    public List<Transaction> getUsedSavingWalletTransactions() {
-        List<Transaction> transactions = new ArrayList<>();
-        List<TransactionOutput> transactionOutputs = new ArrayList<>();
-        List<Address> usedSavingsAddresses = getUsedSavingsAddresses();
-        log.debug("usedSavingsAddresses = " + usedSavingsAddresses);
-        wallet.getTransactions(true).stream().forEach(transaction -> transactionOutputs.addAll(transaction.getOutputs()));
-        for (TransactionOutput transactionOutput : transactionOutputs) {
-            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-
-                if (usedSavingsAddresses.contains(addressOutput) && transactionOutput.getParentTransaction() != null) {
-                    log.debug("transactionOutput.getParentTransaction() = " + transactionOutput.getParentTransaction().getHashAsString());
-                    transactions.add(transactionOutput.getParentTransaction());
-                }
-            }
-        }
-
-        return transactions;
+    public List<AddressEntry> getAddressEntryListAsImmutableList() {
+        return ImmutableList.copyOf(addressEntryList);
     }
 
     public void swapTradeToSavings(String offerId) {
+        getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
         addressEntryList.swapTradeToSavings(offerId);
+    }
+
+    public void swapTradeEntryToAvailableEntry(String offerId, AddressEntry.Context context) {
+        Optional<AddressEntry> addressEntryOptional = getAddressEntryListAsImmutableList().stream()
+                .filter(e -> offerId.equals(e.getOfferId()))
+                .filter(e -> context == e.getContext())
+                .findAny();
+        addressEntryOptional.ifPresent(addressEntryList::swapToAvailable);
+    }
+
+    public void saveAddressEntryList() {
+        addressEntryList.queueUpForSave();
     }
 
 
@@ -518,10 +487,6 @@ public class WalletService {
         return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(), address) : Coin.ZERO;
     }
 
-    public Coin getBalanceForAddressEntryWithTradeId(String tradeId) {
-        return getBalanceForAddress(getTradeAddressEntry(tradeId).getAddress());
-    }
-
     private Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
         for (TransactionOutput transactionOutput : transactionOutputs) {
@@ -535,11 +500,9 @@ public class WalletService {
     }
 
     public Coin getSavingWalletBalance() {
-        Coin balance = Coin.ZERO;
-        for (AddressEntry addressEntry : getSavingsAddressEntryList()) {
-            balance = balance.add(getBalanceForAddress(addressEntry.getAddress()));
-        }
-        return balance;
+        return Coin.valueOf(getFundedAvailableAddressEntries().stream()
+                .mapToLong(addressEntry -> getBalanceForAddress(addressEntry.getAddress()).value)
+                .sum());
     }
 
     public int getNumTxOutputsForAddress(Address address) {
@@ -564,10 +527,11 @@ public class WalletService {
     public Coin getRequiredFee(String fromAddress,
                                String toAddress,
                                Coin amount,
-                               @Nullable KeyParameter aesKey) throws AddressFormatException, IllegalArgumentException {
+                               @Nullable KeyParameter aesKey,
+                               AddressEntry.Context context) throws AddressFormatException, AddressEntryException {
         Coin fee;
         try {
-            wallet.completeTx(getSendRequest(fromAddress, toAddress, amount, aesKey));
+            wallet.completeTx(getSendRequest(fromAddress, toAddress, amount, aesKey, context));
             // We use the min fee for now as the mix of savingswallet/trade wallet has some nasty edge cases...
             fee = FeePolicy.getFixedTxFeeForTrades();
         } catch (InsufficientMoneyException e) {
@@ -582,7 +546,7 @@ public class WalletService {
                                                    String toAddress,
                                                    Coin amount,
                                                    @Nullable KeyParameter aesKey) throws AddressFormatException,
-            IllegalArgumentException {
+            AddressEntryException {
         Coin fee;
         try {
             wallet.completeTx(getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, aesKey));
@@ -599,8 +563,9 @@ public class WalletService {
     private Wallet.SendRequest getSendRequest(String fromAddress,
                                               String toAddress,
                                               Coin amount,
-                                              @Nullable KeyParameter aesKey) throws AddressFormatException,
-            IllegalArgumentException, InsufficientMoneyException {
+                                              @Nullable KeyParameter aesKey,
+                                              AddressEntry.Context context) throws AddressFormatException,
+            AddressEntryException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount),
                 "You cannot send an amount which are smaller than 546 satoshis.");
@@ -609,11 +574,12 @@ public class WalletService {
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
-        Optional<AddressEntry> addressEntry = getAddressEntryByAddress(fromAddress);
+        Optional<AddressEntry> addressEntry = findAddressEntry(fromAddress, context);
         if (!addressEntry.isPresent())
-            throw new IllegalArgumentException("WithdrawFromAddress is not found in our wallets.");
+            throw new AddressEntryException("WithdrawFromAddress is not found in our wallet.");
 
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry.get());
+        checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must nto be null");
+        sendRequest.coinSelector = new TradeWalletCoinSelector(params, addressEntry.get().getAddress());
         sendRequest.changeAddress = addressEntry.get().getAddress();
         sendRequest.feePerKb = FeePolicy.getFeePerKb();
         return sendRequest;
@@ -624,7 +590,7 @@ public class WalletService {
                                                                   Coin amount,
                                                                   @Nullable String changeAddress,
                                                                   @Nullable KeyParameter aesKey) throws
-            AddressFormatException, IllegalArgumentException, InsufficientMoneyException {
+            AddressFormatException, AddressEntryException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount),
                 "You cannot send an amount which are smaller than 546 satoshis.");
@@ -634,18 +600,23 @@ public class WalletService {
         sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
         Set<AddressEntry> addressEntries = fromAddresses.stream()
-                .map(this::getAddressEntryByAddress)
+                .map(address -> {
+                    Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
+                    if (!addressEntryOptional.isPresent())
+                        addressEntryOptional = findAddressEntry(address, AddressEntry.Context.OFFER_FUNDING);
+                    return addressEntryOptional;
+                })
                 .filter(Optional::isPresent)
-                .map(Optional::get).collect(Collectors.toSet());
+                .map(Optional::get)
+                .collect(Collectors.toSet());
         if (addressEntries.isEmpty())
-            throw new IllegalArgumentException("No withdrawFromAddresses  not found in our wallets.\n\t" +
-                    "fromAddresses=" + fromAddresses);
+            throw new AddressEntryException("No Addresses for withdraw  found in our wallet");
 
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntries);
+        sendRequest.coinSelector = new MultiAddressesCoinSelector(params, addressEntries);
         Optional<AddressEntry> addressEntryOptional = Optional.empty();
         AddressEntry changeAddressAddressEntry = null;
         if (changeAddress != null)
-            addressEntryOptional = getAddressEntryByAddress(changeAddress);
+            addressEntryOptional = findAddressEntry(changeAddress, AddressEntry.Context.AVAILABLE);
 
         if (addressEntryOptional.isPresent()) {
             changeAddressAddressEntry = addressEntryOptional.get();
@@ -664,10 +635,11 @@ public class WalletService {
                             String toAddress,
                             Coin amount,
                             @Nullable KeyParameter aesKey,
+                            AddressEntry.Context context,
                             FutureCallback<Transaction> callback) throws AddressFormatException,
-            IllegalArgumentException, InsufficientMoneyException {
-        Coin fee = getRequiredFee(fromAddress, toAddress, amount, aesKey);
-        Wallet.SendResult sendResult = wallet.sendCoins(getSendRequest(fromAddress, toAddress, amount.subtract(fee), aesKey));
+            AddressEntryException, InsufficientMoneyException {
+        Coin fee = getRequiredFee(fromAddress, toAddress, amount, aesKey, context);
+        Wallet.SendResult sendResult = wallet.sendCoins(getSendRequest(fromAddress, toAddress, amount.subtract(fee), aesKey, context));
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
         printTxWithInputs("sendFunds", sendResult.tx);
@@ -680,7 +652,7 @@ public class WalletService {
                                                 @Nullable String changeAddress,
                                                 @Nullable KeyParameter aesKey,
                                                 FutureCallback<Transaction> callback) throws AddressFormatException,
-            IllegalArgumentException, InsufficientMoneyException {
+            AddressEntryException, InsufficientMoneyException {
         Coin fee = getRequiredFeeForMultipleAddresses(fromAddresses, toAddress, amount, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(getSendRequestForMultipleAddresses(fromAddresses, toAddress,
                 amount.subtract(fee), changeAddress, aesKey));

@@ -67,16 +67,7 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
         }
     }
 
-    public AddressEntry getNewTradeAddressEntry(String offerId) {
-        log.trace("getNewAddressEntry called with offerId " + offerId);
-        AddressEntry addressEntry = new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), AddressEntry.Context.TRADE, offerId);
-        add(addressEntry);
-        storage.queueUpForSave();
-        return addressEntry;
-    }
-
-    public AddressEntry getNewSavingsAddressEntry() {
-        AddressEntry addressEntry = new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), AddressEntry.Context.SAVINGS);
+    public AddressEntry addAddressEntry(AddressEntry addressEntry) {
         add(addressEntry);
         storage.queueUpForSave();
         return addressEntry;
@@ -87,17 +78,20 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
         Optional<AddressEntry> addressEntryOptional = this.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId())).findAny();
         if (addressEntryOptional.isPresent()) {
             AddressEntry addressEntry = addressEntryOptional.get();
-            add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.SAVINGS));
+            add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
             remove(addressEntry);
             storage.queueUpForSave();
         }
     }
 
+    public void swapToAvailable(AddressEntry addressEntry) {
+        remove(addressEntry);
+        add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
+        remove(addressEntry);
+        storage.queueUpForSave();
+    }
 
-    public AddressEntry getArbitratorAddressEntry() {
-        if (size() > 0)
-            return get(0);
-        else
-            return null;
+    public void queueUpForSave() {
+        storage.queueUpForSave();
     }
 }

@@ -20,6 +20,8 @@ package io.bitsquare.gui.main.funds.withdrawal;
 import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -34,6 +36,7 @@ import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.trade.Tradable;
+import io.bitsquare.trade.TradableHelper;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.closed.ClosedTradableManager;
@@ -60,7 +63,6 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
@@ -119,7 +121,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @Override
     public void initialize() {
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No funds for withdrawal are available"));
+        tableView.setPlaceholder(new Label("No funds are available for withdrawal"));
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         setAddressColumnCellFactory();
@@ -182,7 +184,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     trades.stream()
                             .filter(trade -> trade.getState().getPhase() == Trade.Phase.PAYOUT_PAID)
                             .forEach(trade -> {
-                                if (walletService.getBalanceForAddress(walletService.getTradeAddressEntry(trade.getId()).getAddress()).isZero())
+                                if (walletService.getBalanceForAddress(walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT).getAddress()).isZero())
                                     tradeManager.addTradeToClosedTrades(trade);
                             });
                 }
@@ -212,13 +214,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             .show();
 
                 }
-            } catch (AddressFormatException e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
+                new Popup().error(e.getMessage()).show();
             }
         } else {
-            new Popup()
-                    .warning("The amount to transfer is lower than the transaction fee and the min. possible tx value (dust).")
+            new Popup().warning("The amount to transfer is lower than the transaction fee and the min. possible tx value (dust).")
                     .show();
         }
     }
@@ -283,11 +285,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(WithdrawalListItem::cleanup);
-        observableList.setAll(Stream.concat(walletService.getSavingsAddressEntryList().stream(), walletService.getTradeAddressEntryList().stream())
-                .filter(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()).isPositive())
+        observableList.setAll(TradableHelper.getAddressEntriesForAvailableBalanceStream(walletService)
                 .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, openOfferManager, tradeManager,
                         closedTradableManager, failedTradesManager, formatter))
-                .filter(item -> item.getBalance().isPositive())
                 .collect(Collectors.toList()));
     }
 
@@ -306,6 +306,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             updateList();
         } catch (AddressFormatException e) {
             new Popup().warning("The address is not correct. Please check the address format.").show();
+        } catch (AddressEntryException e) {
+            new Popup().error(e.getMessage()).show();
         } catch (InsufficientMoneyException e) {
             log.warn(e.getMessage());
             new Popup().warning("You don't have enough fund in your wallet.").show();
@@ -328,7 +330,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawToTextField.setPromptText("Fill in your destination address");
 
         if (BitsquareApp.DEV_MODE)
-            withdrawToTextField.setText("mo6y756TnpdZQCeHStraavjqrndeXzVkxi");
+            withdrawToTextField.setText("mjYhQYSbET2bXJDyCdNqYhqSye5QX2WHPz");
     }
 
     private Optional<Tradable> getTradable(WithdrawalListItem item) {

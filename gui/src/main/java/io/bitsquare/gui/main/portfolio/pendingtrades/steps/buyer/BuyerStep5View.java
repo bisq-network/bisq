@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
@@ -135,14 +136,15 @@ public class BuyerStep5View extends TradeStepView {
         gridPane.getChildren().add(hBox);
 
         useSavingsWalletButton.setOnAction(e -> {
-            model.dataModel.walletService.swapTradeToSavings(trade.getId());
+            model.dataModel.walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+
             handleTradeCompleted();
             model.dataModel.tradeManager.addTradeToClosedTrades(trade);
         });
         withdrawToExternalWalletButton.setOnAction(e -> reviewWithdrawal());
 
         if (BitsquareApp.DEV_MODE) {
-            withdrawAddressTextField.setText("mo6y756TnpdZQCeHStraavjqrndeXzVkxi");
+            withdrawAddressTextField.setText("mjYhQYSbET2bXJDyCdNqYhqSye5QX2WHPz");
         } else {
             String key = "tradeCompleted" + trade.getId();
             if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
@@ -158,7 +160,8 @@ public class BuyerStep5View extends TradeStepView {
     private void reviewWithdrawal() {
         Coin senderAmount = trade.getPayoutAmount();
         WalletService walletService = model.dataModel.walletService;
-        AddressEntry fromAddressesEntry = walletService.getTradeAddressEntry(trade.getId());
+
+        AddressEntry fromAddressesEntry = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         String fromAddresses = fromAddressesEntry.getAddressString();
         String toAddresses = withdrawAddressTextField.getText();
 
@@ -176,7 +179,7 @@ public class BuyerStep5View extends TradeStepView {
                     if (BitsquareApp.DEV_MODE) {
                         doWithdrawal();
                     } else {
-                        Coin requiredFee = walletService.getRequiredFee(fromAddresses, toAddresses, senderAmount, null);
+                        Coin requiredFee = walletService.getRequiredFee(fromAddresses, toAddresses, senderAmount, null, AddressEntry.Context.TRADE_PAYOUT);
                         Coin receiverAmount = senderAmount.subtract(requiredFee);
                         BSFormatter formatter = model.formatter;
                         String key = "reviewWithdrawalAtTradeComplete";
@@ -203,6 +206,8 @@ public class BuyerStep5View extends TradeStepView {
                     }
                 } catch (AddressFormatException e) {
                     validateWithdrawAddress();
+                } catch (AddressEntryException e) {
+                    log.error(e.getMessage());
                 }
             } else {
                 new Popup()

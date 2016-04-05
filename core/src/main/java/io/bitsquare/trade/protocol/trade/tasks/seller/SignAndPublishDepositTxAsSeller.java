@@ -18,14 +18,21 @@
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradingPeer;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 
 public class SignAndPublishDepositTxAsSeller extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishDepositTxAsSeller.class);
@@ -45,14 +52,21 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
 
             byte[] contractHash = Hash.getHash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
+
+            ArrayList<RawTransactionInput> sellerInputs = processModel.getRawTransactionInputs();
+            WalletService walletService = processModel.getWalletService();
+            AddressEntry sellerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG);
+            sellerMultiSigAddressEntry.setLockedTradeAmount(Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum()));
+            walletService.saveAddressEntryList();
+            TradingPeer tradingPeer = processModel.tradingPeer;
             processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
                     true,
                     contractHash,
                     processModel.getPreparedDepositTx(),
-                    processModel.tradingPeer.getRawTransactionInputs(),
-                    processModel.getRawTransactionInputs(),
-                    processModel.tradingPeer.getTradeWalletPubKey(),
-                    processModel.getTradeWalletPubKey(),
+                    tradingPeer.getRawTransactionInputs(),
+                    sellerInputs,
+                    tradingPeer.getMultiSigPubKey(),
+                    sellerMultiSigAddressEntry.getPubKey(),
                     processModel.getArbitratorPubKey(trade.getArbitratorNodeAddress()),
                     new FutureCallback<Transaction>() {
                         @Override

@@ -20,37 +20,26 @@ package io.bitsquare.btc;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.TransactionOutput;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.util.Set;
 
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our addressEntry.
  */
-class AddressBasedCoinSelector extends SavingsWalletCoinSelector {
-    private static final Logger log = LoggerFactory.getLogger(AddressBasedCoinSelector.class);
-    @Nullable
-    private Set<AddressEntry> addressEntries;
-    @Nullable
-    private AddressEntry addressEntry;
+class MultiAddressesCoinSelector extends BitsquareCoinSelector {
+    private static final Logger log = LoggerFactory.getLogger(MultiAddressesCoinSelector.class);
+    private final Set<AddressEntry> addressEntries;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressBasedCoinSelector(NetworkParameters params) {
-        super(params);
-    }
-
-    public AddressBasedCoinSelector(NetworkParameters params, @Nullable AddressEntry addressEntry) {
-        super(params);
-        this.addressEntry = addressEntry;
-    }
-
-    public AddressBasedCoinSelector(NetworkParameters params, @Nullable Set<AddressEntry> addressEntries) {
+    public MultiAddressesCoinSelector(NetworkParameters params, @NotNull Set<AddressEntry> addressEntries) {
         super(params);
         this.addressEntries = addressEntries;
     }
@@ -61,26 +50,19 @@ class AddressBasedCoinSelector extends SavingsWalletCoinSelector {
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
             log.trace("matchesRequiredAddress(es)?");
             log.trace(addressOutput.toString());
-            if (addressEntry != null && addressEntry.getAddress() != null) {
-                log.trace(addressEntry.getAddress().toString());
-                if (addressOutput.equals(addressEntry.getAddress()))
+            log.trace(addressEntries.toString());
+            for (AddressEntry entry : addressEntries) {
+                if (addressOutput.equals(entry.getAddress()))
                     return true;
-                else {
-                    log.trace("No match found at matchesRequiredAddress addressOutput / addressEntry " + addressOutput.toString
-                            () + " / " + addressEntry.getAddress().toString());
-                }
-            } else if (addressEntries != null) {
-                log.trace(addressEntries.toString());
-                for (AddressEntry entry : addressEntries) {
-                    if (addressOutput.equals(entry.getAddress()))
-                        return true;
-                }
-
-                log.trace("No match found at matchesRequiredAddress addressOutput / addressEntries " + addressOutput.toString
-                        () + " / " + addressEntries.toString());
             }
-        }
-        return false;
-    }
 
+            log.trace("No match found at matchesRequiredAddress addressOutput / addressEntries " + addressOutput.toString
+                    () + " / " + addressEntries.toString());
+            return false;
+        } else {
+            log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
+            return false;
+        }
+
+    }
 }

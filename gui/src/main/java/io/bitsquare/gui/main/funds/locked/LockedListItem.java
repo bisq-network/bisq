@@ -15,15 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.funds.reserved;
+package io.bitsquare.gui.main.funds.locked;
 
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
-import io.bitsquare.trade.TradableHelper;
-import io.bitsquare.trade.offer.OpenOffer;
+import io.bitsquare.trade.Trade;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
@@ -33,27 +32,27 @@ import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReservedListItem {
+public class LockedListItem {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final StringProperty date = new SimpleStringProperty();
     private final BalanceListener balanceListener;
     private final Label balanceLabel;
-    private final OpenOffer openOffer;
+    private final Trade trade;
     private final AddressEntry addressEntry;
     private final WalletService walletService;
     private final BSFormatter formatter;
     private final String addressString;
     private Coin balance;
 
-    public ReservedListItem(OpenOffer openOffer, AddressEntry addressEntry, WalletService walletService, BSFormatter formatter) {
-        this.openOffer = openOffer;
+    public LockedListItem(Trade trade, AddressEntry addressEntry, WalletService walletService, BSFormatter formatter) {
+        this.trade = trade;
         this.addressEntry = addressEntry;
         this.walletService = walletService;
         this.formatter = formatter;
         addressString = addressEntry.getAddressString();
 
-        date.set(formatter.formatDateTime(openOffer.getDate()));
+        date.set(formatter.formatDateTime(trade.getDate()));
 
         // balance
         balanceLabel = new Label();
@@ -72,7 +71,7 @@ public class ReservedListItem {
     }
 
     private void updateBalance() {
-        balance = TradableHelper.getReservedBalance(openOffer, walletService);
+        balance = addressEntry.getLockedTradeAmount();
         if (balance != null)
             balanceLabel.setText(formatter.formatCoin(this.balance));
     }
@@ -97,8 +96,8 @@ public class ReservedListItem {
         return addressString;
     }
 
-    public Tradable getOpenOffer() {
-        return openOffer;
+    public Tradable getTrade() {
+        return trade;
     }
 
 }

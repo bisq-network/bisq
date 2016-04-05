@@ -20,7 +20,6 @@ package io.bitsquare.trade.protocol.trade;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.data.RawTransactionInput;
@@ -38,7 +37,6 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.user.User;
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
@@ -199,18 +197,6 @@ public class ProcessModel implements Model, Serializable {
 
     public String getAccountId() {
         return user.getAccountId();
-    }
-
-    public AddressEntry getAddressEntry() {
-        return walletService.getTradeAddressEntry(offer.getId());
-    }
-
-    public Address getUnusedSavingsAddress() {
-        return walletService.getUnusedSavingsAddressEntry().getAddress();
-    }
-
-    public byte[] getTradeWalletPubKey() {
-        return getAddressEntry().getPubKey();
     }
 
     @Nullable

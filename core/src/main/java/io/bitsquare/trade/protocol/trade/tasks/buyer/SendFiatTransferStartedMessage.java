@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.Trade;
@@ -41,7 +42,7 @@ public class SendFiatTransferStartedMessage extends TradeTask {
                     processModel.tradingPeer.getPubKeyRing(),
                     new FiatTransferStartedMessage(
                             processModel.getId(),
-                            processModel.getAddressEntry().getAddressString(),
+                            processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString(),
                             processModel.getMyAddress()
                     ),
                     new SendMailboxMessageListener() {

@@ -22,6 +22,7 @@ import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.deposit.DepositView;
+import io.bitsquare.gui.main.funds.locked.LockedView;
 import io.bitsquare.gui.main.funds.reserved.ReservedView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
@@ -36,7 +37,7 @@ import javax.inject.Inject;
 public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
-    Tab depositTab, withdrawalTab, reservedTab, transactionsTab;
+    Tab depositTab, withdrawalTab, reservedTab, lockedTab, transactionsTab;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -65,6 +66,8 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
                 navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
             else if (newValue == reservedTab)
                 navigation.navigateTo(MainView.class, FundsView.class, ReservedView.class);
+            else if (newValue == lockedTab)
+                navigation.navigateTo(MainView.class, FundsView.class, LockedView.class);
             else if (newValue == transactionsTab)
                 navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
         };
@@ -81,6 +84,8 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
         else if (root.getSelectionModel().getSelectedItem() == reservedTab)
             navigation.navigateTo(MainView.class, FundsView.class, ReservedView.class);
+        else if (root.getSelectionModel().getSelectedItem() == lockedTab)
+            navigation.navigateTo(MainView.class, FundsView.class, LockedView.class);
         else if (root.getSelectionModel().getSelectedItem() == transactionsTab)
             navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
     }
@@ -105,6 +110,8 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
             currentTab = withdrawalTab;
         else if (view instanceof ReservedView)
             currentTab = reservedTab;
+        else if (view instanceof LockedView)
+            currentTab = lockedTab;
         else if (view instanceof TransactionsView)
             currentTab = transactionsTab;
 

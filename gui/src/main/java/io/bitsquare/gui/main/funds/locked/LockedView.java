@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.funds.reserved;
+package io.bitsquare.gui.main.funds.locked;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.AddressEntry;
@@ -30,6 +30,7 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
+import io.bitsquare.trade.TradableHelper;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -52,11 +53,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class ReservedView extends ActivatableView<VBox, Void> {
+public class LockedView extends ActivatableView<VBox, Void> {
     @FXML
-    TableView<ReservedListItem> tableView;
+    TableView<LockedListItem> tableView;
     @FXML
-    TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn, confidenceColumn;
+    TableColumn<LockedListItem, LockedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn, confidenceColumn;
 
     private final WalletService walletService;
     private final TradeManager tradeManager;
@@ -65,8 +66,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private final BSFormatter formatter;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
-    private final ObservableList<ReservedListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<ReservedListItem> sortedList = new SortedList<>(observableList);
+    private final ObservableList<LockedListItem> observableList = FXCollections.observableArrayList();
+    private final SortedList<LockedListItem> sortedList = new SortedList<>(observableList);
     private BalanceListener balanceListener;
     private ListChangeListener<OpenOffer> openOfferListChangeListener;
     private ListChangeListener<Trade> tradeListChangeListener;
@@ -77,8 +78,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ReservedView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
-                         BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
+    private LockedView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
+                       BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -91,7 +92,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @Override
     public void initialize() {
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No funds are reserved in open offers"));
+        tableView.setPlaceholder(new Label("No funds are locked in trades"));
 
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
@@ -99,7 +100,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         setBalanceColumnCellFactory();
 
         addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
-        detailsColumn.setComparator((o1, o2) -> o1.getOpenOffer().getId().compareTo(o2.getOpenOffer().getId()));
+        detailsColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
         balanceColumn.setComparator((o1, o2) -> o1.getBalance().compareTo(o2.getBalance()));
         dateColumn.setComparator((o1, o2) -> {
             if (getTradable(o1).isPresent() && getTradable(o2).isPresent())
@@ -136,7 +137,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         openOfferManager.getOpenOffers().removeListener(openOfferListChangeListener);
         tradeManager.getTrades().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
-        observableList.forEach(ReservedListItem::cleanup);
+        observableList.forEach(LockedListItem::cleanup);
         walletService.removeBalanceListener(balanceListener);
     }
 
@@ -146,16 +147,16 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
-        observableList.forEach(ReservedListItem::cleanup);
-        observableList.setAll(openOfferManager.getOpenOffers().stream()
-                .map(openOffer -> new ReservedListItem(openOffer,
-                        walletService.getOrCreateAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE),
+        observableList.forEach(LockedListItem::cleanup);
+        observableList.setAll(TradableHelper.getLockedTradeStream(tradeManager)
+                .map(trade -> new LockedListItem(trade,
+                        TradableHelper.getLockedTradeAddressEntry(trade, walletService),
                         walletService,
                         formatter))
                 .collect(Collectors.toList()));
     }
 
-    private void openBlockExplorer(ReservedListItem item) {
+    private void openBlockExplorer(LockedListItem item) {
         try {
             Utilities.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
         } catch (Exception e) {
@@ -165,7 +166,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private Optional<Tradable> getTradable(ReservedListItem item) {
+    private Optional<Tradable> getTradable(LockedListItem item) {
         String offerId = item.getAddressEntry().getOfferId();
         Optional<Trade> tradeOptional = tradeManager.getTradeById(offerId);
         if (tradeOptional.isPresent()) {
@@ -177,7 +178,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void openDetailPopup(ReservedListItem item) {
+    private void openDetailPopup(LockedListItem item) {
         Optional<Tradable> tradableOptional = getTradable(item);
         if (tradableOptional.isPresent()) {
             Tradable tradable = tradableOptional.get();
@@ -196,16 +197,16 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     private void setDateColumnCellFactory() {
         dateColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        dateColumn.setCellFactory(new Callback<TableColumn<ReservedListItem, ReservedListItem>,
-                TableCell<ReservedListItem, ReservedListItem>>() {
+        dateColumn.setCellFactory(new Callback<TableColumn<LockedListItem, LockedListItem>,
+                TableCell<LockedListItem, LockedListItem>>() {
 
             @Override
-            public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
-                    ReservedListItem> column) {
-                return new TableCell<ReservedListItem, ReservedListItem>() {
+            public TableCell<LockedListItem, LockedListItem> call(TableColumn<LockedListItem,
+                    LockedListItem> column) {
+                return new TableCell<LockedListItem, LockedListItem>() {
 
                     @Override
-                    public void updateItem(final ReservedListItem item, boolean empty) {
+                    public void updateItem(final LockedListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             if (getTradable(item).isPresent())
@@ -223,18 +224,18 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     private void setDetailsColumnCellFactory() {
         detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        detailsColumn.setCellFactory(new Callback<TableColumn<ReservedListItem, ReservedListItem>,
-                TableCell<ReservedListItem, ReservedListItem>>() {
+        detailsColumn.setCellFactory(new Callback<TableColumn<LockedListItem, LockedListItem>,
+                TableCell<LockedListItem, LockedListItem>>() {
 
             @Override
-            public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
-                    ReservedListItem> column) {
-                return new TableCell<ReservedListItem, ReservedListItem>() {
+            public TableCell<LockedListItem, LockedListItem> call(TableColumn<LockedListItem,
+                    LockedListItem> column) {
+                return new TableCell<LockedListItem, LockedListItem>() {
 
                     private HyperlinkWithIcon field;
 
                     @Override
-                    public void updateItem(final ReservedListItem item, boolean empty) {
+                    public void updateItem(final LockedListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
@@ -252,7 +253,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                                     details = "-";
                                 }
 
-                                field = new HyperlinkWithIcon(details + " (Reserved in offer (local wallet))",
+                                field = new HyperlinkWithIcon(details + " (Locked in trade (MultiSig))",
                                         AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip("Open popup for details"));
@@ -277,17 +278,17 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         addressColumn.setCellFactory(
-                new Callback<TableColumn<ReservedListItem, ReservedListItem>, TableCell<ReservedListItem,
-                        ReservedListItem>>() {
+                new Callback<TableColumn<LockedListItem, LockedListItem>, TableCell<LockedListItem,
+                        LockedListItem>>() {
 
                     @Override
-                    public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
-                            ReservedListItem> column) {
-                        return new TableCell<ReservedListItem, ReservedListItem>() {
+                    public TableCell<LockedListItem, LockedListItem> call(TableColumn<LockedListItem,
+                            LockedListItem> column) {
+                        return new TableCell<LockedListItem, LockedListItem>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
-                            public void updateItem(final ReservedListItem item, boolean empty) {
+                            public void updateItem(final LockedListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
@@ -311,15 +312,15 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private void setBalanceColumnCellFactory() {
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         balanceColumn.setCellFactory(
-                new Callback<TableColumn<ReservedListItem, ReservedListItem>, TableCell<ReservedListItem,
-                        ReservedListItem>>() {
+                new Callback<TableColumn<LockedListItem, LockedListItem>, TableCell<LockedListItem,
+                        LockedListItem>>() {
 
                     @Override
-                    public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
-                            ReservedListItem> column) {
-                        return new TableCell<ReservedListItem, ReservedListItem>() {
+                    public TableCell<LockedListItem, LockedListItem> call(TableColumn<LockedListItem,
+                            LockedListItem> column) {
+                        return new TableCell<LockedListItem, LockedListItem>() {
                             @Override
-                            public void updateItem(final ReservedListItem item, boolean empty) {
+                            public void updateItem(final LockedListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic((item != null && !empty) ? item.getBalanceLabel() : null);
                             }

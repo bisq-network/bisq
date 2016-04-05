@@ -57,7 +57,7 @@ public class ProcessPayDepositRequest extends TradeTask {
             if (payDepositRequest.changeOutputAddress != null)
                 processModel.tradingPeer.setChangeOutputAddress(payDepositRequest.changeOutputAddress);
 
-            processModel.tradingPeer.setTradeWalletPubKey(checkNotNull(payDepositRequest.takerTradeWalletPubKey));
+            processModel.tradingPeer.setMultiSigPubKey(checkNotNull(payDepositRequest.takerMultiSigPubKey));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(payDepositRequest.takerPayoutAddressString));
             processModel.tradingPeer.setPubKeyRing(checkNotNull(payDepositRequest.takerPubKeyRing));
 

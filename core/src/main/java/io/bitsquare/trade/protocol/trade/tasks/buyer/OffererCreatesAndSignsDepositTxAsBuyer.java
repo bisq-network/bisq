@@ -17,7 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
@@ -51,6 +53,11 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
 
             byte[] contractHash = Hash.getHash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
+            WalletService walletService = processModel.getWalletService();
+            String id = processModel.getOffer().getId();
+            AddressEntry buyerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            buyerMultiSigAddressEntry.setLockedTradeAmount(buyerInputAmount);
+            walletService.saveAddressEntryList();
             PreparedDepositTxAndOffererInputs result = processModel.getTradeWalletService().offererCreatesAndSignsDepositTx(
                     true,
                     contractHash,
@@ -59,10 +66,10 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
                     processModel.tradingPeer.getRawTransactionInputs(),
                     processModel.tradingPeer.getChangeOutputValue(),
                     processModel.tradingPeer.getChangeOutputAddress(),
-                    processModel.getAddressEntry(),
-                    processModel.getUnusedSavingsAddress(),
-                    processModel.getTradeWalletPubKey(),
-                    processModel.tradingPeer.getTradeWalletPubKey(),
+                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE),
+                    walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress(),
+                    buyerMultiSigAddressEntry.getPubKey(),
+                    processModel.tradingPeer.getMultiSigPubKey(),
                     processModel.getArbitratorPubKey(trade.getArbitratorNodeAddress()));
 
             processModel.setPreparedDepositTx(result.depositTransaction);

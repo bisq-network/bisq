@@ -46,7 +46,7 @@ public final class TradingPeer implements Persistable {
     private String contractSignature;
     private byte[] signature;
     private PubKeyRing pubKeyRing;
-    private byte[] tradeWalletPubKey;
+    private byte[] multiSigPubKey;
     private List<RawTransactionInput> rawTransactionInputs;
     private long changeOutputValue;
     @Nullable
@@ -81,12 +81,12 @@ public final class TradingPeer implements Persistable {
         this.accountId = accountId;
     }
 
-    public byte[] getTradeWalletPubKey() {
-        return tradeWalletPubKey;
+    public byte[] getMultiSigPubKey() {
+        return multiSigPubKey;
     }
 
-    public void setTradeWalletPubKey(byte[] tradeWalletPubKey) {
-        this.tradeWalletPubKey = tradeWalletPubKey;
+    public void setMultiSigPubKey(byte[] multiSigPubKey) {
+        this.multiSigPubKey = multiSigPubKey;
     }
 
     public PaymentAccountContractData getPaymentAccountContractData() {

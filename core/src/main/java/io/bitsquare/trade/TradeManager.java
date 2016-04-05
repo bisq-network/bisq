@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.KeyRing;
@@ -306,8 +307,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onWithdrawRequest(String toAddress, KeyParameter aesKey, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
-        AddressEntry addressEntry = walletService.getTradeAddressEntry(trade.getId());
-        String fromAddress = addressEntry.getAddressString();
+        String fromAddress = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString();
 
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
@@ -328,8 +328,8 @@ public class TradeManager {
             }
         };
         try {
-            walletService.sendFunds(fromAddress, toAddress, trade.getPayoutAmount(), aesKey, callback);
-        } catch (AddressFormatException | InsufficientMoneyException e) {
+            walletService.sendFunds(fromAddress, toAddress, trade.getPayoutAmount(), aesKey, AddressEntry.Context.TRADE_PAYOUT, callback);
+        } catch (AddressFormatException | InsufficientMoneyException | AddressEntryException e) {
             e.printStackTrace();
             log.error(e.getMessage());
             faultHandler.handleFault("An exception occurred at requestWithdraw.", e);

@@ -24,46 +24,41 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
- * We lookup for spendable outputs which matches our address of our addressEntry.
+ * We lookup for spendable outputs which matches our address of our address.
  */
-class SavingsWalletCoinSelector extends BitsquareCoinSelector {
-    private static final Logger log = LoggerFactory.getLogger(SavingsWalletCoinSelector.class);
+class TradeWalletCoinSelector extends BitsquareCoinSelector {
+    private static final Logger log = LoggerFactory.getLogger(TradeWalletCoinSelector.class);
+    private final Address address;
 
-    private final Set<Address> savingsWalletAddressSet;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SavingsWalletCoinSelector(NetworkParameters params, @NotNull List<AddressEntry> addressEntryList) {
+    public TradeWalletCoinSelector(NetworkParameters params, @NotNull Address address) {
         super(params);
-        savingsWalletAddressSet = addressEntryList.stream()
-                .filter(addressEntry -> addressEntry.getContext() == AddressEntry.Context.AVAILABLE)
-                .map(AddressEntry::getAddress)
-                .collect(Collectors.toSet());
+        this.address = address;
     }
 
+    @Override
     protected boolean matchesRequirement(TransactionOutput transactionOutput) {
         if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-            Address address = transactionOutput.getScriptPubKey().getToAddress(params);
-            log.trace("only lookup in savings wallet address entries");
-            log.trace(address.toString());
-
-            boolean matches = savingsWalletAddressSet.contains(address);
+            Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
+            log.trace("matchesRequiredAddress?");
+            log.trace("addressOutput " + addressOutput.toString());
+            log.trace("address " + address.toString());
+            boolean matches = addressOutput.equals(address);
             if (!matches)
-                log.trace("No match found at matchesRequiredAddress address / addressEntry " +
-                        address.toString() + " / " + address.toString());
+                log.trace("No match found at matchesRequiredAddress addressOutput / address " + addressOutput.toString
+                        () + " / " + address.toString());
 
             return matches;
         } else {
             log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
             return false;
         }
+
     }
 }

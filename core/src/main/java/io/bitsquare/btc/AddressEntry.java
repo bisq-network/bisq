@@ -20,6 +20,7 @@ package io.bitsquare.btc;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.params.MainNetParams;
@@ -44,10 +45,17 @@ public final class AddressEntry implements Persistable {
     private static final Logger log = LoggerFactory.getLogger(AddressEntry.class);
 
     public enum Context {
-        SAVINGS,
-        TRADE,
         ARBITRATOR,
-        DAO
+
+        AVAILABLE,
+
+        OFFER_FUNDING,
+        RESERVED_FOR_TRADE, //reserved
+        MULTI_SIG, //locked
+        TRADE_PAYOUT,
+
+        DAO_SHARE,
+        DAO_DIVIDEND
     }
 
     // keyPair can be null in case the object is created from deserialization as it is transient.
@@ -64,6 +72,8 @@ public final class AddressEntry implements Persistable {
     private final byte[] pubKey;
     private final byte[] pubKeyHash;
     private final String paramId;
+    @Nullable
+    private Coin lockedTradeAmount;
     transient private NetworkParameters params;
 
 
@@ -77,7 +87,7 @@ public final class AddressEntry implements Persistable {
     }
 
     // If created with offerId
-    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, Context context, @Nullable String offerId) {
+    public AddressEntry(@Nullable DeterministicKey keyPair, NetworkParameters params, Context context, @Nullable String offerId) {
         this.keyPair = keyPair;
         this.params = params;
         this.context = context;
@@ -151,6 +161,26 @@ public final class AddressEntry implements Persistable {
 
     public byte[] getPubKey() {
         return pubKey;
+    }
+
+    public boolean isOpenOffer() {
+        return context == Context.OFFER_FUNDING || context == Context.RESERVED_FOR_TRADE;
+    }
+
+    public boolean isTrade() {
+        return context == Context.MULTI_SIG || context == Context.TRADE_PAYOUT;
+    }
+
+    public boolean isTradable() {
+        return isOpenOffer() || isTrade();
+    }
+
+    public void setLockedTradeAmount(Coin lockedTradeAmount) {
+        this.lockedTradeAmount = lockedTradeAmount;
+    }
+
+    public Coin getLockedTradeAmount() {
+        return lockedTradeAmount;
     }
 
     @Override

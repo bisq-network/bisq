@@ -35,7 +35,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final long tradeAmount;
-    public final byte[] takerTradeWalletPubKey;
+    public final byte[] takerMultiSigPubKey;
     public final ArrayList<RawTransactionInput> rawTransactionInputs;
     public final long changeOutputValue;
     public final String changeOutputAddress;
@@ -55,7 +55,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                              ArrayList<RawTransactionInput> rawTransactionInputs,
                              long changeOutputValue,
                              String changeOutputAddress,
-                             byte[] takerTradeWalletPubKey,
+                             byte[] takerMultiSigPubKey,
                              String takerPayoutAddressString,
                              PubKeyRing takerPubKeyRing,
                              PaymentAccountContractData takerPaymentAccountContractData,
@@ -71,7 +71,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         this.changeOutputAddress = changeOutputAddress;
         this.takerPayoutAddressString = takerPayoutAddressString;
         this.takerPubKeyRing = takerPubKeyRing;
-        this.takerTradeWalletPubKey = takerTradeWalletPubKey;
+        this.takerMultiSigPubKey = takerMultiSigPubKey;
         this.takerPaymentAccountContractData = takerPaymentAccountContractData;
         this.takerAccountId = takerAccountId;
         this.takeOfferFeeTxId = takeOfferFeeTxId;
@@ -100,7 +100,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
 
         if (tradeAmount != that.tradeAmount) return false;
         if (changeOutputValue != that.changeOutputValue) return false;
-        if (!Arrays.equals(takerTradeWalletPubKey, that.takerTradeWalletPubKey)) return false;
+        if (!Arrays.equals(takerMultiSigPubKey, that.takerMultiSigPubKey)) return false;
         if (rawTransactionInputs != null ? !rawTransactionInputs.equals(that.rawTransactionInputs) : that.rawTransactionInputs != null)
             return false;
         if (changeOutputAddress != null ? !changeOutputAddress.equals(that.changeOutputAddress) : that.changeOutputAddress != null)
@@ -129,7 +129,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
-        result = 31 * result + (takerTradeWalletPubKey != null ? Arrays.hashCode(takerTradeWalletPubKey) : 0);
+        result = 31 * result + (takerMultiSigPubKey != null ? Arrays.hashCode(takerMultiSigPubKey) : 0);
         result = 31 * result + (rawTransactionInputs != null ? rawTransactionInputs.hashCode() : 0);
         result = 31 * result + (int) (changeOutputValue ^ (changeOutputValue >>> 32));
         result = 31 * result + (changeOutputAddress != null ? changeOutputAddress.hashCode() : 0);
