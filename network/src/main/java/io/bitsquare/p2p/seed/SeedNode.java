@@ -82,7 +82,7 @@ public class SeedNode {
                         String arg4 = args[4];
                         checkArgument(arg4.contains(":") && arg4.split(":").length > 1 && arg4.split(":")[1].length() > 3,
                                 "Wrong program argument");
-                        List<String> list = Arrays.asList(arg4.split("|"));
+                        List<String> list = Arrays.asList(arg4.split("\\|"));
                         progArgSeedNodes = new HashSet<>();
                         list.forEach(e -> {
                             checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4,
