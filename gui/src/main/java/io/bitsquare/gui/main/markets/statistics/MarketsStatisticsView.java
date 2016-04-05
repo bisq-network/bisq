@@ -206,10 +206,14 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
                             @Override
                             public void updateItem(final MarketStatisticItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null && !empty && item.spread != null)
-                                    setText(formatter.formatFiatWithCode(item.spread));
-                                else
+                                if (item != null && !empty) {
+                                    if (item.spread != null)
+                                        setText(formatter.formatFiatWithCode(item.spread));
+                                    else
+                                        setText("-");
+                                } else {
                                     setText("");
+                                }
                             }
                         };
                     }

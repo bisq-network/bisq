@@ -76,7 +76,6 @@ class MarketsStatisticViewModel extends ActivatableViewModel {
             offersByCurrencyMap.get(currencyCode).add(offer);
         }
         marketStatisticItems.clear();
-        long totalAmount = 0;
         for (String currencyCode : offersByCurrencyMap.keySet()) {
             List<Offer> offers = offersByCurrencyMap.get(currencyCode);
             List<Offer> buyOffers = offers
@@ -105,14 +104,11 @@ class MarketsStatisticViewModel extends ActivatableViewModel {
             Fiat bestSellOfferPrice = sellOffers.isEmpty() ? null : sellOffers.get(0).getPrice();
 
             Fiat spread = null;
-            if (bestBuyOfferPrice != null && bestSellOfferPrice != null) {
+            if (bestBuyOfferPrice != null && bestSellOfferPrice != null) 
                 spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
-            }
 
-            for (Offer offer : offers) {
-                totalAmount += offer.getAmount().getValue();
-            }
-            marketStatisticItems.add(new MarketStatisticItem(currencyCode, offers.size(), spread, Coin.valueOf(totalAmount)));
+            Coin totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
+            marketStatisticItems.add(new MarketStatisticItem(currencyCode, offers.size(), spread, totalAmount));
         }
     }
 }
