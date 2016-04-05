@@ -18,6 +18,7 @@
 package io.bitsquare.common.crypto;
 
 import com.google.inject.Inject;
+import io.bitsquare.storage.FileUtil;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +87,7 @@ public class KeyStorage {
     }
 
     public KeyPair loadKeyPair(KeyEntry keyEntry) {
+        FileUtil.rollingBackup(storageDir, keyEntry.getFileName() + ".key");
         // long now = System.currentTimeMillis();
         try {
             KeyFactory keyFactory = KeyFactory.getInstance(keyEntry.getAlgorithm(), "BC");

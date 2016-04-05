@@ -30,6 +30,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.storage.FileUtil;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.*;
 import org.bitcoinj.core.*;
@@ -48,8 +49,10 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
@@ -124,6 +127,9 @@ public class WalletService {
         Timer timeoutTimer = UserThread.runAfter(() ->
                 exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " +
                         STARTUP_TIMEOUT_SEC + " seconds.")), STARTUP_TIMEOUT_SEC);
+
+
+        backupWallet();
 
         // If seed is non-null it means we are restoring from backup.
         walletAppKit = new WalletAppKit(params, walletDir, "Bitsquare") {
@@ -273,6 +279,19 @@ public class WalletService {
                 log.error("Executing task failed. " + t.getMessage());
             }
         }, "RestoreWallet-%d").start();
+    }
+
+    public void backupWallet() {
+        FileUtil.rollingBackup(walletDir, "Bitsquare.wallet");
+    }
+
+    public void clearBackup() {
+        try {
+            FileUtil.deleteDirectory(new File(Paths.get(walletDir.getAbsolutePath(), "backup").toString()));
+        } catch (IOException e) {
+            log.error("Could not delete directory " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
 
@@ -502,7 +521,7 @@ public class WalletService {
     public Coin getBalanceForAddressEntryWithTradeId(String tradeId) {
         return getBalanceForAddress(getTradeAddressEntry(tradeId).getAddress());
     }
-   
+
     private Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
         for (TransactionOutput transactionOutput : transactionOutputs) {

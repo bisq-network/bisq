@@ -1,6 +1,6 @@
 package io.bitsquare.common.crypto;
 
-import io.bitsquare.common.util.Utilities;
+import io.bitsquare.storage.FileUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -37,7 +37,7 @@ public class EncryptionTest {
 
     @After
     public void tearDown() throws IOException {
-        Utilities.deleteDirectory(dir);
+        FileUtil.deleteDirectory(dir);
     }
 
 

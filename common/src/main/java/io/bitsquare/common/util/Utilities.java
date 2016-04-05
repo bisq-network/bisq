@@ -303,17 +303,6 @@ public class Utilities {
         return result;
     }
 
-    public static void deleteDirectory(File file) throws IOException {
-        if (file.isDirectory()) {
-            File[] files = file.listFiles();
-            if (files != null)
-                for (File c : files)
-                    deleteDirectory(c);
-        }
-        if (!file.delete())
-            throw new FileNotFoundException("Failed to delete file: " + file);
-    }
-
     private static void printElapsedTime(String msg) {
         if (!msg.isEmpty()) {
             msg += " / ";
@@ -346,29 +335,6 @@ public class Utilities {
             e.printStackTrace();
         }
         return obj;
-    }
-
-    /**
-     * Empty and delete a folder (and subfolders).
-     *
-     * @param folder folder to empty
-     */
-    private static void removeDirectory(final File folder) {
-        // check if folder file is a real folder
-        if (folder.isDirectory()) {
-            File[] list = folder.listFiles();
-            if (list != null) {
-                for (File tmpF : list) {
-                    if (tmpF.isDirectory()) {
-                        removeDirectory(tmpF);
-                    }
-                    if (!tmpF.delete())
-                        log.warn("can't delete file : " + tmpF);
-                }
-            }
-            if (!folder.delete())
-                log.warn("can't delete folder : " + folder);
-        }
     }
 
     public static String readTextFileFromServer(String url, String userAgent) throws IOException {

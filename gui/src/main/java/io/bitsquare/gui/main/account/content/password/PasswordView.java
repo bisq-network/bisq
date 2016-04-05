@@ -118,6 +118,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                                 .show();
                         passwordField.setText("");
                         repeatedPasswordField.setText("");
+                        walletService.backupWallet();
                     } else {
                         new Popup()
                                 .warning("You entered the wrong password.\n\n" +
@@ -133,6 +134,8 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                             .show();
                     passwordField.setText("");
                     repeatedPasswordField.setText("");
+                    walletService.clearBackup();
+                    walletService.backupWallet();
                 }
                 setText();
             });

@@ -2,7 +2,6 @@ package io.bitsquare.p2p.storage;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
@@ -12,6 +11,7 @@ import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.storage.messages.RefreshTTLMessage;
 import io.bitsquare.p2p.storage.mocks.MockData;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bitsquare.storage.FileUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -90,10 +90,9 @@ public class ProtectedDataStorageTest {
 
         Path path = Paths.get(TestUtils.test_dummy_dir);
         File dir = path.toFile();
-        Utilities.deleteDirectory(dir);
-
-        Utilities.deleteDirectory(dir1);
-        Utilities.deleteDirectory(dir2);
+        FileUtil.deleteDirectory(dir);
+        FileUtil.deleteDirectory(dir1);
+        FileUtil.deleteDirectory(dir2);
     }
 
     //@Test

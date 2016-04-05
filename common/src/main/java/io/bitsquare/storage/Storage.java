@@ -131,7 +131,6 @@ public class Storage<T extends Serializable> {
         }
     }
 
-
     public void remove(String fileName) {
         fileManager.removeFile(fileName);
     }

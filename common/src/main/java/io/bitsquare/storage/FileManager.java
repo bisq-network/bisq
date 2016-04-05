@@ -17,7 +17,6 @@
 
 package io.bitsquare.storage;
 
-import com.google.common.io.Files;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import org.bitcoinj.core.Utils;
@@ -162,13 +161,7 @@ public class FileManager<T> {
     }
 
     public synchronized void backupFile(String fileName) throws IOException {
-        File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
-        if (!backupDir.exists())
-            if (!backupDir.mkdir())
-                log.warn("make dir failed");
-
-        File backupFile = new File(Paths.get(dir.getAbsolutePath(), "backup", fileName).toString());
-        Files.copy(storageFile, backupFile);
+        FileUtil.rollingBackup(dir, fileName);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

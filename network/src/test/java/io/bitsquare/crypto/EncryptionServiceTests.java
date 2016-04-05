@@ -20,10 +20,10 @@ package io.bitsquare.crypto;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.*;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bitsquare.storage.FileUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -66,7 +66,7 @@ public class EncryptionServiceTests {
 
     @After
     public void tearDown() throws IOException {
-        Utilities.deleteDirectory(dir);
+        FileUtil.deleteDirectory(dir);
     }
 
     @Test
