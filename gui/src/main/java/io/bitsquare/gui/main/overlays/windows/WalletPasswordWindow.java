@@ -92,7 +92,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         display();
     }
 
-
     public WalletPasswordWindow onAesKey(AesKeyHandler aesKeyHandler) {
         this.aesKeyHandler = aesKeyHandler;
         return this;
@@ -137,7 +136,10 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        hBox.getChildren().addAll(unlockButton, cancelButton);
+        if (hideCloseButton)
+            hBox.getChildren().add(unlockButton);
+        else
+            hBox.getChildren().addAll(unlockButton, cancelButton);
         gridPane.getChildren().add(hBox);
     }
 

@@ -302,18 +302,24 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     .show();
 
             key = "takeOfferFundWalletInfo";
-            String tradeAmountText = model.isSeller() ? "the trade amount, " : "";
-            new Popup().headLine("Fund your trading wallet")
-                    .instruction("You need to pay in " +
-                            model.totalToPay.get() + " to your local Bitsquare trading wallet.\n" +
-                            "The amount is the sum of " + tradeAmountText + "the security deposit, the trading fee and " +
-                            "the bitcoin mining fee.\n\n" +
-                            "You can choose between 2 options:\n" +
-                            "Either you transfer from your Bitsquare wallet the funds or if you prefer better privacy by " +
-                            "separating all trade transactions you can send from your external Bitcoin wallet the exact amount to the address: " +
-                            model.dataModel.getAddressEntry().getAddressString() + "\n" +
-                            "(you can copy the address in the screen below after closing that popup)\n\n" +
-                            "You can see the status of your incoming payment and all the details in the screen below.")
+            String tradeAmountText = model.isSeller() ? "- Trade amount: " + model.getAmount() + "\n" : "";
+            new Popup().headLine("Fund your trade").instruction("You need to deposit " +
+                    model.totalToPay.get() + " for taking this offer.\n\n" +
+
+                    "The amount is the sum of:\n" +
+                    tradeAmountText +
+                    "- Security deposit: " + model.getSecurityDeposit() + "\n" +
+                    "- Trading fee: " + model.getTakerFee() + "\n" +
+                    "- Bitcoin mining fee: " + model.getNetworkFee() + "\n\n" +
+
+                    "For funding you can choose between 2 options:\n" +
+                    "- Transfer fund from your Bitsquare wallet OR\n" +
+                    "- Transfer fund from any external wallet\n\n" +
+
+                    "If you prefer a higher level of privacy you should use for each trade a distinct funding transaction using the external wallet option.\n" +
+                    "If you prefer convenience using the Bitsquare wallet for several trades might be your preferred option.\n\n" +
+
+                    "You can see all the details for funding when you close that popup.")
                     .dontShowAgainId(key, preferences)
                     .show();
         }

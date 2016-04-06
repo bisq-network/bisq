@@ -240,19 +240,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                         if (item != null && !empty) {
                             Optional<Tradable> tradableOptional = getTradable(item);
                             if (tradableOptional.isPresent()) {
-                                AddressEntry addressEntry = item.getAddressEntry();
-                                String details;
-                                if (addressEntry.isTrade()) {
-                                    details = "Trade ID: " + addressEntry.getShortOfferId();
-                                } else if (addressEntry.isOpenOffer()) {
-                                    details = "Offer ID: " + addressEntry.getShortOfferId();
-                                } else if (addressEntry.getContext() == AddressEntry.Context.ARBITRATOR) {
-                                    details = "Arbitration fee";
-                                } else {
-                                    details = "-";
-                                }
-
-                                field = new HyperlinkWithIcon("Reserved in offer with ID: " + details + " (local wallet)",
+                                field = new HyperlinkWithIcon("Reserved in local wallet for offer with ID: " + item.getAddressEntry().getShortOfferId(),
                                         AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip("Open popup for details"));

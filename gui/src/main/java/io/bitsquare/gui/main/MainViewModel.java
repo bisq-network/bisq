@@ -409,6 +409,26 @@ public class MainViewModel implements ViewModel {
     }
 
     private void onAllServicesInitialized() {
+        // In case we have any offers open or a pending trade we need to unlock our trading wallet so a trade can be executed automatically
+        // Otherwise we delay the password request to create offer, or take offer.
+        // When the password is set it will be stored to the tradeWalletService as well, so its only needed after a restart.
+        if (walletService.getWallet().isEncrypted() &&
+                (openOfferManager.getOpenOffers().size() > 0
+                        || tradeManager.getTrades().size() > 0
+                        || disputeManager.getDisputesAsObservableList().size() > 0)) {
+            walletPasswordWindow
+                    .onAesKey(aesKey -> {
+                        tradeWalletService.setAesKey(aesKey);
+                        onAllServicesInitializedAndUnlocked();
+                    })
+                    .hideCloseButton()
+                    .show();
+        } else {
+            onAllServicesInitializedAndUnlocked();
+        }
+    }
+
+    private void onAllServicesInitializedAndUnlocked() {
         Log.traceCall();
 
         clock.start();
@@ -435,15 +455,6 @@ public class MainViewModel implements ViewModel {
         });
 
         // walletService
-        // In case we have any offers open or a pending trade we need to unlock our trading wallet so a trade can be executed automatically
-        // Otherwise we delay the password request to create offer, or take offer.
-        // When the password is set it will be stored to the tradeWalletService as well, so its only needed after a restart.
-        if (walletService.getWallet().isEncrypted() &&
-                (openOfferManager.getOpenOffers().size() > 0
-                        || tradeManager.getTrades().size() > 0
-                        || disputeManager.getDisputesAsObservableList().size() > 0)) {
-            walletPasswordWindow.onAesKey(aesKey -> tradeWalletService.setAesKey(aesKey)).show();
-        }
         walletService.addBalanceListener(new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
@@ -463,6 +474,7 @@ public class MainViewModel implements ViewModel {
         updateBalance();
         setupDevDummyPaymentAccount();
         setupMarketPriceFeed();
+        swapPendingOfferFundingEntries();
 
         showAppScreen.set(true);
 
@@ -675,6 +687,12 @@ public class MainViewModel implements ViewModel {
             if (!alert.isUpdateInfo || !alert.version.equals(Version.VERSION))
                 new DisplayAlertMessageWindow().alertMessage(alert).show();
         }
+    }
+
+    private void swapPendingOfferFundingEntries() {
+        tradeManager.getAddressEntriesForAvailableBalanceStream()
+                .filter(addressEntry -> addressEntry.getOfferId() != null)
+                .forEach(addressEntry -> walletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING));
     }
 
     private void updateBalance() {

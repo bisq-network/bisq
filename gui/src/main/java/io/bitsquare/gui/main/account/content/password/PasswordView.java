@@ -147,7 +147,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                         " withdrawing bitcoin out of your wallet or " +
                         "if you want to view or restore a wallet from seed words.\n" +
                         "For the transactions used in the trade process we don't support password protection as that would make automatic offer " +
-                        "execution impossible.",
+                        "execution impossible, but you need to provide the password at application startup if you have open offer, trades or disputes.",
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
     }
 

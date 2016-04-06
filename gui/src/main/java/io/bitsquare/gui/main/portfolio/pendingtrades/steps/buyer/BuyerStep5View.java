@@ -23,6 +23,8 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.handlers.FaultHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.MainView;
@@ -43,6 +45,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.spongycastle.crypto.params.KeyParameter;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -150,7 +153,7 @@ public class BuyerStep5View extends TradeStepView {
             if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
                 preferences.dontShowAgain(key, true);
                 new Notification().headLine("Trade completed")
-                        .notification("You can withdraw your funds now to your external Bitcoin wallet.")
+                        .notification("You can withdraw your funds now to your external Bitcoin wallet or transfer it to the Bitsquare wallet.")
                         .autoClose()
                         .show();
             }
@@ -222,18 +225,33 @@ public class BuyerStep5View extends TradeStepView {
     private void doWithdrawal(Coin receiverAmount) {
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);
+        String toAddress = withdrawAddressTextField.getText();
+        ResultHandler resultHandler = this::handleTradeCompleted;
+        FaultHandler faultHandler = (errorMessage, throwable) -> {
+            useSavingsWalletButton.setDisable(false);
+            withdrawToExternalWalletButton.setDisable(false);
+            if (throwable != null && throwable.getMessage() != null)
+                new Popup().error(errorMessage + "\n\n" + throwable.getMessage()).show();
+            else
+                new Popup().error(errorMessage).show();
+        };
+        if (model.dataModel.walletService.getWallet().isEncrypted()) {
+            model.dataModel.walletPasswordWindow.onAesKey(aesKey -> doWithdrawRequest(toAddress, receiverAmount, aesKey, resultHandler, faultHandler))
+                    .onClose(() -> {
+                        useSavingsWalletButton.setDisable(false);
+                        withdrawToExternalWalletButton.setDisable(false);
+                    })
+                    .show();
+        } else
+            doWithdrawRequest(toAddress, receiverAmount, null, resultHandler, faultHandler);
+    }
 
-        model.dataModel.onWithdrawRequest(withdrawAddressTextField.getText(),
+    private void doWithdrawRequest(String toAddress, Coin receiverAmount, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
+        model.dataModel.onWithdrawRequest(toAddress,
                 receiverAmount,
-                this::handleTradeCompleted,
-                (errorMessage, throwable) -> {
-                    useSavingsWalletButton.setDisable(false);
-                    withdrawToExternalWalletButton.setDisable(false);
-                    if (throwable != null && throwable.getMessage() != null)
-                        new Popup().error(errorMessage + "\n\n" + throwable.getMessage()).show();
-                    else
-                        new Popup().error(errorMessage).show();
-                });
+                aesKey,
+                resultHandler,
+                faultHandler);
     }
 
     private void handleTradeCompleted() {

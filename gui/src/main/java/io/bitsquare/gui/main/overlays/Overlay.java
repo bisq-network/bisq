@@ -57,6 +57,7 @@ import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 public abstract class Overlay<T extends Overlay> {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +129,8 @@ public abstract class Overlay<T extends Overlay> {
     protected Timer centerTime;
     protected double buttonDistance = 20;
     protected Type type = Type.Undefined;
-
+    protected boolean hideCloseButton;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -331,6 +333,11 @@ public abstract class Overlay<T extends Overlay> {
 
     public T dontShowAgainText(String dontShowAgainText) {
         this.dontShowAgainText = dontShowAgainText;
+        return (T) this;
+    }
+
+    public T hideCloseButton() {
+        this.hideCloseButton = true;
         return (T) this;
     }
 
@@ -715,7 +722,7 @@ public abstract class Overlay<T extends Overlay> {
             GridPane.setColumnSpan(hBox, 2);
             GridPane.setMargin(hBox, new Insets(buttonDistance, 0, 0, 0));
             gridPane.getChildren().add(hBox);
-        } else {
+        } else if (!hideCloseButton) {
             closeButton.setDefaultButton(true);
             GridPane.setHalignment(closeButton, HPos.RIGHT);
             if (!showReportErrorButtons)

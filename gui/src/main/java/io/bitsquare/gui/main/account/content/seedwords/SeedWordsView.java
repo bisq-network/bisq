@@ -91,6 +91,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         addTitledGroupBg(root, gridRow, 2, "Backup your wallet seed words");
         displaySeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_DISTANCE).second;
         displaySeedWordsTextArea.setPrefHeight(60);
+        displaySeedWordsTextArea.setEditable(false);
         datePicker = addLabelDatePicker(root, ++gridRow, "Creation Date:").second;
         datePicker.setMouseTransparent(true);
 

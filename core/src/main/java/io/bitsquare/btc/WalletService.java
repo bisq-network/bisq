@@ -383,11 +383,6 @@ public class WalletService {
         return ImmutableList.copyOf(addressEntryList);
     }
 
-    public void swapTradeToSavings(String offerId) {
-        getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
-        addressEntryList.swapTradeToSavings(offerId);
-    }
-
     public void swapTradeEntryToAvailableEntry(String offerId, AddressEntry.Context context) {
         Optional<AddressEntry> addressEntryOptional = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))

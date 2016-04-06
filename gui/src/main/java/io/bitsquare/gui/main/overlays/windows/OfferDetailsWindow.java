@@ -84,7 +84,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         this.tradeAmount = tradeAmount;
 
         rowIndex = -1;
-        width = 850;
+        width = 900;
         createGridPane();
         addContent();
         display();
@@ -93,7 +93,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     public void show(Offer offer) {
         this.offer = offer;
         rowIndex = -1;
-        width = 850;
+        width = 900;
         createGridPane();
         addContent();
         display();
@@ -222,7 +222,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         if (placeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, "Commitment", Layout.GROUP_DISTANCE);
-            addLabelTextField(gridPane, rowIndex, "Please note:", Offer.TAC_OFFERER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "I agree:", Offer.TAC_OFFERER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
             addConfirmAndCancelButtons(true);
         } else if (takeOfferHandlerOptional.isPresent()) {

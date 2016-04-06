@@ -71,7 +71,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private final KeyRing keyRing;
     public final DisputeManager disputeManager;
     public final Navigation navigation;
-    private final WalletPasswordWindow walletPasswordWindow;
+    public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
@@ -147,12 +147,26 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
     }
 
-    public void onWithdrawRequest(String toAddress, Coin receiverAmount, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void onWithdrawRequest(String toAddress, Coin receiverAmount, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
         checkNotNull(getTrade(), "trade must not be null");
-        if (walletService.getWallet().isEncrypted()) {
-            walletPasswordWindow.onAesKey(aesKey -> doWithdrawRequest(toAddress, receiverAmount, aesKey, resultHandler, faultHandler)).show();
-        } else
-            doWithdrawRequest(toAddress, receiverAmount, null, resultHandler, faultHandler);
+
+        if (toAddress != null && toAddress.length() > 0) {
+            tradeManager.onWithdrawRequest(
+                    toAddress,
+                    receiverAmount,
+                    aesKey,
+                    getTrade(),
+                    () -> {
+                        resultHandler.handleResult();
+                        selectBestItem();
+                    },
+                    (errorMessage, throwable) -> {
+                        log.error(errorMessage);
+                        faultHandler.handleFault(errorMessage, throwable);
+                    });
+        } else {
+            faultHandler.handleFault("No receiver address defined", null);
+        }
     }
 
     public void onOpenDispute() {
@@ -277,26 +291,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             notificationCenter.setSelectedTradeId(null);
         }
         selectedItemProperty.set(item);
-    }
-
-    private void doWithdrawRequest(String toAddress, Coin receiverAmount, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
-        if (toAddress != null && toAddress.length() > 0) {
-            tradeManager.onWithdrawRequest(
-                    toAddress,
-                    receiverAmount, 
-                    aesKey,
-                    getTrade(),
-                    () -> {
-                        resultHandler.handleResult();
-                        selectBestItem();
-                    },
-                    (errorMessage, throwable) -> {
-                        log.error(errorMessage);
-                        faultHandler.handleFault(errorMessage, throwable);
-                    });
-        } else {
-            faultHandler.handleFault("No receiver address defined", null);
-        }
     }
 
     private void tryOpenDispute(boolean isSupportTicket) {
