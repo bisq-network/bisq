@@ -30,7 +30,6 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
-import io.bitsquare.trade.TradableHelper;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -148,9 +147,9 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(LockedListItem::cleanup);
-        observableList.setAll(TradableHelper.getLockedTradeStream(tradeManager)
+        observableList.setAll(tradeManager.getLockedTradeStream()
                 .map(trade -> new LockedListItem(trade,
-                        TradableHelper.getLockedTradeAddressEntry(trade, walletService),
+                        walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG),
                         walletService,
                         formatter))
                 .collect(Collectors.toList()));

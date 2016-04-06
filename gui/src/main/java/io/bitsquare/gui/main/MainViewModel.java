@@ -26,6 +26,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -54,7 +55,6 @@ import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.payment.OKPayAccount;
-import io.bitsquare.trade.TradableHelper;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.closed.ClosedTradableManager;
@@ -65,6 +65,7 @@ import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
 import javafx.collections.ListChangeListener;
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.store.BlockStoreException;
@@ -683,7 +684,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateAvailableBalance() {
-        Coin totalAvailableBalance = Coin.valueOf(TradableHelper.getAddressEntriesForAvailableBalanceStream(walletService)
+        Coin totalAvailableBalance = Coin.valueOf(tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .mapToLong(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()).getValue())
                 .sum());
         availableBalance.set(formatter.formatCoinWithCode(totalAvailableBalance));
@@ -691,7 +692,10 @@ public class MainViewModel implements ViewModel {
 
     private void updateReservedBalance() {
         Coin sum = Coin.valueOf(openOfferManager.getOpenOffers().stream()
-                .map(openOffer -> TradableHelper.getReservedBalance(openOffer, walletService))
+                .map(openOffer -> {
+                    Address address = walletService.getOrCreateAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+                    return walletService.getBalanceForAddress(address);
+                })
                 .mapToLong(Coin::getValue)
                 .sum());
 
@@ -699,8 +703,8 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateLockedBalance() {
-        Coin sum = Coin.valueOf(TradableHelper.getLockedTradeStream(tradeManager)
-                .mapToLong(trade -> TradableHelper.getLockedTradeAddressEntry(trade, walletService).getLockedTradeAmount().getValue())
+        Coin sum = Coin.valueOf(tradeManager.getLockedTradeStream()
+                .mapToLong(trade -> walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG).getLockedTradeAmount().getValue())
                 .sum());
         lockedBalance.set(formatter.formatCoinWithCode(sum));
     }

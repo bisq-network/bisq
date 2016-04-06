@@ -194,38 +194,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         Set<Tradable> all = concat3.collect(Collectors.toSet());
 
         Set<Transaction> transactions = walletService.getWallet().getTransactions(true);
-       /* List<TransactionsListItem> transactionsListItems = new ArrayList<>();
-        for (Transaction transaction : transactions) {
-            Optional<Tradable> tradableOptional = all.stream()
-                    .filter(tradable -> {
-                        String txId = transaction.getHashAsString();
-                        if (tradable instanceof OpenOffer)
-                            return tradable.getOffer().getOfferFeePaymentTxID().equals(txId);
-                        else if (tradable instanceof Trade) {
-                            Trade trade = (Trade) tradable;
-                            boolean isTakeOfferFeeTx = txId.equals(trade.getTakeOfferFeeTxId());
-                            boolean isOfferFeeTx = trade.getOffer() != null &&
-                                    txId.equals(trade.getOffer().getOfferFeePaymentTxID());
-                            boolean isDepositTx = trade.getDepositTx() != null &&
-                                    trade.getDepositTx().getHashAsString().equals(txId);
-                            boolean isPayoutTx = trade.getPayoutTx() != null &&
-                                    trade.getPayoutTx().getHashAsString().equals(txId);
-
-                            boolean isDisputedPayoutTx = disputeManager.getDisputesAsObservableList().stream()
-                                    .filter(dispute -> txId.equals(dispute.getDisputePayoutTxId()) &&
-                                            tradable.getId().equals(dispute.getTradeId()))
-                                    .findAny()
-                                    .isPresent();
-
-                            return isTakeOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx || isDisputedPayoutTx;
-                        } else
-                            return false;
-                    })
-                    .findAny();
-            // if (tradableOptional.isPresent())
-            transactionsListItems.add(new TransactionsListItem(transaction, walletService, tradableOptional, formatter));
-        }*/
-
         List<TransactionsListItem> transactionsListItems = transactions.stream()
                 .map(transaction -> {
                     Optional<Tradable> tradableOptional = all.stream()
@@ -257,12 +225,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                     return new TransactionsListItem(transaction, walletService, tradableOptional, formatter);
                 })
                 .collect(Collectors.toList());
-
-       /* List<TransactionsListItem> usedSavingWalletEntries = walletService.getUsedSavingWalletTransactions()
-                .stream()
-                .map(transaction -> new TransactionsListItem(transaction, walletService, Optional.<Tradable>empty(), formatter))
-                .collect(Collectors.toList());
-        transactionsListItems.addAll(usedSavingWalletEntries);*/
 
         // are sorted by getRecentTransactions
         observableList.forEach(TransactionsListItem::cleanup);
@@ -377,7 +339,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     String addressString = item.getAddressString();
                                     field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                            AwesomeIcon.EXTERNAL_LINK, item.getReceived(), item.isInternal());
+                                            AwesomeIcon.EXTERNAL_LINK, item.getReceived());
                                     field.setOnAction(event -> openBlockExplorer(item));
                                     field.setTooltip(new Tooltip("Open external blockchain explorer for " +
                                             "address: " + addressString));

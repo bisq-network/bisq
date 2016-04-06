@@ -69,31 +69,28 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @FXML
     GridPane gridPane;
-
     @FXML
     TableView<DepositListItem> tableView;
     @FXML
     TableColumn<DepositListItem, DepositListItem> selectColumn, addressColumn, balanceColumn, confidenceColumn, usageColumn;
     private ImageView qrCodeImageView;
-    private int gridRow = 0;
     private AddressTextField addressTextField;
-    Button generateNewAddressButton;
-
-    private final WalletService walletService;
-    private final BSFormatter formatter;
-    private final Preferences preferences;
-    private final ObservableList<DepositListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<DepositListItem> sortedList = new SortedList<>(observableList);
-
-    private BalanceListener balanceListener;
+    private Button generateNewAddressButton;
     private TitledGroupBg titledGroupBg;
     private Label addressLabel, amountLabel;
     private Label qrCodeLabel;
     private InputTextField amountTextField;
-    private Subscription amountTextFieldSubscription;
-    private String paymentLabel;
-    private ChangeListener<DepositListItem> tableViewSelectionListener;
 
+    private final WalletService walletService;
+    private final BSFormatter formatter;
+    private final Preferences preferences;
+    private final String paymentLabelString;
+    private final ObservableList<DepositListItem> observableList = FXCollections.observableArrayList();
+    private final SortedList<DepositListItem> sortedList = new SortedList<>(observableList);
+    private BalanceListener balanceListener;
+    private Subscription amountTextFieldSubscription;
+    private ChangeListener<DepositListItem> tableViewSelectionListener;
+    private int gridRow = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -106,6 +103,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
         this.walletService = walletService;
         this.formatter = formatter;
         this.preferences = preferences;
+
+        paymentLabelString = "Fund Bitsquare wallet";
     }
 
     @Override
@@ -153,8 +152,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         //GridPane.setValignment(addressLabel, VPos.TOP);
         //GridPane.setMargin(addressLabel, new Insets(3, 0, 0, 0));
         addressTextField = addressTuple.second;
-        paymentLabel = "Fund Bitsquare wallet";
-        addressTextField.setPaymentLabel(paymentLabel);
+        addressTextField.setPaymentLabel(paymentLabelString);
 
 
         Tuple2<Label, InputTextField> amountTuple = addLabelInputTextField(gridPane, ++gridRow, "Amount in BTC (optional):");
@@ -307,7 +305,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private String getBitcoinURI() {
         return BitcoinURI.convertToBitcoinURI(addressTextField.getAddress(),
                 getAmountAsCoin(),
-                paymentLabel,
+                paymentLabelString,
                 null);
     }
 

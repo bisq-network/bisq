@@ -22,7 +22,6 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
-import io.bitsquare.trade.TradableHelper;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -72,7 +71,8 @@ public class ReservedListItem {
     }
 
     private void updateBalance() {
-        balance = TradableHelper.getReservedBalance(openOffer, walletService);
+        Address address = walletService.getOrCreateAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+        balance = walletService.getBalanceForAddress(address);
         if (balance != null)
             balanceLabel.setText(formatter.formatCoin(this.balance));
     }

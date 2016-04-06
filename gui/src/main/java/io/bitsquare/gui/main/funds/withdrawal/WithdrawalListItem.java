@@ -21,10 +21,6 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.closed.ClosedTradableManager;
-import io.bitsquare.trade.failed.FailedTradesManager;
-import io.bitsquare.trade.offer.OpenOfferManager;
 import javafx.scene.control.Label;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -35,25 +31,14 @@ public class WithdrawalListItem {
     private final Label balanceLabel;
     private final AddressEntry addressEntry;
     private final WalletService walletService;
-    private final OpenOfferManager openOfferManager;
-    private final TradeManager tradeManager;
-    private final ClosedTradableManager closedTradableManager;
-    private final FailedTradesManager failedTradesManager;
     private final BSFormatter formatter;
     private Coin balance;
     private final String addressString;
 
     public WithdrawalListItem(AddressEntry addressEntry, WalletService walletService,
-                              OpenOfferManager openOfferManager, TradeManager tradeManager,
-                              ClosedTradableManager closedTradableManager,
-                              FailedTradesManager failedTradesManager,
                               BSFormatter formatter) {
         this.addressEntry = addressEntry;
         this.walletService = walletService;
-        this.openOfferManager = openOfferManager;
-        this.tradeManager = tradeManager;
-        this.closedTradableManager = closedTradableManager;
-        this.failedTradesManager = failedTradesManager;
         this.formatter = formatter;
         addressString = addressEntry.getAddressString();
 
@@ -99,7 +84,6 @@ public class WithdrawalListItem {
         WithdrawalListItem that = (WithdrawalListItem) o;
 
         return !(addressEntry != null ? !addressEntry.equals(that.addressEntry) : that.addressEntry != null);
-
     }
 
     @Override

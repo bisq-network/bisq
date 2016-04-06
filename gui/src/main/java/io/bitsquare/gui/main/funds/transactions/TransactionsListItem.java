@@ -40,7 +40,6 @@ public class TransactionsListItem {
     private final WalletService walletService;
     private final ConfidenceProgressIndicator progressIndicator;
     private final Tooltip tooltip;
-    private boolean isInternal;
     @Nullable
     private Tradable tradable;
     private String details;
@@ -89,7 +88,7 @@ public class TransactionsListItem {
                     }
                 }
             }
-        } else/* if (tradableOptional.isPresent())*/ {
+        } else {
             amountAsCoin = valueSentToMe.subtract(valueSentFromMe);
             boolean outgoing = false;
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
@@ -107,25 +106,27 @@ public class TransactionsListItem {
                 direction = "Sent to:";
                 received = false;
             }
-        } /*else {
-            // savings wallet tx
-            for (TransactionOutput transactionOutput : transaction.getOutputs()) {
-                if (transactionOutput.isMine(walletService.getWallet())) {
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() ||
-                            transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
-                        addressString = address.toString();
+        }
 
-                        amountAsCoin = transactionOutput.getValue().multiply(-1);
-                    }
+        // confidence
+        progressIndicator = new ConfidenceProgressIndicator();
+        progressIndicator.setId("funds-confidence");
+        tooltip = new Tooltip("Not used yet");
+        progressIndicator.setProgress(0);
+        progressIndicator.setPrefHeight(30);
+        progressIndicator.setPrefWidth(30);
+        Tooltip.install(progressIndicator, tooltip);
+
+        if (address != null) {
+            txConfidenceListener = new TxConfidenceListener(txId) {
+                @Override
+                public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
+                    updateConfidence(confidence);
                 }
-            }
-
-            direction = "Transferred to:";
-            received = false;
-            isInternal = true;
-            details = "Change output";
-        }*/
+            };
+            walletService.addTxConfidenceListener(txConfidenceListener);
+            updateConfidence(transaction.getConfidence());
+        }
 
 
         if (tradableOptional.isPresent()) {
@@ -148,10 +149,12 @@ public class TransactionsListItem {
                         trade.getPayoutTx().getHashAsString().equals(txId)) {
                     details = "MultiSig payout: " + tradable.getShortId();
                 } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED) {
-                    if (valueSentToMe.isPositive())
+                    if (valueSentToMe.isPositive()) {
                         details = "Dispute payout: " + tradable.getShortId();
-                    else
+                    } else {
                         details = "Lost dispute case: " + tradable.getShortId();
+                        progressIndicator.setVisible(false);
+                    }
                 } else {
                     details = "Unknown reason: " + tradable.getShortId();
                 }
@@ -159,31 +162,11 @@ public class TransactionsListItem {
         } else {
             if (amountAsCoin.isZero())
                 details = "No refund from dispute";
-            else if (!isInternal)
+            else
                 details = received ? "Received funds" : "Withdrawn from wallet";
         }
 
         date = formatter.formatDateTime(transaction.getUpdateTime());
-
-        // confidence
-        progressIndicator = new ConfidenceProgressIndicator();
-        progressIndicator.setId("funds-confidence");
-        tooltip = new Tooltip("Not used yet");
-        progressIndicator.setProgress(0);
-        progressIndicator.setPrefHeight(30);
-        progressIndicator.setPrefWidth(30);
-        Tooltip.install(progressIndicator, tooltip);
-
-        if (address != null) {
-            txConfidenceListener = new TxConfidenceListener(txId) {
-                @Override
-                public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                    updateConfidence(confidence);
-                }
-            };
-            walletService.addTxConfidenceListener(txConfidenceListener);
-            updateConfidence(transaction.getConfidence());
-        }
     }
 
 
@@ -240,10 +223,6 @@ public class TransactionsListItem {
 
     public String getDirection() {
         return direction;
-    }
-
-    public boolean isInternal() {
-        return isInternal;
     }
 
     public String getTxId() {

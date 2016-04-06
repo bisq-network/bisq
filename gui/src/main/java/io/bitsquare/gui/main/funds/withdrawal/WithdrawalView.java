@@ -30,18 +30,14 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
-import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.trade.Tradable;
-import io.bitsquare.trade.TradableHelper;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
-import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -80,13 +76,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
-    private final OpenOfferManager openOfferManager;
     private final BSFormatter formatter;
     private final Preferences preferences;
     private final BtcAddressValidator btcAddressValidator;
     private final WalletPasswordWindow walletPasswordWindow;
-    private final OfferDetailsWindow offerDetailsWindow;
-    private final TradeDetailsWindow tradeDetailsWindow;
     private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(observableList);
     private Set<WithdrawalListItem> selectedItems = new HashSet<>();
@@ -101,21 +94,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @Inject
     private WithdrawalView(WalletService walletService, TradeManager tradeManager,
                            ClosedTradableManager closedTradableManager,
-                           FailedTradesManager failedTradesManager, OpenOfferManager openOfferManager,
+                           FailedTradesManager failedTradesManager,
                            BSFormatter formatter, Preferences preferences,
-                           BtcAddressValidator btcAddressValidator, WalletPasswordWindow walletPasswordWindow,
-                           OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
+                           BtcAddressValidator btcAddressValidator, WalletPasswordWindow walletPasswordWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
-        this.openOfferManager = openOfferManager;
         this.formatter = formatter;
         this.preferences = preferences;
         this.btcAddressValidator = btcAddressValidator;
         this.walletPasswordWindow = walletPasswordWindow;
-        this.offerDetailsWindow = offerDetailsWindow;
-        this.tradeDetailsWindow = tradeDetailsWindow;
     }
 
     @Override
@@ -285,9 +274,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(WithdrawalListItem::cleanup);
-        observableList.setAll(TradableHelper.getAddressEntriesForAvailableBalanceStream(walletService)
-                .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, openOfferManager, tradeManager,
-                        closedTradableManager, failedTradesManager, formatter))
+        observableList.setAll(tradeManager.getAddressEntriesForAvailableBalanceStream()
+                .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, formatter))
                 .collect(Collectors.toList()));
     }
 

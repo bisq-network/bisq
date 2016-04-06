@@ -35,25 +35,19 @@ import org.slf4j.LoggerFactory;
 
 public class DepositListItem {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     private final StringProperty balance = new SimpleStringProperty();
     private final WalletService walletService;
-
     private Coin balanceAsCoin;
-    private BSFormatter formatter;
     private final ConfidenceProgressIndicator progressIndicator;
     private final Tooltip tooltip;
-
-
-    private String balanceString;
     private String addressString;
     private String usage = "-";
     private TxConfidenceListener txConfidenceListener;
     private int numTxOutputs = 0;
 
-    // public DepositListItem(AddressEntry addressEntry, Transaction transaction, WalletService walletService, Optional<Tradable> tradableOptional, BSFormatter formatter) {
     public DepositListItem(AddressEntry addressEntry, WalletService walletService, BSFormatter formatter) {
         this.walletService = walletService;
-        this.formatter = formatter;
 
         addressString = addressEntry.getAddressString();
 
