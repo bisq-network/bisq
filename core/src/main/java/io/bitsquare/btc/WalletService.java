@@ -604,6 +604,8 @@ public class WalletService {
                     Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
                     if (!addressEntryOptional.isPresent())
                         addressEntryOptional = findAddressEntry(address, AddressEntry.Context.OFFER_FUNDING);
+                    if (!addressEntryOptional.isPresent())
+                        addressEntryOptional = findAddressEntry(address, AddressEntry.Context.TRADE_PAYOUT);
                     return addressEntryOptional;
                 })
                 .filter(Optional::isPresent)
