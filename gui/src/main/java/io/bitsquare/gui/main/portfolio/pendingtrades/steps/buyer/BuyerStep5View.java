@@ -168,19 +168,20 @@ public class BuyerStep5View extends TradeStepView {
         // TODO at some error situation it can be tha the funds are already paid out and we get stuck here
         // need handling to remove the trade (planned for next release)
         Coin balance = walletService.getBalanceForAddress(fromAddressesEntry.getAddress());
-        if (balance.isZero()) {
-            new Popup().warning("Your funds have already been withdrawn.\nPlease check the transaction history.").show();
-            model.dataModel.tradeManager.addTradeToClosedTrades(trade);
-        } else {
-            if (toAddresses.isEmpty()) {
-                validateWithdrawAddress();
-            } else if (Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
-                try {
+        try {
+            Coin requiredFee = walletService.getRequiredFee(fromAddresses, toAddresses, senderAmount, AddressEntry.Context.TRADE_PAYOUT);
+            Coin receiverAmount = senderAmount.subtract(requiredFee);
+            if (balance.isZero()) {
+                new Popup().warning("Your funds have already been withdrawn.\nPlease check the transaction history.").show();
+                model.dataModel.tradeManager.addTradeToClosedTrades(trade);
+            } else {
+                if (toAddresses.isEmpty()) {
+                    validateWithdrawAddress();
+                } else if (Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
+
                     if (BitsquareApp.DEV_MODE) {
-                        doWithdrawal();
+                        doWithdrawal(receiverAmount);
                     } else {
-                        Coin requiredFee = walletService.getRequiredFee(fromAddresses, toAddresses, senderAmount, null, AddressEntry.Context.TRADE_PAYOUT);
-                        Coin receiverAmount = senderAmount.subtract(requiredFee);
                         BSFormatter formatter = model.formatter;
                         String key = "reviewWithdrawalAtTradeComplete";
                         if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
@@ -197,34 +198,34 @@ public class BuyerStep5View extends TradeStepView {
                                         withdrawToExternalWalletButton.setDisable(false);
                                     })
                                     .actionButtonText("Yes")
-                                    .onAction(() -> doWithdrawal())
+                                    .onAction(() -> doWithdrawal(receiverAmount))
                                     .dontShowAgainId(key, preferences)
                                     .show();
                         } else {
-                            doWithdrawal();
+                            doWithdrawal(receiverAmount);
                         }
                     }
-                } catch (AddressFormatException e) {
-                    validateWithdrawAddress();
-                } catch (AddressEntryException e) {
-                    log.error(e.getMessage());
+
+                } else {
+                    new Popup()
+                            .warning("The amount to transfer is lower than the transaction fee and the min. possible tx value (dust).")
+                            .show();
                 }
-            } else {
-                new Popup()
-                        .warning("The amount to transfer is lower than the transaction fee and the min. possible tx value (dust).")
-                        .show();
             }
+        } catch (AddressFormatException e) {
+            validateWithdrawAddress();
+        } catch (AddressEntryException e) {
+            log.error(e.getMessage());
         }
     }
 
-    private void doWithdrawal() {
+    private void doWithdrawal(Coin receiverAmount) {
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);
 
         model.dataModel.onWithdrawRequest(withdrawAddressTextField.getText(),
-                () -> {
-                    handleTradeCompleted();
-                },
+                receiverAmount,
+                this::handleTradeCompleted,
                 (errorMessage, throwable) -> {
                     useSavingsWalletButton.setDisable(false);
                     withdrawToExternalWalletButton.setDisable(false);

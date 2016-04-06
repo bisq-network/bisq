@@ -50,14 +50,14 @@ public class FeePolicy {
     // The BitcoinJ fee calculation use kb so a tx size  < 1kb will still pay the fee for a kb tx.
     // Our payout tx has about 370 bytes so we get a fee/kb value of about 90 satoshi/byte making it high priority
     // Other payout transactions (E.g. arbitrators many collected transactions) will go with 30 satoshi/byte if > 1kb
-    private static Coin FEE_PER_KB = Coin.valueOf(20_000); // 0.0002 BTC about 0.08 EUR @ 400 EUR/BTC 
+    private static Coin NON_TRADE_FEE_PER_KB = Coin.valueOf(10_000); // 0.0001 BTC about 0.04 EUR @ 400 EUR/BTC 
 
-    public static void setFeePerKb(Coin feePerKb) {
-        FEE_PER_KB = feePerKb;
+    public static void setNonTradeFeePerKb(Coin nonTradeFeePerKb) {
+        NON_TRADE_FEE_PER_KB = nonTradeFeePerKb;
     }
 
-    public static Coin getFeePerKb() {
-        return FEE_PER_KB;
+    public static Coin getNonTradeFeePerKb() {
+        return NON_TRADE_FEE_PER_KB;
     }
 
     // Some wallets don't support manual fees. Most use at least 0.0001 BTC (0.04 EUR @ 400 EUR/BTC)

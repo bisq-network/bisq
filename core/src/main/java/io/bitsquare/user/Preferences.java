@@ -105,7 +105,7 @@ public final class Preferences implements Persistable {
     private boolean showOwnOffersInOfferBook;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
-    private long txFeePerKB = FeePolicy.getFeePerKb().value;
+    private long nonTradeTxFeePerKB = FeePolicy.getNonTradeFeePerKb().value;
     private double maxPriceDistanceInPercent;
 
     // Observable wrappers
@@ -162,7 +162,7 @@ public final class Preferences implements Persistable {
                 maxPriceDistanceInPercent = 0.2;
 
             try {
-                setTxFeePerKB(persisted.getTxFeePerKB());
+                setNonTradeTxFeePerKB(persisted.getNonTradeTxFeePerKB());
             } catch (Exception e) {
                 // leave default value
             }
@@ -306,15 +306,15 @@ public final class Preferences implements Persistable {
         }
     }
 
-    public void setTxFeePerKB(long txFeePerKB) throws Exception {
-        if (txFeePerKB < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value)
+    public void setNonTradeTxFeePerKB(long nonTradeTxFeePerKB) throws Exception {
+        if (nonTradeTxFeePerKB < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value)
             throw new Exception("Transaction fee must be at least 5 satoshi/byte");
 
-        if (txFeePerKB < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value)
-            throw new Exception("Transaction fee must be at least 5 satoshi/byte");
+        if (nonTradeTxFeePerKB > 500_000)
+            throw new Exception("Transaction fee is in the range of 10-100 satoshi/byte. Your input is above any reasonable value (>500 satoshi/byte).");
 
-        this.txFeePerKB = txFeePerKB;
-        FeePolicy.setFeePerKb(Coin.valueOf(txFeePerKB));
+        this.nonTradeTxFeePerKB = nonTradeTxFeePerKB;
+        FeePolicy.setNonTradeFeePerKb(Coin.valueOf(nonTradeTxFeePerKB));
         storage.queueUpForSave();
     }
 
@@ -435,8 +435,8 @@ public final class Preferences implements Persistable {
         return preferredTradeCurrency;
     }
 
-    public long getTxFeePerKB() {
-        return Math.max(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value, txFeePerKB);
+    public long getNonTradeTxFeePerKB() {
+        return Math.max(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value, nonTradeTxFeePerKB);
     }
 
     public boolean getUseTorForBitcoinJ() {

@@ -147,12 +147,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
     }
 
-    public void onWithdrawRequest(String toAddress, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void onWithdrawRequest(String toAddress, Coin receiverAmount, ResultHandler resultHandler, FaultHandler faultHandler) {
         checkNotNull(getTrade(), "trade must not be null");
         if (walletService.getWallet().isEncrypted()) {
-            walletPasswordWindow.onAesKey(aesKey -> doWithdrawRequest(toAddress, aesKey, resultHandler, faultHandler)).show();
+            walletPasswordWindow.onAesKey(aesKey -> doWithdrawRequest(toAddress, receiverAmount, aesKey, resultHandler, faultHandler)).show();
         } else
-            doWithdrawRequest(toAddress, null, resultHandler, faultHandler);
+            doWithdrawRequest(toAddress, receiverAmount, null, resultHandler, faultHandler);
     }
 
     public void onOpenDispute() {
@@ -279,10 +279,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         selectedItemProperty.set(item);
     }
 
-    private void doWithdrawRequest(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
+    private void doWithdrawRequest(String toAddress, Coin receiverAmount, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
         if (toAddress != null && toAddress.length() > 0) {
             tradeManager.onWithdrawRequest(
                     toAddress,
+                    receiverAmount, 
                     aesKey,
                     getTrade(),
                     () -> {

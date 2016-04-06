@@ -31,8 +31,6 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.*;
 import io.bitsquare.user.BlockChainExplorer;
 import io.bitsquare.user.Preferences;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -44,6 +42,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
@@ -61,7 +60,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook;
     private int gridRow = 0;
-    //private InputTextField transactionFeeInputTextField;
+    private InputTextField transactionFeeInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
     private BSFormatter formatter;
@@ -75,7 +74,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     final ObservableList<String> btcDenominations = FXCollections.observableArrayList(Preferences.getBtcDenominations());
     final ObservableList<BlockChainExplorer> blockExplorers;
     final ObservableList<String> languageCodes;
-    final StringProperty transactionFeePerByte = new SimpleStringProperty();
     public final ObservableList<FiatCurrency> fiatCurrencies;
     public final ObservableList<FiatCurrency> allFiatCurrencies;
     public final ObservableList<CryptoCurrency> cryptoCurrencies;
@@ -288,7 +286,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void initializeOtherOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "General preferences", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, "General preferences", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
         // userLanguageComboBox = addLabelComboBox(root, gridRow, "Language:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
@@ -313,11 +311,21 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
         };
 
-        // TODO need a bit extra work to separate trade and non trade tx fees before it can be used
-        /*transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Transaction fee (satoshi/byte):").second;
+        transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Transaction fee (satoshi/byte):").second;
         transactionFeeFocusedListener = (o, oldValue, newValue) -> {
-            onFocusOutTransactionFeeTextField(oldValue, newValue);
-        };*/
+            if (oldValue && !newValue) {
+                try {
+                    int val = Integer.parseInt(transactionFeeInputTextField.getText());
+                    preferences.setNonTradeTxFeePerKB(val * 1000);
+                } catch (NumberFormatException t) {
+                    new Popup().warning("Please enter integer numbers only.").show();
+                    transactionFeeInputTextField.setText(getNonTradeTxFeePerKB());
+                } catch (Throwable t) {
+                    new Popup().warning("Your input was not accepted.\n" + t.getMessage()).show();
+                    transactionFeeInputTextField.setText(getNonTradeTxFeePerKB());
+                }
+            }
+        };
     }
 
     private void initializeDisplayOptions() {
@@ -378,7 +386,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void activateOtherOptions() {
-        transactionFeePerByte.set(String.valueOf(preferences.getTxFeePerKB() / 1000));
+        transactionFeeInputTextField.setText(getNonTradeTxFeePerKB());
         
     /* btcDenominationComboBox.setDisable(true);
      btcDenominationComboBox.setItems(btcDenominations);
@@ -423,8 +431,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         deviationInputTextField.textProperty().addListener(deviationListener);
         deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
 
-        // transactionFeeInputTextField.textProperty().bindBidirectional(transactionFeePerByte);
-        // transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
+        transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
+    }
+
+    @NotNull
+    private String getNonTradeTxFeePerKB() {
+        return String.valueOf(preferences.getNonTradeTxFeePerKB() / 1000);
     }
 
     private void activateDisplayPreferences() {
@@ -454,8 +466,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         blockChainExplorerComboBox.setOnAction(null);
         deviationInputTextField.textProperty().removeListener(deviationListener);
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
-        //  transactionFeeInputTextField.textProperty().unbind();
-        ///  transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
+        transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
     }
 
 

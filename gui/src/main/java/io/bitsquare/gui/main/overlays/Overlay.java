@@ -186,9 +186,11 @@ public abstract class Overlay<T extends Overlay> {
         Scene rootScene = owner.getScene();
         if (rootScene != null) {
             Window window = rootScene.getWindow();
-            window.xProperty().removeListener(positionListener);
-            window.yProperty().removeListener(positionListener);
-            window.widthProperty().removeListener(positionListener);
+            if (window != null && positionListener != null) {
+                window.xProperty().removeListener(positionListener);
+                window.yProperty().removeListener(positionListener);
+                window.widthProperty().removeListener(positionListener);
+            }
         }
     }
 

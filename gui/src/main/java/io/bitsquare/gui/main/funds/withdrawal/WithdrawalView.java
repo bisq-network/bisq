@@ -196,10 +196,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             };
             try {
                 Coin requiredFee = walletService.getRequiredFeeForMultipleAddresses(fromAddresses,
-                        withdrawToTextField.getText(), senderAmount, null);
+                        withdrawToTextField.getText(), senderAmount);
                 Coin receiverAmount = senderAmount.subtract(requiredFee);
                 if (BitsquareApp.DEV_MODE) {
-                    doWithdraw(senderAmount, callback);
+                    doWithdraw(receiverAmount, callback);
                 } else {
                     new Popup().headLine("Confirm withdrawal request")
                             .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +

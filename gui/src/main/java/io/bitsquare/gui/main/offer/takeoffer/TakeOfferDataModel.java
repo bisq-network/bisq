@@ -408,7 +408,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection SimplifiableIfStatement
         if (amountAsCoin.get() != null && offer != null) {
             Coin customAmount = offer.getAmount().subtract(amountAsCoin.get());
-            Coin dustAndFee = FeePolicy.getFeePerKb().add(Transaction.MIN_NONDUST_OUTPUT);
+            Coin dustAndFee = FeePolicy.getFixedTxFeeForTrades().add(Transaction.MIN_NONDUST_OUTPUT);
             return customAmount.isPositive() && customAmount.isLessThan(dustAndFee);
         } else {
             return true;
