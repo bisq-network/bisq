@@ -30,6 +30,8 @@ public class PeerServiceTest {
     private SeedNode seedNode1, seedNode2, seedNode3;
     private Set<NodeAddress> seedNodeAddresses = new HashSet<>();
     private List<SeedNode> seedNodes = new ArrayList<>();
+    private String test_dummy_dir = "test_dummy_dir";
+    ;
 
     @Before
     public void setup() throws InterruptedException {
@@ -57,6 +59,8 @@ public class PeerServiceTest {
 
         seedNodes.stream().forEach(seedNode -> {
             CountDownLatch shutDownLatch = new CountDownLatch(1);
+            seedNode.getSeedNodeP2PService().shutDown(() -> {
+            });
             seedNode.shutDown(shutDownLatch::countDown);
             try {
                 shutDownLatch.await();
@@ -67,16 +71,61 @@ public class PeerServiceTest {
         seedNodeAddresses.clear();
     }
 
+
     @Test
     public void testSingleSeedNode() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
         seedNodeAddresses.clear();
-        NodeAddress nodeAddress = new NodeAddress("localhost:8001");
-        seedNodeAddresses.add(nodeAddress);
-        SeedNode seedNode = new SeedNode("test_dummy_dir");
-        seedNodes.add(seedNode);
-        latch = new CountDownLatch(2);
+
+        for (int i = 0; i < 10; i++) {
+            int port = 8000 + i;
+            NodeAddress nodeAddress = new NodeAddress("localhost:" + port);
+            seedNodeAddresses.add(nodeAddress);
+            SeedNode seedNode = new SeedNode(test_dummy_dir);
+            seedNodes.add(seedNode);
+            seedNode.createAndStartP2PService(true);
+            seedNode.getSeedNodeP2PService().start(new P2PServiceListener() {
+                @Override
+                public void onRequestingDataCompleted() {
+
+                }
+
+                @Override
+                public void onNoSeedNodeAvailable() {
+
+                }
+
+                @Override
+                public void onNoPeersAvailable() {
+
+                }
+
+                @Override
+                public void onBootstrapComplete() {
+
+                }
+
+                @Override
+                public void onTorNodeReady() {
+
+                }
+
+                @Override
+                public void onHiddenServicePublished() {
+
+                }
+
+                @Override
+                public void onSetupFailed(Throwable throwable) {
+
+                }
+            });
+        }
+        Thread.sleep(30_000);
+        
+       /* latch = new CountDownLatch(2);
+        
         seedNode.createAndStartP2PService(nodeAddress, useLocalhost, 2, true,
                 seedNodeAddresses, new P2PServiceListener() {
                     @Override
@@ -110,9 +159,10 @@ public class PeerServiceTest {
 
                     }
                 });
+        
         P2PService p2PService = seedNode.getSeedNodeP2PService();
         latch.await();
-        Thread.sleep(500);
+        Thread.sleep(500);*/
 
         //Assert.assertEquals(0, p2PService1.getPeerManager().getAuthenticatedAndReportedPeers().size());
     }
