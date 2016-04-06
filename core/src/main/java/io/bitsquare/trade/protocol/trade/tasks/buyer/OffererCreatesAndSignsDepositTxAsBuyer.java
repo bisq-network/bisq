@@ -56,7 +56,7 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
             WalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry buyerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            buyerMultiSigAddressEntry.setLockedTradeAmount(buyerInputAmount);
+            buyerMultiSigAddressEntry.setLockedTradeAmount(buyerInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades()));
             walletService.saveAddressEntryList();
             PreparedDepositTxAndOffererInputs result = processModel.getTradeWalletService().offererCreatesAndSignsDepositTx(
                     true,

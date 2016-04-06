@@ -253,7 +253,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
                                     details = "-";
                                 }
 
-                                field = new HyperlinkWithIcon(details + " (Locked in trade (MultiSig))",
+                                field = new HyperlinkWithIcon("Locked in trade with ID: " + details + " (MultiSig)",
                                         AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip("Open popup for details"));

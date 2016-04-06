@@ -252,7 +252,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                                     details = "-";
                                 }
 
-                                field = new HyperlinkWithIcon(details + " (Reserved in offer (local wallet))",
+                                field = new HyperlinkWithIcon("Reserved in offer with ID: " + details + " (local wallet)",
                                         AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip("Open popup for details"));
