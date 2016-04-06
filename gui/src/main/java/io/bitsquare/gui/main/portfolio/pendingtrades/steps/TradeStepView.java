@@ -113,7 +113,6 @@ public abstract class TradeStepView extends AnchorPane {
         clockListener = new Clock.Listener() {
             @Override
             public void onSecondTick() {
-                updateTimeLeft();
             }
 
             @Override

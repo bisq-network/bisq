@@ -531,7 +531,6 @@ public class MainViewModel implements ViewModel {
         clock.addListener(new Clock.Listener() {
             @Override
             public void onSecondTick() {
-                updateTradePeriodState();
             }
 
             @Override

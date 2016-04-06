@@ -176,7 +176,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getRemainingTradeDurationAsWords() {
-        return formatter.getDurationAsWords(Math.max(0, getRemainingTradeDuration()));
+        return formatter.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
     }
 
     public double getRemainingTradeDurationAsPercentage() {

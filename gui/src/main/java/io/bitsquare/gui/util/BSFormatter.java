@@ -18,11 +18,11 @@
 package io.bitsquare.gui.util;
 
 import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.locale.Country;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -37,7 +37,6 @@ import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class BSFormatter {
@@ -293,20 +292,10 @@ public class BSFormatter {
         return formatCoin(offer.getAmount()) + " (" + formatCoin(offer.getMinAmount()) + ")";
     }
 
-    public String formatVolumeWithMinVolume(Offer offer) {
-        return formatFiat(offer.getOfferVolume()) +
-                " (" + formatFiat(offer.getMinOfferVolume()) + ")";
-    }
-
     public String formatVolumeWithMinVolumeWithCode(Offer offer) {
         return formatFiatWithCode(offer.getOfferVolume()) +
                 " (" + formatFiatWithCode(offer.getMinOfferVolume()) + ")";
     }
-
-    public String countryLocalesToString(List<Country> countries) {
-        return countries.stream().map(e -> e.name).collect(Collectors.joining(", "));
-    }
-
 
     public String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
         return nodeAddresses.stream().map(e -> e.getFullAddress()).collect(Collectors.joining(", "));
@@ -352,21 +341,56 @@ public class BSFormatter {
         return input;
     }
 
-    public Date addBlocksToNowDate(long blocks) {
-        return new Date(new Date().getTime() + blocks * TimeUnit.MINUTES.toMillis(10));
+    public String formatDurationAsWords(long durationMillis) {
+        return formatDurationAsWords(durationMillis, false);
     }
 
-    public String getDurationAsWords(long duration) {
-        return DurationFormatUtils.formatDurationWords(duration, true, true);
-    }
-
-    public String getDaysHoursMinutes(Date startDate, Date endDate) {
-        try {
-            return DurationFormatUtils.formatDurationWords(endDate.getTime() - startDate.getTime(), true, true);
-        } catch (Throwable t) {
-            // in case we get a invalid duration we set swallow the exception
-            return "";
+    public static String formatDurationAsWords(long durationMillis, boolean showSeconds) {
+        String format;
+        if (showSeconds)
+            format = "d\' days, \'H\' hours, \'m\' minutes, \'s\' seconds\'";
+        else
+            format = "d\' days, \'H\' hours, \'m\' minutes\'";
+        String duration = DurationFormatUtils.formatDuration(durationMillis, format);
+        String tmp;
+        duration = " " + duration;
+        tmp = StringUtils.replaceOnce(duration, " 0 days", "");
+        if (tmp.length() != duration.length()) {
+            duration = tmp;
+            tmp = StringUtils.replaceOnce(tmp, " 0 hours", "");
+            if (tmp.length() != duration.length()) {
+                tmp = StringUtils.replaceOnce(tmp, " 0 minutes", "");
+                duration = tmp;
+                if (tmp.length() != tmp.length()) {
+                    duration = StringUtils.replaceOnce(tmp, " 0 seconds", "");
+                }
+            }
         }
+
+        if (duration.length() != 0) {
+            duration = duration.substring(1);
+        }
+
+        tmp = StringUtils.replaceOnce(duration, " 0 seconds", "");
+
+        if (tmp.length() != duration.length()) {
+            duration = tmp;
+            tmp = StringUtils.replaceOnce(tmp, " 0 minutes", "");
+            if (tmp.length() != duration.length()) {
+                duration = tmp;
+                tmp = StringUtils.replaceOnce(tmp, " 0 hours", "");
+                if (tmp.length() != duration.length()) {
+                    duration = StringUtils.replaceOnce(tmp, " 0 days", "");
+                }
+            }
+        }
+
+        duration = " " + duration;
+        duration = StringUtils.replaceOnce(duration, " 1 seconds", " 1 second");
+        duration = StringUtils.replaceOnce(duration, " 1 minutes", " 1 minute");
+        duration = StringUtils.replaceOnce(duration, " 1 hours", " 1 hour");
+        duration = StringUtils.replaceOnce(duration, " 1 days", " 1 day");
+        return duration.trim();
     }
 
 
