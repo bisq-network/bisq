@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.alert.Alert;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.geometry.Insets;
@@ -73,8 +72,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
             headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
             String url = "https://github.com/bitsquare/bitsquare/releases";
             HyperlinkWithIcon hyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
-                    "Download:", url).second;
-            hyperlinkWithIcon.setOnAction(e -> Utilities.openWebPage(url));
+                    "Download:", url, url).second;
             hyperlinkWithIcon.setMaxWidth(550);
         } else {
             headLine = "Important information!";

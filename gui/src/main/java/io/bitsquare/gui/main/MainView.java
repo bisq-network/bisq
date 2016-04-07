@@ -17,8 +17,6 @@
 
 package io.bitsquare.gui.main;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.pricefeed.PriceFeed;
@@ -266,6 +264,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             @Override
             protected void updateItem(PriceFeedComboBoxItem item, boolean empty) {
                 super.updateItem(item, empty);
+
                 if (!empty && item != null) {
                     textProperty().bind(item.displayStringProperty);
                 } else {
@@ -287,18 +286,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
 
-        Label invertIcon = new Label();
-        HBox.setMargin(invertIcon, new Insets(3, 0, 0, 0));
-        invertIcon.setId("invert-market-price");
-        invertIcon.setOpacity(0.8);
-        invertIcon.setOnMouseClicked(e -> {
-            model.preferences.flipUseInvertedMarketPrice();
-        });
+
+        final ImageView invertIcon = new ImageView();
+        invertIcon.setId("invert");
+        final Button invertIconButton = new Button("", invertIcon);
+        invertIconButton.setPadding(new Insets(0, 0, 0, 0));
+        invertIconButton.setFocusTraversable(false);
+        invertIconButton.setStyle("-fx-background-color: transparent;");
+        //invertIconButton.setStyle("-fx-focus-color: transparent; -fx-border-radius: 0 2 2 0; -fx-border-color: #aaa; -fx-border-insets: 0 0 0 -1; -fx-border-style: solid solid solid none; -fx-padding: 1 0 1 0;");
+        HBox.setMargin(invertIconButton, new Insets(2, 0, 0, 0));
+        invertIconButton.setOnAction(e -> model.preferences.flipUseInvertedMarketPrice());
 
         HBox hBox = new HBox();
-        hBox.setSpacing(5);
-        AwesomeDude.setIcon(invertIcon, AwesomeIcon.RETWEET, "14.0");
-        hBox.getChildren().setAll(priceComboBox, invertIcon);
+        hBox.getChildren().setAll(priceComboBox, invertIconButton);
 
         Label label = new Label(text);
         label.setId("nav-balance-label");

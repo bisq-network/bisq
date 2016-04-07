@@ -1003,6 +1003,7 @@ textfield */
 #price-feed-combo {
     -fx-background-color: #555;
     -fx-text-fill: white;
+    -fx-alignment: center;
 }
 
 #invert-market-price {

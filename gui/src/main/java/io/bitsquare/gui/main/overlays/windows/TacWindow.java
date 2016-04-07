@@ -2,8 +2,6 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.common.util.Utilities;
-import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.user.Preferences;
 import org.slf4j.Logger;
@@ -53,9 +51,7 @@ public class TacWindow extends Overlay<TacWindow> {
     @Override
     protected void addMessage() {
         super.addMessage();
-        String url = "https://bitsquare.io/arbitration_system.pdf";
-        HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(gridPane, ++rowIndex, url, -8);
-        hyperlinkWithIcon.setOnAction(e -> Utilities.openWebPage(url));
+        addHyperlinkWithIcon(gridPane, ++rowIndex, "Arbitration system", "https://bitsquare.io/arbitration_system.pdf", -6);
     }
 
     @Override

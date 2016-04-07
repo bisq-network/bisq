@@ -212,6 +212,12 @@
     -fx-image: url("../../../images/link.png");
 }
 
+#invert {
+    -fx-image: url("../../../images/invert.png");
+}
+
+
+
 #avatar_1 {
     -fx-image: url("../../../images/avatars/avatar_1.png");
 }

@@ -21,6 +21,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Tuple4;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.*;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -162,12 +163,14 @@ public class FormBuilder {
     //  HyperlinkWithIcon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String url) {
-        return addHyperlinkWithIcon(gridPane, rowIndex, url, 0);
+
+    public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url) {
+        return addHyperlinkWithIcon(gridPane, rowIndex, title, url, 0);
     }
 
-    public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String url, double top) {
-        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(url, AwesomeIcon.EXTERNAL_LINK);
+    public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url, double top) {
+        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);
+        hyperlinkWithIcon.setOnAction(e -> Utilities.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
@@ -180,18 +183,15 @@ public class FormBuilder {
     // Label  + HyperlinkWithIcon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title) {
-        return addLabelHyperlinkWithIcon(gridPane, rowIndex, title, "", 0);
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String labelTitle, String title, String url) {
+        return addLabelHyperlinkWithIcon(gridPane, rowIndex, labelTitle, title, url, 0);
     }
 
-    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url) {
-        return addLabelHyperlinkWithIcon(gridPane, rowIndex, title, url, 0);
-    }
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String labelTitle, String title, String url, double top) {
+        Label label = addLabel(gridPane, rowIndex, labelTitle, top);
 
-    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
-
-        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(url, AwesomeIcon.EXTERNAL_LINK);
+        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);
+        hyperlinkWithIcon.setOnAction(e -> Utilities.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 1);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
