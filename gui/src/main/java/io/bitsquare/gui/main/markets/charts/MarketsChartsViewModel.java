@@ -74,7 +74,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
         offerBookListItems.addListener(listChangeListener);
         offerBook.fillOfferBookListItems();
         updateChartData(offerBookListItems);
-        priceFeed.setCurrencyCode(tradeCurrency.get().getCode());
+        //priceFeed.setCurrencyCode(tradeCurrency.get().getCode());
     }
 
     @Override
@@ -136,7 +136,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
         this.tradeCurrency.set(tradeCurrency);
         updateChartData(offerBookListItems);
-        priceFeed.setCurrencyCode(tradeCurrency.getCode());
+        //priceFeed.setCurrencyCode(tradeCurrency.getCode());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

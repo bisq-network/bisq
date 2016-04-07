@@ -1000,13 +1000,16 @@ textfield */
     -fx-text-fill: #dd6900;
 }
 
-#price-feed-text-field {
-    -fx-alignment: center;
+#price-feed-combo {
     -fx-background-color: #555;
     -fx-text-fill: white;
-    -fx-cursor: hand;
+}
+
+#invert-market-price {
+    -fx-text-fill: #111;
 }
 
 #popup-qr-code-info {
     -fx-font-size: 11;
 }
+

@@ -175,8 +175,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         paymentAccounts.setAll(user.getPaymentAccounts());
 
-        if (isTabSelected)
-            priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+        /*if (isTabSelected)
+            priceFeed.setCurrencyCode(tradeCurrencyCode.get());*/
 
         updateBalance();
     }
@@ -220,7 +220,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         if (account != null)
             paymentAccount = account;
 
-        priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+        //priceFeed.setCurrencyCode(tradeCurrencyCode.get());
 
         calculateVolume();
         calculateTotalToPay();
@@ -228,8 +228,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
-        if (isTabSelected)
-            priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+        /*if (isTabSelected)
+            priceFeed.setCurrencyCode(tradeCurrencyCode.get());*/
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -299,7 +299,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             if (paymentAccount != null)
                 paymentAccount.setSelectedTradeCurrency(tradeCurrency);
 
-            priceFeed.setCurrencyCode(code);
+            //priceFeed.setCurrencyCode(code);
         }
     }
 

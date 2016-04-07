@@ -83,7 +83,7 @@ public final class Preferences implements Persistable {
         return defaultTradeCurrency;
     }
 
-    private static boolean _useAnimations = true;
+    private static boolean staticUseAnimations = true;
 
     transient private final Storage<Preferences> storage;
     transient private final BitsquareEnvironment bitsquareEnvironment;
@@ -107,10 +107,12 @@ public final class Preferences implements Persistable {
     private TradeCurrency preferredTradeCurrency;
     private long nonTradeTxFeePerKB = FeePolicy.getNonTradeFeePerKb().value;
     private double maxPriceDistanceInPercent;
+    private boolean useInvertedMarketPrice;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
     transient private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(useAnimations);
+    transient private final BooleanProperty useInvertedMarketPriceProperty = new SimpleBooleanProperty(useInvertedMarketPrice);
     transient private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
@@ -130,6 +132,7 @@ public final class Preferences implements Persistable {
         if (persisted != null) {
             setBtcDenomination(persisted.btcDenomination);
             setUseAnimations(persisted.useAnimations);
+            setUseInvertedMarketPrice(persisted.useInvertedMarketPrice);
 
             setFiatCurrencies(persisted.fiatCurrencies);
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
@@ -194,7 +197,11 @@ public final class Preferences implements Persistable {
         });
         useAnimationsProperty.addListener((ov) -> {
             useAnimations = useAnimationsProperty.get();
-            _useAnimations = useAnimations;
+            staticUseAnimations = useAnimations;
+            storage.queueUpForSave(2000);
+        });
+        useInvertedMarketPriceProperty.addListener((ov) -> {
+            useInvertedMarketPrice = useInvertedMarketPriceProperty.get();
             storage.queueUpForSave(2000);
         });
         fiatCurrenciesAsObservable.addListener((Observable ov) -> {
@@ -229,12 +236,16 @@ public final class Preferences implements Persistable {
     // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setBtcDenomination(String btcDenominationProperty) {
-        this.btcDenominationProperty.set(btcDenominationProperty);
+    public void setBtcDenomination(String btcDenomination) {
+        this.btcDenominationProperty.set(btcDenomination);
     }
 
-    public void setUseAnimations(boolean useAnimationsProperty) {
-        this.useAnimationsProperty.set(useAnimationsProperty);
+    public void setUseAnimations(boolean useAnimations) {
+        this.useAnimationsProperty.set(useAnimations);
+    }
+
+    public void setUseInvertedMarketPrice(boolean useInvertedMarketPrice) {
+        this.useInvertedMarketPriceProperty.set(useInvertedMarketPrice);
     }
 
     public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
@@ -343,6 +354,11 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public boolean flipUseInvertedMarketPrice() {
+        setUseInvertedMarketPrice(!getUseInvertedMarketPrice());
+        return getUseInvertedMarketPrice();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -352,20 +368,29 @@ public final class Preferences implements Persistable {
         return btcDenominationProperty.get();
     }
 
-    public boolean getUseAnimations() {
-        return useAnimationsProperty.get();
-    }
-
-    public static boolean useAnimations() {
-        return _useAnimations;
-    }
-
     public StringProperty btcDenominationProperty() {
         return btcDenominationProperty;
     }
 
+    public boolean getUseAnimations() {
+        return useAnimationsProperty.get();
+    }
+
     public BooleanProperty useAnimationsProperty() {
         return useAnimationsProperty;
+    }
+
+
+    public static boolean useAnimations() {
+        return staticUseAnimations;
+    }
+
+    public boolean getUseInvertedMarketPrice() {
+        return useInvertedMarketPriceProperty.get();
+    }
+
+    public BooleanProperty useInvertedMarketPriceProperty() {
+        return useInvertedMarketPriceProperty;
     }
 
     public BitcoinNetwork getBitcoinNetwork() {

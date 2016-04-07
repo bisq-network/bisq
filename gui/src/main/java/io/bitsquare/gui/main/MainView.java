@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.main;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.pricefeed.PriceFeed;
@@ -36,8 +38,6 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.util.Transitions;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -47,8 +47,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -61,7 +59,6 @@ import static javafx.scene.layout.AnchorPane.*;
 public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     public static final String TITLE_KEY = "view.title";
-    private MonadicBinding<String> marketPriceBinding;
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -92,7 +89,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private static Transitions transitions;
-    private final String title;
     private ChangeListener<String> walletServiceErrorMsgListener;
     private ChangeListener<String> btcSyncIconIdListener;
     private ChangeListener<String> splashP2PNetworkErrorMsgListener;
@@ -106,6 +102,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private BorderPane baseApplicationContainer;
     private Overlay<Popup> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
     private static StackPane rootContainer;
+    private ChangeListener<PriceFeedComboBoxItem> selectedPriceFeedItemListender;
 
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
@@ -114,7 +111,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         MainView.transitions = transitions;
-        this.title = title;
     }
 
     @Override
@@ -138,22 +134,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             setTopAnchor(this, 0d);
         }};
 
-        Tuple3<TextField, Label, VBox> marketPriceBox = getMarketPriceBox("Market price");
-        final BooleanProperty priceInverted = new SimpleBooleanProperty(false);
-        marketPriceBox.first.setOnMouseClicked(e -> priceInverted.setValue(!priceInverted.get()));
-        marketPriceBinding = EasyBind.combine(
-                model.marketPriceCurrency, model.marketPrice, model.marketPriceInverted, priceInverted,
-                (marketPriceCurrency, marketPrice, marketPriceInverted, inverted) ->
-                        (priceInverted.get() ?
-                                marketPriceInverted :
-                                marketPrice) +
-                                (priceInverted.get() ?
-                                        " BTC/" + marketPriceCurrency :
-                                        " " + marketPriceCurrency + "/BTC"));
+        Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> marketPriceBox = getMarketPriceBox("Market price");
+        ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
 
-        marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
-            marketPriceBox.first.setText(newValue);
+        priceComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            model.setPriceFeedComboBoxItem(newValue);
+
         });
+        selectedPriceFeedItemListender = (observable, oldValue, newValue) -> {
+            priceComboBox.getSelectionModel().select(newValue);
+
+        };
+        model.selectedPriceFeedComboBoxItemProperty.addListener(selectedPriceFeedItemListender);
+        priceComboBox.setItems(model.priceFeedComboBoxItems);
 
         marketPriceBox.second.textProperty().bind(createStringBinding(
                 () -> {
@@ -268,22 +261,56 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         return new Tuple2(textField, vBox);
     }
 
-    private Tuple3<TextField, Label, VBox> getMarketPriceBox(String text) {
-        TextField textField = new TextField();
-        textField.setEditable(false);
-        textField.setPrefWidth(180);
-        textField.setFocusTraversable(false);
-        textField.setId("price-feed-text-field");
+    private ListCell<PriceFeedComboBoxItem> getPriceFeedComboBoxListCell() {
+        return new ListCell<PriceFeedComboBoxItem>() {
+            @Override
+            protected void updateItem(PriceFeedComboBoxItem item, boolean empty) {
+                super.updateItem(item, empty);
+                if (!empty && item != null) {
+                    textProperty().bind(item.displayStringProperty);
+                } else {
+                    textProperty().unbind();
+                }
+            }
+        };
+    }
+
+    private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox(String text) {
+        ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
+        priceComboBox.setVisibleRowCount(40);
+        priceComboBox.setMaxWidth(210);
+        priceComboBox.setMinWidth(210);
+        priceComboBox.setFocusTraversable(false);
+        priceComboBox.setId("price-feed-combo");
+        priceComboBox.setCellFactory(p -> getPriceFeedComboBoxListCell());
+        ListCell<PriceFeedComboBoxItem> buttonCell = getPriceFeedComboBoxListCell();
+        buttonCell.setId("price-feed-combo");
+        priceComboBox.setButtonCell(buttonCell);
+
+        Label invertIcon = new Label();
+        HBox.setMargin(invertIcon, new Insets(3, 0, 0, 0));
+        invertIcon.setId("invert-market-price");
+        invertIcon.setOpacity(0.8);
+        invertIcon.setOnMouseClicked(e -> {
+            model.preferences.flipUseInvertedMarketPrice();
+        });
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(5);
+        AwesomeDude.setIcon(invertIcon, AwesomeIcon.RETWEET, "14.0");
+        hBox.getChildren().setAll(priceComboBox, invertIcon);
 
         Label label = new Label(text);
         label.setId("nav-balance-label");
-        label.setPadding(new Insets(0, 5, 0, 5));
-        label.setPrefWidth(textField.getPrefWidth());
+        label.setTextAlignment(TextAlignment.CENTER);
+        label.setPadding(new Insets(0, 25, 0, 5));
+        label.prefWidthProperty().bind(hBox.widthProperty());
+
         VBox vBox = new VBox();
         vBox.setSpacing(3);
         vBox.setPadding(new Insets(11, 0, 0, 0));
-        vBox.getChildren().addAll(textField, label);
-        return new Tuple3(textField, label, vBox);
+        vBox.getChildren().addAll(hBox, label);
+        return new Tuple3(priceComboBox, label, vBox);
     }
 
     public void setPersistedFilesCorrupted(List<String> persistedFilesCorrupted) {

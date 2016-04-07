@@ -158,12 +158,12 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private void setMarketPriceFeedCurrency() {
-        if (isTabSelected) {
+        /*if (isTabSelected) {
             if (showAllTradeCurrenciesProperty.get())
                 priceFeed.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
             else
                 priceFeed.setCurrencyCode(tradeCurrencyCode.get());
-        }
+        }*/
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

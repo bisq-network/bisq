@@ -30,6 +30,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.pricefeed.MarketPrice;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
@@ -48,6 +49,7 @@ import io.bitsquare.gui.main.overlays.windows.TacWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.CloseConnectionReason;
@@ -57,14 +59,14 @@ import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.payment.OKPayAccount;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.closed.ClosedTradableManager;
-import io.bitsquare.trade.failed.FailedTradesManager;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -76,10 +78,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -94,7 +93,7 @@ public class MainViewModel implements ViewModel {
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final DisputeManager disputeManager;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final AlertManager alertManager;
     private final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
@@ -113,6 +112,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty marketPriceInverted = new SimpleStringProperty("N/A");
     final StringProperty marketPriceCurrency = new SimpleStringProperty("");
     final ObjectProperty<PriceFeed.Type> typeProperty = new SimpleObjectProperty<>(PriceFeed.Type.LAST);
+    final ObjectProperty<PriceFeedComboBoxItem> selectedPriceFeedComboBoxItemProperty = new SimpleObjectProperty<>();
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty reservedBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
@@ -139,15 +139,16 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2pNetworkLabelId = new SimpleStringProperty("footer-pane");
 
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
-    private final PriceFeed priceFeed;
-    private final ClosedTradableManager closedTradableManager;
-    private final FailedTradesManager failedTradesManager;
+    final PriceFeed priceFeed;
     private final User user;
     private int numBtcPeers = 0;
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
     private Timer startupTimeout;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
+    final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
+    private MonadicBinding<String> marketPriceBinding;
+    private Subscription priceFeedAllLoadedSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -158,14 +159,11 @@ public class MainViewModel implements ViewModel {
     public MainViewModel(WalletService walletService, TradeWalletService tradeWalletService,
                          PriceFeed priceFeed,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
-                         OpenOfferManager openOfferManager, ClosedTradableManager closedTradableManager,
-                         FailedTradesManager failedTradesManager, DisputeManager disputeManager, Preferences preferences,
+                         OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.priceFeed = priceFeed;
-        this.closedTradableManager = closedTradableManager;
-        this.failedTradesManager = failedTradesManager;
         this.user = user;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -472,6 +470,7 @@ public class MainViewModel implements ViewModel {
         setupDevDummyPaymentAccount();
         setupMarketPriceFeed();
         swapPendingOfferFundingEntries();
+        fillPriceFeedComboBoxItems();
 
         showAppScreen.set(true);
 
@@ -666,7 +665,7 @@ public class MainViewModel implements ViewModel {
             priceFeed.setType(PriceFeed.Type.LAST);
         priceFeed.init(price -> {
                     marketPrice.set(formatter.formatMarketPrice(price));
-                    marketPriceInverted.set(formatter.formatMarketPrice(1 / price, 8));
+                    marketPriceInverted.set(price != 0 ? formatter.formatMarketPrice(1 / price, 8) : "");
                 },
                 (errorMessage, throwable) -> {
                     marketPrice.set("N/A");
@@ -674,6 +673,74 @@ public class MainViewModel implements ViewModel {
                 });
         marketPriceCurrency.bind(priceFeed.currencyCodeProperty());
         typeProperty.bind(priceFeed.typeProperty());
+
+        marketPriceBinding = EasyBind.combine(
+                marketPriceCurrency, marketPrice, marketPriceInverted, preferences.useInvertedMarketPriceProperty(),
+                (marketPriceCurrency, marketPrice, marketPriceInverted, useInvertedMarketPrice) ->
+                        (useInvertedMarketPrice ? marketPriceInverted : marketPrice) +
+                                (useInvertedMarketPrice ? " BTC/" + marketPriceCurrency : " " + marketPriceCurrency + "/BTC"));
+
+        marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
+            if (selectedPriceFeedComboBoxItemProperty.get() == null) {
+                findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
+                        .ifPresent(item -> {
+                            item.setDisplayString(newValue);
+                            selectedPriceFeedComboBoxItemProperty.set(item);
+                        });
+            }
+            if (selectedPriceFeedComboBoxItemProperty.get() != null)
+                selectedPriceFeedComboBoxItemProperty.get().setDisplayString(newValue);
+        });
+
+        priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeed.currenciesUpdateFlagProperty(), newPriceUpdate -> {
+            priceFeedComboBoxItems.stream().forEach(item -> {
+                String currencyCode = item.currencyCode;
+                MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
+                boolean useInvertedMarketPrice = preferences.getUseInvertedMarketPrice();
+                String priceString;
+                String currencyPairString = useInvertedMarketPrice ? "BTC/" + currencyCode : currencyCode + "/BTC";
+                if (marketPrice != null) {
+                    double price = marketPrice.getPrice(priceFeed.getType());
+                    if (price != 0) {
+                        double priceInverted = 1 / price;
+                        priceString = useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, 8) : formatter.formatMarketPrice(price);
+                    } else {
+                        priceString = "N/A";
+                    }
+                } else {
+                    priceString = "N/A";
+                }
+                item.setDisplayString(priceString + " " + currencyPairString);
+            });
+        });
+
+        preferences.getTradeCurrenciesAsObservable().addListener((ListChangeListener<TradeCurrency>) c -> {
+            UserThread.runAfter(() -> fillPriceFeedComboBoxItems(), 100, TimeUnit.MILLISECONDS);
+        });
+    }
+
+    public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
+        if (item != null) {
+            selectedPriceFeedComboBoxItemProperty.set(item);
+            priceFeed.setCurrencyCode(item.currencyCode);
+        } else {
+            findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
+                    .ifPresent(item2 -> selectedPriceFeedComboBoxItemProperty.set(item2));
+        }
+    }
+
+    Optional<PriceFeedComboBoxItem> findPriceFeedComboBoxItem(String currencyCode) {
+        return priceFeedComboBoxItems.stream()
+                .filter(item -> item.currencyCode.equals(currencyCode))
+                .findAny();
+    }
+
+    private void fillPriceFeedComboBoxItems() {
+        List<PriceFeedComboBoxItem> currencyItems = preferences.getTradeCurrenciesAsObservable()
+                .stream()
+                .map(tradeCurrency -> new PriceFeedComboBoxItem(tradeCurrency.getCode()))
+                .collect(Collectors.toList());
+        priceFeedComboBoxItems.setAll(currencyItems);
     }
 
     private void displayAlertIfPresent(Alert alert) {

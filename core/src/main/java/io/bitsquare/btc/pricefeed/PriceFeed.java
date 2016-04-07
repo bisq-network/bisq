@@ -8,13 +8,10 @@ import io.bitsquare.app.Log;
 import io.bitsquare.btc.pricefeed.providers.BitcoinAveragePriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PoloniexPriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PriceProvider;
-import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import io.bitsquare.locale.CurrencyUtil;
+import javafx.beans.property.*;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +40,10 @@ public class PriceFeed {
         }
     }
 
-    private static final long PERIOD_FIAT_SEC = Timer.STRESS_TEST ? 30 : 60;    // We load only the selected currency on interval. Only the first request we load all
-    private static final long PERIOD_CRYPTO_SEC = Timer.STRESS_TEST ? 30 : 10 * 60; // We load the full list with 33kb so we don't want to load too often
+    private static final long PERIOD_FIAT_SEC = 60;
+    private static final long PERIOD_ALL_FIAT_SEC = 60 * 5;
+    private static final long PERIOD_CRYPTO_SEC = 60;
+    private static final long PERIOD_ALL_CRYPTO_SEC = 60 * 5;
 
     private final Map<String, MarketPrice> cache = new HashMap<>();
     private final PriceProvider fiatPriceProvider = new BitcoinAveragePriceProvider();
@@ -53,8 +52,9 @@ public class PriceFeed {
     private FaultHandler faultHandler;
     private Type type;
     private String currencyCode;
-    transient private final StringProperty currencyCodeProperty = new SimpleStringProperty();
-    transient private final ObjectProperty<Type> typeProperty = new SimpleObjectProperty<>();
+    private final StringProperty currencyCodeProperty = new SimpleStringProperty();
+    private final ObjectProperty<Type> typeProperty = new SimpleObjectProperty<>();
+    private final IntegerProperty currenciesUpdateFlag = new SimpleIntegerProperty(0);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +84,10 @@ public class PriceFeed {
             UserThread.runPeriodically(() -> requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPrice),
                     PERIOD_CRYPTO_SEC);
         });
+
+        UserThread.runPeriodically(() -> requestAllPrices(fiatPriceProvider, this::applyPrice), PERIOD_ALL_FIAT_SEC);
+        UserThread.runPeriodically(() -> requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPrice), PERIOD_ALL_CRYPTO_SEC);
+
         requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPrice);
     }
 
@@ -109,6 +113,11 @@ public class PriceFeed {
         this.currencyCode = currencyCode;
         currencyCodeProperty.set(currencyCode);
         applyPrice();
+
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            requestPrice(fiatPriceProvider);
+        else
+            requestPrice(cryptoCurrenciesPriceProvider);
     }
 
 
@@ -132,6 +141,10 @@ public class PriceFeed {
         return typeProperty;
     }
 
+    public IntegerProperty currenciesUpdateFlagProperty() {
+        return currenciesUpdateFlag;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -142,13 +155,15 @@ public class PriceFeed {
             if (cache.containsKey(currencyCode)) {
                 MarketPrice marketPrice = cache.get(currencyCode);
                 //log.debug("applyPrice type=" + type);
-                priceConsumer.accept(marketPrice.getPrice(type));
+                if (marketPrice != null)
+                    priceConsumer.accept(marketPrice.getPrice(type));
             } else {
                 String errorMessage = "We don't have a price for currencyCode " + currencyCode;
                 log.debug(errorMessage);
                 faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
             }
         }
+        currenciesUpdateFlag.setValue(currenciesUpdateFlag.get() + 1);
     }
 
     private void requestPrice(PriceProvider provider) {
