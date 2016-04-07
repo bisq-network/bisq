@@ -62,7 +62,8 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public EmptyWalletWindow(WalletService walletService, WalletPasswordWindow walletPasswordWindow, OpenOfferManager openOfferManager, BSFormatter formatter) {
+    public EmptyWalletWindow(WalletService walletService, WalletPasswordWindow walletPasswordWindow,
+                             OpenOfferManager openOfferManager, BSFormatter formatter) {
         this.walletService = walletService;
         this.walletPasswordWindow = walletPasswordWindow;
         this.openOfferManager = openOfferManager;
@@ -140,8 +141,23 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     }
 
     private void doEmptyWallet(KeyParameter aesKey) {
+        if (!openOfferManager.getOpenOffers().isEmpty()) {
+            UserThread.runAfter(() ->
+                    new Popup().warning("You have open offers which will be removed if you empty the wallet.\n" +
+                            "Are you sure that you want to empty your wallet?")
+                            .actionButtonText("Yes, I am sure")
+                            .onAction(() -> {
+                                doEmptyWallet2(aesKey);
+                            })
+                            .show(), 300, TimeUnit.MILLISECONDS);
+        } else {
+            doEmptyWallet2(aesKey);
+        }
+    }
+
+    private void doEmptyWallet2(KeyParameter aesKey) {
         emptyWalletButton.setDisable(true);
-        openOfferManager.closeAllOpenOffers(() -> {
+        openOfferManager.removeAllOpenOffers(() -> {
             try {
                 walletService.emptyWallet(addressInputTextField.getText(),
                         aesKey,

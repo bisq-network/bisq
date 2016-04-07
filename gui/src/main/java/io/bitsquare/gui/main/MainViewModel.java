@@ -409,13 +409,10 @@ public class MainViewModel implements ViewModel {
     }
 
     private void onAllServicesInitialized() {
+        // We need to request the password in case we have an encrypted wallet as we need to set the aesKey to our trading wallet.
         // In case we have any offers open or a pending trade we need to unlock our trading wallet so a trade can be executed automatically
-        // Otherwise we delay the password request to create offer, or take offer.
         // When the password is set it will be stored to the tradeWalletService as well, so its only needed after a restart.
-        if (walletService.getWallet().isEncrypted() &&
-                (openOfferManager.getOpenOffers().size() > 0
-                        || tradeManager.getTrades().size() > 0
-                        || disputeManager.getDisputesAsObservableList().size() > 0)) {
+        if (walletService.getWallet().isEncrypted()) {
             walletPasswordWindow
                     .onAesKey(aesKey -> {
                         tradeWalletService.setAesKey(aesKey);

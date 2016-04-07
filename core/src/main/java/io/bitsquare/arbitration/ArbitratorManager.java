@@ -145,8 +145,12 @@ public class ArbitratorManager {
                         ArbitratorManager.this.onBootstrapComplete();
                     }
                 };
-                p2PService.addP2PServiceListener(bootstrapListener);
 
+                if (p2PService.isBootstrapped())
+                    onBootstrapComplete();
+                else
+                    p2PService.addP2PServiceListener(bootstrapListener);
+                
             } else {
                 republishArbitrator();
             }

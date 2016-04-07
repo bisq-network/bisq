@@ -53,6 +53,7 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -121,6 +122,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         };
         p2PService.addP2PServiceListener(bootstrapListener);
         p2PService.addDecryptedDirectMessageListener(this);
+
+        if (p2PService.isBootstrapped())
+            onBootstrapComplete();
+        else
+            p2PService.addP2PServiceListener(bootstrapListener);
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -151,6 +157,15 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             UserThread.runAfter(completeHandler::run, openOffers.size() * 100 + 200, TimeUnit.MILLISECONDS);
     }
 
+    public void removeAllOpenOffers(@Nullable Runnable completeHandler) {
+        List<OpenOffer> openOffersList = new ArrayList<>(openOffers);
+        openOffersList.forEach(openOffer -> removeOpenOffer(openOffer, () -> {
+        }, errorMessage -> {
+        }));
+        if (completeHandler != null)
+            UserThread.runAfter(completeHandler::run, openOffers.size() * 100 + 200, TimeUnit.MILLISECONDS);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DecryptedDirectMessageListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +187,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onBootstrapComplete() {
-        p2PService.removeP2PServiceListener(bootstrapListener);
+        if (bootstrapListener != null)
+            p2PService.removeP2PServiceListener(bootstrapListener);
 
         stopped = false;
 

@@ -29,7 +29,6 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
-import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -61,10 +60,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class TakeOfferDataModel extends ActivatableDataModel {
     private final TradeManager tradeManager;
-    private final TradeWalletService tradeWalletService;
-    private final WalletService walletService;
+    final TradeWalletService tradeWalletService;
+    final WalletService walletService;
     private final User user;
-    private final WalletPasswordWindow walletPasswordWindow;
     private final Preferences preferences;
     private final PriceFeed priceFeed;
     private final BlockchainService blockchainService;
@@ -103,14 +101,13 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     @Inject
     TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
-                       WalletService walletService, User user, WalletPasswordWindow walletPasswordWindow,
+                       WalletService walletService, User user,
                        Preferences preferences, PriceFeed priceFeed, BlockchainService blockchainService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
         this.user = user;
-        this.walletPasswordWindow = walletPasswordWindow;
         this.preferences = preferences;
         this.priceFeed = priceFeed;
         this.blockchainService = blockchainService;
@@ -227,17 +224,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to 
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
-        if (walletService.getWallet().isEncrypted() && tradeWalletService.getAesKey() == null) {
-            walletPasswordWindow.onAesKey(aesKey -> {
-                tradeWalletService.setAesKey(aesKey);
-                doTakeOffer(tradeResultHandler);
-            }).show();
-        } else {
-            doTakeOffer(tradeResultHandler);
-        }
-    }
-
-    private void doTakeOffer(TradeResultHandler tradeResultHandler) {
         tradeManager.onTakeOffer(amountAsCoin.get(),
                 totalToPayAsCoin.get().subtract(takerFeeAsCoin),
                 offer,

@@ -145,9 +145,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         addMultilineLabel(root, gridRow,
                 "With password protection you need to enter your password when" +
                         " withdrawing bitcoin out of your wallet or " +
-                        "if you want to view or restore a wallet from seed words.\n" +
-                        "For the transactions used in the trade process we don't support password protection as that would make automatic offer " +
-                        "execution impossible, but you need to provide the password at application startup if you have open offer, trades or disputes.",
+                        "if you want to view or restore a wallet from seed words as well as at application startup.",
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
     }
 

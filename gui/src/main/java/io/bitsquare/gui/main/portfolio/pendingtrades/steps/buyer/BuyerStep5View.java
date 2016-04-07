@@ -23,6 +23,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Tuple2;
@@ -46,6 +47,8 @@ import javafx.scene.layout.HBox;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.spongycastle.crypto.params.KeyParameter;
+
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -223,8 +226,6 @@ public class BuyerStep5View extends TradeStepView {
     }
 
     private void doWithdrawal(Coin receiverAmount) {
-        useSavingsWalletButton.setDisable(true);
-        withdrawToExternalWalletButton.setDisable(true);
         String toAddress = withdrawAddressTextField.getText();
         ResultHandler resultHandler = this::handleTradeCompleted;
         FaultHandler faultHandler = (errorMessage, throwable) -> {
@@ -236,17 +237,16 @@ public class BuyerStep5View extends TradeStepView {
                 new Popup().error(errorMessage).show();
         };
         if (model.dataModel.walletService.getWallet().isEncrypted()) {
-            model.dataModel.walletPasswordWindow.onAesKey(aesKey -> doWithdrawRequest(toAddress, receiverAmount, aesKey, resultHandler, faultHandler))
-                    .onClose(() -> {
-                        useSavingsWalletButton.setDisable(false);
-                        withdrawToExternalWalletButton.setDisable(false);
-                    })
-                    .show();
+            UserThread.runAfter(() -> model.dataModel.walletPasswordWindow.onAesKey(aesKey ->
+                    doWithdrawRequest(toAddress, receiverAmount, aesKey, resultHandler, faultHandler))
+                    .show(), 300, TimeUnit.MILLISECONDS);
         } else
             doWithdrawRequest(toAddress, receiverAmount, null, resultHandler, faultHandler);
     }
 
     private void doWithdrawRequest(String toAddress, Coin receiverAmount, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
+        useSavingsWalletButton.setDisable(true);
+        withdrawToExternalWalletButton.setDisable(true);
         model.dataModel.onWithdrawRequest(toAddress,
                 receiverAmount,
                 aesKey,

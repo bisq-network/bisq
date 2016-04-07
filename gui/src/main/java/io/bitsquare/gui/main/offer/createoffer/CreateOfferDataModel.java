@@ -30,7 +30,6 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
-import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
@@ -63,14 +62,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class CreateOfferDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
     final WalletService walletService;
-    private final TradeWalletService tradeWalletService;
+    final TradeWalletService tradeWalletService;
     private final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final PriceFeed priceFeed;
     private Navigation navigation;
-    private final WalletPasswordWindow walletPasswordWindow;
     private final BlockchainService blockchainService;
     private final BSFormatter formatter;
     private final String offerId;
@@ -117,8 +115,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     @Inject
     CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService, TradeWalletService tradeWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeed priceFeed,
-                         Navigation navigation,
-                         WalletPasswordWindow walletPasswordWindow, BlockchainService blockchainService, BSFormatter formatter) {
+                         Navigation navigation, BlockchainService blockchainService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -128,7 +125,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.p2PService = p2PService;
         this.priceFeed = priceFeed;
         this.navigation = navigation;
-        this.walletPasswordWindow = walletPasswordWindow;
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
@@ -286,17 +282,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        if (walletService.getWallet().isEncrypted() && tradeWalletService.getAesKey() == null) {
-            walletPasswordWindow.onAesKey(aesKey -> {
-                tradeWalletService.setAesKey(aesKey);
-                doPlaceOffer(offer, resultHandler);
-            }).show();
-        } else {
-            doPlaceOffer(offer, resultHandler);
-        }
-    }
-
-    private void doPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
         openOfferManager.placeOffer(offer, totalToPayAsCoin.get().subtract(offerFeeAsCoin), useSavingsWallet, resultHandler);
     }
 

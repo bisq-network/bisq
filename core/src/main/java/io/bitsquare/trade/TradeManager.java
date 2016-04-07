@@ -151,13 +151,15 @@ public class TradeManager {
         bootstrapListener = new BootstrapListener() {
             @Override
             public void onBootstrapComplete() {
-                Log.traceCall("onNetworkReady");
                 // Get called after onMailboxMessageAdded from initial data request
                 // The mailbox message will be removed inside the tasks after they are processed successfully
                 initPendingTrades();
             }
         };
-        p2PService.addP2PServiceListener(bootstrapListener);
+        if (p2PService.isBootstrapped())
+            initPendingTrades();
+        else
+            p2PService.addP2PServiceListener(bootstrapListener);
     }
 
 
@@ -167,7 +169,8 @@ public class TradeManager {
 
     private void initPendingTrades() {
         Log.traceCall();
-        p2PService.removeP2PServiceListener(bootstrapListener);
+        if (bootstrapListener != null)
+            p2PService.removeP2PServiceListener(bootstrapListener);
 
         //List<Trade> failedTrades = new ArrayList<>();
         for (Trade trade : trades) {

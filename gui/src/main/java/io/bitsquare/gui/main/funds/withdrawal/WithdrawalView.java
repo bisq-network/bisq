@@ -25,6 +25,7 @@ import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -58,6 +59,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -281,7 +283,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void doWithdraw(Coin amount, FutureCallback<Transaction> callback) {
         if (walletService.getWallet().isEncrypted()) {
-            walletPasswordWindow.onAesKey(aesKey -> sendFunds(amount, aesKey, callback)).show();
+            UserThread.runAfter(() -> walletPasswordWindow.onAesKey(aesKey ->
+                    sendFunds(amount, aesKey, callback))
+                    .show(), 300, TimeUnit.MILLISECONDS);
         } else {
             sendFunds(amount, null, callback);
         }

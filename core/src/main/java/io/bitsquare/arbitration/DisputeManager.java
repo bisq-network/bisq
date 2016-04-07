@@ -125,7 +125,10 @@ public class DisputeManager {
                 applyMessages();
             }
         };
-        p2PService.addP2PServiceListener(bootstrapListener);
+        if (p2PService.isBootstrapped())
+            applyMessages();
+        else
+            p2PService.addP2PServiceListener(bootstrapListener);
     }
 
     private void applyMessages() {
@@ -146,7 +149,8 @@ public class DisputeManager {
         });
         decryptedMailboxMessageWithPubKeys.clear();
 
-        p2PService.removeP2PServiceListener(bootstrapListener);
+        if (bootstrapListener != null)
+            p2PService.removeP2PServiceListener(bootstrapListener);
     }
 
 

@@ -37,7 +37,6 @@ import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
-import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.trade.Trade;
@@ -110,7 +109,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableGroupHeadline tableGroupHeadline;
     private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages;
     private Button sendButton;
-    private boolean isBootstrapped;
     private Subscription inputTextAreaTextSubscription;
 
 
@@ -175,17 +173,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         };
 
         disputeDirectMessageListListener = c -> scrollToBottom();
-
-        if (!p2PService.isBootstrapped()) {
-            p2PService.addP2PServiceListener(new BootstrapListener() {
-                @Override
-                public void onBootstrapComplete() {
-                    isBootstrapped = true;
-                }
-            });
-        } else {
-            isBootstrapped = true;
-        }
     }
 
     @Override
@@ -425,7 +412,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendButton = new Button("Send");
             sendButton.setDefaultButton(true);
             sendButton.setOnAction(e -> {
-                if (isBootstrapped) {
+                if (p2PService.isBootstrapped()) {
                     String text = inputTextArea.getText();
                     if (!text.isEmpty())
                         onSendMessage(text, selectedDispute);
