@@ -27,6 +27,7 @@ import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
+// Helps run delayed and periodic actions in the caller thread.
 public class UserThread {
     private static final Logger log = LoggerFactory.getLogger(UserThread.class);
     private static Class<? extends Timer> timerClass;
