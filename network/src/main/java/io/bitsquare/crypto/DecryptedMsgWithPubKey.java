@@ -57,7 +57,7 @@ public final class DecryptedMsgWithPubKey implements Persistable {
     @Override
     public String toString() {
         return "DecryptedMsgWithPubKey{" +
-                ", message=" + message +
+                "message=" + message +
                 ", signaturePubKey.hashCode()=" + signaturePubKey.hashCode() +
                 '}';
     }
