@@ -572,7 +572,7 @@ public class Connection implements MessageListener {
         @Override
         public String toString() {
             return "SharedSpace{" +
-                    ", socket=" + socket +
+                    "socket=" + socket +
                     ", ruleViolations=" + ruleViolations +
                     '}';
         }
