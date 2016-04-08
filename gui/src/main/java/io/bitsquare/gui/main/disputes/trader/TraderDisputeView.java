@@ -494,10 +494,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             headerLabel.setTextAlignment(TextAlignment.CENTER);
                             attachmentsBox.setSpacing(5);
                             statusIcon.setStyle("-fx-font-size: 10;");
-
-                            // TODO icon not displayed correctly (too small), don't knwo why....
-                            AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY, "16.0");
-                            copyIcon.getStyleClass().add("copy-icon");// -fx-cursor: hand;
                             Tooltip.install(copyIcon, new Tooltip("Copy to clipboard"));
                             messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);
                         }
@@ -641,7 +637,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     AnchorPane.setBottomAnchor(messageLabel, bottomBorder + 10);
                                 }
 
-
+                                // Need to set it here otherwise style is not correct
+                                AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY, "16.0");
+                                copyIcon.getStyleClass().add("copy-icon");
+                                
                                 // TODO There are still some cell rendering issues on updates
                                 setGraphic(messageAnchorPane);
                             } else {
