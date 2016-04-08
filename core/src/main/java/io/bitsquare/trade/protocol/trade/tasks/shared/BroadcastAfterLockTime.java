@@ -78,10 +78,10 @@ public class BroadcastAfterLockTime extends TradeTask {
         log.debug("payoutTxFromWallet:" + payoutTxFromWallet);
         if (payoutTxFromWallet != null)
             payoutTx = payoutTxFromWallet;
-        
+
         TransactionConfidence.ConfidenceType confidenceType = payoutTx.getConfidence().getConfidenceType();
         log.debug("payoutTx confidenceType:" + confidenceType);
-        if (confidenceType.equals(TransactionConfidence.ConfidenceType.BUILDING)) {
+        if (confidenceType.equals(TransactionConfidence.ConfidenceType.BUILDING) || confidenceType.equals(TransactionConfidence.ConfidenceType.PENDING)) {
             log.debug("payoutTx already building:" + payoutTx);
             trade.setState(Trade.State.PAYOUT_BROAD_CASTED);
             complete();
