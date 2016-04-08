@@ -146,7 +146,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     @Override
     protected void activate() {
         if (BitsquareApp.DEV_MODE) {
-            amount.set("0.01");
+            amount.set("0.0001");
             minAmount.set(amount.get());
             price.set("400");
             volume.set("0.04");
