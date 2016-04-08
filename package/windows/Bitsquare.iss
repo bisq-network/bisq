@@ -3,7 +3,7 @@
 [Setup]
 AppId={{bitsquare}}
 AppName=Bitsquare
-AppVersion=0.3.7
+AppVersion=0.4.0
 AppVerName=Bitsquare
 AppPublisher=Bitsquare
 AppComments=Bitsquare
