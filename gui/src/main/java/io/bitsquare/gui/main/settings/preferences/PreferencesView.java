@@ -311,7 +311,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
         };
 
-        transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Transaction fee (satoshi/byte):").second;
+        transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Withdrawal transaction fee (satoshi/byte):").second;
         transactionFeeFocusedListener = (o, oldValue, newValue) -> {
             if (oldValue && !newValue) {
                 try {

@@ -496,7 +496,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             statusIcon.setStyle("-fx-font-size: 10;");
 
                             // TODO icon not displayed correctly (too small), don't knwo why....
-                            AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
+                            AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY, "16.0");
                             copyIcon.getStyleClass().add("copy-icon");// -fx-cursor: hand;
                             Tooltip.install(copyIcon, new Tooltip("Copy to clipboard"));
                             messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);

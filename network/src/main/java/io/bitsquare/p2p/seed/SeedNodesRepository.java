@@ -21,23 +21,12 @@ public class SeedNodesRepository {
             // access still his his app
 
             // mainnet
-            // v0.3.3
-            /* new NodeAddress("oyyii5ogv7y7iadi.onion:8000"),
-            new NodeAddress("ugcro2f5xnkguash.onion:8000"),
-            new NodeAddress("qarhpdsl6mfhbnud.onion:8000"),*/
-
-            // v0.3.4
-           /* new NodeAddress("lih5zsr2bvxi24pk.onion:8000"),
-            new NodeAddress("s5xpstlooosehtxm.onion:8000"),
-            new NodeAddress("izs5oz7i5ta7c2ir.onion:8000"),*/
-
             // v0.3.5, v0.3.6 (backwards compatible)
             /*new NodeAddress("hulvbm5xjn7b7ku4.onion:8000"),
             new NodeAddress("3efgjjbdvhbvck3x.onion:8000"),
             new NodeAddress("3unfcshgwipxhxfm.onion:8000"),*/
 
-
-            // v0.3.7
+            // v0.4.0
             new NodeAddress("ybmi4iaesugslxrw.onion:8000"),
             new NodeAddress("ufwnvo775jfnjeux.onion:8000"),
             new NodeAddress("b66vnevaljo6xt5a.onion:8000"),

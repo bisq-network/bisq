@@ -91,6 +91,7 @@ public class BitsquareApp extends Application {
     private MainView mainView;
 
     public static Runnable shutDownHandler;
+    private boolean shutDownRequested;
 
     public static void setEnvironment(Environment env) {
         BitsquareApp.env = env;
@@ -189,7 +190,7 @@ public class BitsquareApp extends Application {
             // configure the primary stage
             primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
             primaryStage.setScene(scene);
-            primaryStage.setMinWidth(1080);
+            primaryStage.setMinWidth(1130);
             primaryStage.setMinHeight(620);
 
             // on windows the title icon is also used as task bar icon in a larger size
@@ -229,37 +230,39 @@ public class BitsquareApp extends Application {
     }
 
     private void showErrorPopup(Throwable throwable, boolean doShutDown) {
-        if (scene == null) {
-            scene = new Scene(new StackPane(), 1000, 650);
-            primaryStage.setScene(scene);
-            primaryStage.show();
-        }
-        try {
-            try {
-                if (!popupOpened) {
-                    String message = throwable.getMessage();
-                    popupOpened = true;
-                    if (message != null)
-                        new Popup().error(message).onClose(() -> popupOpened = false).show();
-                    else
-                        new Popup().error(throwable.toString()).onClose(() -> popupOpened = false).show();
-                }
-            } catch (Throwable throwable3) {
-                log.error("Error at displaying Throwable.");
-                throwable3.printStackTrace();
+        if (!shutDownRequested) {
+            if (scene == null) {
+                scene = new Scene(new StackPane(), 1000, 650);
+                primaryStage.setScene(scene);
+                primaryStage.show();
             }
-            if (doShutDown)
-                stop();
-        } catch (Throwable throwable2) {
-            // If printStackTrace cause a further exception we don't pass the throwable to the Popup.
-            Dialogs.create()
-                    .owner(primaryStage)
-                    .title("Error")
-                    .message(throwable.toString())
-                    .masthead("A fatal exception occurred at startup.")
-                    .showError();
-            if (doShutDown)
-                stop();
+            try {
+                try {
+                    if (!popupOpened) {
+                        String message = throwable.getMessage();
+                        popupOpened = true;
+                        if (message != null)
+                            new Popup().error(message).onClose(() -> popupOpened = false).show();
+                        else
+                            new Popup().error(throwable.toString()).onClose(() -> popupOpened = false).show();
+                    }
+                } catch (Throwable throwable3) {
+                    log.error("Error at displaying Throwable.");
+                    throwable3.printStackTrace();
+                }
+                if (doShutDown)
+                    stop();
+            } catch (Throwable throwable2) {
+                // If printStackTrace cause a further exception we don't pass the throwable to the Popup.
+                Dialogs.create()
+                        .owner(primaryStage)
+                        .title("Error")
+                        .message(throwable.toString())
+                        .masthead("A fatal exception occurred at startup.")
+                        .showError();
+                if (doShutDown)
+                    stop();
+            }
         }
     }
 
@@ -308,6 +311,7 @@ public class BitsquareApp extends Application {
 
     @Override
     public void stop() {
+        shutDownRequested = true;
         gracefulShutDown(() -> {
             log.info("App shutdown complete");
             System.exit(0);
@@ -318,7 +322,9 @@ public class BitsquareApp extends Application {
         log.debug("gracefulShutDown");
         new Popup().headLine("Shut down in progress")
                 .backgroundInfo("Shutting down application can take a few seconds.\n" +
-                        "Please don't interrupt that process.").closeButtonText("Ok")
+                        "Please don't interrupt that process.")
+                .hideCloseButton()
+                .useAnimation(false)
                 .show();
         try {
             if (injector != null) {

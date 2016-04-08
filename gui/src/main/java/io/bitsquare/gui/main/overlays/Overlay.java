@@ -57,7 +57,6 @@ import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 public abstract class Overlay<T extends Overlay> {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +129,8 @@ public abstract class Overlay<T extends Overlay> {
     protected double buttonDistance = 20;
     protected Type type = Type.Undefined;
     protected boolean hideCloseButton;
-    
+    protected boolean useAnimation;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -338,6 +338,11 @@ public abstract class Overlay<T extends Overlay> {
 
     public T hideCloseButton() {
         this.hideCloseButton = true;
+        return (T) this;
+    }
+
+    public T useAnimation(boolean useAnimation) {
+        this.useAnimation = useAnimation;
         return (T) this;
     }
 
@@ -746,7 +751,7 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected double getDuration(double duration) {
-        return Preferences.useAnimations() ? duration : 1;
+        return useAnimation && Preferences.useAnimations() ? duration : 1;
     }
 
     @Override

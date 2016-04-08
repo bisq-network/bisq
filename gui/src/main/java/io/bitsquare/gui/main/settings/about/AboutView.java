@@ -61,7 +61,7 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Support Bitsquare", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        label = addLabel(root, gridRow, "Bitsquare is not a company but a community project and open for participation. If you want to participate check out our web page.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        label = addLabel(root, gridRow, "Bitsquare is not a company but a community project and open for participation. If you want to participate or support Bitsquare please follow the links below.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
