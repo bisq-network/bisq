@@ -30,7 +30,7 @@ public final class NodeAddress implements Persistable, Payload {
         return hostName + ":" + port;
     }
 
-    // We use just a few chars form or address to blur the potential receiver for sent messages
+    // We use just a few chars from the full address to blur the potential receiver for sent messages
     public byte[] getAddressPrefixHash() {
         if (addressPrefixHash == null)
             addressPrefixHash = Hash.getHash(getFullAddress().substring(0, Math.min(2, getFullAddress().length())));
