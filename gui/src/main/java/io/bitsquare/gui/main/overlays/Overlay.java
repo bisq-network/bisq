@@ -129,7 +129,7 @@ public abstract class Overlay<T extends Overlay> {
     protected double buttonDistance = 20;
     protected Type type = Type.Undefined;
     protected boolean hideCloseButton;
-    protected boolean useAnimation;
+    protected boolean useAnimation = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
