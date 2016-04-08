@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade.tasks.shared;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
+import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
@@ -69,18 +70,23 @@ public class BroadcastAfterLockTime extends TradeTask {
     }
 
     private void broadcastTx() {
+        Log.traceCall();
         Transaction payoutTx = trade.getPayoutTx();
         checkNotNull(payoutTx, "payoutTx must not be null at BroadcastAfterLockTime.broadcastTx");
 
         Transaction payoutTxFromWallet = processModel.getWalletService().getWallet().getTransaction(payoutTx.getHash());
+        log.debug("payoutTxFromWallet:" + payoutTxFromWallet);
         if (payoutTxFromWallet != null)
             payoutTx = payoutTxFromWallet;
         
         TransactionConfidence.ConfidenceType confidenceType = payoutTx.getConfidence().getConfidenceType();
+        log.debug("payoutTx confidenceType:" + confidenceType);
         if (confidenceType.equals(TransactionConfidence.ConfidenceType.BUILDING)) {
+            log.debug("payoutTx already building:" + payoutTx);
             trade.setState(Trade.State.PAYOUT_BROAD_CASTED);
             complete();
         } else {
+            log.debug("do broadcast tx " + payoutTx);
             processModel.getTradeWalletService().broadcastTx(payoutTx, new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
@@ -91,6 +97,7 @@ public class BroadcastAfterLockTime extends TradeTask {
 
                 @Override
                 public void onFailure(@NotNull Throwable t) {
+                    log.error("BroadcastTx failed. Error:" + t.getMessage());
                     failed(t);
                 }
             });
