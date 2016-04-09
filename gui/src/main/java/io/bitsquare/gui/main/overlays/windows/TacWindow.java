@@ -37,7 +37,7 @@ public class TacWindow extends Overlay<TacWindow> {
                     "    - You must reply within 48 hours to each arbitrator inquiry.\n" +
                     "    - Failure to follow the above requirements may result in loss of your security deposit.\n\n" +
                     "For more details and a general overview please read the full documentation about the " +
-                    "arbitration system and the dispute process at:";
+                    "arbitration system and the dispute process.";
             message(text);
             actionButtonText("I agree");
             closeButtonText("I disagree and quit");
