@@ -17,12 +17,15 @@
 
 package io.bitsquare.gui.main.account;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.arbitratorregistration.ArbitratorRegistrationView;
 import io.bitsquare.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -47,6 +50,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
+    private Preferences preferences;
     private Tab selectedTab;
     Tab arbitratorRegistrationTab;
     private ArbitratorRegistrationView arbitratorRegistrationView;
@@ -56,10 +60,11 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
 
     @Inject
-    private AccountView(AccountViewModel model, CachingViewLoader viewLoader, Navigation navigation) {
+    private AccountView(AccountViewModel model, CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.preferences = preferences;
     }
 
     @Override
@@ -113,6 +118,17 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
             else
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
         }
+
+        String key = "accountPrivacyInfo";
+        if (!BitsquareApp.DEV_MODE)
+            new Popup().backgroundInfo("In the account section you can setup your payment accounts for national currencies " +
+                    "as well as for crypto currencies.\n\n" +
+                    "Please note that this data is stored locally on your computer only. Bitsquare does not operate servers " +
+                    "and has no access to users data.\n\n" +
+                    "When you are trading with someone you exchange in the trade process with your peer the " +
+                    "required account data for that trade.")
+                    .dontShowAgainId(key, preferences)
+                    .show();
     }
 
     @Override
