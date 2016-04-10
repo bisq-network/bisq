@@ -36,7 +36,7 @@ public class FileUtil {
             try {
                 Files.copy(origFile, backupFile);
 
-                pruneBackup(backupDir);
+                pruneBackup(backupFileDir);
             } catch (IOException e) {
                 log.error("Backup key failed " + e.getMessage());
                 e.printStackTrace();
@@ -55,6 +55,9 @@ public class FileUtil {
                     if (file.isFile()) {
                         if (!file.delete())
                             log.error("Failed to delete file: " + file);
+                        else
+                            pruneBackup(backupDir);
+                        
                     } else {
                         pruneBackup(new File(Paths.get(backupDir.getAbsolutePath(), file.getName()).toString()));
                     }
