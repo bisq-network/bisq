@@ -282,7 +282,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             String key = "securityDepositInfo";
             new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
                     "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
-                    "It will be refunded to you after the trade has successfully completed.")
+                    "It will be refunded to you after the trade has successfully completed.\n\n" +
+                    "Please note that you need to keep you application running if you have an open offer.\n" +
+                    "When another trader wants to take your offer it requires that your application is online and able to react.\n" +
+                    "Be sure that you have standby mode deactivated as that would disconnect your client from the network (monitor standby is not a problem).")
                     .actionButtonText("Visit FAQ web page")
                     .onAction(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
                     .closeButtonText("I understand")
