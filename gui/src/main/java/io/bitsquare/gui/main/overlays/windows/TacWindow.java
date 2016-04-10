@@ -32,7 +32,8 @@ public class TacWindow extends Overlay<TacWindow> {
                     "2. The user is responsible to use the software in compliance with local laws. Don't use Bitsquare if the usage of Bitcoin is not legal in your jurisdiction.\n\n" +
                     "3. The user confirms that he has read and agreed to the rules regrading the dispute process:\n" +
                     "    - You must finalize trades within the maximum duration specified for each payment method.\n" +
-                    "    - You must enter the correct reference text for your payment transfers.\n" +
+                    "    - You must enter the trade ID in the \"reason for payment\" text field when doing the fiat payment transfer.\n" +
+                    "    - If the bank of the fiat sender charges fees for the fiat transfer the fiat sender (bitcoin buyer) has to cover the fees.\n" +
                     "    - You must cooperate with the arbitrator during the arbitration process.\n" +
                     "    - You must reply within 48 hours to each arbitrator inquiry.\n" +
                     "    - Failure to follow the above requirements may result in loss of your security deposit.\n\n" +

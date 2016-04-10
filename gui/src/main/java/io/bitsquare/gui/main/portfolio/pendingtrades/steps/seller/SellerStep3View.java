@@ -83,7 +83,7 @@ public class SellerStep3View extends TradeStepView {
                     message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
                             "Please go to your online banking web page and check if you have received " +
                             tradeAmountWithCode + " from the bitcoin buyer.\n\n" +
-                            "The reference text of the transaction is: \"" + trade.getShortId() + "\"";
+                            "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
                 }
                 if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
                     preferences.dontShowAgain(key, true);
@@ -151,7 +151,7 @@ public class SellerStep3View extends TradeStepView {
         paymentDetailsTextField.setTooltip(new Tooltip(paymentDetails));
 
         if (!isBlockChain) {
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Reference text:", model.dataModel.getReference());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Reason for payment:", model.dataModel.getReference());
             GridPane.setRowSpan(titledGroupBg, 3);
         }
 

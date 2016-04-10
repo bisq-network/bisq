@@ -84,10 +84,11 @@ public class BuyerStep2View extends TradeStepView {
                                 "Here are the payment account details of the bitcoin seller:\n" +
                                 "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
                                 "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
-                                "Please don't forget to add the reference text \"" + trade.getShortId() +
-                                "\" so the receiver can assign your payment to this trade.\n\n" +
-                                "DO NOT use any additional notice in the reference text like " +
-                                "Bitcoin, Btc or Bitsquare.";
+                                "Please don't forget to add the trade ID \"" + trade.getShortId() +
+                                "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
+                                "DO NOT use any additional notice in the \"reason for payment\" text like " +
+                                "Bitcoin, Btc or Bitsquare.\n\n" +
+                                "If your bank charges fees you have to cover those fees.";
 
                     if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
                         preferences.dontShowAgain(key, true);
@@ -168,7 +169,7 @@ public class BuyerStep2View extends TradeStepView {
         }
 
         if (!(paymentAccountContractData instanceof CryptoCurrencyAccountContractData))
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Reference text:", model.dataModel.getReference());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Reason for payment:", model.dataModel.getReference());
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
 
