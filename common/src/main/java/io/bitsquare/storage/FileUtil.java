@@ -73,7 +73,7 @@ public class FileUtil {
                 for (File c : files)
                     deleteDirectory(c);
         }
-        if (!file.delete())
+        if (file.exists() && !file.delete())
             throw new FileNotFoundException("Failed to delete file: " + file);
     }
 }
