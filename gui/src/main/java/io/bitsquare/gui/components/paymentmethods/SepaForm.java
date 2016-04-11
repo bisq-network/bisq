@@ -162,6 +162,7 @@ public class SepaForm extends PaymentMethodForm {
         flowPane.setPadding(new Insets(10, 10, 10, 10));
         flowPane.setVgap(10);
         flowPane.setHgap(10);
+        flowPane.setMinHeight(55);
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");
