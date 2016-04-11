@@ -167,14 +167,16 @@ public class Connection implements MessageListener {
             try {
                 Log.traceCall();
                 // Throttle outbound messages
-                if (System.currentTimeMillis() - lastSendTimeStamp < 20) {
-                    log.info("We got 2 sendMessage requests in less then 20 ms. We set the thread to sleep " +
-                                    "for 50 ms to avoid that we flood our peer. lastSendTimeStamp={}, now={}, elapsed={}",
-                            lastSendTimeStamp, System.currentTimeMillis(), (System.currentTimeMillis() - lastSendTimeStamp));
+                long now = System.currentTimeMillis();
+                long elapsed = now - lastSendTimeStamp;
+                if (elapsed < 20) {
+                    log.info("We got 2 sendMessage requests in less than 20 ms. We set the thread to sleep " +
+                                    "for 50 ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}",
+                            lastSendTimeStamp, now, elapsed);
                     Thread.sleep(50);
                 }
 
-                lastSendTimeStamp = System.currentTimeMillis();
+                lastSendTimeStamp = now;
                 String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
                 int size = ByteArrayUtils.objectToByteArray(message).length;
 
@@ -629,8 +631,8 @@ public class Connection implements MessageListener {
                         long now = System.currentTimeMillis();
                         long elapsed = now - lastReadTimeStamp;
                         if (elapsed < 10) {
-                            log.info("We got 2 messages received in less then 10 ms. We set the thread to sleep " +
-                                            "for 20 ms to avoid that we get flooded from our peer. lastReadTimeStamp={}, now={}, elapsed={}",
+                            log.info("We got 2 messages received in less than 10 ms. We set the thread to sleep " +
+                                            "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
                                     lastReadTimeStamp, now, elapsed);
                             Thread.sleep(20);
                         }
