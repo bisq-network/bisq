@@ -102,7 +102,6 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             });
         }
     }
-
     
     private void addContent() {
         addMultilineLabel(gridPane, ++rowIndex,

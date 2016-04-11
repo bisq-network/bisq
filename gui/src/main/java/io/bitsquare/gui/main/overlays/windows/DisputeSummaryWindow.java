@@ -38,7 +38,9 @@ import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -126,6 +128,18 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             feeToggleGroup.selectedToggleProperty().removeListener(feeToggleSelectionListener);
     }
 
+    @Override
+    protected void setupKeyHandler(Scene scene) {
+        if (!hideCloseButton) {
+            scene.setOnKeyPressed(e -> {
+                if (e.getCode() == KeyCode.ESCAPE) {
+                    e.consume();
+                    doClose();
+                }
+            });
+        }
+    }
+    
     @Override
     protected void createGridPane() {
         super.createGridPane();

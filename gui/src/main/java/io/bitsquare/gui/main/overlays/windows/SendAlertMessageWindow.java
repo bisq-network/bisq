@@ -24,10 +24,12 @@ import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import org.slf4j.Logger;
@@ -89,6 +91,18 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    protected void setupKeyHandler(Scene scene) {
+        if (!hideCloseButton) {
+            scene.setOnKeyPressed(e -> {
+                if (e.getCode() == KeyCode.ESCAPE) {
+                    e.consume();
+                    doClose();
+                }
+            });
+        }
+    }
+    
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Alert private key:", 10).second;
 

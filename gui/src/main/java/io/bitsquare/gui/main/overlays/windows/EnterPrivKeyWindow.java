@@ -22,8 +22,10 @@ import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
@@ -84,6 +86,18 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
 
     @Override
     protected void cleanup() {
+    }
+
+    @Override
+    protected void setupKeyHandler(Scene scene) {
+        if (!hideCloseButton) {
+            scene.setOnKeyPressed(e -> {
+                if (e.getCode() == KeyCode.ESCAPE) {
+                    e.consume();
+                    doClose();
+                }
+            });
+        }
     }
 
     private void addInputFields() {
