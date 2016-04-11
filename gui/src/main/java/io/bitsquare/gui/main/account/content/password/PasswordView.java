@@ -40,6 +40,7 @@ import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
 
+import static com.google.inject.internal.util.$Preconditions.checkArgument;
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
@@ -93,6 +94,9 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         setText();
 
         pwButton.setOnAction(e -> {
+            String password = passwordField.getText();
+            checkArgument(password.length() < 50, "Password must be less then 50 characters.");
+
             pwButton.setDisable(true);
             deriveStatusLabel.setText("Derive key from password");
             progressIndicator.setProgress(-1);
@@ -105,7 +109,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
             else
                 keyCrypterScrypt = ScryptUtil.getKeyCrypterScrypt();
 
-            ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, passwordField.getText(), aesKey -> {
+            ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, password, aesKey -> {
                 deriveStatusLabel.setText("");
                 progressIndicator.setVisible(false);
 

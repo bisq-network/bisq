@@ -40,10 +40,12 @@ public final class PasswordValidator extends InputValidator {
     }
 
     private ValidationResult validateMinLength(String input) {
-        if (input.length() > 7)
-            return new ValidationResult(true);
-        else
+        if (input.length() < 8)
             return new ValidationResult(false, BSResources.get("validation.passwordTooShort"));
+        else if (input.length() > 50)
+            return new ValidationResult(false, BSResources.get("validation.passwordTooLong"));
+        else
+            return new ValidationResult(true);
     }
 
 }
