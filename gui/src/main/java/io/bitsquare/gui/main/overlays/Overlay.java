@@ -380,14 +380,7 @@ public abstract class Overlay<T extends Overlay> {
             scene.getStylesheets().setAll(rootScene.getStylesheets());
             scene.setFill(Color.TRANSPARENT);
 
-            if (!hideCloseButton) {
-                scene.setOnKeyPressed(e -> {
-                    if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER) {
-                        e.consume();
-                        doClose();
-                    }
-                });
-            }
+            setupKeyHandler(scene);
 
             stage = new Stage();
             stage.setScene(scene);
@@ -418,6 +411,17 @@ public abstract class Overlay<T extends Overlay> {
             window.widthProperty().addListener(positionListener);
 
             animateDisplay();
+        }
+    }
+
+    protected void setupKeyHandler(Scene scene) {
+        if (!hideCloseButton) {
+            scene.setOnKeyPressed(e -> {
+                if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER) {
+                    e.consume();
+                    doClose();
+                }
+            });
         }
     }
 
