@@ -396,7 +396,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
 
         splashP2PNetworkProgressListener = (ov, oldValue, newValue) -> {
-            if ((double) newValue >= 1) {
+            if ((double) newValue != -1) {
                 splashP2PNetworkIndicator.setVisible(false);
                 splashP2PNetworkIndicator.setManaged(false);
             }
