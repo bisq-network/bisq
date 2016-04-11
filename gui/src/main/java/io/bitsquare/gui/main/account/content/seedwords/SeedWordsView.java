@@ -59,7 +59,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private Preferences preferences;
 
     private Button restoreButton;
-    private TextArea displaySeedWordsTextArea, restorSeedWordsTextArea;
+    private TextArea displaySeedWordsTextArea, restoreSeedWordsTextArea;
     private DatePicker datePicker, restoreDatePicker;
 
     private int gridRow = 0;
@@ -70,7 +70,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private ChangeListener<String> seedWordsTextAreaChangeListener;
     private ChangeListener<Boolean> datePickerChangeListener;
     private ChangeListener<LocalDate> dateChangeListener;
-    BooleanProperty seedWordsEdited = new SimpleBooleanProperty();
+    private BooleanProperty seedWordsEdited = new SimpleBooleanProperty();
     private String seedWordText;
     private LocalDate walletCreationDate;
 
@@ -96,8 +96,8 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         datePicker.setMouseTransparent(true);
 
         addTitledGroupBg(root, ++gridRow, 2, "Restore your wallet seed words", Layout.GROUP_DISTANCE);
-        restorSeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        restorSeedWordsTextArea.setPrefHeight(60);
+        restoreSeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        restoreSeedWordsTextArea.setPrefHeight(60);
         restoreDatePicker = addLabelDatePicker(root, ++gridRow, "Creation Date:").second;
         restoreButton = addButtonAfterGroup(root, ++gridRow, "Restore wallet");
 
@@ -109,9 +109,9 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {
-                restorSeedWordsTextArea.getStyleClass().remove("validation_error");
+                restoreSeedWordsTextArea.getStyleClass().remove("validation_error");
             } else {
-                restorSeedWordsTextArea.getStyleClass().add("validation_error");
+                restoreSeedWordsTextArea.getStyleClass().add("validation_error");
             }
         };
 
@@ -143,14 +143,14 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     public void activate() {
         seedWordsValid.addListener(seedWordsValidChangeListener);
         dateValid.addListener(datePickerChangeListener);
-        restorSeedWordsTextArea.textProperty().addListener(seedWordsTextAreaChangeListener);
+        restoreSeedWordsTextArea.textProperty().addListener(seedWordsTextAreaChangeListener);
         restoreDatePicker.valueProperty().addListener(dateChangeListener);
         restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !dateValid.get() || !seedWordsEdited.get(),
                 seedWordsValid, dateValid, seedWordsEdited));
 
         restoreButton.setOnAction(e -> onRestore());
 
-        restorSeedWordsTextArea.getStyleClass().remove("validation_error");
+        restoreSeedWordsTextArea.getStyleClass().remove("validation_error");
         restoreDatePicker.getStyleClass().remove("validation_error");
 
 
@@ -184,7 +184,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     protected void deactivate() {
         seedWordsValid.removeListener(seedWordsValidChangeListener);
         dateValid.removeListener(datePickerChangeListener);
-        restorSeedWordsTextArea.textProperty().removeListener(seedWordsTextAreaChangeListener);
+        restoreSeedWordsTextArea.textProperty().removeListener(seedWordsTextAreaChangeListener);
         restoreDatePicker.valueProperty().removeListener(dateChangeListener);
         restoreButton.disableProperty().unbind();
 
@@ -192,12 +192,12 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
 
         displaySeedWordsTextArea.setText("");
-        restorSeedWordsTextArea.setText("");
+        restoreSeedWordsTextArea.setText("");
 
         restoreDatePicker.setValue(null);
         datePicker.setValue(null);
 
-        restorSeedWordsTextArea.getStyleClass().remove("validation_error");
+        restoreSeedWordsTextArea.getStyleClass().remove("validation_error");
         restoreDatePicker.getStyleClass().remove("validation_error");
     }
 
@@ -251,9 +251,9 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     }
 
     private void doRestore() {
-        log.info("Attempting wallet restore using seed '{}' from date {}", restorSeedWordsTextArea.getText(), restoreDatePicker.getValue());
+        log.info("Attempting wallet restore using seed '{}' from date {}", restoreSeedWordsTextArea.getText(), restoreDatePicker.getValue());
         long date = restoreDatePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
-        DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(restorSeedWordsTextArea.getText()), null, "", date);
+        DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(restoreSeedWordsTextArea.getText()), null, "", date);
         walletService.restoreSeedWords(seed,
                 () -> UserThread.execute(() -> {
                     log.debug("Wallet restored with seed words");
