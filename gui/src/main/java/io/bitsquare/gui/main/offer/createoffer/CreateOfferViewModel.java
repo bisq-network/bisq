@@ -641,11 +641,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 showTransactionPublishedScreen.get()) {
             spinnerInfoText.set("");
         } else if (dataModel.isWalletFunded.get()) {
-            if (dataModel.isFeeFromFundingTxSufficient.get()) {
+            spinnerInfoText.set("");
+           /* if (dataModel.isFeeFromFundingTxSufficient.get()) {
                 spinnerInfoText.set("");
             } else {
                 spinnerInfoText.set("Check if funding tx miner fee is sufficient...");
-            }
+            }*/
         } else {
             spinnerInfoText.set("Waiting for funds...");
         }

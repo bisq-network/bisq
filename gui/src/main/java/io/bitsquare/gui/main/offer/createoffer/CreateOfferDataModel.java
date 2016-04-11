@@ -88,7 +88,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     //final BooleanProperty isMainNet = new SimpleBooleanProperty();
-    final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
+    //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
 
     // final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
