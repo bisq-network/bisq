@@ -721,30 +721,35 @@ public class MainViewModel implements ViewModel {
                 selectedPriceFeedComboBoxItemProperty.get().setDisplayString(newValue);
         });
 
-        priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeed.currenciesUpdateFlagProperty(), newPriceUpdate -> {
-            priceFeedComboBoxItems.stream().forEach(item -> {
-                String currencyCode = item.currencyCode;
-                MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
-                boolean useInvertedMarketPrice = preferences.getUseInvertedMarketPrice();
-                String priceString;
-                String currencyPairString = useInvertedMarketPrice ? "BTC/" + currencyCode : currencyCode + "/BTC";
-                if (marketPrice != null) {
-                    double price = marketPrice.getPrice(priceFeed.getType());
-                    if (price != 0) {
-                        double priceInverted = 1 / price;
-                        priceString = useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, 8) : formatter.formatMarketPrice(price);
-                    } else {
-                        priceString = "N/A";
-                    }
+        priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeed.currenciesUpdateFlagProperty(), newPriceUpdate -> setMarketPriceInItems());
+
+        preferences.getTradeCurrenciesAsObservable().addListener((ListChangeListener<TradeCurrency>) c -> {
+            UserThread.runAfter(() -> {
+                fillPriceFeedComboBoxItems();
+                setMarketPriceInItems();
+            }, 100, TimeUnit.MILLISECONDS);
+        });
+    }
+
+    private void setMarketPriceInItems() {
+        priceFeedComboBoxItems.stream().forEach(item -> {
+            String currencyCode = item.currencyCode;
+            MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
+            boolean useInvertedMarketPrice = preferences.getUseInvertedMarketPrice();
+            String priceString;
+            String currencyPairString = useInvertedMarketPrice ? "BTC/" + currencyCode : currencyCode + "/BTC";
+            if (marketPrice != null) {
+                double price = marketPrice.getPrice(priceFeed.getType());
+                if (price != 0) {
+                    double priceInverted = 1 / price;
+                    priceString = useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, 8) : formatter.formatMarketPrice(price);
                 } else {
                     priceString = "N/A";
                 }
-                item.setDisplayString(priceString + " " + currencyPairString);
-            });
-        });
-
-        preferences.getTradeCurrenciesAsObservable().addListener((ListChangeListener<TradeCurrency>) c -> {
-            UserThread.runAfter(() -> fillPriceFeedComboBoxItems(), 100, TimeUnit.MILLISECONDS);
+            } else {
+                priceString = "N/A";
+            }
+            item.setDisplayString(priceString + " " + currencyPairString);
         });
     }
 

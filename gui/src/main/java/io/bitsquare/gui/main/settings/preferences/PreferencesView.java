@@ -356,7 +356,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         fiatCurrenciesListView.setItems(fiatCurrencies);
         fiatCurrenciesComboBox.setOnAction(e -> {
             FiatCurrency selectedItem = fiatCurrenciesComboBox.getSelectionModel().getSelectedItem();
-            log.error("setOnAction " + selectedItem);
             if (selectedItem != null) {
                 preferences.addFiatCurrency(selectedItem);
                 if (allFiatCurrencies.contains(selectedItem)) {
