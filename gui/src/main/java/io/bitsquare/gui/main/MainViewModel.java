@@ -199,7 +199,7 @@ public class MainViewModel implements ViewModel {
     public void initializeAllServices() {
         Log.traceCall();
 
-        UserThread.runAfter(() -> tacWindow.showIfNeeded(), 2);
+        UserThread.runAfter(tacWindow::showIfNeeded, 2);
 
         BooleanProperty walletInitialized = initBitcoinWallet();
         BooleanProperty p2pNetWorkReady = initP2PNetwork();
@@ -214,9 +214,22 @@ public class MainViewModel implements ViewModel {
         startupTimeout = UserThread.runAfter(() -> {
             log.warn("startupTimeout called");
             MainView.blur();
-            new Popup().warning("The application could not startup after 3 minutes.\n" +
-                    "There might be some network connection problems or a unstable Tor path.\n\n" +
-                    "Please restart and try again.")
+            String details;
+            if (!walletInitialized.get()) {
+                details = "You still did not get connected to the bitcoin network.\n" +
+                        "If you use Tor for Bitcoin it might be that you got an unstable Tor path.\n" +
+                        "You could wait longer or try to restart.";
+            } else if (!p2pNetWorkReady.get()) {
+                details = "You still did not get connected to the P2P network.\n" +
+                        "That can happen sometimes when you got an unstable Tor path.\n" +
+                        "You could wait longer or try to restart.";
+            } else {
+                log.error("Startup timeout with unknown problem.");
+                details = "There is an unknown problem at startup.\n" +
+                        "Please restart and if the problem continues file a bug report.";
+            }
+            new Popup().warning("The application could not startup after 3 minutes.\n\n" +
+                    details)
                     .actionButtonText("Shut down and start again")
                     .onAction(BitsquareApp.shutDownHandler::run)
                     .show();
