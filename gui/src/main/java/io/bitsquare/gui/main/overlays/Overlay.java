@@ -380,12 +380,14 @@ public abstract class Overlay<T extends Overlay> {
             scene.getStylesheets().setAll(rootScene.getStylesheets());
             scene.setFill(Color.TRANSPARENT);
 
-            scene.setOnKeyPressed(e -> {
-                if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER) {
-                    e.consume();
-                    doClose();
-                }
-            });
+            if (!hideCloseButton) {
+                scene.setOnKeyPressed(e -> {
+                    if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER) {
+                        e.consume();
+                        doClose();
+                    }
+                });
+            }
 
             stage = new Stage();
             stage.setScene(scene);
