@@ -64,12 +64,14 @@ import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Wallet;
 import org.bitcoinj.store.BlockStoreException;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -144,11 +146,13 @@ public class MainViewModel implements ViewModel {
     private int numBtcPeers = 0;
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
-    private Timer startupTimeout;
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
     private MonadicBinding<String> marketPriceBinding;
     private Subscription priceFeedAllLoadedSubscription;
+    private Popup startupTimeoutPopup;
+    private BooleanProperty p2pNetWorkReady;
+    private BooleanProperty walletInitialized;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -201,39 +205,56 @@ public class MainViewModel implements ViewModel {
 
         UserThread.runAfter(tacWindow::showIfNeeded, 2);
 
-        BooleanProperty walletInitialized = initBitcoinWallet();
-        BooleanProperty p2pNetWorkReady = initP2PNetwork();
+        ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
+            if (newValue && !p2pNetWorkReady.get())
+                showStartupTimeoutPopup();
+        };
+
+        Timer startupTimeout = UserThread.runAfter(() -> {
+            log.warn("startupTimeout called");
+            Wallet wallet = walletService.getWallet();
+            if (wallet != null && wallet.isEncrypted())
+                walletInitialized.addListener(walletInitializedListener);
+            else
+                showStartupTimeoutPopup();
+        }, 4, TimeUnit.MINUTES);
+
+        walletInitialized = initBitcoinWallet();
+        p2pNetWorkReady = initP2PNetwork();
 
         // need to store it to not get garbage collected
         allServicesDone = EasyBind.combine(walletInitialized, p2pNetWorkReady, (a, b) -> a && b);
         allServicesDone.subscribe((observable, oldValue, newValue) -> {
-            if (newValue)
+            if (newValue) {
+                startupTimeout.stop();
+                walletInitialized.removeListener(walletInitializedListener);
                 onAllServicesInitialized();
-        });
-
-        startupTimeout = UserThread.runAfter(() -> {
-            log.warn("startupTimeout called");
-            MainView.blur();
-            String details;
-            if (!walletInitialized.get()) {
-                details = "You still did not get connected to the bitcoin network.\n" +
-                        "If you use Tor for Bitcoin it might be that you got an unstable Tor path.\n" +
-                        "You could wait longer or try to restart.";
-            } else if (!p2pNetWorkReady.get()) {
-                details = "You still did not get connected to the P2P network.\n" +
-                        "That can happen sometimes when you got an unstable Tor path.\n" +
-                        "You could wait longer or try to restart.";
-            } else {
-                log.error("Startup timeout with unknown problem.");
-                details = "There is an unknown problem at startup.\n" +
-                        "Please restart and if the problem continues file a bug report.";
             }
-            new Popup().warning("The application could not startup after 3 minutes.\n\n" +
-                    details)
-                    .actionButtonText("Shut down and start again")
-                    .onAction(BitsquareApp.shutDownHandler::run)
-                    .show();
-        }, 3, TimeUnit.MINUTES);
+        });
+    }
+
+    private void showStartupTimeoutPopup() {
+        MainView.blur();
+        String details;
+        if (!walletInitialized.get()) {
+            details = "You still did not get connected to the bitcoin network.\n" +
+                    "If you use Tor for Bitcoin it might be that you got an unstable Tor path.\n" +
+                    "You can wait longer or try to restart.";
+        } else if (!p2pNetWorkReady.get()) {
+            details = "You still did not get connected to the P2P network.\n" +
+                    "That can happen sometimes when you got an unstable Tor path.\n" +
+                    "You can wait longer or try to restart.";
+        } else {
+            log.error("Startup timeout with unknown problem.");
+            details = "There is an unknown problem at startup.\n" +
+                    "Please restart and if the problem continues file a bug report.";
+        }
+        startupTimeoutPopup = new Popup();
+        startupTimeoutPopup.warning("The application could not startup after 4 minutes.\n\n" +
+                details)
+                .actionButtonText("Shut down and start again")
+                .onAction(BitsquareApp.shutDownHandler::run)
+                .show();
     }
 
     public void shutDown() {
@@ -413,35 +434,30 @@ public class MainViewModel implements ViewModel {
         walletService.initialize(null,
                 () -> {
                     numBtcPeers = walletService.numPeersProperty().get();
-                    walletInitialized.set(true);
+
+                    if (walletService.getWallet().isEncrypted()) {
+                        if (p2pNetWorkReady.get())
+                            splashP2PNetworkProgress.set(0);
+
+                        walletPasswordWindow
+                                .onAesKey(aesKey -> {
+                                    tradeWalletService.setAesKey(aesKey);
+                                    walletInitialized.set(true);
+                                })
+                                .hideCloseButton()
+                                .show();
+                    } else {
+                        walletInitialized.set(true);
+                    }
                 },
                 walletServiceException::set);
         return walletInitialized;
     }
 
     private void onAllServicesInitialized() {
-        // We need to request the password in case we have an encrypted wallet as we need to set the aesKey to our trading wallet.
-        // In case we have any offers open or a pending trade we need to unlock our trading wallet so a trade can be executed automatically
-        // When the password is set it will be stored to the tradeWalletService as well, so its only needed after a restart.
-        if (walletService.getWallet().isEncrypted()) {
-            walletPasswordWindow
-                    .onAesKey(aesKey -> {
-                        tradeWalletService.setAesKey(aesKey);
-                        onAllServicesInitializedAndUnlocked();
-                    })
-                    .hideCloseButton()
-                    .show();
-        } else {
-            onAllServicesInitializedAndUnlocked();
-        }
-    }
-
-    private void onAllServicesInitializedAndUnlocked() {
         Log.traceCall();
 
         clock.start();
-
-        startupTimeout.stop();
 
         // disputeManager
         disputeManager.onAllServicesInitialized();
