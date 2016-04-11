@@ -139,7 +139,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             });
         }
     }
-    
+
     @Override
     protected void createGridPane() {
         super.createGridPane();

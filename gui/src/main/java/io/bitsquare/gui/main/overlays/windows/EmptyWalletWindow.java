@@ -102,7 +102,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             });
         }
     }
-    
+
     private void addContent() {
         addMultilineLabel(gridPane, ++rowIndex,
                 "Please use that only in emergency case if you cannot access your fund from the UI.\n\n" +
