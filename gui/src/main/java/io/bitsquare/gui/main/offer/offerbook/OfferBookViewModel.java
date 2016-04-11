@@ -89,11 +89,12 @@ class OfferBookViewModel extends ActivatableViewModel {
     // If id is empty string we ignore filter (display all methods)
 
     PaymentMethod selectedPaymentMethod = new PaymentMethod(SHOW_ALL_FLAG, 0, 0, null);
+    private CryptoCurrency showAllCurrenciesItem = new CryptoCurrency(SHOW_ALL_FLAG, SHOW_ALL_FLAG);
 
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     private boolean isTabSelected;
-    final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty();
+    final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
     boolean showAllPaymentMethods = true;
 
 
@@ -152,7 +153,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private void fillAllTradeCurrencies() {
         allTradeCurrencies.clear();
         // Used for ignoring filter (show all)
-        allTradeCurrencies.add(new CryptoCurrency(SHOW_ALL_FLAG, SHOW_ALL_FLAG));
+        allTradeCurrencies.add(showAllCurrenciesItem);
         allTradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
         allTradeCurrencies.add(new CryptoCurrency(EDIT_FLAG, EDIT_FLAG));
     }
@@ -186,10 +187,11 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
         String code = tradeCurrency.getCode();
-        showAllTradeCurrenciesProperty.set(isShowAllEntry(code));
+        boolean showAllEntry = isShowAllEntry(code);
+        showAllTradeCurrenciesProperty.set(showAllEntry);
         if (isEditEntry(code))
             navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
-        else if (!showAllTradeCurrenciesProperty.get()) {
+        else if (!showAllEntry) {
             this.selectedTradeCurrency = tradeCurrency;
             tradeCurrencyCode.set(code);
         }
