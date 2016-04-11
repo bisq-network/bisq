@@ -29,9 +29,11 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import org.bitcoinj.core.AddressFormatException;
@@ -89,6 +91,19 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    protected void setupKeyHandler(Scene scene) {
+        if (!hideCloseButton) {
+            scene.setOnKeyPressed(e -> {
+                if (e.getCode() == KeyCode.ESCAPE) {
+                    e.consume();
+                    doClose();
+                }
+            });
+        }
+    }
+
+    
     private void addContent() {
         addMultilineLabel(gridPane, ++rowIndex,
                 "Please use that only in emergency case if you cannot access your fund from the UI.\n\n" +
