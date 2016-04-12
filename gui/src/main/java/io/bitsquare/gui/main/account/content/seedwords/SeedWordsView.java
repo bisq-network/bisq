@@ -157,7 +157,6 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         DeterministicSeed keyChainSeed = walletService.getWallet().getKeyChainSeed();
         // wallet creation date is not encrypted
         walletCreationDate = Instant.ofEpochSecond(keyChainSeed.getCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
-        log.error("walletCreationDate " + walletCreationDate);
         if (keyChainSeed.isEncrypted()) {
             askForPassword();
         } else {
