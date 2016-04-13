@@ -493,6 +493,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return new ByteArray(Hash.getHash(data));
     }
 
+    // Get a new map with entries older than 10 days purged from the given map.
     private HashMap<ByteArray, MapValue> getPurgedSequenceNumberMap(HashMap<ByteArray, MapValue> persisted) {
         HashMap<ByteArray, MapValue> purged = new HashMap<>();
         long maxAgeTs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(10);
