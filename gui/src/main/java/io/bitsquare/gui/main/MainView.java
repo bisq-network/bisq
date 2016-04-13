@@ -137,10 +137,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         priceComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             model.setPriceFeedComboBoxItem(newValue);
-
         });
         selectedPriceFeedItemListender = (observable, oldValue, newValue) -> {
-            priceComboBox.getSelectionModel().select(newValue);
+            if (newValue != null)
+                priceComboBox.getSelectionModel().select(newValue);
 
         };
         model.selectedPriceFeedComboBoxItemProperty.addListener(selectedPriceFeedItemListender);

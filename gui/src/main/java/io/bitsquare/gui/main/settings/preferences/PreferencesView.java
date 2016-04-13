@@ -58,7 +58,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     //  private ComboBox<String> userLanguageComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
-    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook;
+    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, useStickyMarketPriceCheckBox;
     private int gridRow = 0;
     private InputTextField transactionFeeInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
@@ -329,11 +329,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void initializeDisplayOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Display options", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, "Display options", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, "Show my own offers in offer book:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
+        useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
         resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all don't show again flags:", "Reset", 0).second;
     }
 
@@ -445,6 +446,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         useAnimationsCheckBox.setSelected(preferences.getUseAnimations());
         useAnimationsCheckBox.setOnAction(e -> preferences.setUseAnimations(useAnimationsCheckBox.isSelected()));
 
+        useStickyMarketPriceCheckBox.setSelected(preferences.getUseStickyMarketPrice());
+        useStickyMarketPriceCheckBox.setOnAction(e -> preferences.setUseStickyMarketPrice(useStickyMarketPriceCheckBox.isSelected()));
+
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgainForType());
 
         autoSelectArbitratorsCheckBox.setSelected(preferences.getAutoSelectArbitrators());
@@ -471,6 +475,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     private void deactivateDisplayPreferences() {
         useAnimationsCheckBox.setOnAction(null);
+        useStickyMarketPriceCheckBox.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);
         autoSelectArbitratorsCheckBox.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);

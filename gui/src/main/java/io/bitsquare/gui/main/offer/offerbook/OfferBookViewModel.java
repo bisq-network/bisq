@@ -159,12 +159,12 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private void setMarketPriceFeedCurrency() {
-        /*if (isTabSelected) {
+        if (!preferences.getUseStickyMarketPrice() && isTabSelected) {
             if (showAllTradeCurrenciesProperty.get())
                 priceFeed.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
             else
                 priceFeed.setCurrencyCode(tradeCurrencyCode.get());
-        }*/
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -186,19 +186,21 @@ class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
-        String code = tradeCurrency.getCode();
-        boolean showAllEntry = isShowAllEntry(code);
-        showAllTradeCurrenciesProperty.set(showAllEntry);
-        if (isEditEntry(code))
-            navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
-        else if (!showAllEntry) {
-            this.selectedTradeCurrency = tradeCurrency;
-            tradeCurrencyCode.set(code);
+        if (tradeCurrency != null) {
+            String code = tradeCurrency.getCode();
+            boolean showAllEntry = isShowAllEntry(code);
+            showAllTradeCurrenciesProperty.set(showAllEntry);
+            if (isEditEntry(code))
+                navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
+            else if (!showAllEntry) {
+                this.selectedTradeCurrency = tradeCurrency;
+                tradeCurrencyCode.set(code);
+            }
+
+            setMarketPriceFeedCurrency();
+
+            filterList();
         }
-
-        setMarketPriceFeedCurrency();
-
-        filterList();
     }
 
     public void onSetPaymentMethod(PaymentMethod paymentMethod) {

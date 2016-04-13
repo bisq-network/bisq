@@ -711,15 +711,34 @@ public class MainViewModel implements ViewModel {
                                 (useInvertedMarketPrice ? " BTC/" + marketPriceCurrency : " " + marketPriceCurrency + "/BTC"));
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
-            if (selectedPriceFeedComboBoxItemProperty.get() == null) {
-                findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
-                        .ifPresent(item -> {
-                            item.setDisplayString(newValue);
-                            selectedPriceFeedComboBoxItemProperty.set(item);
+            if (newValue != null && !newValue.equals(oldValue)) {
+
+                String code = preferences.getUseStickyMarketPrice() ?
+                        preferences.getPreferredTradeCurrency().getCode() :
+                        priceFeed.currencyCodeProperty().get();
+                Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(code);
+                if (itemOptional.isPresent()) {
+                    if (selectedPriceFeedComboBoxItemProperty.get() == null || !preferences.getUseStickyMarketPrice()) {
+                        itemOptional.get().setDisplayString(newValue);
+                        selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
+                    }
+                } else {
+                    if (CurrencyUtil.isCryptoCurrency(code)) {
+                        CurrencyUtil.getCryptoCurrency(code).ifPresent(cryptoCurrency -> {
+                            preferences.addCryptoCurrency(cryptoCurrency);
+                            fillPriceFeedComboBoxItems();
                         });
+                    } else {
+                        CurrencyUtil.getFiatCurrency(code).ifPresent(fiatCurrency -> {
+                            preferences.addFiatCurrency(fiatCurrency);
+                            fillPriceFeedComboBoxItems();
+                        });
+                    }
+                }
+
+                if (selectedPriceFeedComboBoxItemProperty.get() != null)
+                    selectedPriceFeedComboBoxItemProperty.get().setDisplayString(newValue);
             }
-            if (selectedPriceFeedComboBoxItemProperty.get() != null)
-                selectedPriceFeedComboBoxItemProperty.get().setDisplayString(newValue);
         });
 
         priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeed.currenciesUpdateFlagProperty(), newPriceUpdate -> setMarketPriceInItems());
@@ -755,7 +774,14 @@ public class MainViewModel implements ViewModel {
     }
 
     public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
-        if (item != null) {
+        if (!preferences.getUseStickyMarketPrice()) {
+            Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(priceFeed.currencyCodeProperty().get());
+            if (itemOptional.isPresent())
+                selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
+            else
+                findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
+                        .ifPresent(item2 -> selectedPriceFeedComboBoxItemProperty.set(item2));
+        } else if (item != null) {
             selectedPriceFeedComboBoxItemProperty.set(item);
             priceFeed.setCurrencyCode(item.currencyCode);
         } else {

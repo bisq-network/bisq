@@ -165,6 +165,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     @Override
     protected void activate() {
+        currencyComboBox.setPrefWidth(250);
+        paymentAccountsComboBox.setPrefWidth(250);
+
         addBindings();
         addListeners();
         addSubscriptions();

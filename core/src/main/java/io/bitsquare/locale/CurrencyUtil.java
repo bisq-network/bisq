@@ -114,7 +114,7 @@ public class CurrencyUtil {
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
         return result;
     }
-    
+
 
     /**
      * @return Sorted list of SEPA currencies with EUR as first item
@@ -154,6 +154,10 @@ public class CurrencyUtil {
 
     public static boolean isFiatCurrency(String currencyCode) {
         return !(isCryptoCurrency(currencyCode)) && Currency.getInstance(currencyCode) != null;
+    }
+
+    public static Optional<FiatCurrency> getFiatCurrency(String currencyCode) {
+        return allSortedFiatCurrencies.stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
     }
 
     @SuppressWarnings("WeakerAccess")

@@ -136,7 +136,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // if (isWalletFunded.get())
         //     feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
 
-        /*if (isTabSelected)*/
+        if (!preferences.getUseStickyMarketPrice() && isTabSelected)
             priceFeed.setCurrencyCode(offer.getCurrencyCode());
 
         tradeManager.checkOfferAvailability(offer, () -> {
@@ -207,13 +207,15 @@ class TakeOfferDataModel extends ActivatableDataModel {
         };
 
         offer.resetState();
-        //priceFeed.setCurrencyCode(offer.getCurrencyCode());
+
+        if (!preferences.getUseStickyMarketPrice())
+            priceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
-        /*if (isTabSelected)
-            priceFeed.setCurrencyCode(offer.getCurrencyCode());*/
+        if (!preferences.getUseStickyMarketPrice() && isTabSelected)
+            priceFeed.setCurrencyCode(offer.getCurrencyCode());
     }
 
 

@@ -31,6 +31,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.*;
@@ -176,8 +177,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         paymentAccounts.setAll(user.getPaymentAccounts());
 
-        /*if (isTabSelected)
-            priceFeed.setCurrencyCode(tradeCurrencyCode.get());*/
+        if (!preferences.getUseStickyMarketPrice() && isTabSelected)
+            priceFeed.setCurrencyCode(tradeCurrencyCode.get());
 
         updateBalance();
     }
@@ -232,7 +233,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         tradeCurrencyCode.set(this.tradeCurrency.getCode());
 
-        //priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+        if (!preferences.getUseStickyMarketPrice())
+            priceFeed.setCurrencyCode(tradeCurrencyCode.get());
 
         calculateVolume();
         calculateTotalToPay();
@@ -241,8 +243,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
-        /*if (isTabSelected)
-            priceFeed.setCurrencyCode(tradeCurrencyCode.get());*/
+        if (!preferences.getUseStickyMarketPrice() && isTabSelected)
+            priceFeed.setCurrencyCode(tradeCurrencyCode.get());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -306,13 +308,27 @@ class CreateOfferDataModel extends ActivatableDataModel {
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         if (tradeCurrency != null) {
             this.tradeCurrency = tradeCurrency;
-            String code = tradeCurrency.getCode();
+            final String code = tradeCurrency.getCode();
             tradeCurrencyCode.set(code);
 
             if (paymentAccount != null)
                 paymentAccount.setSelectedTradeCurrency(tradeCurrency);
 
-            //priceFeed.setCurrencyCode(code);
+            if (!preferences.getUseStickyMarketPrice())
+                priceFeed.setCurrencyCode(code);
+
+            Optional<TradeCurrency> tradeCurrencyOptional = preferences.getTradeCurrenciesAsObservable().stream().filter(e -> e.getCode().equals(code)).findAny();
+            if (!tradeCurrencyOptional.isPresent()) {
+                if (CurrencyUtil.isCryptoCurrency(code)) {
+                    CurrencyUtil.getCryptoCurrency(code).ifPresent(cryptoCurrency -> {
+                        preferences.addCryptoCurrency(cryptoCurrency);
+                    });
+                } else {
+                    CurrencyUtil.getFiatCurrency(code).ifPresent(fiatCurrency -> {
+                        preferences.addFiatCurrency(fiatCurrency);
+                    });
+                }
+            }
         }
     }
 
