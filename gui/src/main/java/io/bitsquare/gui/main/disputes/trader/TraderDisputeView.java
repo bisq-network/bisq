@@ -417,7 +417,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     if (!text.isEmpty())
                         onSendMessage(text, selectedDispute);
                 } else {
-                    new Popup().information("You need to wait until bootstrapping to the network is completed.\n" +
+                    new Popup().information("You need to wait until you are fully connected to the network.\n" +
                             "That might take up to about 2 minutes at startup.").show();
                 }
             });

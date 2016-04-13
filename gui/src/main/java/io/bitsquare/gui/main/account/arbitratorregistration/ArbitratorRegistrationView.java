@@ -224,7 +224,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
                     () -> new Popup().feedback("You have successfully removed your arbitrator from the P2P network.").show(),
                     (errorMessage) -> new Popup().error("Could not remove arbitrator.\nError message: " + errorMessage).show());
         } else {
-            new Popup().information("You need to wait until bootstrapping to the network is completed.\n" +
+            new Popup().information("You need to wait until you are fully connected to the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
     }
@@ -235,7 +235,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
                     () -> new Popup().feedback("You have successfully registered your arbitrator to the P2P network.").show(),
                     (errorMessage) -> new Popup().error("Could not register arbitrator.\nError message: " + errorMessage).show());
         } else {
-            new Popup().information("You need to wait until you are bootstrapped to the network.\n" +
+            new Popup().information("You need to wait until you are fully connected to the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
     }

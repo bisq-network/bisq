@@ -245,7 +245,7 @@ public class SellerStep3View extends TradeStepView {
                 confirmPaymentReceived();
             }
         } else {
-            new Popup().information("You need to wait until bootstrapping to the network is completed.\n" +
+            new Popup().information("You need to wait until you are fully connected to the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
         }
     }
