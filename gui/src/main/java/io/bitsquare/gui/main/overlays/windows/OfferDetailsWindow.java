@@ -32,6 +32,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
@@ -132,7 +133,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     }
 
     private void addContent() {
-        int rows = 5;
+        int rows = 6;
 
         List<String> acceptedBanks = offer.getAcceptedBankIds();
         boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
@@ -148,18 +149,27 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Offer");
 
-        if (takeOfferHandlerOptional.isPresent())
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
-        else if (placeOfferHandlerOptional.isPresent())
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
-        else
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(offer.getDirection()), Layout.FIRST_ROW_DISTANCE);
-
+        String fiatDirectionInfo = ":";
+        String btcDirectionInfo = ":";
+        Offer.Direction direction = offer.getDirection();
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(tradeAmount));
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(direction), Layout.FIRST_ROW_DISTANCE);
+            fiatDirectionInfo = direction == Offer.Direction.BUY ? " to receive:" : " to spend:";
+            btcDirectionInfo = direction == Offer.Direction.SELL ? " to receive:" : " to spend:";
+        } else if (placeOfferHandlerOptional.isPresent()) {
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(direction), Layout.FIRST_ROW_DISTANCE);
+            fiatDirectionInfo = direction == Offer.Direction.SELL ? " to receive:" : " to spend:";
+            btcDirectionInfo = direction == Offer.Direction.BUY ? " to receive:" : " to spend:";
         } else {
-            addLabelTextField(gridPane, ++rowIndex, "Amount:", formatter.formatCoinWithCode(offer.getAmount()));
-            addLabelTextField(gridPane, ++rowIndex, "Min. amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(direction), Layout.FIRST_ROW_DISTANCE);
+        }
+        if (takeOfferHandlerOptional.isPresent()) {
+            addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(tradeAmount));
+            addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(offer.getVolumeByAmount(offer.getAmount())));
+        } else {
+            addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(offer.getAmount()));
+            addLabelTextField(gridPane, ++rowIndex, "Min. bitcoin amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
+            addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(offer.getVolumeByAmount(offer.getAmount())));
         }
 
         addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");

@@ -24,6 +24,7 @@ import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
@@ -108,16 +109,24 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         Offer offer = trade.getOffer();
         Contract contract = trade.getContract();
 
-        int rows = 5;
+        int rows = 6;
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Trade");
 
         boolean myOffer = tradeManager.isMyOffer(offer);
-        if (tradeManager.isBuyer(offer))
+        String fiatDirectionInfo;
+        String btcDirectionInfo;
+        if (tradeManager.isBuyer(offer)) {
             addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForBuyer(myOffer), Layout.FIRST_ROW_DISTANCE);
-        else
+            fiatDirectionInfo = " to spend:";
+            btcDirectionInfo = " to receive:";
+        } else {
             addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForSeller(myOffer), Layout.FIRST_ROW_DISTANCE);
+            fiatDirectionInfo = " to receive:";
+            btcDirectionInfo = " to spend:";
+        }
 
-        addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(trade.getTradeAmount()));
+        addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(trade.getTradeAmount()));
+        addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(trade.getTradeVolume()));
         addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(offer.getPrice()));
         addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
