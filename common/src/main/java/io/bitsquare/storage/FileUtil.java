@@ -16,30 +16,32 @@ public class FileUtil {
     private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
 
     public static void rollingBackup(File dir, String fileName) {
-        File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
-        if (!backupDir.exists())
-            if (!backupDir.mkdir())
-                log.warn("make dir failed");
+        if (dir.exists()) {
+            File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());
+            if (!backupDir.exists())
+                if (!backupDir.mkdir())
+                    log.warn("make dir failed.\nBackupDir=" + backupDir.getAbsolutePath());
 
-        File origFile = new File(Paths.get(dir.getAbsolutePath(), fileName).toString());
-        if (origFile.exists()) {
-            String dirName = "backups_" + fileName;
-            if (dirName.contains("."))
-                dirName = dirName.replace(".", "_");
-            File backupFileDir = new File(Paths.get(backupDir.getAbsolutePath(), dirName).toString());
-            if (!backupFileDir.exists())
-                if (!backupFileDir.mkdir())
-                    log.warn("make backupFileDir failed");
+            File origFile = new File(Paths.get(dir.getAbsolutePath(), fileName).toString());
+            if (origFile.exists()) {
+                String dirName = "backups_" + fileName;
+                if (dirName.contains("."))
+                    dirName = dirName.replace(".", "_");
+                File backupFileDir = new File(Paths.get(backupDir.getAbsolutePath(), dirName).toString());
+                if (!backupFileDir.exists())
+                    if (!backupFileDir.mkdir())
+                        log.warn("make backupFileDir failed");
 
-            File backupFile = new File(Paths.get(backupFileDir.getAbsolutePath(), new Date().getTime() + "_" + fileName).toString());
+                File backupFile = new File(Paths.get(backupFileDir.getAbsolutePath(), new Date().getTime() + "_" + fileName).toString());
 
-            try {
-                Files.copy(origFile, backupFile);
+                try {
+                    Files.copy(origFile, backupFile);
 
-                pruneBackup(backupFileDir);
-            } catch (IOException e) {
-                log.error("Backup key failed " + e.getMessage());
-                e.printStackTrace();
+                    pruneBackup(backupFileDir);
+                } catch (IOException e) {
+                    log.error("Backup key failed " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -57,7 +59,7 @@ public class FileUtil {
                             log.error("Failed to delete file: " + file);
                         else
                             pruneBackup(backupDir);
-                        
+
                     } else {
                         pruneBackup(new File(Paths.get(backupDir.getAbsolutePath(), file.getName()).toString()));
                     }
