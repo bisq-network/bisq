@@ -397,7 +397,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     public boolean hasPaymentAccountForCurrency() {
-        return user.hasPaymentAccountForCurrency(selectedTradeCurrency);
+        return (showAllTradeCurrenciesProperty.get() && !user.getPaymentAccounts().isEmpty()) || user.hasPaymentAccountForCurrency(selectedTradeCurrency);
     }
 
     boolean hasAcceptedArbitrators() {

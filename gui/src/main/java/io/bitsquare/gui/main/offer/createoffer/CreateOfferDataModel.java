@@ -50,6 +50,7 @@ import org.bitcoinj.utils.Fiat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -211,19 +212,31 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
+    boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
-        this.tradeCurrency = tradeCurrency;
 
-        tradeCurrencyCode.set(tradeCurrency.getCode());
         PaymentAccount account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
-        if (account != null)
+        if (account != null) {
             paymentAccount = account;
+            this.tradeCurrency = tradeCurrency;
+        } else {
+            Optional<PaymentAccount> paymentAccountOptional = user.getPaymentAccounts().stream().findAny();
+            if (paymentAccountOptional.isPresent()) {
+                paymentAccount = paymentAccountOptional.get();
+                this.tradeCurrency = paymentAccount.getSingleTradeCurrency();
+            } else {
+                // Should never get called as in offer view you should not be able to open a create offer view
+                return false;
+            }
+        }
+
+        tradeCurrencyCode.set(this.tradeCurrency.getCode());
 
         //priceFeed.setCurrencyCode(tradeCurrencyCode.get());
 
         calculateVolume();
         calculateTotalToPay();
+        return true;
     }
 
     void onTabSelected(boolean isSelected) {

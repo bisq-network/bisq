@@ -302,10 +302,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
-        dataModel.initWithData(direction, tradeCurrency);
+    boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
+        boolean result = dataModel.initWithData(direction, tradeCurrency);
         if (dataModel.paymentAccount != null)
             btcValidator.setMaxTradeLimitInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimit());
+
+        return result;
     }
 
 

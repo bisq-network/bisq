@@ -201,7 +201,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
-        model.initWithData(direction, tradeCurrency);
+        boolean result = model.initWithData(direction, tradeCurrency);
+
+        if (!result) {
+            log.error("Payment account set up. That should not be possible as UI does not support that case.");
+            new Popup().warning("You don't have a payment account set up.").onClose(this::close).show();
+        }
 
         if (direction == Offer.Direction.BUY) {
             imageView.setId("image-buy-large");
