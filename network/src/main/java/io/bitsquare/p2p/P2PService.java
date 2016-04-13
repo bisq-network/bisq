@@ -116,8 +116,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     private void init(boolean useLocalhost, int networkId, File storageDir) {
-        FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key");
-        
+        if (!useLocalhost)
+            FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key");
+
         networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
@@ -277,10 +278,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 "seedNodeOfPreliminaryDataRequest must be present");
         peerExchangeManager.requestReportedPeersFromSeedNodes(seedNodeOfPreliminaryDataRequest.get());
 
-        isBootstrapped = true;
-        p2pServiceListeners.stream().forEach(P2PServiceListener::onBootstrapComplete);
-
-        p2PDataStorage.onBootstrapComplete();
+        if (!isBootstrapped) {
+            isBootstrapped = true;
+            p2pServiceListeners.stream().forEach(P2PServiceListener::onBootstrapComplete);
+            p2PDataStorage.onBootstrapComplete();
+        }
     }
 
     @Override

@@ -81,7 +81,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final Storage<TradableList<OpenOffer>> openOffersStorage;
     private boolean stopped;
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
-    private BootstrapListener bootstrapListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,19 +113,17 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     public void onAllServicesInitialized() {
-        bootstrapListener = new BootstrapListener() {
-            @Override
-            public void onBootstrapComplete() {
-                OpenOfferManager.this.onBootstrapComplete();
-            }
-        };
-        p2PService.addP2PServiceListener(bootstrapListener);
         p2PService.addDecryptedDirectMessageListener(this);
 
         if (p2PService.isBootstrapped())
             onBootstrapComplete();
         else
-            p2PService.addP2PServiceListener(bootstrapListener);
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onBootstrapComplete() {
+                    OpenOfferManager.this.onBootstrapComplete();
+                }
+            });
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -138,8 +135,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         stopped = true;
         p2PService.getPeerManager().removeListener(this);
         p2PService.removeDecryptedDirectMessageListener(this);
-        if (bootstrapListener != null)
-            p2PService.removeP2PServiceListener(bootstrapListener);
 
         stopPeriodicRefreshOffersTimer();
         stopPeriodicRepublishOffersTimer();
@@ -187,9 +182,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onBootstrapComplete() {
-        if (bootstrapListener != null)
-            p2PService.removeP2PServiceListener(bootstrapListener);
-
         stopped = false;
 
         // Republish means we send the complete offer object

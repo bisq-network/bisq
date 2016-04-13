@@ -95,7 +95,6 @@ public class ArbitratorManager {
     private final ArbitratorService arbitratorService;
     private final User user;
     private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
-    private BootstrapListener bootstrapListener;
     private Timer republishArbitratorTimer, retryRepublishArbitratorTimer;
 
 
@@ -125,9 +124,6 @@ public class ArbitratorManager {
     public void shutDown() {
         stopRepublishArbitratorTimer();
         stopRetryRepublishArbitratorTimer();
-        if (bootstrapListener != null)
-            arbitratorService.getP2PService().removeP2PServiceListener(bootstrapListener);
-
     }
 
 
@@ -138,22 +134,15 @@ public class ArbitratorManager {
     public void onAllServicesInitialized() {
         if (user.getRegisteredArbitrator() != null) {
             P2PService p2PService = arbitratorService.getP2PService();
-            if (!p2PService.isBootstrapped()) {
-                bootstrapListener = new BootstrapListener() {
+            if (p2PService.isBootstrapped())
+                republishArbitrator();
+            else
+                p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
                     public void onBootstrapComplete() {
-                        ArbitratorManager.this.onBootstrapComplete();
+                        republishArbitrator();
                     }
-                };
-
-                if (p2PService.isBootstrapped())
-                    onBootstrapComplete();
-                else
-                    p2PService.addP2PServiceListener(bootstrapListener);
-                
-            } else {
-                republishArbitrator();
-            }
+                });
         }
 
         republishArbitratorTimer = UserThread.runPeriodically(this::republishArbitrator, REPUBLISH_MILLIS, TimeUnit.MILLISECONDS);
@@ -246,15 +235,6 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void onBootstrapComplete() {
-        if (bootstrapListener != null) {
-            arbitratorService.getP2PService().removeP2PServiceListener(bootstrapListener);
-            bootstrapListener = null;
-        }
-
-        republishArbitrator();
-    }
 
     private void republishArbitrator() {
         Arbitrator registeredArbitrator = user.getRegisteredArbitrator();

@@ -70,7 +70,6 @@ public class DisputeManager {
     private final DisputeList<Dispute> disputes;
     transient private final ObservableList<Dispute> disputesObservableList;
     private final String disputeInfo;
-    private final BootstrapListener bootstrapListener;
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
 
@@ -118,17 +117,23 @@ public class DisputeManager {
             if (p2PService.isBootstrapped())
                 applyMessages();
         });
+    }
 
-        bootstrapListener = new BootstrapListener() {
-            @Override
-            public void onBootstrapComplete() {
-                applyMessages();
-            }
-        };
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onAllServicesInitialized() {
         if (p2PService.isBootstrapped())
             applyMessages();
         else
-            p2PService.addP2PServiceListener(bootstrapListener);
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onBootstrapComplete() {
+                    applyMessages();
+                }
+            });
     }
 
     private void applyMessages() {
@@ -148,17 +153,6 @@ public class DisputeManager {
             }
         });
         decryptedMailboxMessageWithPubKeys.clear();
-
-        if (bootstrapListener != null)
-            p2PService.removeP2PServiceListener(bootstrapListener);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void onAllServicesInitialized() {
     }
 
     private void dispatchMessage(DisputeMessage message) {

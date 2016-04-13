@@ -81,7 +81,6 @@ public class TradeManager {
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
-    private final BootstrapListener bootstrapListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -147,19 +146,20 @@ public class TradeManager {
                 }
             }
         });
+    }
 
-        bootstrapListener = new BootstrapListener() {
-            @Override
-            public void onBootstrapComplete() {
-                // Get called after onMailboxMessageAdded from initial data request
-                // The mailbox message will be removed inside the tasks after they are processed successfully
-                initPendingTrades();
-            }
-        };
+    public void onAllServicesInitialized() {
         if (p2PService.isBootstrapped())
             initPendingTrades();
         else
-            p2PService.addP2PServiceListener(bootstrapListener);
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onBootstrapComplete() {
+                    // Get called after onMailboxMessageAdded from initial data request
+                    // The mailbox message will be removed inside the tasks after they are processed successfully
+                    initPendingTrades();
+                }
+            });
     }
 
 
@@ -169,8 +169,6 @@ public class TradeManager {
 
     private void initPendingTrades() {
         Log.traceCall();
-        if (bootstrapListener != null)
-            p2PService.removeP2PServiceListener(bootstrapListener);
 
         //List<Trade> failedTrades = new ArrayList<>();
         for (Trade trade : trades) {

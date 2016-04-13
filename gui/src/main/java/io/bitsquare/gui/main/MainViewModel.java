@@ -468,6 +468,7 @@ public class MainViewModel implements ViewModel {
         onDisputesChangeListener(disputeManager.getDisputesAsObservableList(), null);
 
         // tradeManager
+        tradeManager.onAllServicesInitialized();
         tradeManager.getTrades().addListener((ListChangeListener<Trade>) c -> updateBalance());
         tradeManager.getTrades().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
