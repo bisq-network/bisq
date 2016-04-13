@@ -66,8 +66,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     TextArea bitcoinPeersTextArea;
     @FXML
     Label bitcoinPeersLabel, p2PPeersLabel;
-    @FXML
-    CheckBox useTorCheckBox;
+    /* @FXML
+     CheckBox useTorCheckBox;*/
     @FXML
     TableView<P2pNetworkListItem> tableView;
     @FXML
@@ -130,7 +130,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void activate() {
-        useTorCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
+      /*  useTorCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
         useTorCheckBox.setOnAction(event -> {
             boolean selected = useTorCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
@@ -145,7 +145,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                         .onClose(() -> useTorCheckBox.setSelected(!selected))
                         .show();
             }
-        });
+        });*/
         bitcoinPeersSubscription = EasyBind.subscribe(walletService.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
 
         nodeAddressSubscription = EasyBind.subscribe(p2PService.getNetworkNode().nodeAddressProperty(),
@@ -160,7 +160,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void deactivate() {
-        useTorCheckBox.setOnAction(null);
+        //useTorCheckBox.setOnAction(null);
 
         if (nodeAddressSubscription != null)
             nodeAddressSubscription.unsubscribe();
