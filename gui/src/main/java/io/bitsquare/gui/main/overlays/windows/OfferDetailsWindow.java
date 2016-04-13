@@ -133,7 +133,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     }
 
     private void addContent() {
-        int rows = 6;
+        int rows = 5;
 
         List<String> acceptedBanks = offer.getAcceptedBankIds();
         boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
@@ -173,8 +173,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         }
 
         addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
-
-        addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
 
         if (offer.isMyOffer(keyRing) && user.getPaymentAccount(offer.getOffererPaymentAccountId()) != null)
             addLabelTextField(gridPane, ++rowIndex, "Payment account:", user.getPaymentAccount(offer.getOffererPaymentAccountId()).getAccountName());

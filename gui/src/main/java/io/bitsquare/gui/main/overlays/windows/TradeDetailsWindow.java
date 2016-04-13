@@ -109,7 +109,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         Offer offer = trade.getOffer();
         Contract contract = trade.getContract();
 
-        int rows = 6;
+        int rows = 5;
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Trade");
 
         boolean myOffer = tradeManager.isMyOffer(offer);
@@ -128,7 +128,6 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(trade.getTradeAmount()));
         addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(trade.getTradeVolume()));
         addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(offer.getPrice()));
-        addLabelTextField(gridPane, ++rowIndex, "Currency:", offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
 
         // second group
