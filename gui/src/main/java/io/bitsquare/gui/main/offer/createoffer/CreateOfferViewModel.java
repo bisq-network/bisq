@@ -117,6 +117,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private Timer timeoutTimer;
     private PriceFeed.Type priceFeedType;
     private boolean priceAsPercentageIsInput;
+    private ChangeListener<Boolean> usePercentageBasedPriceListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -239,18 +240,20 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 calculateVolume();
                 dataModel.calculateTotalToPay();
 
-                MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
-                if (marketPrice != null) {
-                    double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
-                    try {
-                        double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
-                        double priceFactor = priceAsDouble / marketPriceAsDouble;
-                        priceFactor = dataModel.getDirection() == Offer.Direction.BUY ? 1 - priceFactor : 1 + priceFactor;
-                        priceAsPercentage.set(formatter.formatToPercent(priceFactor, 2));
-                    } catch (NumberFormatException t) {
-                        priceAsPercentage.set("");
-                        new Popup().warning("Your input is not a valid number.")
-                                .show();
+                if (!priceAsPercentageIsInput) {
+                    MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
+                    if (marketPrice != null) {
+                        double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
+                        try {
+                            double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
+                            double priceFactor = priceAsDouble / marketPriceAsDouble;
+                            priceFactor = dataModel.getDirection() == Offer.Direction.BUY ? 1 - priceFactor : 1 + priceFactor;
+                            priceAsPercentage.set(formatter.formatToPercent(priceFactor, 2));
+                        } catch (NumberFormatException t) {
+                            priceAsPercentage.set("");
+                            new Popup().warning("Your input is not a valid number.")
+                                    .show();
+                        }
                     }
                 }
             }
@@ -295,6 +298,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 }
             }
         };
+        usePercentageBasedPriceListener = (observable, oldValue, newValue) -> {
+            if (newValue)
+                priceValidationResult.set(new InputValidator.ValidationResult(true));
+        };
+
         volumeListener = (ov, oldValue, newValue) -> {
             if (isFiatInputValid(newValue).isValid) {
                 setVolumeToModel();
@@ -324,6 +332,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         minAmount.addListener(minAmountListener);
         price.addListener(priceListener);
         priceAsPercentage.addListener(priceAsPercentageListener);
+        dataModel.usePercentageBasedPrice.addListener(usePercentageBasedPriceListener);
         volume.addListener(volumeListener);
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
@@ -341,6 +350,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         minAmount.removeListener(minAmountListener);
         price.removeListener(priceListener);
         priceAsPercentage.removeListener(priceAsPercentageListener);
+        dataModel.usePercentageBasedPrice.removeListener(usePercentageBasedPriceListener);
         volume.removeListener(volumeListener);
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
@@ -366,7 +376,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (dataModel.paymentAccount != null)
             btcValidator.setMaxTradeLimitInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimit());
 
-        priceFeedType = direction == Offer.Direction.BUY ? PriceFeed.Type.ASK : PriceFeed.Type.BID;
+        priceFeedType = direction == Offer.Direction.SELL ? PriceFeed.Type.ASK : PriceFeed.Type.BID;
 
         return result;
     }
@@ -565,7 +575,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             Fiat priceAsFiat = dataModel.priceAsFiat.get();
             long shiftDivisor = checkedPow(10, priceAsFiat.smallestUnitExponent());
             double offerPrice = ((double) priceAsFiat.longValue()) / ((double) shiftDivisor);
-            if (marketPriceAsDouble != 0 && Math.abs(1 - (offerPrice / marketPriceAsDouble)) > preferences.getMaxPriceDistanceInPercent()) {
+            double percentage = Math.abs(1 - (offerPrice / marketPriceAsDouble));
+            if (marketPriceAsDouble != 0 && percentage > preferences.getMaxPriceDistanceInPercent()) {
                 displayPriceOutofRangePopup();
                 return false;
             } else {

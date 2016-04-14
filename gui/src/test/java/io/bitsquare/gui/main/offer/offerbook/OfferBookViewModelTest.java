@@ -277,6 +277,7 @@ public class OfferBookViewModelTest {
                 countryCode,
                 acceptedCountryCodes,
                 bankId,
-                acceptedBanks);
+                acceptedBanks,
+                null);
     }
 }

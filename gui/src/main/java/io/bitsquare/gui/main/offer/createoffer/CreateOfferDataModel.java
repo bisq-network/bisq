@@ -301,7 +301,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 countryCode,
                 acceptedCountryCodes,
                 bankId,
-                acceptedBanks);
+                acceptedBanks,
+                priceFeed);
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {

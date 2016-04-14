@@ -24,6 +24,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -97,6 +98,7 @@ public class TradeManager {
                         FailedTradesManager failedTradesManager,
                         ArbitratorManager arbitratorManager,
                         P2PService p2PService,
+                        PriceFeed priceFeed,
                         @Named("storage.dir") File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
@@ -109,8 +111,9 @@ public class TradeManager {
         this.p2PService = p2PService;
 
         tradableListStorage = new Storage<>(storageDir);
-        this.trades = new TradableList<>(tradableListStorage, "PendingTrades");
-
+        trades = new TradableList<>(tradableListStorage, "PendingTrades");
+        trades.forEach(e -> e.getOffer().setPriceFeed(priceFeed));
+        
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
             public void onDirectMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {

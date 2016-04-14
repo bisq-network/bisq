@@ -19,6 +19,8 @@ package io.bitsquare.trade.offer;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.Restrictions;
+import io.bitsquare.btc.pricefeed.MarketPrice;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -106,7 +108,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final long date;
     private final long protocolVersion;
     private final long fiatPrice;
-    private final double percentageBasedPrice;
+    private final double marketPriceMargin;
     private final boolean usePercentageBasedPrice;
     private final long amount;
     private final long minAmount;
@@ -129,6 +131,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     transient private OfferAvailabilityProtocol availabilityProtocol;
     @JsonExclude
     transient private StringProperty errorMessageProperty = new SimpleStringProperty();
+    transient private PriceFeed priceFeed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +143,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  PubKeyRing pubKeyRing,
                  Direction direction,
                  long fiatPrice,
-                 double percentageBasedPrice,
+                 double marketPriceMargin,
                  boolean usePercentageBasedPrice,
                  long amount,
                  long minAmount,
@@ -151,13 +154,14 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  @Nullable String countryCode,
                  @Nullable ArrayList<String> acceptedCountryCodes,
                  @Nullable String bankId,
-                 @Nullable ArrayList<String> acceptedBankIds) {
+                 @Nullable ArrayList<String> acceptedBankIds,
+                 PriceFeed priceFeed) {
         this.id = id;
         this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
         this.fiatPrice = fiatPrice;
-        this.percentageBasedPrice = percentageBasedPrice;
+        this.marketPriceMargin = marketPriceMargin;
         this.usePercentageBasedPrice = usePercentageBasedPrice;
         this.amount = amount;
         this.minAmount = minAmount;
@@ -169,6 +173,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.acceptedCountryCodes = acceptedCountryCodes;
         this.bankId = bankId;
         this.acceptedBankIds = acceptedBankIds;
+        this.priceFeed = priceFeed;
 
         protocolVersion = Version.TRADE_PROTOCOL_VERSION;
 
@@ -269,6 +274,10 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void setPriceFeed(PriceFeed priceFeed) {
+        this.priceFeed = priceFeed;
+    }
+
     public void setState(State state) {
         this.state = state;
         stateProperty().set(state);
@@ -318,11 +327,34 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public Fiat getPrice() {
-        return Fiat.valueOf(currencyCode, fiatPrice);
+        Fiat priceAsFiat = Fiat.valueOf(currencyCode, fiatPrice);
+        if (usePercentageBasedPrice && priceFeed != null) {
+            MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
+            if (marketPrice != null) {
+                PriceFeed.Type priceFeedType = direction == Direction.SELL ? PriceFeed.Type.ASK : PriceFeed.Type.BID;
+                double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
+                double factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
+                double targetPrice = marketPriceAsDouble * factor;
+                try {
+                    return Fiat.parseFiat(currencyCode, String.valueOf(targetPrice));
+                } catch (Exception e) {
+                    log.warn("Exception at parseToFiat: " + e.toString());
+                    log.warn("We use the static price.");
+                    return priceAsFiat;
+                }
+            } else {
+                log.warn("We don't have a market price. We use the static price instead.");
+                return priceAsFiat;
+            }
+        } else {
+            if (priceFeed == null)
+                log.warn("priceFeed must not be null");
+            return priceAsFiat;
+        }
     }
 
-    public double getPercentageBasedPrice() {
-        return percentageBasedPrice;
+    public double getMarketPriceMargin() {
+        return marketPriceMargin;
     }
 
     public boolean isUsePercentageBasedPrice() {
@@ -408,7 +440,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         Offer offer = (Offer) o;
         if (date != offer.date) return false;
         if (fiatPrice != offer.fiatPrice) return false;
-        if (Double.compare(offer.percentageBasedPrice, percentageBasedPrice) != 0) return false;
+        if (Double.compare(offer.marketPriceMargin, marketPriceMargin) != 0) return false;
         if (usePercentageBasedPrice != offer.usePercentageBasedPrice) return false;
         if (amount != offer.amount) return false;
         if (minAmount != offer.minAmount) return false;
@@ -441,7 +473,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         result = 31 * result + (currencyCode != null ? currencyCode.hashCode() : 0);
         result = 31 * result + (int) (date ^ (date >>> 32));
         result = 31 * result + (int) (fiatPrice ^ (fiatPrice >>> 32));
-        long temp = Double.doubleToLongBits(percentageBasedPrice);
+        long temp = Double.doubleToLongBits(marketPriceMargin);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (usePercentageBasedPrice ? 1 : 0);
         result = 31 * result + (int) (amount ^ (amount >>> 32));
@@ -467,7 +499,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\tcurrencyCode='" + currencyCode + '\'' +
                 "\n\tdate=" + date +
                 "\n\tfiatPrice=" + fiatPrice +
-                "\n\tpercentagePrice=" + percentageBasedPrice +
+                "\n\tmarketPriceMargin=" + marketPriceMargin +
                 "\n\tusePercentageBasedPrice=" + usePercentageBasedPrice +
                 "\n\tamount=" + amount +
                 "\n\tminAmount=" + minAmount +
