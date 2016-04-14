@@ -24,7 +24,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.KeyRing;
@@ -374,9 +373,7 @@ public abstract class Trade implements Tradable, Model {
         return offer;
     }
 
-    public Coin getPayoutAmount() {
-        return FeePolicy.getSecurityDeposit();
-    }
+    abstract public Coin getPayoutAmount();
 
     public ProcessModel getProcessModel() {
         return processModel;

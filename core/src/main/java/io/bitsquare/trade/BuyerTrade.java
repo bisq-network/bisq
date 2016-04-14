@@ -18,6 +18,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.NodeAddress;
@@ -29,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class BuyerTrade extends Trade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -63,7 +65,13 @@ public abstract class BuyerTrade extends Trade {
                     log::warn);
         }
     }
+    
+    @Override
+    public Coin getPayoutAmount() {
+        checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
 
+        return FeePolicy.getSecurityDeposit().add(getTradeAmount());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter for Mutable objects
