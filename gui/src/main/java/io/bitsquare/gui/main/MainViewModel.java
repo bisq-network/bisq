@@ -404,7 +404,7 @@ public class MainViewModel implements ViewModel {
                             result = numPeersString + " / synchronized with " + btcNetworkAsString;
                             btcSplashSyncIconId.set("image-connection-synced");
                         } else if (percentage > 0.0) {
-                            result = numPeersString + " / synchronizing with " + btcNetworkAsString + ": " + formatter.formatToPercent(percentage);
+                            result = numPeersString + " / synchronizing with " + btcNetworkAsString + ": " + formatter.formatToPercentWithSymbol(percentage);
                         } else {
                             result = numPeersString + " / connecting to " + btcNetworkAsString;
                         }

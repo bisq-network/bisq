@@ -106,7 +106,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private ChangeListener<Boolean> amountFocusedListener;
     private ChangeListener<Boolean> minAmountFocusedListener;
-    private ChangeListener<Boolean> priceFocusedListener;
+    private ChangeListener<Boolean> priceFocusedListener, priceAsPercentageFocusedListener;
     private ChangeListener<Boolean> volumeFocusedListener;
     private ChangeListener<Boolean> showWarningInvalidBtcDecimalPlacesListener;
     private ChangeListener<Boolean> showWarningInvalidFiatDecimalPlacesPlacesListener;
@@ -286,6 +286,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         amountTextField.setMouseTransparent(true);
         minAmountTextField.setMouseTransparent(true);
         priceTextField.setMouseTransparent(true);
+        priceAsPercentageTextField.setMouseTransparent(true);
+        fixedPriceButton.setMouseTransparent(true);
+        percentagePriceButton.setMouseTransparent(true);
         volumeTextField.setMouseTransparent(true);
         currencyComboBox.setMouseTransparent(true);
         paymentAccountsComboBox.setMouseTransparent(true);
@@ -414,7 +417,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         amountBtcLabel.textProperty().bind(model.btcCode);
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> model.tradeCurrencyCode.get() + "/" + model.btcCode.get(), model.btcCode, model.tradeCurrencyCode));
         priceTextField.disableProperty().bind(model.dataModel.usePercentageBasedPrice);
+        priceCurrencyLabel.disableProperty().bind(model.dataModel.usePercentageBasedPrice);
         priceAsPercentageTextField.disableProperty().bind(model.dataModel.usePercentageBasedPrice.not());
+        priceAsPercentageLabel.disableProperty().bind(model.dataModel.usePercentageBasedPrice.not());
         priceAsPercentageLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
         minAmountBtcLabel.textProperty().bind(model.btcCode);
@@ -423,6 +428,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         amountTextField.textProperty().bindBidirectional(model.amount);
         minAmountTextField.textProperty().bindBidirectional(model.minAmount);
         priceTextField.textProperty().bindBidirectional(model.price);
+        priceAsPercentageTextField.textProperty().bindBidirectional(model.priceAsPercentage);
         volumeTextField.textProperty().bindBidirectional(model.volume);
         volumeTextField.promptTextProperty().bind(model.volumePromptLabel);
         totalToPayTextField.textProperty().bind(model.totalToPay);
@@ -462,7 +468,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         amountBtcLabel.textProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
         priceTextField.disableProperty().unbind();
+        priceCurrencyLabel.disableProperty().unbind();
         priceAsPercentageTextField.disableProperty().unbind();
+        priceAsPercentageLabel.disableProperty().unbind();
         volumeCurrencyLabel.textProperty().unbind();
         minAmountBtcLabel.textProperty().unbind();
         priceDescriptionLabel.textProperty().unbind();
@@ -470,6 +478,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         amountTextField.textProperty().unbindBidirectional(model.amount);
         minAmountTextField.textProperty().unbindBidirectional(model.minAmount);
         priceTextField.textProperty().unbindBidirectional(model.price);
+        priceAsPercentageTextField.textProperty().unbindBidirectional(model.priceAsPercentage);
         priceAsPercentageLabel.prefWidthProperty().unbind();
         volumeTextField.textProperty().unbindBidirectional(model.volume);
         volumeTextField.promptTextProperty().unbindBidirectional(model.volume);
@@ -536,6 +545,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             model.onFocusOutPriceTextField(oldValue, newValue, priceTextField.getText());
             priceTextField.setText(model.price.get());
         };
+        priceAsPercentageFocusedListener = (o, oldValue, newValue) -> {
+            model.onFocusOutPriceAsPercentageTextField(oldValue, newValue, priceAsPercentageTextField.getText());
+            priceAsPercentageTextField.setText(model.priceAsPercentage.get());
+        };
         volumeFocusedListener = (o, oldValue, newValue) -> {
             model.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
             volumeTextField.setText(model.volume.get());
@@ -595,6 +608,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         tradeCurrencyCodeListener = (observable, oldValue, newValue) -> {
             priceTextField.clear();
+            priceAsPercentageTextField.clear();
             volumeTextField.clear();
         };
 
@@ -633,6 +647,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         amountTextField.focusedProperty().addListener(amountFocusedListener);
         minAmountTextField.focusedProperty().addListener(minAmountFocusedListener);
         priceTextField.focusedProperty().addListener(priceFocusedListener);
+        priceAsPercentageTextField.focusedProperty().addListener(priceAsPercentageFocusedListener);
         volumeTextField.focusedProperty().addListener(volumeFocusedListener);
 
         // warnings
@@ -656,6 +671,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
         minAmountTextField.focusedProperty().removeListener(minAmountFocusedListener);
         priceTextField.focusedProperty().removeListener(priceFocusedListener);
+        priceAsPercentageTextField.focusedProperty().removeListener(priceAsPercentageFocusedListener);
         volumeTextField.focusedProperty().removeListener(volumeFocusedListener);
 
         // warnings
@@ -975,7 +991,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         priceAsPercentageTextField.setPromptText("Enter % value");
         priceAsPercentageLabel.setText("% dist.");
         priceAsPercentageLabel.setStyle("-fx-alignment: center;");
-       
+
         Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getValueCurrencyBox(BSResources.get("createOffer.amount.prompt"));
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         minAmountTextField = amountValueCurrencyBoxTuple.second;

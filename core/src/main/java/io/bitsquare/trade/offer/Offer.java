@@ -106,7 +106,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final long date;
     private final long protocolVersion;
     private final long fiatPrice;
-    private final double percentagePrice;
+    private final double percentageBasedPrice;
     private final boolean usePercentageBasedPrice;
     private final long amount;
     private final long minAmount;
@@ -140,7 +140,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  PubKeyRing pubKeyRing,
                  Direction direction,
                  long fiatPrice,
-                 double percentagePrice,
+                 double percentageBasedPrice,
                  boolean usePercentageBasedPrice,
                  long amount,
                  long minAmount,
@@ -157,7 +157,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
         this.fiatPrice = fiatPrice;
-        this.percentagePrice = percentagePrice;
+        this.percentageBasedPrice = percentageBasedPrice;
         this.usePercentageBasedPrice = usePercentageBasedPrice;
         this.amount = amount;
         this.minAmount = minAmount;
@@ -321,8 +321,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return Fiat.valueOf(currencyCode, fiatPrice);
     }
 
-    public double getPercentagePrice() {
-        return percentagePrice;
+    public double getPercentageBasedPrice() {
+        return percentageBasedPrice;
     }
 
     public boolean isUsePercentageBasedPrice() {
@@ -408,7 +408,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         Offer offer = (Offer) o;
         if (date != offer.date) return false;
         if (fiatPrice != offer.fiatPrice) return false;
-        if (Double.compare(offer.percentagePrice, percentagePrice) != 0) return false;
+        if (Double.compare(offer.percentageBasedPrice, percentageBasedPrice) != 0) return false;
         if (usePercentageBasedPrice != offer.usePercentageBasedPrice) return false;
         if (amount != offer.amount) return false;
         if (minAmount != offer.minAmount) return false;
@@ -441,7 +441,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         result = 31 * result + (currencyCode != null ? currencyCode.hashCode() : 0);
         result = 31 * result + (int) (date ^ (date >>> 32));
         result = 31 * result + (int) (fiatPrice ^ (fiatPrice >>> 32));
-        long temp = Double.doubleToLongBits(percentagePrice);
+        long temp = Double.doubleToLongBits(percentageBasedPrice);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (usePercentageBasedPrice ? 1 : 0);
         result = 31 * result + (int) (amount ^ (amount >>> 32));
@@ -467,7 +467,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\tcurrencyCode='" + currencyCode + '\'' +
                 "\n\tdate=" + date +
                 "\n\tfiatPrice=" + fiatPrice +
-                "\n\tpercentagePrice=" + percentagePrice +
+                "\n\tpercentagePrice=" + percentageBasedPrice +
                 "\n\tusePercentageBasedPrice=" + usePercentageBasedPrice +
                 "\n\tamount=" + amount +
                 "\n\tminAmount=" + minAmount +

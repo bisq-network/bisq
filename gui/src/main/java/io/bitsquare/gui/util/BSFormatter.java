@@ -325,11 +325,58 @@ public class BSFormatter {
     }
 
     public String formatToPercent(double value) {
+        return formatToPercent(value, 1);
+    }
+
+    public String formatToPercent(double value, int digits) {
         DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
-        decimalFormat.setMinimumFractionDigits(1);
-        decimalFormat.setMaximumFractionDigits(1);
+        decimalFormat.setMinimumFractionDigits(digits);
+        decimalFormat.setMaximumFractionDigits(digits);
         decimalFormat.setGroupingUsed(false);
-        return decimalFormat.format(value * 100.0) + " %";
+        return decimalFormat.format(value * 100.0);
+    }
+
+    public String formatToNumberString(double value, int digits) {
+        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
+        decimalFormat.setMinimumFractionDigits(digits);
+        decimalFormat.setMaximumFractionDigits(digits);
+        decimalFormat.setGroupingUsed(false);
+        return decimalFormat.format(value);
+    }
+
+    public double parseNumberStringToDouble(String percentString) throws NumberFormatException {
+        try {
+            String input = percentString.replace(",", ".");
+            input = input.replace(" ", "");
+            return Double.parseDouble(input);
+        } catch (NumberFormatException e) {
+            throw e;
+        }
+    }
+
+    public String formatToPercentWithSymbol(double value) {
+        return formatToPercent(value) + " %";
+    }
+
+    public double parsePercentStringToDouble(String percentString) throws NumberFormatException {
+        try {
+            String input = percentString.replace("%", "");
+            input = input.replace(",", ".");
+            input = input.replace(" ", "");
+            double value = Double.parseDouble(input);
+            return value / 100;
+        } catch (NumberFormatException e) {
+            throw e;
+        }
+    }
+
+    public double roundDouble(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
     }
 
     private String cleanInput(String input) {

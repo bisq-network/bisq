@@ -97,7 +97,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
-    final ObjectProperty<Double> priceAsPercentage = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
@@ -110,6 +109,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private Notification walletFundedNotification;
     boolean useSavingsWallet;
     Coin totalAvailableBalance;
+    private double percentageBasedPrice = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +256,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     Offer createAndGetOffer() {
         long fiatPrice = priceAsFiat.get() != null ? priceAsFiat.get().getValue() : 0L;
 
-        double percentagePrice = 0;
         long amount = amountAsCoin.get() != null ? amountAsCoin.get().getValue() : 0L;
         long minAmount = minAmountAsCoin.get() != null ? minAmountAsCoin.get().getValue() : 0L;
 
@@ -283,12 +282,15 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
+        log.error("fiatPrice " + fiatPrice);
+        log.error("percentageBasedPrice " + percentageBasedPrice);
+        log.error("usePercentageBasedPrice " + usePercentageBasedPrice.get());
         return new Offer(offerId,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,
                 fiatPrice,
-                percentagePrice,
+                percentageBasedPrice,
                 usePercentageBasedPrice.get(),
                 amount,
                 minAmount,
@@ -493,5 +495,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
     public void swapTradeToSavings() {
         walletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
         walletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
+    }
+
+    double getPercentageBasedPrice() {
+        return percentageBasedPrice;
+    }
+
+    void setPercentageBasedPrice(double percentageBasedPrice) {
+        this.percentageBasedPrice = percentageBasedPrice;
     }
 }
