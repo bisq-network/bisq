@@ -106,6 +106,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final long date;
     private final long protocolVersion;
     private final long fiatPrice;
+    private final double percentagePrice;
+    private final boolean usePercentageBasedPrice;
     private final long amount;
     private final long minAmount;
     private final NodeAddress offererNodeAddress;
@@ -138,6 +140,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  PubKeyRing pubKeyRing,
                  Direction direction,
                  long fiatPrice,
+                 double percentagePrice,
+                 boolean usePercentageBasedPrice,
                  long amount,
                  long minAmount,
                  String currencyCode,
@@ -153,6 +157,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
         this.fiatPrice = fiatPrice;
+        this.percentagePrice = percentagePrice;
+        this.usePercentageBasedPrice = usePercentageBasedPrice;
         this.amount = amount;
         this.minAmount = minAmount;
         this.currencyCode = currencyCode;
@@ -315,6 +321,14 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return Fiat.valueOf(currencyCode, fiatPrice);
     }
 
+    public double getPercentagePrice() {
+        return percentagePrice;
+    }
+
+    public boolean isUsePercentageBasedPrice() {
+        return usePercentageBasedPrice;
+    }
+
     public Coin getAmount() {
         return Coin.valueOf(amount);
     }
@@ -391,11 +405,11 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Offer)) return false;
-
         Offer offer = (Offer) o;
-
         if (date != offer.date) return false;
         if (fiatPrice != offer.fiatPrice) return false;
+        if (Double.compare(offer.percentagePrice, percentagePrice) != 0) return false;
+        if (usePercentageBasedPrice != offer.usePercentageBasedPrice) return false;
         if (amount != offer.amount) return false;
         if (minAmount != offer.minAmount) return false;
         if (id != null ? !id.equals(offer.id) : offer.id != null) return false;
@@ -418,7 +432,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         if (arbitratorNodeAddresses != null ? !arbitratorNodeAddresses.equals(offer.arbitratorNodeAddresses) : offer.arbitratorNodeAddresses != null)
             return false;
         return !(offerFeePaymentTxID != null ? !offerFeePaymentTxID.equals(offer.offerFeePaymentTxID) : offer.offerFeePaymentTxID != null);
-
     }
 
     @Override
@@ -428,6 +441,9 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         result = 31 * result + (currencyCode != null ? currencyCode.hashCode() : 0);
         result = 31 * result + (int) (date ^ (date >>> 32));
         result = 31 * result + (int) (fiatPrice ^ (fiatPrice >>> 32));
+        long temp = Double.doubleToLongBits(percentagePrice);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (usePercentageBasedPrice ? 1 : 0);
         result = 31 * result + (int) (amount ^ (amount >>> 32));
         result = 31 * result + (int) (minAmount ^ (minAmount >>> 32));
         result = 31 * result + (offererNodeAddress != null ? offererNodeAddress.hashCode() : 0);
@@ -451,6 +467,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\tcurrencyCode='" + currencyCode + '\'' +
                 "\n\tdate=" + date +
                 "\n\tfiatPrice=" + fiatPrice +
+                "\n\tpercentagePrice=" + percentagePrice +
+                "\n\tusePercentageBasedPrice=" + usePercentageBasedPrice +
                 "\n\tamount=" + amount +
                 "\n\tminAmount=" + minAmount +
                 "\n\toffererAddress=" + offererNodeAddress +
@@ -471,5 +489,4 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\tTAC_TAKER=" + TAC_TAKER +
                 '}';
     }
-
 }

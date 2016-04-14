@@ -88,8 +88,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private BalanceTextField balanceTextField;
     private TitledGroupBg payFundsPane;
     private ProgressIndicator spinner;
-    private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, placeOfferButton;
-    private InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
+    private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, placeOfferButton, usePercentageBasedPriceButton;
+    private InputTextField amountTextField, minAmountTextField, priceTextField, priceAsPercentageTextField, volumeTextField;
     private TextField currencyTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
             volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, currencyTextFieldLabel,
@@ -98,6 +98,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private PopOver totalToPayInfoPopover;
+    private Label priceAsPercentageLabel;
+    private ToggleButton fixedPriceButton;
+    private ToggleButton percentagePriceButton;
 
     private OfferView.CloseHandler closeHandler;
 
@@ -174,6 +177,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         if (spinner != null && spinner.isVisible())
             spinner.setProgress(-1);
+
+        percentagePriceButton.setSelected(model.dataModel.usePercentageBasedPrice.get());
+        fixedPriceButton.setSelected(!model.dataModel.usePercentageBasedPrice.get());
 
         directionLabel.setText(model.getDirectionLabel());
         amountDescriptionLabel.setText(model.getAmountDescription());
@@ -407,6 +413,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void addBindings() {
         amountBtcLabel.textProperty().bind(model.btcCode);
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> model.tradeCurrencyCode.get() + "/" + model.btcCode.get(), model.btcCode, model.tradeCurrencyCode));
+        priceTextField.disableProperty().bind(model.dataModel.usePercentageBasedPrice);
+        priceAsPercentageTextField.disableProperty().bind(model.dataModel.usePercentageBasedPrice.not());
+        priceAsPercentageLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
         minAmountBtcLabel.textProperty().bind(model.btcCode);
         priceDescriptionLabel.textProperty().bind(createStringBinding(() -> BSResources.get("createOffer.amountPriceBox.priceDescription", model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
@@ -452,6 +461,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void removeBindings() {
         amountBtcLabel.textProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
+        priceTextField.disableProperty().unbind();
+        priceAsPercentageTextField.disableProperty().unbind();
         volumeCurrencyLabel.textProperty().unbind();
         minAmountBtcLabel.textProperty().unbind();
         priceDescriptionLabel.textProperty().unbind();
@@ -459,6 +470,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         amountTextField.textProperty().unbindBidirectional(model.amount);
         minAmountTextField.textProperty().unbindBidirectional(model.minAmount);
         priceTextField.textProperty().unbindBidirectional(model.price);
+        priceAsPercentageLabel.prefWidthProperty().unbind();
         volumeTextField.textProperty().unbindBidirectional(model.volume);
         volumeTextField.promptTextProperty().unbindBidirectional(model.volume);
         totalToPayTextField.textProperty().unbind();
@@ -745,8 +757,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         gridPane.getChildren().add(imageVBox);
 
         addAmountPriceFields();
-
-        addMinAmountBox();
+        addSecondRow();
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow, BSResources.get("createOffer.amountPriceBox.next"), BSResources.get("shared.cancel"));
         nextButton = tuple.first;
@@ -897,7 +908,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         xLabel.setFont(Font.font("Helvetica-Bold", 20));
         xLabel.setPadding(new Insets(14, 3, 0, 3));
 
-        // price
+        // price as fiat
         Tuple3<HBox, InputTextField, Label> priceValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.price.prompt"));
         HBox priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
         priceTextField = priceValueCurrencyBoxTuple.second;
@@ -905,6 +916,26 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox, BSResources.get("createOffer.amountPriceBox.priceDescription"));
         priceDescriptionLabel = priceInputBoxTuple.first;
         VBox priceBox = priceInputBoxTuple.second;
+
+        // Fixed/Percentage toggle
+        ToggleGroup toggleGroup = new ToggleGroup();
+        fixedPriceButton = new ToggleButton("Fixed");
+        fixedPriceButton.setId("toggle-price-left");
+        fixedPriceButton.setToggleGroup(toggleGroup);
+        fixedPriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
+            model.dataModel.setUsePercentageBasedPrice(!newValue);
+        });
+
+        percentagePriceButton = new ToggleButton("Percentage");
+        percentagePriceButton.setId("toggle-price-right");
+        percentagePriceButton.setToggleGroup(toggleGroup);
+        percentagePriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
+            model.dataModel.setUsePercentageBasedPrice(newValue);
+        });
+
+        HBox toggleButtons = new HBox();
+        toggleButtons.setPadding(new Insets(18, 0, 0, 0));
+        toggleButtons.getChildren().addAll(fixedPriceButton, percentagePriceButton);
 
         // =
         Label resultLabel = new Label("=");
@@ -923,7 +954,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         HBox hBox = new HBox();
         hBox.setSpacing(5);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(amountBox, xLabel, priceBox, resultLabel, volumeBox);
+        hBox.getChildren().addAll(amountBox, xLabel, priceBox, toggleButtons, resultLabel, volumeBox);
         GridPane.setRowIndex(hBox, gridRow);
         GridPane.setColumnIndex(hBox, 1);
         GridPane.setMargin(hBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 10, 0, 0));
@@ -931,7 +962,20 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         gridPane.getChildren().add(hBox);
     }
 
-    private void addMinAmountBox() {
+    private void addSecondRow() {
+        Tuple3<HBox, InputTextField, Label> priceAsPercentageTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.price.prompt"));
+        HBox priceAsPercentageValueCurrencyBox = priceAsPercentageTuple.first;
+        priceAsPercentageTextField = priceAsPercentageTuple.second;
+        priceAsPercentageLabel = priceAsPercentageTuple.third;
+
+        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, "Distance in % from market price");
+        priceAsPercentageInputBoxTuple.first.setPrefWidth(200);
+        VBox priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
+
+        priceAsPercentageTextField.setPromptText("Enter % value");
+        priceAsPercentageLabel.setText("% dist.");
+        priceAsPercentageLabel.setStyle("-fx-alignment: center;");
+       
         Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getValueCurrencyBox(BSResources.get("createOffer.amount.prompt"));
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         minAmountTextField = amountValueCurrencyBoxTuple.second;
@@ -939,11 +983,21 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, BSResources.get("createOffer.amountPriceBox" +
                 ".minAmountDescription"));
-        VBox box = amountInputBoxTuple.second;
-        GridPane.setRowIndex(box, ++gridRow);
-        GridPane.setColumnIndex(box, 1);
-        GridPane.setMargin(box, new Insets(5, 10, 5, 0));
-        gridPane.getChildren().add(box);
+
+        Label xLabel = new Label("x");
+        xLabel.setFont(Font.font("Helvetica-Bold", 20));
+        xLabel.setPadding(new Insets(14, 3, 0, 3));
+        xLabel.setVisible(false); // we just use it to get the same layout as the upper row
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(5);
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, priceAsPercentageInputBox);
+        GridPane.setRowIndex(hBox, ++gridRow);
+        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(5, 10, 5, 0));
+        GridPane.setColumnSpan(hBox, 2);
+        gridPane.getChildren().add(hBox);
     }
 
 

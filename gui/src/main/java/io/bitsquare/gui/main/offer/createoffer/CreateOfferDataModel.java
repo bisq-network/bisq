@@ -89,6 +89,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final StringProperty btcCode = new SimpleStringProperty();
 
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
+    final BooleanProperty usePercentageBasedPrice = new SimpleBooleanProperty();
     //final BooleanProperty isMainNet = new SimpleBooleanProperty();
     //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
 
@@ -96,6 +97,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
+    final ObjectProperty<Double> priceAsPercentage = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
@@ -253,6 +255,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     Offer createAndGetOffer() {
         long fiatPrice = priceAsFiat.get() != null ? priceAsFiat.get().getValue() : 0L;
+
+        double percentagePrice = 0;
         long amount = amountAsCoin.get() != null ? amountAsCoin.get().getValue() : 0L;
         long minAmount = minAmountAsCoin.get() != null ? minAmountAsCoin.get().getValue() : 0L;
 
@@ -284,6 +288,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 keyRing.getPubKeyRing(),
                 direction,
                 fiatPrice,
+                percentagePrice,
+                usePercentageBasedPrice.get(),
                 amount,
                 minAmount,
                 tradeCurrencyCode.get(),
@@ -376,6 +382,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     boolean hasAcceptedArbitrators() {
         return user.getAcceptedArbitrators().size() > 0;
+    }
+
+    public void setUsePercentageBasedPrice(boolean usePercentageBasedPrice) {
+        this.usePercentageBasedPrice.set(usePercentageBasedPrice);
     }
 
     /*boolean isFeeFromFundingTxSufficient() {

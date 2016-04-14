@@ -267,6 +267,8 @@ public class OfferBookViewModelTest {
                 null,
                 0,
                 0,
+                false,
+                0,
                 0,
                 tradeCurrencyCode,
                 null,
