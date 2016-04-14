@@ -116,6 +116,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private Offer offer;
     private Timer timeoutTimer;
     private PriceFeed.Type priceFeedType;
+    private boolean priceAsPercentageIsInput;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -256,40 +257,42 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             updateButtonDisableState();
         };
         priceAsPercentageListener = (ov, oldValue, newValue) -> {
-            try {
-                if (!newValue.isEmpty() && !newValue.equals("-")) {
-                    double percentageBasedPrice = formatter.parsePercentStringToDouble(newValue);
-                    if (percentageBasedPrice >= 1 || percentageBasedPrice <= -1) {
-                        dataModel.setPercentageBasedPrice(0);
-                        UserThread.execute(() -> priceAsPercentage.set("0"));
-                        new Popup().warning("You cannot set a percentage of 100% or larger. Please enter a percentage number like \"5.4\" for 5.4%")
-                                .show();
-                    } else {
-                        MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
-                        if (marketPrice != null) {
-                            percentageBasedPrice = formatter.roundDouble(percentageBasedPrice, 4);
-                            dataModel.setPercentageBasedPrice(percentageBasedPrice);
-                            double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
-                            double factor = dataModel.getDirection() == Offer.Direction.BUY ? 1 - percentageBasedPrice : 1 + percentageBasedPrice;
-                            double targetPrice = marketPriceAsDouble * factor;
-                            price.set(formatter.formatToNumberString(targetPrice, 2));
-                            setPriceToModel();
-                            calculateVolume();
-                            dataModel.calculateTotalToPay();
-                            updateButtonDisableState();
-                        } else {
-                            new Popup().warning("There is no price feed available for that currency. You cannot use percent based price.")
+            if (priceAsPercentageIsInput) {
+                try {
+                    if (!newValue.isEmpty() && !newValue.equals("-")) {
+                        double percentageBasedPrice = formatter.parsePercentStringToDouble(newValue);
+                        if (percentageBasedPrice >= 1 || percentageBasedPrice <= -1) {
+                            dataModel.setPercentageBasedPrice(0);
+                            UserThread.execute(() -> priceAsPercentage.set("0"));
+                            new Popup().warning("You cannot set a percentage of 100% or larger. Please enter a percentage number like \"5.4\" for 5.4%")
                                     .show();
+                        } else {
+                            MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
+                            if (marketPrice != null) {
+                                percentageBasedPrice = formatter.roundDouble(percentageBasedPrice, 4);
+                                dataModel.setPercentageBasedPrice(percentageBasedPrice);
+                                double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
+                                double factor = dataModel.getDirection() == Offer.Direction.BUY ? 1 - percentageBasedPrice : 1 + percentageBasedPrice;
+                                double targetPrice = marketPriceAsDouble * factor;
+                                price.set(formatter.formatToNumberString(targetPrice, 2));
+                                setPriceToModel();
+                                calculateVolume();
+                                dataModel.calculateTotalToPay();
+                                updateButtonDisableState();
+                            } else {
+                                new Popup().warning("There is no price feed available for that currency. You cannot use percent based price.")
+                                        .show();
+                            }
                         }
+                    } else {
+                        dataModel.setPercentageBasedPrice(0);
                     }
-                } else {
+                } catch (Throwable t) {
                     dataModel.setPercentageBasedPrice(0);
+                    UserThread.execute(() -> priceAsPercentage.set("0"));
+                    new Popup().warning("Your input is not a valid number. Please enter a percentage number like \"5.4\" for 5.4%")
+                            .show();
                 }
-            } catch (Throwable t) {
-                dataModel.setPercentageBasedPrice(0);
-                UserThread.execute(() -> priceAsPercentage.set("0"));
-                new Popup().warning("Your input is not a valid number. Please enter a percentage number like \"5.4\" for 5.4%")
-                        .show();
             }
         };
         volumeListener = (ov, oldValue, newValue) -> {
@@ -475,8 +478,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
                 // handle minAmount/amount relationship
                 if (!dataModel.isMinAmountLessOrEqualAmount()) {
-                    amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            BSResources.get("createOffer.validation.amountSmallerThanMinAmount")));
+                    minAmount.set(amount.get());
+                    /*amountValidationResult.set(new InputValidator.ValidationResult(false,
+                            BSResources.get("createOffer.validation.amountSmallerThanMinAmount")));*/
                 } else {
                     amountValidationResult.set(result);
                     if (minAmount.get() != null)
@@ -496,8 +500,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 minAmount.set(formatter.formatCoin(dataModel.minAmountAsCoin.get()));
 
                 if (!dataModel.isMinAmountLessOrEqualAmount()) {
-                    minAmountValidationResult.set(new InputValidator.ValidationResult(false,
-                            BSResources.get("createOffer.validation.minAmountLargerThanAmount")));
+                    amount.set(minAmount.get());
+                   /* minAmountValidationResult.set(new InputValidator.ValidationResult(false,
+                            BSResources.get("createOffer.validation.minAmountLargerThanAmount")));*/
                 } else {
                     minAmountValidationResult.set(result);
                     if (amount.get() != null)
@@ -523,9 +528,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue, String userInput) {
-        if (oldValue && !newValue) {
+        priceAsPercentageIsInput = !oldValue && newValue;
+        if (oldValue && !newValue)
             priceAsPercentage.set(formatter.formatToNumberString(dataModel.getPercentageBasedPrice() * 100, 2));
-        }
     }
 
     void onFocusOutVolumeTextField(boolean oldValue, boolean newValue, String userInput) {
