@@ -433,6 +433,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return checkSignature(protectedStorageEntry.ownerPubKey, hashOfDataAndSeqNr, protectedStorageEntry.signature);
     }
 
+    // Check that the pubkey of the storage entry matches the allowed pubkey for the addition or removal operation
+    // in the contained mailbox message, or the pubkey of other kinds of messages.
     private boolean checkPublicKeys(ProtectedStorageEntry protectedStorageEntry, boolean isAddOperation) {
         boolean result;
         if (protectedStorageEntry.getStoragePayload() instanceof MailboxStoragePayload) {
