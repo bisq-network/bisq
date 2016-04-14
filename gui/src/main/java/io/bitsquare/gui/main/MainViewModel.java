@@ -712,7 +712,8 @@ public class MainViewModel implements ViewModel {
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
-
+                setMarketPriceInItems();
+                
                 String code = preferences.getUseStickyMarketPrice() ?
                         preferences.getPreferredTradeCurrency().getCode() :
                         priceFeed.currencyCodeProperty().get();

@@ -15,10 +15,6 @@ public class PriceFeedComboBoxItem {
         this.currencyCode = currencyCode;
     }
 
-    public String getDisplayString() {
-        return displayStringProperty.get();
-    }
-
     public void setDisplayString(String displayString) {
         this.displayStringProperty.set(displayString);
     }
