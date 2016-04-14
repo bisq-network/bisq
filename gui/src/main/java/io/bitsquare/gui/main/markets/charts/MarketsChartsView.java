@@ -164,8 +164,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
     private Tuple3<TableView<Offer>, VBox, Button> getOfferTable(Offer.Direction direction) {
         TableView<Offer> tableView = new TableView<>();
-        tableView.setMinHeight(100);
-        tableView.setMaxHeight(100);
+        tableView.setMinHeight(109);
+        tableView.setMaxHeight(109);
         tableView.setMinWidth(530);
         tableView.setMouseTransparent(true);
 
@@ -197,8 +197,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         // amount
         TableColumn<Offer, Offer> amountColumn = new TableColumn<>("Amount (BTC)");
         amountColumn.setText("Amount (BTC)");
-        amountColumn.setMinWidth(130);
-        amountColumn.setMaxWidth(130);
+        amountColumn.setMinWidth(125);
+        amountColumn.setMaxWidth(125);
         amountColumn.setSortable(false);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
@@ -221,8 +221,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
         // volume
         TableColumn<Offer, Offer> volumeColumn = new TableColumn<>();
-        volumeColumn.setMinWidth(130);
-        volumeColumn.setMaxWidth(130);
+        volumeColumn.setMinWidth(125);
+        volumeColumn.setMaxWidth(125);
         volumeColumn.setSortable(false);
         volumeColumn.textProperty().bind(volumeColumnLabel);
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -290,7 +290,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         VBox vBox = new VBox();
         vBox.setSpacing(10);
         vBox.setFillWidth(true);
-        vBox.setMinHeight(180);
+        vBox.setMinHeight(190);
         vBox.getChildren().addAll(titleLabel, tableView, button);
 
         button.prefWidthProperty().bind(vBox.widthProperty());
