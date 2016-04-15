@@ -113,7 +113,7 @@ public class TradeManager {
         tradableListStorage = new Storage<>(storageDir);
         trades = new TradableList<>(tradableListStorage, "PendingTrades");
         trades.forEach(e -> e.getOffer().setPriceFeed(priceFeed));
-        
+
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
             public void onDirectMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
@@ -264,6 +264,7 @@ public class TradeManager {
 
     // First we check if offer is still available then we create the trade with the protocol
     public void onTakeOffer(Coin amount,
+                            long tradePrice,
                             Coin fundsNeededForTrade,
                             Offer offer,
                             String paymentAccountId,
@@ -273,11 +274,12 @@ public class TradeManager {
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE)
-                        createTrade(amount, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
+                        createTrade(amount, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
                 });
     }
 
     private void createTrade(Coin amount,
+                             long tradePrice,
                              Coin fundsNeededForTrade,
                              Offer offer,
                              String paymentAccountId,
@@ -286,9 +288,9 @@ public class TradeManager {
                              TradeResultHandler tradeResultHandler) {
         Trade trade;
         if (offer.getDirection() == Offer.Direction.BUY)
-            trade = new SellerAsTakerTrade(offer, amount, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new SellerAsTakerTrade(offer, amount, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
         else
-            trade = new BuyerAsTakerTrade(offer, amount, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new BuyerAsTakerTrade(offer, amount, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
 
         trade.setTakerPaymentAccountId(paymentAccountId);
 

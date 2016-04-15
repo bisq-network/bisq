@@ -229,7 +229,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
     public Fiat getVolumeByAmount(Coin amount) {
         if (fiatPrice != 0 && amount != null && !amount.isZero())
-            return new ExchangeRate(Fiat.valueOf(currencyCode, fiatPrice)).coinToFiat(amount);
+            return new ExchangeRate(getPrice()).coinToFiat(amount);
         else
             return null;
     }
@@ -335,6 +335,13 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
                 double factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
                 double targetPrice = marketPriceAsDouble * factor;
+
+                // round
+                long factor1 = (long) Math.pow(10, 2);
+                targetPrice = targetPrice * factor1;
+                long tmp = Math.round(targetPrice);
+                targetPrice = (double) tmp / factor1;
+                
                 try {
                     return Fiat.parseFiat(currencyCode, String.valueOf(targetPrice));
                 } catch (Exception e) {

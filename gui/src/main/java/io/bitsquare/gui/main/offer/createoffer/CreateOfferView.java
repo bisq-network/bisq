@@ -93,14 +93,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private TextField currencyTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
             volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, currencyTextFieldLabel,
-            currencyComboBoxLabel, spinnerInfoLabel;
+            currencyComboBoxLabel, spinnerInfoLabel, priceAsPercentageLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private PopOver totalToPayInfoPopover;
-    private Label priceAsPercentageLabel;
-    private ToggleButton fixedPriceButton;
-    private ToggleButton percentagePriceButton;
+    private ToggleButton fixedPriceButton, percentagePriceButton;
 
     private OfferView.CloseHandler closeHandler;
 

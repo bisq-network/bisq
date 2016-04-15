@@ -47,6 +47,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.ExchangeRate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -232,8 +233,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
         addLabelTextField(gridPane, ++rowIndex, "Traders role:", role);
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex, "Trade volume:", formatter.formatFiatWithCode(contract.offer.getVolumeByAmount(contract.getTradeAmount())));
-        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiatWithCode(contract.offer.getPrice()));
+        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatFiatWithCode(contract.getTradePrice()));
+        addLabelTextField(gridPane, ++rowIndex, "Trade volume:", formatter.formatFiatWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
     }
 
     private void addCheckboxes() {

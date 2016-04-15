@@ -38,8 +38,8 @@ public abstract class BuyerTrade extends Trade {
 
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTrade.class);
 
-    BuyerTrade(Offer offer, Coin tradeAmount, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradingPeerNodeAddress, storage);
+    BuyerTrade(Offer offer, Coin tradeAmount, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, tradePrice, tradingPeerNodeAddress, storage);
     }
 
     BuyerTrade(Offer offer, Storage<? extends TradableList> storage) {
@@ -65,7 +65,7 @@ public abstract class BuyerTrade extends Trade {
                     log::warn);
         }
     }
-    
+
     @Override
     public Coin getPayoutAmount() {
         checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");

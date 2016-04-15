@@ -35,6 +35,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final long tradeAmount;
+    public final long tradePrice;
     public final byte[] takerMultiSigPubKey;
     public final ArrayList<RawTransactionInput> rawTransactionInputs;
     public final long changeOutputValue;
@@ -52,6 +53,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public PayDepositRequest(NodeAddress senderNodeAddress,
                              String tradeId,
                              long tradeAmount,
+                             long tradePrice,
                              ArrayList<RawTransactionInput> rawTransactionInputs,
                              long changeOutputValue,
                              String changeOutputAddress,
@@ -66,6 +68,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         super(tradeId);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
+        this.tradePrice = tradePrice;
         this.rawTransactionInputs = rawTransactionInputs;
         this.changeOutputValue = changeOutputValue;
         this.changeOutputAddress = changeOutputAddress;

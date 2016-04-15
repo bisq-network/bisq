@@ -96,6 +96,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ConnectionListener connectionListener;
     //  private Subscription isFeeSufficientSubscription;
     private Runnable takeOfferSucceededHandler;
+    String marketPriceMargin;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +163,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         }
 
         amountRange = formatter.formatCoin(offer.getMinAmount()) + " - " + formatter.formatCoin(offer.getAmount());
-        price = formatter.formatFiat(offer.getPrice());
+        price = formatter.formatFiat(dataModel.tradePrice);
+        marketPriceMargin = formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin());
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getId());
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");

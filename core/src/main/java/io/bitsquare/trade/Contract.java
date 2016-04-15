@@ -25,6 +25,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.offer.Offer;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.Arrays;
@@ -40,6 +41,7 @@ public final class Contract implements Payload {
 
     public final Offer offer;
     private final long tradeAmount;
+    private final long tradePrice;
     public final String takeOfferFeeTxID;
     public final NodeAddress arbitratorNodeAddress;
     private final boolean isBuyerOffererAndSellerTaker;
@@ -64,6 +66,7 @@ public final class Contract implements Payload {
 
     public Contract(Offer offer,
                     Coin tradeAmount,
+                    Fiat tradePrice,
                     String takeOfferFeeTxID,
                     NodeAddress buyerNodeAddress,
                     NodeAddress sellerNodeAddress,
@@ -80,6 +83,7 @@ public final class Contract implements Payload {
                     byte[] offererBtcPubKey,
                     byte[] takerBtcPubKey) {
         this.offer = offer;
+        this.tradePrice = tradePrice.value;
         this.buyerNodeAddress = buyerNodeAddress;
         this.sellerNodeAddress = sellerNodeAddress;
         this.tradeAmount = tradeAmount.value;
@@ -154,6 +158,10 @@ public final class Contract implements Payload {
         return Coin.valueOf(tradeAmount);
     }
 
+    public Fiat getTradePrice() {
+        return Fiat.valueOf(offer.getCurrencyCode(), tradePrice);
+    }
+
     public NodeAddress getBuyerNodeAddress() {
         return buyerNodeAddress;
     }
@@ -171,6 +179,7 @@ public final class Contract implements Payload {
         Contract contract = (Contract) o;
 
         if (tradeAmount != contract.tradeAmount) return false;
+        if (tradePrice != contract.tradePrice) return false;
         if (isBuyerOffererAndSellerTaker != contract.isBuyerOffererAndSellerTaker) return false;
         if (offer != null ? !offer.equals(contract.offer) : contract.offer != null) return false;
         if (takeOfferFeeTxID != null ? !takeOfferFeeTxID.equals(contract.takeOfferFeeTxID) : contract.takeOfferFeeTxID != null)
@@ -206,6 +215,7 @@ public final class Contract implements Payload {
     public int hashCode() {
         int result = offer != null ? offer.hashCode() : 0;
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
+        result = 31 * result + (int) (tradePrice ^ (tradePrice >>> 32));
         result = 31 * result + (takeOfferFeeTxID != null ? takeOfferFeeTxID.hashCode() : 0);
         result = 31 * result + (arbitratorNodeAddress != null ? arbitratorNodeAddress.hashCode() : 0);
         result = 31 * result + (isBuyerOffererAndSellerTaker ? 1 : 0);
@@ -229,6 +239,7 @@ public final class Contract implements Payload {
         return "Contract{" +
                 "\n\toffer=" + offer +
                 "\n\ttradeAmount=" + tradeAmount +
+                "\n\ttradePrice=" + tradePrice +
                 "\n\ttakeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
                 "\n\tarbitratorAddress=" + arbitratorNodeAddress +
                 "\n\tisBuyerOffererAndSellerTaker=" + isBuyerOffererAndSellerTaker +

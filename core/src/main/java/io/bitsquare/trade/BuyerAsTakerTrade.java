@@ -43,8 +43,8 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradingPeerNodeAddress, storage);
+    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, tradePrice, tradingPeerNodeAddress, storage);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {

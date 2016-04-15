@@ -90,9 +90,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private TitledGroupBg payFundsPane;
     private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, takeOfferButton;
     private InputTextField amountTextField;
-    private TextField paymentMethodTextField, currencyTextField, priceTextField, volumeTextField, amountRangeTextField;
+    private TextField paymentMethodTextField, currencyTextField, priceTextField, priceAsPercentageTextField, volumeTextField, amountRangeTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
-            amountBtcLabel, priceCurrencyLabel,
+            amountBtcLabel, priceCurrencyLabel, priceAsPercentageLabel,
             volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, spinnerInfoLabel, offerAvailabilitySpinnerLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
     private PopOver totalToPayInfoPopover;
@@ -228,6 +228,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         amountDescriptionLabel.setText(model.getAmountDescription());
         amountRangeTextField.setText(model.getAmountRange());
         priceTextField.setText(model.getPrice());
+        priceAsPercentageTextField.setText(model.marketPriceMargin);
         addressTextField.setPaymentLabel(model.getPaymentLabel());
         addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
     }
@@ -269,7 +270,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                                 offerDetailsWindow.hide();
                                 offerDetailsWindowDisplayed = false;
                             })
-            ).show(model.getOffer(), model.dataModel.amountAsCoin.get());
+            ).show(model.getOffer(), model.dataModel.amountAsCoin.get(), model.dataModel.tradePrice);
             offerDetailsWindowDisplayed = true;
         } else {
             new Popup().warning("You have no arbitrator selected.\n" +
@@ -285,6 +286,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         amountTextField.setMouseTransparent(true);
         priceTextField.setMouseTransparent(true);
+        priceAsPercentageTextField.setMouseTransparent(true);
         volumeTextField.setMouseTransparent(true);
 
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
@@ -389,6 +391,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.amountAsCoinProperty().bind(model.dataModel.missingCoin);
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> model.dataModel.getCurrencyCode() + "/" + model.btcCode.get(), model.btcCode));
+        priceAsPercentageLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         amountRangeBtcLabel.textProperty().bind(model.btcCode);
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
 
@@ -414,6 +417,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.amountAsCoinProperty().unbind();
         amountTextField.validationResultProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
+        priceAsPercentageLabel.prefWidthProperty().unbind();
         amountRangeBtcLabel.textProperty().unbind();
         nextButton.disableProperty().unbind();
 
@@ -638,8 +642,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         gridPane.getChildren().add(imageVBox);
 
         addAmountPriceFields();
-
-        addAmountRangeBox();
+        addSecondRow();
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
@@ -839,18 +842,42 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         gridPane.getChildren().add(hBox);
     }
 
-    private void addAmountRangeBox() {
+    private void addSecondRow() {
+        Tuple3<HBox, TextField, Label> priceAsPercentageTuple = getValueCurrencyBox();
+        HBox priceAsPercentageValueCurrencyBox = priceAsPercentageTuple.first;
+        priceAsPercentageTextField = priceAsPercentageTuple.second;
+        priceAsPercentageLabel = priceAsPercentageTuple.third;
+
+        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, "Distance in % from market price");
+        priceAsPercentageInputBoxTuple.first.setPrefWidth(200);
+        VBox priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
+
+        priceAsPercentageTextField.setPromptText("Enter % value");
+        priceAsPercentageLabel.setText("% dist.");
+        priceAsPercentageLabel.setStyle("-fx-alignment: center;");
+
+
         Tuple3<HBox, TextField, Label> amountValueCurrencyBoxTuple = getValueCurrencyBox();
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountRangeTextField = amountValueCurrencyBoxTuple.second;
         amountRangeBtcLabel = amountValueCurrencyBoxTuple.third;
 
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, BSResources.get("takeOffer.amountPriceBox.amountRangeDescription"));
-        VBox box = amountInputBoxTuple.second;
-        GridPane.setRowIndex(box, ++gridRow);
-        GridPane.setColumnIndex(box, 1);
-        GridPane.setMargin(box, new Insets(5, 10, 5, 0));
-        gridPane.getChildren().add(box);
+
+        Label xLabel = new Label("x");
+        xLabel.setFont(Font.font("Helvetica-Bold", 20));
+        xLabel.setPadding(new Insets(14, 3, 0, 3));
+        xLabel.setVisible(false); // we just use it to get the same layout as the upper row
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(5);
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, priceAsPercentageInputBox);
+        GridPane.setRowIndex(hBox, ++gridRow);
+        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(5, 10, 5, 0));
+        GridPane.setColumnSpan(hBox, 2);
+        gridPane.getChildren().add(hBox);
     }
 
 

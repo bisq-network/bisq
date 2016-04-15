@@ -576,8 +576,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             long shiftDivisor = checkedPow(10, priceAsFiat.smallestUnitExponent());
             double offerPrice = ((double) priceAsFiat.longValue()) / ((double) shiftDivisor);
             double percentage = Math.abs(1 - (offerPrice / marketPriceAsDouble));
+            percentage = formatter.roundDouble(percentage, 2);
             if (marketPriceAsDouble != 0 && percentage > preferences.getMaxPriceDistanceInPercent()) {
-                displayPriceOutofRangePopup();
+                displayPriceOutOfRangePopup();
                 return false;
             } else {
                 return true;
@@ -587,7 +588,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    private void displayPriceOutofRangePopup() {
+    private void displayPriceOutOfRangePopup() {
         Popup popup = new Popup();
         popup.warning("The price you have entered is outside the max. allowed deviation from the market price.\n" +
                 "The max. allowed deviation is " +

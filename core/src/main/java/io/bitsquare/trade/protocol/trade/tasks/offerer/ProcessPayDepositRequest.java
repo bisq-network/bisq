@@ -77,13 +77,14 @@ public class ProcessPayDepositRequest extends TradeTask {
                 failed("acceptedArbitratorNames size must be at least 1");
             trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.arbitratorNodeAddress));
             checkArgument(payDepositRequest.tradeAmount > 0);
+            trade.setTradePrice(payDepositRequest.tradePrice);
             trade.setTradeAmount(Coin.valueOf(payDepositRequest.tradeAmount));
 
             // update to the latest peer address of our peer if the payDepositRequest is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             removeMailboxMessageAfterProcessing();
-            
+
             complete();
         } catch (Throwable t) {
             failed(t);
