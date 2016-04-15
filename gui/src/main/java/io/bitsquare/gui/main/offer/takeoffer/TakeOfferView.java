@@ -287,6 +287,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         model.onShowPayFundsScreen();
 
         amountTextField.setMouseTransparent(true);
+        amountTextField.setFocusTraversable(false);
         priceTextField.setMouseTransparent(true);
         priceAsPercentageTextField.setMouseTransparent(true);
         volumeTextField.setMouseTransparent(true);

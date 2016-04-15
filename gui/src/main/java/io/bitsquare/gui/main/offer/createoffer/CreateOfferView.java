@@ -52,6 +52,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.*;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -70,6 +71,8 @@ import org.jetbrains.annotations.NotNull;
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -123,6 +126,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private Subscription isSpinnerVisibleSubscription;
     private Subscription cancelButton2StyleSubscription;
     private Subscription balanceSubscription;
+    private List<Node> editOfferElements = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -281,15 +285,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void onShowPayFundsScreen() {
         model.onShowPayFundsScreen();
 
-        amountTextField.setMouseTransparent(true);
-        minAmountTextField.setMouseTransparent(true);
-        priceTextField.setMouseTransparent(true);
-        priceAsPercentageTextField.setMouseTransparent(true);
-        fixedPriceButton.setMouseTransparent(true);
-        percentagePriceButton.setMouseTransparent(true);
-        volumeTextField.setMouseTransparent(true);
-        currencyComboBox.setMouseTransparent(true);
-        paymentAccountsComboBox.setMouseTransparent(true);
+        editOfferElements.stream().forEach(node -> {
+            node.setMouseTransparent(true);
+            node.setFocusTraversable(false);
+        });
 
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
@@ -728,11 +727,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, "Payment account:", Layout.FIRST_ROW_DISTANCE).second;
         paymentAccountsComboBox.setPromptText("Select payment account");
+        editOfferElements.add(paymentAccountsComboBox);
 
         // we display either currencyComboBox (multi currency account) or currencyTextField (single)
         Tuple2<Label, ComboBox> currencyComboBoxTuple = addLabelComboBox(gridPane, ++gridRow, "Currency:");
         currencyComboBoxLabel = currencyComboBoxTuple.first;
+        editOfferElements.add(currencyComboBoxLabel);
         currencyComboBox = currencyComboBoxTuple.second;
+        editOfferElements.add(currencyComboBox);
         currencyComboBox.setPromptText("Select currency");
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
@@ -748,7 +750,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         Tuple2<Label, TextField> currencyTextFieldTuple = addLabelTextField(gridPane, gridRow, "Currency:", "", 5);
         currencyTextFieldLabel = currencyTextFieldTuple.first;
+        editOfferElements.add(currencyTextFieldLabel);
         currencyTextField = currencyTextFieldTuple.second;
+        editOfferElements.add(currencyTextField);
     }
 
     private void addAmountPriceGroup() {
@@ -775,9 +779,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow, BSResources.get("createOffer.amountPriceBox.next"), BSResources.get("shared.cancel"));
         nextButton = tuple.first;
+        editOfferElements.add(nextButton);
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
         //UserThread.runAfter(() -> nextButton.requestFocus(), 100, TimeUnit.MILLISECONDS);
         cancelButton1 = tuple.second;
+        editOfferElements.add(cancelButton1);
         cancelButton1.setDefaultButton(false);
         cancelButton1.setOnAction(e -> {
             close();
@@ -912,9 +918,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.amount.prompt"));
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountTextField = amountValueCurrencyBoxTuple.second;
+        editOfferElements.add(amountTextField);
         amountBtcLabel = amountValueCurrencyBoxTuple.third;
+        editOfferElements.add(amountBtcLabel);
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, model.getAmountDescription());
         amountDescriptionLabel = amountInputBoxTuple.first;
+        editOfferElements.add(amountDescriptionLabel);
         VBox amountBox = amountInputBoxTuple.second;
 
         // x
@@ -926,14 +935,18 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tuple3<HBox, InputTextField, Label> priceValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.price.prompt"));
         HBox priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
         priceTextField = priceValueCurrencyBoxTuple.second;
+        editOfferElements.add(priceTextField);
         priceCurrencyLabel = priceValueCurrencyBoxTuple.third;
+        editOfferElements.add(priceCurrencyLabel);
         Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox, BSResources.get("createOffer.amountPriceBox.priceDescription"));
         priceDescriptionLabel = priceInputBoxTuple.first;
+        editOfferElements.add(priceDescriptionLabel);
         VBox priceBox = priceInputBoxTuple.second;
 
         // Fixed/Percentage toggle
         ToggleGroup toggleGroup = new ToggleGroup();
         fixedPriceButton = new ToggleButton("Fixed");
+        editOfferElements.add(fixedPriceButton);
         fixedPriceButton.setId("toggle-price-left");
         fixedPriceButton.setToggleGroup(toggleGroup);
         fixedPriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
@@ -942,6 +955,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         });
 
         percentagePriceButton = new ToggleButton("Percentage");
+        editOfferElements.add(percentagePriceButton);
         percentagePriceButton.setId("toggle-price-right");
         percentagePriceButton.setToggleGroup(toggleGroup);
         percentagePriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
@@ -962,9 +976,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tuple3<HBox, InputTextField, Label> volumeValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.volume.prompt"));
         HBox volumeValueCurrencyBox = volumeValueCurrencyBoxTuple.first;
         volumeTextField = volumeValueCurrencyBoxTuple.second;
+        editOfferElements.add(volumeTextField);
         volumeCurrencyLabel = volumeValueCurrencyBoxTuple.third;
+        editOfferElements.add(volumeCurrencyLabel);
         Tuple2<Label, VBox> volumeInputBoxTuple = getTradeInputBox(volumeValueCurrencyBox, model.volumeDescriptionLabel.get());
         volumeDescriptionLabel = volumeInputBoxTuple.first;
+        editOfferElements.add(volumeDescriptionLabel);
         VBox volumeBox = volumeInputBoxTuple.second;
 
         HBox hBox = new HBox();
@@ -982,7 +999,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tuple3<HBox, InputTextField, Label> priceAsPercentageTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.price.prompt"));
         HBox priceAsPercentageValueCurrencyBox = priceAsPercentageTuple.first;
         priceAsPercentageTextField = priceAsPercentageTuple.second;
+        editOfferElements.add(priceAsPercentageTextField);
         priceAsPercentageLabel = priceAsPercentageTuple.third;
+        editOfferElements.add(priceAsPercentageLabel);
 
         Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, "Distance in % from market price");
         priceAsPercentageInputBoxTuple.first.setPrefWidth(200);
@@ -995,7 +1014,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getValueCurrencyBox(BSResources.get("createOffer.amount.prompt"));
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         minAmountTextField = amountValueCurrencyBoxTuple.second;
+        editOfferElements.add(minAmountTextField);
         minAmountBtcLabel = amountValueCurrencyBoxTuple.third;
+        editOfferElements.add(minAmountBtcLabel);
 
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, BSResources.get("createOffer.amountPriceBox" +
                 ".minAmountDescription"));

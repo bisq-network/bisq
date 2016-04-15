@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
-// https://api.bitfinex.com/v1/pubticker/BTCUSD
 public interface PriceProvider extends Serializable {
     Map<String, MarketPrice> getAllPrices() throws IOException, HttpException;
 
