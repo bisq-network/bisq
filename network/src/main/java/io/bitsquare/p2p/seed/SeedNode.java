@@ -25,6 +25,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
+    public static final int MAX_CONNECTIONS_LIMIT = 1000;
+    public static final int MAX_CONNECTIONS_DEFAULT = 50;
 
     private NodeAddress mySeedNodeAddress = new NodeAddress("localhost:8001");
     private boolean useLocalhost = false;
@@ -66,11 +68,11 @@ public class SeedNode {
                         String arg2 = args[2];
                         int maxConnections = Integer.parseInt(arg2);
                         log.info("From processArgs: maxConnections=" + maxConnections);
-                        checkArgument(maxConnections < 1000, "maxConnections seems to be a bit too high...");
+                        checkArgument(maxConnections < MAX_CONNECTIONS_LIMIT, "maxConnections seems to be a bit too high...");
                         PeerManager.setMaxConnections(maxConnections);
                     } else {
                         // we keep default a higher connection size for seed nodes
-                        PeerManager.setMaxConnections(50);
+                        PeerManager.setMaxConnections(MAX_CONNECTIONS_DEFAULT);
                     }
                     if (args.length > 3) {
                         String arg3 = args[3];
