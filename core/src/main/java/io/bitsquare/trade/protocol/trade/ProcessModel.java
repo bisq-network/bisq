@@ -68,7 +68,6 @@ public class ProcessModel implements Model, Serializable {
     transient private KeyRing keyRing;
     transient private P2PService p2PService;
 
-
     // Mutable
     public final TradingPeer tradingPeer;
     transient private TradeMessage tradeMessage;

@@ -110,6 +110,7 @@ public final class Preferences implements Persistable {
     private double maxPriceDistanceInPercent;
     private boolean useInvertedMarketPrice;
     private boolean useStickyMarketPrice = false;
+    private boolean usePercentageBasedPrice = false;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -162,6 +163,7 @@ public final class Preferences implements Persistable {
             // useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
             useTorForBitcoinJ = false;
             useStickyMarketPrice = persisted.getUseStickyMarketPrice();
+            usePercentageBasedPrice = persisted.getUsePercentageBasedPrice();
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
             maxPriceDistanceInPercent = persisted.getMaxPriceDistanceInPercent();
             // Backward compatible to version 0.3.6. Can be removed after a while
@@ -368,6 +370,12 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setUsePercentageBasedPrice(boolean usePercentageBasedPrice) {
+        this.usePercentageBasedPrice = usePercentageBasedPrice;
+        storage.queueUpForSave();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -486,6 +494,10 @@ public final class Preferences implements Persistable {
 
     public boolean getUseStickyMarketPrice() {
         return useStickyMarketPrice;
+    }
+
+    public boolean getUsePercentageBasedPrice() {
+        return usePercentageBasedPrice;
     }
 
 

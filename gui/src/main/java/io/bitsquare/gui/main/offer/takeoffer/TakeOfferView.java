@@ -855,7 +855,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
         priceAsPercentageTextField.setPromptText("Enter % value");
-        priceAsPercentageLabel.setText("% dist.");
+        priceAsPercentageLabel.setText("%");
         priceAsPercentageLabel.setStyle("-fx-alignment: center;");
 
 

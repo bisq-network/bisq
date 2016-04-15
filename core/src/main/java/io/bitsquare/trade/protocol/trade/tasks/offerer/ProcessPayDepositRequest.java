@@ -26,6 +26,7 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,8 +77,27 @@ public class ProcessPayDepositRequest extends TradeTask {
             if (payDepositRequest.acceptedArbitratorNodeAddresses.size() < 1)
                 failed("acceptedArbitratorNames size must be at least 1");
             trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.arbitratorNodeAddress));
+
+            long takersTradePrice = payDepositRequest.tradePrice;
+            checkArgument(takersTradePrice > 0);
+            Fiat tradePriceAsFiat = Fiat.valueOf(trade.getOffer().getCurrencyCode(), takersTradePrice);
+            Fiat offerPriceAsFiat = trade.getOffer().getPrice();
+            double factor = (double) takersTradePrice / (double) offerPriceAsFiat.value;
+            // We allow max. 2 % difference between own offer price calculation and takers calculation.
+            // Market price might be different at offerers and takers side so we need a bit of tolerance.
+            // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations 
+            // from one provider.
+            if (Math.abs(1 - factor) > 0.02) {
+                String msg = "Takers tradePrice is outside our market price tolerance.\n" +
+                        "tradePriceAsFiat=" + tradePriceAsFiat.toFriendlyString() + "\n" +
+                        "offerPriceAsFiat=" + offerPriceAsFiat.toFriendlyString();
+                log.warn(msg);
+                failed(msg);
+            }
+            trade.setTradePrice(takersTradePrice);
+            
+            
             checkArgument(payDepositRequest.tradeAmount > 0);
-            trade.setTradePrice(payDepositRequest.tradePrice);
             trade.setTradeAmount(Coin.valueOf(payDepositRequest.tradeAmount));
 
             // update to the latest peer address of our peer if the payDepositRequest is correct

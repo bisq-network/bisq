@@ -140,6 +140,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
         securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
+        usePercentageBasedPrice.set(preferences.getUsePercentageBasedPrice());
+
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
@@ -282,9 +284,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
-        log.error("fiatPrice " + fiatPrice);
-        log.error("percentageBasedPrice " + percentageBasedPrice);
-        log.error("usePercentageBasedPrice " + usePercentageBasedPrice.get());
         return new Offer(offerId,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
@@ -389,6 +388,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     public void setUsePercentageBasedPrice(boolean usePercentageBasedPrice) {
         this.usePercentageBasedPrice.set(usePercentageBasedPrice);
+        preferences.setUsePercentageBasedPrice(usePercentageBasedPrice);
     }
 
     /*boolean isFeeFromFundingTxSufficient() {

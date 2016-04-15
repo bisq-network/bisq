@@ -989,7 +989,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         VBox priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
         priceAsPercentageTextField.setPromptText("Enter % value");
-        priceAsPercentageLabel.setText("% dist.");
+        priceAsPercentageLabel.setText("%");
         priceAsPercentageLabel.setStyle("-fx-alignment: center;");
 
         Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getValueCurrencyBox(BSResources.get("createOffer.amount.prompt"));
