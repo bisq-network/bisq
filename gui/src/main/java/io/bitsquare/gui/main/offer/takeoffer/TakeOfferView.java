@@ -116,6 +116,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     // private Subscription noSufficientFeeSubscription;
     //  private MonadicBinding<Boolean> noSufficientFeeBinding;
     private Subscription cancelButton2StyleSubscription;
+    private VBox priceAsPercentageInputBox;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -195,6 +196,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     public void initWithData(Offer offer) {
         model.initWithData(offer);
 
+        priceAsPercentageInputBox.setVisible(offer.getUsePercentageBasedPrice());
+
         if (model.getOffer().getDirection() == Offer.Direction.SELL) {
             imageView.setId("image-buy-large");
             directionLabel.setId("direction-icon-label-buy");
@@ -210,7 +213,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             nextButton.setId("sell-button");
             takeOfferButton.setText("Review offer for selling bitcoin");
         }
-
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
         paymentAccountsLabel.setVisible(showComboBox);
@@ -850,7 +852,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, "Distance in % from market price");
         priceAsPercentageInputBoxTuple.first.setPrefWidth(200);
-        VBox priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
+        priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
         priceAsPercentageTextField.setPromptText("Enter % value");
         priceAsPercentageLabel.setText("% dist.");
@@ -873,6 +875,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         hBox.setSpacing(5);
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, priceAsPercentageInputBox);
+
         GridPane.setRowIndex(hBox, ++gridRow);
         GridPane.setColumnIndex(hBox, 1);
         GridPane.setMargin(hBox, new Insets(5, 10, 5, 0));

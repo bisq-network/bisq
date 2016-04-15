@@ -364,7 +364,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return marketPriceMargin;
     }
 
-    public boolean isUsePercentageBasedPrice() {
+    public boolean getUsePercentageBasedPrice() {
         return usePercentageBasedPrice;
     }
 

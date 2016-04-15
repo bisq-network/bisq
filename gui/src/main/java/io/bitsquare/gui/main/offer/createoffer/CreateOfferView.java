@@ -938,6 +938,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceButton.setToggleGroup(toggleGroup);
         fixedPriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
             model.dataModel.setUsePercentageBasedPrice(!newValue);
+            percentagePriceButton.setSelected(!newValue);
         });
 
         percentagePriceButton = new ToggleButton("Percentage");
@@ -945,6 +946,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         percentagePriceButton.setToggleGroup(toggleGroup);
         percentagePriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
             model.dataModel.setUsePercentageBasedPrice(newValue);
+            fixedPriceButton.setSelected(!newValue);
         });
 
         HBox toggleButtons = new HBox();

@@ -263,7 +263,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         Offer offer = item.getOffer();
         Fiat price = offer.getPrice();
         String postFix = "";
-        if (offer.isUsePercentageBasedPrice()) {
+        if (offer.getUsePercentageBasedPrice()) {
             postFix = " (" + formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin()) + ")";
         }
         if (showAllTradeCurrenciesProperty.get())
