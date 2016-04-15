@@ -40,6 +40,8 @@ import java.util.concurrent.TimeUnit;
 // Run in UserThread
 public class P2PDataStorage implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
+    /** How many days to keep an entry before it is purged. */
+    public static final int PURGE_AGE_DAYS = 10;
 
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL_SEC = Timer.STRESS_TEST ? 5 : 60;
@@ -495,10 +497,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return new ByteArray(Hash.getHash(data));
     }
 
-    // Get a new map with entries older than 10 days purged from the given map.
+    // Get a new map with entries older than PURGE_AGE_DAYS purged from the given map.
     private HashMap<ByteArray, MapValue> getPurgedSequenceNumberMap(HashMap<ByteArray, MapValue> persisted) {
         HashMap<ByteArray, MapValue> purged = new HashMap<>();
-        long maxAgeTs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(10);
+        long maxAgeTs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(PURGE_AGE_DAYS);
         persisted.entrySet().stream().forEach(entry -> {
             if (entry.getValue().timeStamp > maxAgeTs)
                 purged.put(entry.getKey(), entry.getValue());
