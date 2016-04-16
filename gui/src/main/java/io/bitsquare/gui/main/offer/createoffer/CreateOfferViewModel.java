@@ -243,17 +243,20 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 if (!priceAsPercentageIsInput) {
                     MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
                     if (marketPrice != null) {
-                        double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
+                        double marketPriceAsDouble = formatter.roundDouble(marketPrice.getPrice(priceFeedType), 2);
                         try {
                             double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
-                            double priceFactor = priceAsDouble / marketPriceAsDouble;
-                            priceFactor = dataModel.getDirection() == Offer.Direction.BUY ? 1 - priceFactor : 1 + priceFactor;
-                            priceAsPercentage.set(formatter.formatToPercent(priceFactor, 2));
+                            double relation = priceAsDouble / marketPriceAsDouble;
+                            relation = formatter.roundDouble(relation, 2);
+                            double marketPriceMargin = dataModel.getDirection() == Offer.Direction.BUY ? 1 - relation : 1 + relation;
+                            priceAsPercentage.set(formatter.formatToPercent(marketPriceMargin, 2));
                         } catch (NumberFormatException t) {
                             priceAsPercentage.set("");
                             new Popup().warning("Your input is not a valid number.")
                                     .show();
                         }
+                    } else {
+                        log.warn("We don't have a market price. We use the static price instead.");
                     }
                 }
             }
@@ -263,8 +266,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             if (priceAsPercentageIsInput) {
                 try {
                     if (!newValue.isEmpty() && !newValue.equals("-")) {
-                        double percentageBasedPrice = formatter.parsePercentStringToDouble(newValue);
-                        if (percentageBasedPrice >= 1 || percentageBasedPrice <= -1) {
+                        double marketPriceMargin = formatter.parsePercentStringToDouble(newValue);
+                        if (marketPriceMargin >= 1 || marketPriceMargin <= -1) {
                             dataModel.setPercentageBasedPrice(0);
                             UserThread.execute(() -> priceAsPercentage.set("0"));
                             new Popup().warning("You cannot set a percentage of 100% or larger. Please enter a percentage number like \"5.4\" for 5.4%")
@@ -272,11 +275,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         } else {
                             MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
                             if (marketPrice != null) {
-                                percentageBasedPrice = formatter.roundDouble(percentageBasedPrice, 4);
-                                dataModel.setPercentageBasedPrice(percentageBasedPrice);
-                                double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
-                                double factor = dataModel.getDirection() == Offer.Direction.BUY ? 1 - percentageBasedPrice : 1 + percentageBasedPrice;
-                                double targetPrice = marketPriceAsDouble * factor;
+                                marketPriceMargin = formatter.roundDouble(marketPriceMargin, 4);
+                                dataModel.setPercentageBasedPrice(marketPriceMargin);
+                                Offer.Direction direction = dataModel.getDirection();
+                                double marketPriceAsDouble = formatter.roundDouble(marketPrice.getPrice(priceFeedType), 2);
+                                double factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
+                                double targetPrice = formatter.roundDouble(marketPriceAsDouble * factor, 2);
                                 price.set(formatter.formatToNumberString(targetPrice, 2));
                                 setPriceToModel();
                                 calculateVolume();
@@ -376,7 +380,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (dataModel.paymentAccount != null)
             btcValidator.setMaxTradeLimitInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimit());
 
-        priceFeedType = direction == Offer.Direction.SELL ? PriceFeed.Type.ASK : PriceFeed.Type.BID;
+        priceFeedType = direction == Offer.Direction.BUY ? PriceFeed.Type.ASK : PriceFeed.Type.BID;
 
         return result;
     }

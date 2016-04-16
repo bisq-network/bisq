@@ -107,8 +107,14 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final String id;
     private final long date;
     private final long protocolVersion;
+    // Price if fixed price is used (usePercentageBasedPrice = false)
     private final long fiatPrice;
-    private final double marketPriceMargin;
+    // Distance form market price if percentage based price is used (usePercentageBasedPrice = true). 
+    // E.g. 0.1 -> 10%. Can be negative as well. Depending on direction the marketPriceMargin is above or below the market price.
+    // Positive values is always the usual case where you want a better price as the market. 
+    // E.g. Buy offer with market price 400.- leads to a 360.- price. 
+    // Sell offer with market price 400.- leads to a 440.- price. 
+    private final double marketPriceMargin; 
     private final boolean usePercentageBasedPrice;
     private final long amount;
     private final long minAmount;
@@ -331,7 +337,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         if (usePercentageBasedPrice && priceFeed != null) {
             MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
             if (marketPrice != null) {
-                PriceFeed.Type priceFeedType = direction == Direction.SELL ? PriceFeed.Type.ASK : PriceFeed.Type.BID;
+                PriceFeed.Type priceFeedType = direction == Direction.BUY ? PriceFeed.Type.ASK : PriceFeed.Type.BID;
                 double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
                 double factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
                 double targetPrice = marketPriceAsDouble * factor;
