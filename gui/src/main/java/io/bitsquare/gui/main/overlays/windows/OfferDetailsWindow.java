@@ -175,11 +175,17 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(offer.getVolumeByAmount(offer.getAmount())));
         }
 
-        if (takeOfferHandlerOptional.isPresent())
+        if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(tradePrice) + " " + offer.getCurrencyCode() + "/" + "BTC");
-        else
-            addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
-
+        } else {
+            Fiat price = offer.getPrice();
+            if (offer.getUseMarketBasedPrice()) {
+                addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price) +
+                        " (" + formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin()) + ")");
+            } else {
+                addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price));
+            }
+        }
         if (offer.isMyOffer(keyRing) && user.getPaymentAccount(offer.getOffererPaymentAccountId()) != null)
             addLabelTextField(gridPane, ++rowIndex, "Payment account:", user.getPaymentAccount(offer.getOffererPaymentAccountId()).getAccountName());
         else

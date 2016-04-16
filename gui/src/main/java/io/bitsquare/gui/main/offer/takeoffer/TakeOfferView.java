@@ -194,45 +194,51 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Offer offer) {
-        model.initWithData(offer);
+        if (offer.getPrice() != null) {
+            model.initWithData(offer);
+            priceAsPercentageInputBox.setVisible(offer.getUseMarketBasedPrice());
 
-        priceAsPercentageInputBox.setVisible(offer.getUseMarketBasedPrice());
+            if (model.getOffer().getDirection() == Offer.Direction.SELL) {
+                imageView.setId("image-buy-large");
+                directionLabel.setId("direction-icon-label-buy");
 
-        if (model.getOffer().getDirection() == Offer.Direction.SELL) {
-            imageView.setId("image-buy-large");
-            directionLabel.setId("direction-icon-label-buy");
+                takeOfferButton.setId("buy-button-big");
+                takeOfferButton.setText("Review offer for buying bitcoin");
+                nextButton.setId("buy-button");
+            } else {
+                imageView.setId("image-sell-large");
+                directionLabel.setId("direction-icon-label-sell");
 
-            takeOfferButton.setId("buy-button-big");
-            takeOfferButton.setText("Review offer for buying bitcoin");
-            nextButton.setId("buy-button");
+                takeOfferButton.setId("sell-button-big");
+                nextButton.setId("sell-button");
+                takeOfferButton.setText("Review offer for selling bitcoin");
+            }
+
+            boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
+            paymentAccountsLabel.setVisible(showComboBox);
+            paymentAccountsLabel.setManaged(showComboBox);
+            paymentAccountsComboBox.setVisible(showComboBox);
+            paymentAccountsComboBox.setManaged(showComboBox);
+            paymentMethodTextField.setVisible(!showComboBox);
+            paymentMethodTextField.setManaged(!showComboBox);
+            paymentMethodLabel.setVisible(!showComboBox);
+            paymentMethodLabel.setManaged(!showComboBox);
+            if (!showComboBox)
+                paymentMethodTextField.setText(BSResources.get(model.getPaymentMethod().getId()));
+            currencyTextField.setText(model.dataModel.getCurrencyNameAndCode());
+            directionLabel.setText(model.getDirectionLabel());
+            amountDescriptionLabel.setText(model.getAmountDescription());
+            amountRangeTextField.setText(model.getAmountRange());
+            priceTextField.setText(model.getPrice());
+            priceAsPercentageTextField.setText(model.marketPriceMargin);
+            addressTextField.setPaymentLabel(model.getPaymentLabel());
+            addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
         } else {
-            imageView.setId("image-sell-large");
-            directionLabel.setId("direction-icon-label-sell");
-
-            takeOfferButton.setId("sell-button-big");
-            nextButton.setId("sell-button");
-            takeOfferButton.setText("Review offer for selling bitcoin");
+            new Popup().warning("You cannot take that offer as it uses a percentage price based on the " +
+                    "market price but there is no price feed available.")
+                    .onClose(this::close)
+                    .show();
         }
-
-        boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
-        paymentAccountsLabel.setVisible(showComboBox);
-        paymentAccountsLabel.setManaged(showComboBox);
-        paymentAccountsComboBox.setVisible(showComboBox);
-        paymentAccountsComboBox.setManaged(showComboBox);
-        paymentMethodTextField.setVisible(!showComboBox);
-        paymentMethodTextField.setManaged(!showComboBox);
-        paymentMethodLabel.setVisible(!showComboBox);
-        paymentMethodLabel.setManaged(!showComboBox);
-        if (!showComboBox)
-            paymentMethodTextField.setText(BSResources.get(model.getPaymentMethod().getId()));
-        currencyTextField.setText(model.dataModel.getCurrencyNameAndCode());
-        directionLabel.setText(model.getDirectionLabel());
-        amountDescriptionLabel.setText(model.getAmountDescription());
-        amountRangeTextField.setText(model.getAmountRange());
-        priceTextField.setText(model.getPrice());
-        priceAsPercentageTextField.setText(model.marketPriceMargin);
-        addressTextField.setPaymentLabel(model.getPaymentLabel());
-        addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
     }
 
     public void setCloseHandler(OfferView.CloseHandler closeHandler) {

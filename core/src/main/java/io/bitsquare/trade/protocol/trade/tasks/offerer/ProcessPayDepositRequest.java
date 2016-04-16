@@ -82,6 +82,7 @@ public class ProcessPayDepositRequest extends TradeTask {
             checkArgument(takersTradePrice > 0);
             Fiat tradePriceAsFiat = Fiat.valueOf(trade.getOffer().getCurrencyCode(), takersTradePrice);
             Fiat offerPriceAsFiat = trade.getOffer().getPrice();
+            checkArgument(offerPriceAsFiat != null, "offerPriceAsFiat must not be null");
             double factor = (double) takersTradePrice / (double) offerPriceAsFiat.value;
             // We allow max. 2 % difference between own offer price calculation and takers calculation.
             // Market price might be different at offerers and takers side so we need a bit of tolerance.
@@ -95,8 +96,8 @@ public class ProcessPayDepositRequest extends TradeTask {
                 failed(msg);
             }
             trade.setTradePrice(takersTradePrice);
-            
-            
+
+
             checkArgument(payDepositRequest.tradeAmount > 0);
             trade.setTradeAmount(Coin.valueOf(payDepositRequest.tradeAmount));
 

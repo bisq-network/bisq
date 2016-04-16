@@ -82,29 +82,30 @@ class MarketsStatisticViewModel extends ActivatableViewModel {
                     .stream()
                     .filter(e -> e.getDirection().equals(Offer.Direction.BUY))
                     .sorted((o1, o2) -> {
-                        long a = o1.getPrice().value;
-                        long b = o2.getPrice().value;
+                        long a = o1.getPrice() != null ? o1.getPrice().value : 0;
+                        long b = o2.getPrice() != null ? o2.getPrice().value : 0;
                         if (a != b)
                             return a < b ? 1 : -1;
                         return 0;
                     })
                     .collect(Collectors.toList());
-            Fiat bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
+
             List<Offer> sellOffers = offers
                     .stream()
                     .filter(e -> e.getDirection().equals(Offer.Direction.SELL))
                     .sorted((o1, o2) -> {
-                        long a = o1.getPrice().value;
-                        long b = o2.getPrice().value;
+                        long a = o1.getPrice() != null ? o1.getPrice().value : 0;
+                        long b = o2.getPrice() != null ? o2.getPrice().value : 0;
                         if (a != b)
                             return a > b ? 1 : -1;
                         return 0;
                     })
                     .collect(Collectors.toList());
-            Fiat bestSellOfferPrice = sellOffers.isEmpty() ? null : sellOffers.get(0).getPrice();
 
             Fiat spread = null;
-            if (bestBuyOfferPrice != null && bestSellOfferPrice != null) 
+            Fiat bestSellOfferPrice = sellOffers.isEmpty() ? null : sellOffers.get(0).getPrice();
+            Fiat bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
+            if (bestBuyOfferPrice != null && bestSellOfferPrice != null)
                 spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
 
             Coin totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());

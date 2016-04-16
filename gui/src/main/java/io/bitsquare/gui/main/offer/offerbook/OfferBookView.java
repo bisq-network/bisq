@@ -51,6 +51,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
 
@@ -164,9 +165,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
-        priceColumn.setComparator((o1, o2) -> o1.getOffer().getPrice().compareTo(o2.getOffer().getPrice()));
+        priceColumn.setComparator((o1, o2) -> {
+            Fiat price1 = o1.getOffer().getPrice();
+            Fiat price2 = o2.getOffer().getPrice();
+            return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
+        });
         amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
-        volumeColumn.setComparator((o1, o2) -> o1.getOffer().getOfferVolume().compareTo(o2.getOffer().getOfferVolume()));
+        volumeColumn.setComparator((o1, o2) -> {
+            Fiat offerVolume1 = o1.getOffer().getOfferVolume();
+            Fiat offerVolume2 = o2.getOffer().getOfferVolume();
+            return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
+        });
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
         avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().hostName.compareTo(o2.getOffer().getOwnerNodeAddress().hostName));
 

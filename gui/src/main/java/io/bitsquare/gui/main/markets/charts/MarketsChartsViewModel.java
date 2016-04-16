@@ -33,6 +33,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;
+import org.bitcoinj.utils.Fiat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,8 +91,8 @@ class MarketsChartsViewModel extends ActivatableViewModel {
                 .filter(e -> e.getCurrencyCode().equals(tradeCurrency.get().getCode())
                         && e.getDirection().equals(Offer.Direction.BUY))
                 .sorted((o1, o2) -> {
-                    long a = o1.getPrice().value;
-                    long b = o2.getPrice().value;
+                    long a = o1.getPrice() != null ? o1.getPrice().value : 0;
+                    long b = o2.getPrice() != null ? o2.getPrice().value : 0;
                     if (a != b)
                         return a < b ? 1 : -1;
                     return 0;
@@ -105,8 +106,8 @@ class MarketsChartsViewModel extends ActivatableViewModel {
                 .filter(e -> e.getCurrencyCode().equals(tradeCurrency.get().getCode())
                         && e.getDirection().equals(Offer.Direction.SELL))
                 .sorted((o1, o2) -> {
-                    long a = o1.getPrice().value;
-                    long b = o2.getPrice().value;
+                    long a = o1.getPrice() != null ? o1.getPrice().value : 0;
+                    long b = o2.getPrice() != null ? o2.getPrice().value : 0;
                     if (a != b)
                         return a > b ? 1 : -1;
                     return 0;
@@ -120,13 +121,16 @@ class MarketsChartsViewModel extends ActivatableViewModel {
         data.clear();
         double accumulatedAmount = 0;
         for (Offer offer : sortedList) {
-            double price = (double) offer.getPrice().value / LongMath.pow(10, offer.getPrice().smallestUnitExponent());
-            double amount = (double) offer.getAmount().value / LongMath.pow(10, offer.getAmount().smallestUnitExponent());
-            accumulatedAmount += amount;
-            if (direction.equals(Offer.Direction.BUY))
-                data.add(0, new XYChart.Data(price, accumulatedAmount));
-            else
-                data.add(new XYChart.Data(price, accumulatedAmount));
+            Fiat priceAsFiat = offer.getPrice();
+            if (priceAsFiat != null) {
+                double price = (double) priceAsFiat.value / LongMath.pow(10, priceAsFiat.smallestUnitExponent());
+                double amount = (double) offer.getAmount().value / LongMath.pow(10, offer.getAmount().smallestUnitExponent());
+                accumulatedAmount += amount;
+                if (direction.equals(Offer.Direction.BUY))
+                    data.add(0, new XYChart.Data(price, accumulatedAmount));
+                else
+                    data.add(new XYChart.Data(price, accumulatedAmount));
+            }
         }
     }
 

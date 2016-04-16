@@ -118,7 +118,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     // E.g. Buy offer with market price 400.- leads to a 360.- price. 
     // Sell offer with market price 400.- leads to a 440.- price. 
     private final double marketPriceMargin;
-   
+
     private final long amount;
     private final long minAmount;
     private final NodeAddress offererNodeAddress;
@@ -236,19 +236,27 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
 
+    @Nullable
     public Fiat getVolumeByAmount(Coin amount) {
-        try {
-            return new ExchangeRate(getPrice()).coinToFiat(amount);
-        } catch (Throwable t) {
-            log.error("getVolumeByAmount failed. Error=" + t.getMessage());
-            return Fiat.valueOf(currencyCode, 0);
+        Fiat price = getPrice();
+        if (price != null && amount != null) {
+            try {
+                return new ExchangeRate(price).coinToFiat(amount);
+            } catch (Throwable t) {
+                log.error("getVolumeByAmount failed. Error=" + t.getMessage());
+                return null;
+            }
+        } else {
+            return null;
         }
     }
 
+    @Nullable
     public Fiat getOfferVolume() {
         return getVolumeByAmount(getAmount());
     }
 
+    @Nullable
     public Fiat getMinOfferVolume() {
         return getVolumeByAmount(getMinAmount());
     }
@@ -337,6 +345,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return pubKeyRing;
     }
 
+    @Nullable
     public Fiat getPrice() {
         if (useMarketBasedPrice) {
             checkNotNull(priceFeed, "priceFeed must not be null");
@@ -357,14 +366,13 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                     return Fiat.parseFiat(currencyCode, String.valueOf(targetPrice));
                 } catch (Exception e) {
                     log.error("Exception at getPrice / parseToFiat: " + e.toString() + "\n" +
-                            "We use an inaccessible price to avoid null pointers.\n" +
                             "That case should never happen.");
-                    return Fiat.valueOf(currencyCode, direction == Direction.BUY ? Long.MIN_VALUE : Long.MAX_VALUE);
+                    return null;
                 }
             } else {
-                log.warn("We don't have a market price. We use an inaccessible price to avoid null pointers.\n" +
+                log.warn("We don't have a market price./n" +
                         "That case could only happen if you don't get a price feed.");
-                return Fiat.valueOf(currencyCode, direction == Direction.BUY ? Long.MIN_VALUE : Long.MAX_VALUE);
+                return null;
             }
         } else {
             return Fiat.valueOf(currencyCode, fiatPrice);

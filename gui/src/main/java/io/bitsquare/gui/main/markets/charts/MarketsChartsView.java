@@ -47,6 +47,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.bitcoinj.utils.Fiat;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -184,9 +185,13 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                             @Override
                             public void updateItem(final Offer offer, boolean empty) {
                                 super.updateItem(offer, empty);
-                                if (offer != null && !empty)
-                                    setText(formatter.formatFiat(offer.getPrice()));
-                                else
+                                if (offer != null && !empty) {
+                                    Fiat offerPrice = offer.getPrice();
+                                    if (offerPrice != null)
+                                        setText(formatter.formatFiat(offerPrice));
+                                    else
+                                        setText("");
+                                } else
                                     setText("");
                             }
                         };
