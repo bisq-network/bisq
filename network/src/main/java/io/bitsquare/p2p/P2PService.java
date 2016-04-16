@@ -397,9 +397,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private void doSendEncryptedDirectMessage(@NotNull NodeAddress peersNodeAddress, PubKeyRing pubKeyRing, DirectMessage message,
                                               SendDirectMessageListener sendDirectMessageListener) {
         Log.traceCall();
-        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at doSendEncryptedDirectMessage");
+        checkNotNull(peersNodeAddress, "Peer node address must not be null at doSendEncryptedDirectMessage");
         checkArgument(optionalEncryptionService.isPresent(), "EncryptionService not set. Seems that is called on a seed node which must not happen.");
-        checkNotNull(networkNode.getNodeAddress(), "networkNode.getNodeAddress() must not be null.");
+        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at doSendEncryptedDirectMessage");
         try {
             log.info("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
                     "Encrypt message:\nmessage={}"
