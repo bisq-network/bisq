@@ -41,6 +41,8 @@ import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
@@ -420,13 +422,35 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     public TableCell<OfferBookListItem, OfferBookListItem> call(
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                            private OfferBookListItem offerBookListItem;
+                            ChangeListener<Number> listener = new ChangeListener<Number>() {
+                                @Override
+                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                                    if (offerBookListItem != null && offerBookListItem.getOffer().getPrice() != null) {
+                                        setText(model.getPrice(offerBookListItem));
+                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                    }
+                                }
+                            };
+
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null && !empty)
-                                    setText(model.getPrice(item));
-                                else
+
+                                if (item != null && !empty) {
+                                    if (item.getOffer().getPrice() == null) {
+                                        this.offerBookListItem = item;
+                                        model.priceFeed.currenciesUpdateFlagProperty().addListener(listener);
+                                        setText("N/A");
+                                    } else {
+                                        setText(model.getPrice(item));
+                                    }
+                                } else {
+                                    if (listener != null)
+                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                    this.offerBookListItem = null;
                                     setText("");
+                                }
                             }
                         };
                     }
@@ -448,13 +472,34 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     public TableCell<OfferBookListItem, OfferBookListItem> call(
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                            private OfferBookListItem offerBookListItem;
+                            ChangeListener<Number> listener = new ChangeListener<Number>() {
+                                @Override
+                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                                    if (offerBookListItem != null && offerBookListItem.getOffer().getOfferVolume() != null) {
+                                        setText(model.getVolume(offerBookListItem));
+                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                    }
+                                }
+                            };
+
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null && !empty)
-                                    setText(model.getVolume(item));
-                                else
+                                if (item != null && !empty) {
+                                    if (item.getOffer().getPrice() == null) {
+                                        this.offerBookListItem = item;
+                                        model.priceFeed.currenciesUpdateFlagProperty().addListener(listener);
+                                        setText("N/A");
+                                    } else {
+                                        setText(model.getVolume(item));
+                                    }
+                                } else {
+                                    if (listener != null)
+                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                    this.offerBookListItem = null;
                                     setText("");
+                                }
                             }
                         };
                     }

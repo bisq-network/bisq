@@ -29,6 +29,8 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -44,15 +46,16 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
     private final OfferBook offerBook;
     private final Preferences preferences;
-    private final PriceFeed priceFeed;
+    final PriceFeed priceFeed;
 
     final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>(CurrencyUtil.getDefaultTradeCurrency());
-    private final List<XYChart.Data> buyData = new ArrayList();
-    private final List<XYChart.Data> sellData = new ArrayList();
+    private final List<XYChart.Data> buyData = new ArrayList<>();
+    private final List<XYChart.Data> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     private final ObservableList<Offer> top3BuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<Offer> top3SellOfferList = FXCollections.observableArrayList();
+    private final ChangeListener<Number> cacheFilledListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,14 +70,29 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
         offerBookListItems = offerBook.getOfferBookListItems();
         listChangeListener = c -> updateChartData(offerBookListItems);
+
+        cacheFilledListener = new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                if (!offerBookListItems.stream().filter(item -> item.getOffer().getPrice() == null).findAny().isPresent()) {
+                    offerBook.fillOfferBookListItems();
+                    updateChartData(offerBookListItems);
+                    priceFeed.currenciesUpdateFlagProperty().removeListener(cacheFilledListener);
+                }
+            }
+        };
     }
 
     @Override
     protected void activate() {
         priceFeed.setType(PriceFeed.Type.LAST);
         offerBookListItems.addListener(listChangeListener);
+
         offerBook.fillOfferBookListItems();
         updateChartData(offerBookListItems);
+
+        if (offerBookListItems.stream().filter(item -> item.getOffer().getPrice() == null).findAny().isPresent())
+            priceFeed.currenciesUpdateFlagProperty().addListener(cacheFilledListener);
 
         if (!preferences.getUseStickyMarketPrice())
             priceFeed.setCurrencyCode(tradeCurrency.get().getCode());

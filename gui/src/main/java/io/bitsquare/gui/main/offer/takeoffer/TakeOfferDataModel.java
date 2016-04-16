@@ -148,7 +148,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     protected void deactivate() {
         removeBindings();
         removeListeners();
-        tradeManager.onCancelAvailabilityRequest(offer);
+        if (offer != null)
+            tradeManager.onCancelAvailabilityRequest(offer);
     }
 
 
@@ -160,8 +161,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void initWithData(Offer offer) {
         this.offer = offer;
         tradePrice = offer.getPrice();
-        // we check at the view class and close in case we dont get a price
-        checkNotNull(tradePrice, "tradePrice must not be null");
         addressEntry = walletService.getOrCreateAddressEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
         checkNotNull(addressEntry, "addressEntry must not be null");
 
@@ -309,7 +308,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void calculateVolume() {
-        if (offer != null &&
+        if (tradePrice != null && offer != null &&
                 amountAsCoin.get() != null &&
                 !amountAsCoin.get().isZero()) {
             volumeAsFiat.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));

@@ -59,6 +59,7 @@ import javafx.stage.Window;
 import javafx.util.StringConverter;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.easybind.EasyBind;
@@ -194,7 +195,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Offer offer) {
-        if (offer.getPrice() != null) {
             model.initWithData(offer);
             priceAsPercentageInputBox.setVisible(offer.getUseMarketBasedPrice());
 
@@ -233,12 +233,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             priceAsPercentageTextField.setText(model.marketPriceMargin);
             addressTextField.setPaymentLabel(model.getPaymentLabel());
             addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
-        } else {
+
+        if (offer.getPrice() == null)
             new Popup().warning("You cannot take that offer as it uses a percentage price based on the " +
                     "market price but there is no price feed available.")
                     .onClose(this::close)
                     .show();
-        }
     }
 
     public void setCloseHandler(OfferView.CloseHandler closeHandler) {
@@ -247,7 +247,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     // called form parent as the view does not get notified when the tab is closed
     public void onClose() {
-        if (model.dataModel.balance.get().isPositive() && !model.takeOfferCompleted.get()) {
+        Coin balance = model.dataModel.balance.get();
+        if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
             new Popup().information("You have already funds paid in.\n" +
                     "In the \"Funds/Available for withdrawal\" section you can withdraw those funds.")

@@ -70,7 +70,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final OfferBook offerBook;
     private final Preferences preferences;
     private final P2PService p2PService;
-    private final PriceFeed priceFeed;
+    final PriceFeed priceFeed;
     private ClosedTradableManager closedTradableManager;
     private Navigation navigation;
     final BSFormatter formatter;
@@ -272,19 +272,21 @@ class OfferBookViewModel extends ActivatableViewModel {
             else
                 return formatter.formatFiat(price) + postFix;
         } else {
-            return "";
+            return "N/A";
         }
     }
 
     String getVolume(OfferBookListItem item) {
         Fiat offerVolume = item.getOffer().getOfferVolume();
         Fiat minOfferVolume = item.getOffer().getMinOfferVolume();
-        if (showAllTradeCurrenciesProperty.get())
-            return (item != null) ? formatter.formatFiatWithCode(offerVolume) +
-                    " (" + formatter.formatFiatWithCode(minOfferVolume) + ")" : "";
-        else
-            return (item != null) ? formatter.formatFiat(offerVolume) +
-                    " (" + formatter.formatFiat(minOfferVolume) + ")" : "";
+        if (offerVolume != null && minOfferVolume != null) {
+            if (showAllTradeCurrenciesProperty.get())
+                return formatter.formatFiatWithCode(offerVolume) + " (" + formatter.formatFiatWithCode(minOfferVolume) + ")";
+            else
+                return formatter.formatFiat(offerVolume) + " (" + formatter.formatFiat(minOfferVolume) + ")";
+        } else {
+            return "N/A";
+        }
     }
 
     String getPaymentMethod(OfferBookListItem item) {

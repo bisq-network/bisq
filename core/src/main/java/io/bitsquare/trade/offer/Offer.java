@@ -277,7 +277,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                     resultHandler.handleResult();
                 },
                 (errorMessage) -> {
-                    availabilityProtocol.cancel();
+                    if (availabilityProtocol != null)
+                        availabilityProtocol.cancel();
                     log.error(errorMessage);
                 });
         availabilityProtocol.sendOfferAvailabilityRequest();
@@ -370,8 +371,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                     return null;
                 }
             } else {
-                log.warn("We don't have a market price./n" +
-                        "That case could only happen if you don't get a price feed.");
+                log.warn("We don't have a market price.\n" +
+                        "That case could only happen if you don't have a price feed.");
                 return null;
             }
         } else {

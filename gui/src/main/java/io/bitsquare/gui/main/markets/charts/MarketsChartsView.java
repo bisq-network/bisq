@@ -35,6 +35,8 @@ import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -47,7 +49,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import org.bitcoinj.utils.Fiat;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -182,17 +183,34 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                     @Override
                     public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
                         return new TableCell<Offer, Offer>() {
+                            private Offer offer;
+                            ChangeListener<Number> listener = new ChangeListener<Number>() {
+                                @Override
+                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                                    if (offer != null && offer.getPrice() != null) {
+                                        setText(formatter.formatFiat(offer.getPrice()));
+                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                    }
+                                }
+                            };
+
                             @Override
                             public void updateItem(final Offer offer, boolean empty) {
                                 super.updateItem(offer, empty);
                                 if (offer != null && !empty) {
-                                    Fiat offerPrice = offer.getPrice();
-                                    if (offerPrice != null)
-                                        setText(formatter.formatFiat(offerPrice));
-                                    else
-                                        setText("");
-                                } else
+                                    if (offer.getPrice() == null) {
+                                        this.offer = offer;
+                                        model.priceFeed.currenciesUpdateFlagProperty().addListener(listener);
+                                        setText("N/A");
+                                    } else {
+                                        setText(formatter.formatFiat(offer.getPrice()));
+                                    }
+                                } else {
+                                    if (listener != null)
+                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                    this.offer = null;
                                     setText("");
+                                }
                             }
                         };
                     }
@@ -236,13 +254,34 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                     @Override
                     public TableCell<Offer, Offer> call(TableColumn<Offer, Offer> column) {
                         return new TableCell<Offer, Offer>() {
+                            private Offer offer;
+                            ChangeListener<Number> listener = new ChangeListener<Number>() {
+                                @Override
+                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                                    if (offer != null && offer.getPrice() != null) {
+                                        setText(formatter.formatFiat(offer.getOfferVolume()));
+                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                    }
+                                }
+                            };
+
                             @Override
                             public void updateItem(final Offer offer, boolean empty) {
                                 super.updateItem(offer, empty);
-                                if (offer != null && !empty)
-                                    setText(formatter.formatFiat(offer.getOfferVolume()));
-                                else
+                                if (offer != null && !empty) {
+                                    if (offer.getPrice() == null) {
+                                        this.offer = offer;
+                                        model.priceFeed.currenciesUpdateFlagProperty().addListener(listener);
+                                        setText("N/A");
+                                    } else {
+                                        setText(formatter.formatFiat(offer.getOfferVolume()));
+                                    }
+                                } else {
+                                    if (listener != null)
+                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                    this.offer = null;
                                     setText("");
+                                }
                             }
                         };
                     }
