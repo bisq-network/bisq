@@ -135,15 +135,6 @@ public class Utilities {
         }
     }
 
-    public static void openWebPage(String target) {
-        try {
-            openURI(new URI(target));
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-        }
-    }
-
     public static void openDirectory(File directory) throws IOException {
         if (!isLinux()
                 && Desktop.isDesktopSupported()
@@ -160,6 +151,26 @@ public class Utilities {
                 throw new IOException("Failed to open directory: " + directory.toString());
         }
     }
+    
+    public static void openWebPage(String target) {
+        try {
+            openURI(new URI(target));
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        }
+    }
+
+    public static void openMail(String to, String subject, String body) {
+        try {
+            subject = URLEncoder.encode(subject, "UTF-8").replace("+", "%20");
+            body = URLEncoder.encode(body, "UTF-8").replace("+", "%20");
+            openURI(new URI("mailto:" + to + "?subject=" + subject + "&body=" + body));
+        } catch (IOException | URISyntaxException e) {
+            log.error("openMail failed " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     public static void printSystemLoad() {
         Runtime runtime = Runtime.getRuntime();
@@ -169,22 +180,17 @@ public class Utilities {
         log.info("System load (nr. threads/used memory (MB)): " + Thread.activeCount() + "/" + used);
     }
 
-    public static void openMail(String to, String subject, String body) {
-        try {
-            subject = URLEncoder.encode(subject, "UTF-8").replace("+", "%20");
-            body = URLEncoder.encode(body, "UTF-8").replace("+", "%20");
-            Desktop.getDesktop().mail(new URI("mailto:" + to + "?subject=" + subject + "&body=" + body));
-        } catch (IOException | URISyntaxException e) {
-            e.printStackTrace();
-        }
-    }
-
     public static void copyToClipboard(String content) {
-        if (content != null && content.length() > 0) {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            ClipboardContent clipboardContent = new ClipboardContent();
-            clipboardContent.putString(content);
-            clipboard.setContent(clipboardContent);
+        try {
+            if (content != null && content.length() > 0) {
+                Clipboard clipboard = Clipboard.getSystemClipboard();
+                ClipboardContent clipboardContent = new ClipboardContent();
+                clipboardContent.putString(content);
+                clipboard.setContent(clipboardContent);
+            }
+        } catch (Throwable e) {
+            log.error("copyToClipboard failed " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
