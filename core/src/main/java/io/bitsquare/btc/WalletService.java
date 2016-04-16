@@ -31,6 +31,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.storage.FileUtil;
+import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.*;
 import org.bitcoinj.core.*;
@@ -95,6 +96,8 @@ public class WalletService {
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
+    private final Storage<Long> storage;
+    private final Long bloomFilterTweak;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,14 +106,23 @@ public class WalletService {
 
     @Inject
     public WalletService(RegTestHost regTestHost, TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
-                         @Named(DIR_KEY) File walletDir, Preferences preferences) {
+                         @Named(DIR_KEY) File appDir, Preferences preferences) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.params = preferences.getBitcoinNetwork().getParameters();
-        this.walletDir = new File(walletDir, "bitcoin");
+        this.walletDir = new File(appDir, "bitcoin");
         this.userAgent = userAgent;
         useTor = preferences.getUseTorForBitcoinJ();
+
+        storage = new Storage<>(walletDir);
+        Long persisted = storage.initAndGetPersisted("BloomFilterNonce");
+        if (persisted != null) {
+            bloomFilterTweak = persisted;
+        } else {
+            bloomFilterTweak = new Random().nextLong();
+            storage.queueUpForSave(bloomFilterTweak, 100);
+        }
     }
 
 
@@ -142,10 +154,6 @@ public class WalletService {
                 walletAppKit.wallet().allowSpendingUnconfirmedTransactions();
                 if (params != RegTestParams.get())
                     walletAppKit.peerGroup().setMaxConnections(11);
-
-                // https://groups.google.com/forum/#!msg/bitcoinj/Ys13qkTwcNg/9qxnhwnkeoIJ
-                // DEFAULT_BLOOM_FILTER_FP_RATE = 0.00001
-                walletAppKit.peerGroup().setBloomFilterFalsePositiveRate(0.00001);
 
                 wallet = walletAppKit.wallet();
                 wallet.addEventListener(walletEventListener);
@@ -202,6 +210,37 @@ public class WalletService {
                 UserThread.runAfter(resultHandler::handleResult, 100, TimeUnit.MILLISECONDS);
             }
         };
+
+        // Bloom filters in BitcoinJ are completely broken
+        // See: https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj/
+
+        // FalsePositiveRate of 0.5% leads to a probability of 0.0071 with 56 million pubkeys in the block chain and 
+        // 200 keys.
+        // See: https://www.reddit.com/r/Bitcoin/comments/2vrx6n/privacy_in_bitcoinj_android_wallet_multibit_hive/coknjuz
+        // We use 1000 keys so we get an even better value.
+        // walletAppKit.setBloomFilterFalsePositiveRate(0.005); 
+        // walletAppKit.setBloomFilterFalsePositiveRate(0.00001); //0.00001;
+        // Nr of false positives (56M keys in the blockchain): 0.005 * 56 000 000 = 280 000
+        // 0,00001 * 56 000 000 = 28 000 = 560
+        // 0,0001 * 56 000 000 = 28 000 = 5600
+        // 0,001 * 56 000 000 = 28 000 = 56 000
+        // 1333 / 5600 = 0.23 -> 23 % probability that pub key is in our wallet
+        // With higher fp rate values it fails to download the svp chain - seems it triggers Bitcoins DDoS protection ?
+        walletAppKit.setBloomFilterFalsePositiveRate(0.0001); // default is 0,00001;
+
+        // Default only 266 keys are generated (2 * 100+33). That would trigger new bloom filters when we are reaching 
+        // a third under the limit (66). To avoid that we create much more keys which are unlikely to hit the 
+        // new filter creation for most users. With 500 we get 1333 keys which should be enough for most users to 
+        // never need to re-create a bloom filter
+        walletAppKit.setLookaheadSize(500);
+
+        // Bitsquare's BitcoinJ fork has added setBloomFilterTweak setter to reuse the same seed avoiding the trivial vulnerability
+        // by getting the real pub keys by intersections of several filters sent at each startup.
+        walletAppKit.setBloomFilterTweak(bloomFilterTweak);
+
+        // Avoid weakening probability by square root due to the default implementation using both pubkey and hash of pubkey
+        // See: https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj/
+        walletAppKit.setInsertPubKey(false);
 
         // TODO Get bitcoinj running over our tor proxy. BlockingClientManager need to be used to use the socket  
         // from jtorproxy. To get supported it via nio / netty will be harder

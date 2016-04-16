@@ -26,10 +26,15 @@ public class SeedNodesRepository {
             new NodeAddress("3efgjjbdvhbvck3x.onion:8000"),
             new NodeAddress("3unfcshgwipxhxfm.onion:8000"),*/
 
-            // v0.4.0
-            new NodeAddress("ybmi4iaesugslxrw.onion:8000"),
+            // v0.4.0, v0.4.1
+           /* new NodeAddress("ybmi4iaesugslxrw.onion:8000"),
             new NodeAddress("ufwnvo775jfnjeux.onion:8000"),
-            new NodeAddress("b66vnevaljo6xt5a.onion:8000"),
+            new NodeAddress("b66vnevaljo6xt5a.onion:8000"),*/
+
+            // v0.4.2
+            new NodeAddress("tyng4uwrmynumrlr.onion:8000"),
+            new NodeAddress("45tr2h3hte27tnx3.onion:8000"),
+            new NodeAddress("j5fjv3elo372agzo.onion:8000"),
 
             // testnet
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),
@@ -39,7 +44,7 @@ public class SeedNodesRepository {
             // 1. Run a seed node with prog args: rxdkppp3vicnbgqt.onion:8002 2 50
             // 2. Find your local onion address in Bitsquare_seed_node_rxdkppp3vicnbgqt.onion_8002/tor/hiddenservice/hostname
             // 3. Shut down the seed node
-            // 4. Rename the directory with your local onion address
+            // 4. Rename the directory with your local onion address    
             // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
             new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
             new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
