@@ -60,8 +60,9 @@ However, if you're not familiar with git or it is otherwise inconvenient to use,
 ### 2. Install bitcoinj fork 
 Versions later than 0.13.1 has removed support for Java serialisation. 
 In version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details).
-We remove Cartographer/HttpDiscovery support from in our [fork version 0.13.1.1](https://github.com/bitsquare/bitcoinj/tree/RemovedHttpDiscovery).
+We remove Cartographer/HttpDiscovery support from in our [fork version 0.13.1.2](https://github.com/bitsquare/bitcoinj/tree/FixBloomFilters).
 Beside the Java serialisation issues here are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer. 
+Beside that we fixed a few [flaws with the Bloom Filters](https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj) in BitcoinJ.
                 
     $ git clone https://github.com/bitsquare/bitcoinj.git                
     $ cd bitcoinj  
