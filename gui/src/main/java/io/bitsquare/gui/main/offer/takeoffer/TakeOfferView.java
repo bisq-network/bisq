@@ -196,7 +196,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     public void initWithData(Offer offer) {
         model.initWithData(offer);
 
-        priceAsPercentageInputBox.setVisible(offer.getUsePercentageBasedPrice());
+        priceAsPercentageInputBox.setVisible(offer.getUseMarketBasedPrice());
 
         if (model.getOffer().getDirection() == Offer.Direction.SELL) {
             imageView.setId("image-buy-large");

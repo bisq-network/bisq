@@ -104,7 +104,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private ChangeListener<String> amountListener;
     private ChangeListener<String> minAmountListener;
-    private ChangeListener<String> priceListener, priceAsPercentageListener;
+    private ChangeListener<String> priceListener, marketPriceMarginListener;
     private ChangeListener<String> volumeListener;
     private ChangeListener<Coin> amountAsCoinListener;
     private ChangeListener<Coin> minAmountAsCoinListener;
@@ -116,8 +116,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private Offer offer;
     private Timer timeoutTimer;
     private PriceFeed.Type priceFeedType;
-    private boolean priceAsPercentageIsInput;
-    private ChangeListener<Boolean> usePercentageBasedPriceListener;
+    private boolean inputIsMarketBasedPrice;
+    private ChangeListener<Boolean> useMarketBasedPriceListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -240,7 +240,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 calculateVolume();
                 dataModel.calculateTotalToPay();
 
-                if (!priceAsPercentageIsInput) {
+                if (!inputIsMarketBasedPrice) {
                     MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
                     if (marketPrice != null) {
                         double marketPriceAsDouble = formatter.roundDouble(marketPrice.getPrice(priceFeedType), 2);
@@ -262,13 +262,13 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             }
             updateButtonDisableState();
         };
-        priceAsPercentageListener = (ov, oldValue, newValue) -> {
-            if (priceAsPercentageIsInput) {
+        marketPriceMarginListener = (ov, oldValue, newValue) -> {
+            if (inputIsMarketBasedPrice) {
                 try {
                     if (!newValue.isEmpty() && !newValue.equals("-")) {
                         double marketPriceMargin = formatter.parsePercentStringToDouble(newValue);
                         if (marketPriceMargin >= 1 || marketPriceMargin <= -1) {
-                            dataModel.setPercentageBasedPrice(0);
+                            dataModel.setMarketPriceMargin(0);
                             UserThread.execute(() -> priceAsPercentage.set("0"));
                             new Popup().warning("You cannot set a percentage of 100% or larger. Please enter a percentage number like \"5.4\" for 5.4%")
                                     .show();
@@ -276,7 +276,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
                             if (marketPrice != null) {
                                 marketPriceMargin = formatter.roundDouble(marketPriceMargin, 4);
-                                dataModel.setPercentageBasedPrice(marketPriceMargin);
+                                dataModel.setMarketPriceMargin(marketPriceMargin);
                                 Offer.Direction direction = dataModel.getDirection();
                                 double marketPriceAsDouble = formatter.roundDouble(marketPrice.getPrice(priceFeedType), 2);
                                 double factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
@@ -292,17 +292,17 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             }
                         }
                     } else {
-                        dataModel.setPercentageBasedPrice(0);
+                        dataModel.setMarketPriceMargin(0);
                     }
                 } catch (Throwable t) {
-                    dataModel.setPercentageBasedPrice(0);
+                    dataModel.setMarketPriceMargin(0);
                     UserThread.execute(() -> priceAsPercentage.set("0"));
                     new Popup().warning("Your input is not a valid number. Please enter a percentage number like \"5.4\" for 5.4%")
                             .show();
                 }
             }
         };
-        usePercentageBasedPriceListener = (observable, oldValue, newValue) -> {
+        useMarketBasedPriceListener = (observable, oldValue, newValue) -> {
             if (newValue)
                 priceValidationResult.set(new InputValidator.ValidationResult(true));
         };
@@ -335,8 +335,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         amount.addListener(amountListener);
         minAmount.addListener(minAmountListener);
         price.addListener(priceListener);
-        priceAsPercentage.addListener(priceAsPercentageListener);
-        dataModel.usePercentageBasedPrice.addListener(usePercentageBasedPriceListener);
+        priceAsPercentage.addListener(marketPriceMarginListener);
+        dataModel.useMarketBasedPrice.addListener(useMarketBasedPriceListener);
         volume.addListener(volumeListener);
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
@@ -353,8 +353,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         amount.removeListener(amountListener);
         minAmount.removeListener(minAmountListener);
         price.removeListener(priceListener);
-        priceAsPercentage.removeListener(priceAsPercentageListener);
-        dataModel.usePercentageBasedPrice.removeListener(usePercentageBasedPriceListener);
+        priceAsPercentage.removeListener(marketPriceMarginListener);
+        dataModel.useMarketBasedPrice.removeListener(useMarketBasedPriceListener);
         volume.removeListener(volumeListener);
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
@@ -542,9 +542,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue, String userInput) {
-        priceAsPercentageIsInput = !oldValue && newValue;
+        inputIsMarketBasedPrice = !oldValue && newValue;
         if (oldValue && !newValue)
-            priceAsPercentage.set(formatter.formatToNumberString(dataModel.getPercentageBasedPrice() * 100, 2));
+            priceAsPercentage.set(formatter.formatToNumberString(dataModel.getMarketPriceMargin() * 100, 2));
     }
 
     void onFocusOutVolumeTextField(boolean oldValue, boolean newValue, String userInput) {

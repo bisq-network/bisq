@@ -107,15 +107,18 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final String id;
     private final long date;
     private final long protocolVersion;
-    // Price if fixed price is used (usePercentageBasedPrice = false)
+
+    // We use 2 type of prices: fixed price or price based on distance from market price
+    private final boolean useMarketBasedPrice;
+    // fiatPrice if fixed price is used (usePercentageBasedPrice = false), otherwise 0
     private final long fiatPrice;
-    // Distance form market price if percentage based price is used (usePercentageBasedPrice = true). 
+    // Distance form market price if percentage based price is used (usePercentageBasedPrice = true), otherwise 0. 
     // E.g. 0.1 -> 10%. Can be negative as well. Depending on direction the marketPriceMargin is above or below the market price.
     // Positive values is always the usual case where you want a better price as the market. 
     // E.g. Buy offer with market price 400.- leads to a 360.- price. 
     // Sell offer with market price 400.- leads to a 440.- price. 
-    private final double marketPriceMargin; 
-    private final boolean usePercentageBasedPrice;
+    private final double marketPriceMargin;
+   
     private final long amount;
     private final long minAmount;
     private final NodeAddress offererNodeAddress;
@@ -150,7 +153,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  Direction direction,
                  long fiatPrice,
                  double marketPriceMargin,
-                 boolean usePercentageBasedPrice,
+                 boolean useMarketBasedPrice,
                  long amount,
                  long minAmount,
                  String currencyCode,
@@ -168,7 +171,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.direction = direction;
         this.fiatPrice = fiatPrice;
         this.marketPriceMargin = marketPriceMargin;
-        this.usePercentageBasedPrice = usePercentageBasedPrice;
+        this.useMarketBasedPrice = useMarketBasedPrice;
         this.amount = amount;
         this.minAmount = minAmount;
         this.currencyCode = currencyCode;
@@ -234,10 +237,12 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public Fiat getVolumeByAmount(Coin amount) {
-        if (fiatPrice != 0 && amount != null && !amount.isZero())
+        try {
             return new ExchangeRate(getPrice()).coinToFiat(amount);
-        else
-            return null;
+        } catch (Throwable t) {
+            log.error("getVolumeByAmount failed. Error=" + t.getMessage());
+            return Fiat.valueOf(currencyCode, 0);
+        }
     }
 
     public Fiat getOfferVolume() {
@@ -333,8 +338,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public Fiat getPrice() {
-        Fiat priceAsFiat = Fiat.valueOf(currencyCode, fiatPrice);
-        if (usePercentageBasedPrice && priceFeed != null) {
+        if (useMarketBasedPrice) {
+            checkNotNull(priceFeed, "priceFeed must not be null");
             MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
             if (marketPrice != null) {
                 PriceFeed.Type priceFeedType = direction == Direction.BUY ? PriceFeed.Type.ASK : PriceFeed.Type.BID;
@@ -347,22 +352,22 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 targetPrice = targetPrice * factor1;
                 long tmp = Math.round(targetPrice);
                 targetPrice = (double) tmp / factor1;
-                
+
                 try {
                     return Fiat.parseFiat(currencyCode, String.valueOf(targetPrice));
                 } catch (Exception e) {
-                    log.warn("Exception at parseToFiat: " + e.toString());
-                    log.warn("We use the static price.");
-                    return priceAsFiat;
+                    log.error("Exception at getPrice / parseToFiat: " + e.toString() + "\n" +
+                            "We use an inaccessible price to avoid null pointers.\n" +
+                            "That case should never happen.");
+                    return Fiat.valueOf(currencyCode, direction == Direction.BUY ? Long.MIN_VALUE : Long.MAX_VALUE);
                 }
             } else {
-                log.warn("We don't have a market price. We use the static price instead.");
-                return priceAsFiat;
+                log.warn("We don't have a market price. We use an inaccessible price to avoid null pointers.\n" +
+                        "That case could only happen if you don't get a price feed.");
+                return Fiat.valueOf(currencyCode, direction == Direction.BUY ? Long.MIN_VALUE : Long.MAX_VALUE);
             }
         } else {
-            if (priceFeed == null)
-                log.warn("priceFeed must not be null");
-            return priceAsFiat;
+            return Fiat.valueOf(currencyCode, fiatPrice);
         }
     }
 
@@ -370,8 +375,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return marketPriceMargin;
     }
 
-    public boolean getUsePercentageBasedPrice() {
-        return usePercentageBasedPrice;
+    public boolean getUseMarketBasedPrice() {
+        return useMarketBasedPrice;
     }
 
     public Coin getAmount() {
@@ -454,7 +459,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         if (date != offer.date) return false;
         if (fiatPrice != offer.fiatPrice) return false;
         if (Double.compare(offer.marketPriceMargin, marketPriceMargin) != 0) return false;
-        if (usePercentageBasedPrice != offer.usePercentageBasedPrice) return false;
+        if (useMarketBasedPrice != offer.useMarketBasedPrice) return false;
         if (amount != offer.amount) return false;
         if (minAmount != offer.minAmount) return false;
         if (id != null ? !id.equals(offer.id) : offer.id != null) return false;
@@ -488,7 +493,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         result = 31 * result + (int) (fiatPrice ^ (fiatPrice >>> 32));
         long temp = Double.doubleToLongBits(marketPriceMargin);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + (usePercentageBasedPrice ? 1 : 0);
+        result = 31 * result + (useMarketBasedPrice ? 1 : 0);
         result = 31 * result + (int) (amount ^ (amount >>> 32));
         result = 31 * result + (int) (minAmount ^ (minAmount >>> 32));
         result = 31 * result + (offererNodeAddress != null ? offererNodeAddress.hashCode() : 0);
@@ -513,7 +518,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\tdate=" + date +
                 "\n\tfiatPrice=" + fiatPrice +
                 "\n\tmarketPriceMargin=" + marketPriceMargin +
-                "\n\tusePercentageBasedPrice=" + usePercentageBasedPrice +
+                "\n\tuseMarketBasedPrice=" + useMarketBasedPrice +
                 "\n\tamount=" + amount +
                 "\n\tminAmount=" + minAmount +
                 "\n\toffererAddress=" + offererNodeAddress +

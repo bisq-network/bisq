@@ -89,7 +89,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final StringProperty btcCode = new SimpleStringProperty();
 
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
-    final BooleanProperty usePercentageBasedPrice = new SimpleBooleanProperty();
+    final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
     //final BooleanProperty isMainNet = new SimpleBooleanProperty();
     //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
 
@@ -109,7 +109,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private Notification walletFundedNotification;
     boolean useSavingsWallet;
     Coin totalAvailableBalance;
-    private double percentageBasedPrice = 0;
+    private double marketPriceMargin = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +140,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
         securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
-        usePercentageBasedPrice.set(preferences.getUsePercentageBasedPrice());
+        useMarketBasedPrice.set(preferences.getUsePercentageBasedPrice());
 
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -256,8 +256,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Offer createAndGetOffer() {
-        long fiatPrice = priceAsFiat.get() != null ? priceAsFiat.get().getValue() : 0L;
-
+        long fiatPrice = priceAsFiat.get() != null && !useMarketBasedPrice.get() ? priceAsFiat.get().getValue() : 0L;
+        double marketPriceMarginParam = useMarketBasedPrice.get() ? marketPriceMargin : 0;
         long amount = amountAsCoin.get() != null ? amountAsCoin.get().getValue() : 0L;
         long minAmount = minAmountAsCoin.get() != null ? minAmountAsCoin.get().getValue() : 0L;
 
@@ -289,8 +289,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 keyRing.getPubKeyRing(),
                 direction,
                 fiatPrice,
-                percentageBasedPrice,
-                usePercentageBasedPrice.get(),
+                marketPriceMarginParam,
+                useMarketBasedPrice.get(),
                 amount,
                 minAmount,
                 tradeCurrencyCode.get(),
@@ -386,9 +386,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return user.getAcceptedArbitrators().size() > 0;
     }
 
-    public void setUsePercentageBasedPrice(boolean usePercentageBasedPrice) {
-        this.usePercentageBasedPrice.set(usePercentageBasedPrice);
-        preferences.setUsePercentageBasedPrice(usePercentageBasedPrice);
+    public void setUseMarketBasedPrice(boolean useMarketBasedPrice) {
+        this.useMarketBasedPrice.set(useMarketBasedPrice);
+        preferences.setUsePercentageBasedPrice(useMarketBasedPrice);
     }
 
     /*boolean isFeeFromFundingTxSufficient() {
@@ -498,11 +498,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
         walletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 
-    double getPercentageBasedPrice() {
-        return percentageBasedPrice;
+    double getMarketPriceMargin() {
+        return marketPriceMargin;
     }
 
-    void setPercentageBasedPrice(double percentageBasedPrice) {
-        this.percentageBasedPrice = percentageBasedPrice;
+    void setMarketPriceMargin(double marketPriceMargin) {
+        this.marketPriceMargin = marketPriceMargin;
     }
 }
