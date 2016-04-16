@@ -24,7 +24,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.KeyRing;
@@ -42,6 +41,7 @@ import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -168,6 +168,7 @@ public abstract class Trade implements Tradable, Model {
     transient private ObjectProperty<Fiat> tradeVolumeProperty;
     @Nullable
     private String takeOfferFeeTxId;
+    private long tradePrice;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -190,11 +191,12 @@ public abstract class Trade implements Tradable, Model {
     }
 
     // taker
-    protected Trade(Offer offer, Coin tradeAmount, NodeAddress tradingPeerNodeAddress,
+    protected Trade(Offer offer, Coin tradeAmount, long tradePrice, NodeAddress tradingPeerNodeAddress,
                     Storage<? extends TradableList> storage) {
 
         this(offer, storage);
         this.tradeAmount = tradeAmount;
+        this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
         tradeAmountProperty.set(tradeAmount);
         tradeVolumeProperty.set(getTradeVolume());
@@ -374,9 +376,7 @@ public abstract class Trade implements Tradable, Model {
         return offer;
     }
 
-    public Coin getPayoutAmount() {
-        return FeePolicy.getSecurityDeposit();
-    }
+    abstract public Coin getPayoutAmount();
 
     public ProcessModel getProcessModel() {
         return processModel;
@@ -384,8 +384,8 @@ public abstract class Trade implements Tradable, Model {
 
     @Nullable
     public Fiat getTradeVolume() {
-        if (tradeAmount != null)
-            return offer.getVolumeByAmount(tradeAmount);
+        if (tradeAmount != null && getTradePrice() != null)
+            return new ExchangeRate(getTradePrice()).coinToFiat(tradeAmount);
         else
             return null;
     }
@@ -453,6 +453,14 @@ public abstract class Trade implements Tradable, Model {
         this.tradeAmount = tradeAmount;
         tradeAmountProperty.set(tradeAmount);
         tradeVolumeProperty.set(getTradeVolume());
+    }
+
+    public void setTradePrice(long tradePrice) {
+        this.tradePrice = tradePrice;
+    }
+
+    public Fiat getTradePrice() {
+        return Fiat.valueOf(offer.getCurrencyCode(), tradePrice);
     }
 
     @Nullable

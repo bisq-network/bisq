@@ -123,7 +123,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addLabelTextField(gridPane, ++rowIndex, "Offer date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(dispute.getTradeDate()));
         addLabelTextField(gridPane, ++rowIndex, "Trade type:", formatter.getDirectionBothSides(offer.getDirection()));
-        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode());
+        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatFiat(contract.getTradePrice()) + " " + offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer bitcoin address:",
                 contract.getBuyerPayoutAddressString()).second.setMouseTransparent(false);

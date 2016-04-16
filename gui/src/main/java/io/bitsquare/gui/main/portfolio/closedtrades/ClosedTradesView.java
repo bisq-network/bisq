@@ -81,7 +81,13 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         tradeIdColumn.setComparator((o1, o2) -> o1.getTradable().getId().compareTo(o2.getTradable().getId()));
         dateColumn.setComparator((o1, o2) -> o1.getTradable().getDate().compareTo(o2.getTradable().getDate()));
         directionColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getDirection().compareTo(o2.getTradable().getOffer().getDirection()));
-        priceColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getPrice().compareTo(o2.getTradable().getOffer().getPrice()));
+        priceColumn.setComparator((o1, o2) -> {
+            Tradable tradable = o1.getTradable();
+            if (tradable instanceof Trade)
+                return ((Trade) o1.getTradable()).getTradePrice().compareTo(((Trade) o2.getTradable()).getTradePrice());
+            else
+                return o1.getTradable().getOffer().getPrice().compareTo(o2.getTradable().getOffer().getPrice());
+        });
         volumeColumn.setComparator((o1, o2) -> {
             if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
                 Fiat tradeVolume1 = ((Trade) o1.getTradable()).getTradeVolume();

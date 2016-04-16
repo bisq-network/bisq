@@ -24,6 +24,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -97,6 +98,7 @@ public class TradeManager {
                         FailedTradesManager failedTradesManager,
                         ArbitratorManager arbitratorManager,
                         P2PService p2PService,
+                        PriceFeed priceFeed,
                         @Named("storage.dir") File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
@@ -109,7 +111,8 @@ public class TradeManager {
         this.p2PService = p2PService;
 
         tradableListStorage = new Storage<>(storageDir);
-        this.trades = new TradableList<>(tradableListStorage, "PendingTrades");
+        trades = new TradableList<>(tradableListStorage, "PendingTrades");
+        trades.forEach(e -> e.getOffer().setPriceFeed(priceFeed));
 
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
@@ -261,6 +264,7 @@ public class TradeManager {
 
     // First we check if offer is still available then we create the trade with the protocol
     public void onTakeOffer(Coin amount,
+                            long tradePrice,
                             Coin fundsNeededForTrade,
                             Offer offer,
                             String paymentAccountId,
@@ -270,11 +274,12 @@ public class TradeManager {
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE)
-                        createTrade(amount, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
+                        createTrade(amount, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
                 });
     }
 
     private void createTrade(Coin amount,
+                             long tradePrice,
                              Coin fundsNeededForTrade,
                              Offer offer,
                              String paymentAccountId,
@@ -283,9 +288,9 @@ public class TradeManager {
                              TradeResultHandler tradeResultHandler) {
         Trade trade;
         if (offer.getDirection() == Offer.Direction.BUY)
-            trade = new SellerAsTakerTrade(offer, amount, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new SellerAsTakerTrade(offer, amount, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
         else
-            trade = new BuyerAsTakerTrade(offer, amount, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new BuyerAsTakerTrade(offer, amount, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
 
         trade.setTakerPaymentAccountId(paymentAccountId);
 

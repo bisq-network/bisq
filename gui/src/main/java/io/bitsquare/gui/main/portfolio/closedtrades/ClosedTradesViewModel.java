@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.collections.ObservableList;
@@ -54,7 +55,13 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     }
 
     String getPrice(ClosedTradableListItem item) {
-        return (item != null) ? formatter.formatFiat(item.getTradable().getOffer().getPrice()) : "";
+        if (item == null)
+            return "";
+        Tradable tradable = item.getTradable();
+        if (tradable instanceof Trade)
+            return formatter.formatFiat(((Trade) tradable).getTradePrice());
+        else
+            return formatter.formatFiat(tradable.getOffer().getPrice());
     }
 
     String getVolume(ClosedTradableListItem item) {

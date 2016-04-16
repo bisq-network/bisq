@@ -18,21 +18,17 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.OffererProtocol;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class BuyerAsOffererTrade extends BuyerTrade implements OffererTrade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -73,12 +69,4 @@ public final class BuyerAsOffererTrade extends BuyerTrade implements OffererTrad
     public void handleTakeOfferRequest(TradeMessage message, NodeAddress taker) {
         ((OffererProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
     }
-
-    @Override
-    public Coin getPayoutAmount() {
-        checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
-
-        return FeePolicy.getSecurityDeposit().add(getTradeAmount());
-    }
-
 }

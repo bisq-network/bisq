@@ -496,6 +496,26 @@ textfield */
     -fx-border-insets: 0 0 0 -2;
 }
 
+#toggle-price-left {
+    -fx-border-radius: 4 0 0 4;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: #aaa;
+    -fx-border-style: solid none solid solid;
+    -fx-border-insets: 0 -2 0 0;
+    -fx-background-insets: 0 -2 0 0;
+    -fx-background-radius: 4 0 0 4;
+}
+
+#toggle-price-right {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: #aaa;
+    -fx-border-style: solid solid solid none;
+    -fx-border-insets: 0 0 0 -2;
+    -fx-background-insets: 0 0 0 -2;
+    -fx-background-radius: 0 4 4 0;
+}
+
 #totals-separator {
     -fx-background: #AAAAAA;
 }

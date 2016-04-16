@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.offer.takeoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -52,6 +53,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final TakeOfferDataModel dataModel;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
+    private PriceFeed priceFeed;
     private final Navigation navigation;
     final BSFormatter formatter;
 
@@ -94,6 +96,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ConnectionListener connectionListener;
     //  private Subscription isFeeSufficientSubscription;
     private Runnable takeOfferSucceededHandler;
+    String marketPriceMargin;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,13 +104,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, P2PService p2PService,
+    public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, P2PService p2PService, PriceFeed priceFeed,
                               Navigation navigation, BSFormatter formatter) {
         super(dataModel);
         this.dataModel = dataModel;
 
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
+        this.priceFeed = priceFeed;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -159,7 +163,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         }
 
         amountRange = formatter.formatCoin(offer.getMinAmount()) + " - " + formatter.formatCoin(offer.getAmount());
-        price = formatter.formatFiat(offer.getPrice());
+        price = formatter.formatFiat(dataModel.tradePrice);
+        marketPriceMargin = formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin());
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getId());
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");

@@ -18,6 +18,7 @@
 package io.bitsquare.trade.closed;
 
 import com.google.inject.Inject;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Tradable;
@@ -37,9 +38,10 @@ public class ClosedTradableManager {
     private final KeyRing keyRing;
 
     @Inject
-    public ClosedTradableManager(KeyRing keyRing, @Named("storage.dir") File storageDir) {
+    public ClosedTradableManager(KeyRing keyRing, PriceFeed priceFeed, @Named("storage.dir") File storageDir) {
         this.keyRing = keyRing;
         this.closedTrades = new TradableList<>(new Storage<>(storageDir), "ClosedTrades");
+        closedTrades.forEach(e -> e.getOffer().setPriceFeed(priceFeed));
     }
 
     public void add(Tradable tradable) {

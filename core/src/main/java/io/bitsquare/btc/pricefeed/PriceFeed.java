@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+// TODO use https://github.com/timmolter/XChange
 public class PriceFeed {
     private static final Logger log = LoggerFactory.getLogger(PriceFeed.class);
 
@@ -44,9 +45,9 @@ public class PriceFeed {
         }
     }
 
-    private static final long PERIOD_FIAT_SEC = 2 * 60;
-    private static final long PERIOD_ALL_FIAT_SEC = 60 * 5;
-    private static final long PERIOD_ALL_CRYPTO_SEC = 60 * 5;
+    private static final long PERIOD_FIAT_SEC = 90;
+    private static final long PERIOD_ALL_FIAT_SEC = 60 * 3;
+    private static final long PERIOD_ALL_CRYPTO_SEC = 60 * 3;
 
     private final Map<String, MarketPrice> cache = new HashMap<>();
     private final PriceProvider fiatPriceProvider = new BitcoinAveragePriceProvider();

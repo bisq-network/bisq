@@ -404,7 +404,7 @@ public class MainViewModel implements ViewModel {
                             result = numPeersString + " / synchronized with " + btcNetworkAsString;
                             btcSplashSyncIconId.set("image-connection-synced");
                         } else if (percentage > 0.0) {
-                            result = numPeersString + " / synchronizing with " + btcNetworkAsString + ": " + formatter.formatToPercent(percentage);
+                            result = numPeersString + " / synchronizing with " + btcNetworkAsString + ": " + formatter.formatToPercentWithSymbol(percentage);
                         } else {
                             result = numPeersString + " / connecting to " + btcNetworkAsString;
                         }
@@ -497,7 +497,11 @@ public class MainViewModel implements ViewModel {
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();
-        setupDevDummyPaymentAccount();
+        if (BitsquareApp.DEV_MODE) {
+            preferences.setShowOwnOffersInOfferBook(true);
+            if (user.getPaymentAccounts().isEmpty())
+                setupDevDummyPaymentAccount();
+        }
         setupMarketPriceFeed();
         swapPendingOfferFundingEntries();
         fillPriceFeedComboBoxItems();
@@ -713,7 +717,7 @@ public class MainViewModel implements ViewModel {
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
                 setMarketPriceInItems();
-                
+
                 String code = preferences.getUseStickyMarketPrice() ?
                         preferences.getPreferredTradeCurrency().getCode() :
                         priceFeed.currencyCodeProperty().get();
@@ -896,12 +900,10 @@ public class MainViewModel implements ViewModel {
     }
 
     private void setupDevDummyPaymentAccount() {
-        if (BitsquareApp.DEV_MODE && user.getPaymentAccounts().isEmpty()) {
-            OKPayAccount okPayAccount = new OKPayAccount();
-            okPayAccount.setAccountNr("dummy");
-            okPayAccount.setAccountName("OKPay dummy");
-            okPayAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
-            user.addPaymentAccount(okPayAccount);
-        }
+        OKPayAccount okPayAccount = new OKPayAccount();
+        okPayAccount.setAccountNr("dummy");
+        okPayAccount.setAccountName("OKPay dummy");
+        okPayAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
+        user.addPaymentAccount(okPayAccount);
     }
 }

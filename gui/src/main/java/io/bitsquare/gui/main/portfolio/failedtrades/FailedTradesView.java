@@ -62,7 +62,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
         tradeIdColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
         dateColumn.setComparator((o1, o2) -> o1.getTrade().getDate().compareTo(o2.getTrade().getDate()));
-        priceColumn.setComparator((o1, o2) -> o1.getTrade().getOffer().getPrice().compareTo(o2.getTrade().getOffer().getPrice()));
+        priceColumn.setComparator((o1, o2) -> o1.getTrade().getTradePrice().compareTo(o2.getTrade().getTradePrice()));
         volumeColumn.setComparator((o1, o2) -> o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume()));
         amountColumn.setComparator((o1, o2) -> o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount()));
         stateColumn.setComparator((o1, o2) -> model.getState(o1).compareTo(model.getState(o2)));

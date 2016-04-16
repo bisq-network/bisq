@@ -60,6 +60,7 @@ public class CreateAndSignContract extends TradeTask {
             Contract contract = new Contract(
                     processModel.getOffer(),
                     trade.getTradeAmount(),
+                    trade.getTradePrice(),
                     trade.getTakeOfferFeeTxId(),
                     buyerNodeAddress,
                     sellerNodeAddress,

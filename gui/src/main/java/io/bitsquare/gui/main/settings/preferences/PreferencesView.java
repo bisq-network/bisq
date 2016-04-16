@@ -296,19 +296,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         deviationListener = (observable, oldValue, newValue) -> {
             try {
-                String input = newValue.replace("%", "");
-                input = input.replace(",", ".");
-                input = input.replace(" ", "");
-                double value = Double.parseDouble(input);
-                preferences.setMaxPriceDistanceInPercent(value / 100);
-            } catch (Throwable t) {
+                double value = formatter.parsePercentStringToDouble(newValue);
+                preferences.setMaxPriceDistanceInPercent(value);
+            } catch (NumberFormatException t) {
                 log.error("Exception at parseDouble deviation: " + t.toString());
-                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
             }
         };
         deviationFocusedListener = (observable1, oldValue1, newValue1) -> {
             if (oldValue1 && !newValue1)
-                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
         };
 
         transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Withdrawal transaction fee (satoshi/byte):").second;
@@ -427,7 +424,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         });
         blockChainExplorerComboBox.setOnAction(e -> preferences.setBlockChainExplorer(blockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
 
-        deviationInputTextField.setText(formatter.formatToPercent(preferences.getMaxPriceDistanceInPercent()));
+        deviationInputTextField.setText(formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent()));
         deviationInputTextField.textProperty().addListener(deviationListener);
         deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
 

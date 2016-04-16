@@ -18,6 +18,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.NodeAddress;
@@ -36,8 +37,8 @@ public abstract class SellerTrade extends Trade {
 
     private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerTrade.class);
 
-    SellerTrade(Offer offer, Coin tradeAmount, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradingPeerNodeAddress, storage);
+    SellerTrade(Offer offer, Coin tradeAmount, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, tradePrice, tradingPeerNodeAddress, storage);
     }
 
     SellerTrade(Offer offer, Storage<? extends TradableList> storage) {
@@ -62,6 +63,11 @@ public abstract class SellerTrade extends Trade {
             onFiatPaymentReceived(() -> log.debug("onFiatPaymentReceived succeeded"),
                     log::warn);
         }
+    }
+
+    @Override
+    public Coin getPayoutAmount() {
+        return FeePolicy.getSecurityDeposit();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

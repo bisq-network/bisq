@@ -18,7 +18,6 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.offer.Offer;
@@ -32,7 +31,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -45,8 +43,8 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradingPeerNodeAddress, storage);
+    public BuyerAsTakerTrade(Offer offer, Coin tradeAmount, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, tradePrice, tradingPeerNodeAddress, storage);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -73,12 +71,5 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     public void takeAvailableOffer() {
         checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
         ((TakerProtocol) tradeProtocol).takeAvailableOffer();
-    }
-
-    @Override
-    public Coin getPayoutAmount() {
-        checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
-
-        return FeePolicy.getSecurityDeposit().add(getTradeAmount());
     }
 }

@@ -257,10 +257,19 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getPrice(OfferBookListItem item) {
+        if ((item == null))
+            return "";
+
+        Offer offer = item.getOffer();
+        Fiat price = offer.getPrice();
+        String postFix = "";
+        if (offer.getUsePercentageBasedPrice()) {
+            postFix = " (" + formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin()) + ")";
+        }
         if (showAllTradeCurrenciesProperty.get())
-            return (item != null) ? formatter.formatFiatWithCode(item.getOffer().getPrice()) : "";
+            return formatter.formatPriceWithCode(price) + postFix;
         else
-            return (item != null) ? formatter.formatFiat(item.getOffer().getPrice()) : "";
+            return formatter.formatFiat(price) + postFix;
     }
 
     String getVolume(OfferBookListItem item) {

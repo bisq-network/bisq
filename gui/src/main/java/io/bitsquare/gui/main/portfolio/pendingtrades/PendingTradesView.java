@@ -336,7 +336,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.formatCoinWithCode(item.getTrade().getPayoutAmount()));
+                                    setText(formatter.formatCoinWithCode(item.getTrade().getTradeAmount()));
                                 else
                                     setText(null);
                             }
@@ -380,7 +380,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.formatPriceWithCode(item.getTrade().getTradeVolume()));
+                                    setText(formatter.formatFiatWithCode(item.getTrade().getTradeVolume()));
                                 else
                                     setText(null);
                             }

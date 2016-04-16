@@ -41,6 +41,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;
+    private Fiat tradePrice;
     private Optional<Runnable> placeOfferHandlerOptional = Optional.empty();
     private Optional<Runnable> takeOfferHandlerOptional = Optional.empty();
     private ProgressIndicator spinner;
@@ -80,9 +82,10 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         type = Type.Confirmation;
     }
 
-    public void show(Offer offer, Coin tradeAmount) {
+    public void show(Offer offer, Coin tradeAmount, Fiat tradePrice) {
         this.offer = offer;
         this.tradeAmount = tradeAmount;
+        this.tradePrice = tradePrice;
 
         rowIndex = -1;
         width = 900;
@@ -172,7 +175,10 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(offer.getVolumeByAmount(offer.getAmount())));
         }
 
-        addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
+        if (takeOfferHandlerOptional.isPresent())
+            addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(tradePrice) + " " + offer.getCurrencyCode() + "/" + "BTC");
+        else
+            addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(offer.getPrice()) + " " + offer.getCurrencyCode() + "/" + "BTC");
 
         if (offer.isMyOffer(keyRing) && user.getPaymentAccount(offer.getOffererPaymentAccountId()) != null)
             addLabelTextField(gridPane, ++rowIndex, "Payment account:", user.getPaymentAccount(offer.getOffererPaymentAccountId()).getAccountName());

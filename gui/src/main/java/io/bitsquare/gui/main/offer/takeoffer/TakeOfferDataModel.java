@@ -92,6 +92,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     boolean useSavingsWallet;
     Coin totalAvailableBalance;
     private Notification walletFundedNotification;
+    Fiat tradePrice;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -158,6 +159,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // called before activate
     void initWithData(Offer offer) {
         this.offer = offer;
+        tradePrice = offer.getPrice();
 
         addressEntry = walletService.getOrCreateAddressEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
         checkNotNull(addressEntry, "addressEntry must not be null");
@@ -227,6 +229,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
         tradeManager.onTakeOffer(amountAsCoin.get(),
+                tradePrice.getValue(),
                 totalToPayAsCoin.get().subtract(takerFeeAsCoin),
                 offer,
                 paymentAccount.getId(),
@@ -308,7 +311,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (offer != null &&
                 amountAsCoin.get() != null &&
                 !amountAsCoin.get().isZero()) {
-            volumeAsFiat.set(new ExchangeRate(offer.getPrice()).coinToFiat(amountAsCoin.get()));
+            volumeAsFiat.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));
 
             updateBalance();
         }
