@@ -62,7 +62,7 @@ public class Connection implements MessageListener {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final int MAX_MSG_SIZE = 100 * 1024;              // 100 kb of compressed data
+    private static final int MAX_MSG_SIZE = 500 * 1024;              // 500 kb
     //TODO decrease limits again after testing
     private static final int MSG_THROTTLE_PER_SEC = 50;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec 
     private static final int MSG_THROTTLE_PER_10_SEC = 500;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 50 mbit/sec for 10 sec 
