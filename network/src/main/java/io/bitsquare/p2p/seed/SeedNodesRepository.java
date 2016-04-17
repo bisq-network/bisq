@@ -32,9 +32,9 @@ public class SeedNodesRepository {
             new NodeAddress("b66vnevaljo6xt5a.onion:8000"),*/
 
             // v0.4.2
-            new NodeAddress("tyng4uwrmynumrlr.onion:8000"),
-            new NodeAddress("45tr2h3hte27tnx3.onion:8000"),
-            new NodeAddress("j5fjv3elo372agzo.onion:8000"),
+            new NodeAddress("uadzuib66jupaept.onion:8000"),
+            new NodeAddress("hbma455xxbqhcuqh.onion:8000"),
+            new NodeAddress("wgthuiqn3aoiovbm.onion:8000"),
 
             // testnet
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),

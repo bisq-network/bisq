@@ -121,7 +121,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
         String key = "accountPrivacyInfo";
         if (!BitsquareApp.DEV_MODE)
-            new Popup().backgroundInfo("In the account section you can setup your payment accounts for national currencies " +
+            new Popup().backgroundInfo("In the account screen you can setup your payment accounts for national currencies " +
                     "as well as for crypto currencies.\n\n" +
                     "Please note that this data is stored locally on your computer only. Bitsquare does not operate servers " +
                     "and has no access to users data.\n\n" +
