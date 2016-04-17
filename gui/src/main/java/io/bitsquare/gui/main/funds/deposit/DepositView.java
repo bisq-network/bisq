@@ -159,7 +159,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         amountLabel = amountTuple.first;
         amountTextField = amountTuple.second;
         if (BitsquareApp.DEV_MODE)
-            amountTextField.setText("1");
+            amountTextField.setText("10");
 
         titledGroupBg.setVisible(false);
         titledGroupBg.setManaged(false);

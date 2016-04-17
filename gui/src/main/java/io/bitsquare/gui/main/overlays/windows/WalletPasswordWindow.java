@@ -334,10 +334,19 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
                             "Please finalize your trades, close all your open offers and go to the Funds section to withdraw your bitcoin.\n" +
                             "In case you cannot access your bitcoin you can use the emergency tool to empty the wallet.\n" +
                             "To open that emergency tool press \"cmd + e\".")
+                    .actionButtonText("I want to restore anyway")
+                    .onAction(this::checkIfEncrypted)
+                    .closeButtonText("I will empty my wallet first")
                     .show();
-        } else if (wallet.isEncrypted()) {
+        } else {
+            checkIfEncrypted();
+        }
+    }
+
+    private void checkIfEncrypted() {
+        if (walletService.getWallet().isEncrypted()) {
             new Popup()
-                    .warning("Your bitcoin wallet is encrypted.\n\n" +
+                    .information("Your bitcoin wallet is encrypted.\n\n" +
                             "After restore, the wallet will no longer be encrypted and you must set a new password.\n\n" +
                             "Do you want to proceed?")
                     .closeButtonText("No")

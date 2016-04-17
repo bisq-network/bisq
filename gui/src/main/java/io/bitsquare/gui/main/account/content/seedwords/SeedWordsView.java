@@ -237,13 +237,25 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                             "Please finalize your trades, close all your open offers and go to the Funds section to withdraw your bitcoin.\n" +
                             "In case you cannot access your bitcoin you can use the emergency tool to empty the wallet.\n" +
                             "To open that emergency tool press \"cmd + e\".")
+                    .actionButtonText("I want to restore anyway")
+                    .onAction(this::checkIfEncrypted)
+                    .closeButtonText("I will empty my wallet first")
                     .show();
-        } else if (wallet.isEncrypted()) {
+        } else {
+            checkIfEncrypted();
+        }
+    }
+
+    private void checkIfEncrypted() {
+        if (walletService.getWallet().isEncrypted()) {
             new Popup()
-                    .warning("Your bitcoin wallet is encrypted.\n\n" +
-                            "After restore, the wallet will no longer be encrypted and you must set a new password.")
-                    .closeButtonText("I understand")
-                    .onClose(() -> doRestore()).show();
+                    .information("Your bitcoin wallet is encrypted.\n\n" +
+                            "After restore, the wallet will no longer be encrypted and you must set a new password.\n\n" +
+                            "Do you want to proceed?")
+                    .closeButtonText("No")
+                    .actionButtonText("Yes")
+                    .onAction(this::doRestore)
+                    .show();
         } else {
             doRestore();
         }
@@ -253,7 +265,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         log.info("Attempting wallet restore using seed '{}' from date {}", restoreSeedWordsTextArea.getText(), restoreDatePicker.getValue());
         long date = restoreDatePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(restoreSeedWordsTextArea.getText()), null, "", date);
-        walletService.restoreSeedWords(seed,
+        walletService.restoreSeedWords(seed,    
                 () -> UserThread.execute(() -> {
                     log.debug("Wallet restored with seed words");
 
@@ -261,7 +273,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                             .feedback("Wallet restored successfully with the new seed words.\n\n" +
                                     "You need to shut down and restart the application.")
                             .closeButtonText("Shut down")
-                            .onClose(() -> BitsquareApp.shutDownHandler.run()).show();
+                            .onClose(BitsquareApp.shutDownHandler::run).show();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());

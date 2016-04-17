@@ -148,8 +148,7 @@ public class TransactionsListItem {
                 } else if (trade.getPayoutTx() != null &&
                         trade.getPayoutTx().getHashAsString().equals(txId)) {
                     details = "MultiSig payout: " + tradable.getShortId();
-                } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED ||
-                        trade.getDisputeState() == Trade.DisputeState.DISPUTE_STARTED_BY_PEER) {
+                } else if (trade.getDisputeState() != Trade.DisputeState.NONE) {
                     if (valueSentToMe.isPositive()) {
                         details = "Dispute payout: " + tradable.getShortId();
                     } else {
