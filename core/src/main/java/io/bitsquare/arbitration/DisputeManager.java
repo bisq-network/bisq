@@ -463,13 +463,6 @@ public class DisputeManager {
                     log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeCommunicationMessage.getTradeId());
 
                 dispute.setIsClosed(true);
-                if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())
-                    tradeManager.closeDisputedTrade(dispute.getTradeId());
-                else {
-                    Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
-                    if (openOfferOptional.isPresent())
-                        openOfferManager.closeOpenOffer(openOfferOptional.get().getOffer());
-                }
 
                 if (dispute.disputeResultProperty().get() == null) {
                     dispute.setDisputeResult(disputeResult);
@@ -532,13 +525,15 @@ public class DisputeManager {
                 } else {
                     log.warn("We got a dispute msg what we have already stored. TradeId = " + disputeResult.tradeId);
                 }
-            
-           /* DisputeMailMessage disputeDirectMessage = disputeResult.getResultMailMessage();
-            if (!dispute.getDisputeMailMessagesAsObservableList().contains(disputeDirectMessage))
-                dispute.addDisputeMessage(disputeDirectMessage);
-            else
-                log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeDirectMessage.getTradeId());*/
 
+                // set state after payout as we call swapTradeEntryToAvailableEntry 
+                if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())
+                    tradeManager.closeDisputedTrade(dispute.getTradeId());
+                else {
+                    Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
+                    if (openOfferOptional.isPresent())
+                        openOfferManager.closeOpenOffer(openOfferOptional.get().getOffer());
+                }
             } else {
                 log.warn("We got a dispute result msg but we don't have a matching dispute. TradeId = " + disputeResult.tradeId);
             }
