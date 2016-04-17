@@ -70,6 +70,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final PriceFeed priceFeed;
+    private final String shortOfferId;
     private Navigation navigation;
     private final BlockchainService blockchainService;
     private final BSFormatter formatter;
@@ -135,6 +136,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
 
         offerId = UUID.randomUUID().toString();
+        shortOfferId = offerId.substring(0, Math.min(8, offerId.length()));
         addressEntry = walletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
         offerFeeAsCoin = FeePolicy.getCreateOfferFee();
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();

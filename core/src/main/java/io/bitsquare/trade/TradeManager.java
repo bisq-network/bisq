@@ -176,8 +176,8 @@ public class TradeManager {
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
             if (trade.isDepositFeePaid()) {
-                trade.updateDepositTxFromWallet();
                 initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
+                trade.updateDepositTxFromWallet();
             } else if (trade.isTakerFeePaid()) {
                 addTradeToFailedTrades(trade);
             } else {

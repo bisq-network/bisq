@@ -753,7 +753,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 isFiatInputValid(volume.get()).isValid &&
                 dataModel.isMinAmountLessOrEqualAmount() &&
                 !dataModel.useMarketBasedPrice.get() || dataModel.getMarketPriceMargin() != 0 &&
-                dataModel.useMarketBasedPrice.get() || dataModel.priceAsFiat.get().getValue() != 0;
+                dataModel.useMarketBasedPrice.get() || (dataModel.priceAsFiat.get() != null && dataModel.priceAsFiat.get().getValue() != 0);
         isNextButtonDisabled.set(!inputDataValid);
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
         //isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || notSufficientFees);
