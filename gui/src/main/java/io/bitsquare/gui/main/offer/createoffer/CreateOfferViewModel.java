@@ -138,7 +138,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         this.navigation = navigation;
         this.formatter = formatter;
 
-        paymentLabel = BSResources.get("createOffer.fundsBox.paymentLabel", dataModel.getOfferId());
+        paymentLabel = BSResources.get("createOffer.fundsBox.paymentLabel", dataModel.shortOfferId);
 
         if (dataModel.getAddressEntry() != null) {
             addressAsString = dataModel.getAddressEntry().getAddressString();
@@ -441,6 +441,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         btcValidator.setMaxTradeLimitInBitcoin(paymentAccount.getPaymentMethod().getMaxTradeLimit());
         dataModel.onPaymentAccountSelected(paymentAccount);
+        if (amount.get() != null)
+            amountValidationResult.set(isBtcInputValid(amount.get()));
     }
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
@@ -491,15 +493,13 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 calculateVolume();
 
                 // handle minAmount/amount relationship
-                if (!dataModel.isMinAmountLessOrEqualAmount()) {
+                if (!dataModel.isMinAmountLessOrEqualAmount()) 
                     minAmount.set(amount.get());
-                    /*amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            BSResources.get("createOffer.validation.amountSmallerThanMinAmount")));*/
-                } else {
+                else 
                     amountValidationResult.set(result);
-                    if (minAmount.get() != null)
-                        minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
-                }
+
+                if (minAmount.get() != null)
+                    minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
             }
         }
     }

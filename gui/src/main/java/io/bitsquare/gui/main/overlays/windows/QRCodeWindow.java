@@ -49,7 +49,7 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
         GridPane.setHalignment(qrCodeImageView, HPos.CENTER);
         gridPane.getChildren().add(qrCodeImageView);
 
-        Label infoLabel = new Label("Payment request:\n" + bitcoinURI);
+        Label infoLabel = new Label("Payment request:\n" + bitcoinURI.replace("%20", " ").replace("?", "\n?").replace("&", "\n&"));
         infoLabel.setMouseTransparent(true);
         infoLabel.setWrapText(true);
         infoLabel.setId("popup-qr-code-info");

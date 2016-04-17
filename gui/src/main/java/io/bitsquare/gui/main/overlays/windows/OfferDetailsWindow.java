@@ -88,7 +88,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         this.tradePrice = tradePrice;
 
         rowIndex = -1;
-        width = 900;
+        width = 950;
         createGridPane();
         addContent();
         display();
@@ -97,7 +97,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     public void show(Offer offer) {
         this.offer = offer;
         rowIndex = -1;
-        width = 900;
+        width = 950;
         createGridPane();
         addContent();
         display();
@@ -172,7 +172,11 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         } else {
             addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(offer.getAmount()));
             addLabelTextField(gridPane, ++rowIndex, "Min. bitcoin amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
-            addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(offer.getVolumeByAmount(offer.getAmount())));
+            String amount = formatter.formatFiatWithCode(offer.getOfferVolume());
+            String minVolume = "";
+            if (!offer.getAmount().equals(offer.getMinAmount()))
+                minVolume = " (min. " + formatter.formatFiatWithCode(offer.getMinOfferVolume()) + ")";
+            addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, amount + minVolume);
         }
 
         if (takeOfferHandlerOptional.isPresent()) {
@@ -181,7 +185,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             Fiat price = offer.getPrice();
             if (offer.getUseMarketBasedPrice()) {
                 addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price) +
-                        " (" + formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin()) + ")");
+                        " (distance from market price: " + formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin()) + ")");
             } else {
                 addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price));
             }

@@ -122,37 +122,49 @@ public class SellerStep3View extends TradeStepView {
     protected void addContent() {
         addTradeInfoBlock();
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, "Confirm payment receipt", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, "Confirm payment receipt", Layout.GROUP_DISTANCE);
 
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to receive:",
                 model.getFiatAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
-        String paymentDetails = "";
-        String title = "";
+        String myPaymentDetails = "";
+        String peersPaymentDetails = "";
+        String myTitle = "";
+        String peersTitle = "";
         boolean isBlockChain = false;
         String nameByCode = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
         Contract contract = trade.getContract();
         if (contract != null) {
-            PaymentAccountContractData paymentAccountContractData = contract.getSellerPaymentAccountContractData();
-            if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData) {
-                paymentDetails = ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress();
-                title = "Your " + nameByCode + " address:";
+            PaymentAccountContractData myPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
+            PaymentAccountContractData peersPaymentAccountContractData = contract.getBuyerPaymentAccountContractData();
+            if (myPaymentAccountContractData instanceof CryptoCurrencyAccountContractData) {
+                myPaymentDetails = ((CryptoCurrencyAccountContractData) myPaymentAccountContractData).getAddress();
+                peersPaymentDetails = ((CryptoCurrencyAccountContractData) peersPaymentAccountContractData).getAddress();
+                myTitle = "Your " + nameByCode + " address:";
+                peersTitle = "Buyers " + nameByCode + " address:";
                 isBlockChain = true;
             } else {
-                paymentDetails = paymentAccountContractData.getPaymentDetails();
-                title = "Your payment account:";
+                myPaymentDetails = myPaymentAccountContractData.getPaymentDetails();
+                peersPaymentDetails = peersPaymentAccountContractData.getPaymentDetails();
+                myTitle = "Your payment account:";
+                peersTitle = "Buyers payment account:";
             }
         }
 
-        TextFieldWithCopyIcon paymentDetailsTextField = addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                title, StringUtils.abbreviate(paymentDetails, 56)).second;
-        paymentDetailsTextField.setMouseTransparent(false);
-        paymentDetailsTextField.setTooltip(new Tooltip(paymentDetails));
+        TextFieldWithCopyIcon myPaymentDetailsTextField = addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                myTitle, StringUtils.abbreviate(myPaymentDetails, 56)).second;
+        myPaymentDetailsTextField.setMouseTransparent(false);
+        myPaymentDetailsTextField.setTooltip(new Tooltip(myPaymentDetails));
+
+        TextFieldWithCopyIcon peersPaymentDetailsTextField = addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                peersTitle, StringUtils.abbreviate(peersPaymentDetails, 56)).second;
+        peersPaymentDetailsTextField.setMouseTransparent(false);
+        peersPaymentDetailsTextField.setTooltip(new Tooltip(peersPaymentDetails));
 
         if (!isBlockChain) {
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Reason for payment:", model.dataModel.getReference());
-            GridPane.setRowSpan(titledGroupBg, 3);
+            GridPane.setRowSpan(titledGroupBg, 4);
         }
 
         Tuple3<Button, ProgressIndicator, Label> tuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "Confirm payment receipt");

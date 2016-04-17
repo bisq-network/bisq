@@ -162,7 +162,8 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = AliPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
-                gridRow = BlockChainForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                String labelTitle = "Sellers " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " address:";
+                gridRow = BlockChainForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData, labelTitle);
                 break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodName);
@@ -224,7 +225,7 @@ public class BuyerStep2View extends TradeStepView {
             if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
                 Popup popup = new Popup();
                 popup.headLine("Confirm that you have started the payment")
-                        .confirmation("Have you initiated the " + model.dataModel.getCurrencyCode() +
+                        .confirmation("Did you initiate the " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) +
                                 " payment to your trading partner?")
                         .width(700)
                         .actionButtonText("Yes, I have started the payment")

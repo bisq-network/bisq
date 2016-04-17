@@ -52,8 +52,8 @@ public class BlockChainForm extends PaymentMethodForm {
     private ComboBox<TradeCurrency> currencyComboBox;
     private Label addressLabel;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Cryptocurrency address:", ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress());
+    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData, String labelTitle) {
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, labelTitle, ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress());
         if (((CryptoCurrencyAccountContractData) paymentAccountContractData).getPaymentId() != null)
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Payment ID:", ((CryptoCurrencyAccountContractData) paymentAccountContractData).getPaymentId());
 
