@@ -148,7 +148,10 @@ public abstract class Trade implements Tradable, Model {
     private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
     private Date takeOfferDate;
     private Coin tradeAmount;
+    private long tradePrice;
     private NodeAddress tradingPeerNodeAddress;
+    @Nullable
+    private String takeOfferFeeTxId;
     protected State state;
     private DisputeState disputeState = DisputeState.NONE;
     private TradePeriodState tradePeriodState = TradePeriodState.NORMAL;
@@ -166,9 +169,6 @@ public abstract class Trade implements Tradable, Model {
     transient private StringProperty errorMessageProperty;
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Fiat> tradeVolumeProperty;
-    @Nullable
-    private String takeOfferFeeTxId;
-    private long tradePrice;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -271,9 +271,9 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
-    public void updateDepositTxFromWallet(TradeWalletService tradeWalletService) {
+    public void updateDepositTxFromWallet() {
         if (depositTx != null)
-            setDepositTx(tradeWalletService.getWalletTx(depositTx.getHash()));
+            setDepositTx(processModel.getTradeWalletService().getWalletTx(depositTx.getHash()));
     }
 
     public void setDepositTx(Transaction tx) {
@@ -336,6 +336,10 @@ public abstract class Trade implements Tradable, Model {
 
     public boolean isTakerFeePaid() {
         return state.getPhase() != null && state.getPhase().ordinal() >= Phase.TAKER_FEE_PAID.ordinal();
+    }
+
+    public boolean isDepositFeePaid() {
+        return state.getPhase() != null && state.getPhase().ordinal() >= Phase.DEPOSIT_PAID.ordinal();
     }
 
     public State getState() {

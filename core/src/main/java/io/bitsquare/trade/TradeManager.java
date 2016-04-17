@@ -173,25 +173,18 @@ public class TradeManager {
     private void initPendingTrades() {
         Log.traceCall();
 
-        //List<Trade> failedTrades = new ArrayList<>();
         for (Trade trade : trades) {
-            // We continue an interrupted trade.
-
-            // TODO 
-           /* if (trade.isFailedState()) {
-                failedTrades.add(trade);
-            }
-            else {*/
             trade.setStorage(tradableListStorage);
-            trade.updateDepositTxFromWallet(tradeWalletService);
-            initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
-
-
-            // }
+            if (trade.isDepositFeePaid()) {
+                trade.updateDepositTxFromWallet();
+                initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
+            } else if (trade.isTakerFeePaid()) {
+                addTradeToFailedTrades(trade);
+            } else {
+                removePreparedTrade(trade);
+            }
         }
         pendingTradesInitialized.set(true);
-
-        //failedTrades.stream().filter(Trade::isTakerFeePaid).forEach(this::addTradeToFailedTrades);
     }
 
     private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
@@ -345,21 +338,30 @@ public class TradeManager {
 
     // If trade was completed (closed without fault but might be closed by a dispute) we move it to the closed trades
     public void addTradeToClosedTrades(Trade trade) {
-        trades.remove(trade);
+        removeTrade(trade);
         closedTradableManager.add(trade);
     }
 
     // If trade is in already in critical state (if taker role: taker fee; both roles: after deposit published)
     // we move the trade to failedTradesManager
     public void addTradeToFailedTrades(Trade trade) {
-        trades.remove(trade);
+        removeTrade(trade);
         failedTradesManager.add(trade);
     }
 
     // If trade is in preparation (if taker role: before taker fee is paid; both roles: before deposit published)
     // we just remove the trade from our list. We don't store those trades.
     public void removePreparedTrade(Trade trade) {
+        removeTrade(trade);
+    }
+
+    public void removeTrade(Trade trade) {
         trades.remove(trade);
+
+        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.OFFER_FUNDING);
+        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
     }
 
 
