@@ -125,8 +125,8 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
                     "as well as for crypto currencies.\n\n" +
                     "Please note that this data is stored locally on your computer only. Bitsquare does not operate servers " +
                     "and has no access to users data.\n\n" +
-                    "When you are trading with someone you exchange in the trade process with your peer the " +
-                    "required account data for that trade.")
+                    "When you are trading you will exchange in the trade process with your peer the " +
+                    "required account data for that trade (e.g. bank account data or altcoin address).")
                     .dontShowAgainId(key, preferences)
                     .show();
     }
