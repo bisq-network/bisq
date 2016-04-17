@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.alert.Alert;
-import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
@@ -115,9 +114,6 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
 
         InputTextField versionInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "New version nr.:").second;
         versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
-
-        if (BitsquareApp.DEV_MODE)
-            keyInputTextField.setText("2e41038992f89eef2e4634ff3586e342c68ad9a5a7ffafee866781687f77a9b1");
 
         sendButton = new Button("Send notification");
         sendButton.setOnAction(e -> {

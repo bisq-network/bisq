@@ -78,7 +78,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
             headLine = "Important information!";
             headLineLabel.setStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 22;");
         }
-        closeButton = new Button("Cancel");
+        closeButton = new Button("Close");
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
