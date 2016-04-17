@@ -56,6 +56,7 @@ import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
+import io.bitsquare.payment.CryptoCurrencyAccount;
 import io.bitsquare.payment.OKPayAccount;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -500,7 +501,7 @@ public class MainViewModel implements ViewModel {
         if (BitsquareApp.DEV_MODE) {
             preferences.setShowOwnOffersInOfferBook(true);
             if (user.getPaymentAccounts().isEmpty())
-                setupDevDummyPaymentAccount();
+                setupDevDummyPaymentAccounts();
         }
         setupMarketPriceFeed();
         swapPendingOfferFundingEntries();
@@ -899,11 +900,17 @@ public class MainViewModel implements ViewModel {
         showPendingTradesNotification.set(numPendingTrades > 0);
     }
 
-    private void setupDevDummyPaymentAccount() {
+    private void setupDevDummyPaymentAccounts() {
         OKPayAccount okPayAccount = new OKPayAccount();
-        okPayAccount.setAccountNr("dummy");
+        okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
         okPayAccount.setAccountName("OKPay dummy");
         okPayAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
         user.addPaymentAccount(okPayAccount);
+
+        CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();
+        cryptoCurrencyAccount.setAccountName("ETH dummy");
+        cryptoCurrencyAccount.setAddress("0x" + new Random().nextInt(1000000));
+        cryptoCurrencyAccount.setSingleTradeCurrency(CurrencyUtil.getCryptoCurrency("ETH").get());
+        user.addPaymentAccount(cryptoCurrencyAccount);
     }
 }
