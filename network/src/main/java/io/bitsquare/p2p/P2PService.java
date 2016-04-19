@@ -554,6 +554,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                         @Override
                         public void onBroadcastedToFirstPeer(BroadcastMessage message) {
+                            // The reason for that check was to separate different callback for different send calls.
+                            // We only want to notify our sendMailboxMessageListener for the calls he is interested in.
                             if (message instanceof AddDataMessage &&
                                     ((AddDataMessage) message).protectedStorageEntry.equals(protectedMailboxStorageEntry)) {
                                 sendMailboxMessageListener.onStoredInMailbox();
@@ -568,12 +570,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                         @Override
                         public void onBroadcastFailed(String errorMessage) {
-                            //sendMailboxMessageListener.onFault("Broadcast completed without any successful broadcast");
+                            // TODO investigate why not sending sendMailboxMessageListener.onFault. Related probably 
+                            // to the logic from BroadcastHandler.sendToPeer
                         }
                     };
                     boolean result = p2PDataStorage.add(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true);
                     if (!result) {
                         //TODO remove and add again with a delay to ensure the data will be broadcasted
+                        // The p2PDataStorage.remove makes probably sense but need to be analysed more.
+                        // Don't change that if it is not 100% clear.
                         sendMailboxMessageListener.onFault("Data already exists in our local database");
                         boolean removeResult = p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
                         log.debug("remove result=" + removeResult);
