@@ -105,8 +105,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
-        result.add(new CryptoCurrency("QRK", "Quark"));
-        result.add(new CryptoCurrency("WDC", "WorldCoin"));
 
         // Unfortunately we cannot support CryptoNote coins yet as there is no way to proof the transaction. Payment ID helps only locate the tx but the 
         // arbitrator cannot see if the receiving key matches the receivers address. They might add support for exposing the tx key, but that is not 
