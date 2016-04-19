@@ -513,7 +513,7 @@ public class PeerManager implements ConnectionListener {
     public void handleConnectionFault(NodeAddress nodeAddress, @Nullable Connection connection) {
         Log.traceCall("nodeAddress=" + nodeAddress);
         boolean doRemovePersistedPeer = false;
-        Peer reportedPeer = removeReportedPeer(nodeAddress);
+        removeReportedPeer(nodeAddress);
         Optional<Peer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);
         if (persistedPeerOptional.isPresent()) {
             Peer persistedPeer = persistedPeerOptional.get();

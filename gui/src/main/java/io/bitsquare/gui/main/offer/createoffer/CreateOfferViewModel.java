@@ -248,7 +248,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
                             double relation = priceAsDouble / marketPriceAsDouble;
                             relation = formatter.roundDouble(relation, 2);
-                            double marketPriceMargin = dataModel.getDirection() == Offer.Direction.BUY ? 1 - relation : 1 + relation;
+                            double marketPriceMargin = dataModel.getDirection() == Offer.Direction.BUY ? 1 - relation : relation - 1;
                             priceAsPercentage.set(formatter.formatToPercent(marketPriceMargin, 2));
                         } catch (NumberFormatException t) {
                             priceAsPercentage.set("");
