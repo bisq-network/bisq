@@ -36,7 +36,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
-import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -152,13 +151,11 @@ public class SellerStep3View extends TradeStepView {
             }
         }
 
-        TextFieldWithCopyIcon myPaymentDetailsTextField = addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                myTitle, StringUtils.abbreviate(myPaymentDetails, 56)).second;
+        TextFieldWithCopyIcon myPaymentDetailsTextField = addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, myTitle, myPaymentDetails).second;
         myPaymentDetailsTextField.setMouseTransparent(false);
         myPaymentDetailsTextField.setTooltip(new Tooltip(myPaymentDetails));
 
-        TextFieldWithCopyIcon peersPaymentDetailsTextField = addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                peersTitle, StringUtils.abbreviate(peersPaymentDetails, 56)).second;
+        TextFieldWithCopyIcon peersPaymentDetailsTextField = addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, peersTitle, peersPaymentDetails).second;
         peersPaymentDetailsTextField.setMouseTransparent(false);
         peersPaymentDetailsTextField.setTooltip(new Tooltip(peersPaymentDetails));
 
