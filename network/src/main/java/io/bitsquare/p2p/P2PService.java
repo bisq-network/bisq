@@ -308,6 +308,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onConnection(Connection connection) {
         numConnectedPeers.set(networkNode.getAllConnections().size());
+        //TODO check if still needed and why
         UserThread.runAfter(() -> numConnectedPeers.set(networkNode.getAllConnections().size()), 3);
     }
 
@@ -315,6 +316,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
         numConnectedPeers.set(networkNode.getAllConnections().size());
+        //TODO check if still needed and why
         UserThread.runAfter(() -> numConnectedPeers.set(networkNode.getAllConnections().size()), 3);
     }
 
@@ -518,7 +520,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 } catch (CryptoException e) {
                     log.error("sendEncryptedMessage failed");
                     e.printStackTrace();
-                    sendMailboxMessageListener.onFault("Data already exist in our local database");
+                    sendMailboxMessageListener.onFault("sendEncryptedMailboxMessage failed " + e);
                 }
             } else {
                 sendMailboxMessageListener.onFault("There are no P2P network nodes connected. " +
@@ -566,6 +568,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                         @Override
                         public void onBroadcastFailed(String errorMessage) {
+                            //sendMailboxMessageListener.onFault("Broadcast completed without any successful broadcast");
                         }
                     };
                     boolean result = p2PDataStorage.add(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true);

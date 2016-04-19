@@ -231,10 +231,21 @@ public class WalletService {
 
         // Calculation is derived from: https://www.reddit.com/r/Bitcoin/comments/2vrx6n/privacy_in_bitcoinj_android_wallet_multibit_hive/coknjuz
         // Nr of false positives (56M keys in the blockchain): 
+        // First attempt for FP rate:
         // FP rate = 0,0001;  Nr of false positives: 0,0001 * 56 000 000  = 5600
-        // We have 1333keys: 1333 / 5600 = 0.23 -> 23 % probability that a pub key is in our wallet
-        // With higher fp rate values it fails to download the svp chain - seems it triggers Bitcoins DDoS protection ?
-        walletAppKit.setBloomFilterFalsePositiveRate(0.0001);
+        // We have 1333keys: 1333 / (5600 + 1333) = 0.19 -> 19 % probability that a pub key is in our wallet
+        // After tests I found out that the bandwidth consumption varies widely related to the generated filter.
+        // About 20- 40 MB for upload and 30-130 MB for download at first start up (spv chain).
+        // Afterwards its about 1 MB for upload and 20-80 MB for download.
+        // Probably better then a high FP rate would be to include foreign pubKeyHashes which are tested to not be used 
+        // in many transactions. If we had a pool of 100 000 such keys (2 MB data dump) to random select 4000 we could mix it with our
+        // 1000 own keys and get a similar probability rate as with the current setup but less variation in bandwidth 
+        // consumption.
+
+        // For now to reduce risks with high bandwidth consumption we reduce the FP rate by half.
+        // FP rate = 0,00005;  Nr of false positives: 0,00005 * 56 000 000  = 2800
+        // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
+        walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
 
         // TODO Get bitcoinj running over our tor proxy. BlockingClientManager need to be used to use the socket  
