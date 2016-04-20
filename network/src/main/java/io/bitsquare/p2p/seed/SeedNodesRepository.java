@@ -11,9 +11,10 @@ import java.util.stream.Collectors;
 public class SeedNodesRepository {
     private static final Logger log = LoggerFactory.getLogger(SeedNodesRepository.class);
 
-    // mainnet use port 8000
-    // testnet use port 8001
-    // regtest use port 8002
+    // Addresses are used if their port match the network id:
+    // - mainnet uses port 8000
+    // - testnet uses port 8001
+    // - regtest uses port 8002
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
             // In alpha we change the network with new releases. That will be faded out once we become backwards compatible (Beta)
 
@@ -51,6 +52,10 @@ public class SeedNodesRepository {
             new NodeAddress("mfla72c4igh5ta2t.onion:8002")
     );
 
+    // Addresses are used if the last digit of their port match the network id:
+    // - mainnet use port ends in 0
+    // - testnet use port ends in 1
+    // - regtest use port ends in 2
     private Set<NodeAddress> localhostSeedNodeAddresses = Sets.newHashSet(
             // mainnet
             new NodeAddress("localhost:2000"),

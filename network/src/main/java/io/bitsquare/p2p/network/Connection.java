@@ -167,14 +167,16 @@ public class Connection implements MessageListener {
             try {
                 Log.traceCall();
                 // Throttle outbound messages
-                if (System.currentTimeMillis() - lastSendTimeStamp < 20) {
-                    log.info("We got 2 sendMessage requests in less then 20 ms. We set the thread to sleep " +
-                                    "for 50 ms to avoid that we flood our peer. lastSendTimeStamp={}, now={}, elapsed={}",
-                            lastSendTimeStamp, System.currentTimeMillis(), (System.currentTimeMillis() - lastSendTimeStamp));
+                long now = System.currentTimeMillis();
+                long elapsed = now - lastSendTimeStamp;
+                if (elapsed < 20) {
+                    log.info("We got 2 sendMessage requests in less than 20 ms. We set the thread to sleep " +
+                                    "for 50 ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}",
+                            lastSendTimeStamp, now, elapsed);
                     Thread.sleep(50);
                 }
 
-                lastSendTimeStamp = System.currentTimeMillis();
+                lastSendTimeStamp = now;
                 String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
                 int size = ByteArrayUtils.objectToByteArray(message).length;
 
@@ -572,7 +574,7 @@ public class Connection implements MessageListener {
         @Override
         public String toString() {
             return "SharedSpace{" +
-                    ", socket=" + socket +
+                    "socket=" + socket +
                     ", ruleViolations=" + ruleViolations +
                     '}';
         }
@@ -583,7 +585,9 @@ public class Connection implements MessageListener {
     // InputHandler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Runs in same thread as Connection
+    // Runs in same thread as Connection, receives a message, performs several checks on it
+    // (including throttling limits, validity and statistics)
+    // and delivers it to the message listener given in the constructor.
     private static class InputHandler implements Runnable {
         private static final Logger log = LoggerFactory.getLogger(InputHandler.class);
 
@@ -629,8 +633,8 @@ public class Connection implements MessageListener {
                         long now = System.currentTimeMillis();
                         long elapsed = now - lastReadTimeStamp;
                         if (elapsed < 10) {
-                            log.info("We got 2 messages received in less then 10 ms. We set the thread to sleep " +
-                                            "for 20 ms to avoid that we get flooded from our peer. lastReadTimeStamp={}, now={}, elapsed={}",
+                            log.info("We got 2 messages received in less than 10 ms. We set the thread to sleep " +
+                                            "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
                                     lastReadTimeStamp, now, elapsed);
                             Thread.sleep(20);
                         }
@@ -728,13 +732,13 @@ public class Connection implements MessageListener {
                             if (!(message instanceof KeepAliveMessage))
                                 connection.statistic.updateLastActivityTimestamp();
 
-                            // First a seed node gets a message form a peer (PreliminaryDataRequest using 
-                            // AnonymousMessage interface) which does not has its hidden service 
-                            // published, so does not know its address. As the IncomingConnection does not has the 
+                            // First a seed node gets a message from a peer (PreliminaryDataRequest using
+                            // AnonymousMessage interface) which does not have its hidden service
+                            // published, so it does not know its address. As the IncomingConnection does not have the
                             // peersNodeAddress set that connection cannot be used for outgoing messages until we 
                             // get the address set.
                             // At the data update message (DataRequest using SendersNodeAddressMessage interface) 
-                            // after the HS is published we get the peers address set.
+                            // after the HS is published we get the peer's address set.
 
                             // There are only those messages used for new connections to a peer:
                             // 1. PreliminaryDataRequest

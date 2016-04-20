@@ -109,8 +109,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.torDir = torDir;
         this.clock = clock;
 
-        optionalEncryptionService = encryptionService == null ? Optional.empty() : Optional.of(encryptionService);
-        optionalKeyRing = keyRing == null ? Optional.empty() : Optional.of(keyRing);
+        optionalEncryptionService = Optional.ofNullable(encryptionService);
+        optionalKeyRing = Optional.ofNullable(keyRing);
 
         init(useLocalhost, networkId, storageDir);
     }

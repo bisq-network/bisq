@@ -14,6 +14,8 @@ import java.util.List;
 
 public class FileUtil {
     private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
+    /** Number of copies to keep in backup directory. */
+    private static final int KEPT_BACKUPS = 10;
 
     public static void rollingBackup(File dir, String fileName) {
         if (dir.exists()) {
@@ -30,7 +32,7 @@ public class FileUtil {
                 File backupFileDir = new File(Paths.get(backupDir.getAbsolutePath(), dirName).toString());
                 if (!backupFileDir.exists())
                     if (!backupFileDir.mkdir())
-                        log.warn("make backupFileDir failed");
+                        log.warn("make backupFileDir failed.\nBackupFileDir=" + backupFileDir.getAbsolutePath());
 
                 File backupFile = new File(Paths.get(backupFileDir.getAbsolutePath(), new Date().getTime() + "_" + fileName).toString());
 
@@ -39,7 +41,7 @@ public class FileUtil {
 
                     pruneBackup(backupFileDir);
                 } catch (IOException e) {
-                    log.error("Backup key failed " + e.getMessage());
+                    log.error("Backup key failed: " + e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -51,7 +53,7 @@ public class FileUtil {
             File[] files = backupDir.listFiles();
             if (files != null) {
                 List<File> filesList = Arrays.asList(files);
-                if (filesList.size() > 10) {
+                if (filesList.size() > KEPT_BACKUPS) {
                     filesList.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
                     File file = filesList.get(0);
                     if (file.isFile()) {

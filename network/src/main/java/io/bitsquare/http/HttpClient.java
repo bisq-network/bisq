@@ -22,14 +22,15 @@ public class HttpClient {
             URL url = new URL(baseUrl + param);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
+            connection.setConnectTimeout(10_000);
+            connection.setReadTimeout(10_000);
 
             if (connection.getResponseCode() == 200) {
                 return convertInputStreamToString(connection.getInputStream());
             } else {
+                String error = convertInputStreamToString(connection.getErrorStream());
                 connection.getErrorStream().close();
-                throw new HttpException(convertInputStreamToString(connection.getErrorStream()));
+                throw new HttpException(error);
             }
         } finally {
             if (connection != null)

@@ -60,6 +60,8 @@ public abstract class NetworkNode implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // Calls this (and other registered) setup listener's ``onTorNodeReady()`` and ``onHiddenServicePublished``
+    // when the events happen.
     abstract public void start(@Nullable SetupListener setupListener);
 
     public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress, Message message) {

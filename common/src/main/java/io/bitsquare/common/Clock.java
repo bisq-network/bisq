@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+// Helps configure listener objects that are run by the `UserThread` each second
+// and can do per second, per minute and delayed second actions.
 public class Clock {
     private static final Logger log = LoggerFactory.getLogger(Clock.class);
 

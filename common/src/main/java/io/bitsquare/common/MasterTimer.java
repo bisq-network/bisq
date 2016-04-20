@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+// Runs all listener objects periodically in a short interval.
 public class MasterTimer {
     private final static Logger log = LoggerFactory.getLogger(MasterTimer.class);
     private static final java.util.Timer timer = new java.util.Timer();
