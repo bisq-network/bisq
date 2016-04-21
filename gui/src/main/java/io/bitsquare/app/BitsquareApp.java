@@ -54,7 +54,6 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -208,10 +207,16 @@ public class BitsquareApp extends Application {
             // make the UI visible
             primaryStage.show();
 
-            Font fon = Font.getDefault();
-            Font fonds = Font.getDefault();
 
-            //showDebugWindow();
+            if (!Utilities.isCorrectOSArchitecture())
+                new Popup<>().warning("You have the wrong version installed for the architecture of your computer.\n" +
+                        "Your computers architecture is: " + System.getProperty("os.arch") + ".\n" +
+                        "The Bitsquare binary you installed is: " + System.getProperty("sun.arch.data.model") + ".\n" +
+                        "Please shut down and re-install the correct version (" + System.getProperty("os.arch") + ").")
+                        .closeButtonText("Shut down")
+                        .onClose(shutDownHandler::run)
+                        .show();
+
         } catch (Throwable throwable) {
             showErrorPopup(throwable, false);
         }

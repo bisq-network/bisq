@@ -118,6 +118,15 @@ public class Utilities {
         return System.getProperty("os.name").toLowerCase();
     }
 
+    public static boolean isCorrectOSArchitecture() {
+        String osArch = System.getProperty("os.arch");
+        String jvmArch = System.getProperty("sun.arch.data.model");
+        //TODO remove log
+        log.warn("osArch " + osArch);
+        log.warn("jvmArch " + jvmArch);
+        return osArch.endsWith(jvmArch);
+    }
+
     public static void openURI(URI uri) throws IOException {
         if (!isLinux()
                 && Desktop.isDesktopSupported()
