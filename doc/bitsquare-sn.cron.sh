@@ -8,7 +8,7 @@
 # Exit with status 2 if there were restarted daemons.
 #
 # Author: Ivan Vilata-i-Balaguer <ivan@selidor.net>
-MAX_RSS_MiB=512
+MAX_RSS_MiB=350
 
 PIDDIR=/var/run/bitsquare-sn
 INITDIR=/etc/init.d
