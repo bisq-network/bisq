@@ -110,6 +110,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("VPN", "VPNCoin"));
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
         result.add(new CryptoCurrency("YBC", "YbCoin"));
+        result.add(new CryptoCurrency("CLOAK", "CloakCoin"));
         
                 
         // Unfortunately we cannot support CryptoNote coins yet as there is no way to proof the transaction. Payment ID helps only locate the tx but the 
