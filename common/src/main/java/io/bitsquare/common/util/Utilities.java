@@ -118,13 +118,29 @@ public class Utilities {
         return System.getProperty("os.name").toLowerCase();
     }
 
+    //TODO remove logs
     public static boolean isCorrectOSArchitecture() {
-        String osArch = System.getProperty("os.arch");
         String jvmArch = System.getProperty("sun.arch.data.model");
-        //TODO remove log
-        log.warn("osArch " + osArch);
         log.warn("jvmArch " + jvmArch);
-        return osArch.endsWith(jvmArch);
+        log.warn("System.getenv(\"ProgramFiles(x86)\") " + System.getenv("ProgramFiles(x86)"));
+        if (isWindows()) {
+            // See: https://stackoverflow.com/questions/20856694/how-to-find-the-os-bit-type
+            String arch = System.getenv("PROCESSOR_ARCHITECTURE");
+            String wow64Arch = System.getenv("PROCESSOR_ARCHITEW6432");
+
+            String realArch = arch.endsWith("64")
+                    || wow64Arch != null && wow64Arch.endsWith("64")
+                    ? "64" : "32";
+
+            log.warn("arch " + arch);
+            log.warn("wow64Arch " + wow64Arch);
+            log.warn("realArch " + realArch);
+            return realArch.endsWith(jvmArch);
+        } else {
+            String osArch = System.getProperty("os.arch");
+            log.warn("osArch " + osArch);
+            return osArch.endsWith(jvmArch);
+        }
     }
 
     public static void openURI(URI uri) throws IOException {
