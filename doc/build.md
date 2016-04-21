@@ -34,7 +34,7 @@ Prerequisites
 The only prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u40 or better (as well as maven and git).
 In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
-To check the version of Java you currently have installed:
+##### 1. Check the version of Java you currently have installed
 
     $ javac -version
     javac 1.8.0_40
@@ -44,6 +44,13 @@ If `javac` is not found, or your version is anything less than `1.8.0_40`, then 
 > _**TIP:** Here are [instructions](http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html) for installing the JDK via `apt` on Debian/Ubuntu systems.
 > Bitsquare can be built with OpenJDK as well, but this hasn't been thoroughly tested yet._
 
+##### 2. Enable unlimited Strength for cryptographic keys
+
+Bitsquare uses 256 bit length keys which are still not permitted by default. Get around that ridiculous fact by adding the missing [jars from Oracle](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html). You will get an error when building Bitsquare package if you don't have these.
+
+##### 3. Copy the BountyCastle provider jar file
+
+Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2) to $JavaHome/jre/lib/ext/. This prevent a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
 
 Steps
 -----
@@ -123,15 +130,6 @@ Here are example program arguments for using regtest and using the Tor network:
    
     $ java -jar gui/target/shaded.jar --bitcoin.network=regtest node.port=4442 --devTest=true --app.name=Bitsquare-Tor-Regtest-Bob   
    
-
-### 7. Enable unlimited Strength for cryptographic keys
-
-Bitsquare uses 256 bit length keys which are still not permitted by default.  
-Get around that ridiculous fact by adding the missing [jars from Oracle](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html).
-Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2) to $JavaHome/jre/lib/ext (to avoid getting 
-a "JCE cannot authenticate the provider BC" exception).
-
-
 Problems?
 ---------
 
