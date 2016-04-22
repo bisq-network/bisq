@@ -60,7 +60,6 @@ public class NetworkStressTest {
                     @Override
                     public void onTorNodeReady() {
                         // do nothing
-                        System.out.println("TOR NODE READY");
                     }
 
                     @Override
@@ -96,8 +95,9 @@ public class NetworkStressTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws InterruptedException {
         // do nothing
+        Thread.sleep(30_000);
     }
 
     private Path createTempDirectory() throws IOException {
