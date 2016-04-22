@@ -27,13 +27,14 @@ public class NetworkStressTest {
         tempDir = createTempDirectory();
         seedNode = new SeedNode(tempDir.toString());
         final NodeAddress seedNodeAddress = new NodeAddress("localhost:8002");
+        final boolean useLocalhost = true;
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
 
         // Use as a barrier to wait for concurrent tasks.
         final CountDownLatch latch = new CountDownLatch(1 /*seed node*/);
         // Start the seed node.
-        seedNode.createAndStartP2PService(seedNodeAddress, true /*localhost*/,
+        seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
                 2 /*regtest*/, true /*detailed logging*/, seedNodes,
                 new P2PServiceListener() {
                     @Override
