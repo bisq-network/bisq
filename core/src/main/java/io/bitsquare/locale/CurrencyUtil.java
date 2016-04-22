@@ -114,6 +114,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("CLOAK", "CloakCoin"));
         result.add(new CryptoCurrency("EGC", "EverGreenCoin"));
         result.add(new CryptoCurrency("VRC", "VeriCoin"));
+        result.add(new CryptoCurrency("ESP", "Espers"));
         
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
