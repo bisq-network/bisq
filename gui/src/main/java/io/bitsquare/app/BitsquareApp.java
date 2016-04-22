@@ -101,8 +101,8 @@ public class BitsquareApp extends Application {
         String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
         Log.setup(logPath, !IS_RELEASE_VERSION);
         log.info("Log files under: " + logPath);
-
         Version.printVersion();
+        Utilities.printSysInfo();
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);

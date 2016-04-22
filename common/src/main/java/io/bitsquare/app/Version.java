@@ -81,6 +81,4 @@ public class Version {
                 ", getP2PNetworkId()=" + getP2PMessageVersion() +
                 '}');
     }
-
-
 }
