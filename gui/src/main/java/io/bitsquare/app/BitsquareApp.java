@@ -208,14 +208,16 @@ public class BitsquareApp extends Application {
             primaryStage.show();
 
 
-            if (!Utilities.isCorrectOSArchitecture())
-                new Popup<>().warning("You have the wrong version installed for the architecture of your computer.\n" +
-                        "Your computers architecture is: " + System.getProperty("os.arch") + ".\n" +
-                        "The Bitsquare binary you installed is: " + System.getProperty("sun.arch.data.model") + ".\n" +
-                        "Please shut down and re-install the correct version (" + System.getProperty("os.arch") + ").")
-                        .closeButtonText("Shut down")
-                        .onClose(shutDownHandler::run)
+            if (!Utilities.isCorrectOSArchitecture()) {
+                String osArchitecture = Utilities.getOSArchitecture();
+                // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
+                // Needs at least more testing on different machines...
+                new Popup<>().warning("You have probably the wrong version installed for the architecture of your computer.\n" +
+                        "Your computers architecture is: " + osArchitecture + ".\n" +
+                        "The Bitsquare binary you installed is: " + Utilities.getJVMArchitecture() + ".\n" +
+                        "Please shut down and re-install the correct version (" + osArchitecture + ").")
                         .show();
+            }
 
         } catch (Throwable throwable) {
             showErrorPopup(throwable, false);
@@ -225,8 +227,8 @@ public class BitsquareApp extends Application {
     private void showSendAlertMessagePopup() {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
         new SendAlertMessageWindow()
-                .onAddAlertMessage((alert, privKeyString) -> alertManager.addAlertMessageIfKeyIsValid(alert, privKeyString))
-                .onRemoveAlertMessage(privKeyString -> alertManager.removeAlertMessageIfKeyIsValid(privKeyString))
+                .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
+                .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
                 .show();
     }
 

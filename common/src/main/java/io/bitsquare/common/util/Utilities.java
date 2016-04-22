@@ -34,6 +34,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.*;
 
@@ -115,32 +116,40 @@ public class Utilities {
     }
 
     private static String getOSName() {
-        return System.getProperty("os.name").toLowerCase();
+        return System.getProperty("os.name").toLowerCase(Locale.US);
     }
 
-    //TODO remove logs
-    public static boolean isCorrectOSArchitecture() {
-        String jvmArch = System.getProperty("sun.arch.data.model");
-        log.warn("jvmArch " + jvmArch);
-        log.warn("System.getenv(\"ProgramFiles(x86)\") " + System.getenv("ProgramFiles(x86)"));
+    public static String getOSArchitecture() {
+        String osArch = System.getProperty("os.arch");
         if (isWindows()) {
-            // See: https://stackoverflow.com/questions/20856694/how-to-find-the-os-bit-type
+            // See: Like always windows needs extra treatment
+            // https://stackoverflow.com/questions/20856694/how-to-find-the-os-bit-type
             String arch = System.getenv("PROCESSOR_ARCHITECTURE");
             String wow64Arch = System.getenv("PROCESSOR_ARCHITEW6432");
-
-            String realArch = arch.endsWith("64")
+            return arch.endsWith("64")
                     || wow64Arch != null && wow64Arch.endsWith("64")
                     ? "64" : "32";
-
-            log.warn("arch " + arch);
-            log.warn("wow64Arch " + wow64Arch);
-            log.warn("realArch " + realArch);
-            return realArch.endsWith(jvmArch);
+        } else if (isLinux()) {
+            return osArch.startsWith("i") ? "32" : "64";
         } else {
-            String osArch = System.getProperty("os.arch");
-            log.warn("osArch " + osArch);
-            return osArch.endsWith(jvmArch);
+            return osArch.contains("64") ? "64" : osArch;
         }
+    }
+
+    public static String getJVMArchitecture() {
+        return System.getProperty("sun.arch.data.model");
+    }
+
+    public static boolean isCorrectOSArchitecture() {
+        boolean result = getOSArchitecture().endsWith(getJVMArchitecture());
+        if (!result) {
+            log.warn("System.getProperty(\"os.arch\") " + System.getProperty("os.arch"));
+            log.warn("System.getenv(\"ProgramFiles(x86)\") " + System.getenv("ProgramFiles(x86)"));
+            log.warn("System.getenv(\"PROCESSOR_ARCHITECTURE\")" + System.getenv("PROCESSOR_ARCHITECTURE"));
+            log.warn("System.getenv(\"PROCESSOR_ARCHITEW6432\") " + System.getenv("PROCESSOR_ARCHITEW6432"));
+            log.warn("System.getProperty(\"sun.arch.data.model\") " + System.getProperty("sun.arch.data.model"));
+        }
+        return result;
     }
 
     public static void openURI(URI uri) throws IOException {
@@ -176,7 +185,7 @@ public class Utilities {
                 throw new IOException("Failed to open directory: " + directory.toString());
         }
     }
-    
+
     public static void openWebPage(String target) {
         try {
             openURI(new URI(target));
