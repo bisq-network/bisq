@@ -123,6 +123,8 @@ public class BitsquareApp extends Application {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
+        if (Utilities.isRestrictedCryptography())
+            Utilities.removeCryptographyRestrictions();
         Security.addProvider(new BouncyCastleProvider());
 
         BitsquareApp.primaryStage = primaryStage;
