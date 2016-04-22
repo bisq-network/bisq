@@ -1,7 +1,5 @@
 package io.bitsquare.p2p.network;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.seed.SeedNode;
@@ -19,9 +17,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 public class NetworkStressTest {
     private Path tempDir;
