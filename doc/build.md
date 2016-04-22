@@ -46,11 +46,22 @@ If `javac` is not found, or your version is anything less than `1.8.0_40`, then 
 
 ##### 2. Enable unlimited Strength for cryptographic keys
 
-Bitsquare uses 256 bit length keys which are still not permitted by default. Get around that ridiculous fact by adding the missing [jars from Oracle](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html). You will get an error when building Bitsquare package if you don't have these.
+Bitsquare uses 256 bit length keys which are still not permitted by default. 
+Get around that ridiculous fact by adding the missing [jars from Oracle](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html). 
+Please follow the steps described in the Readme file at the downloaded package.
+You will get an error when building Bitsquare package if you don't have these.
 
 ##### 3. Copy the BountyCastle provider jar file
 
-Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2) to $JavaHome/jre/lib/ext/. This prevent a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
+Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2) to $JavaHome/jre/lib/ext/. 
+This prevent a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
+
+##### 4. Edit the jre\lib\security\java.security file to add BouncyCastleProvider
+
+Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
+E.g.:
+security.provider.11=org.bouncycastle.jce.provider.BouncyCastleProvider
+
 
 Steps
 -----
