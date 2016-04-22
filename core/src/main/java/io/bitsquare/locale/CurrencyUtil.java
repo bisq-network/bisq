@@ -76,6 +76,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
+        result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
@@ -111,12 +112,9 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
         result.add(new CryptoCurrency("YBC", "YbCoin"));
         result.add(new CryptoCurrency("CLOAK", "CloakCoin"));
+        result.add(new CryptoCurrency("EGC", "EverGreenCoin"));
+        result.add(new CryptoCurrency("VRC", "VeriCoin"));
         
-                
-        // Unfortunately we cannot support CryptoNote coins yet as there is no way to proof the transaction. Payment ID helps only locate the tx but the 
-        // arbitrator cannot see if the receiving key matches the receivers address. They might add support for exposing the tx key, but that is not 
-        // implemented yet. To use the view key (also not available in GUI wallets) would reveal the complete wallet history for incoming payments, which is
-        // not acceptable from privacy point of view.
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
         return result;
