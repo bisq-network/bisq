@@ -5,6 +5,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
@@ -118,8 +119,11 @@ public class SeedNode {
                 "Bitsquare_seed_node_" + String.valueOf(mySeedNodeAddress.getFullAddress().replace(":", "_")));
 
         String logPath = Paths.get(appPath.toString(), "logs").toString();
-        Log.setup(logPath, useDetailedLogging);
+        Log.setup(logPath);
         log.info("Log files under: " + logPath);
+        Version.printVersion();
+        Utilities.printSysInfo();
+        Log.setLevel(useDetailedLogging);
 
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (progArgSeedNodes != null && !progArgSeedNodes.isEmpty()) {

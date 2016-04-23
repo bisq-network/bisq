@@ -128,7 +128,7 @@ public class SystemTray {
                 e1.printStackTrace();
             }
         });
-        exitItem.addActionListener(e -> onExit.run());
+        exitItem.addActionListener(e -> UserThread.execute(onExit::run));
     }
 
     public void hideStage() {
