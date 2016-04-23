@@ -542,8 +542,12 @@ public class Connection implements MessageListener {
             } else {
                 // TODO sometimes we get StreamCorruptedException, OptionalDataException, IllegalStateException
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
-                log.warn("Unknown reason for exception at socket {}\n\tconnection={}\n\tException=",
-                        socket.toString(), this, e.toString());
+                log.warn("Unknown reason for exception at socket {}\n\t" +
+                                "connection={}\n\t" +
+                                "Exception=",
+                        socket.toString(),
+                        this,
+                        e.toString());
                 e.printStackTrace();
             }
 

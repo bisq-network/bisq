@@ -371,7 +371,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                     return null;
                 }
             } else {
-                log.warn("We don't have a market price.\n" +
+                log.debug("We don't have a market price.\n" +
                         "That case could only happen if you don't have a price feed.");
                 return null;
             }
