@@ -37,7 +37,10 @@ $JAVA_HOME/bin/javapackager \
 rm "gui/deploy/Bitsquare.html"
 rm "gui/deploy/Bitsquare.jnlp"
 
-mv "gui/deploy/bundles/Bitsquare.dmg" "gui/deploy/Bitsquare-$fullVersion.dmg"
-rm gui/deploy/bundles
+mv "gui/deploy/bundles/Bitsquare-$fullVersion.dmg" "gui/deploy/Bitsquare-$fullVersion.dmg"
+rm "gui/deploy/bundles"
+
+mv "gui/deploy/SeedNode.jar" "gui/deploy/SeedNode-0.4.3.jar"
+
 
 cd package/mac
