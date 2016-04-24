@@ -889,8 +889,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.isWalletFunded.get()) {
-                new Popup().warning("You have already paid in the funds.\n" +
-                        "Are you sure you want to cancel.")
+                new Popup().warning("Are you sure, you want to cancel.")
                         .closeButtonText("No")
                         .actionButtonText("Yes, cancel")
                         .onAction(() -> {
