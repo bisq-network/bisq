@@ -79,6 +79,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("XVG", "Verge"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
         return result;
