@@ -891,7 +891,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             if (model.dataModel.isWalletFunded.get()) {
                 new Popup().warning("You have already paid the funds.\n" +
                         "If you cancel now, your funds will be available immediately.\n" +
-                        "Are you sure, you want to cancel.")
+                        "Are you sure you want to cancel?")
                         .closeButtonText("No")
                         .actionButtonText("Yes, cancel")
                         .onAction(() -> {
