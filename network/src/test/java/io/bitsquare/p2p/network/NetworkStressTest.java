@@ -2,6 +2,7 @@ package io.bitsquare.p2p.network;
 
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.seed.SeedNode;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -41,7 +42,7 @@ public class NetworkStressTest {
         // Create and start the seed node.
         seedNode = new SeedNode(tempDir.toString());
         final NodeAddress seedNodeAddress = getSeedNodeAddress();
-        final boolean useLocalhost = seedNodeAddress.getFullAddress().startsWith("localhost:");
+        final boolean useLocalhost = seedNodeAddress.hostName.equals("localhost");
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
         seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
@@ -58,7 +59,7 @@ public class NetworkStressTest {
 
     @NotNull
     private static NodeAddress getSeedNodeAddress() {
-        return new NodeAddress("localhost:8002");
+        return new NodeAddress("localhost", Utils.findFreeSystemPort());
     }
 
     @NotNull
