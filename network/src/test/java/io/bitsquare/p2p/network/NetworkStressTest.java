@@ -1,9 +1,12 @@
 package io.bitsquare.p2p.network;
 
+import io.bitsquare.common.Clock;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.seed.SeedNode;
+import io.bitsquare.p2p.seed.SeedNodesRepository;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.jetbrains.annotations.NotNull;
@@ -11,30 +14,38 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 public class NetworkStressTest {
+    /** Numeric identifier of the regtest Bitcoin network. */
     private static final int REGTEST_NETWORK_ID = 2;
+    /** Number of peer nodes to create. */
+    private static final int NPEERS = 1;
 
     /** A directory to temporarily hold seed and normal nodes' configuration and state files. */
     private Path tempDir;
     /** A single seed node that other nodes will contact to request initial data. */
     private SeedNode seedNode;
+    /** A list of peer nodes represented as P2P services. */
+    private List<P2PService> peerNodes = new ArrayList<>();
 
     @Before
     public void setUp() throws Exception {
         /** A property where threads can indicate setup failure. */
         BooleanProperty setupFailed = new SimpleBooleanProperty(false);
         /** A barrier to wait for concurrent tasks. */
-        final CountDownLatch pendingTasks = new CountDownLatch(1 /*seed node*/);
+        final CountDownLatch pendingTasks = new CountDownLatch(1 /*seed node*/ + NPEERS);
 
         // Create the temporary directory.
         tempDir = createTempDirectory();
@@ -49,12 +60,31 @@ public class NetworkStressTest {
                 REGTEST_NETWORK_ID, true /*detailed logging*/, seedNodes,
                 getSetupListener(setupFailed, pendingTasks));
 
+        // Create and start peer nodes.
+        SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
+        if (useLocalhost) {
+            seedNodesRepository.setLocalhostSeedNodeAddresses(seedNodes);
+        } else {
+            seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
+        }
+        for (int p = 0; p < NPEERS; p++) {
+            final int peerPort = Utils.findFreeSystemPort();
+            final File peerDir = new File(tempDir.toFile(), "Bitsquare_peer_" + peerPort);
+            final File peerTorDir = new File(peerDir, "tor");
+            final File peerStorageDir = new File(peerDir, "db");
+            final P2PService peer = new P2PService(seedNodesRepository, peerPort, peerTorDir, useLocalhost,
+                    REGTEST_NETWORK_ID, peerStorageDir, new Clock(), null /*TODO:enc svc*/, null /*TODO:key ring*/);
+            peerNodes.add(peer);
+            peer.start(getSetupListener(setupFailed, pendingTasks));
+        }
+
         // Wait for concurrent tasks to finish.
         pendingTasks.await();
 
         // Check if any node reported setup failure on start.
-        if (setupFailed.get())
+        if (setupFailed.get()) {
             throw new Exception("nodes failed to start");
+        }
     }
 
     @NotNull
@@ -110,11 +140,15 @@ public class NetworkStressTest {
     @After
     public void tearDown() throws InterruptedException, IOException {
         /** A barrier to wait for concurrent tasks. */
-        final CountDownLatch pendingTasks = new CountDownLatch(seedNode != null? 1 : 0);
+        final CountDownLatch pendingTasks = new CountDownLatch((seedNode != null? 1 : 0) + peerNodes.size());
 
         // Stop the seed node.
         if (seedNode != null) {
             seedNode.shutDown(pendingTasks::countDown);
+        }
+        // Stop peer nodes.
+        for (P2PService peer : peerNodes) {
+            peer.shutDown(pendingTasks::countDown);
         }
         // Wait for concurrent tasks to finish.
         pendingTasks.await();
