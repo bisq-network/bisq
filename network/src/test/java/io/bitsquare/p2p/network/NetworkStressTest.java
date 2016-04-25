@@ -19,21 +19,26 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 public class NetworkStressTest {
+    /** A directory to temporarily hold seed and normal nodes' configuration and state files. */
     private Path tempDir;
+    /** A single seed node that other nodes will contact to request initial data. */
     private SeedNode seedNode;
 
     @Before
     public void setup() throws IOException, InterruptedException {
+        /** A barrier to wait for concurrent tasks. */
+        final CountDownLatch pendingTasks = new CountDownLatch(1 /*seed node*/);
+
+        // Create the temporary directory.
         tempDir = createTempDirectory();
+
+        // Create and start the seed node.
         seedNode = new SeedNode(tempDir.toString());
         final NodeAddress seedNodeAddress = new NodeAddress("localhost:8002");
         final boolean useLocalhost = true;
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
-
-        // Use as a barrier to wait for concurrent tasks.
-        final CountDownLatch latch = new CountDownLatch(1 /*seed node*/);
-        // Start the seed node.
+        boolean seedNodeSetupFailed = false;
         seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
                 2 /*regtest*/, true /*detailed logging*/, seedNodes,
                 new P2PServiceListener() {
@@ -64,7 +69,7 @@ public class NetworkStressTest {
 
                     @Override
                     public void onHiddenServicePublished() {
-                        latch.countDown();  // one less task to wait on
+                        pendingTasks.countDown();  // one less task to wait on
                     }
 
                     @Override
@@ -75,19 +80,19 @@ public class NetworkStressTest {
         );
 
         // Wait for concurrent tasks to finish.
-        latch.await();
+        pendingTasks.await();
     }
 
     @After
     public void tearDown() throws InterruptedException, IOException {
-        // Use as a barrier to wait for concurrent tasks.
-        final CountDownLatch latch = new CountDownLatch(1 /*seed node*/);
+        /** A barrier to wait for concurrent tasks. */
+        final CountDownLatch pendingTasks = new CountDownLatch(1 /*seed node*/);
         // Stop the seed node.
         if (seedNode != null) {
-            seedNode.shutDown(latch::countDown);
+            seedNode.shutDown(pendingTasks::countDown);
         }
         // Wait for concurrent tasks to finish.
-        latch.await();
+        pendingTasks.await();
 
         if (tempDir != null) {
             deleteRecursively(tempDir);
