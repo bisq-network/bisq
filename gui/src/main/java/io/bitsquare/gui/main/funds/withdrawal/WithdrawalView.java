@@ -87,6 +87,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
     private Set<String> fromAddresses;
+    private Coin amountOfSelectedItems;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -186,8 +187,11 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 }
             };
             try {
+                // We need to use the max. amount (amountOfSelectedItems) as the senderAmount might be less then 
+                // we have available and then the fee calculation would return 0
+                // TODO Get a proper fee calculation from BitcoinJ directly
                 Coin requiredFee = walletService.getRequiredFeeForMultipleAddresses(fromAddresses,
-                        withdrawToTextField.getText(), senderAmount);
+                        withdrawToTextField.getText(), amountOfSelectedItems);
                 Coin receiverAmount = senderAmount.subtract(requiredFee);
                 if (BitsquareApp.DEV_MODE) {
                     doWithdraw(receiverAmount, callback);
@@ -227,9 +231,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 .collect(Collectors.toSet());
 
         if (!selectedItems.isEmpty()) {
-            Coin sum = Coin.valueOf(selectedItems.stream().mapToLong(e -> e.getBalance().getValue()).sum());
-            if (sum.isPositive()) {
-                amountTextField.setText(formatter.formatCoin(sum));
+            amountOfSelectedItems = Coin.valueOf(selectedItems.stream().mapToLong(e -> e.getBalance().getValue()).sum());
+            if (amountOfSelectedItems.isPositive()) {
+                amountTextField.setText(formatter.formatCoin(amountOfSelectedItems));
             } else {
                 amountTextField.setText("");
                 withdrawFromTextField.setText("");
@@ -338,9 +342,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private boolean areInputsValid() {
-        return btcAddressValidator.validate(withdrawToTextField.getText()).isValid &&
-                amountTextField.getText().length() > 0 &&
-                Restrictions.isAboveFixedTxFeeAndDust(formatter.parseToCoin(amountTextField.getText()));
+        if (amountTextField.getText().length() > 0) {
+            Coin amount = formatter.parseToCoin(amountTextField.getText());
+            return btcAddressValidator.validate(withdrawToTextField.getText()).isValid &&
+                    amount.compareTo(amountOfSelectedItems) <= 0 &&
+                    Restrictions.isAboveFixedTxFeeAndDust(amount);
+        } else {
+            return false;
+        }
     }
 
 
