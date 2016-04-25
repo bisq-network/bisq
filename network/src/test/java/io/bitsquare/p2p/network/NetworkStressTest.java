@@ -1,6 +1,9 @@
 package io.bitsquare.p2p.network;
 
 import io.bitsquare.common.Clock;
+import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.crypto.KeyStorage;
+import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
@@ -9,6 +12,7 @@ import io.bitsquare.p2p.seed.SeedNode;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
@@ -21,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -47,6 +52,9 @@ public class NetworkStressTest {
         /** A barrier to wait for concurrent tasks. */
         final CountDownLatch pendingTasks = new CountDownLatch(1 /*seed node*/ + NPEERS);
 
+        // Set a security provider to allow key generation.
+        Security.addProvider(new BouncyCastleProvider());
+
         // Create the temporary directory.
         tempDir = createTempDirectory();
 
@@ -72,8 +80,14 @@ public class NetworkStressTest {
             final File peerDir = new File(tempDir.toFile(), "Bitsquare_peer_" + peerPort);
             final File peerTorDir = new File(peerDir, "tor");
             final File peerStorageDir = new File(peerDir, "db");
+            final File peerKeysDir = new File(peerDir, "keys");
+            //noinspection ResultOfMethodCallIgnored
+            peerKeysDir.mkdirs();  // needed for creating the key ring
+            final KeyStorage peerKeyStorage = new KeyStorage(peerKeysDir);
+            final KeyRing peerKeyRing = new KeyRing(peerKeyStorage);
+            final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing);
             final P2PService peer = new P2PService(seedNodesRepository, peerPort, peerTorDir, useLocalhost,
-                    REGTEST_NETWORK_ID, peerStorageDir, new Clock(), null /*TODO:enc svc*/, null /*TODO:key ring*/);
+                    REGTEST_NETWORK_ID, peerStorageDir, new Clock(), peerEncryptionService, peerKeyRing);
             peerNodes.add(peer);
             peer.start(getSetupListener(setupFailed, pendingTasks));
         }
