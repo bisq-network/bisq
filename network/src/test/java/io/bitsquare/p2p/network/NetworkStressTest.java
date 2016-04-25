@@ -25,7 +25,7 @@ public class NetworkStressTest {
     private SeedNode seedNode;
 
     @Before
-    public void setup() throws IOException, InterruptedException {
+    public void setUp() throws IOException, InterruptedException {
         /** A barrier to wait for concurrent tasks. */
         final CountDownLatch pendingTasks = new CountDownLatch(1 /*seed node*/);
 
@@ -87,6 +87,7 @@ public class NetworkStressTest {
     public void tearDown() throws InterruptedException, IOException {
         /** A barrier to wait for concurrent tasks. */
         final CountDownLatch pendingTasks = new CountDownLatch(seedNode != null? 1 : 0);
+
         // Stop the seed node.
         if (seedNode != null) {
             seedNode.shutDown(pendingTasks::countDown);
