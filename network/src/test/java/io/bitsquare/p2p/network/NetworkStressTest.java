@@ -21,6 +21,8 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 public class NetworkStressTest {
+    private static final int REGTEST_NETWORK_ID = 2;
+
     /** A directory to temporarily hold seed and normal nodes' configuration and state files. */
     private Path tempDir;
     /** A single seed node that other nodes will contact to request initial data. */
@@ -43,9 +45,8 @@ public class NetworkStressTest {
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
         seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
-                2 /*regtest*/, true /*detailed logging*/, seedNodes,
-                getSetupListener(setupFailed, pendingTasks)
-        );
+                REGTEST_NETWORK_ID, true /*detailed logging*/, seedNodes,
+                getSetupListener(setupFailed, pendingTasks));
 
         // Wait for concurrent tasks to finish.
         pendingTasks.await();
