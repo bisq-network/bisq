@@ -38,59 +38,71 @@ public class NetworkStressTest {
 
         // Create and start the seed node.
         seedNode = new SeedNode(tempDir.toString());
-        final NodeAddress seedNodeAddress = new NodeAddress("localhost:8002");
-        final boolean useLocalhost = true;
+        final NodeAddress seedNodeAddress = getSeedNodeAddress();
+        final boolean useLocalhost = seedNodeAddress.getFullAddress().startsWith("localhost:");
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
         seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
                 2 /*regtest*/, true /*detailed logging*/, seedNodes,
-                new P2PServiceListener() {
-                    @Override
-                    public void onRequestingDataCompleted() {
-                        // do nothing
-                    }
-
-                    @Override
-                    public void onNoSeedNodeAvailable() {
-                        // expected, do nothing
-                    }
-
-                    @Override
-                    public void onNoPeersAvailable() {
-                        // expected, do nothing
-                    }
-
-                    @Override
-                    public void onBootstrapComplete() {
-                        // do nothing
-                    }
-
-                    @Override
-                    public void onTorNodeReady() {
-                        // do nothing
-                    }
-
-                    @Override
-                    public void onHiddenServicePublished() {
-                        // successful result
-                        pendingTasks.countDown();
-                    }
-
-                    @Override
-                    public void onSetupFailed(Throwable throwable) {
-                        // failed result
-                        setupFailed.set(true);
-                        pendingTasks.countDown();
-                    }
-                }
+                getSetupListener(setupFailed, pendingTasks)
         );
 
         // Wait for concurrent tasks to finish.
         pendingTasks.await();
 
-        // Check if nodes started correctly.
+        // Check if any node reported setup failure on start.
         if (setupFailed.get())
             throw new Exception("nodes failed to start");
+    }
+
+    @NotNull
+    private static NodeAddress getSeedNodeAddress() {
+        return new NodeAddress("localhost:8002");
+    }
+
+    @NotNull
+    private static P2PServiceListener getSetupListener(
+            final BooleanProperty setupFailed,
+            final CountDownLatch pendingTasks) {
+        return new P2PServiceListener() {
+            @Override
+            public void onRequestingDataCompleted() {
+                // do nothing
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
+                // expected, do nothing
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
+                // expected, do nothing
+            }
+
+            @Override
+            public void onBootstrapComplete() {
+                // do nothing
+            }
+
+            @Override
+            public void onTorNodeReady() {
+                // do nothing
+            }
+
+            @Override
+            public void onHiddenServicePublished() {
+                // successful result
+                pendingTasks.countDown();
+            }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+                // failed result
+                setupFailed.set(true);
+                pendingTasks.countDown();
+            }
+        };
     }
 
     @After
