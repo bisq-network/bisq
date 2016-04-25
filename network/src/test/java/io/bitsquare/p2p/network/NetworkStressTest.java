@@ -3,6 +3,8 @@ package io.bitsquare.p2p.network;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.seed.SeedNode;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
@@ -25,7 +27,9 @@ public class NetworkStressTest {
     private SeedNode seedNode;
 
     @Before
-    public void setUp() throws IOException, InterruptedException {
+    public void setUp() throws Exception {
+        /** A property where threads can indicate setup failure. */
+        BooleanProperty setupFailed = new SimpleBooleanProperty(false);
         /** A barrier to wait for concurrent tasks. */
         final CountDownLatch pendingTasks = new CountDownLatch(1 /*seed node*/);
 
@@ -38,7 +42,6 @@ public class NetworkStressTest {
         final boolean useLocalhost = true;
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
-        boolean seedNodeSetupFailed = false;
         seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
                 2 /*regtest*/, true /*detailed logging*/, seedNodes,
                 new P2PServiceListener() {
@@ -69,18 +72,25 @@ public class NetworkStressTest {
 
                     @Override
                     public void onHiddenServicePublished() {
-                        pendingTasks.countDown();  // one less task to wait on
+                        // successful result
+                        pendingTasks.countDown();
                     }
 
                     @Override
                     public void onSetupFailed(Throwable throwable) {
-                        //XXXX
+                        // failed result
+                        setupFailed.set(true);
+                        pendingTasks.countDown();
                     }
                 }
         );
 
         // Wait for concurrent tasks to finish.
         pendingTasks.await();
+
+        // Check if nodes started correctly.
+        if (setupFailed.get())
+            throw new Exception("nodes failed to start");
     }
 
     @After
