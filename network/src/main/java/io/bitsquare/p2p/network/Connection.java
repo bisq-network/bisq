@@ -64,7 +64,7 @@ public class Connection implements MessageListener {
 
     private static final int MAX_MSG_SIZE = 500 * 1024;              // 500 kb
     //TODO decrease limits again after testing
-    private static final int MSG_THROTTLE_PER_SEC = 50;              // With MAX_MSG_SIZE of 100kb results in bandwidth of 5 mbit/sec 
+    private static final int MSG_THROTTLE_PER_SEC = 70;              // With MAX_MSG_SIZE of 500kb results in bandwidth of 35 mbit/sec 
     private static final int MSG_THROTTLE_PER_10_SEC = 500;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 50 mbit/sec for 10 sec 
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
 
@@ -251,15 +251,15 @@ public class Connection implements MessageListener {
         boolean violated = false;
         //TODO remove serializable storage after network is tested stable
         if (messageTimeStamps.size() >= MSG_THROTTLE_PER_SEC) {
-            // check if we got more than 10 (MSG_THROTTLE_PER_SEC) msg per sec.
+            // check if we got more than 70 (MSG_THROTTLE_PER_SEC) msg per sec.
             long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC).first;
             // if duration < 1 sec we received too much messages
             violated = now - compareValue < TimeUnit.SECONDS.toMillis(1);
             if (violated) {
-                log.error("violatesThrottleLimit 1 ");
+                log.error("violatesThrottleLimit MSG_THROTTLE_PER_SEC ");
                 log.error("elapsed " + (now - compareValue));
                 log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
-                        .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.toString())
+                        .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.getClass().getName())
                         .collect(Collectors.toList()).toString());
             }
         }
@@ -272,10 +272,10 @@ public class Connection implements MessageListener {
                 violated = now - compareValue < TimeUnit.SECONDS.toMillis(10);
 
                 if (violated) {
-                    log.error("violatesThrottleLimit 2 ");
+                    log.error("violatesThrottleLimit MSG_THROTTLE_PER_10_SEC ");
                     log.error("elapsed " + (now - compareValue));
                     log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
-                            .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.toString())
+                            .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.getClass().getName())
                             .collect(Collectors.toList()).toString());
                 }
             }
