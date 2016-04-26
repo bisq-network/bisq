@@ -47,10 +47,10 @@ public class NetworkStressTest {
 
     @Before
     public void setUp() throws Exception {
-        /** A property where threads can indicate setup failure. */
-        BooleanProperty setupFailed = new SimpleBooleanProperty(false);
-        /** A barrier to wait for concurrent tasks. */
-        final CountDownLatch pendingTasks = new CountDownLatch(1 /*seed node*/ + NPEERS);
+        /** A property where threads can indicate setup failure of local services (Tor node, hidden service). */
+        BooleanProperty localServicesFailed = new SimpleBooleanProperty(false);
+        /** A barrier to wait for concurrent setup of local services (Tor node, hidden service). */
+        final CountDownLatch localServicesLatch = new CountDownLatch(1 /*seed node*/ + NPEERS);
 
         // Set a security provider to allow key generation.
         Security.addProvider(new BouncyCastleProvider());
@@ -66,7 +66,7 @@ public class NetworkStressTest {
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
         seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
                 REGTEST_NETWORK_ID, true /*detailed logging*/, seedNodes,
-                getSetupListener(setupFailed, pendingTasks));
+                getSetupListener(localServicesFailed, localServicesLatch));
 
         // Create and start peer nodes.
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
@@ -89,14 +89,14 @@ public class NetworkStressTest {
             final P2PService peer = new P2PService(seedNodesRepository, peerPort, peerTorDir, useLocalhost,
                     REGTEST_NETWORK_ID, peerStorageDir, new Clock(), peerEncryptionService, peerKeyRing);
             peerNodes.add(peer);
-            peer.start(getSetupListener(setupFailed, pendingTasks));
+            peer.start(getSetupListener(localServicesFailed, localServicesLatch));
         }
 
         // Wait for concurrent tasks to finish.
-        pendingTasks.await();
+        localServicesLatch.await();
 
         // Check if any node reported setup failure on start.
-        if (setupFailed.get()) {
+        if (localServicesFailed.get()) {
             throw new Exception("nodes failed to start");
         }
     }
@@ -107,9 +107,9 @@ public class NetworkStressTest {
     }
 
     @NotNull
-    private static P2PServiceListener getSetupListener(
-            final BooleanProperty setupFailed,
-            final CountDownLatch pendingTasks) {
+    private P2PServiceListener getSetupListener(
+            final BooleanProperty localServicesFailed,
+            final CountDownLatch localServicesLatch) {
         return new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
@@ -139,33 +139,33 @@ public class NetworkStressTest {
             @Override
             public void onHiddenServicePublished() {
                 // successful result
-                pendingTasks.countDown();
+                localServicesLatch.countDown();
             }
 
             @Override
             public void onSetupFailed(Throwable throwable) {
                 // failed result
-                setupFailed.set(true);
-                pendingTasks.countDown();
+                localServicesFailed.set(true);
+                localServicesLatch.countDown();
             }
         };
     }
 
     @After
     public void tearDown() throws InterruptedException, IOException {
-        /** A barrier to wait for concurrent tasks. */
-        final CountDownLatch pendingTasks = new CountDownLatch((seedNode != null? 1 : 0) + peerNodes.size());
+        /** A barrier to wait for concurrent shutdown of services. */
+        final CountDownLatch shutdownLatch = new CountDownLatch((seedNode != null? 1 : 0) + peerNodes.size());
 
         // Stop the seed node.
         if (seedNode != null) {
-            seedNode.shutDown(pendingTasks::countDown);
+            seedNode.shutDown(shutdownLatch::countDown);
         }
         // Stop peer nodes.
         for (P2PService peer : peerNodes) {
-            peer.shutDown(pendingTasks::countDown);
+            peer.shutDown(shutdownLatch::countDown);
         }
         // Wait for concurrent tasks to finish.
-        pendingTasks.await();
+        shutdownLatch.await();
 
         if (tempDir != null) {
             deleteRecursively(tempDir);
