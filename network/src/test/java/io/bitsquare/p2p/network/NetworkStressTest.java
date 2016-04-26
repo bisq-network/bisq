@@ -114,7 +114,13 @@ public class NetworkStressTest {
 
     @NotNull
     private static NodeAddress getSeedNodeAddress() {
-        return new NodeAddress("localhost", Utils.findFreeSystemPort());
+        // The address is only considered by ``SeedNodesRepository`` if
+        // it ends in the digit matching the network identifier.
+        int port;
+        do {
+            port = Utils.findFreeSystemPort();
+        } while (port % 10 != REGTEST_NETWORK_ID);
+        return new NodeAddress("localhost", port);
     }
 
     @NotNull
