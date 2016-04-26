@@ -55,6 +55,8 @@ public class NetworkStressTest {
 
     /** A barrier to wait for concurrent reception of preliminary data in peers. */
     private CountDownLatch prelimDataLatch = new CountDownLatch(NPEERS);
+    /** A barrier to wait for concurrent bootstrap of peers. */
+    private CountDownLatch bootstrapLatch = new CountDownLatch(NPEERS);
 
     @Before
     public void setUp() throws Exception {
@@ -146,7 +148,8 @@ public class NetworkStressTest {
 
             @Override
             public void onBootstrapComplete() {
-                // do nothing
+                // successful result
+                NetworkStressTest.this.bootstrapLatch.countDown();
             }
 
             @Override
@@ -195,6 +198,9 @@ public class NetworkStressTest {
         // Wait for peers to get their preliminary data.
         org.junit.Assert.assertTrue("timed out while waiting for preliminary data",
                 prelimDataLatch.await(30, TimeUnit.SECONDS));
+        // Wait for peers to complete their bootstrapping.
+        org.junit.Assert.assertTrue("timed out while waiting for bootstrap",
+                bootstrapLatch.await(30, TimeUnit.SECONDS));
     }
 
     private Path createTempDirectory() throws IOException {
