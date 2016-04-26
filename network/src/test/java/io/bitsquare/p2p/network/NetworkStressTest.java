@@ -79,7 +79,7 @@ public class NetworkStressTest {
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
         seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
                 REGTEST_NETWORK_ID, true /*detailed logging*/, seedNodes,
-                getSetupListener(localServicesFailed, localServicesLatch));
+                new SeedServiceListener(localServicesLatch, localServicesFailed));
 
         // Create and start peer nodes.
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
@@ -102,7 +102,7 @@ public class NetworkStressTest {
             final P2PService peer = new P2PService(seedNodesRepository, peerPort, peerTorDir, useLocalhost,
                     REGTEST_NETWORK_ID, peerStorageDir, new Clock(), peerEncryptionService, peerKeyRing);
             peerNodes.add(peer);
-            peer.start(getSetupListener(localServicesFailed, localServicesLatch));
+            peer.start(new PeerServiceListener(localServicesLatch, localServicesFailed));
         }
 
         // Wait for concurrent tasks to finish.
@@ -123,53 +123,6 @@ public class NetworkStressTest {
             port = Utils.findFreeSystemPort();
         } while (port % 10 != REGTEST_NETWORK_ID);
         return new NodeAddress("localhost", port);
-    }
-
-    @NotNull
-    private P2PServiceListener getSetupListener(
-            final BooleanProperty localServicesFailed,
-            final CountDownLatch localServicesLatch) {
-        return new P2PServiceListener() {
-            @Override
-            public void onRequestingDataCompleted() {
-                // successful result
-                NetworkStressTest.this.prelimDataLatch.countDown();
-            }
-
-            @Override
-            public void onNoSeedNodeAvailable() {
-                // expected, do nothing
-            }
-
-            @Override
-            public void onNoPeersAvailable() {
-                // expected, do nothing
-            }
-
-            @Override
-            public void onBootstrapComplete() {
-                // successful result
-                NetworkStressTest.this.bootstrapLatch.countDown();
-            }
-
-            @Override
-            public void onTorNodeReady() {
-                // do nothing
-            }
-
-            @Override
-            public void onHiddenServicePublished() {
-                // successful result
-                localServicesLatch.countDown();
-            }
-
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-                // failed result
-                localServicesFailed.set(true);
-                localServicesLatch.countDown();
-            }
-        };
     }
 
     @After
@@ -222,5 +175,89 @@ public class NetworkStressTest {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    // P2P service listener classes
+
+    private class TestSetupListener implements SetupListener {
+        private final CountDownLatch localServicesLatch;
+        private final BooleanProperty localServicesFailed;
+
+        TestSetupListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed) {
+            this.localServicesLatch = localServicesLatch;
+            this.localServicesFailed = localServicesFailed;
+        }
+
+        @Override
+        public void onTorNodeReady() {
+            // do nothing
+        }
+
+        @Override
+        public void onHiddenServicePublished() {
+            // successful result
+            localServicesLatch.countDown();
+        }
+
+        @Override
+        public void onSetupFailed(Throwable throwable) {
+            // failed result
+            localServicesFailed.set(true);
+            localServicesLatch.countDown();
+        }
+    }
+
+    private class SeedServiceListener extends TestSetupListener implements P2PServiceListener {
+        SeedServiceListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed) {
+            super(localServicesLatch, localServicesFailed);
+        }
+
+        @Override
+        public void onRequestingDataCompleted() {
+            // preliminary data not used in single seed node
+        }
+
+        @Override
+        public void onNoSeedNodeAvailable() {
+            // expected in single seed node
+        }
+
+        @Override
+        public void onNoPeersAvailable() {
+            // expected in single seed node
+        }
+
+        @Override
+        public void onBootstrapComplete() {
+            // not used in single seed node
+        }
+    }
+
+    private class PeerServiceListener extends TestSetupListener implements P2PServiceListener {
+        PeerServiceListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed) {
+            super(localServicesLatch, localServicesFailed);
+        }
+
+        @Override
+        public void onRequestingDataCompleted() {
+            // preliminary data received
+            NetworkStressTest.this.prelimDataLatch.countDown();
+        }
+
+        @Override
+        public void onNoSeedNodeAvailable() {
+            // do nothing
+        }
+
+        @Override
+        public void onNoPeersAvailable() {
+            // do nothing
+        }
+
+        @Override
+        public void onBootstrapComplete() {
+            // peer bootstrapped
+            NetworkStressTest.this.bootstrapLatch.countDown();
+        }
     }
 }
