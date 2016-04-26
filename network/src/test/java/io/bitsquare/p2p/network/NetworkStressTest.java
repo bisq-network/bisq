@@ -34,10 +34,17 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class NetworkStressTest {
-    /** Numeric identifier of the regtest Bitcoin network. */
-    private static final int REGTEST_NETWORK_ID = 2;
+    // Test parameters
+
     /** Number of peer nodes to create. */
     private static final int NPEERS = 1;
+
+    // Constants
+
+    /** Numeric identifier of the regtest Bitcoin network. */
+    private static final int REGTEST_NETWORK_ID = 2;
+
+    // Instance fields
 
     /** A directory to temporarily hold seed and normal nodes' configuration and state files. */
     private Path tempDir;
