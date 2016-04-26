@@ -60,16 +60,6 @@ public class FeePolicy {
         return NON_TRADE_FEE_PER_KB;
     }
 
-    // Some wallets don't support manual fees. Most use at least 0.0001 BTC (0.04 EUR @ 400 EUR/BTC)
-    // To avoid rejecting deposit tx with too low mining fees we reduce the min. 
-    // required fee to 0.0001 BTC. There is a risk that the tx does not get fast into the blockchain but it seems it has less
-    // negative consequences as forcing the user to set a sufficiently high fee which is impossible in some wallets 
-    // like in the old MultiBit wallet or Coinbase. Unfortunately there is no perfect solution for that problem.
-    public static Coin getMinRequiredFeeForFundingTx() {
-        return Coin.valueOf(10_000);
-    }
-
-
     // 0.0005 BTC  0.05% of 1 BTC about 0.2 EUR @ 400 EUR/BTC
     public static Coin getCreateOfferFee() {
         // We need to pay the quite high miner fee of 30_000 from the trading fee tx so 30_000 us our lower limit
