@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class NetworkStressTest {
     /** Numeric identifier of the regtest Bitcoin network. */
@@ -44,6 +45,9 @@ public class NetworkStressTest {
     private SeedNode seedNode;
     /** A list of peer nodes represented as P2P services. */
     private List<P2PService> peerNodes = new ArrayList<>();
+
+    /** A barrier to wait for concurrent reception of preliminary data in peers. */
+    private CountDownLatch prelimDataLatch = new CountDownLatch(NPEERS);
 
     @Before
     public void setUp() throws Exception {
@@ -113,7 +117,8 @@ public class NetworkStressTest {
         return new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
-                // do nothing
+                // successful result
+                NetworkStressTest.this.prelimDataLatch.countDown();
             }
 
             @Override
@@ -174,8 +179,9 @@ public class NetworkStressTest {
 
     @Test
     public void test() throws InterruptedException {
-        // do nothing
-        Thread.sleep(30_000);
+        // Wait for peers to get their preliminary data.
+        org.junit.Assert.assertTrue("timed out while waiting for preliminary data",
+                prelimDataLatch.await(30, TimeUnit.SECONDS));
     }
 
     private Path createTempDirectory() throws IOException {
