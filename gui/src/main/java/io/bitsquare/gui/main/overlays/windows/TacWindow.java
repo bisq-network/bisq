@@ -31,7 +31,7 @@ public class TacWindow extends Overlay<TacWindow> {
                     "arising from, out of or in connection with the software or the use or other dealings in the software.\n\n" +
                     "2. The user is responsible to use the software in compliance with local laws. Don't use Bitsquare if the usage of Bitcoin is not legal in your jurisdiction.\n\n" +
                     "3. Bitcoin market price is delivered by 3rd parties (BitcoinAverage, Poloniex). It is your responsibility to double check the price with other sources.\n\n" +
-                    "4. The user confirms that he has read and agreed to the rules regrading the dispute process:\n" +
+                    "4. The user confirms that he has read and agreed to the rules regarding the dispute process:\n" +
                     "    - You must finalize trades within the maximum duration specified for each payment method.\n" +
                     "    - You must enter the trade ID in the \"reason for payment\" text field when doing the fiat payment transfer.\n" +
                     "    - If the bank of the fiat sender charges fees the sender (bitcoin buyer) has to cover the fees.\n" +
