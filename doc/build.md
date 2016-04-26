@@ -12,7 +12,7 @@ For the impatient
 What follows is explained in detail in the sections below, but for those who know their way around Java, git and Maven, here are the instructions in a nutshell:
 
     $ javac -version
-    javac 1.8.0_40       # must be 1.8.0_40 or better
+    javac 1.8.0_66       # must be 1.8.0_66 or better
 
     $ git clone https://github.com/bitsquare/bitcoinj.git                
     $ cd bitcoinj  
@@ -37,9 +37,9 @@ In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll n
 ##### 1. Check the version of Java you currently have installed
 
     $ javac -version
-    javac 1.8.0_40
+    javac 1.8.0_66
 
-If `javac` is not found, or your version is anything less than `1.8.0_40`, then you'll need to [download and install the latest JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
+If `javac` is not found, or your version is anything less than `1.8.0_66`, then you'll need to [download and install the latest JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
 
 > _**TIP:** Here are [instructions](http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html) for installing the JDK via `apt` on Debian/Ubuntu systems.
 > Bitsquare can be built with OpenJDK as well, but this hasn't been thoroughly tested yet._
