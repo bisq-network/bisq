@@ -187,7 +187,7 @@ public class NetworkStressTest {
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(path);
+                Files.delete(file);
                 return FileVisitResult.CONTINUE;
             }
 
