@@ -1,11 +1,11 @@
 #!/bin/bash
 
-version="0.4.3"
+version="0.4.4"
 
 target_dir="/Users/mk/Documents/__bitsquare/_releases/$version"
 
-cp "/Users/mk/Documents/_intellij/bitsquare/gui/deploy/bundles/Bitsquare-0.4.3.dmg" "$target_dir/Bitsquare-0.4.3.dmg "
-cp "/Users/mk/Documents/_intellij/bitsquare/gui/deploy/SeedNode-0.4.3.jar" "$target_dir/SeedNode-0.4.3.jar"
+cp "/Users/mk/Documents/_intellij/bitsquare/gui/deploy/bundles/Bitsquare-0.4.4.dmg" "$target_dir/Bitsquare-0.4.4.dmg "
+cp "/Users/mk/Documents/_intellij/bitsquare/gui/deploy/SeedNode-0.4.4.jar" "$target_dir/SeedNode-0.4.4.jar"
 
 
 linux32="Bitsquare-32bit-$version.deb"

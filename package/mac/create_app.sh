@@ -5,7 +5,7 @@ mkdir -p gui/deploy
 
 set -e
 
-fullVersion="0.4.3"
+fullVersion="0.4.4"
 
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
@@ -40,7 +40,7 @@ rm "gui/deploy/Bitsquare.jnlp"
 mv "gui/deploy/bundles/Bitsquare-$fullVersion.dmg" "gui/deploy/Bitsquare-$fullVersion.dmg"
 rm "gui/deploy/bundles"
 
-mv "gui/deploy/SeedNode.jar" "gui/deploy/SeedNode-0.4.3.jar"
+mv "gui/deploy/SeedNode.jar" "gui/deploy/SeedNode-0.4.4.jar"
 
 
 cd package/mac
