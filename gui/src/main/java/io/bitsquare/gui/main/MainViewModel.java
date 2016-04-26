@@ -823,11 +823,10 @@ public class MainViewModel implements ViewModel {
     private void displayAlertIfPresent(Alert alert) {
         boolean alreadyDisplayed = alert != null && alert.equals(user.getDisplayedAlert());
         user.setDisplayedAlert(alert);
-
-        if (alert != null && !alreadyDisplayed) {
-            if (!alert.isUpdateInfo || !alert.version.equals(Version.VERSION))
-                new DisplayAlertMessageWindow().alertMessage(alert).show();
-        }
+        if (alert != null &&
+                !alreadyDisplayed &&
+                (!alert.isUpdateInfo || alert.isNewVersion()))
+            new DisplayAlertMessageWindow().alertMessage(alert).show();
     }
 
     private void swapPendingOfferFundingEntries() {
