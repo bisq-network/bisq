@@ -140,9 +140,9 @@ public class NetworkStressTest {
         // Wait for concurrent tasks to finish.
         shutdownLatch.await();
 
-        // Cleanup directory if not given explicitly.
-        if (tempDir != null && System.getenv(TEST_DIR_ENVVAR) == null) {
-            deleteRecursively(tempDir);
+        // Cleanup temporary directory.
+        if (tempDir != null) {
+            deleteTempDirectory();
         }
     }
 
@@ -173,9 +173,11 @@ public class NetworkStressTest {
         return stressTestDirPath;
     }
 
-    private static void deleteRecursively(@NotNull final Path path) throws IOException {
+    private void deleteTempDirectory() throws IOException {
         // Based on <https://stackoverflow.com/a/27917071/6239236> by Tomasz Dzięcielewski.
-        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+        if (System.getenv(TEST_DIR_ENVVAR) != null)
+            return;  // do not remove if given explicitly
+        Files.walkFileTree(tempDir, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 Files.delete(file);
