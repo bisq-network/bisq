@@ -83,3 +83,23 @@ executable:
 
 The check will be run every hour.  For more sophisticated checks, use a proper
 monitor like [Monit](https://mmonit.com/monit/).
+
+## Monitor script
+
+The attached [monitor script](monitor-bitsquare-sn.cron.sh) can be used to
+watch several seed nodes by connecting to them over Tor, and report by email
+if there were any failed connection attempts.  The script uses the ``torify``
+and ``nc``  tools, so make sure that you have the ``tor`` and some ``netcat``
+package installed in your system.  Also make sure that it is able to send
+messages using the ``mail``  utility.
+
+To enable the monitor, first edit the script and set the email addresses you
+want to report to in ``REPORT_TO_EMAILS``; if you want to specify the set of
+seed nodes to check, change the value of ``SEED_NODES``.  Then copy the script
+to ``/etc/cron.hourly`` and make it executable:
+
+    # cp /path/to/monitor-bitsquare-sn.cron.sh /etc/cron.hourly/monitor-bitsquare-sn
+    # chmod a+rx /etc/cron.hourly/monitor-bitsquare-sn
+
+Since this script requires no special permissions, you may instead want to run
+it from a normal user's crontab (e.g. the ``bsqsn`` user above).
