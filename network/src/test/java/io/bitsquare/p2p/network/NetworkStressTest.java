@@ -20,10 +20,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.Security;
 import java.util.ArrayList;
@@ -37,12 +34,14 @@ public class NetworkStressTest {
     // Test parameters
 
     /** Number of peer nodes to create. */
-    private static final int NPEERS = 1;
+    private static final int NPEERS = 4;
 
     // Constants
 
     /** Numeric identifier of the regtest Bitcoin network. */
     private static final int REGTEST_NETWORK_ID = 2;
+    /** Environment variable to specify a persistent test data directory. */
+    private static final String TEST_DIR_ENVVAR = "STRESS_TEST_DIR";
 
     // Instance fields
 
@@ -141,7 +140,8 @@ public class NetworkStressTest {
         // Wait for concurrent tasks to finish.
         shutdownLatch.await();
 
-        if (tempDir != null) {
+        // Cleanup directory if not given explicitly.
+        if (tempDir != null && System.getenv(TEST_DIR_ENVVAR) == null) {
             deleteRecursively(tempDir);
         }
     }
@@ -157,7 +157,20 @@ public class NetworkStressTest {
     }
 
     private Path createTempDirectory() throws IOException {
-        return Files.createTempDirectory("bsq" + this.getClass().getSimpleName());
+        Path stressTestDirPath;
+
+        String stressTestDir = System.getenv(TEST_DIR_ENVVAR);
+        if (stressTestDir != null) {
+            // Test directory specified, use and create if missing.
+            stressTestDirPath = Paths.get(stressTestDir);
+            if (!Files.isDirectory(stressTestDirPath)) {
+                //noinspection ResultOfMethodCallIgnored
+                stressTestDirPath.toFile().mkdirs();
+            }
+        } else {
+            stressTestDirPath = Files.createTempDirectory("bsq" + this.getClass().getSimpleName());
+        }
+        return stressTestDirPath;
     }
 
     private static void deleteRecursively(@NotNull final Path path) throws IOException {
