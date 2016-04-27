@@ -173,20 +173,30 @@ public class NetworkStressTest {
         return stressTestDirPath;
     }
 
+    /**
+     * Delete the test data directory recursively, unless <code>STRESS_TEST_DIR</code> is defined,
+     * in which case peer node keys are kept.
+     *
+     * @throws IOException
+     */
     private void deleteTestDataDirectory() throws IOException {
         // Based on <https://stackoverflow.com/a/27917071/6239236> by Tomasz Dzięcielewski.
-        if (System.getenv(TEST_DIR_ENVVAR) != null)
-            return;  // do not remove if given explicitly
+        boolean keep = System.getenv(TEST_DIR_ENVVAR) != null;  // do not remove if given explicitly
         Files.walkFileTree(testDataDir, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
+                final String fileName = file.getFileName().toString();
+                if (!(keep && (fileName.equals("enc.key") || fileName.equals("sig.key"))))
+                    Files.delete(file);
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
             public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                Files.delete(dir);
+                // ``dir`` is always a directory, I/O errors may still trigger ``NullPointerException``.
+                //noinspection ConstantConditions
+                if (!(keep && dir.toFile().listFiles().length > 0))
+                    Files.delete(dir);
                 return FileVisitResult.CONTINUE;
             }
         });
