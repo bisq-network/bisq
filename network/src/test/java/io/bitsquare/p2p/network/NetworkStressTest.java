@@ -33,8 +33,6 @@ import java.util.concurrent.TimeUnit;
 public class NetworkStressTest {
     // Test parameters
 
-    /** Number of peer nodes to create. */
-    private static final int NPEERS = 4;
     /** Whether to log messages less important than warnings. */
     private static final boolean USE_DETAILED_LOGGING = false;
 
@@ -42,6 +40,10 @@ public class NetworkStressTest {
 
     /** Numeric identifier of the regtest Bitcoin network. */
     private static final int REGTEST_NETWORK_ID = 2;
+    /** Default number of peers in the test. */
+    private static final int NPEERS_DEFAULT = 4;
+    /** Environment variable to specify the number of peers in the test. */
+    private static final String NPEERS_ENVVAR = "STRESS_TEST_NPEERS";
     /** Environment variable to specify a persistent test data directory. */
     private static final String TEST_DIR_ENVVAR = "STRESS_TEST_DIR";
 
@@ -55,16 +57,25 @@ public class NetworkStressTest {
     private List<P2PService> peerNodes = new ArrayList<>();
 
     /** A barrier to wait for concurrent reception of preliminary data in peers. */
-    private CountDownLatch prelimDataLatch = new CountDownLatch(NPEERS);
+    private CountDownLatch prelimDataLatch;
     /** A barrier to wait for concurrent bootstrap of peers. */
-    private CountDownLatch bootstrapLatch = new CountDownLatch(NPEERS);
+    private CountDownLatch bootstrapLatch;
 
     @Before
     public void setUp() throws Exception {
+        /** Number of peer nodes to create. */
+        int nPeers = NPEERS_DEFAULT;
+
+        final String nPeersEnv = System.getenv(NPEERS_ENVVAR);
+        if (nPeersEnv != null && !nPeersEnv.equals(""))
+            nPeers = Integer.parseInt(nPeersEnv);
+        prelimDataLatch = new CountDownLatch(nPeers);
+        bootstrapLatch = new CountDownLatch(nPeers);
+
         /** A property where threads can indicate setup failure of local services (Tor node, hidden service). */
-        BooleanProperty localServicesFailed = new SimpleBooleanProperty(false);
+        final BooleanProperty localServicesFailed = new SimpleBooleanProperty(false);
         /** A barrier to wait for concurrent setup of local services (Tor node, hidden service). */
-        final CountDownLatch localServicesLatch = new CountDownLatch(1 /*seed node*/ + NPEERS);
+        final CountDownLatch localServicesLatch = new CountDownLatch(1 /*seed node*/ + nPeers);
 
         // Set a security provider to allow key generation.
         Security.addProvider(new BouncyCastleProvider());
@@ -89,7 +100,7 @@ public class NetworkStressTest {
         } else {
             seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
         }
-        for (int p = 0; p < NPEERS; p++) {
+        for (int p = 0; p < nPeers; p++) {
             final int peerPort = Utils.findFreeSystemPort();
             final File peerDir = new File(testDataDir.toFile(), String.format("peer-%06d", p));
             final File peerTorDir = new File(peerDir, "tor");
