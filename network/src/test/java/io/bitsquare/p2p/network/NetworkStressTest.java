@@ -35,6 +35,8 @@ public class NetworkStressTest {
 
     /** Number of peer nodes to create. */
     private static final int NPEERS = 4;
+    /** Whether to log messages less important than warnings. */
+    private static final boolean USE_DETAILED_LOGGING = false;
 
     // Constants
 
@@ -77,7 +79,7 @@ public class NetworkStressTest {
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
         seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
-                REGTEST_NETWORK_ID, true /*detailed logging*/, seedNodes,
+                REGTEST_NETWORK_ID, USE_DETAILED_LOGGING, seedNodes,
                 new SeedServiceListener(localServicesLatch, localServicesFailed));
 
         // Create and start peer nodes.
