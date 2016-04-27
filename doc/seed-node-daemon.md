@@ -32,10 +32,10 @@ configuration directory to the ``~bsqsb/.local/share``  directory.
 ## Testing the seed node
 
 You need to check that the seed node can actually run in your system.  For
-instance, if you are using version 0.4.2 and your seed node's Tor address is
+instance, if you are using version 0.4.4 and your seed node's Tor address is
 ``1a2b3c4d5e6f7g8h.onion:8000``, try to run this as the ``bsqsn`` user:
 
-    $ java -jar ~bsqsn/SeedNode-0.4.2.jar 1a2b3c4d5e6f7g8h.onion:8000 0 50
+    $ java -jar ~bsqsn/SeedNode-0.4.4.jar 1a2b3c4d5e6f7g8h.onion:8000 0 50
 
 Please check error messages if it fails to run.  Do note that you will need
 OpenJDK and OpenJFX in the server.  In Debian-like systems you may install the
@@ -53,7 +53,7 @@ configuration variables to your needs, especially ``SN_ADDRESS``, ``SN_JAR``
 and ``SN_USER``.  In the previous example, the values would be:
 
     SN_ADDRESS=1a2b3c4d5e6f7g8h.onion:8000
-    SN_JAR=~bsqsn/SeedNode-0.4.2.jar
+    SN_JAR=~bsqsn/SeedNode-0.4.4.jar
     SN_USER=bsqsn
 
 Put the customized script under ``/etc/init.d`` using a name without

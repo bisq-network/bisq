@@ -28,7 +28,7 @@ SN_NETWORK_ID=0
 SN_MAX_CONNECTIONS=50
 
 # Location of the seed node jar file.  Use to select a particular version.
-SN_JAR=~bsqsn/SeedNode-0.4.2.jar
+SN_JAR=~bsqsn/SeedNode-0.4.4.jar
 # User to run the seed node as.
 SN_USER=bsqsn
 ## END CONFIGURATION
