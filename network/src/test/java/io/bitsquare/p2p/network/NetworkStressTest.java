@@ -159,8 +159,8 @@ public class NetworkStressTest {
     private Path createTestDataDirectory() throws IOException {
         Path stressTestDirPath;
 
-        String stressTestDir = System.getenv(TEST_DIR_ENVVAR);
-        if (stressTestDir != null) {
+        final String stressTestDir = System.getenv(TEST_DIR_ENVVAR);
+        if ((stressTestDir != null) && !stressTestDir.equals("")) {
             // Test directory specified, use and create if missing.
             stressTestDirPath = Paths.get(stressTestDir);
             if (!Files.isDirectory(stressTestDirPath)) {
@@ -181,7 +181,8 @@ public class NetworkStressTest {
      */
     private void deleteTestDataDirectory() throws IOException {
         // Based on <https://stackoverflow.com/a/27917071/6239236> by Tomasz Dzięcielewski.
-        boolean keep = System.getenv(TEST_DIR_ENVVAR) != null;  // do not remove if given explicitly
+        final String stressTestDir = System.getenv(TEST_DIR_ENVVAR);
+        final boolean keep = (stressTestDir != null) && !stressTestDir.equals("");
         Files.walkFileTree(testDataDir, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
