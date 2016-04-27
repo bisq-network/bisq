@@ -45,8 +45,8 @@ public class NetworkStressTest {
 
     // Instance fields
 
-    /** A directory to temporarily hold seed and normal nodes' configuration and state files. */
-    private Path tempDir;
+    /** A directory to (temporarily) hold seed and normal nodes' configuration and state files. */
+    private Path testDataDir;
     /** A single seed node that other nodes will contact to request initial data. */
     private SeedNode seedNode;
     /** A list of peer nodes represented as P2P services. */
@@ -67,11 +67,11 @@ public class NetworkStressTest {
         // Set a security provider to allow key generation.
         Security.addProvider(new BouncyCastleProvider());
 
-        // Create the temporary directory.
-        tempDir = createTempDirectory();
+        // Create the test data directory.
+        testDataDir = createTestDataDirectory();
 
         // Create and start the seed node.
-        seedNode = new SeedNode(tempDir.toString());
+        seedNode = new SeedNode(testDataDir.toString());
         final NodeAddress seedNodeAddress = getSeedNodeAddress();
         final boolean useLocalhost = seedNodeAddress.hostName.equals("localhost");
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
@@ -89,7 +89,7 @@ public class NetworkStressTest {
         }
         for (int p = 0; p < NPEERS; p++) {
             final int peerPort = Utils.findFreeSystemPort();
-            final File peerDir = new File(tempDir.toFile(), String.format("peer-%06d", p));
+            final File peerDir = new File(testDataDir.toFile(), String.format("peer-%06d", p));
             final File peerTorDir = new File(peerDir, "tor");
             final File peerStorageDir = new File(peerDir, "db");
             final File peerKeysDir = new File(peerDir, "keys");
@@ -140,9 +140,9 @@ public class NetworkStressTest {
         // Wait for concurrent tasks to finish.
         shutdownLatch.await();
 
-        // Cleanup temporary directory.
-        if (tempDir != null) {
-            deleteTempDirectory();
+        // Cleanup test data directory.
+        if (testDataDir != null) {
+            deleteTestDataDirectory();
         }
     }
 
@@ -156,7 +156,7 @@ public class NetworkStressTest {
                 bootstrapLatch.await(30, TimeUnit.SECONDS));
     }
 
-    private Path createTempDirectory() throws IOException {
+    private Path createTestDataDirectory() throws IOException {
         Path stressTestDirPath;
 
         String stressTestDir = System.getenv(TEST_DIR_ENVVAR);
@@ -173,11 +173,11 @@ public class NetworkStressTest {
         return stressTestDirPath;
     }
 
-    private void deleteTempDirectory() throws IOException {
+    private void deleteTestDataDirectory() throws IOException {
         // Based on <https://stackoverflow.com/a/27917071/6239236> by Tomasz Dzięcielewski.
         if (System.getenv(TEST_DIR_ENVVAR) != null)
             return;  // do not remove if given explicitly
-        Files.walkFileTree(tempDir, new SimpleFileVisitor<Path>() {
+        Files.walkFileTree(testDataDir, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 Files.delete(file);
