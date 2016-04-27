@@ -90,7 +90,7 @@ public class NetworkStressTest {
         }
         for (int p = 0; p < NPEERS; p++) {
             final int peerPort = Utils.findFreeSystemPort();
-            final File peerDir = new File(tempDir.toFile(), "Bitsquare_peer_" + peerPort);
+            final File peerDir = new File(tempDir.toFile(), String.format("peer-%06d", p));
             final File peerTorDir = new File(peerDir, "tor");
             final File peerStorageDir = new File(peerDir, "db");
             final File peerKeysDir = new File(peerDir, "keys");
