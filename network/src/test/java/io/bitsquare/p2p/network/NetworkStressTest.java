@@ -1,13 +1,17 @@
 package io.bitsquare.p2p.network;
 
+import io.bitsquare.app.Version;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
+import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.Utils;
+import io.bitsquare.p2p.messaging.DirectMessage;
+import io.bitsquare.p2p.messaging.SendDirectMessageListener;
 import io.bitsquare.p2p.seed.SeedNode;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import javafx.beans.property.BooleanProperty;
@@ -57,6 +61,8 @@ public class NetworkStressTest {
     private SeedNode seedNode;
     /** A list of peer nodes represented as P2P services. */
     private List<P2PService> peerNodes = new ArrayList<>();
+    /** A list of peer node's public key rings. */
+    private List<PubKeyRing> peerPKRings = new ArrayList<>();
 
     /** A barrier to wait for concurrent reception of preliminary data in peers. */
     private CountDownLatch prelimDataLatch;
@@ -115,6 +121,7 @@ public class NetworkStressTest {
             peerKeysDir.mkdirs();  // needed for creating the key ring
             final KeyStorage peerKeyStorage = new KeyStorage(peerKeysDir);
             final KeyRing peerKeyRing = new KeyRing(peerKeyStorage);
+            peerPKRings.add(peerKeyRing.getPubKeyRing());
             final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing);
             final P2PService peer = new P2PService(seedNodesRepository, peerPort, peerTorDir, useLocalhost,
                     REGTEST_NETWORK_ID, peerStorageDir, new Clock(), peerEncryptionService, peerKeyRing);
@@ -172,6 +179,34 @@ public class NetworkStressTest {
         // Wait for peers to complete their bootstrapping.
         org.junit.Assert.assertTrue("timed out while waiting for bootstrap",
                 bootstrapLatch.await(30, TimeUnit.SECONDS));
+
+        // Test sending a direct message from peer #0 to peer #1.
+        BooleanProperty sentDirectFailed = new SimpleBooleanProperty(false);
+        final CountDownLatch sentDirectLatch = new CountDownLatch(1);
+        //final CountDownLatch receivedDirectLatch = new CountDownLatch(1);
+        final int srcPeerIdx = 0;
+        final int dstPeerIdx = 1;
+        final P2PService srcPeer = peerNodes.get(srcPeerIdx);
+        final P2PService dstPeer = peerNodes.get(dstPeerIdx);
+        srcPeer.sendEncryptedDirectMessage(dstPeer.getAddress(), peerPKRings.get(dstPeerIdx),
+                new StressTestDirectMessage("test-" + dstPeerIdx), new SendDirectMessageListener() {
+                    @Override
+                    public void onArrived() {
+                        sentDirectLatch.countDown();
+                    }
+
+                    @Override
+                    public void onFault() {
+                        sentDirectFailed.set(true);
+                        sentDirectLatch.countDown();
+                    }
+                });
+        // TODO: receiving data
+        // Wait for peer #0 to complete sending.
+        org.junit.Assert.assertTrue("timed out while sending direct message",
+                sentDirectLatch.await(30, TimeUnit.SECONDS));
+        org.junit.Assert.assertFalse("peer failed to send message", sentDirectFailed.get());
+        //TODO: wait for receiving data
     }
 
     private Path createTestDataDirectory() throws IOException {
@@ -303,5 +338,27 @@ public class NetworkStressTest {
             // peer bootstrapped
             NetworkStressTest.this.bootstrapLatch.countDown();
         }
+    }
+}
+
+// Message classes
+
+final class StressTestDirectMessage implements DirectMessage {
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
+    private final int messageVersion = Version.getP2PMessageVersion();
+
+    private String data;
+
+    StressTestDirectMessage(String data) {
+        this.data = data;
+    }
+
+    @Override
+    public int getMessageVersion() {
+        return messageVersion;
+    }
+
+    public String getData() {
+        return data;
     }
 }
