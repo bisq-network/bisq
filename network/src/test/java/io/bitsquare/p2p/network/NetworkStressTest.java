@@ -42,6 +42,8 @@ public class NetworkStressTest {
     private static final int REGTEST_NETWORK_ID = 2;
     /** Default number of peers in the test. */
     private static final int NPEERS_DEFAULT = 4;
+    /** Minimum number of peers for the test to work. */
+    private static final int NPEERS_MIN = 2;
     /** Environment variable to specify the number of peers in the test. */
     private static final String NPEERS_ENVVAR = "STRESS_TEST_NPEERS";
     /** Environment variable to specify a persistent test data directory. */
@@ -69,6 +71,9 @@ public class NetworkStressTest {
         final String nPeersEnv = System.getenv(NPEERS_ENVVAR);
         if (nPeersEnv != null && !nPeersEnv.equals(""))
             nPeers = Integer.parseInt(nPeersEnv);
+        if (nPeers < NPEERS_MIN)
+            throw new IllegalArgumentException(
+                    String.format("Test needs at least %d peer nodes to work: %d", NPEERS_MIN, nPeers));
         prelimDataLatch = new CountDownLatch(nPeers);
         bootstrapLatch = new CountDownLatch(nPeers);
 
