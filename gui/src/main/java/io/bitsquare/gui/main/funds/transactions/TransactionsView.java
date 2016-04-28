@@ -41,17 +41,21 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
 
 import javax.inject.Inject;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -77,7 +81,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final DisputeManager disputeManager;
     private final OfferDetailsWindow offerDetailsWindow;
     private WalletEventListener walletEventListener;
-
+    private EventHandler<KeyEvent> keyEventEventHandler;
+    private Scene scene;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -164,6 +169,33 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 updateList();
             }
         };
+
+        keyEventEventHandler = event -> {
+            if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(event)) {
+                Map<Long, List<Coin>> map = new HashMap<>();
+                observableList.stream().forEach(item -> {
+                    Coin amountAsCoin = item.getAmountAsCoin();
+                    List<Coin> list;
+                    long key = amountAsCoin.getValue();
+                    if (!map.containsKey(key)) {
+                        list = new ArrayList<>();
+                        map.put(key, list);
+                    } else {
+                        list = map.get(key);
+                    }
+                    list.add(amountAsCoin);
+                });
+                StringBuilder stringBuilder = new StringBuilder();
+                map.entrySet().stream().forEach(e -> {
+                    stringBuilder.append("Nr. of transactions for amount ").
+                            append(formatter.formatCoinWithCode(Coin.valueOf(e.getKey()))).
+                            append(": ").
+                            append(e.getValue().size()).
+                            append("\n");
+                });
+                new Popup().headLine("Statistical info").information(stringBuilder.toString()).show();
+            }
+        };
     }
 
     @Override
@@ -173,6 +205,10 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         updateList();
 
         walletService.getWallet().addEventListener(walletEventListener);
+
+        scene = root.getScene();
+        if (scene != null)
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     @Override
@@ -180,6 +216,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         sortedList.comparatorProperty().unbind();
         observableList.forEach(TransactionsListItem::cleanup);
         walletService.getWallet().removeEventListener(walletEventListener);
+
+        if (scene != null)
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
 
