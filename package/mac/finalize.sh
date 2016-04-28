@@ -41,7 +41,7 @@ HASH_WIN_32="$(shasum -a 256 $WIN_32)"
 
 sed -e "s|HASH_MAC|$HASH_MAC|" -e "s|HASH_DEB_64|$HASH_DEB_64|" -e "s|HASH_DEB_32|$HASH_DEB_32|" -e "s|HASH_WIN_64|$HASH_WIN_64|" -e "s|HASH_WIN_32|$HASH_WIN_32|" hashes.template > hashes.txt
 
-gpg --local-user manfred@bitsquare.io --output signed_hashes.txt --clearsign hashes.txt
+gpg --local-user manfred@bitsquare.io --output signed_sha256_hashes.txt --clearsign hashes.txt
 gpg --verify signed_hashes.txt
 
 rm "$target_dir/hashes.template"
