@@ -25,10 +25,10 @@ SN_ADDRESS=1a2b3c4d5e6f7g8h.onion:8000
 # Bitcoin network: 0=mainnet, 1=testnet, 2=regtest.
 SN_NETWORK_ID=0
 # Maximum number of connecitions to allow.
-SN_MAX_CONNECTIONS=50
+SN_MAX_CONNECTIONS=100
 
 # Location of the seed node jar file.  Use to select a particular version.
-SN_JAR=~bsqsn/SeedNode-0.4.2.jar
+SN_JAR=~bsqsn/SeedNode-0.4.4.jar
 # User to run the seed node as.
 SN_USER=bsqsn
 ## END CONFIGURATION
