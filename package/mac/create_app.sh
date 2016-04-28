@@ -5,7 +5,7 @@ mkdir -p gui/deploy
 
 set -e
 
-fullVersion="0.4.4"
+fullVersion="0.4.5"
 
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
