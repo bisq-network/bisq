@@ -152,7 +152,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                     return type != null ? "Market price (" + type.name + ")" : "";
                 },
                 model.marketPriceCurrency, model.typeProperty));
-        HBox.setMargin(marketPriceBox.third, new Insets(0, 20, 0, 0));
+        HBox.setMargin(marketPriceBox.third, new Insets(0, 0, 0, 0));
 
 
         Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox("Available balance");
@@ -243,7 +243,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple2<TextField, VBox> getBalanceBox(String text) {
         TextField textField = new TextField();
         textField.setEditable(false);
-        textField.setPrefWidth(120);
+        textField.setPrefWidth(140);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
         textField.setStyle("-fx-alignment: center;  -fx-background-color: white;");

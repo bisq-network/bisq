@@ -183,7 +183,7 @@ public class BuyerStep5View extends TradeStepView {
             } else {
                 if (toAddresses.isEmpty()) {
                     validateWithdrawAddress();
-                } else if (Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
+                } else if (Restrictions.isAboveFixedTxFeeForTradesAndDust(senderAmount)) {
 
                     if (BitsquareApp.DEV_MODE) {
                         doWithdrawal(receiverAmount);

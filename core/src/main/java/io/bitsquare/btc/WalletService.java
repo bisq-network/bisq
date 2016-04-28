@@ -717,7 +717,7 @@ public class WalletService {
             AddressEntryException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount),
-                "You cannot send an amount which are smaller than 546 satoshis.");
+                "The amount is too low (dust limit).");
         tx.addOutput(amount, new Address(params, toAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
@@ -742,7 +742,7 @@ public class WalletService {
             AddressFormatException, AddressEntryException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount),
-                "You cannot send an amount which are smaller than 546 satoshis.");
+                "The amount is too low (dust limit).");
         tx.addOutput(amount, new Address(params, toAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);

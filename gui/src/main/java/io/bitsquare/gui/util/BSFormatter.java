@@ -53,7 +53,7 @@ public class BSFormatter {
     // Input of a group separator (1,123,45) lead to an validation error.
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
-    private MonetaryFormat coinFormat = MonetaryFormat.BTC.repeatOptionalDecimals(2, 2);
+    private MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
 
     //  private String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
@@ -97,7 +97,7 @@ public class BSFormatter {
         if (useMilliBit)
             return MonetaryFormat.MBTC;
         else
-            return MonetaryFormat.BTC.repeatOptionalDecimals(2, 2);
+            return MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
     }
 
   /*  public void setFiatCurrencyCode(String currencyCode) {
