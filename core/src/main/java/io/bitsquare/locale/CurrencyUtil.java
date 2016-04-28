@@ -103,7 +103,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ESP", "Espers"));
         result.add(new CryptoCurrency("XVG", "Verge"));
         result.add(new CryptoCurrency("MYR", "Myriadcoin"));
-
+        result.add(new CryptoCurrency("MXT", "MarteXcoin"));
+        
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
         return result;
