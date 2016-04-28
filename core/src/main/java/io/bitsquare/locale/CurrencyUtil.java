@@ -106,7 +106,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("MXT", "MarteXcoin"));
         result.add(new CryptoCurrency("GRS", "Groestlcoin"));
         result.add(new CryptoCurrency("IOC", "I/O Coin"));
-
+        result.add(new CryptoCurrency("SIB", "Sibcoin"));
+        
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
         return result;
