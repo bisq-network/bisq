@@ -37,7 +37,7 @@ public class BankUtil {
             countryCode = "";
         switch (countryCode) {
             default:
-                return "Bank nr.(BIC/SWIFT):";
+                return "Bank nr. or BIC/SWIFT:";
         }
 
     }
@@ -64,7 +64,7 @@ public class BankUtil {
             countryCode = "";
         switch (countryCode) {
             default:
-                return "Account nr.(IBAN):";
+                return "Account nr. or IBAN:";
         }
     }
 
