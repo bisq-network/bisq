@@ -43,7 +43,7 @@ public class TransactionsListItem {
     @Nullable
     private Tradable tradable;
     private String details;
-    private String addressString;
+    private String addressString = "";
     private String direction;
     private TxConfidenceListener txConfidenceListener;
     private boolean received;
