@@ -68,22 +68,8 @@ public class CurrencyUtil {
         return allSortedCryptoCurrencies;
     }
 
-    public static List<CryptoCurrency> getMainCryptoCurrencies() {
-        final List<CryptoCurrency> result = new ArrayList<>();
-        result.add(new CryptoCurrency("ETH", "Ethereum"));
-        result.add(new CryptoCurrency("LTC", "Litecoin"));
-        result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("SDC", "ShadowCash"));
-        result.add(new CryptoCurrency("NMC", "Namecoin"));
-        result.add(new CryptoCurrency("NBT", "NuBits"));
-        result.add(new CryptoCurrency("SC", "Siacoin"));
-        result.add(new CryptoCurrency("FAIR", "FairCoin"));
-        result.add(new CryptoCurrency("DOGE", "Dogecoin"));
-        result.add(new CryptoCurrency("NXT", "Nxt"));
-        result.add(new CryptoCurrency("BTS", "BitShares"));
-        return result;
-    }
-
+    // Don't make a PR for adding a coin but follow the steps described here: 
+    // https://forum.bitsquare.io/t/how-to-add-your-favorite-altcoin/
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("ETH", "Ethereum"));
@@ -107,7 +93,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
         result.add(new CryptoCurrency("XEM", "NEM"));
-        result.add(new CryptoCurrency("ANTI", "Anti.cash"));
+        result.add(new CryptoCurrency("ANTI", "Anti"));
         result.add(new CryptoCurrency("VPN", "VPNCoin"));
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
         result.add(new CryptoCurrency("YBC", "YbCoin"));
@@ -117,9 +103,25 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ESP", "Espers"));
         result.add(new CryptoCurrency("XVG", "Verge"));
         result.add(new CryptoCurrency("MYR", "Myriadcoin"));
-        
+
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
+        return result;
+    }
+
+    public static List<CryptoCurrency> getMainCryptoCurrencies() {
+        final List<CryptoCurrency> result = new ArrayList<>();
+        result.add(new CryptoCurrency("ETH", "Ethereum"));
+        result.add(new CryptoCurrency("LTC", "Litecoin"));
+        result.add(new CryptoCurrency("DASH", "Dash"));
+        result.add(new CryptoCurrency("SDC", "ShadowCash"));
+        result.add(new CryptoCurrency("NMC", "Namecoin"));
+        result.add(new CryptoCurrency("NBT", "NuBits"));
+        result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("FAIR", "FairCoin"));
+        result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("NXT", "Nxt"));
+        result.add(new CryptoCurrency("BTS", "BitShares"));
         return result;
     }
 
