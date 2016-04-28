@@ -200,7 +200,7 @@ public class NetworkStressTest {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 final String fileName = file.getFileName().toString();
-                if (!(keep && (fileName.equals("enc.key") || fileName.equals("sig.key"))))
+                if (!(keep && (fileName.matches("enc\\.key|sig\\.key|private_key"))))  // peer and tor keys
                     Files.delete(file);
                 return FileVisitResult.CONTINUE;
             }
