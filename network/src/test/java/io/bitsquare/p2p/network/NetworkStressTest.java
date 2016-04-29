@@ -189,7 +189,7 @@ public class NetworkStressTest {
         final P2PService srcPeer = peerNodes.get(srcPeerIdx);
         final P2PService dstPeer = peerNodes.get(dstPeerIdx);
         srcPeer.sendEncryptedDirectMessage(dstPeer.getAddress(), peerPKRings.get(dstPeerIdx),
-                new StressTestDirectMessage("test-" + dstPeerIdx), new SendDirectMessageListener() {
+                new StressTestDirectMessage("test/" + dstPeer.getAddress()), new SendDirectMessageListener() {
                     @Override
                     public void onArrived() {
                         sentDirectLatch.countDown();
