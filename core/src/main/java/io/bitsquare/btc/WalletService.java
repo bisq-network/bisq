@@ -95,6 +95,7 @@ public class WalletService {
     public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
     private final Storage<Long> storage;
     private final Long bloomFilterTweak;
+    private KeyParameter aesKey;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -335,6 +336,10 @@ public class WalletService {
             log.error("Could not delete directory " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public void setAesKey(KeyParameter aesKey) {
+        this.aesKey = aesKey;
     }
 
 
@@ -618,7 +623,7 @@ public class WalletService {
                         AddressEntry.Context context,
                         Coin fee) throws AddressEntryException, AddressFormatException {
         try {
-            wallet.completeTx(getSendRequest(fromAddress, toAddress, amount, null, context));
+            wallet.completeTx(getSendRequest(fromAddress, toAddress, amount, aesKey, context));
         } catch (InsufficientMoneyException e) {
             if (e.missing != null) {
                 log.trace("missing fee " + e.missing.toFriendlyString());
@@ -640,7 +645,7 @@ public class WalletService {
                                             Coin amount,
                                             Coin fee) throws AddressEntryException, AddressFormatException {
         try {
-            wallet.completeTx(getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, null));
+            wallet.completeTx(getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, aesKey));
         } catch (InsufficientMoneyException e) {
             if (e.missing != null) {
                 log.trace("missing fee " + e.missing.toFriendlyString());

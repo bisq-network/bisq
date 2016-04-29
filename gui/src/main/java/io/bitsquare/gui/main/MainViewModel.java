@@ -444,6 +444,7 @@ public class MainViewModel implements ViewModel {
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {
                                     tradeWalletService.setAesKey(aesKey);
+                                    walletService.setAesKey(aesKey);
                                     walletInitialized.set(true);
                                 })
                                 .hideCloseButton()
