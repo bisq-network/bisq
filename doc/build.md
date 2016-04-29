@@ -20,7 +20,7 @@ What follows is explained in detail in the sections below, but for those who kno
     
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bitsquare
-    $ mvn clean package    
+    $ mvn clean package -DskipTests   
 
 When the build completes, you will find an executable jar: `gui/target/shaded.jar`. 
 To run it use:
@@ -91,7 +91,7 @@ Beside that we fixed a few [flaws with the Bloom Filters](https://jonasnick.gith
 Bitsquare uses maven as a build system. 
 
     $ cd bitsquare
-    $ mvn clean package
+    $ mvn clean package -DskipTests
 
 ### 4. Run
 
