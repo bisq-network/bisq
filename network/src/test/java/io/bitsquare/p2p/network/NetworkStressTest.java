@@ -5,11 +5,13 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.Utils;
+import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.p2p.messaging.DirectMessage;
 import io.bitsquare.p2p.messaging.SendDirectMessageListener;
 import io.bitsquare.p2p.seed.SeedNode;
@@ -183,7 +185,7 @@ public class NetworkStressTest {
         // Test sending a direct message from peer #0 to peer #1.
         BooleanProperty sentDirectFailed = new SimpleBooleanProperty(false);
         final CountDownLatch sentDirectLatch = new CountDownLatch(1);
-        //final CountDownLatch receivedDirectLatch = new CountDownLatch(1);
+        final CountDownLatch receivedDirectLatch = new CountDownLatch(1);
         final int srcPeerIdx = 0;
         final int dstPeerIdx = 1;
         final P2PService srcPeer = peerNodes.get(srcPeerIdx);
@@ -201,12 +203,22 @@ public class NetworkStressTest {
                         sentDirectLatch.countDown();
                     }
                 });
-        // TODO: receiving data
+        dstPeer.addDecryptedDirectMessageListener((decryptedMsgWithPubKey, peerNodeAddress) -> {
+            if (!(decryptedMsgWithPubKey.message instanceof StressTestDirectMessage))
+                return;
+            StressTestDirectMessage directMessage = (StressTestDirectMessage)(decryptedMsgWithPubKey.message);
+            if ((directMessage.getData().equals("test/" + dstPeer.getAddress())))
+                receivedDirectLatch.countDown();
+        });
+        // Since receiving is completed before sending is reported to be complete,
+        // all receiving checks should end before all sending checks to avoid deadlocking.
+        // Wait for peer #1 to complete receiving.
+        org.junit.Assert.assertTrue("timed out while receiving direct message",
+                receivedDirectLatch.await(30, TimeUnit.SECONDS));
         // Wait for peer #0 to complete sending.
         org.junit.Assert.assertTrue("timed out while sending direct message",
                 sentDirectLatch.await(30, TimeUnit.SECONDS));
         org.junit.Assert.assertFalse("peer failed to send message", sentDirectFailed.get());
-        //TODO: wait for receiving data
     }
 
     private Path createTestDataDirectory() throws IOException {
@@ -358,7 +370,7 @@ final class StressTestDirectMessage implements DirectMessage {
         return messageVersion;
     }
 
-    public String getData() {
+    String getData() {
         return data;
     }
 }
