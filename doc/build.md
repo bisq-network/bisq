@@ -14,13 +14,13 @@ What follows is explained in detail in the sections below, but for those who kno
     $ javac -version
     javac 1.8.0_66       # must be 1.8.0_66 or better
 
-    $ git clone https://github.com/bitsquare/bitcoinj.git                
+    $ git clone -b FixBloomFilters https://github.com/bitsquare/bitcoinj.git                
     $ cd bitcoinj  
-    $ mvn install -DskipTests -Dmaven.javadoc.skip=true
+    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bitsquare
-    $ mvn package    
+    $ mvn clean package    
 
 When the build completes, you will find an executable jar: `gui/target/shaded.jar`. 
 To run it use:
@@ -82,16 +82,16 @@ We remove Cartographer/HttpDiscovery support from in our [fork version 0.13.1.2]
 Beside the Java serialisation issues here are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer. 
 Beside that we fixed a few [flaws with the Bloom Filters](https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj) in BitcoinJ.
                 
-    $ git clone https://github.com/bitsquare/bitcoinj.git                
+    $ git clone -b FixBloomFilters https://github.com/bitsquare/bitcoinj.git               
     $ cd bitcoinj  
-    $ mvn install -DskipTests -Dmaven.javadoc.skip=true
+    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
 
 ### 3. Build jar
 
 Bitsquare uses maven as a build system. 
 
     $ cd bitsquare
-    $ mvn package
+    $ mvn clean package
 
 ### 4. Run
 
