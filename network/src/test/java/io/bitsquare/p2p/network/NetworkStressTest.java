@@ -186,6 +186,16 @@ public class NetworkStressTest {
         final CountDownLatch receivedDirectLatch = new CountDownLatch(nPeers);
         final Instant sendStart = Instant.now();
         for (final P2PService srcPeer : peerNodes) {
+            // Make peer ready for receiving direct messages.
+            srcPeer.addDecryptedDirectMessageListener((decryptedMsgWithPubKey, peerNodeAddress) -> {
+                if (!(decryptedMsgWithPubKey.message instanceof StressTestDirectMessage))
+                    return;
+                StressTestDirectMessage directMessage = (StressTestDirectMessage) (decryptedMsgWithPubKey.message);
+                if ((directMessage.getData().equals("test/" + srcPeer.getAddress())))
+                    receivedDirectLatch.countDown();
+            });
+
+            // Select a random peer and send a direct message to it.
             final int dstPeerIdx = (int) (Math.random() * nPeers);
             final P2PService dstPeer = peerNodes.get(dstPeerIdx);
             //print("sending direct message from peer %s to %s", srcPeer.getAddress(), dstPeer.getAddress());
@@ -202,13 +212,6 @@ public class NetworkStressTest {
                             sentDirectLatch.countDown();
                         }
                     });
-            dstPeer.addDecryptedDirectMessageListener((decryptedMsgWithPubKey, peerNodeAddress) -> {
-                if (!(decryptedMsgWithPubKey.message instanceof StressTestDirectMessage))
-                    return;
-                StressTestDirectMessage directMessage = (StressTestDirectMessage) (decryptedMsgWithPubKey.message);
-                if ((directMessage.getData().equals("test/" + dstPeer.getAddress())))
-                    receivedDirectLatch.countDown();
-            });
         }
         // Since receiving is completed before sending is reported to be complete,
         // all receiving checks should end before all sending checks to avoid deadlocking.
