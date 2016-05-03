@@ -234,14 +234,17 @@ public class NetworkStressTest {
         }
         // Since receiving is completed before sending is reported to be complete,
         // all receiving checks should end before all sending checks to avoid deadlocking.
-        // Wait for peers to complete receiving.
+        /** Time to transmit all messages in the worst random case, and with no computation delays. */
+        final long idealMaxDirectDelay = MAX_DIRECT_DELAY_MILLIS * DIRECT_COUNT;
+        // Wait for peers to complete receiving.  We are generous here.
         org.junit.Assert.assertTrue("timed out while receiving direct messages",
-                receivedDirectLatch.await(30, TimeUnit.SECONDS));
+                receivedDirectLatch.await(2 * idealMaxDirectDelay, TimeUnit.MILLISECONDS));
         print("receiving %d direct messages per peer took %ss", DIRECT_COUNT,
                 Duration.between(sendStart, Instant.now()).toMillis()/1000.0);
         // Wait for peers to complete sending.
+        // This should be nearly instantaneous after waiting for reception is completed.
         org.junit.Assert.assertTrue("timed out while sending direct messages",
-                sentDirectLatch.await(30, TimeUnit.SECONDS));
+                sentDirectLatch.await(idealMaxDirectDelay / 10, TimeUnit.MILLISECONDS));
         print("sending %d direct messages per peer took %ss", DIRECT_COUNT,
                 Duration.between(sendStart, Instant.now()).toMillis()/1000.0);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
