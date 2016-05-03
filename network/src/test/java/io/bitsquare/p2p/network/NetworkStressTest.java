@@ -204,14 +204,18 @@ public class NetworkStressTest {
                     receivedDirectLatch.countDown();
             });
 
+            long nextSendMillis = System.currentTimeMillis();
             for (int i = 0; i < DIRECT_COUNT; i++) {
-                // Select a random peer and send a direct message to it after a random delay
-                // not shorter than throttle limits.
+                // Select a random peer and send a direct message to it...
                 final int dstPeerIdx = (int) (Math.random() * nPeers);
                 final P2PService dstPeer = peerNodes.get(dstPeerIdx);
                 final NodeAddress dstPeerAddress = dstPeer.getAddress();
-                //print("sending direct message from peer %s to %s", srcPeer.getAddress(), dstPeer.getAddress());
-                UserThread.runAfterRandomDelay(() -> srcPeer.sendEncryptedDirectMessage(
+                // ...after a random delay not shorter than throttle limits.
+                nextSendMillis += Math.round(Math.random() * (MAX_DIRECT_DELAY_MILLIS - MIN_DIRECT_DELAY_MILLIS));
+                final long sendAfterMillis = nextSendMillis - System.currentTimeMillis();
+                /*print("sending direct message from peer %s to %s in %sms",
+                        srcPeer.getAddress(), dstPeer.getAddress(), sendAfterMillis);*/
+                UserThread.runAfter(() -> srcPeer.sendEncryptedDirectMessage(
                         dstPeerAddress, peerPKRings.get(dstPeerIdx),
                         new StressTestDirectMessage("test/" + dstPeerAddress), new SendDirectMessageListener() {
                             @Override
@@ -224,7 +228,7 @@ public class NetworkStressTest {
                                 sentDirectFailed.set(true);
                                 sentDirectLatch.countDown();
                             }
-                        }), MIN_DIRECT_DELAY_MILLIS, MAX_DIRECT_DELAY_MILLIS, TimeUnit.MILLISECONDS
+                        }), sendAfterMillis, TimeUnit.MILLISECONDS
                 );
             }
         }
