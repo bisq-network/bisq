@@ -28,8 +28,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.Security;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -193,7 +191,7 @@ public class NetworkStressTest {
         BooleanProperty sentDirectFailed = new SimpleBooleanProperty(false);
         final CountDownLatch sentDirectLatch = new CountDownLatch(DIRECT_COUNT * nPeers);
         final CountDownLatch receivedDirectLatch = new CountDownLatch(DIRECT_COUNT * nPeers);
-        final Instant sendStart = Instant.now();
+        final long sendStartMillis = System.currentTimeMillis();
         for (final P2PService srcPeer : peerNodes) {
             // Make the peer ready for receiving direct messages.
             srcPeer.addDecryptedDirectMessageListener((decryptedMsgWithPubKey, peerNodeAddress) -> {
@@ -240,13 +238,13 @@ public class NetworkStressTest {
         org.junit.Assert.assertTrue("timed out while receiving direct messages",
                 receivedDirectLatch.await(2 * idealMaxDirectDelay, TimeUnit.MILLISECONDS));
         print("receiving %d direct messages per peer took %ss", DIRECT_COUNT,
-                Duration.between(sendStart, Instant.now()).toMillis()/1000.0);
+                (System.currentTimeMillis() - sendStartMillis)/1000.0);
         // Wait for peers to complete sending.
         // This should be nearly instantaneous after waiting for reception is completed.
         org.junit.Assert.assertTrue("timed out while sending direct messages",
                 sentDirectLatch.await(idealMaxDirectDelay / 10, TimeUnit.MILLISECONDS));
         print("sending %d direct messages per peer took %ss", DIRECT_COUNT,
-                Duration.between(sendStart, Instant.now()).toMillis()/1000.0);
+                (System.currentTimeMillis() - sendStartMillis)/1000.0);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
     }
 
