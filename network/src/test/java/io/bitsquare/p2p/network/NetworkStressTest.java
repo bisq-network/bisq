@@ -186,7 +186,7 @@ public class NetworkStressTest {
         final CountDownLatch receivedDirectLatch = new CountDownLatch(nPeers);
         final Instant sendStart = Instant.now();
         for (final P2PService srcPeer : peerNodes) {
-            // Make peer ready for receiving direct messages.
+            // Make the peer ready for receiving direct messages.
             srcPeer.addDecryptedDirectMessageListener((decryptedMsgWithPubKey, peerNodeAddress) -> {
                 if (!(decryptedMsgWithPubKey.message instanceof StressTestDirectMessage))
                     return;
@@ -218,12 +218,12 @@ public class NetworkStressTest {
         // Wait for peers to complete receiving.
         org.junit.Assert.assertTrue("timed out while receiving direct messages",
                 receivedDirectLatch.await(30, TimeUnit.SECONDS));
-        print("receiving 1 direct message per node took %ss",
+        print("receiving 1 direct message per peer took %ss",
                 Duration.between(sendStart, Instant.now()).toMillis()/1000.0);
         // Wait for peers to complete sending.
         org.junit.Assert.assertTrue("timed out while sending direct messages",
                 sentDirectLatch.await(30, TimeUnit.SECONDS));
-        print("sending 1 direct message per node took %ss",
+        print("sending 1 direct message per peer took %ss",
                 Duration.between(sendStart, Instant.now()).toMillis()/1000.0);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
     }
