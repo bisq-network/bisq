@@ -2,6 +2,7 @@ package io.bitsquare.p2p.network;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.Clock;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.crypto.PubKeyRing;
@@ -43,6 +44,7 @@ public class NetworkStressTest {
 
     /** Numeric identifier of the regtest Bitcoin network. */
     private static final int REGTEST_NETWORK_ID = 2;
+
     /** Default number of peers in the test. */
     private static final int NPEERS_DEFAULT = 4;
     /** Minimum number of peers for the test to work. */
@@ -51,6 +53,11 @@ public class NetworkStressTest {
     private static final String NPEERS_ENVVAR = "STRESS_TEST_NPEERS";
     /** Environment variable to specify a persistent test data directory. */
     private static final String TEST_DIR_ENVVAR = "STRESS_TEST_DIR";
+
+    /** Minimum delay between direct messages in milliseconds, 25% larger than throttle limit. */
+    private static long MIN_DIRECT_DELAY_MILLIS = Math.round(1.25 * (1.0 / Connection.MSG_THROTTLE_PER_SEC) * 1000);
+    /** Maximum delay between direct messages in milliseconds, 10 times larger than minimum. */
+    private static long MAX_DIRECT_DELAY_MILLIS = 10 * MIN_DIRECT_DELAY_MILLIS;
 
     // Instance fields
 
@@ -195,12 +202,14 @@ public class NetworkStressTest {
                     receivedDirectLatch.countDown();
             });
 
-            // Select a random peer and send a direct message to it.
+            // Select a random peer and send a direct message to it after a random delay
+            // not shorter than throttle limits.
             final int dstPeerIdx = (int) (Math.random() * nPeers);
             final P2PService dstPeer = peerNodes.get(dstPeerIdx);
             final NodeAddress dstPeerAddress = dstPeer.getAddress();
             //print("sending direct message from peer %s to %s", srcPeer.getAddress(), dstPeer.getAddress());
-            srcPeer.sendEncryptedDirectMessage(dstPeerAddress, peerPKRings.get(dstPeerIdx),
+            UserThread.runAfterRandomDelay(() -> srcPeer.sendEncryptedDirectMessage(
+                    dstPeerAddress, peerPKRings.get(dstPeerIdx),
                     new StressTestDirectMessage("test/" + dstPeerAddress), new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {
@@ -212,7 +221,8 @@ public class NetworkStressTest {
                             sentDirectFailed.set(true);
                             sentDirectLatch.countDown();
                         }
-                    });
+                    }), MIN_DIRECT_DELAY_MILLIS, MAX_DIRECT_DELAY_MILLIS, TimeUnit.MILLISECONDS
+            );
         }
         // Since receiving is completed before sending is reported to be complete,
         // all receiving checks should end before all sending checks to avoid deadlocking.

@@ -62,10 +62,11 @@ public class Connection implements MessageListener {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final int MAX_MSG_SIZE = 500 * 1024;              // 500 kb
+    // Leaving some constants package-private for tests to know limits.
+    static final int MAX_MSG_SIZE = 500 * 1024;              // 500 kb
     //TODO decrease limits again after testing
-    private static final int MSG_THROTTLE_PER_SEC = 70;              // With MAX_MSG_SIZE of 500kb results in bandwidth of 35 mbit/sec 
-    private static final int MSG_THROTTLE_PER_10_SEC = 500;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 50 mbit/sec for 10 sec 
+    static final int MSG_THROTTLE_PER_SEC = 70;              // With MAX_MSG_SIZE of 500kb results in bandwidth of 35 mbit/sec
+    static final int MSG_THROTTLE_PER_10_SEC = 500;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 50 mbit/sec for 10 sec
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
 
     public static int getMaxMsgSize() {
