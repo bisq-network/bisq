@@ -40,6 +40,13 @@ public class NetworkStressTest {
 
     // Constants
 
+    /** Environment variable to specify the number of peers in the test. */
+    private static final String NPEERS_ENVVAR = "STRESS_TEST_NPEERS";
+    /** Environment variable to specify a persistent test data directory. */
+    private static final String TEST_DIR_ENVVAR = "STRESS_TEST_DIR";
+    /** Environment variable to specify the number of direct messages sent per peer. */
+    private static final String DIRECT_COUNT_ENVVAR = "STRESS_TEST_NDIRECT";
+
     /** Numeric identifier of the regtest Bitcoin network. */
     private static final int REGTEST_NETWORK_ID = 2;
 
@@ -47,13 +54,9 @@ public class NetworkStressTest {
     private static final int NPEERS_DEFAULT = 4;
     /** Minimum number of peers for the test to work. */
     private static final int NPEERS_MIN = 2;
-    /** Environment variable to specify the number of peers in the test. */
-    private static final String NPEERS_ENVVAR = "STRESS_TEST_NPEERS";
-    /** Environment variable to specify a persistent test data directory. */
-    private static final String TEST_DIR_ENVVAR = "STRESS_TEST_DIR";
+    /** Default number of direct messages to be sent by each peer. */
+    private static final int DIRECT_COUNT_DEFAULT = 100;
 
-    /** Number of direct messages to be sent by each peer. */
-    private static int DIRECT_COUNT = 100;
     /** Minimum delay between direct messages in milliseconds, 25% larger than throttle limit. */
     private static long MIN_DIRECT_DELAY_MILLIS = Math.round(1.25 * (1.0 / Connection.MSG_THROTTLE_PER_SEC) * 1000);
     /** Maximum delay between direct messages in milliseconds, 10 times larger than minimum. */
@@ -75,17 +78,31 @@ public class NetworkStressTest {
     /** A barrier to wait for concurrent bootstrap of peers. */
     private CountDownLatch bootstrapLatch;
 
+    /** Number of direct messages to be sent by each peer. */
+    private int directCount = DIRECT_COUNT_DEFAULT;
+
     @Before
     public void setUp() throws Exception {
+        // Parse test parameter environment variables.
+
         /** Number of peer nodes to create. */
         int nPeers = NPEERS_DEFAULT;
-
         final String nPeersEnv = System.getenv(NPEERS_ENVVAR);
         if (nPeersEnv != null && !nPeersEnv.equals(""))
             nPeers = Integer.parseInt(nPeersEnv);
         if (nPeers < NPEERS_MIN)
             throw new IllegalArgumentException(
-                    String.format("Test needs at least %d peer nodes to work: %d", NPEERS_MIN, nPeers));
+                    String.format("Test needs at least %d peer nodes to work: %d", NPEERS_MIN, nPeers)
+            );
+
+        final String nDirectEnv = System.getenv(DIRECT_COUNT_ENVVAR);
+        if (nDirectEnv != null && !nDirectEnv.equals(""))
+            directCount = Integer.parseInt(nDirectEnv);
+        if (directCount < 0)
+            throw new IllegalArgumentException(
+                    String.format("Direct messages sent per peer must not be negative: %d", directCount)
+            );
+
         prelimDataLatch = new CountDownLatch(nPeers);
         bootstrapLatch = new CountDownLatch(nPeers);
 
@@ -189,8 +206,8 @@ public class NetworkStressTest {
         // Test each peer sending a direct message to another random peer.
         final int nPeers = peerNodes.size();
         BooleanProperty sentDirectFailed = new SimpleBooleanProperty(false);
-        final CountDownLatch sentDirectLatch = new CountDownLatch(DIRECT_COUNT * nPeers);
-        final CountDownLatch receivedDirectLatch = new CountDownLatch(DIRECT_COUNT * nPeers);
+        final CountDownLatch sentDirectLatch = new CountDownLatch(directCount * nPeers);
+        final CountDownLatch receivedDirectLatch = new CountDownLatch(directCount * nPeers);
         final long sendStartMillis = System.currentTimeMillis();
         for (final P2PService srcPeer : peerNodes) {
             // Make the peer ready for receiving direct messages.
@@ -203,7 +220,7 @@ public class NetworkStressTest {
             });
 
             long nextSendMillis = System.currentTimeMillis();
-            for (int i = 0; i < DIRECT_COUNT; i++) {
+            for (int i = 0; i < directCount; i++) {
                 // Select a random peer and send a direct message to it...
                 final int dstPeerIdx = (int) (Math.random() * nPeers);
                 final P2PService dstPeer = peerNodes.get(dstPeerIdx);
@@ -233,17 +250,17 @@ public class NetworkStressTest {
         // Since receiving is completed before sending is reported to be complete,
         // all receiving checks should end before all sending checks to avoid deadlocking.
         /** Time to transmit all messages in the worst random case, and with no computation delays. */
-        final long idealMaxDirectDelay = MAX_DIRECT_DELAY_MILLIS * DIRECT_COUNT;
+        final long idealMaxDirectDelay = MAX_DIRECT_DELAY_MILLIS * directCount;
         // Wait for peers to complete receiving.  We are generous here.
         org.junit.Assert.assertTrue("timed out while receiving direct messages",
                 receivedDirectLatch.await(2 * idealMaxDirectDelay, TimeUnit.MILLISECONDS));
-        print("receiving %d direct messages per peer took %ss", DIRECT_COUNT,
+        print("receiving %d direct messages per peer took %ss", directCount,
                 (System.currentTimeMillis() - sendStartMillis)/1000.0);
         // Wait for peers to complete sending.
         // This should be nearly instantaneous after waiting for reception is completed.
         org.junit.Assert.assertTrue("timed out while sending direct messages",
                 sentDirectLatch.await(idealMaxDirectDelay / 10, TimeUnit.MILLISECONDS));
-        print("sending %d direct messages per peer took %ss", DIRECT_COUNT,
+        print("sending %d direct messages per peer took %ss", directCount,
                 (System.currentTimeMillis() - sendStartMillis)/1000.0);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
     }
