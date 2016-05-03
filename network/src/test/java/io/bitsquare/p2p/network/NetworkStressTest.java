@@ -5,13 +5,11 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.crypto.PubKeyRing;
-import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.Utils;
-import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.p2p.messaging.DirectMessage;
 import io.bitsquare.p2p.messaging.SendDirectMessageListener;
 import io.bitsquare.p2p.seed.SeedNode;
@@ -29,6 +27,8 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.Security;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -184,6 +184,7 @@ public class NetworkStressTest {
         BooleanProperty sentDirectFailed = new SimpleBooleanProperty(false);
         final CountDownLatch sentDirectLatch = new CountDownLatch(nPeers);
         final CountDownLatch receivedDirectLatch = new CountDownLatch(nPeers);
+        final Instant sendStart = Instant.now();
         for (final P2PService srcPeer : peerNodes) {
             final int dstPeerIdx = (int) (Math.random() * nPeers);
             final P2PService dstPeer = peerNodes.get(dstPeerIdx);
@@ -215,10 +216,19 @@ public class NetworkStressTest {
         // Wait for peers to complete receiving.
         org.junit.Assert.assertTrue("timed out while receiving direct messages",
                 receivedDirectLatch.await(30, TimeUnit.SECONDS));
+        print("receiving 1 direct message per node took %ss",
+                Duration.between(sendStart, Instant.now()).toMillis()/1000.0);
         // Wait for peers to complete sending.
         org.junit.Assert.assertTrue("timed out while sending direct messages",
                 sentDirectLatch.await(30, TimeUnit.SECONDS));
+        print("sending 1 direct message per node took %ss",
+                Duration.between(sendStart, Instant.now()).toMillis()/1000.0);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
+    }
+
+    private void print(String message, Object... args) {
+        System.out.println(this.getClass().getSimpleName() + ": "
+            + String.format(message, args));
     }
 
     private Path createTestDataDirectory() throws IOException {
