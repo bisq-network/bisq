@@ -116,6 +116,7 @@ public class NetworkStressTest {
 
         // Create the test data directory.
         testDataDir = createTestDataDirectory();
+        print("test data directory: " + testDataDir);
 
         // Create and start the seed node.
         seedNode = new SeedNode(testDataDir.toString());
@@ -126,6 +127,7 @@ public class NetworkStressTest {
         seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
                 REGTEST_NETWORK_ID, USE_DETAILED_LOGGING, seedNodes,
                 new SeedServiceListener(localServicesLatch, localServicesFailed));
+        print("created seed node");
 
         // Create and start peer nodes.
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
@@ -151,6 +153,7 @@ public class NetworkStressTest {
             peerNodes.add(peer);
             peer.start(new PeerServiceListener(localServicesLatch, localServicesFailed));
         }
+        print("created peer nodes");
 
         // Wait for concurrent tasks to finish.
         localServicesLatch.await();
@@ -159,6 +162,8 @@ public class NetworkStressTest {
         if (localServicesFailed.get()) {
             throw new Exception("nodes failed to start");
         }
+
+        print("all local nodes started");
     }
 
     @NotNull
@@ -187,6 +192,7 @@ public class NetworkStressTest {
         }
         // Wait for concurrent tasks to finish.
         shutdownLatch.await();
+        print("all local nodes stopped");
 
         // Cleanup test data directory.
         if (testDataDir != null) {
@@ -199,9 +205,11 @@ public class NetworkStressTest {
         // Wait for peers to get their preliminary data.
         assertLatch("timed out while waiting for preliminary data",
                 prelimDataLatch, 30, TimeUnit.SECONDS);
+        print("preliminary data received");
         // Wait for peers to complete their bootstrapping.
         assertLatch("timed out while waiting for bootstrap",
                 bootstrapLatch, 30, TimeUnit.SECONDS);
+        print("bootstrap complete");
 
         // Test each peer sending a direct message to another random peer.
         final int nPeers = peerNodes.size();
@@ -247,6 +255,7 @@ public class NetworkStressTest {
                 );
             }
         }
+        print("%d direct messages scheduled to be sent by each of %d peers", directCount, nPeers);
         // Since receiving is completed before sending is reported to be complete,
         // all receiving checks should end before all sending checks to avoid deadlocking.
         /** Time to transmit all messages in the worst random case, and with no computation delays. */
