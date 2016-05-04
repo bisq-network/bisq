@@ -197,11 +197,11 @@ public class NetworkStressTest {
     @Test
     public void test() throws InterruptedException {
         // Wait for peers to get their preliminary data.
-        org.junit.Assert.assertTrue("timed out while waiting for preliminary data",
-                prelimDataLatch.await(30, TimeUnit.SECONDS));
+        assertLatch("timed out while waiting for preliminary data",
+                prelimDataLatch, 30, TimeUnit.SECONDS);
         // Wait for peers to complete their bootstrapping.
-        org.junit.Assert.assertTrue("timed out while waiting for bootstrap",
-                bootstrapLatch.await(30, TimeUnit.SECONDS));
+        assertLatch("timed out while waiting for bootstrap",
+                bootstrapLatch, 30, TimeUnit.SECONDS);
 
         // Test each peer sending a direct message to another random peer.
         final int nPeers = peerNodes.size();
@@ -252,14 +252,14 @@ public class NetworkStressTest {
         /** Time to transmit all messages in the worst random case, and with no computation delays. */
         final long idealMaxDirectDelay = MAX_DIRECT_DELAY_MILLIS * directCount;
         // Wait for peers to complete receiving.  We are generous here.
-        org.junit.Assert.assertTrue("timed out while receiving direct messages",
-                receivedDirectLatch.await(2 * idealMaxDirectDelay, TimeUnit.MILLISECONDS));
+        assertLatch("timed out while receiving direct messages",
+                receivedDirectLatch, 2 * idealMaxDirectDelay, TimeUnit.MILLISECONDS);
         print("receiving %d direct messages per peer took %ss", directCount,
                 (System.currentTimeMillis() - sendStartMillis)/1000.0);
         // Wait for peers to complete sending.
         // This should be nearly instantaneous after waiting for reception is completed.
-        org.junit.Assert.assertTrue("timed out while sending direct messages",
-                sentDirectLatch.await(idealMaxDirectDelay / 10, TimeUnit.MILLISECONDS));
+        assertLatch("timed out while sending direct messages",
+                sentDirectLatch, idealMaxDirectDelay / 10, TimeUnit.MILLISECONDS);
         print("sending %d direct messages per peer took %ss", directCount,
                 (System.currentTimeMillis() - sendStartMillis)/1000.0);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
@@ -268,6 +268,12 @@ public class NetworkStressTest {
     private void print(String message, Object... args) {
         System.out.println(this.getClass().getSimpleName() + ": "
             + String.format(message, args));
+    }
+
+    private static void assertLatch(String message, CountDownLatch latch, long timeout, TimeUnit unit)
+            throws InterruptedException {
+        if (!latch.await(timeout, unit))
+            org.junit.Assert.fail(String.format("%s (%d pending in latch)", message, latch.getCount()));
     }
 
     private Path createTestDataDirectory() throws IOException {
