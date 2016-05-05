@@ -66,6 +66,16 @@ public class GetDataRequestHandler {
         Log.traceCall(getDataRequest + "\n\tconnection=" + connection);
         GetDataResponse getDataResponse = new GetDataResponse(new HashSet<>(dataStorage.getMap().values()),
                 getDataRequest.getNonce());
+
+        if (timeoutTimer == null) {  // setup before sending to avoid race conditions
+            timeoutTimer = UserThread.runAfter(() -> {
+                        String errorMessage = "A timeout occurred for getDataResponse:" + getDataResponse +
+                                " on connection:" + connection;
+                        handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
+                    },
+                    TIME_OUT_SEC, TimeUnit.SECONDS);
+        }
+
         SettableFuture<Connection> future = networkNode.sendMessage(connection, getDataResponse);
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
@@ -84,15 +94,6 @@ public class GetDataRequestHandler {
                 handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);
             }
         });
-
-        if (timeoutTimer == null) {
-            timeoutTimer = UserThread.runAfter(() -> {
-                        String errorMessage = "A timeout occurred for getDataResponse:" + getDataResponse +
-                                " on connection:" + connection;
-                        handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
-                    },
-                    TIME_OUT_SEC, TimeUnit.SECONDS);
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
