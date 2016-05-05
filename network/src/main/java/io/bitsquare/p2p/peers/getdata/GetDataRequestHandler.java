@@ -67,8 +67,8 @@ public class GetDataRequestHandler {
         GetDataResponse getDataResponse = new GetDataResponse(new HashSet<>(dataStorage.getMap().values()),
                 getDataRequest.getNonce());
 
-        if (timeoutTimer == null) {  // setup before sending to avoid race conditions
-            timeoutTimer = UserThread.runAfter(() -> {
+        if (timeoutTimer == null) {
+            timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                         String errorMessage = "A timeout occurred for getDataResponse:" + getDataResponse +
                                 " on connection:" + connection;
                         handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);

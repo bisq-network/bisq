@@ -88,8 +88,8 @@ public class RequestDataHandler implements MessageListener {
             else
                 getDataRequest = new GetUpdatedDataRequest(networkNode.getNodeAddress(), nonce);
 
-            if (timeoutTimer == null) {  // setup before sending to avoid race conditions
-                timeoutTimer = UserThread.runAfter(() -> {
+            if (timeoutTimer == null) {
+                timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                             if (!stopped) {
                                 String errorMessage = "A timeout occurred at sending getDataRequest:" + getDataRequest +
                                         " on nodeAddress:" + nodeAddress;
