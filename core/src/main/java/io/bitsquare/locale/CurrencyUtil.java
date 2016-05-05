@@ -72,7 +72,7 @@ public class CurrencyUtil {
     // https://forum.bitsquare.io/t/how-to-add-your-favorite-altcoin/
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
-        result.add(new CryptoCurrency("ETH", "Ethereum"));
+        result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
@@ -119,7 +119,7 @@ public class CurrencyUtil {
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
-        result.add(new CryptoCurrency("ETH", "Ethereum"));
+        result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("SDC", "ShadowCash"));
