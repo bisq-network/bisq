@@ -88,8 +88,6 @@ public class RequestDataHandler implements MessageListener {
             else
                 getDataRequest = new GetUpdatedDataRequest(networkNode.getNodeAddress(), nonce);
 
-            log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
-
             if (timeoutTimer == null) {  // setup before sending to avoid race conditions
                 timeoutTimer = UserThread.runAfter(() -> {
                             if (!stopped) {
@@ -105,6 +103,7 @@ public class RequestDataHandler implements MessageListener {
                         TIME_OUT_SEC);
             }
 
+            log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
