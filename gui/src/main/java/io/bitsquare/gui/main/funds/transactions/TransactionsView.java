@@ -311,7 +311,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setText(item.getDate());
+                                    setText(item.getDateString());
                                 } else {
                                     setText("");
                                 }

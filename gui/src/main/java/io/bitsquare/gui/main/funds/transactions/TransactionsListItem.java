@@ -30,12 +30,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.util.Date;
 import java.util.Optional;
 
 public class TransactionsListItem {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private String date;
+    private String dateString;
+    private final Date date;
     private final String txId;
     private final WalletService walletService;
     private final ConfidenceProgressIndicator progressIndicator;
@@ -166,7 +168,8 @@ public class TransactionsListItem {
                 details = received ? "Received funds" : "Withdrawn from wallet";
         }
 
-        date = formatter.formatDateTime(transaction.getUpdateTime());
+        date = transaction.getUpdateTime();
+        dateString = formatter.formatDateTime(date);
     }
 
 
@@ -203,8 +206,8 @@ public class TransactionsListItem {
         return progressIndicator;
     }
 
-    public final String getDate() {
-        return date;
+    public final String getDateString() {
+        return dateString;
     }
 
 
@@ -239,6 +242,10 @@ public class TransactionsListItem {
 
     public boolean getDetailsAvailable() {
         return detailsAvailable;
+    }
+
+    public Date getDate() {
+        return date;
     }
 
     @Nullable
