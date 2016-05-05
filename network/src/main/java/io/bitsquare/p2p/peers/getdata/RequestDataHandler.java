@@ -90,6 +90,21 @@ public class RequestDataHandler implements MessageListener {
 
             log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
 
+            if (timeoutTimer == null) {  // setup before sending to avoid race conditions
+                timeoutTimer = UserThread.runAfter(() -> {
+                            if (!stopped) {
+                                String errorMessage = "A timeout occurred at sending getDataRequest:" + getDataRequest +
+                                        " on nodeAddress:" + nodeAddress;
+                                log.info(errorMessage + " / RequestDataHandler=" + RequestDataHandler.this);
+                                handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
+                            } else {
+                                log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
+                                        "Might be caused by an previous networkNode.sendMessage.onFailure.");
+                            }
+                        },
+                        TIME_OUT_SEC);
+            }
+
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
@@ -119,21 +134,6 @@ public class RequestDataHandler implements MessageListener {
                     }
                 }
             });
-
-            if (timeoutTimer == null) {
-                timeoutTimer = UserThread.runAfter(() -> {
-                            if (!stopped) {
-                                String errorMessage = "A timeout occurred at sending getDataRequest:" + getDataRequest +
-                                        " on nodeAddress:" + nodeAddress;
-                                log.info(errorMessage + " / RequestDataHandler=" + RequestDataHandler.this);
-                                handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
-                            } else {
-                                log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
-                                        "Might be caused by an previous networkNode.sendMessage.onFailure.");
-                            }
-                        },
-                        TIME_OUT_SEC);
-            }
         } else {
             log.warn("We have stopped already. We ignore that requestData call.");
         }
