@@ -70,6 +70,21 @@ class GetPeersRequestHandler {
                 "The peers address must have been already set at the moment");
         GetPeersResponse getPeersResponse = new GetPeersResponse(getPeersRequest.nonce,
                 peerManager.getConnectedNonSeedNodeReportedPeers(connection.getPeersNodeAddressOptional().get()));
+
+        checkArgument(timeoutTimer == null, "onGetPeersRequest must not be called twice.");
+        timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
+                    if (!stopped) {
+                        String errorMessage = "A timeout occurred at sending getPeersResponse:" + getPeersResponse + " on connection:" + connection;
+                        log.info(errorMessage + " / PeerExchangeHandshake=" +
+                                GetPeersRequestHandler.this);
+                        log.info("timeoutTimer called. this=" + this);
+                        handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
+                    } else {
+                        log.trace("We have stopped already. We ignore that timeoutTimer.run call.");
+                    }
+                },
+                TIME_OUT_SEC, TimeUnit.SECONDS);
+
         SettableFuture<Connection> future = networkNode.sendMessage(connection,
                 getPeersResponse);
         Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -97,20 +112,6 @@ class GetPeersRequestHandler {
                 }
             }
         });
-
-        checkArgument(timeoutTimer == null, "onGetPeersRequest must not be called twice.");
-        timeoutTimer = UserThread.runAfter(() -> {
-                    if (!stopped) {
-                        String errorMessage = "A timeout occurred at sending getPeersResponse:" + getPeersResponse + " on connection:" + connection;
-                        log.info(errorMessage + " / PeerExchangeHandshake=" +
-                                GetPeersRequestHandler.this);
-                        log.info("timeoutTimer called. this=" + this);
-                        handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
-                    } else {
-                        log.trace("We have stopped already. We ignore that timeoutTimer.run call.");
-                    }
-                },
-                TIME_OUT_SEC, TimeUnit.SECONDS);
 
         peerManager.addToReportedPeers(getPeersRequest.reportedPeers, connection);
     }
