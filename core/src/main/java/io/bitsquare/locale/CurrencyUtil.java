@@ -110,6 +110,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("CRBIT", "Creditbit"));
         result.add(new CryptoCurrency("BIGUP", "BigUp"));
         result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
+        result.add(new CryptoCurrency("MKR", "Maker"));
         
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
