@@ -133,6 +133,8 @@ public class BroadcastHandler implements PeerManager.Listener {
 
             log.info("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeersSet.size());
             for (int i = 0; i < numOfPeers; i++) {
+                if (stopped)
+                    break;  // do not continue sending after a timeout or a cancellation
                 final long minDelay = i * 30 * factor + 1;
                 final long maxDelay = minDelay * 2 + 30 * factor;
                 final Connection connection = connectedPeersList.get(i);
