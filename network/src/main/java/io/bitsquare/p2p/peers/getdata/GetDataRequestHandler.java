@@ -66,33 +66,42 @@ public class GetDataRequestHandler {
         Log.traceCall(getDataRequest + "\n\tconnection=" + connection);
         GetDataResponse getDataResponse = new GetDataResponse(new HashSet<>(dataStorage.getMap().values()),
                 getDataRequest.getNonce());
-        SettableFuture<Connection> future = networkNode.sendMessage(connection, getDataResponse);
-        Futures.addCallback(future, new FutureCallback<Connection>() {
-            @Override
-            public void onSuccess(Connection connection) {
-                log.trace("Send DataResponse to {} succeeded. getDataResponse={}",
-                        connection.getPeersNodeAddressOptional(), getDataResponse);
-                cleanup();
-                listener.onComplete();
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                String errorMessage = "Sending getDataRequest to " + connection +
-                        " failed. That is expected if the peer is offline. getDataResponse=" + getDataResponse + "." +
-                        "Exception: " + throwable.getMessage();
-                handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);
-            }
-        });
 
         if (timeoutTimer == null) {
-            timeoutTimer = UserThread.runAfter(() -> {
+            timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                         String errorMessage = "A timeout occurred for getDataResponse:" + getDataResponse +
                                 " on connection:" + connection;
                         handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
                     },
                     TIME_OUT_SEC, TimeUnit.SECONDS);
         }
+
+        SettableFuture<Connection> future = networkNode.sendMessage(connection, getDataResponse);
+        Futures.addCallback(future, new FutureCallback<Connection>() {
+            @Override
+            public void onSuccess(Connection connection) {
+                if (!stopped) {
+                    log.trace("Send DataResponse to {} succeeded. getDataResponse={}",
+                            connection.getPeersNodeAddressOptional(), getDataResponse);
+                    cleanup();
+                    listener.onComplete();
+                } else {
+                    log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call.");
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                if (!stopped) {
+                    String errorMessage = "Sending getDataRequest to " + connection +
+                            " failed. That is expected if the peer is offline. getDataResponse=" + getDataResponse + "." +
+                            "Exception: " + throwable.getMessage();
+                    handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);
+                } else {
+                    log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
+                }
+            }
+        });
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

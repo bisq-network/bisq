@@ -116,16 +116,9 @@ public class BroadcastHandler implements PeerManager.Listener {
                 numOfPeers = Math.min(5, connectedPeersList.size());
                 factor = 2;
             }
-            log.info("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeersSet.size());
-            for (int i = 0; i < numOfPeers; i++) {
-                final long minDelay = i * 30 * factor + 1;
-                final long maxDelay = minDelay * 2 + 30 * factor;
-                final Connection connection = connectedPeersList.get(i);
-                UserThread.runAfterRandomDelay(() -> sendToPeer(connection, message), minDelay, maxDelay, TimeUnit.MILLISECONDS);
-            }
 
             long timeoutDelay = TIMEOUT_PER_PEER_SEC * numOfPeers;
-            timeoutTimer = UserThread.runAfter(() -> {
+            timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                 String errorMessage = "Timeout: Broadcast did not complete after " + timeoutDelay + " sec.";
 
                 log.warn(errorMessage + "\n\t" +
@@ -137,6 +130,16 @@ public class BroadcastHandler implements PeerManager.Listener {
                         "broadcastQueue=" + broadcastQueue);
                 onFault(errorMessage);
             }, timeoutDelay);
+
+            log.info("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeersSet.size());
+            for (int i = 0; i < numOfPeers; i++) {
+                if (stopped)
+                    break;  // do not continue sending after a timeout or a cancellation
+                final long minDelay = i * 30 * factor + 1;
+                final long maxDelay = minDelay * 2 + 30 * factor;
+                final Connection connection = connectedPeersList.get(i);
+                UserThread.runAfterRandomDelay(() -> sendToPeer(connection, message), minDelay, maxDelay, TimeUnit.MILLISECONDS);
+            }
         } else {
             onFault("Message not broadcasted because we have no available peers yet.\n\t" +
                     "message = " + StringUtils.abbreviate(message.toString(), 100), false);

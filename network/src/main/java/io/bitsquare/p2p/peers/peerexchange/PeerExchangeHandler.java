@@ -84,6 +84,22 @@ class PeerExchangeHandler implements MessageListener {
         if (!stopped) {
             if (networkNode.getNodeAddress() != null) {
                 GetPeersRequest getPeersRequest = new GetPeersRequest(networkNode.getNodeAddress(), nonce, peerManager.getConnectedNonSeedNodeReportedPeers(nodeAddress));
+
+                if (timeoutTimer == null) {
+                    timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
+                                if (!stopped) {
+                                    String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
+                                    log.info(errorMessage + " / PeerExchangeHandler=" +
+                                            PeerExchangeHandler.this);
+                                    log.info("timeoutTimer called on " + this);
+                                    handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
+                                } else {
+                                    log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");
+                                }
+                            },
+                            TIME_OUT_SEC, TimeUnit.SECONDS);
+                }
+
                 SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getPeersRequest);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -116,21 +132,6 @@ class PeerExchangeHandler implements MessageListener {
                         }
                     }
                 });
-
-                if (timeoutTimer == null) {
-                    timeoutTimer = UserThread.runAfter(() -> {
-                                if (!stopped) {
-                                    String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
-                                    log.info(errorMessage + " / PeerExchangeHandler=" +
-                                            PeerExchangeHandler.this);
-                                    log.info("timeoutTimer called on " + this);
-                                    handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
-                                } else {
-                                    log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");
-                                }
-                            },
-                            TIME_OUT_SEC, TimeUnit.SECONDS);
-                }
             } else {
                 log.debug("My node address is still null at sendGetPeersRequest. We ignore that call.");
             }
