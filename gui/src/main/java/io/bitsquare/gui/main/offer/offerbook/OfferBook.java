@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
@@ -67,7 +68,16 @@ public class OfferBook {
                 // clean up possible references in openOfferManager 
                 tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
 
-                offerBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
+                Optional<OfferBookListItem> candidate = offerBookListItems.stream().filter(item -> item.getOffer().getId().equals(offer.getId())).findAny();
+                if (candidate.isPresent()) {
+                    try {
+                        OfferBookListItem item = candidate.get();
+                        if (offerBookListItems.contains(item))
+                            offerBookListItems.remove(item);
+                    } catch (Throwable t) {
+                        log.error(" offerBookListItems.remove failed " + t.getMessage());
+                    }
+                }
             }
         });
     }
