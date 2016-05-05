@@ -24,7 +24,7 @@ public class Restrictions {
 
     public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001"); // 4 cent @ 400 EUR/BTC 
 
-    public static boolean isAboveFixedTxFeeAndDust(Coin amount) {
+    public static boolean isAboveFixedTxFeeForTradesAndDust(Coin amount) {
         return amount != null && amount.compareTo(FeePolicy.getFixedTxFeeForTrades().add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
     }
 

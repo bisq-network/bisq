@@ -272,7 +272,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         String postFix = selectedTradeCurrency instanceof FiatCurrency || model.showAllTradeCurrenciesProperty.get() ? "" :
                 " (" + mirroredDirectionText + " " + selectedTradeCurrency.getName() + ")";
 
-        offerBookTitle.setText("Offers for " + directionText + " bitcoin" + postFix);
+        // offerBookTitle.setText("Offers for " + directionText + " bitcoin" + postFix);
+        offerBookTitle.setText("Available offers");
         createOfferButton.setText("Create new offer for " + directionText + " bitcoin" + postFix);
     }
 

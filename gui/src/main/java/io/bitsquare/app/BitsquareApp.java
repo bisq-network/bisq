@@ -54,7 +54,6 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -100,10 +99,12 @@ public class BitsquareApp extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
         String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
-        Log.setup(logPath, !IS_RELEASE_VERSION);
-        log.info("Log files under: " + logPath);
 
+        Log.setup(logPath);
+        log.info("Log files under: " + logPath);
         Version.printVersion();
+        Utilities.printSysInfo();
+        Log.setLevel(!IS_RELEASE_VERSION);
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
@@ -124,6 +125,8 @@ public class BitsquareApp extends Application {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
+        if (Utilities.isRestrictedCryptography())
+            Utilities.removeCryptographyRestrictions();
         Security.addProvider(new BouncyCastleProvider());
 
         BitsquareApp.primaryStage = primaryStage;
@@ -158,7 +161,7 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            scene = new Scene(mainView.getRoot(), 1150, 740);
+            scene = new Scene(mainView.getRoot(), 1190, 740);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css");
@@ -190,7 +193,7 @@ public class BitsquareApp extends Application {
             // configure the primary stage
             primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
             primaryStage.setScene(scene);
-            primaryStage.setMinWidth(1130);
+            primaryStage.setMinWidth(1170);
             primaryStage.setMinHeight(620);
 
             // on windows the title icon is also used as task bar icon in a larger size
@@ -208,10 +211,18 @@ public class BitsquareApp extends Application {
             // make the UI visible
             primaryStage.show();
 
-            Font fon = Font.getDefault();
-            Font fonds = Font.getDefault();
 
-            //showDebugWindow();
+            if (!Utilities.isCorrectOSArchitecture()) {
+                String osArchitecture = Utilities.getOSArchitecture();
+                // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
+                // Needs at least more testing on different machines...
+                new Popup<>().warning("You have probably the wrong version installed for the architecture of your computer.\n" +
+                        "Your computers architecture is: " + osArchitecture + ".\n" +
+                        "The Bitsquare binary you installed is: " + Utilities.getJVMArchitecture() + ".\n" +
+                        "Please shut down and re-install the correct version (" + osArchitecture + ").")
+                        .show();
+            }
+
         } catch (Throwable throwable) {
             showErrorPopup(throwable, false);
         }
@@ -220,8 +231,8 @@ public class BitsquareApp extends Application {
     private void showSendAlertMessagePopup() {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
         new SendAlertMessageWindow()
-                .onAddAlertMessage((alert, privKeyString) -> alertManager.addAlertMessageIfKeyIsValid(alert, privKeyString))
-                .onRemoveAlertMessage(privKeyString -> alertManager.removeAlertMessageIfKeyIsValid(privKeyString))
+                .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
+                .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
                 .show();
     }
 

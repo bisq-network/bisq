@@ -117,6 +117,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                     if (wallet.checkAESKey(aesKey)) {
                         wallet.decrypt(aesKey);
                         tradeWalletService.setAesKey(null);
+                        walletService.setAesKey(null);
                         new Popup()
                                 .feedback("Wallet successfully decrypted and password protection removed.")
                                 .show();
@@ -133,6 +134,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                     wallet.encrypt(keyCrypterScrypt, aesKey);
                     // we save the key for the trade wallet as we don't require passwords here
                     tradeWalletService.setAesKey(aesKey);
+                    walletService.setAesKey(aesKey);
                     new Popup()
                             .feedback("Wallet successfully encrypted and password protection enabled.")
                             .show();

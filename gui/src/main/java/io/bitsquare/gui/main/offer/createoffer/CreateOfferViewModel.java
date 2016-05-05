@@ -493,9 +493,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 calculateVolume();
 
                 // handle minAmount/amount relationship
-                if (!dataModel.isMinAmountLessOrEqualAmount()) 
+                if (!dataModel.isMinAmountLessOrEqualAmount())
                     minAmount.set(amount.get());
-                else 
+                else
                     amountValidationResult.set(result);
 
                 if (minAmount.get() != null)
@@ -750,10 +750,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         boolean inputDataValid = isBtcInputValid(amount.get()).isValid &&
                 isBtcInputValid(minAmount.get()).isValid &&
                 isFiatInputValid(price.get()).isValid &&
+                dataModel.priceAsFiat.get() != null &&
+                dataModel.priceAsFiat.get().getValue() != 0 &&
                 isFiatInputValid(volume.get()).isValid &&
-                dataModel.isMinAmountLessOrEqualAmount() &&
-                !dataModel.useMarketBasedPrice.get() || dataModel.getMarketPriceMargin() != 0 &&
-                dataModel.useMarketBasedPrice.get() || (dataModel.priceAsFiat.get() != null && dataModel.priceAsFiat.get().getValue() != 0);
+                dataModel.isMinAmountLessOrEqualAmount();
+
         isNextButtonDisabled.set(!inputDataValid);
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
         //isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || notSufficientFees);

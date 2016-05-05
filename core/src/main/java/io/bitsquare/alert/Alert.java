@@ -67,6 +67,12 @@ public final class Alert implements StoragePayload {
         return signatureAsBase64;
     }
 
+    public boolean isNewVersion() {
+        int versionNum = Integer.valueOf(Version.VERSION.replace(".", ""));
+        int alertVersionNum = Integer.valueOf(version.replace(".", ""));
+        return versionNum < alertVersionNum;
+    }
+
     @Override
     public long getTTL() {
         return TTL;

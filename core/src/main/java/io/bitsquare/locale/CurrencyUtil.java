@@ -68,21 +68,8 @@ public class CurrencyUtil {
         return allSortedCryptoCurrencies;
     }
 
-    public static List<CryptoCurrency> getMainCryptoCurrencies() {
-        final List<CryptoCurrency> result = new ArrayList<>();
-        result.add(new CryptoCurrency("ETH", "Ethereum"));
-        result.add(new CryptoCurrency("LTC", "Litecoin"));
-        result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("SDC", "ShadowCash"));
-        result.add(new CryptoCurrency("NMC", "Namecoin"));
-        result.add(new CryptoCurrency("NBT", "NuBits"));
-        result.add(new CryptoCurrency("FAIR", "FairCoin"));
-        result.add(new CryptoCurrency("DOGE", "Dogecoin"));
-        result.add(new CryptoCurrency("NXT", "Nxt"));
-        result.add(new CryptoCurrency("BTS", "BitShares"));
-        return result;
-    }
-
+    // Don't make a PR for adding a coin but follow the steps described here: 
+    // https://forum.bitsquare.io/t/how-to-add-your-favorite-altcoin/
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("ETH", "Ethereum"));
@@ -105,13 +92,43 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
-
-        // Unfortunately we cannot support CryptoNote coins yet as there is no way to proof the transaction. Payment ID helps only locate the tx but the 
-        // arbitrator cannot see if the receiving key matches the receivers address. They might add support for exposing the tx key, but that is not 
-        // implemented yet. To use the view key (also not available in GUI wallets) would reveal the complete wallet history for incoming payments, which is
-        // not acceptable from privacy point of view.
+        result.add(new CryptoCurrency("XEM", "NEM"));
+        result.add(new CryptoCurrency("ANTI", "Anti"));
+        result.add(new CryptoCurrency("VPN", "VPNCoin"));
+        result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
+        result.add(new CryptoCurrency("YBC", "YbCoin"));
+        result.add(new CryptoCurrency("CLOAK", "CloakCoin"));
+        result.add(new CryptoCurrency("EGC", "EverGreenCoin"));
+        result.add(new CryptoCurrency("VRC", "VeriCoin"));
+        result.add(new CryptoCurrency("ESP", "Espers"));
+        result.add(new CryptoCurrency("XVG", "Verge"));
+        result.add(new CryptoCurrency("MYRC", "Myriadcoin"));
+        result.add(new CryptoCurrency("MXT", "MarteXcoin"));
+        result.add(new CryptoCurrency("GRS", "Groestlcoin"));
+        result.add(new CryptoCurrency("IOC", "I/O Coin"));
+        result.add(new CryptoCurrency("SIB", "Sibcoin"));
+        result.add(new CryptoCurrency("CRBIT", "Creditbit"));
+        result.add(new CryptoCurrency("BIGUP", "BigUp"));
+        result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
+        
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
+        return result;
+    }
+
+    public static List<CryptoCurrency> getMainCryptoCurrencies() {
+        final List<CryptoCurrency> result = new ArrayList<>();
+        result.add(new CryptoCurrency("ETH", "Ethereum"));
+        result.add(new CryptoCurrency("LTC", "Litecoin"));
+        result.add(new CryptoCurrency("DASH", "Dash"));
+        result.add(new CryptoCurrency("SDC", "ShadowCash"));
+        result.add(new CryptoCurrency("NMC", "Namecoin"));
+        result.add(new CryptoCurrency("NBT", "NuBits"));
+        result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("FAIR", "FairCoin"));
+        result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("NXT", "Nxt"));
+        result.add(new CryptoCurrency("BTS", "BitShares"));
         return result;
     }
 

@@ -30,7 +30,7 @@ public class Log {
     private static SizeBasedTriggeringPolicy triggeringPolicy;
     private static Logger logbackLogger;
 
-    public static void setup(String fileName, boolean useDetailedLogging) {
+    public static void setup(String fileName) {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         RollingFileAppender appender = new RollingFileAppender();
@@ -60,8 +60,8 @@ public class Log {
         appender.start();
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.WARN);
         logbackLogger.addAppender(appender);
+        logbackLogger.setLevel(Level.INFO);
 
         // log errors in separate file
         // not working as expected still.... damn logback...
@@ -78,6 +78,10 @@ public class Log {
         errorAppender.addFilter(levelFilter);
         errorAppender.start();
         logbackLogger.addAppender(errorAppender);*/
+    }
+
+    public static void setLevel(boolean useDetailedLogging) {
+        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.WARN);
     }
 
     public static void traceCall() {

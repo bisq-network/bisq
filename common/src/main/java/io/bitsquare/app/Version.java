@@ -24,7 +24,7 @@ public class Version {
     private static final Logger log = LoggerFactory.getLogger(Version.class);
 
     // The application versions
-    public static final String VERSION = "0.4.3";
+    public static final String VERSION = "0.4.6";
 
     // The version nr. for the objects sent over the network. A change will break the serialization of old objects.
     // If objects are used for both network and database the network version is applied.
@@ -81,6 +81,4 @@ public class Version {
                 ", getP2PNetworkId()=" + getP2PMessageVersion() +
                 '}');
     }
-
-
 }

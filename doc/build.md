@@ -12,15 +12,15 @@ For the impatient
 What follows is explained in detail in the sections below, but for those who know their way around Java, git and Maven, here are the instructions in a nutshell:
 
     $ javac -version
-    javac 1.8.0_40       # must be 1.8.0_40 or better
+    javac 1.8.0_66       # must be 1.8.0_66 or better
 
-    $ git clone https://github.com/bitsquare/bitcoinj.git                
+    $ git clone -b FixBloomFilters https://github.com/bitsquare/bitcoinj.git                
     $ cd bitcoinj  
-    $ mvn install -DskipTests -Dmaven.javadoc.skip=true
+    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bitsquare
-    $ mvn package    
+    $ mvn clean package -DskipTests   
 
 When the build completes, you will find an executable jar: `gui/target/shaded.jar`. 
 To run it use:
@@ -34,15 +34,33 @@ Prerequisites
 The only prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u40 or better (as well as maven and git).
 In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
-To check the version of Java you currently have installed:
+##### 1. Check the version of Java you currently have installed
 
     $ javac -version
-    javac 1.8.0_40
+    javac 1.8.0_66
 
-If `javac` is not found, or your version is anything less than `1.8.0_40`, then you'll need to [download and install the latest JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
+If `javac` is not found, or your version is anything less than `1.8.0_66`, then you'll need to [download and install the latest JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
 
 > _**TIP:** Here are [instructions](http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html) for installing the JDK via `apt` on Debian/Ubuntu systems.
 > Bitsquare can be built with OpenJDK as well, but this hasn't been thoroughly tested yet._
+
+##### 2. Enable unlimited Strength for cryptographic keys
+
+Bitsquare uses 256 bit length keys which are still not permitted by default. 
+Get around that ridiculous fact by adding the missing [jars from Oracle](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html). 
+Please follow the steps described in the Readme file at the downloaded package.
+You will get an error when building Bitsquare package if you don't have these.
+
+##### 3. Copy the BountyCastle provider jar file
+
+Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2) to $JavaHome/jre/lib/ext/. 
+This prevent a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
+
+##### 4. Edit the jre\lib\security\java.security file to add BouncyCastleProvider
+
+Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
+E.g.:
+security.provider.11=org.bouncycastle.jce.provider.BouncyCastleProvider
 
 
 Steps
@@ -64,16 +82,16 @@ We remove Cartographer/HttpDiscovery support from in our [fork version 0.13.1.2]
 Beside the Java serialisation issues here are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer. 
 Beside that we fixed a few [flaws with the Bloom Filters](https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj) in BitcoinJ.
                 
-    $ git clone https://github.com/bitsquare/bitcoinj.git                
+    $ git clone -b FixBloomFilters https://github.com/bitsquare/bitcoinj.git               
     $ cd bitcoinj  
-    $ mvn install -DskipTests -Dmaven.javadoc.skip=true
+    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
 
 ### 3. Build jar
 
 Bitsquare uses maven as a build system. 
 
     $ cd bitsquare
-    $ mvn package
+    $ mvn clean package -DskipTests
 
 ### 4. Run
 
@@ -123,15 +141,6 @@ Here are example program arguments for using regtest and using the Tor network:
    
     $ java -jar gui/target/shaded.jar --bitcoin.network=regtest node.port=4442 --devTest=true --app.name=Bitsquare-Tor-Regtest-Bob   
    
-
-### 7. Enable unlimited Strength for cryptographic keys
-
-Bitsquare uses 256 bit length keys which are still not permitted by default.  
-Get around that ridiculous fact by adding the missing [jars from Oracle](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html).
-Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2) to $JavaHome/jre/lib/ext (to avoid getting 
-a "JCE cannot authenticate the provider BC" exception).
-
-
 Problems?
 ---------
 

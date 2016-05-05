@@ -30,10 +30,15 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.security.Permission;
+import java.security.PermissionCollection;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.*;
 
@@ -115,7 +120,49 @@ public class Utilities {
     }
 
     private static String getOSName() {
-        return System.getProperty("os.name").toLowerCase();
+        return System.getProperty("os.name").toLowerCase(Locale.US);
+    }
+
+    public static String getOSArchitecture() {
+        String osArch = System.getProperty("os.arch");
+        if (isWindows()) {
+            // See: Like always windows needs extra treatment
+            // https://stackoverflow.com/questions/20856694/how-to-find-the-os-bit-type
+            String arch = System.getenv("PROCESSOR_ARCHITECTURE");
+            String wow64Arch = System.getenv("PROCESSOR_ARCHITEW6432");
+            return arch.endsWith("64")
+                    || wow64Arch != null && wow64Arch.endsWith("64")
+                    ? "64" : "32";
+        } else if (isLinux()) {
+            return osArch.startsWith("i") ? "32" : "64";
+        } else {
+            return osArch.contains("64") ? "64" : osArch;
+        }
+    }
+
+    public static void printSysInfo() {
+        log.info("os.name: " + System.getProperty("os.name"));
+        log.info("os.version: " + System.getProperty("os.version"));
+        log.info("os.arch: " + System.getProperty("os.arch"));
+        log.info("sun.arch.data.model: " + getJVMArchitecture());
+        log.info("JRE: " + System.getProperty("java.runtime.version", "-") + " (" + System.getProperty("java.vendor", "-") + ")");
+        log.info("JVM: " + System.getProperty("java.vm.version", "-") + " (" + System.getProperty("java.vm.name", "-") + ")");
+    }
+    
+    public static String getJVMArchitecture() {
+        return System.getProperty("sun.arch.data.model");
+    }
+
+    public static boolean isCorrectOSArchitecture() {
+        boolean result = getOSArchitecture().endsWith(getJVMArchitecture());
+        if (!result) {
+            log.warn("System.getProperty(\"os.arch\") " + System.getProperty("os.arch"));
+            log.warn("System.getenv(\"ProgramFiles(x86)\") " + System.getenv("ProgramFiles(x86)"));
+            log.warn("System.getenv(\"PROCESSOR_ARCHITECTURE\")" + System.getenv("PROCESSOR_ARCHITECTURE"));
+            log.warn("System.getenv(\"PROCESSOR_ARCHITEW6432\") " + System.getenv("PROCESSOR_ARCHITEW6432"));
+            log.warn("System.getProperty(\"sun.arch.data.model\") " + System.getProperty("sun.arch.data.model"));
+        }
+        return result;
     }
 
     public static void openURI(URI uri) throws IOException {
@@ -151,7 +198,7 @@ public class Utilities {
                 throw new IOException("Failed to open directory: " + directory.toString());
         }
     }
-    
+
     public static void openWebPage(String target) {
         try {
             openURI(new URI(target));
@@ -372,5 +419,43 @@ public class Utilities {
         public boolean shouldSkipClass(Class<?> clazz) {
             return false;
         }
+    }
+
+    // See: https://stackoverflow.com/questions/1179672/how-to-avoid-installing-unlimited-strength-jce-policy-files-when-deploying-an
+    public static void removeCryptographyRestrictions() {
+        if (!isRestrictedCryptography()) {
+            log.debug("Cryptography restrictions removal not needed");
+            return;
+        }
+        try {
+            final Class<?> jceSecurity = Class.forName("javax.crypto.JceSecurity");
+            final Class<?> cryptoPermissions = Class.forName("javax.crypto.CryptoPermissions");
+            final Class<?> cryptoAllPermission = Class.forName("javax.crypto.CryptoAllPermission");
+
+            final Field isRestrictedField = jceSecurity.getDeclaredField("isRestricted");
+            isRestrictedField.setAccessible(true);
+            isRestrictedField.set(null, false);
+
+            final Field defaultPolicyField = jceSecurity.getDeclaredField("defaultPolicy");
+            defaultPolicyField.setAccessible(true);
+            final PermissionCollection defaultPolicy = (PermissionCollection) defaultPolicyField.get(null);
+
+            final Field perms = cryptoPermissions.getDeclaredField("perms");
+            perms.setAccessible(true);
+            ((Map<?, ?>) perms.get(defaultPolicy)).clear();
+
+            final Field instance = cryptoAllPermission.getDeclaredField("INSTANCE");
+            instance.setAccessible(true);
+            defaultPolicy.add((Permission) instance.get(null));
+
+            log.debug("Successfully removed cryptography restrictions");
+        } catch (Exception e) {
+            log.warn("Failed to remove cryptography restrictions", e);
+        }
+    }
+
+    public static boolean isRestrictedCryptography() {
+        // This simply matches the Oracle JRE, but not OpenJDK.
+        return "Java(TM) SE Runtime Environment".equals(System.getProperty("java.runtime.name"));
     }
 }

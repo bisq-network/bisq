@@ -27,10 +27,7 @@ import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.CryptoCurrency;
-import io.bitsquare.locale.FiatCurrency;
-import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.locale.*;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -69,6 +66,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     private Subscription tradeCurrencySubscriber;
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
+    private Button buyOfferButton;
+    private Button sellOfferButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -120,6 +119,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         Tuple3<TableView<Offer>, VBox, Button> tupleSell = getOfferTable(Offer.Direction.SELL);
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
+        buyOfferButton = tupleBuy.third;
+        sellOfferButton = tupleSell.third;
 
         HBox hBox = new HBox();
         hBox.setSpacing(30);
@@ -135,19 +136,29 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
         currencyComboBox.setOnAction(e -> {
-            model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+            TradeCurrency tradeCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
+            model.onSetTradeCurrency(tradeCurrency);
             updateChartData();
         });
 
         model.getOfferBookListItems().addListener(changeListener);
         tradeCurrencySubscriber = EasyBind.subscribe(model.tradeCurrency,
-                newValue -> {
-                    String code = newValue.getCode();
-                    areaChart.setTitle("Offer book for " + newValue.getName());
+                tradeCurrency -> {
+                    String code = tradeCurrency.getCode();
+                    String tradeCurrencyName = tradeCurrency.getName();
+                    areaChart.setTitle("Offer book for " + tradeCurrencyName);
                     priceColumnLabel.set("Price (" + code + "/BTC)");
                     volumeColumnLabel.set("Volume (" + code + ")");
                     xAxis.setLabel(priceColumnLabel.get());
                     xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis, "", ""));
+
+                    if (CurrencyUtil.isCryptoCurrency(code)) {
+                        buyOfferButton.setText("I want to sell bitcoin / buy " + tradeCurrencyName);
+                        sellOfferButton.setText("I want to buy bitcoin / sell " + tradeCurrencyName);
+                    } else {
+                        buyOfferButton.setText("I want to sell bitcoin");
+                        sellOfferButton.setText("I want to buy bitcoin");
+                    }
                 });
 
         buyOfferTableView.setItems(model.getTop3BuyOfferList());
@@ -316,7 +327,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
-        Label titleLabel = new Label(direction.equals(Offer.Direction.BUY) ? "Top 3 offers for buying bitcoin  (bid)" : "Top 3 offers for selling bitcoin  (ask)");
+        Label titleLabel = new Label(direction.equals(Offer.Direction.BUY) ? "Top 3 bid offers" : "Top 3 ask offers");
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
@@ -355,10 +366,10 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));
 
         seriesBuy = new XYChart.Series();
-        seriesBuy.setName("Offers for buying bitcoin   ");
+        seriesBuy.setName("Bid offers   ");
 
         seriesSell = new XYChart.Series();
-        seriesSell.setName("Offers for selling bitcoin ");
+        seriesSell.setName("Ask offers");
 
         areaChart = new AreaChart<>(xAxis, yAxis);
         areaChart.setAnimated(false);

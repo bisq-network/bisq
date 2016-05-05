@@ -87,6 +87,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     protected void activate() {
         selectBackupDir.setOnAction(e -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
             directoryChooser.setTitle("Select backup location");
             File dir = directoryChooser.showDialog(stage);
             if (dir != null) {

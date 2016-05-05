@@ -74,7 +74,7 @@
                     <PropertyValueFactory property="onionAddress"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="In/Out" fx:id="connectionTypeColumn" minWidth="70" maxWidth="80">
+            <TableColumn text="In/Out" fx:id="connectionTypeColumn" minWidth="80" maxWidth="90">
                 <cellValueFactory>
                     <PropertyValueFactory property="connectionType"/>
                 </cellValueFactory>

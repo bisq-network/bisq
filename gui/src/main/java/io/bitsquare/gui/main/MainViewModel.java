@@ -81,6 +81,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.security.Security;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -443,6 +444,7 @@ public class MainViewModel implements ViewModel {
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {
                                     tradeWalletService.setAesKey(aesKey);
+                                    walletService.setAesKey(aesKey);
                                     walletInitialized.set(true);
                                 })
                                 .hideCloseButton()
@@ -541,7 +543,7 @@ public class MainViewModel implements ViewModel {
                     log.error(msg);
                     UserThread.execute(() -> new Popup<>().warning(msg)
                             .actionButtonText("Shut down")
-                            .onAction(() -> BitsquareApp.shutDownHandler.run())
+                            .onAction(BitsquareApp.shutDownHandler::run)
                             .closeButtonText("Report bug at Github issues")
                             .onClose(() -> Utilities.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
                             .show());
@@ -549,6 +551,15 @@ public class MainViewModel implements ViewModel {
             }
         };
         checkCryptoThread.start();
+
+        if (Security.getProvider("BC") == null) {
+            new Popup<>().warning("There is a problem with the crypto libraries. BountyCastle is not available.")
+                    .actionButtonText("Shut down")
+                    .onAction(BitsquareApp.shutDownHandler::run)
+                    .closeButtonText("Report bug at Github issues")
+                    .onClose(() -> Utilities.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
+                    .show();
+        }
     }
 
 
@@ -813,11 +824,10 @@ public class MainViewModel implements ViewModel {
     private void displayAlertIfPresent(Alert alert) {
         boolean alreadyDisplayed = alert != null && alert.equals(user.getDisplayedAlert());
         user.setDisplayedAlert(alert);
-
-        if (alert != null && !alreadyDisplayed) {
-            if (!alert.isUpdateInfo || !alert.version.equals(Version.VERSION))
-                new DisplayAlertMessageWindow().alertMessage(alert).show();
-        }
+        if (alert != null &&
+                !alreadyDisplayed &&
+                (!alert.isUpdateInfo || alert.isNewVersion()))
+            new DisplayAlertMessageWindow().alertMessage(alert).show();
     }
 
     private void swapPendingOfferFundingEntries() {

@@ -292,7 +292,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private Coin getAmountAsCoin() {
         Coin senderAmount = formatter.parseToCoin(amountTextField.getText());
-        if (!Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
+        if (!Restrictions.isAboveFixedTxFeeForTradesAndDust(senderAmount)) {
             senderAmount = Coin.ZERO;
            /* new Popup()
                     .warning("The amount is lower than the transaction fee and the min. possible tx value (dust).")

@@ -22,7 +22,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
-import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.UserThread;
@@ -40,8 +39,10 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
 import io.bitsquare.user.Preferences;
-import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -50,10 +51,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.*;
 import org.jetbrains.annotations.NotNull;
 import org.spongycastle.crypto.params.KeyParameter;
 
@@ -87,6 +85,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
     private Set<String> fromAddresses;
+    private Coin amountOfSelectedItems = Coin.ZERO;
+    private ObjectProperty<Coin> senderAmountAsCoinProperty = new SimpleObjectProperty<>(Coin.ZERO);
+    private ChangeListener<String> amountListener;
+    private ChangeListener<Boolean> amountFocusListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -130,6 +132,23 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 updateList();
             }
         };
+        amountListener = (observable, oldValue, newValue) -> {
+            if (amountTextField.focusedProperty().get()) {
+                try {
+                    senderAmountAsCoinProperty.set(formatter.parseToCoin(amountTextField.getText()));
+                } catch (Throwable t) {
+                    log.error("Error at amountTextField input. " + t.toString());
+                }
+            }
+        };
+        amountFocusListener = (observable, oldValue, newValue) -> {
+            if (oldValue && !newValue) {
+                if (senderAmountAsCoinProperty.get().isPositive())
+                    amountTextField.setText(formatter.formatCoin(senderAmountAsCoinProperty.get()));
+                else
+                    amountTextField.setText("");
+            }
+        };
     }
 
     @Override
@@ -140,17 +159,18 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         reset();
 
+        amountTextField.textProperty().addListener(amountListener);
+        amountTextField.focusedProperty().addListener(amountFocusListener);
         walletService.addBalanceListener(balanceListener);
-        withdrawButton.disableProperty().bind(Bindings.createBooleanBinding(() -> !areInputsValid(),
-                amountTextField.textProperty(), withdrawToTextField.textProperty()));
     }
 
     @Override
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
         observableList.forEach(WithdrawalListItem::cleanup);
-        withdrawButton.disableProperty().unbind();
         walletService.removeBalanceListener(balanceListener);
+        amountTextField.textProperty().removeListener(amountListener);
+        amountTextField.focusedProperty().removeListener(amountFocusListener);
     }
 
 
@@ -160,8 +180,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @FXML
     public void onWithdraw() {
-        Coin senderAmount = formatter.parseToCoin(amountTextField.getText());
-        if (Restrictions.isAboveFixedTxFeeAndDust(senderAmount)) {
+        if (areInputsValid()) {
             FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
@@ -186,33 +205,38 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 }
             };
             try {
+                // We need to use the max. amount (amountOfSelectedItems) as the senderAmount might be less then 
+                // we have available and then the fee calculation would return 0
+                // TODO Get a proper fee calculation from BitcoinJ directly
                 Coin requiredFee = walletService.getRequiredFeeForMultipleAddresses(fromAddresses,
-                        withdrawToTextField.getText(), senderAmount);
-                Coin receiverAmount = senderAmount.subtract(requiredFee);
-                if (BitsquareApp.DEV_MODE) {
-                    doWithdraw(receiverAmount, callback);
-                } else {
-                    new Popup().headLine("Confirm withdrawal request")
-                            .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
-                                    "From address: " + withdrawFromTextField.getText() + "\n" +
-                                    "To receiving address: " + withdrawToTextField.getText() + ".\n" +
-                                    "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n\n" +
-                                    "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
-                                    "Are you sure you want to withdraw that amount?")
-                            .actionButtonText("Yes")
-                            .onAction(() -> doWithdraw(receiverAmount, callback))
-                            .closeButtonText("Cancel")
-                            .show();
+                        withdrawToTextField.getText(), amountOfSelectedItems);
+                Coin receiverAmount = senderAmountAsCoinProperty.get().subtract(requiredFee);
+                if (receiverAmount.isPositive()) {
+                    if (BitsquareApp.DEV_MODE) {
+                        doWithdraw(receiverAmount, callback);
+                    } else {
+                        new Popup().headLine("Confirm withdrawal request")
+                                .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmountAsCoinProperty.get()) + "\n" +
+                                        "From address: " + withdrawFromTextField.getText() + "\n" +
+                                        "To receiving address: " + withdrawToTextField.getText() + ".\n" +
+                                        "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n\n" +
+                                        "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
+                                        "Are you sure you want to withdraw that amount?")
+                                .actionButtonText("Yes")
+                                .onAction(() -> doWithdraw(receiverAmount, callback))
+                                .closeButtonText("Cancel")
+                                .show();
 
+                    }
+                } else {
+                    new Popup().warning("The amount you would like to send is too low as the bitcoin transaction fee will be deducted.\n" +
+                            "Please use a higher amount.").show();
                 }
             } catch (Throwable e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                new Popup().error(e.getMessage()).show();
+                new Popup().warning(e.getMessage()).show();
             }
-        } else {
-            new Popup().warning("The amount to transfer is lower than the transaction fee and the min. possible tx value (dust).")
-                    .show();
         }
     }
 
@@ -227,10 +251,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 .collect(Collectors.toSet());
 
         if (!selectedItems.isEmpty()) {
-            Coin sum = Coin.valueOf(selectedItems.stream().mapToLong(e -> e.getBalance().getValue()).sum());
-            if (sum.isPositive()) {
-                amountTextField.setText(formatter.formatCoin(sum));
+            amountOfSelectedItems = Coin.valueOf(selectedItems.stream().mapToLong(e -> e.getBalance().getValue()).sum());
+            if (amountOfSelectedItems.isPositive()) {
+                senderAmountAsCoinProperty.set(amountOfSelectedItems);
+                amountTextField.setText(formatter.formatCoin(amountOfSelectedItems));
             } else {
+                senderAmountAsCoinProperty.set(Coin.ZERO);
+                amountOfSelectedItems = Coin.ZERO;
                 amountTextField.setText("");
                 withdrawFromTextField.setText("");
             }
@@ -298,11 +325,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             updateList();
         } catch (AddressFormatException e) {
             new Popup().warning("The address is not correct. Please check the address format.").show();
+        } catch (Wallet.DustySendRequested e) {
+            new Popup().warning("The amount you would like to send is below the dust limit and would be rejected by the bitcoin network.\n" +
+                    "Please use a higher amount.").show();
         } catch (AddressEntryException e) {
             new Popup().error(e.getMessage()).show();
         } catch (InsufficientMoneyException e) {
             log.warn(e.getMessage());
             new Popup().warning("You don't have enough fund in your wallet.").show();
+        } catch (Throwable e) {
+            log.warn(e.getMessage());
+            new Popup().warning(e.getMessage()).show();
         }
     }
 
@@ -315,6 +348,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawFromTextField.setPromptText("Select a source address from the table");
         withdrawFromTextField.setTooltip(null);
 
+        amountOfSelectedItems = Coin.ZERO;
+        senderAmountAsCoinProperty.set(Coin.ZERO);
         amountTextField.setText("");
         amountTextField.setPromptText("Set the amount to withdraw");
 
@@ -338,9 +373,27 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private boolean areInputsValid() {
-        return btcAddressValidator.validate(withdrawToTextField.getText()).isValid &&
-                amountTextField.getText().length() > 0 &&
-                Restrictions.isAboveFixedTxFeeAndDust(formatter.parseToCoin(amountTextField.getText()));
+        if (!senderAmountAsCoinProperty.get().isPositive()) {
+            new Popup().warning("Please fill in a valid value for the amount to send (max. 8 decimal places).").show();
+            return false;
+        }
+
+        if (!btcAddressValidator.validate(withdrawToTextField.getText()).isValid) {
+            new Popup().warning("Please fill in a valid receiver bitcoin address.").show();
+            return false;
+        }
+        if (!amountOfSelectedItems.isPositive()) {
+            new Popup().warning("You need to select a source address in the table above.").show();
+            return false;
+        }
+
+        if (senderAmountAsCoinProperty.get().compareTo(amountOfSelectedItems) > 0) {
+            new Popup().warning("Your amount exceeds the available amount for the selected address.\n" +
+                    "Consider to select multiple addresses in the table above if you want to withdraw more.").show();
+            return false;
+        }
+
+        return true;
     }
 
 

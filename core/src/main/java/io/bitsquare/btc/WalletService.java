@@ -39,10 +39,7 @@ import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
-import org.bitcoinj.script.Script;
 import org.bitcoinj.utils.Threading;
-import org.bitcoinj.wallet.CoinSelection;
-import org.bitcoinj.wallet.CoinSelector;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -98,6 +95,7 @@ public class WalletService {
     public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
     private final Storage<Long> storage;
     private final Long bloomFilterTweak;
+    private KeyParameter aesKey;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -340,6 +338,10 @@ public class WalletService {
         }
     }
 
+    public void setAesKey(KeyParameter aesKey) {
+        this.aesKey = aesKey;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -574,22 +576,24 @@ public class WalletService {
     public Coin getRequiredFee(String fromAddress,
                                String toAddress,
                                Coin amount,
-                               AddressEntry.Context context) throws AddressFormatException, AddressEntryException {
+                               AddressEntry.Context context)
+            throws AddressFormatException, AddressEntryException {
         Optional<AddressEntry> addressEntry = findAddressEntry(fromAddress, context);
         if (!addressEntry.isPresent())
             throw new AddressEntryException("WithdrawFromAddress is not found in our wallet.");
 
         checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must nto be null");
-        CoinSelector selector = new TradeWalletCoinSelector(params, addressEntry.get().getAddress());
-        return getFee(toAddress,
+        return getFee(fromAddress,
+                toAddress,
                 amount,
-                selector);
+                context,
+                Coin.ZERO);
     }
 
     public Coin getRequiredFeeForMultipleAddresses(Set<String> fromAddresses,
                                                    String toAddress,
-                                                   Coin amount) throws AddressFormatException,
-            AddressEntryException {
+                                                   Coin amount)
+            throws AddressFormatException, AddressEntryException {
         Set<AddressEntry> addressEntries = fromAddresses.stream()
                 .map(address -> {
                     Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
@@ -606,63 +610,55 @@ public class WalletService {
                 .collect(Collectors.toSet());
         if (addressEntries.isEmpty())
             throw new AddressEntryException("No Addresses for withdraw  found in our wallet");
-
-        CoinSelector selector = new MultiAddressesCoinSelector(params, addressEntries);
-        return getFee(toAddress,
+        return getFeeForMultipleAddresses(fromAddresses,
+                toAddress,
                 amount,
-                selector);
+                Coin.ZERO);
     }
 
-    private Coin getFee(String toAddress,
-                        Coin amount,
-                        CoinSelector selector) throws AddressFormatException, AddressEntryException {
-        List<TransactionOutput> candidates = wallet.calculateAllSpendCandidates();
-        CoinSelection bestCoinSelection = selector.select(params.getMaxMoney(), candidates);
-        Transaction tx = new Transaction(params);
-        tx.addOutput(amount, new Address(params, toAddress));
-        if (!adjustOutputDownwardsForFee(tx, bestCoinSelection, Coin.ZERO, FeePolicy.getNonTradeFeePerKb()))
-            throw new Wallet.CouldNotAdjustDownwards();
 
-        Coin fee = amount.subtract(tx.getOutput(0).getValue());
-        log.info("Required fee " + fee);
+    private Coin getFee(String fromAddress,
+                        String toAddress,
+                        Coin amount,
+                        AddressEntry.Context context,
+                        Coin fee) throws AddressEntryException, AddressFormatException {
+        try {
+            wallet.completeTx(getSendRequest(fromAddress, toAddress, amount, aesKey, context));
+        } catch (InsufficientMoneyException e) {
+            if (e.missing != null) {
+                log.trace("missing fee " + e.missing.toFriendlyString());
+                fee = fee.add(e.missing);
+                amount = amount.subtract(fee);
+                return getFee(fromAddress,
+                        toAddress,
+                        amount,
+                        context,
+                        fee);
+            }
+        }
+        log.trace("result fee " + fee.toFriendlyString());
         return fee;
     }
 
-    private boolean adjustOutputDownwardsForFee(Transaction tx, CoinSelection coinSelection, Coin baseFee, Coin feePerKb) {
-        TransactionOutput output = tx.getOutput(0);
-        // Check if we need additional fee due to the transaction's size
-        int size = tx.bitcoinSerialize().length;
-        size += estimateBytesForSigning(coinSelection);
-        Coin fee = baseFee.add(feePerKb.multiply((size / 1000) + 1));
-        output.setValue(output.getValue().subtract(fee));
-        // Check if we need additional fee due to the output's value
-        if (output.getValue().compareTo(Coin.CENT) < 0 && fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
-            output.setValue(output.getValue().subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.subtract(fee)));
-        return output.getMinNonDustValue().compareTo(output.getValue()) <= 0;
-    }
-
-    private int estimateBytesForSigning(CoinSelection selection) {
-        int size = 0;
-        for (TransactionOutput output : selection.gathered) {
-            try {
-                Script script = output.getScriptPubKey();
-                ECKey key = null;
-                Script redeemScript = null;
-                if (script.isSentToAddress()) {
-                    key = wallet.findKeyFromPubHash(script.getPubKeyHash());
-                    checkNotNull(key, "Coin selection includes unspendable outputs");
-                } else if (script.isPayToScriptHash()) {
-                    redeemScript = wallet.findRedeemDataFromScriptHash(script.getPubKeyHash()).redeemScript;
-                    checkNotNull(redeemScript, "Coin selection includes unspendable outputs");
-                }
-                size += script.getNumberOfBytesRequiredToSpend(key, redeemScript);
-            } catch (ScriptException e) {
-                // If this happens it means an output script in a wallet tx could not be understood. That should never
-                // happen, if it does it means the wallet has got into an inconsistent state.
-                throw new IllegalStateException(e);
+    private Coin getFeeForMultipleAddresses(Set<String> fromAddresses,
+                                            String toAddress,
+                                            Coin amount,
+                                            Coin fee) throws AddressEntryException, AddressFormatException {
+        try {
+            wallet.completeTx(getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, aesKey));
+        } catch (InsufficientMoneyException e) {
+            if (e.missing != null) {
+                log.trace("missing fee " + e.missing.toFriendlyString());
+                fee = fee.add(e.missing);
+                amount = amount.subtract(fee);
+                return getFeeForMultipleAddresses(fromAddresses,
+                        toAddress,
+                        amount,
+                        fee);
             }
         }
-        return size;
+        log.trace("result fee " + fee.toFriendlyString());
+        return fee;
     }
 
 
@@ -726,7 +722,7 @@ public class WalletService {
             AddressEntryException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount),
-                "You cannot send an amount which are smaller than 546 satoshis.");
+                "The amount is too low (dust limit).");
         tx.addOutput(amount, new Address(params, toAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
@@ -751,7 +747,7 @@ public class WalletService {
             AddressFormatException, AddressEntryException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount),
-                "You cannot send an amount which are smaller than 546 satoshis.");
+                "The amount is too low (dust limit).");
         tx.addOutput(amount, new Address(params, toAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
