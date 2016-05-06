@@ -346,7 +346,7 @@ public class PeerManager implements ConnectionListener {
         printNewReportedPeers(reportedPeersToAdd);
 
         // We check if the reported msg is not violating our rules
-        if (reportedPeersToAdd.size() <= (MAX_REPORTED_PEERS + PeerManager.MAX_CONNECTIONS_ABSOLUTE + 10)) {
+        if (reportedPeersToAdd.size() <= (MAX_REPORTED_PEERS + MAX_CONNECTIONS_ABSOLUTE + 10)) {
             reportedPeers.addAll(reportedPeersToAdd);
             purgeReportedPeersIfExceeds();
 
