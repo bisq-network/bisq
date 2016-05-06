@@ -30,6 +30,7 @@ public class SeedNode {
     public static final int MAX_CONNECTIONS_DEFAULT = 50;
 
     private NodeAddress mySeedNodeAddress = new NodeAddress("localhost:8001");
+    private int maxConnections = MAX_CONNECTIONS_DEFAULT;  // we keep default a higher connection size for seed nodes
     private boolean useLocalhost = false;
     private Set<NodeAddress> progArgSeedNodes;
     private P2PService seedNodeP2PService;
@@ -67,13 +68,10 @@ public class SeedNode {
                     Version.setBtcNetworkId(networkId);
                     if (args.length > 2) {
                         String arg2 = args[2];
-                        int maxConnections = Integer.parseInt(arg2);
+                        maxConnections = Integer.parseInt(arg2);
                         log.info("From processArgs: maxConnections=" + maxConnections);
                         checkArgument(maxConnections < MAX_CONNECTIONS_LIMIT, "maxConnections seems to be a bit too high...");
                         PeerManager.setMaxConnections(maxConnections);
-                    } else {
-                        // we keep default a higher connection size for seed nodes
-                        PeerManager.setMaxConnections(MAX_CONNECTIONS_DEFAULT);
                     }
                     if (args.length > 3) {
                         String arg3 = args[3];
@@ -107,11 +105,13 @@ public class SeedNode {
     }
 
     public void createAndStartP2PService(boolean useDetailedLogging) {
-        createAndStartP2PService(mySeedNodeAddress, useLocalhost, Version.getBtcNetworkId(), useDetailedLogging, progArgSeedNodes, null);
+        createAndStartP2PService(mySeedNodeAddress, maxConnections, useLocalhost,
+                Version.getBtcNetworkId(), useDetailedLogging, progArgSeedNodes, null);
     }
 
     @VisibleForTesting
     public void createAndStartP2PService(NodeAddress mySeedNodeAddress,
+                                         int maxConnections,
                                          boolean useLocalhost,
                                          int networkId,
                                          boolean useDetailedLogging,
@@ -144,7 +144,8 @@ public class SeedNode {
             log.info("Created torDir at " + torDir.getAbsolutePath());
 
         seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
-        seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, torDir, useLocalhost, networkId, storageDir, new Clock(), null, null);
+        seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, maxConnections,
+                torDir, useLocalhost, networkId, storageDir, new Clock(), null, null);
         seedNodeP2PService.start(listener);
     }
 

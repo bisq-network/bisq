@@ -26,6 +26,7 @@ import java.util.concurrent.CountDownLatch;
 @Ignore
 public class PeerManagerTest {
     private static final Logger log = LoggerFactory.getLogger(PeerManagerTest.class);
+    public static final int MAX_CONNECTIONS = 100;
 
     final boolean useLocalhost = true;
     private CountDownLatch latch;
@@ -37,7 +38,7 @@ public class PeerManagerTest {
     public void setup() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
-        PeerManager.setMaxConnections(100);
+        PeerManager.setMaxConnections(MAX_CONNECTIONS);
 
         seedNodes = new HashSet<>();
         if (useLocalhost) {
@@ -84,7 +85,7 @@ public class PeerManagerTest {
         seedNodes.add(nodeAddress);
         seedNode1 = new SeedNode("test_dummy_dir");
         latch = new CountDownLatch(2);
-        seedNode1.createAndStartP2PService(nodeAddress, useLocalhost, 2, true,
+        seedNode1.createAndStartP2PService(nodeAddress, MAX_CONNECTIONS, useLocalhost, 2, true,
                 seedNodes, new P2PServiceListener() {
                     @Override
                     public void onRequestingDataCompleted() {
@@ -136,7 +137,7 @@ public class PeerManagerTest {
         latch = new CountDownLatch(6);
 
         seedNode1 = new SeedNode("test_dummy_dir");
-        seedNode1.createAndStartP2PService(nodeAddress1, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
+        seedNode1.createAndStartP2PService(nodeAddress1, MAX_CONNECTIONS, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();
@@ -174,7 +175,7 @@ public class PeerManagerTest {
         Thread.sleep(500);
 
         seedNode2 = new SeedNode("test_dummy_dir");
-        seedNode2.createAndStartP2PService(nodeAddress2, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
+        seedNode2.createAndStartP2PService(nodeAddress2, MAX_CONNECTIONS, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();
@@ -411,7 +412,7 @@ public class PeerManagerTest {
         SeedNode seedNode = new SeedNode("test_dummy_dir");
 
         latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(new NodeAddress("localhost", port), useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
+        seedNode.createAndStartP2PService(new NodeAddress("localhost", port), MAX_CONNECTIONS, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();
