@@ -23,7 +23,7 @@ import java.util.concurrent.CountDownLatch;
 // Run it once then lookup for onion address at: tor/hiddenservice/hostname and use that for the NodeAddress param.
 public class PeerServiceTest {
     private static final Logger log = LoggerFactory.getLogger(PeerServiceTest.class);
-    public static final int MAX_CONNECTIONS = 100;
+    private static final int MAX_CONNECTIONS = 100;
 
     final boolean useLocalhost = true;
     private CountDownLatch latch;

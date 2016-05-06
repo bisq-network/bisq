@@ -26,7 +26,7 @@ import java.util.concurrent.CountDownLatch;
 @Ignore
 public class PeerManagerTest {
     private static final Logger log = LoggerFactory.getLogger(PeerManagerTest.class);
-    public static final int MAX_CONNECTIONS = 100;
+    private static final int MAX_CONNECTIONS = 100;
 
     final boolean useLocalhost = true;
     private CountDownLatch latch;
