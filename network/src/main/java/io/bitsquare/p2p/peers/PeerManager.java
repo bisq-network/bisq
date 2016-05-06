@@ -28,16 +28,20 @@ public class PeerManager implements ConnectionListener {
     // Use a long delay as the bootstrapping peer might need a while until it knows its onion address
     private static final long REMOVE_ANONYMOUS_PEER_SEC = Timer.STRESS_TEST ? 10 : 120;
 
+    private static final int MAX_REPORTED_PEERS = 1000;
+    private static final int MAX_PERSISTED_PEERS = 500;
+    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(14); // max age for reported peers is 14 days
+
+    private final boolean printReportedPeersDetails = true;
+    private boolean lostAllConnections;
+
     private int MAX_CONNECTIONS;
     private int MIN_CONNECTIONS;
     private int MAX_CONNECTIONS_PEER;
     private int MAX_CONNECTIONS_NON_DIRECT;
-
-
     private int MAX_CONNECTIONS_ABSOLUTE;
-    private final boolean printReportedPeersDetails = true;
-    private boolean lostAllConnections;
 
+    // Modify this to change the relationships between connection limits.
     private void setMaxConnections(int maxConnections) {
         MAX_CONNECTIONS = maxConnections;
         MIN_CONNECTIONS = Math.max(1, maxConnections - 4);
@@ -45,10 +49,6 @@ public class PeerManager implements ConnectionListener {
         MAX_CONNECTIONS_NON_DIRECT = MAX_CONNECTIONS + 8;
         MAX_CONNECTIONS_ABSOLUTE = MAX_CONNECTIONS + 18;
     }
-
-    private static final int MAX_REPORTED_PEERS = 1000;
-    private static final int MAX_PERSISTED_PEERS = 500;
-    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(14); // max age for reported peers is 14 days
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,8 +88,8 @@ public class PeerManager implements ConnectionListener {
 
     public PeerManager(NetworkNode networkNode, int maxConnections, Set<NodeAddress> seedNodeAddresses,
                        File storageDir, Clock clock) {
-        this.networkNode = networkNode;
         setMaxConnections(maxConnections);
+        this.networkNode = networkNode;
         this.clock = clock;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
