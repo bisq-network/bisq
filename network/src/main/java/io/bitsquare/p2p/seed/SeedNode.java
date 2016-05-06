@@ -71,7 +71,6 @@ public class SeedNode {
                         maxConnections = Integer.parseInt(arg2);
                         log.info("From processArgs: maxConnections=" + maxConnections);
                         checkArgument(maxConnections < MAX_CONNECTIONS_LIMIT, "maxConnections seems to be a bit too high...");
-                        PeerManager.setMaxConnections(maxConnections);
                     }
                     if (args.length > 3) {
                         String arg3 = args[3];

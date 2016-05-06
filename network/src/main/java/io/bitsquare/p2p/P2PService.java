@@ -150,7 +150,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.addMessageListener(this);
 
         Set<NodeAddress> seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, networkId);
-        peerManager = new PeerManager(networkNode, seedNodeAddresses, storageDir, clock);
+        peerManager = new PeerManager(networkNode, maxConnections, seedNodeAddresses, storageDir, clock);
 
         broadcaster = new Broadcaster(networkNode, peerManager);
 

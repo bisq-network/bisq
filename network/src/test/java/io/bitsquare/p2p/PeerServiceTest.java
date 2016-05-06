@@ -38,7 +38,6 @@ public class PeerServiceTest {
     public void setup() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
-        PeerManager.setMaxConnections(MAX_CONNECTIONS);
 
         if (useLocalhost) {
             seedNodeAddresses.add(new NodeAddress("localhost:8001"));

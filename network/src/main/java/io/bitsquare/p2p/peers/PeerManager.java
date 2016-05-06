@@ -28,26 +28,22 @@ public class PeerManager implements ConnectionListener {
     // Use a long delay as the bootstrapping peer might need a while until it knows its onion address
     private static final long REMOVE_ANONYMOUS_PEER_SEC = Timer.STRESS_TEST ? 10 : 120;
 
-    private static int MAX_CONNECTIONS;
-    private static int MIN_CONNECTIONS;
-    private static int MAX_CONNECTIONS_PEER;
-    private static int MAX_CONNECTIONS_NON_DIRECT;
+    private int MAX_CONNECTIONS;
+    private int MIN_CONNECTIONS;
+    private int MAX_CONNECTIONS_PEER;
+    private int MAX_CONNECTIONS_NON_DIRECT;
 
 
-    private static int MAX_CONNECTIONS_ABSOLUTE;
+    private int MAX_CONNECTIONS_ABSOLUTE;
     private final boolean printReportedPeersDetails = true;
     private boolean lostAllConnections;
 
-    public static void setMaxConnections(int maxConnections) {
+    private void setMaxConnections(int maxConnections) {
         MAX_CONNECTIONS = maxConnections;
         MIN_CONNECTIONS = Math.max(1, maxConnections - 4);
         MAX_CONNECTIONS_PEER = MAX_CONNECTIONS + 4;
         MAX_CONNECTIONS_NON_DIRECT = MAX_CONNECTIONS + 8;
         MAX_CONNECTIONS_ABSOLUTE = MAX_CONNECTIONS + 18;
-    }
-
-    static {
-        setMaxConnections(12);
     }
 
     private static final int MAX_REPORTED_PEERS = 1000;
@@ -90,8 +86,10 @@ public class PeerManager implements ConnectionListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PeerManager(NetworkNode networkNode, Set<NodeAddress> seedNodeAddresses, File storageDir, Clock clock) {
+    public PeerManager(NetworkNode networkNode, int maxConnections, Set<NodeAddress> seedNodeAddresses,
+                       File storageDir, Clock clock) {
         this.networkNode = networkNode;
+        setMaxConnections(maxConnections);
         this.clock = clock;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
