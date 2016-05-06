@@ -124,7 +124,7 @@ public class NetworkStressTest {
         final boolean useLocalhost = seedNodeAddress.hostName.equals("localhost");
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
-        seedNode.createAndStartP2PService(seedNodeAddress, useLocalhost,
+        seedNode.createAndStartP2PService(seedNodeAddress, SeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhost,
                 REGTEST_NETWORK_ID, USE_DETAILED_LOGGING, seedNodes,
                 new SeedServiceListener(localServicesLatch, localServicesFailed));
         print("created seed node");
