@@ -686,8 +686,13 @@ public class Connection implements MessageListener {
 
 
                         // First we check the size
-                        if (size > getMaxMsgSize() && reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
+                        boolean exceeds = size > getMaxMsgSize();
+                        if (exceeds)
+                            log.warn("size > MAX_MSG_SIZE. size=" + size);
+
+                        if (exceeds && reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
                             return;
+
 
                         // Then we check if data is of type Serializable (objectInputStream supports  
                         // Externalizable objects as well)
