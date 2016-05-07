@@ -146,7 +146,9 @@ public class ProcessModel implements Model, Serializable {
 
     public byte[] getArbitratorPubKey(NodeAddress arbitratorNodeAddress) {
         Arbitrator acceptedArbitratorByAddress = user.getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-        checkNotNull(acceptedArbitratorByAddress, "acceptedArbitratorByAddress must not be null. Maybe there is no arbitrator in the network available.");
+        checkNotNull(acceptedArbitratorByAddress, "acceptedArbitratorByAddress must not be null.\n" +
+                "Maybe there is no arbitrator in the network available or you did not receive the data from the P2P network.\n" +
+                "You can try to restart the app to see if that resolved the issue.");
         return acceptedArbitratorByAddress.getBtcPubKey();
     }
 
