@@ -15,7 +15,7 @@ import java.security.spec.X509EncodedKeySpec;
 public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-   
+
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     public transient PublicKey receiversPubKey;
@@ -45,7 +45,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     @Override
     public String toString() {
         return "ProtectedMailboxData{" +
-                "receiversPubKey.hashCode()=" + receiversPubKey.hashCode() +
+                "receiversPubKey.hashCode()=" + (receiversPubKey != null ? receiversPubKey.hashCode() : "") +
                 "} " + super.toString();
     }
 }
