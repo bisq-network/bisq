@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadFactory;
 public class SeedNodeMain {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
 
-    private static final boolean USE_DETAILED_LOGGING = true;
+    private static final boolean USE_DETAILED_LOGGING = false;
 
     private SeedNode seedNode;
 
