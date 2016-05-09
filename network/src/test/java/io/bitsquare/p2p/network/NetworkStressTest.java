@@ -270,8 +270,9 @@ public class NetworkStressTest {
         // Wait for peers to complete receiving.  We are generous here.
         assertLatch("timed out while receiving direct messages",
                 receivedDirectLatch, 10 * idealMaxDirectDelay, TimeUnit.MILLISECONDS);
-        print("receiving %d direct messages per peer took %ss", directCount,
-                (System.currentTimeMillis() - sendStartMillis)/1000.0);
+        final long recvMillis = System.currentTimeMillis() - sendStartMillis;
+        print("receiving %d direct messages per peer took %ss (%.2f x ideal max)",
+                directCount, recvMillis/1000.0, recvMillis/(float)idealMaxDirectDelay);
         // Wait for peers to complete sending.
         // This should be nearly instantaneous after waiting for reception is completed.
         assertLatch("timed out while sending direct messages",
