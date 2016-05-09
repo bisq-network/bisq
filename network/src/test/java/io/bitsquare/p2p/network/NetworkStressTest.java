@@ -6,6 +6,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
@@ -221,6 +222,7 @@ public class NetworkStressTest {
         // Test each peer sending a direct message to another random peer.
         final int nPeers = peerNodes.size();
         BooleanProperty sentDirectFailed = new SimpleBooleanProperty(false);
+        final List<Long> sentDelays = new Vector<>(nPeers * directCount);
         final CountDownLatch sentDirectLatch = new CountDownLatch(directCount * nPeers);
         final CountDownLatch receivedDirectLatch = new CountDownLatch(directCount * nPeers);
         final long sendStartMillis = System.currentTimeMillis();
@@ -245,20 +247,24 @@ public class NetworkStressTest {
                 final long sendAfterMillis = nextSendMillis - System.currentTimeMillis();
                 /*print("sending direct message from peer %s to %s in %sms",
                         srcPeer.getAddress(), dstPeer.getAddress(), sendAfterMillis);*/
-                UserThread.runAfter(() -> srcPeer.sendEncryptedDirectMessage(
-                        dstPeerAddress, peerPKRings.get(dstPeerIdx),
-                        new StressTestDirectMessage("test/" + dstPeerAddress), new SendDirectMessageListener() {
-                            @Override
-                            public void onArrived() {
-                                sentDirectLatch.countDown();
-                            }
+                UserThread.runAfter(() -> {
+                            final long sendMillis = System.currentTimeMillis();
+                            srcPeer.sendEncryptedDirectMessage(
+                                    dstPeerAddress, peerPKRings.get(dstPeerIdx),
+                                    new StressTestDirectMessage("test/" + dstPeerAddress), new SendDirectMessageListener() {
+                                        @Override
+                                        public void onArrived() {
+                                            sentDelays.add(System.currentTimeMillis() - sendMillis);
+                                            sentDirectLatch.countDown();
+                                        }
 
-                            @Override
-                            public void onFault() {
-                                sentDirectFailed.set(true);
-                                sentDirectLatch.countDown();
-                            }
-                        }), sendAfterMillis, TimeUnit.MILLISECONDS
+                                        @Override
+                                        public void onFault() {
+                                            sentDirectFailed.set(true);
+                                            sentDirectLatch.countDown();
+                                        }
+                                    });
+                        }, sendAfterMillis, TimeUnit.MILLISECONDS
                 );
             }
         }
@@ -277,8 +283,10 @@ public class NetworkStressTest {
         // This should be nearly instantaneous after waiting for reception is completed.
         assertLatch("timed out while sending direct messages",
                 sentDirectLatch, idealMaxDirectDelay / 10, TimeUnit.MILLISECONDS);
-        print("sending %d direct messages per peer took %ss", directCount,
-                (System.currentTimeMillis() - sendStartMillis)/1000.0);
+        Tuple3<Long, Long, Long> mma = minMaxAvg(sentDelays);
+        print("sending %d direct messages per peer took %ss (min/max/avg %s/%s/%s ms)",
+                directCount, (System.currentTimeMillis() - sendStartMillis)/1000.0,
+                mma.first, mma.second, mma.third);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
     }
 
@@ -338,6 +346,20 @@ public class NetworkStressTest {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    private Tuple3<Long, Long, Long> minMaxAvg(List<Long> l) {
+        long min = Long.MAX_VALUE;
+        long max = Long.MIN_VALUE;
+        long sum = 0;
+        for (long e : l) {
+            if (e < min)
+                min = e;
+            if (e > max)
+                max = e;
+            sum += e;
+        }
+        return new Tuple3<>(min, max, sum / l.size());
     }
 
     // P2P service listener classes
