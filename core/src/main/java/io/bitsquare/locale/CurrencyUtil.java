@@ -111,8 +111,9 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BIGUP", "BigUp"));
         result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
         result.add(new CryptoCurrency("JBS", "Jumbucks"));
+        result.add(new CryptoCurrency("PINK", "Pinkcoin"));
         //result.add(new CryptoCurrency("MKR", "Maker"));
-         
+
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
         return result;
