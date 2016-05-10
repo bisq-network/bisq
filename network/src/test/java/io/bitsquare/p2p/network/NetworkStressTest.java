@@ -164,6 +164,16 @@ public class NetworkStressTest {
         }
 
         print("all local nodes started");
+
+        // Wait for peers to get their preliminary data.
+        assertLatch("timed out while waiting for preliminary data",
+                prelimDataLatch, 30, TimeUnit.SECONDS);
+        print("preliminary data received");
+
+        // Wait for peers to complete their bootstrapping.
+        assertLatch("timed out while waiting for bootstrap",
+                bootstrapLatch, 30, TimeUnit.SECONDS);
+        print("bootstrap complete");
     }
 
     @NotNull
@@ -221,15 +231,6 @@ public class NetworkStressTest {
 
     @Test
     public void test() throws InterruptedException {
-        // Wait for peers to get their preliminary data.
-        assertLatch("timed out while waiting for preliminary data",
-                prelimDataLatch, 30, TimeUnit.SECONDS);
-        print("preliminary data received");
-        // Wait for peers to complete their bootstrapping.
-        assertLatch("timed out while waiting for bootstrap",
-                bootstrapLatch, 30, TimeUnit.SECONDS);
-        print("bootstrap complete");
-
         // Test each peer sending a direct message to another random peer.
         final int nPeers = peerNodes.size();
         BooleanProperty sentDirectFailed = new SimpleBooleanProperty(false);
