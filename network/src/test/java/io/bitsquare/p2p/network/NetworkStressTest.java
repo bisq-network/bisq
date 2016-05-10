@@ -140,24 +140,9 @@ public class NetworkStressTest {
         for (int p = 0; p < nPeers; p++) {
             // peer network port
             final int peerPort = Utils.findFreeSystemPort();
-
-            // peer data directories
-            final File peerDir = new File(testDataDir.toFile(), String.format("peer-%06d", p));
-            final File peerTorDir = new File(peerDir, "tor");
-            final File peerStorageDir = new File(peerDir, "db");
-            final File peerKeysDir = new File(peerDir, "keys");
-            //noinspection ResultOfMethodCallIgnored
-            peerKeysDir.mkdirs();  // needed for creating the key ring
-
-            // peer keys
-            final KeyStorage peerKeyStorage = new KeyStorage(peerKeysDir);
-            final KeyRing peerKeyRing = new KeyRing(peerKeyStorage);
-            peerPKRings.add(peerKeyRing.getPubKeyRing());
-            final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing);
-
             // create, save and start peer
-            final P2PService peer = new P2PService(seedNodesRepository, peerPort, peerTorDir, useLocalhost,
-                    REGTEST_NETWORK_ID, peerStorageDir, new Clock(), peerEncryptionService, peerKeyRing);
+            final P2PService peer = createPeerNode(p, peerPort, useLocalhost, seedNodesRepository);
+            peerPKRings.add(peer.getKeyRing().getPubKeyRing());
             peerNodes.add(peer);
             peer.start(new PeerServiceListener(localServicesLatch, localServicesFailed));
         }
@@ -183,6 +168,25 @@ public class NetworkStressTest {
             port = Utils.findFreeSystemPort();
         } while (port % 10 != REGTEST_NETWORK_ID);
         return new NodeAddress("localhost", port);
+    }
+
+    @NotNull
+    private P2PService createPeerNode(int n, int port, boolean useLocalhost, SeedNodesRepository seedNodesRepository) {
+        // peer data directories
+        final File peerDir = new File(testDataDir.toFile(), String.format("peer-%06d", n));
+        final File peerTorDir = new File(peerDir, "tor");
+        final File peerStorageDir = new File(peerDir, "db");
+        final File peerKeysDir = new File(peerDir, "keys");
+        //noinspection ResultOfMethodCallIgnored
+        peerKeysDir.mkdirs();  // needed for creating the key ring
+
+        // peer keys
+        final KeyStorage peerKeyStorage = new KeyStorage(peerKeysDir);
+        final KeyRing peerKeyRing = new KeyRing(peerKeyStorage);
+        final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing);
+
+        return new P2PService(seedNodesRepository, port, peerTorDir, useLocalhost,
+                REGTEST_NETWORK_ID, peerStorageDir, new Clock(), peerEncryptionService, peerKeyRing);
     }
 
     @After
