@@ -776,8 +776,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     @VisibleForTesting
+    @Nullable
     public KeyRing getKeyRing() {
-        return optionalKeyRing.get();
+        return optionalKeyRing.isPresent()? optionalKeyRing.get() : null;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
