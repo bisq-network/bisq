@@ -189,7 +189,8 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                             handlerMap.put(uid, keepAliveHandler);
                             keepAliveHandler.sendPingAfterRandomDelay(connection);
                         } else {
-                            log.warn("Connection with id {} has not completed and is still in our map. " +
+                            // TODO check if this situation causes any issues
+                            log.debug("Connection with id {} has not completed and is still in our map. " +
                                     "We will try to ping that peer at the next schedule.", uid);
                         }
                     });
