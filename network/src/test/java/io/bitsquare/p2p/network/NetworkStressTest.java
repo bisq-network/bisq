@@ -125,7 +125,7 @@ public class NetworkStressTest {
 
         // Create and start the seed node.
         seedNode = new SeedNode(testDataDir.toString());
-        final NodeAddress seedNodeAddress = getSeedNodeAddress();
+        final NodeAddress seedNodeAddress = newSeedNodeAddress();
         final boolean useLocalhost = seedNodeAddress.hostName.equals("localhost");
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
@@ -165,7 +165,7 @@ public class NetworkStressTest {
     }
 
     @NotNull
-    private static NodeAddress getSeedNodeAddress() {
+    private static NodeAddress newSeedNodeAddress() {
         // The address is only considered by ``SeedNodesRepository`` if
         // it ends in the digit matching the network identifier.
         int port;
