@@ -309,6 +309,52 @@ public class NetworkStressTest {
         // (so it can get its mailbox messages),
         // and the new first online node sends messages.
         // This is repeated until all nodes have been online and offline.
+        final CountDownLatch shutDownLatch = new CountDownLatch(1);
+        P2PService peer = peerNodes.get(0);
+        peer.shutDown(shutDownLatch::countDown);
+        shutDownLatch.await();
+
+        peer = createPeerNode(0, peerPorts.get(0));
+        peerNodes.set(0, peer);
+        final CountDownLatch bootLatch = new CountDownLatch(1);
+        peer.start(new P2PServiceListener() {
+            @Override
+            public void onRequestingDataCompleted() {
+
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
+
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
+
+            }
+
+            @Override
+            public void onBootstrapComplete() {
+                bootLatch.countDown();
+            }
+
+            @Override
+            public void onTorNodeReady() {
+
+            }
+
+            @Override
+            public void onHiddenServicePublished() {
+
+            }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+
+            }
+        });
+        bootLatch.await();
+
         for (int firstOnline = 0, firstOffline = (int)Math.ceil(nPeers/2.0);
                 firstOnline < nPeers;
                 firstOnline++, firstOffline = ++firstOffline%nPeers) {
