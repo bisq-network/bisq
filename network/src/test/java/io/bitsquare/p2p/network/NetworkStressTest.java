@@ -69,8 +69,12 @@ public class NetworkStressTest {
     private Path testDataDir;
     /** A single seed node that other nodes will contact to request initial data. */
     private SeedNode seedNode;
+    /** The repository of seed nodes used in the test. */
+    private SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
     /** A list of peer nodes represented as P2P services. */
     private List<P2PService> peerNodes = new ArrayList<>();
+    /** A list of peer node's service ports. */
+    private List<Integer> peerPorts = new ArrayList<>();
     /** A list of peer node's public key rings. */
     private List<PubKeyRing> peerPKRings = new ArrayList<>();
 
@@ -131,7 +135,6 @@ public class NetworkStressTest {
         print("created seed node");
 
         // Create and start peer nodes, all connecting to the seed node above.
-        SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (useLocalhost) {
             seedNodesRepository.setLocalhostSeedNodeAddresses(seedNodes);
         } else {
@@ -140,8 +143,10 @@ public class NetworkStressTest {
         for (int p = 0; p < nPeers; p++) {
             // peer network port
             final int peerPort = Utils.findFreeSystemPort();
+            peerPorts.add(peerPort);
             // create, save and start peer
-            final P2PService peer = createPeerNode(p, peerPort, useLocalhost, seedNodesRepository);
+            final P2PService peer = createPeerNode(p, peerPort, useLocalhost);
+            //noinspection ConstantConditions
             peerPKRings.add(peer.getKeyRing().getPubKeyRing());
             peerNodes.add(peer);
             peer.start(new PeerServiceListener(localServicesLatch, localServicesFailed));
@@ -171,7 +176,7 @@ public class NetworkStressTest {
     }
 
     @NotNull
-    private P2PService createPeerNode(int n, int port, boolean useLocalhost, SeedNodesRepository seedNodesRepository) {
+    private P2PService createPeerNode(int n, int port, boolean useLocalhost) {
         // peer data directories
         final File peerDir = new File(testDataDir.toFile(), String.format("peer-%06d", n));
         final File peerTorDir = new File(peerDir, "tor");
