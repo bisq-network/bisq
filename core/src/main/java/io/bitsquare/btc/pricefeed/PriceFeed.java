@@ -119,16 +119,16 @@ public class PriceFeed {
     }
 
     public void setCurrencyCode(String currencyCode) {
-        if (this.currencyCode != currencyCode) {
+        if (this.currencyCode == null || !this.currencyCode.equals(currencyCode)) {
             this.currencyCode = currencyCode;
             currencyCodeProperty.set(currencyCode);
             applyPrice();
 
-            if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-                requestPrice(fiatPriceProvider);
-            } else {
+            if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                 // Poloniex does not support calls for one currency just for all which is quite a bit of data
                 requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPrice);
+            } else {
+                requestPrice(fiatPriceProvider);
             }
         }
     }
