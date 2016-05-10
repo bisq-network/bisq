@@ -251,7 +251,8 @@ public class NetworkStressTest {
                             final long sendMillis = System.currentTimeMillis();
                             srcPeer.sendEncryptedDirectMessage(
                                     dstPeerAddress, peerPKRings.get(dstPeerIdx),
-                                    new StressTestDirectMessage("test/" + dstPeerAddress), new SendDirectMessageListener() {
+                                    new StressTestDirectMessage("test/" + dstPeerAddress),
+                                    new SendDirectMessageListener() {
                                         @Override
                                         public void onArrived() {
                                             sentDelays.add(System.currentTimeMillis() - sendMillis);
