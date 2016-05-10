@@ -80,11 +80,6 @@ public class NetworkStressTest {
     /** A list of peer node's public key rings. */
     private List<PubKeyRing> peerPKRings = new ArrayList<>();
 
-    /** A barrier to wait for concurrent reception of preliminary data in peers. */
-    private CountDownLatch prelimDataLatch;
-    /** A barrier to wait for concurrent bootstrap of peers. */
-    private CountDownLatch bootstrapLatch;
-
     /** Number of direct messages to be sent by each peer. */
     private int directCount = DIRECT_COUNT_DEFAULT;
 
@@ -109,14 +104,15 @@ public class NetworkStressTest {
             throw new IllegalArgumentException(
                     String.format("Direct messages sent per peer must not be negative: %d", directCount)
             );
-
-        prelimDataLatch = new CountDownLatch(nPeers);
-        bootstrapLatch = new CountDownLatch(nPeers);
-
         /** A property where threads can indicate setup failure of local services (Tor node, hidden service). */
         final BooleanProperty localServicesFailed = new SimpleBooleanProperty(false);
         /** A barrier to wait for concurrent setup of local services (Tor node, hidden service). */
         final CountDownLatch localServicesLatch = new CountDownLatch(1 /*seed node*/ + nPeers);
+        /* A barrier to wait for concurrent reception of preliminary data in peers. */
+        final CountDownLatch prelimDataLatch = new CountDownLatch(nPeers);
+        /* A barrier to wait for concurrent bootstrap of peers. */
+        final CountDownLatch bootstrapLatch = new CountDownLatch(nPeers);
+
 
         // Set a security provider to allow key generation.
         Security.addProvider(new BouncyCastleProvider());
@@ -151,7 +147,8 @@ public class NetworkStressTest {
             //noinspection ConstantConditions
             peerPKRings.add(peer.getKeyRing().getPubKeyRing());
             peerNodes.add(peer);
-            peer.start(new PeerServiceListener(localServicesLatch, localServicesFailed));
+            peer.start(new PeerServiceListener(
+                    localServicesLatch, localServicesFailed, prelimDataLatch, bootstrapLatch));
         }
         print("created peer nodes");
 
@@ -492,14 +489,20 @@ public class NetworkStressTest {
     }
 
     private class PeerServiceListener extends TestSetupListener implements P2PServiceListener {
-        PeerServiceListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed) {
+        private final CountDownLatch prelimDataLatch;
+        private final CountDownLatch bootstrapLatch;
+
+        PeerServiceListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed,
+                            CountDownLatch prelimDataLatch, CountDownLatch bootstrapLatch) {
             super(localServicesLatch, localServicesFailed);
+            this.prelimDataLatch = prelimDataLatch;
+            this.bootstrapLatch = bootstrapLatch;
         }
 
         @Override
         public void onRequestingDataCompleted() {
             // preliminary data received
-            NetworkStressTest.this.prelimDataLatch.countDown();
+            prelimDataLatch.countDown();
         }
 
         @Override
@@ -515,7 +518,7 @@ public class NetworkStressTest {
         @Override
         public void onBootstrapComplete() {
             // peer bootstrapped
-            NetworkStressTest.this.bootstrapLatch.countDown();
+            bootstrapLatch.countDown();
         }
     }
 }
