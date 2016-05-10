@@ -226,9 +226,9 @@ public class NetworkStressTest {
         }
     }
 
+    /** Test each peer sending a direct message to another random peer. */
     @Test
-    public void test() throws InterruptedException {
-        // Test each peer sending a direct message to another random peer.
+    public void test_direct() throws InterruptedException {
         final int nPeers = peerNodes.size();
         BooleanProperty sentDirectFailed = new SimpleBooleanProperty(false);
         final List<Long> sentDelays = new Vector<>(nPeers * directCount);
@@ -288,18 +288,21 @@ public class NetworkStressTest {
                 receivedDirectLatch, 10 * idealMaxDirectDelay, TimeUnit.MILLISECONDS);
         final long recvMillis = System.currentTimeMillis() - sendStartMillis;
         print("receiving %d direct messages per peer took %ss (%.2f x ideal max)",
-                directCount, recvMillis/1000.0, recvMillis/(float)idealMaxDirectDelay);
+                directCount, recvMillis / 1000.0, recvMillis / (float) idealMaxDirectDelay);
         // Wait for peers to complete sending.
         // This should be nearly instantaneous after waiting for reception is completed.
         assertLatch("timed out while sending direct messages",
                 sentDirectLatch, idealMaxDirectDelay / 10, TimeUnit.MILLISECONDS);
         Tuple3<Long, Long, Long> mma = minMaxAvg(sentDelays);
         print("sending %d direct messages per peer took %ss (min/max/avg %s/%s/%s ms)",
-                directCount, (System.currentTimeMillis() - sendStartMillis)/1000.0,
+                directCount, (System.currentTimeMillis() - sendStartMillis) / 1000.0,
                 mma.first, mma.second, mma.third);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
+    }
 
-        // Test sending and receiving mailbox messages.
+    /** Test sending and receiving mailbox messages. */
+    @Test
+    public void test_mailbox() throws InterruptedException {
         // We start by putting the first half of peers online and the second one offline.
         // Then the first online peer sends a number of messages to random peers (regardless of their state),
         // so that some messages are delivered directly and others into a mailbox.
@@ -353,6 +356,7 @@ public class NetworkStressTest {
         });
         bootLatch.await();
 
+        final int nPeers = peerNodes.size();
         for (int firstOnline = 0, firstOffline = (int)Math.ceil(nPeers/2.0);
                 firstOnline < nPeers;
                 firstOnline++, firstOffline = ++firstOffline%nPeers) {
