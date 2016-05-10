@@ -53,8 +53,8 @@ public class NetworkStressTest {
 
     /** Default number of peers in the test. */
     private static final int NPEERS_DEFAULT = 4;
-    /** Minimum number of peers for the test to work. */
-    private static final int NPEERS_MIN = 2;
+    /** Minimum number of peers for the test to work (2 for direct messages, 3 for mailbox messages). */
+    private static final int NPEERS_MIN = 3;
     /** Default number of direct messages to be sent by each peer. */
     private static final int DIRECT_COUNT_DEFAULT = 100;
 
@@ -293,6 +293,20 @@ public class NetworkStressTest {
                 directCount, (System.currentTimeMillis() - sendStartMillis)/1000.0,
                 mma.first, mma.second, mma.third);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
+
+        // Test sending and receiving mailbox messages.
+        // We start by putting the first half of peers online and the second one offline.
+        // Then the first online peer sends a number of messages to random peers (regardless of their state),
+        // so that some messages are delivered directly and others into a mailbox.
+        // Then the first online peer is put offline and the last offline peer is put online
+        // (so it can get its mailbox messages),
+        // and the new first online node sends messages.
+        // This is repeated until all nodes have been online and offline.
+        for (int firstOnline = 0, firstOffline = (int)Math.ceil(nPeers/2.0);
+                firstOnline < nPeers;
+                firstOnline++, firstOffline = ++firstOffline%nPeers) {
+            System.out.println("firstOnline "+firstOnline+" firstOffline "+firstOffline);
+        }
     }
 
     private void print(String message, Object... args) {
