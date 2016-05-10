@@ -67,6 +67,8 @@ public class NetworkStressTest {
 
     /** A directory to (temporarily) hold seed and normal nodes' configuration and state files. */
     private Path testDataDir;
+    /** Whether to use localhost addresses instead of Tor hidden services. */
+    private boolean useLocalhost;
     /** A single seed node that other nodes will contact to request initial data. */
     private SeedNode seedNode;
     /** The repository of seed nodes used in the test. */
@@ -126,7 +128,7 @@ public class NetworkStressTest {
         // Create and start the seed node.
         seedNode = new SeedNode(testDataDir.toString());
         final NodeAddress seedNodeAddress = newSeedNodeAddress();
-        final boolean useLocalhost = seedNodeAddress.hostName.equals("localhost");
+        useLocalhost = seedNodeAddress.hostName.equals("localhost");
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
         seedNode.createAndStartP2PService(seedNodeAddress, SeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhost,
@@ -145,7 +147,7 @@ public class NetworkStressTest {
             final int peerPort = Utils.findFreeSystemPort();
             peerPorts.add(peerPort);
             // create, save and start peer
-            final P2PService peer = createPeerNode(p, peerPort, useLocalhost);
+            final P2PService peer = createPeerNode(p, peerPort);
             //noinspection ConstantConditions
             peerPKRings.add(peer.getKeyRing().getPubKeyRing());
             peerNodes.add(peer);
@@ -176,7 +178,7 @@ public class NetworkStressTest {
     }
 
     @NotNull
-    private P2PService createPeerNode(int n, int port, boolean useLocalhost) {
+    private P2PService createPeerNode(int n, int port) {
         // peer data directories
         final File peerDir = new File(testDataDir.toFile(), String.format("peer-%06d", n));
         final File peerTorDir = new File(peerDir, "tor");
