@@ -112,6 +112,10 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
         result.add(new CryptoCurrency("JBS", "Jumbucks"));
         result.add(new CryptoCurrency("PINK", "Pinkcoin"));
+
+        // For MKR we need a extra info box:
+        // It's very important that users only use EIP-20 compliant contract wallets. 
+        // Modern mist wallets should be able to do it but there are some older mist versions that can't. 
         //result.add(new CryptoCurrency("MKR", "Maker"));
 
         // result.add(new CryptoCurrency("XMR", "Monero")); 
@@ -173,7 +177,7 @@ public class CurrencyUtil {
     }
 
     public static boolean isFiatCurrency(String currencyCode) {
-        return !(isCryptoCurrency(currencyCode)) && Currency.getInstance(currencyCode) != null;
+        return !isCryptoCurrency(currencyCode) && Currency.getInstance(currencyCode) != null;
     }
 
     public static Optional<FiatCurrency> getFiatCurrency(String currencyCode) {
@@ -182,7 +186,7 @@ public class CurrencyUtil {
 
     @SuppressWarnings("WeakerAccess")
     public static boolean isCryptoCurrency(String currencyCode) {
-        return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny().isPresent();
+        return getCryptoCurrency(currencyCode).isPresent();
     }
 
     public static Optional<CryptoCurrency> getCryptoCurrency(String currencyCode) {
@@ -199,12 +203,15 @@ public class CurrencyUtil {
 
 
     public static String getNameByCode(String currencyCode) {
-        try {
-            return Currency.getInstance(currencyCode).getDisplayName(Preferences.getDefaultLocale());
-        } catch (Throwable t) {
-            // Seems that it is a cryptocurrency
-            return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findFirst().get().getName();
-        }
+        if (isCryptoCurrency(currencyCode))
+            return getCryptoCurrency(currencyCode).get().getName();
+        else
+            try {
+                return Currency.getInstance(currencyCode).getDisplayName(Preferences.getDefaultLocale());
+            } catch (Throwable t) {
+                log.warn("No currency name available " + t.getMessage());
+                return "N/A (" + currencyCode + ")";
+            }
     }
 
     public static TradeCurrency getDefaultTradeCurrency() {
