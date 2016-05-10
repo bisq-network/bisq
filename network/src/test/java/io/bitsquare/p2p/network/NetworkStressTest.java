@@ -23,6 +23,9 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Request;
+import org.junit.runner.Result;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,6 +85,16 @@ public class NetworkStressTest {
 
     /** Number of direct messages to be sent by each peer. */
     private int directCount = DIRECT_COUNT_DEFAULT;
+
+    // Inspired by <https://stackoverflow.com/a/9288513> by Marc Peters.
+    public static void main(String[] args) {
+        Request request = (args.length == 0)
+                ? Request.aClass(NetworkStressTest.class)
+                : Request.method(NetworkStressTest.class, args[0]);
+
+        Result result = new JUnitCore().run(request);
+        System.exit(result.wasSuccessful() ? 0 : 1);
+    }
 
     @Before
     public void setUp() throws Exception {
