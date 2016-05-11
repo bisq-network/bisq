@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,6 +94,8 @@ public class NetworkStressTest {
                 : Request.method(NetworkStressTest.class, args[0]);
 
         Result result = new JUnitCore().run(request);
+        for (Failure f : result.getFailures())
+            System.err.printf("\n%s\n%s", f, f.getTrace());
         System.exit(result.wasSuccessful() ? 0 : 1);
     }
 
