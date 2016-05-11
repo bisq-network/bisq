@@ -180,12 +180,12 @@ public class NetworkStressTest {
 
         // Wait for peers to get their preliminary data.
         assertLatch("timed out while waiting for preliminary data",
-                prelimDataLatch, 30, TimeUnit.SECONDS);
+                prelimDataLatch, 2 * nPeers, TimeUnit.SECONDS);
         print("preliminary data received");
 
         // Wait for peers to complete their bootstrapping.
         assertLatch("timed out while waiting for bootstrap",
-                bootstrapLatch, 30, TimeUnit.SECONDS);
+                bootstrapLatch, 2 * nPeers, TimeUnit.SECONDS);
         print("bootstrap complete");
     }
 
