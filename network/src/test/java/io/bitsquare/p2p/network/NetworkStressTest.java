@@ -35,6 +35,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.Security;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class NetworkStressTest {
@@ -136,6 +137,12 @@ public class NetworkStressTest {
         // Create the test data directory.
         testDataDir = createTestDataDirectory();
         print("test data directory: " + testDataDir);
+
+        // Setting the executor seems to make tests more stable against ``ConcurrentModificationException``
+        // (see #443).  However it make it use more open files, so you may need to use ``ulimit -n NUMBER``
+        // or run ``prlimit -nNUMBER -pPID`` (as root) on your shell's PID if you get too many open files errors.
+        // NUMBER=16384 seems to be enough for 100 peers in Debian GNU/Linux.
+        UserThread.setExecutor(Executors.newSingleThreadExecutor());
 
         // Create and start the seed node.
         seedNode = new SeedNode(testDataDir.toString());
