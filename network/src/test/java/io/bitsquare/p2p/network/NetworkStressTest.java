@@ -228,6 +228,8 @@ public class NetworkStressTest {
 
     @After
     public void tearDown() throws InterruptedException, IOException {
+        print("stopping all local nodes");
+
         /** A barrier to wait for concurrent shutdown of services. */
         final CountDownLatch shutdownLatch = new CountDownLatch((seedNode != null? 1 : 0) + peerNodes.size());
 
