@@ -233,13 +233,13 @@ public class NetworkStressTest {
         /** A barrier to wait for concurrent shutdown of services. */
         final CountDownLatch shutdownLatch = new CountDownLatch((seedNode != null? 1 : 0) + peerNodes.size());
 
-        // Stop the seed node.
-        if (seedNode != null) {
-            seedNode.shutDown(shutdownLatch::countDown);
-        }
         // Stop peer nodes.
         for (P2PService peer : peerNodes) {
             peer.shutDown(shutdownLatch::countDown);
+        }
+        // Stop the seed node.
+        if (seedNode != null) {
+            seedNode.shutDown(shutdownLatch::countDown);
         }
         // Wait for concurrent tasks to finish.
         shutdownLatch.await();
