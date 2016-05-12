@@ -360,58 +360,41 @@ public class NetworkStressTest {
         // (so it can get its mailbox messages),
         // and the new first online node sends messages.
         // This is repeated until all nodes have been online and offline.
-        final CountDownLatch shutDownLatch = new CountDownLatch(1);
-        P2PService peer = peerNodes.get(0);
-        peer.shutDown(shutDownLatch::countDown);
-        shutDownLatch.await();
 
-        peer = createPeerNode(0, peerPorts.get(0));
-        peerNodes.set(0, peer);
-        final CountDownLatch bootLatch = new CountDownLatch(1);
-        peer.start(new P2PServiceListener() {
-            @Override
-            public void onRequestingDataCompleted() {
-
-            }
-
-            @Override
-            public void onNoSeedNodeAvailable() {
-
-            }
-
-            @Override
-            public void onNoPeersAvailable() {
-
-            }
-
-            @Override
-            public void onBootstrapComplete() {
-                bootLatch.countDown();
-            }
-
-            @Override
-            public void onTorNodeReady() {
-
-            }
-
-            @Override
-            public void onHiddenServicePublished() {
-
-            }
-
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-
-            }
-        });
-        bootLatch.await();
-
+        // Put the second half of peers offline.
         final int nPeers = peerNodes.size();
-        for (int firstOnline = 0, firstOffline = (int)Math.ceil(nPeers/2.0);
-                firstOnline < nPeers;
-                firstOnline++, firstOffline = ++firstOffline%nPeers) {
-            System.out.println("firstOnline "+firstOnline+" firstOffline "+firstOffline);
+        final CountDownLatch halfShutDown = new CountDownLatch(nPeers / 2);
+        int firstPeerDown = (int)Math.ceil(nPeers / 2.0);
+        for (P2PService peer : peerNodes.subList(firstPeerDown, nPeers)) {
+            peer.shutDown(halfShutDown::countDown);
         }
+        assertLatch("timed out while stopping a half of the peers",
+                halfShutDown, 10, TimeUnit.SECONDS);
+        print("stopped a half of the peers for mailbox test");
+
+        // Cycle through peers sending to others, stopping the peer
+        // and starting one of the stopped peers.
+        for (int firstOnline = 0, firstOffline = firstPeerDown;
+                firstOnline < nPeers;
+                firstOnline++, firstOffline = ++firstOffline % nPeers) {
+            // TODO: Make first online node send messages to other nodes.
+
+            // When done, put first online peer offline.
+            final CountDownLatch stopLatch = new CountDownLatch(1);
+            peerNodes.get(firstOnline).shutDown(stopLatch::countDown);
+            stopLatch.await(10, TimeUnit.SECONDS);
+            print("put peer %d offline", firstOnline);
+
+            // When done, put first offline peer online.
+            final CountDownLatch startLatch = new CountDownLatch(1);
+            final P2PService startedPeer = createPeerNode(firstOffline, peerPorts.get(firstOffline));
+            // TODO: Setup message listeners.
+            peerNodes.set(firstOffline, startedPeer);
+            startedPeer.start(new MailboxStartListener(startLatch));
+            startLatch.await(10, TimeUnit.SECONDS);
+            print("put peer %d online", firstOffline);
+        }
+        // TODO: Wait for nodes to receive messages.
     }
 
     private void print(String message, Object... args) {
@@ -573,6 +556,43 @@ public class NetworkStressTest {
         public void onBootstrapComplete() {
             // peer bootstrapped
             countDownAndPrint(bootstrapLatch, 'b');
+        }
+    }
+
+    private class MailboxStartListener implements P2PServiceListener {
+        private final CountDownLatch startLatch;
+
+        MailboxStartListener(CountDownLatch startLatch) {
+            this.startLatch = startLatch;
+        }
+
+        @Override
+        public void onRequestingDataCompleted() {
+        }
+
+        @Override
+        public void onNoSeedNodeAvailable() {
+        }
+
+        @Override
+        public void onNoPeersAvailable() {
+        }
+
+        @Override
+        public void onBootstrapComplete() {
+            startLatch.countDown();
+        }
+
+        @Override
+        public void onTorNodeReady() {
+        }
+
+        @Override
+        public void onHiddenServicePublished() {
+        }
+
+        @Override
+        public void onSetupFailed(Throwable throwable) {
         }
     }
 }
