@@ -102,15 +102,7 @@ public class NetworkStressTest {
         System.exit(result.wasSuccessful() ? 0 : 1);
     }
 
-    /** Return a string of a character repeated a number of times. */
-    private static String nChars(char c, int n) {
-        String ret = "";
-        for (int i = 0; i < n; i++)
-            ret += c;
-        return ret;
-    }
-
-    /** Print a progress bar based on the given character. */
+    /** Print a progress indicator based on the given character. */
     private void printProgress(char c, int n) {
         if (n < 1)
             return;  // nothing to represent
@@ -124,7 +116,7 @@ public class NetworkStressTest {
         System.out.flush();
     }
 
-    /** Decrease latch count and print pending as a progress bar based on the given character. */
+    /** Decrease latch count and print a progress indicator based on the given character. */
     private void countDownAndPrint(CountDownLatch latch, char c) {
         latch.countDown();
         printProgress(c, (int)latch.getCount());
