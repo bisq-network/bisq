@@ -105,13 +105,15 @@ public class NetworkStressTest {
     /** Print a progress indicator based on the given character. */
     private void printProgress(char c, int n) {
         if (n < 1)
-            return;  // nothing to represent
+            return;  // completed tasks are not shown
 
+        // Do not print the indicator if the last one was shown less than half second ago.
         long now = System.currentTimeMillis();
         if ((now - lastProgressUpdateMillis) < 500)
-            return;  // throttle message printing below half a second
+            return;
         lastProgressUpdateMillis = now;
 
+        // Keep a fixed length so that indicators do not overwrite partially.
         System.out.print(String.format("\r%s> %c*%-6d ", this.getClass().getSimpleName(), c, n));
         System.out.flush();
     }
