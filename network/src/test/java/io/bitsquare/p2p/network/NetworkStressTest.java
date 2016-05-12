@@ -246,11 +246,10 @@ public class NetworkStressTest {
 
     @After
     public void tearDown() throws InterruptedException, IOException {
-        print("stopping all local nodes");
-
         /** A barrier to wait for concurrent shutdown of services. */
         final CountDownLatch shutdownLatch = new CountDownLatch((seedNode != null? 1 : 0) + peerNodes.size());
 
+        print("stopping all local nodes");
         // Stop peer nodes.
         for (P2PService peer : peerNodes) {
             peer.shutDown(() -> countDownAndPrint(shutdownLatch, '.'));
@@ -264,6 +263,7 @@ public class NetworkStressTest {
         print("all local nodes stopped");
 
         // Cleanup test data directory.
+        print("cleaning up test data directory");
         if (testDataDir != null) {
             deleteTestDataDirectory();
         }
