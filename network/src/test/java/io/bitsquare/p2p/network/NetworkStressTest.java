@@ -100,6 +100,24 @@ public class NetworkStressTest {
         System.exit(result.wasSuccessful() ? 0 : 1);
     }
 
+    /** Return a string of a character repeated a number of times. */
+    private static String nChars(char c, int n) {
+        String ret = "";
+        for (int i = 0; i < n; i++)
+            ret += c;
+        return ret;
+    }
+
+    /** Decrease latch count and print pending as a progress bar based on the given character. */
+    private void countDownAndPrint(CountDownLatch latch, char c) {
+        latch.countDown();
+        int remaining = (int)latch.getCount();
+        if (remaining > 0)
+            System.err.print(String.format("\r%s: %s ", this.getClass().getSimpleName(), nChars(c, remaining)));
+        if (remaining == 1)
+            System.err.println();
+    }
+
     @Before
     public void setUp() throws Exception {
         // Parse test parameter environment variables.
@@ -235,11 +253,11 @@ public class NetworkStressTest {
 
         // Stop peer nodes.
         for (P2PService peer : peerNodes) {
-            peer.shutDown(shutdownLatch::countDown);
+            peer.shutDown(() -> countDownAndPrint(shutdownLatch, '.'));
         }
         // Stop the seed node.
         if (seedNode != null) {
-            seedNode.shutDown(shutdownLatch::countDown);
+            seedNode.shutDown(() -> countDownAndPrint(shutdownLatch, '.'));
         }
         // Wait for concurrent tasks to finish.
         shutdownLatch.await();
@@ -531,7 +549,7 @@ public class NetworkStressTest {
         @Override
         public void onRequestingDataCompleted() {
             // preliminary data received
-            prelimDataLatch.countDown();
+            countDownAndPrint(prelimDataLatch, 'p');
         }
 
         @Override
@@ -547,7 +565,7 @@ public class NetworkStressTest {
         @Override
         public void onBootstrapComplete() {
             // peer bootstrapped
-            bootstrapLatch.countDown();
+            countDownAndPrint(bootstrapLatch, 'b');
         }
     }
 }
