@@ -70,6 +70,8 @@ public class NetworkStressTest {
 
     // Instance fields
 
+    /** Number of columns in terminal (for progress reporting). */
+    private int terminalColumns = 80;
     /** A directory to (temporarily) hold seed and normal nodes' configuration and state files. */
     private Path testDataDir;
     /** Whether to use localhost addresses instead of Tor hidden services. */
@@ -112,8 +114,13 @@ public class NetworkStressTest {
     private void countDownAndPrint(CountDownLatch latch, char c) {
         latch.countDown();
         int remaining = (int)latch.getCount();
-        if (remaining > 0)
-            System.out.print(String.format("\r%s> %s ", this.getClass().getSimpleName(), nChars(c, remaining)));
+        if (remaining > 0) {
+            String hdr = String.format("\r%s> ", this.getClass().getSimpleName());
+            String msg = (hdr.length() - 1/*carriage return*/ + remaining + 1/*final space*/ > terminalColumns)
+                    ? String.format("%c*%d", c, remaining)
+                    : nChars(c, remaining);
+            System.out.print(hdr + msg + ' ');
+        }
         if (remaining == 1)
             System.out.print('\n');
         System.out.flush();
@@ -140,6 +147,11 @@ public class NetworkStressTest {
             throw new IllegalArgumentException(
                     String.format("Direct messages sent per peer must not be negative: %d", directCount)
             );
+
+        final String terminalColumnsEnv = System.getenv("COLUMNS");
+        if (terminalColumnsEnv != null && !terminalColumnsEnv.equals(""))
+            terminalColumns = Integer.parseInt(terminalColumnsEnv);
+
         /** A property where threads can indicate setup failure of local services (Tor node, hidden service). */
         final BooleanProperty localServicesFailed = new SimpleBooleanProperty(false);
         /** A barrier to wait for concurrent setup of local services (Tor node, hidden service). */
