@@ -52,6 +52,8 @@ public class NetworkStressTest {
     private static final String TEST_DIR_ENVVAR = "STRESS_TEST_DIR";
     /** Environment variable to specify the number of direct messages sent per peer. */
     private static final String DIRECT_COUNT_ENVVAR = "STRESS_TEST_NDIRECT";
+    /** Environment variable to specify the number of mailbox messages sent per peer. */
+    private static final String MAILBOX_COUNT_ENVVAR = "STRESS_TEST_NMAILBOX";
 
     /** Numeric identifier of the regtest Bitcoin network. */
     private static final int REGTEST_NETWORK_ID = 2;
@@ -62,6 +64,8 @@ public class NetworkStressTest {
     private static final int NPEERS_MIN = 3;
     /** Default number of direct messages to be sent by each peer. */
     private static final int DIRECT_COUNT_DEFAULT = 100;
+    /** Default number of mailbox messages to be sent by each peer. */
+    private static final int MAILBOX_COUNT_DEFAULT = 100;
 
     /** Minimum delay between direct messages in milliseconds, 25% larger than throttle limit. */
     private static long MIN_DIRECT_DELAY_MILLIS = Math.round(1.25 * (1.0 / Connection.MSG_THROTTLE_PER_SEC) * 1000);
@@ -89,6 +93,8 @@ public class NetworkStressTest {
 
     /** Number of direct messages to be sent by each peer. */
     private int directCount = DIRECT_COUNT_DEFAULT;
+    /** Number of mailbox messages to be sent by each peer. */
+    private int mailboxCount = MAILBOX_COUNT_DEFAULT;
 
     // Inspired by <https://stackoverflow.com/a/9288513> by Marc Peters.
     public static void main(String[] args) {
@@ -144,6 +150,14 @@ public class NetworkStressTest {
         if (directCount < 0)
             throw new IllegalArgumentException(
                     String.format("Direct messages sent per peer must not be negative: %d", directCount)
+            );
+
+        final String nMailboxEnv = System.getenv(MAILBOX_COUNT_ENVVAR);
+        if (nMailboxEnv != null && !nMailboxEnv.equals(""))
+            mailboxCount = Integer.parseInt(nMailboxEnv);
+        if (mailboxCount < 0)
+            throw new IllegalArgumentException(
+                    String.format("Mailbox messages sent per peer must not be negative: %d", mailboxCount)
             );
 
         /** A property where threads can indicate setup failure of local services (Tor node, hidden service). */
@@ -374,6 +388,10 @@ public class NetworkStressTest {
 
         // Cycle through peers sending to others, stopping the peer
         // and starting one of the stopped peers.
+        //
+        // No sent latch here since the order of events is different
+        // depending on whether the message goes direct or via mailbox.
+        final CountDownLatch receivedMailboxLatch = new CountDownLatch(mailboxCount * nPeers);
         for (int firstOnline = 0, firstOffline = firstPeerDown;
                 firstOnline < nPeers;
                 firstOnline++, firstOffline = ++firstOffline % nPeers) {
@@ -394,7 +412,9 @@ public class NetworkStressTest {
             startLatch.await(10, TimeUnit.SECONDS);
             print("put peer %d online", firstOffline);
         }
-        // TODO: Wait for nodes to receive messages.
+        // TODO: Wait for nodes to receive messages, use meaningful timeout.
+        assertLatch("timed out while receiving mailbox messages",
+                receivedMailboxLatch, 120, TimeUnit.SECONDS);
     }
 
     private void print(String message, Object... args) {
