@@ -70,8 +70,6 @@ public class NetworkStressTest {
 
     // Instance fields
 
-    /** Number of columns in terminal (for progress reporting). */
-    private int terminalColumns = 80;
     /** The last time a progress bar update was printed (to throttle message printing). */
     private long lastProgressUpdateMillis = 0;
     /** A directory to (temporarily) hold seed and normal nodes' configuration and state files. */
@@ -118,17 +116,11 @@ public class NetworkStressTest {
             return;  // nothing to represent
 
         long now = System.currentTimeMillis();
-        if ((n != 1) && ((now - lastProgressUpdateMillis) < 500))
-            return;  // throttle message printing below half a second (but last one is always printed)
+        if ((now - lastProgressUpdateMillis) < 500)
+            return;  // throttle message printing below half a second
         lastProgressUpdateMillis = now;
 
-        String hdr = String.format("\r%s> ", this.getClass().getSimpleName());
-        String msg = (hdr.length() - 1/*carriage return*/ + n + 1/*final space*/ > terminalColumns)
-                ? String.format("%c*%d", c, n)
-                : nChars(c, n);
-        System.out.print(hdr + msg + ' ');
-        if (n == 1)
-            System.out.print('\n');
+        System.out.print(String.format("\r%s> %c*%-6d ", this.getClass().getSimpleName(), c, n));
         System.out.flush();
     }
 
@@ -159,10 +151,6 @@ public class NetworkStressTest {
             throw new IllegalArgumentException(
                     String.format("Direct messages sent per peer must not be negative: %d", directCount)
             );
-
-        final String terminalColumnsEnv = System.getenv("COLUMNS");
-        if (terminalColumnsEnv != null && !terminalColumnsEnv.equals(""))
-            terminalColumns = Integer.parseInt(terminalColumnsEnv);
 
         /** A property where threads can indicate setup failure of local services (Tor node, hidden service). */
         final BooleanProperty localServicesFailed = new SimpleBooleanProperty(false);
