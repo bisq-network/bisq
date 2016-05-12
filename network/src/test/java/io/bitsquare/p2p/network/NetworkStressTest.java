@@ -113,9 +113,10 @@ public class NetworkStressTest {
         latch.countDown();
         int remaining = (int)latch.getCount();
         if (remaining > 0)
-            System.err.print(String.format("\r%s: %s ", this.getClass().getSimpleName(), nChars(c, remaining)));
+            System.out.print(String.format("\r%s> %s ", this.getClass().getSimpleName(), nChars(c, remaining)));
         if (remaining == 1)
-            System.err.println();
+            System.out.print('\n');
+        System.out.flush();
     }
 
     @Before
