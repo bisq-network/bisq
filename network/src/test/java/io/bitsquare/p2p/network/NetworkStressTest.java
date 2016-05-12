@@ -112,24 +112,28 @@ public class NetworkStressTest {
         return ret;
     }
 
-    /** Decrease latch count and print pending as a progress bar based on the given character. */
-    private void countDownAndPrint(CountDownLatch latch, char c) {
-        latch.countDown();
-        int remaining = (int)latch.getCount();
+    /** Print a progress bar based on the given character. */
+    private void printProgress(char c, int n) {
         long now = System.currentTimeMillis();
         if (now - lastProgressUpdateMillis < 500)
             return;  // throttle message printing below half a second
         lastProgressUpdateMillis = now;
-        if (remaining > 0) {
+        if (n > 0) {
             String hdr = String.format("\r%s> ", this.getClass().getSimpleName());
-            String msg = (hdr.length() - 1/*carriage return*/ + remaining + 1/*final space*/ > terminalColumns)
-                    ? String.format("%c*%d", c, remaining)
-                    : nChars(c, remaining);
+            String msg = (hdr.length() - 1/*carriage return*/ + n + 1/*final space*/ > terminalColumns)
+                    ? String.format("%c*%d", c, n)
+                    : nChars(c, n);
             System.out.print(hdr + msg + ' ');
         }
-        if (remaining == 1)
+        if (n == 1)
             System.out.print('\n');
         System.out.flush();
+    }
+
+    /** Decrease latch count and print pending as a progress bar based on the given character. */
+    private void countDownAndPrint(CountDownLatch latch, char c) {
+        latch.countDown();
+        printProgress(c, (int)latch.getCount());
     }
 
     @Before
