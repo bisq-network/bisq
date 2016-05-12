@@ -130,35 +130,27 @@ public class NetworkStressTest {
         printProgress(c, (int)latch.getCount());
     }
 
+    /** Parse an integer value from the given environment variable, with default and minimum values. */
+    private int parseEnvInt(String envVar, int defValue, int minValue) {
+        int value = defValue;
+        final String envValue = System.getenv(envVar);
+        if (envValue != null && !envValue.equals(""))
+            value = Integer.parseInt(envValue);
+        if (value < minValue)
+            throw new IllegalArgumentException(
+                    String.format("%s must be at least %d: %d", envVar, minValue, value)
+            );
+        return value;
+    }
+
     @Before
     public void setUp() throws Exception {
         // Parse test parameter environment variables.
 
         /** Number of peer nodes to create. */
-        int nPeers = NPEERS_DEFAULT;
-        final String nPeersEnv = System.getenv(NPEERS_ENVVAR);
-        if (nPeersEnv != null && !nPeersEnv.equals(""))
-            nPeers = Integer.parseInt(nPeersEnv);
-        if (nPeers < NPEERS_MIN)
-            throw new IllegalArgumentException(
-                    String.format("Test needs at least %d peer nodes to work: %d", NPEERS_MIN, nPeers)
-            );
-
-        final String nDirectEnv = System.getenv(DIRECT_COUNT_ENVVAR);
-        if (nDirectEnv != null && !nDirectEnv.equals(""))
-            directCount = Integer.parseInt(nDirectEnv);
-        if (directCount < 0)
-            throw new IllegalArgumentException(
-                    String.format("Direct messages sent per peer must not be negative: %d", directCount)
-            );
-
-        final String nMailboxEnv = System.getenv(MAILBOX_COUNT_ENVVAR);
-        if (nMailboxEnv != null && !nMailboxEnv.equals(""))
-            mailboxCount = Integer.parseInt(nMailboxEnv);
-        if (mailboxCount < 0)
-            throw new IllegalArgumentException(
-                    String.format("Mailbox messages sent per peer must not be negative: %d", mailboxCount)
-            );
+        final int nPeers = parseEnvInt(NPEERS_ENVVAR, NPEERS_DEFAULT, NPEERS_MIN);
+        directCount = parseEnvInt(DIRECT_COUNT_ENVVAR, DIRECT_COUNT_DEFAULT, 0);
+        mailboxCount = parseEnvInt(MAILBOX_COUNT_ENVVAR, MAILBOX_COUNT_DEFAULT, 0);
 
         /** A property where threads can indicate setup failure of local services (Tor node, hidden service). */
         final BooleanProperty localServicesFailed = new SimpleBooleanProperty(false);
