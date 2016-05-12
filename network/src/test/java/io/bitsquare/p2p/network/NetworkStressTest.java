@@ -309,13 +309,13 @@ public class NetworkStressTest {
                                         @Override
                                         public void onArrived() {
                                             sentDelays.add(System.currentTimeMillis() - sendMillis);
-                                            sentDirectLatch.countDown();
+                                            countDownAndPrint(sentDirectLatch, 'd');
                                         }
 
                                         @Override
                                         public void onFault() {
                                             sentDirectFailed.set(true);
-                                            sentDirectLatch.countDown();
+                                            countDownAndPrint(sentDirectLatch, 'd');
                                         }
                                     });
                         }, sendAfterMillis, TimeUnit.MILLISECONDS
