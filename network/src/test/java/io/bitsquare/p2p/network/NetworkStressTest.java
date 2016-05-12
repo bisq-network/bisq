@@ -392,7 +392,8 @@ public class NetworkStressTest {
             // When done, put first online peer offline.
             final CountDownLatch stopLatch = new CountDownLatch(1);
             peerNodes.get(firstOnline).shutDown(stopLatch::countDown);
-            stopLatch.await(10, TimeUnit.SECONDS);
+            assertLatch("timed out while stopping peer " + firstOnline,
+                    stopLatch, 10, TimeUnit.SECONDS);
             print("put peer %d offline", firstOnline);
 
             // When done, put first offline peer online.
@@ -401,10 +402,11 @@ public class NetworkStressTest {
             // TODO: Setup message listeners.
             peerNodes.set(firstOffline, startedPeer);
             startedPeer.start(new MailboxStartListener(startLatch));
-            startLatch.await(10, TimeUnit.SECONDS);
+            assertLatch("timed out while starting peer " + firstOffline,
+                    startLatch, 10, TimeUnit.SECONDS);
             print("put peer %d online", firstOffline);
         }
-        // TODO: Wait for nodes to receive messages, use meaningful timeout.
+        // TODO: Use meaningful timeout.
         assertLatch("timed out while receiving mailbox messages",
                 receivedMailboxLatch, 120, TimeUnit.SECONDS);
     }
