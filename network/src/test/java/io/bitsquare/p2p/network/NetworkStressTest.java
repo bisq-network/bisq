@@ -72,6 +72,8 @@ public class NetworkStressTest {
 
     /** Number of columns in terminal (for progress reporting). */
     private int terminalColumns = 80;
+    /** The last time a progress bar update was printed (to throttle message printing). */
+    private long lastProgressUpdateMillis = 0;
     /** A directory to (temporarily) hold seed and normal nodes' configuration and state files. */
     private Path testDataDir;
     /** Whether to use localhost addresses instead of Tor hidden services. */
@@ -114,6 +116,10 @@ public class NetworkStressTest {
     private void countDownAndPrint(CountDownLatch latch, char c) {
         latch.countDown();
         int remaining = (int)latch.getCount();
+        long now = System.currentTimeMillis();
+        if (now - lastProgressUpdateMillis < 500)
+            return;  // throttle message printing below half a second
+        lastProgressUpdateMillis = now;
         if (remaining > 0) {
             String hdr = String.format("\r%s> ", this.getClass().getSimpleName());
             String msg = (hdr.length() - 1/*carriage return*/ + remaining + 1/*final space*/ > terminalColumns)
