@@ -3,7 +3,9 @@ package io.bitsquare.p2p.network;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleLongProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,22 +21,22 @@ public class Statistic {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private final static IntegerProperty totalSentBytes = new SimpleIntegerProperty(0);
-    private final static IntegerProperty totalReceivedBytes = new SimpleIntegerProperty(0);
+    private final static LongProperty totalSentBytes = new SimpleLongProperty(0);
+    private final static LongProperty totalReceivedBytes = new SimpleLongProperty(0);
 
-    public static int getTotalSentBytes() {
+    public static long getTotalSentBytes() {
         return totalSentBytes.get();
     }
 
-    public static IntegerProperty totalSentBytesProperty() {
+    public static LongProperty totalSentBytesProperty() {
         return totalSentBytes;
     }
 
-    public static int getTotalReceivedBytes() {
+    public static long getTotalReceivedBytes() {
         return totalReceivedBytes.get();
     }
 
-    public static IntegerProperty totalReceivedBytesProperty() {
+    public static LongProperty totalReceivedBytesProperty() {
         return totalReceivedBytes;
     }
 
@@ -45,8 +47,8 @@ public class Statistic {
 
     private final Date creationDate;
     private long lastActivityTimestamp = System.currentTimeMillis();
-    private final IntegerProperty sentBytes = new SimpleIntegerProperty(0);
-    private final IntegerProperty receivedBytes = new SimpleIntegerProperty(0);
+    private final LongProperty sentBytes = new SimpleLongProperty(0);
+    private final LongProperty receivedBytes = new SimpleLongProperty(0);
     private final Map<String, Integer> receivedMessages = new ConcurrentHashMap<>();
     private final Map<String, Integer> sentMessages = new ConcurrentHashMap<>();
     private final IntegerProperty roundTripTime = new SimpleIntegerProperty(0);
@@ -117,19 +119,19 @@ public class Statistic {
         return System.currentTimeMillis() - lastActivityTimestamp;
     }
 
-    public int getSentBytes() {
+    public long getSentBytes() {
         return sentBytes.get();
     }
 
-    public IntegerProperty sentBytesProperty() {
+    public LongProperty sentBytesProperty() {
         return sentBytes;
     }
 
-    public int getReceivedBytes() {
+    public long getReceivedBytes() {
         return receivedBytes.get();
     }
 
-    public IntegerProperty receivedBytesProperty() {
+    public LongProperty receivedBytesProperty() {
         return receivedBytes;
     }
 

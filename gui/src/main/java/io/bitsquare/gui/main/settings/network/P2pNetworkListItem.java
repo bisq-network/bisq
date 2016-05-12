@@ -55,9 +55,9 @@ public class P2pNetworkListItem {
         this.statistic = connection.getStatistic();
 
         sentBytesSubscription = EasyBind.subscribe(statistic.sentBytesProperty(),
-                e -> sentBytes.set(formatter.formatBytes((int) e)));
+                e -> sentBytes.set(formatter.formatBytes((long) e)));
         receivedBytesSubscription = EasyBind.subscribe(statistic.receivedBytesProperty(),
-                e -> receivedBytes.set(formatter.formatBytes((int) e)));
+                e -> receivedBytes.set(formatter.formatBytes((long) e)));
         onionAddressSubscription = EasyBind.subscribe(connection.peersNodeAddressProperty(),
                 nodeAddress -> onionAddress.set(nodeAddress != null ? nodeAddress.getFullAddress() : "Not known yet"));
         roundTripTimeSubscription = EasyBind.subscribe(statistic.roundTripTimeProperty(),

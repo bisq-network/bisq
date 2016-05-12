@@ -489,7 +489,7 @@ public class BSFormatter {
             return isOfferer ? "Seller (offerer)" : "Buyer (taker)";
     }
 
-    public String formatBytes(int bytes) {
+    public String formatBytes(long bytes) {
         double kb = 1024;
         double mb = kb * kb;
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
