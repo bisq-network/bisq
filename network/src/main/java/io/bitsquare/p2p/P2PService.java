@@ -55,9 +55,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class P2PService implements SetupListener, MessageListener, ConnectionListener, RequestDataManager.Listener,
         HashMapChangedListener {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
+    public static final int MAX_CONNECTIONS_DEFAULT = 12;
 
     private final SeedNodesRepository seedNodesRepository;
     private final int port;
+    private final int maxConnections;
     private final File torDir;
     private Clock clock;
     private final Optional<EncryptionService> optionalEncryptionService;
@@ -104,8 +106,32 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       Clock clock,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
+        this(
+                seedNodesRepository,
+                port, MAX_CONNECTIONS_DEFAULT,
+                torDir,
+                useLocalhost,
+                networkId,
+                storageDir,
+                clock,
+                encryptionService,
+                keyRing
+        );
+    }
+
+    @VisibleForTesting
+    public P2PService(SeedNodesRepository seedNodesRepository,
+                      int port, int maxConnections,
+                      File torDir,
+                      boolean useLocalhost,
+                      int networkId,
+                      File storageDir,
+                      Clock clock,
+                      @Nullable EncryptionService encryptionService,
+                      @Nullable KeyRing keyRing) {
         this.seedNodesRepository = seedNodesRepository;
         this.port = port;
+        this.maxConnections = maxConnections;
         this.torDir = torDir;
         this.clock = clock;
 
@@ -124,7 +150,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.addMessageListener(this);
 
         Set<NodeAddress> seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, networkId);
-        peerManager = new PeerManager(networkNode, seedNodeAddresses, storageDir, clock);
+        peerManager = new PeerManager(networkNode, maxConnections, seedNodeAddresses, storageDir, clock);
 
         broadcaster = new Broadcaster(networkNode, peerManager);
 
