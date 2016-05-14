@@ -112,7 +112,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
         result.add(new CryptoCurrency("JBS", "Jumbucks"));
         result.add(new CryptoCurrency("PINK", "Pinkcoin"));
-
+        result.add(new CryptoCurrency("OK", "OKCash"));
+        
         // For MKR we need a extra info box:
         // It's very important that users only use EIP-20 compliant contract wallets. 
         // Modern mist wallets should be able to do it but there are some older mist versions that can't. 
