@@ -864,7 +864,6 @@ public class MainViewModel implements ViewModel {
     private void updateLockedBalance() {
         Coin sum = Coin.valueOf(tradeManager.getLockedTradeStream()
                 .mapToLong(trade -> {
-                    //AddressEntry addressEntry = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
                     Coin lockedTradeAmount = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG).getLockedTradeAmount();
                     return lockedTradeAmount != null ? lockedTradeAmount.getValue() : 0;
                 })
