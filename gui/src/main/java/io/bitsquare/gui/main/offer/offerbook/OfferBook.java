@@ -91,7 +91,12 @@ public class OfferBook {
         List<Offer> offers = offerBookService.getOffers();
         CopyOnWriteArraySet<OfferBookListItem> list = new CopyOnWriteArraySet<>();
         offers.stream().forEach(e -> list.add(new OfferBookListItem(e)));
-        offerBookListItems.clear();
+        try {
+            offerBookListItems.clear();
+        } catch (Throwable t) {
+            log.error(" offerBookListItems.clear failed " + t.getMessage());
+        }
+       
         offerBookListItems.addAll(list);
 
         log.debug("offerBookListItems " + offerBookListItems.size());
