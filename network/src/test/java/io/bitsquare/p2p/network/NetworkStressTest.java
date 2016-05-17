@@ -304,6 +304,7 @@ public class NetworkStressTest {
             long nextSendMillis = System.currentTimeMillis();
             for (int i = 0; i < directCount; i++) {
                 // Select a random peer and send a direct message to it...
+                // TODO: Do not send the message to oneself.
                 final int dstPeerIdx = (int) (Math.random() * nPeers);
                 final P2PService dstPeer = peerNodes.get(dstPeerIdx);
                 final NodeAddress dstPeerAddress = dstPeer.getAddress();
