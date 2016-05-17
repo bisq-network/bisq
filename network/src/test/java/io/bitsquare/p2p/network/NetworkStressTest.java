@@ -292,22 +292,28 @@ public class NetworkStressTest {
         final CountDownLatch receivedDirectLatch = new CountDownLatch(directCount * nPeers);
         final long sendStartMillis = System.currentTimeMillis();
         for (final P2PService srcPeer : peerNodes) {
+            final NodeAddress srcPeerAddress = srcPeer.getAddress();
+
             // Make the peer ready for receiving direct messages.
             srcPeer.addDecryptedDirectMessageListener((decryptedMsgWithPubKey, peerNodeAddress) -> {
                 if (!(decryptedMsgWithPubKey.message instanceof StressTestDirectMessage))
                     return;
                 StressTestDirectMessage directMessage = (StressTestDirectMessage) (decryptedMsgWithPubKey.message);
-                if ((directMessage.getData().equals("test/" + srcPeer.getAddress())))
+                if ((directMessage.getData().equals("test/" + srcPeerAddress)))
                     receivedDirectLatch.countDown();
             });
 
             long nextSendMillis = System.currentTimeMillis();
             for (int i = 0; i < directCount; i++) {
-                // Select a random peer and send a direct message to it...
-                // TODO: Do not send the message to oneself.
-                final int dstPeerIdx = (int) (Math.random() * nPeers);
-                final P2PService dstPeer = peerNodes.get(dstPeerIdx);
-                final NodeAddress dstPeerAddress = dstPeer.getAddress();
+                // Select a random peer (different than source one) and send a direct message to it...
+                int peerIdx;
+                NodeAddress peerAddr;
+                do {
+                    peerIdx = (int) (Math.random() * nPeers);
+                    peerAddr = peerNodes.get(peerIdx).getAddress();
+                } while (srcPeerAddress.equals(peerAddr));
+                final int dstPeerIdx = peerIdx;
+                final NodeAddress dstPeerAddress = peerAddr;
                 // ...after a random delay not shorter than throttle limits.
                 nextSendMillis += Math.round(Math.random() * (MAX_DIRECT_DELAY_MILLIS - MIN_DIRECT_DELAY_MILLIS));
                 final long sendAfterMillis = nextSendMillis - System.currentTimeMillis();
