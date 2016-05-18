@@ -649,8 +649,8 @@ public class NetworkStressTest {
                     TimeUnit.SECONDS);
             //print("put peer %d online", firstOffline);
         }
-        /** Time to transmit all messages with the estimated per-message delay, with 1 second computation delay. */
-        final long idealMaxMailboxDelay = 2 * (MAILBOX_DELAY_SECS + 1) * 1000 * nPeers * mailboxCount;
+        /** Time to transmit all messages with the estimated per-message delay, with no computation delays. */
+        final long idealMaxMailboxDelay = 2 * MAILBOX_DELAY_SECS * 1000 * nPeers * mailboxCount;
         assertLatch("timed out while receiving mailbox messages",
                 receivedMailboxLatch, idealMaxMailboxDelay, TimeUnit.MILLISECONDS);
         final long recvMillis = System.currentTimeMillis() - sendStartMillis;
