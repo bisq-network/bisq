@@ -254,7 +254,7 @@ public class MainViewModel implements ViewModel {
         startupTimeoutPopup = new Popup();
         startupTimeoutPopup.warning("The application could not startup after 4 minutes.\n\n" +
                 details)
-                .actionButtonText("Shut down and start again")
+                .actionButtonText("Shut down")
                 .onAction(BitsquareApp.shutDownHandler::run)
                 .show();
     }
