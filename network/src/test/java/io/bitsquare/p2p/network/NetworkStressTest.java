@@ -96,6 +96,9 @@ public class NetworkStressTest {
     /** Number of mailbox messages to be sent by each peer. */
     private int mailboxCount = MAILBOX_COUNT_DEFAULT;
 
+
+    // # MAIN ENTRY POINT
+
     // Inspired by <https://stackoverflow.com/a/9288513> by Marc Peters.
     public static void main(String[] args) {
         Request request = (args.length == 0)
@@ -106,6 +109,20 @@ public class NetworkStressTest {
         for (Failure f : result.getFailures())
             System.err.printf("\n%s\n%s", f, f.getTrace());
         System.exit(result.wasSuccessful() ? 0 : 1);
+    }
+
+
+    // # COMMON UTILITIES
+
+    private void print(String message, Object... args) {
+        System.out.println(this.getClass().getSimpleName() + ": "
+                + String.format(message, args));
+    }
+
+    /** Decrease latch count and print a progress indicator based on the given character. */
+    private void countDownAndPrint(CountDownLatch latch, char c) {
+        latch.countDown();
+        printProgress(c, (int)latch.getCount());
     }
 
     /** Print a progress indicator based on the given character. */
@@ -124,24 +141,28 @@ public class NetworkStressTest {
         System.out.flush();
     }
 
-    /** Decrease latch count and print a progress indicator based on the given character. */
-    private void countDownAndPrint(CountDownLatch latch, char c) {
-        latch.countDown();
-        printProgress(c, (int)latch.getCount());
+    private static void assertLatch(String message, CountDownLatch latch, long timeout, TimeUnit unit)
+            throws InterruptedException {
+        if (!latch.await(timeout, unit))
+            org.junit.Assert.fail(String.format("%s (%d pending in latch)", message, latch.getCount()));
     }
 
-    /** Parse an integer value from the given environment variable, with default and minimum values. */
-    private int parseEnvInt(String envVar, int defValue, int minValue) {
-        int value = defValue;
-        final String envValue = System.getenv(envVar);
-        if (envValue != null && !envValue.equals(""))
-            value = Integer.parseInt(envValue);
-        if (value < minValue)
-            throw new IllegalArgumentException(
-                    String.format("%s must be at least %d: %d", envVar, minValue, value)
-            );
-        return value;
+    private Tuple3<Long, Long, Long> minMaxAvg(List<Long> l) {
+        long min = Long.MAX_VALUE;
+        long max = Long.MIN_VALUE;
+        long sum = 0;
+        for (long e : l) {
+            if (e < min)
+                min = e;
+            if (e > max)
+                max = e;
+            sum += e;
+        }
+        return new Tuple3<>(min, max, sum / l.size());
     }
+
+
+    // # TEST SETUP
 
     @Before
     public void setUp() throws Exception {
@@ -160,7 +181,6 @@ public class NetworkStressTest {
         final CountDownLatch prelimDataLatch = new CountDownLatch(nPeers);
         /* A barrier to wait for concurrent bootstrap of peers. */
         final CountDownLatch bootstrapLatch = new CountDownLatch(nPeers);
-
 
         // Set a security provider to allow key generation.
         Security.addProvider(new BouncyCastleProvider());
@@ -227,6 +247,36 @@ public class NetworkStressTest {
         print("bootstrap complete");
     }
 
+    /** Parse an integer value from the given environment variable, with default and minimum values. */
+    private int parseEnvInt(String envVar, int defValue, int minValue) {
+        int value = defValue;
+        final String envValue = System.getenv(envVar);
+        if (envValue != null && !envValue.equals(""))
+            value = Integer.parseInt(envValue);
+        if (value < minValue)
+            throw new IllegalArgumentException(
+                    String.format("%s must be at least %d: %d", envVar, minValue, value)
+            );
+        return value;
+    }
+
+    private Path createTestDataDirectory() throws IOException {
+        Path stressTestDirPath;
+
+        final String stressTestDir = System.getenv(TEST_DIR_ENVVAR);
+        if ((stressTestDir != null) && !stressTestDir.equals("")) {
+            // Test directory specified, use and create if missing.
+            stressTestDirPath = Paths.get(stressTestDir);
+            if (!Files.isDirectory(stressTestDirPath)) {
+                //noinspection ResultOfMethodCallIgnored
+                stressTestDirPath.toFile().mkdirs();
+            }
+        } else {
+            stressTestDirPath = Files.createTempDirectory("bsq" + this.getClass().getSimpleName());
+        }
+        return stressTestDirPath;
+    }
+
     @NotNull
     private static NodeAddress newSeedNodeAddress() {
         // The address is only considered by ``SeedNodesRepository`` if
@@ -257,6 +307,99 @@ public class NetworkStressTest {
                 REGTEST_NETWORK_ID, peerStorageDir, new Clock(), peerEncryptionService, peerKeyRing);
     }
 
+    // ## TEST SETUP: P2P service listener classes
+
+    private class TestSetupListener implements SetupListener {
+        private final CountDownLatch localServicesLatch;
+        private final BooleanProperty localServicesFailed;
+
+        TestSetupListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed) {
+            this.localServicesLatch = localServicesLatch;
+            this.localServicesFailed = localServicesFailed;
+        }
+
+        @Override
+        public void onTorNodeReady() {
+            // do nothing
+        }
+
+        @Override
+        public void onHiddenServicePublished() {
+            // successful result
+            localServicesLatch.countDown();
+        }
+
+        @Override
+        public void onSetupFailed(Throwable throwable) {
+            // failed result
+            localServicesFailed.set(true);
+            localServicesLatch.countDown();
+        }
+    }
+
+    private class SeedServiceListener extends TestSetupListener implements P2PServiceListener {
+        SeedServiceListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed) {
+            super(localServicesLatch, localServicesFailed);
+        }
+
+        @Override
+        public void onRequestingDataCompleted() {
+            // preliminary data not used in single seed node
+        }
+
+        @Override
+        public void onNoSeedNodeAvailable() {
+            // expected in single seed node
+        }
+
+        @Override
+        public void onNoPeersAvailable() {
+            // expected in single seed node
+        }
+
+        @Override
+        public void onBootstrapComplete() {
+            // not used in single seed node
+        }
+    }
+
+    private class PeerServiceListener extends TestSetupListener implements P2PServiceListener {
+        private final CountDownLatch prelimDataLatch;
+        private final CountDownLatch bootstrapLatch;
+
+        PeerServiceListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed,
+                            CountDownLatch prelimDataLatch, CountDownLatch bootstrapLatch) {
+            super(localServicesLatch, localServicesFailed);
+            this.prelimDataLatch = prelimDataLatch;
+            this.bootstrapLatch = bootstrapLatch;
+        }
+
+        @Override
+        public void onRequestingDataCompleted() {
+            // preliminary data received
+            countDownAndPrint(prelimDataLatch, 'p');
+        }
+
+        @Override
+        public void onNoSeedNodeAvailable() {
+            // do nothing
+        }
+
+        @Override
+        public void onNoPeersAvailable() {
+            // do nothing
+        }
+
+        @Override
+        public void onBootstrapComplete() {
+            // peer bootstrapped
+            countDownAndPrint(bootstrapLatch, 'b');
+        }
+    }
+
+
+    // # TEST CLEANUP
+
     @After
     public void tearDown() throws InterruptedException, IOException {
         /** A barrier to wait for concurrent shutdown of services. */
@@ -281,6 +424,39 @@ public class NetworkStressTest {
             deleteTestDataDirectory();
         }
     }
+
+    /**
+     * Delete the test data directory recursively, unless <code>STRESS_TEST_DIR</code> is defined,
+     * in which case peer node keys are kept.
+     *
+     * @throws IOException
+     */
+    private void deleteTestDataDirectory() throws IOException {
+        // Based on <https://stackoverflow.com/a/27917071/6239236> by Tomasz Dzięcielewski.
+        final String stressTestDir = System.getenv(TEST_DIR_ENVVAR);
+        final boolean keep = (stressTestDir != null) && !stressTestDir.equals("");
+        Files.walkFileTree(testDataDir, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                final String fileName = file.getFileName().toString();
+                if (!(keep && (fileName.matches("enc\\.key|sig\\.key|private_key"))))  // peer and tor keys
+                    Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                // ``dir`` is always a directory, I/O errors may still trigger ``NullPointerException``.
+                //noinspection ConstantConditions
+                if (!(keep && dir.toFile().listFiles().length > 0))
+                    Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+
+    // # DIRECT SENDING AND RECEIVING
 
     /** Test each peer sending a direct message to another random peer. */
     @Test
@@ -362,6 +538,9 @@ public class NetworkStressTest {
                 mma.first, mma.second, mma.third);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
     }
+
+
+    // # DIRECT + MAILBOX SENDING AND RECEIVING
 
     /** Test sending and receiving mailbox messages. */
     @Test
@@ -490,169 +669,6 @@ public class NetworkStressTest {
         peer.addDecryptedMailboxListener(listener);
     }
 
-
-    private void print(String message, Object... args) {
-        System.out.println(this.getClass().getSimpleName() + ": "
-            + String.format(message, args));
-    }
-
-    private static void assertLatch(String message, CountDownLatch latch, long timeout, TimeUnit unit)
-            throws InterruptedException {
-        if (!latch.await(timeout, unit))
-            org.junit.Assert.fail(String.format("%s (%d pending in latch)", message, latch.getCount()));
-    }
-
-    private Path createTestDataDirectory() throws IOException {
-        Path stressTestDirPath;
-
-        final String stressTestDir = System.getenv(TEST_DIR_ENVVAR);
-        if ((stressTestDir != null) && !stressTestDir.equals("")) {
-            // Test directory specified, use and create if missing.
-            stressTestDirPath = Paths.get(stressTestDir);
-            if (!Files.isDirectory(stressTestDirPath)) {
-                //noinspection ResultOfMethodCallIgnored
-                stressTestDirPath.toFile().mkdirs();
-            }
-        } else {
-            stressTestDirPath = Files.createTempDirectory("bsq" + this.getClass().getSimpleName());
-        }
-        return stressTestDirPath;
-    }
-
-    /**
-     * Delete the test data directory recursively, unless <code>STRESS_TEST_DIR</code> is defined,
-     * in which case peer node keys are kept.
-     *
-     * @throws IOException
-     */
-    private void deleteTestDataDirectory() throws IOException {
-        // Based on <https://stackoverflow.com/a/27917071/6239236> by Tomasz Dzięcielewski.
-        final String stressTestDir = System.getenv(TEST_DIR_ENVVAR);
-        final boolean keep = (stressTestDir != null) && !stressTestDir.equals("");
-        Files.walkFileTree(testDataDir, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                final String fileName = file.getFileName().toString();
-                if (!(keep && (fileName.matches("enc\\.key|sig\\.key|private_key"))))  // peer and tor keys
-                    Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                // ``dir`` is always a directory, I/O errors may still trigger ``NullPointerException``.
-                //noinspection ConstantConditions
-                if (!(keep && dir.toFile().listFiles().length > 0))
-                    Files.delete(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-    }
-
-    private Tuple3<Long, Long, Long> minMaxAvg(List<Long> l) {
-        long min = Long.MAX_VALUE;
-        long max = Long.MIN_VALUE;
-        long sum = 0;
-        for (long e : l) {
-            if (e < min)
-                min = e;
-            if (e > max)
-                max = e;
-            sum += e;
-        }
-        return new Tuple3<>(min, max, sum / l.size());
-    }
-
-    // P2P service listener classes
-
-    private class TestSetupListener implements SetupListener {
-        private final CountDownLatch localServicesLatch;
-        private final BooleanProperty localServicesFailed;
-
-        TestSetupListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed) {
-            this.localServicesLatch = localServicesLatch;
-            this.localServicesFailed = localServicesFailed;
-        }
-
-        @Override
-        public void onTorNodeReady() {
-            // do nothing
-        }
-
-        @Override
-        public void onHiddenServicePublished() {
-            // successful result
-            localServicesLatch.countDown();
-        }
-
-        @Override
-        public void onSetupFailed(Throwable throwable) {
-            // failed result
-            localServicesFailed.set(true);
-            localServicesLatch.countDown();
-        }
-    }
-
-    private class SeedServiceListener extends TestSetupListener implements P2PServiceListener {
-        SeedServiceListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed) {
-            super(localServicesLatch, localServicesFailed);
-        }
-
-        @Override
-        public void onRequestingDataCompleted() {
-            // preliminary data not used in single seed node
-        }
-
-        @Override
-        public void onNoSeedNodeAvailable() {
-            // expected in single seed node
-        }
-
-        @Override
-        public void onNoPeersAvailable() {
-            // expected in single seed node
-        }
-
-        @Override
-        public void onBootstrapComplete() {
-            // not used in single seed node
-        }
-    }
-
-    private class PeerServiceListener extends TestSetupListener implements P2PServiceListener {
-        private final CountDownLatch prelimDataLatch;
-        private final CountDownLatch bootstrapLatch;
-
-        PeerServiceListener(CountDownLatch localServicesLatch, BooleanProperty localServicesFailed,
-                            CountDownLatch prelimDataLatch, CountDownLatch bootstrapLatch) {
-            super(localServicesLatch, localServicesFailed);
-            this.prelimDataLatch = prelimDataLatch;
-            this.bootstrapLatch = bootstrapLatch;
-        }
-
-        @Override
-        public void onRequestingDataCompleted() {
-            // preliminary data received
-            countDownAndPrint(prelimDataLatch, 'p');
-        }
-
-        @Override
-        public void onNoSeedNodeAvailable() {
-            // do nothing
-        }
-
-        @Override
-        public void onNoPeersAvailable() {
-            // do nothing
-        }
-
-        @Override
-        public void onBootstrapComplete() {
-            // peer bootstrapped
-            countDownAndPrint(bootstrapLatch, 'b');
-        }
-    }
-
     private class MailboxStartListener implements P2PServiceListener {
         private final CountDownLatch startLatch;
 
@@ -691,7 +707,8 @@ public class NetworkStressTest {
     }
 }
 
-// Message classes
+
+// # MESSAGE CLASSES
 
 final class StressTestDirectMessage implements DirectMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
