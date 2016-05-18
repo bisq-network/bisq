@@ -585,7 +585,9 @@ public class NetworkStressTest {
 
         // Cycle through peers sending to others, stopping the peer
         // and starting one of the stopped peers.
+        print("%d mailbox messages to be sent by each of %d peers", mailboxCount, nPeers);
         BooleanProperty sentMailboxFailed = new SimpleBooleanProperty(false);
+        final long sendStartMillis = System.currentTimeMillis();
         for (int firstOnline = 0, firstOffline = firstPeerDown;
                 firstOnline < nPeers;
                 firstOnline++, firstOffline = ++firstOffline % nPeers) {
@@ -642,12 +644,18 @@ public class NetworkStressTest {
             startedPeer.start(new MailboxStartListener(startLatch));
             assertLatch("timed out while starting peer " + firstOffline,
                     startLatch,
+                    // this assumes some delay per received mailbox message
                     (MAX_PRELIMINARY_DELAY_SECS + MAX_BOOTSTRAP_DELAY_SECS) + MAILBOX_DELAY_SECS * nPeers,
                     TimeUnit.SECONDS);
             //print("put peer %d online", firstOffline);
         }
+        /** Time to transmit all messages with the estimated per-message delay, with 1 second computation delay. */
+        final long idealMaxMailboxDelay = 2 * (MAILBOX_DELAY_SECS + 1) * 1000 * nPeers * mailboxCount;
         assertLatch("timed out while receiving mailbox messages",
-                receivedMailboxLatch, 2 * (MAILBOX_DELAY_SECS + 1) * nPeers * mailboxCount, TimeUnit.SECONDS);
+                receivedMailboxLatch, idealMaxMailboxDelay, TimeUnit.MILLISECONDS);
+        final long recvMillis = System.currentTimeMillis() - sendStartMillis;
+        print("receiving %d mailbox messages per peer took %ss (%.2f x ideal max)",
+                mailboxCount, recvMillis / 1000.0, recvMillis / (float) idealMaxMailboxDelay);
         org.junit.Assert.assertFalse("some peer(s) failed to send a message", sentMailboxFailed.get());
     }
 
