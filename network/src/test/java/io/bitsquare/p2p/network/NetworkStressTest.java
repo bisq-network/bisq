@@ -67,6 +67,12 @@ public class NetworkStressTest {
     /** Default number of mailbox messages to be sent by each peer. */
     private static final int MAILBOX_COUNT_DEFAULT = 100;
 
+    /** Maximum delay in seconds for a node to receive preliminary data. */
+    private static long MAX_PRELIMINARY_DELAY_SECS = 5;
+    /** Maximum delay in seconds for a node to bootstrap after receiving preliminary data. */
+    private static long MAX_BOOTSTRAP_DELAY_SECS = 5;
+    /** Maximum delay in seconds for a node to shutdown. */
+    private static long MAX_SHUTDOWN_DELAY_SECS = 2;
     /** Minimum delay between direct messages in milliseconds, 25% larger than throttle limit. */
     private static long MIN_DIRECT_DELAY_MILLIS = Math.round(1.25 * (1.0 / Connection.MSG_THROTTLE_PER_SEC) * 1000);
     /** Maximum delay between direct messages in milliseconds, 10 times larger than minimum. */
@@ -240,12 +246,12 @@ public class NetworkStressTest {
 
         // Wait for peers to get their preliminary data.
         assertLatch("timed out while waiting for preliminary data",
-                prelimDataLatch, 5 * nPeers, TimeUnit.SECONDS);
+                prelimDataLatch, MAX_PRELIMINARY_DELAY_SECS * nPeers, TimeUnit.SECONDS);
         print("preliminary data received");
 
         // Wait for peers to complete their bootstrapping.
         assertLatch("timed out while waiting for bootstrap",
-                bootstrapLatch, 5 * nPeers, TimeUnit.SECONDS);
+                bootstrapLatch, MAX_BOOTSTRAP_DELAY_SECS * nPeers, TimeUnit.SECONDS);
         print("bootstrap complete");
     }
 
@@ -405,7 +411,9 @@ public class NetworkStressTest {
     @After
     public void tearDown() throws InterruptedException, IOException {
         /** A barrier to wait for concurrent shutdown of services. */
-        final CountDownLatch shutdownLatch = new CountDownLatch((seedNode != null? 1 : 0) + peerNodes.size());
+
+        final int nNodes = (seedNode != null ? 1 : 0) + peerNodes.size();
+        final CountDownLatch shutdownLatch = new CountDownLatch(nNodes);
 
         print("stopping all local nodes");
         // Stop peer nodes.
@@ -417,7 +425,8 @@ public class NetworkStressTest {
             seedNode.shutDown(() -> countDownAndPrint(shutdownLatch, '.'));
         }
         // Wait for concurrent tasks to finish.
-        shutdownLatch.await();
+        assertLatch("timed out while stopping nodes",
+                shutdownLatch, MAX_SHUTDOWN_DELAY_SECS * nNodes, TimeUnit.SECONDS);
         print("all local nodes stopped");
 
         // Cleanup test data directory.
@@ -571,7 +580,7 @@ public class NetworkStressTest {
             peer.shutDown(halfShutDown::countDown);
         }
         assertLatch("timed out while stopping a half of the peers",
-                halfShutDown, 10, TimeUnit.SECONDS);
+                halfShutDown, MAX_SHUTDOWN_DELAY_SECS * nPeers, TimeUnit.SECONDS);
         //print("stopped a half of the peers for mailbox test");
 
         // Cycle through peers sending to others, stopping the peer
@@ -622,7 +631,7 @@ public class NetworkStressTest {
             final CountDownLatch stopLatch = new CountDownLatch(1);
             onlinePeer.shutDown(stopLatch::countDown);
             assertLatch("timed out while stopping peer " + firstOnline,
-                    stopLatch, 10, TimeUnit.SECONDS);
+                    stopLatch, MAX_SHUTDOWN_DELAY_SECS, TimeUnit.SECONDS);
             //print("put peer %d offline", firstOnline);
 
             // When done, put first offline peer online and setup message listeners.
@@ -632,7 +641,9 @@ public class NetworkStressTest {
             peerNodes.set(firstOffline, startedPeer);
             startedPeer.start(new MailboxStartListener(startLatch));
             assertLatch("timed out while starting peer " + firstOffline,
-                    startLatch, 10 + MAILBOX_DELAY_SECS * nPeers, TimeUnit.SECONDS);
+                    startLatch,
+                    (MAX_PRELIMINARY_DELAY_SECS + MAX_BOOTSTRAP_DELAY_SECS) + MAILBOX_DELAY_SECS * nPeers,
+                    TimeUnit.SECONDS);
             //print("put peer %d online", firstOffline);
         }
         assertLatch("timed out while receiving mailbox messages",
