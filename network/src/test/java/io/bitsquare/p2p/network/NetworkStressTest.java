@@ -469,7 +469,7 @@ public class NetworkStressTest {
                     return;
                 StressTestMailboxMessage msg = (StressTestMailboxMessage) (decryptedMsgWithPubKey.message);
                 if ((msg.getData().equals("test/" + peer.getAddress())))
-                    receivedMailboxLatch.countDown();
+                    countDownAndPrint(receivedMailboxLatch, 'm');
             }
 
             @Override
