@@ -451,6 +451,7 @@ public class NetworkStressTest {
         // TODO: Use meaningful timeout.
         assertLatch("timed out while receiving mailbox messages",
                 receivedMailboxLatch, 120, TimeUnit.SECONDS);
+        org.junit.Assert.assertFalse("some peer(s) failed to send a message", sentMailboxFailed.get());
     }
 
     /** Configure the peer to decrease the latch on receipt of mailbox message (direct or via mailbox). */
