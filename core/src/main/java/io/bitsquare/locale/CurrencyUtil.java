@@ -115,6 +115,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("OK", "OKCash"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
         result.add(new CryptoCurrency("MOIN", "Moin"));
+        result.add(new CryptoCurrency("SLR", "SolarCoin"));
         
         // For MKR we need a extra info box:
         // It's very important that users only use EIP-20 compliant contract wallets. 
