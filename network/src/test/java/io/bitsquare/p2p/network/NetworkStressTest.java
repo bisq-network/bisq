@@ -71,6 +71,8 @@ public class NetworkStressTest {
     private static long MIN_DIRECT_DELAY_MILLIS = Math.round(1.25 * (1.0 / Connection.MSG_THROTTLE_PER_SEC) * 1000);
     /** Maximum delay between direct messages in milliseconds, 10 times larger than minimum. */
     private static long MAX_DIRECT_DELAY_MILLIS = 10 * MIN_DIRECT_DELAY_MILLIS;
+    /** Estimated delay in seconds to send or receive a mailbox message. */
+    private static long MAILBOX_DELAY_SECS = 2;
 
     // Instance fields
 
@@ -613,9 +615,8 @@ public class NetworkStressTest {
                             }
                         });
             }
-            // TODO: Use meaningful timeout.
             assertLatch("timed out while sending from peer " + firstOnline,
-                    sendLatch, 2 * mailboxCount, TimeUnit.SECONDS);
+                    sendLatch, MAILBOX_DELAY_SECS * mailboxCount, TimeUnit.SECONDS);
 
             // When done, put first online peer offline.
             final CountDownLatch stopLatch = new CountDownLatch(1);
@@ -631,12 +632,11 @@ public class NetworkStressTest {
             peerNodes.set(firstOffline, startedPeer);
             startedPeer.start(new MailboxStartListener(startLatch));
             assertLatch("timed out while starting peer " + firstOffline,
-                    startLatch, 10, TimeUnit.SECONDS);
+                    startLatch, 10 + MAILBOX_DELAY_SECS * nPeers, TimeUnit.SECONDS);
             //print("put peer %d online", firstOffline);
         }
-        // TODO: Use meaningful timeout.
         assertLatch("timed out while receiving mailbox messages",
-                receivedMailboxLatch, 120, TimeUnit.SECONDS);
+                receivedMailboxLatch, 2 * (MAILBOX_DELAY_SECS + 1) * nPeers * mailboxCount, TimeUnit.SECONDS);
         org.junit.Assert.assertFalse("some peer(s) failed to send a message", sentMailboxFailed.get());
     }
 
