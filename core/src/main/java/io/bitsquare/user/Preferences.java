@@ -103,7 +103,7 @@ public final class Preferences implements Persistable {
     private boolean tacAccepted;
     // Don't remove as we don't want to break old serialized data
     private boolean useTorForBitcoinJ = false;
-    private boolean showOwnOffersInOfferBook;
+    private boolean showOwnOffersInOfferBook = true;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
     private long nonTradeTxFeePerKB = FeePolicy.getNonTradeFeePerKb().value;
