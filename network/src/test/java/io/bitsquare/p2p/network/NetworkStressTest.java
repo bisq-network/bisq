@@ -402,6 +402,7 @@ public class NetworkStressTest {
             // The first online peer sends messages to random other peers.
             final P2PService onlinePeer = peerNodes.get(firstOnline);
             final NodeAddress onlinePeerAddress = onlinePeer.getAddress();
+            final CountDownLatch sendLatch = new CountDownLatch(mailboxCount);
             for (int i = 0; i < mailboxCount; i++) {
                 // Select a random peer (different than source one)...
                 int peerIdx;
@@ -418,18 +419,24 @@ public class NetworkStressTest {
                         new SendMailboxMessageListener() {  // checked in receiver
                             @Override
                             public void onArrived() {
+                                sendLatch.countDown();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
+                                sendLatch.countDown();
                             }
 
                             @Override
                             public void onFault(String errorMessage) {
                                 sentMailboxFailed.set(true);
+                                sendLatch.countDown();
                             }
                         });
             }
+            // TODO: Use meaningful timeout.
+            assertLatch("timed out while sending from peer " + firstOnline,
+                    sendLatch, 2 * mailboxCount, TimeUnit.SECONDS);
 
             // When done, put first online peer offline.
             final CountDownLatch stopLatch = new CountDownLatch(1);
