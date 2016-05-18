@@ -775,6 +775,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         return peerManager;
     }
 
+    @VisibleForTesting
+    @Nullable
+    public KeyRing getKeyRing() {
+        return optionalKeyRing.isPresent()? optionalKeyRing.get() : null;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
