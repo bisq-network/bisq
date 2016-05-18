@@ -391,7 +391,7 @@ public class NetworkStressTest {
         }
         assertLatch("timed out while stopping a half of the peers",
                 halfShutDown, 10, TimeUnit.SECONDS);
-        print("stopped a half of the peers for mailbox test");
+        //print("stopped a half of the peers for mailbox test");
 
         // Cycle through peers sending to others, stopping the peer
         // and starting one of the stopped peers.
@@ -443,7 +443,7 @@ public class NetworkStressTest {
             onlinePeer.shutDown(stopLatch::countDown);
             assertLatch("timed out while stopping peer " + firstOnline,
                     stopLatch, 10, TimeUnit.SECONDS);
-            print("put peer %d offline", firstOnline);
+            //print("put peer %d offline", firstOnline);
 
             // When done, put first offline peer online and setup message listeners.
             final CountDownLatch startLatch = new CountDownLatch(1);
@@ -453,7 +453,7 @@ public class NetworkStressTest {
             startedPeer.start(new MailboxStartListener(startLatch));
             assertLatch("timed out while starting peer " + firstOffline,
                     startLatch, 10, TimeUnit.SECONDS);
-            print("put peer %d online", firstOffline);
+            //print("put peer %d online", firstOffline);
         }
         // TODO: Use meaningful timeout.
         assertLatch("timed out while receiving mailbox messages",
