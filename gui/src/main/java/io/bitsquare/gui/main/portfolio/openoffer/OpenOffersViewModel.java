@@ -24,8 +24,10 @@ import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.collections.ObservableList;
+import org.bitcoinj.utils.Fiat;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
     private final P2PService p2PService;
@@ -58,7 +60,19 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getPrice(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatPriceWithCode(item.getOffer().getPrice()) : "";
+        if ((item == null))
+            return "";
+
+        Offer offer = item.getOffer();
+        Fiat price = offer.getPrice();
+        if (price != null) {
+            String postFix = "";
+            if (offer.getUseMarketBasedPrice())
+                postFix = " (" + formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin()) + ")";
+            return formatter.formatPriceWithCode(price) + postFix;
+        } else {
+            return "N/A";
+        }
     }
 
     String getVolume(OpenOfferListItem item) {
