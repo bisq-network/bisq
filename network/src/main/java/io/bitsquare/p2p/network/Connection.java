@@ -540,8 +540,10 @@ public class Connection implements MessageListener {
             } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
                 closeConnectionReason = CloseConnectionReason.SOCKET_TIMEOUT;
                 log.debug("SocketTimeoutException at socket " + socket.toString() + "\n\tconnection={}" + this);
-            } else if (e instanceof EOFException || e instanceof StreamCorruptedException) {
+            } else if (e instanceof EOFException) {
                 closeConnectionReason = CloseConnectionReason.TERMINATED;
+            } else if (e instanceof OptionalDataException || e instanceof StreamCorruptedException) {
+                closeConnectionReason = CloseConnectionReason.CORRUPTED_DATA;
             } else {
                 // TODO sometimes we get StreamCorruptedException, OptionalDataException, IllegalStateException
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
@@ -788,7 +790,8 @@ public class Connection implements MessageListener {
                     }
                 }
             } catch (Throwable t) {
-                t.printStackTrace();
+                if (!(t instanceof OptionalDataException))
+                    t.printStackTrace();
                 stop();
                 sharedModel.handleConnectionException(new Exception(t));
             }
