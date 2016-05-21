@@ -181,8 +181,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
         avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().hostName.compareTo(o2.getOffer().getOwnerNodeAddress().hostName));
 
-        priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
-
         createOfferButton = addButton(root, ++gridRow, "");
         createOfferButton.setMinHeight(40);
         createOfferButton.setPadding(new Insets(0, 20, 0, 20));
@@ -204,6 +202,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         else
             currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
 
+        priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
+        amountColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
 
         paymentMethodComboBox.setItems(model.getPaymentMethods());
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
@@ -242,6 +242,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         createOfferButton.setOnAction(null);
         volumeColumn.textProperty().unbind();
         model.getOfferList().comparatorProperty().unbind();
+
+        priceColumn.sortableProperty().unbind();
+        amountColumn.sortableProperty().unbind();
     }
 
 
