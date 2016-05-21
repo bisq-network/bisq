@@ -640,7 +640,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 // Need to set it here otherwise style is not correct
                                 AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY, "16.0");
                                 copyIcon.getStyleClass().add("copy-icon");
-                                
+
                                 // TODO There are still some cell rendering issues on updates
                                 setGraphic(messageAnchorPane);
                             } else {
@@ -706,6 +706,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             {
                 setMinWidth(110);
                 setMaxWidth(110);
+                setSortable(false);
             }
         };
         column.setCellValueFactory((addressListItem) ->
@@ -791,7 +792,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 setMinWidth(130);
             }
         };
-        column.setSortable(false);
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
@@ -849,7 +849,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 setSortable(false);
             }
         };
-        column.setSortable(false);
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
@@ -887,7 +886,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 setMinWidth(50);
             }
         };
-        column.setSortable(false);
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
