@@ -20,6 +20,8 @@ package io.bitsquare.gui.main.funds.transactions;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -55,6 +57,7 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
 
 import javax.inject.Inject;
+import java.text.DateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -173,6 +176,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(event)) {
                 Map<Long, List<Coin>> map = new HashMap<>();
+                Map<String, Tuple2<Date, Integer>> dateMap = new HashMap<>();
                 observableList.stream().forEach(item -> {
                     Coin amountAsCoin = item.getAmountAsCoin();
                     List<Coin> list;
@@ -184,7 +188,18 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                         list = map.get(key);
                     }
                     list.add(amountAsCoin);
+
+                    DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.US);
+                    String day = dateFormatter.format(item.getDate());
+                    if (!dateMap.containsKey(day)) {
+                        dateMap.put(day, new Tuple2<>(item.getDate(), 1));
+                    } else {
+                        Tuple2<Date, Integer> tuple2 = dateMap.get(day);
+                        int prev = tuple2.second;
+                        dateMap.put(day, new Tuple2<>(tuple2.first, ++prev));
+                    }
                 });
+
                 StringBuilder stringBuilder = new StringBuilder();
                 map.entrySet().stream().forEach(e -> {
                     stringBuilder.append("Nr. of transactions for amount ").
@@ -193,7 +208,31 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                             append(e.getValue().size()).
                             append("\n");
                 });
-                new Popup().headLine("Statistical info").information(stringBuilder.toString()).show();
+
+                List<Tuple3<String, Date, Integer>> dateList = dateMap.entrySet().stream().
+                        map(e -> {
+                            Tuple2<Date, Integer> value = e.getValue();
+                            return new Tuple3<>(e.getKey(), value.first, value.second);
+                        }).
+                        collect(Collectors.toList());
+                dateList.sort((o1, o2) -> o2.second.compareTo(o1.second));
+                StringBuilder stringBuilder2 = new StringBuilder();
+                dateList.stream().forEach(e2 -> {
+                    stringBuilder2.append("\n").
+                            append(e2.first).
+                            append(": ").
+                            append(e2.third);
+                });
+                StringBuilder stringBuilder3 = new StringBuilder();
+                dateList.stream().forEach(e3 -> {
+                    stringBuilder3.append(e3.third).append(",");
+                });
+                String message = stringBuilder.toString() + "\nNr. of transactions by day:" + stringBuilder2.toString();
+                new Popup().headLine("Statistical info")
+                        .information(message)
+                        .actionButtonText("Copy")
+                        .onAction(() -> Utilities.copyToClipboard(message + "\n\nCSV:\n" + stringBuilder3.toString()))
+                        .show();
             }
         };
     }
