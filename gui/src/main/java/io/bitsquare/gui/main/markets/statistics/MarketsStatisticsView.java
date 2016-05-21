@@ -80,10 +80,10 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
         tableView.getColumns().add(spreadColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        currencyColumn.setComparator((o1, o2) -> o1.currencyCode.compareTo(o2.currencyCode));
+        currencyColumn.setComparator((o1, o2) -> CurrencyUtil.getNameByCode(o1.currencyCode).compareTo(CurrencyUtil.getNameByCode(o2.currencyCode)));
         numberOfOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfOffers).compareTo(o2.numberOfOffers));
         totalAmountColumn.setComparator((o1, o2) -> o1.totalAmount.compareTo(o2.totalAmount));
-        spreadColumn.setComparator((o1, o2) -> o1.spread != null && o2.spread != null ? o1.spread.compareTo(o2.spread) : 0);
+        spreadColumn.setComparator((o1, o2) -> o1.spread != null && o2.spread != null ? formatter.formatFiatWithCode(o1.spread).compareTo(formatter.formatFiatWithCode(o2.spread)) : 0);
 
         tableView.getSortOrder().add(numberOfOffersColumn);
     }
