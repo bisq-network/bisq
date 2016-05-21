@@ -101,7 +101,7 @@ public final class MailboxStoragePayload implements StoragePayload {
 
     @Override
     public String toString() {
-        return "ExpirableMailboxPayload{" +
+        return "MailboxStoragePayload{" +
                 "prefixedSealedAndSignedMessage=" + prefixedSealedAndSignedMessage +
                 ", senderStoragePublicKey.hashCode()=" + senderPubKeyForAddOperation.hashCode() +
                 ", receiverStoragePublicKey.hashCode()=" + receiverPubKeyForRemoveOperation.hashCode() +

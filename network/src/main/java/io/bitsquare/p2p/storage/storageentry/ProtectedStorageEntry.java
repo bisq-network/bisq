@@ -69,7 +69,7 @@ public class ProtectedStorageEntry implements Payload {
 
     @Override
     public String toString() {
-        return "ProtectedData{" +
+        return "ProtectedStorageEntry{" +
                 "expirablePayload=" + storagePayload +
                 ", timeStamp=" + timeStamp +
                 ", sequenceNumber=" + sequenceNumber +
