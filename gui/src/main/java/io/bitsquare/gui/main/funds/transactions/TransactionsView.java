@@ -19,9 +19,10 @@ package io.bitsquare.gui.main.funds.transactions;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.arbitration.DisputeManager;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
-import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.common.util.Tuple4;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -176,27 +177,42 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(event)) {
                 Map<Long, List<Coin>> map = new HashMap<>();
-                Map<String, Tuple2<Date, Integer>> dateMap = new HashMap<>();
+                Map<String, Tuple4<Date, Integer, Integer, Integer>> dataByDayMap = new HashMap<>();
                 observableList.stream().forEach(item -> {
                     Coin amountAsCoin = item.getAmountAsCoin();
-                    List<Coin> list;
+                    List<Coin> amounts;
                     long key = amountAsCoin.getValue();
                     if (!map.containsKey(key)) {
-                        list = new ArrayList<>();
-                        map.put(key, list);
+                        amounts = new ArrayList<>();
+                        map.put(key, amounts);
                     } else {
-                        list = map.get(key);
+                        amounts = map.get(key);
                     }
-                    list.add(amountAsCoin);
+                    amounts.add(amountAsCoin);
 
                     DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.US);
                     String day = dateFormatter.format(item.getDate());
-                    if (!dateMap.containsKey(day)) {
-                        dateMap.put(day, new Tuple2<>(item.getDate(), 1));
+
+                    if (!dataByDayMap.containsKey(day)) {
+                        int numOffers = 0;
+                        int numTrades = 0;
+                        if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                            numOffers++;
+                        else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                            numTrades++;
+
+                        dataByDayMap.put(day, new Tuple4<>(item.getDate(), 1, numOffers, numTrades));
                     } else {
-                        Tuple2<Date, Integer> tuple2 = dateMap.get(day);
-                        int prev = tuple2.second;
-                        dateMap.put(day, new Tuple2<>(tuple2.first, ++prev));
+                        Tuple4<Date, Integer, Integer, Integer> tuple = dataByDayMap.get(day);
+                        int prev = tuple.second;
+                        int numOffers = tuple.third;
+                        int numTrades = tuple.forth;
+                        if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                            numOffers++;
+                        else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                            numTrades++;
+
+                        dataByDayMap.put(day, new Tuple4<>(tuple.first, ++prev, numOffers, numTrades));
                     }
                 });
 
@@ -209,29 +225,40 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                             append("\n");
                 });
 
-                List<Tuple3<String, Date, Integer>> dateList = dateMap.entrySet().stream().
+                List<Tuple4<String, Date, Integer, Tuple2<Integer, Integer>>> sortedDataByDayList = dataByDayMap.entrySet().stream().
                         map(e -> {
-                            Tuple2<Date, Integer> value = e.getValue();
-                            return new Tuple3<>(e.getKey(), value.first, value.second);
+                            Tuple4<Date, Integer, Integer, Integer> data = e.getValue();
+                            return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.forth));
                         }).
                         collect(Collectors.toList());
-                dateList.sort((o1, o2) -> o2.second.compareTo(o1.second));
-                StringBuilder stringBuilder2 = new StringBuilder();
-                dateList.stream().forEach(e2 -> {
-                    stringBuilder2.append("\n").
-                            append(e2.first).
+                sortedDataByDayList.sort((o1, o2) -> o2.second.compareTo(o1.second));
+                StringBuilder transactionsByDayStringBuilder = new StringBuilder();
+                StringBuilder offersStringBuilder = new StringBuilder();
+                StringBuilder tradesStringBuilder = new StringBuilder();
+                StringBuilder allStringBuilder = new StringBuilder();
+                allStringBuilder.append("Date").append(";").append("Offers").append(";").append("Trades").append("\n");
+                sortedDataByDayList.stream().forEach(tuple4 -> {
+                    offersStringBuilder.append(tuple4.forth.first).append(",");
+                    tradesStringBuilder.append(tuple4.forth.second).append(",");
+                    allStringBuilder.append(tuple4.first).append(";").append(tuple4.forth.first).append(";").append(tuple4.forth.second).append("\n");
+                    transactionsByDayStringBuilder.append("\n").
+                            append(tuple4.first).
                             append(": ").
-                            append(e2.third);
+                            append(tuple4.third).
+                            append(" (Offers: ").
+                            append(tuple4.forth.first).
+                            append(" / Trades: ").
+                            append(tuple4.forth.second).
+                            append(")");
                 });
-                StringBuilder stringBuilder3 = new StringBuilder();
-                dateList.stream().forEach(e3 -> {
-                    stringBuilder3.append(e3.third).append(",");
-                });
-                String message = stringBuilder.toString() + "\nNr. of transactions by day:" + stringBuilder2.toString();
+                String message = stringBuilder.toString() + "\nNr. of transactions by day:" + transactionsByDayStringBuilder.toString();
                 new Popup().headLine("Statistical info")
                         .information(message)
                         .actionButtonText("Copy")
-                        .onAction(() -> Utilities.copyToClipboard(message + "\n\nCSV:\n" + stringBuilder3.toString()))
+                        .onAction(() -> Utilities.copyToClipboard(message +
+                                "\n\nCSV (Offers):\n" + offersStringBuilder.toString() +
+                                "\n\nCSV (Trades):\n" + tradesStringBuilder.toString() +
+                                "\n\nCSV (all):\n" + allStringBuilder.toString()))
                         .show();
             }
         };
