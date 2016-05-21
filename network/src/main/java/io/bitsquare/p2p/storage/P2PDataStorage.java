@@ -40,7 +40,9 @@ import java.util.concurrent.TimeUnit;
 // Run in UserThread
 public class P2PDataStorage implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
-    /** How many days to keep an entry before it is purged. */
+    /**
+     * How many days to keep an entry before it is purged.
+     */
     public static final int PURGE_AGE_DAYS = 10;
 
     @VisibleForTesting
@@ -250,8 +252,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     log.info("Data set after refreshTTL: size=" + map.values().size());
 
                     broadcast(refreshTTLMessage, sender, null, isDataOwner);
-                } else {
-                    log.warn("Checks for refreshTTL failed");
                 }
                 return result;
             }
@@ -406,7 +406,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             if (newSequenceNumber > storedSequenceNumber) {
                 return true;
             } else {
-                log.info("Sequence number is invalid. sequenceNumber = "
+                log.warn("Sequence number is invalid. sequenceNumber = "
                         + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
                         "That can happen if the data owner gets an old delayed data storage message.");
                 return false;
@@ -459,16 +459,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean checkIfStoredDataPubKeyMatchesNewDataPubKey(PublicKey ownerPubKey, ByteArray hashOfData) {
-        if (map.containsKey(hashOfData)) {
-            ProtectedStorageEntry storedData = map.get(hashOfData);
-            boolean result = storedData.ownerPubKey.equals(ownerPubKey);
-            if (!result)
-                log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
+        ProtectedStorageEntry storedData = map.get(hashOfData);
+        boolean result = storedData.ownerPubKey.equals(ownerPubKey);
+        if (!result)
+            log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
 
-            return result;
-        } else {
-            return false;
-        }
+        return result;
     }
 
     private boolean checkIfStoredMailboxDataMatchesNewMailboxData(PublicKey receiversPubKey, ByteArray hashOfData) {
