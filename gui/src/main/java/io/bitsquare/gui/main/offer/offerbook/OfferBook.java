@@ -70,12 +70,10 @@ public class OfferBook {
 
                 Optional<OfferBookListItem> candidate = offerBookListItems.stream().filter(item -> item.getOffer().getId().equals(offer.getId())).findAny();
                 if (candidate.isPresent()) {
-                    try {
-                        OfferBookListItem item = candidate.get();
+                    OfferBookListItem item = candidate.get();
+                    synchronized (offerBookListItems) {
                         if (offerBookListItems.contains(item))
                             offerBookListItems.remove(item);
-                    } catch (Throwable t) {
-                        log.error(" offerBookListItems.remove failed " + t.getMessage());
                     }
                 }
             }
@@ -91,12 +89,10 @@ public class OfferBook {
         List<Offer> offers = offerBookService.getOffers();
         CopyOnWriteArraySet<OfferBookListItem> list = new CopyOnWriteArraySet<>();
         offers.stream().forEach(e -> list.add(new OfferBookListItem(e)));
-        try {
+        synchronized (offerBookListItems) {
             offerBookListItems.clear();
-        } catch (Throwable t) {
-            log.error(" offerBookListItems.clear failed " + t.getMessage());
         }
-       
+
         offerBookListItems.addAll(list);
 
         log.debug("offerBookListItems " + offerBookListItems.size());
