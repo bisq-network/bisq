@@ -13,6 +13,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
+import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.p2p.peers.keepalive.messages.Pong;
@@ -63,10 +64,11 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Leaving some constants package-private for tests to know limits.
-    static final int MAX_MSG_SIZE = 500 * 1024;              // 500 kb
+    static final int MAX_MSG_SIZE = 500 * 1024;                       // 500 kb
+    static final int MAX_MSG_SIZE_GET_DATA = 2 * 1024 * 1024;         // 2 MB
     //TODO decrease limits again after testing
     static final int MSG_THROTTLE_PER_SEC = 70;              // With MAX_MSG_SIZE of 500kb results in bandwidth of 35 mbit/sec
-    static final int MSG_THROTTLE_PER_10_SEC = 500;           // With MAX_MSG_SIZE of 100kb results in bandwidth of 50 mbit/sec for 10 sec
+    static final int MSG_THROTTLE_PER_10_SEC = 500;          // With MAX_MSG_SIZE of 100kb results in bandwidth of 50 mbit/sec for 10 sec
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
 
     public static int getMaxMsgSize() {
@@ -689,9 +691,14 @@ public class Connection implements MessageListener {
 
 
                         // First we check the size
-                        boolean exceeds = size > getMaxMsgSize();
+                        boolean exceeds;
+                        if (rawInputObject instanceof GetDataResponse)
+                            exceeds = size > MAX_MSG_SIZE_GET_DATA;
+                        else
+                            exceeds = size > MAX_MSG_SIZE;
+                        
                         if (exceeds)
-                            log.warn("size > MAX_MSG_SIZE. size=" + size);
+                            log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, message);
 
                         if (exceeds && reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
                             return;
