@@ -390,7 +390,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             if (newSequenceNumber >= storedSequenceNumber) {
                 return true;
             } else {
-                log.warn("Sequence number is invalid. sequenceNumber = "
+                log.debug("Sequence number is invalid. sequenceNumber = "
                         + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
                         "That can happen if the data owner gets an old delayed data storage message.");
                 return false;
@@ -407,16 +407,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 return true;
             } else if (newSequenceNumber == storedSequenceNumber) {
                 if (newSequenceNumber == 0) {
-                    log.trace("Sequence number is equal to the stored one and both are 0." +
+                    log.debug("Sequence number is equal to the stored one and both are 0." +
                             "That is expected for messages which never got updated (mailbox msg).");
                     return false;
                 } else {
-                    log.trace("Sequence number is equal to the stored one. sequenceNumber = "
+                    log.debug("Sequence number is equal to the stored one. sequenceNumber = "
                             + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
                     return false;
                 }
             } else {
-                log.warn("Sequence number is invalid. sequenceNumber = "
+                log.debug("Sequence number is invalid. sequenceNumber = "
                         + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
                         "That can happen if the data owner gets an old delayed data storage message.");
                 return false;
