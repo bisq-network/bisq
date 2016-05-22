@@ -120,6 +120,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ERC", "Europecoin"));
         result.add(new CryptoCurrency("MKR", "Maker"));
         result.add(new CryptoCurrency("DAO", "DAO"));
+        result.add(new CryptoCurrency("POST", "PostCoin"));
+        
         // For MKR we need a extra info box:
         // It's very important that users only use EIP-20 compliant contract wallets. 
         // Modern mist wallets should be able to do it but there are some older mist versions that can't. 
