@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.components.paymentmethods;
 
-import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
@@ -33,6 +32,7 @@ import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.StringConverter;
 import org.apache.commons.lang3.StringUtils;
@@ -55,6 +55,7 @@ public class SepaForm extends PaymentMethodForm {
     private TextField currencyTextField;
     private final List<CheckBox> euroCountryCheckBoxes = new ArrayList<>();
     private final List<CheckBox> nonEuroCountryCheckBoxes = new ArrayList<>();
+    private ComboBox<TradeCurrency> currencyComboBox;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", ((SepaAccountContractData) paymentAccountContractData).getHolderName());
@@ -98,10 +99,29 @@ public class SepaForm extends PaymentMethodForm {
 
         });
 
-        Tuple3<Label, ComboBox, TextField> tuple3 = addLabelComboBoxLabel(gridPane, ++gridRow, "Country of your Bank:", "");
-        ComboBox<Country> countryComboBox = tuple3.second;
-        currencyTextField = tuple3.third;
+
+        addLabel(gridPane, ++gridRow, "Country of your Bank:");
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        ComboBox<Country> countryComboBox = new ComboBox<>();
+        currencyComboBox = new ComboBox<>();
+        currencyTextField = new TextField("");
+        currencyTextField.setEditable(false);
+        currencyTextField.setMouseTransparent(true);
+        currencyTextField.setFocusTraversable(false);
         currencyTextField.setMinWidth(300);
+
+        currencyTextField.setVisible(false);
+        currencyTextField.setManaged(false);
+        currencyComboBox.setVisible(false);
+        currencyComboBox.setManaged(false);
+
+        hBox.getChildren().addAll(countryComboBox, currencyTextField, currencyComboBox);
+        GridPane.setRowIndex(hBox, gridRow);
+        GridPane.setColumnIndex(hBox, 1);
+        gridPane.getChildren().add(hBox);
+
+
         countryComboBox.setPromptText("Select country of your Bank");
         countryComboBox.setConverter(new StringConverter<Country>() {
             @Override
@@ -118,8 +138,8 @@ public class SepaForm extends PaymentMethodForm {
             Country selectedItem = countryComboBox.getSelectionModel().getSelectedItem();
             sepaAccount.setCountry(selectedItem);
             TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(selectedItem.code);
-            sepaAccount.setSingleTradeCurrency(currency);
-            currencyTextField.setText("Currency: " + currency.getNameAndCode());
+            setupCurrency(selectedItem, currency);
+
             updateCountriesSelection(true, euroCountryCheckBoxes);
             updateCountriesSelection(true, nonEuroCountryCheckBoxes);
             updateFromInputs();
@@ -136,11 +156,44 @@ public class SepaForm extends PaymentMethodForm {
             countryComboBox.getSelectionModel().select(country);
             sepaAccount.setCountry(country);
             TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(country.code);
-            sepaAccount.setSingleTradeCurrency(currency);
-            currencyTextField.setText("Currency: " + currency.getNameAndCode());
+            setupCurrency(country, currency);
         }
 
         updateFromInputs();
+    }
+
+    private void setupCurrency(Country country, TradeCurrency currency) {
+        if (CountryUtil.getAllSepaEuroCountries().contains(country)) {
+            currencyTextField.setVisible(true);
+            currencyTextField.setManaged(true);
+            currencyComboBox.setVisible(false);
+            currencyComboBox.setManaged(false);
+            sepaAccount.setSingleTradeCurrency(currency);
+            currencyTextField.setText("Currency: " + currency.getNameAndCode());
+        } else {
+            currencyComboBox.setVisible(true);
+            currencyComboBox.setManaged(true);
+            currencyTextField.setVisible(false);
+            currencyTextField.setManaged(false);
+            currencyComboBox.setItems(FXCollections.observableArrayList(currency, CurrencyUtil.getFiatCurrency("EUR").get()));
+            currencyComboBox.setOnAction(e2 -> {
+                sepaAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+                updateCountriesSelection(true, euroCountryCheckBoxes);
+                autoFillNameTextField();
+            });
+            currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+                @Override
+                public String toString(TradeCurrency currency) {
+                    return currency.getNameAndCode();
+                }
+
+                @Override
+                public TradeCurrency fromString(String string) {
+                    return null;
+                }
+            });
+            currencyComboBox.getSelectionModel().select(0);
+        }
     }
 
     private void addEuroCountriesGrid(boolean isEditable) {
