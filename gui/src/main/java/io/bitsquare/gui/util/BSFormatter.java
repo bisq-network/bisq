@@ -196,24 +196,23 @@ public class BSFormatter {
                 return fiatFormat.noCode().format(fiat).toString();
             } catch (Throwable t) {
                 log.warn("Exception at formatFiat: " + t.toString());
-                return "";
+                return "N/A " + fiat.getCurrencyCode();
             }
         } else {
-            return "";
+            return "N/A";
         }
     }
 
     public String formatFiatWithCode(Fiat fiat) {
         if (fiat != null) {
             try {
-                //return fiatFormat.postfixCode().format(fiat).toString();
                 return fiatFormat.noCode().format(fiat).toString() + " " + fiat.getCurrencyCode();
             } catch (Throwable t) {
                 log.warn("Exception at formatFiatWithCode: " + t.toString());
-                return "";
+                return "N/A " + fiat.getCurrencyCode();
             }
         } else {
-            return "";
+            return "N/A";
         }
     }
 
