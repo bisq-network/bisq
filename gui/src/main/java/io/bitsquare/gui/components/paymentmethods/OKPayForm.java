@@ -50,7 +50,7 @@ public class OKPayForm extends PaymentMethodForm {
     private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account nr.:", ((OKPayAccountContractData) paymentAccountContractData).getAccountNr());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Wallet ID:", ((OKPayAccountContractData) paymentAccountContractData).getAccountNr());
         return gridRow;
     }
 
@@ -64,7 +64,7 @@ public class OKPayForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account nr.:").second;
+        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Wallet ID:").second;
         accountNrInputTextField.setValidator(okPayValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             okPayAccount.setAccountNr(newValue);
@@ -128,7 +128,7 @@ public class OKPayForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", okPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(okPayAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Account nr.:", okPayAccount.getAccountNr()).second;
+        TextField field = addLabelTextField(gridPane, ++gridRow, "Wallet ID:", okPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
         addAllowedPeriod();
         addCurrenciesGrid(false);
