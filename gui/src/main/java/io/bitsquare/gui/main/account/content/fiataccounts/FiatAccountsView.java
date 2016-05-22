@@ -224,7 +224,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentMethodsComboBox.setConverter(new StringConverter<PaymentMethod>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
-                return BSResources.get(paymentMethod.getId());
+                return paymentMethod != null ? BSResources.get(paymentMethod.getId()) : "";
             }
 
             @Override

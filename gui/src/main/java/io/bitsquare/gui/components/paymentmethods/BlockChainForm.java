@@ -40,6 +40,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class BlockChainForm extends PaymentMethodForm {
@@ -127,19 +129,25 @@ public class BlockChainForm extends PaymentMethodForm {
 
     @Override
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, "Cryptocurrency:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        currencyComboBox.setPromptText("Select cryptocurrency");
+        currencyComboBox = addLabelSearchComboBox(gridPane, ++gridRow, "Cryptocurrency:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        currencyComboBox.setPromptText("Select or search cryptocurrency");
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedCryptoCurrencies()));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 20));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency.getNameAndCode();
+                return tradeCurrency != null ? tradeCurrency.getNameAndCode() : "";
             }
 
             @Override
             public TradeCurrency fromString(String s) {
-                return null;
+                Optional<TradeCurrency> tradeCurrencyOptional = currencyComboBox.getItems().stream().
+                        filter(tradeCurrency -> tradeCurrency.getNameAndCode().equals(s)).
+                        findAny();
+                if (tradeCurrencyOptional.isPresent())
+                    return tradeCurrencyOptional.get();
+                else
+                    return null;
             }
         });
         currencyComboBox.setOnAction(e -> {

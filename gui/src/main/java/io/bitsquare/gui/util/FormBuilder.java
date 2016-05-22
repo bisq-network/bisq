@@ -558,6 +558,20 @@ public class FormBuilder {
         return new Tuple2<>(label, comboBox);
     }
 
+    public static Tuple2<Label, SearchComboBox> addLabelSearchComboBox(GridPane gridPane, int rowIndex, String title, double top) {
+        Label label = null;
+        if (title != null)
+            label = addLabel(gridPane, rowIndex, title, top);
+
+        SearchComboBox comboBox = new SearchComboBox();
+        GridPane.setRowIndex(comboBox, rowIndex);
+        GridPane.setColumnIndex(comboBox, 1);
+        GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(comboBox);
+
+        return new Tuple2<>(label, comboBox);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label + ComboBox + ComboBox
