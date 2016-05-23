@@ -44,6 +44,7 @@ public class BankUtil {
         switch (countryCode) {
             case "GB":
             case "US":
+            case "BR":
                 return false;
             default:
                 return true;
@@ -54,6 +55,7 @@ public class BankUtil {
         switch (countryCode) {
             case "GB":
             case "US":
+            case "BR":
                 log.warn("BankId must not be used for country " + countryCode);
             default:
                 return "Bank nr. or BIC/SWIFT:";
@@ -66,6 +68,7 @@ public class BankUtil {
         switch (countryCode) {
             case "GB":
             case "US":
+            case "BR":
                 return true;
             default:
                 return true;
@@ -78,6 +81,8 @@ public class BankUtil {
                 return "UK Sort code:";
             case "US":
                 return "Routing Number:";
+            case "BR":
+                return "Branch code:";
             case "CA":
                 return "Transit Number:";
             default:
@@ -98,6 +103,7 @@ public class BankUtil {
         switch (countryCode) {
             case "GB":
             case "US":
+            case "BR":
                 return "Account number:";
             default:
                 return "Account nr. or IBAN:";
@@ -108,6 +114,7 @@ public class BankUtil {
     public static boolean isAccountTypeRequired(String countryCode) {
         switch (countryCode) {
             case "US":
+            case "BR":
                 return true;
             default:
                 return false;
@@ -117,6 +124,7 @@ public class BankUtil {
     public static String getAccountTypeLabel(String countryCode) {
         switch (countryCode) {
             case "US":
+            case "BR":
                 return "Account type:";
             default:
                 return "";
@@ -126,6 +134,7 @@ public class BankUtil {
     public static List<String> getAccountTypeValues(String countryCode) {
         switch (countryCode) {
             case "US":
+            case "BR":
                 return Arrays.asList("Checking", "Savings");
             default:
                 return new ArrayList<>();
@@ -147,7 +156,7 @@ public class BankUtil {
     public static String getHolderIdLabel(String countryCode) {
         switch (countryCode) {
             case "BR":
-                return "CPF Number:";
+                return "Tax Registration Number (CPF):";
             case "CL":
                 return "RUT Number:";
             default:

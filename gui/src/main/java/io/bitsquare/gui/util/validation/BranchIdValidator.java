@@ -23,17 +23,25 @@ import io.bitsquare.locale.BSResources;
 public final class BranchIdValidator extends BankValidator {
     @Override
     public ValidationResult validate(String input) {
+        int length;
         switch (countryCode) {
             case "GB":
-                if (isNumberWithFixedLength(input, 6))
+                length = 6;
+                if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.sortCode", "Sort code", 6));
+                    return new ValidationResult(false, BSResources.get("validation.sortCodeNumber", "Sort code", length));
             case "US":
-                if (isNumberWithFixedLength(input, 9))
+                length = 9;
+                if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.sortCode", "Routing number", 9));
+                    return new ValidationResult(false, BSResources.get("validation.sortCodeNumber", "Routing number", length));
+            case "BR":
+                if (isStringInRange(input, 2, 6))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, BSResources.get("validation.sortCodeChars", "Branch code", "2 - 6"));
             default:
                 return super.validate(input);
         }

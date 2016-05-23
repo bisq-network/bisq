@@ -77,16 +77,22 @@ abstract class BankForm extends PaymentMethodForm {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameAndCode(countryCode));
 
         String bankCodeLabel = BankUtil.getBankIdLabel(countryCode);
-        if (BankUtil.isBankNameRequired(countryCode) && BankUtil.isBankIdRequired(countryCode))
+        String branchCodeLabel = BankUtil.getBranchIdLabel(countryCode);
+        boolean branchCodeDisplayed = false;
+        if (BankUtil.isBankNameRequired(countryCode) && BankUtil.isBankIdRequired(countryCode)) {
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Bank name / " + bankCodeLabel,
                     bankAccountContractData.getBankName() + " / " + bankAccountContractData.getBankId());
-        else if (BankUtil.isBankNameRequired(countryCode))
+        } else if (BankUtil.isBankNameRequired(countryCode) && !BankUtil.isBankIdRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode)) {
+            branchCodeDisplayed = true;
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Bank name / " + branchCodeLabel,
+                    bankAccountContractData.getBankName() + " / " + bankAccountContractData.getBranchId());
+        } else if (BankUtil.isBankNameRequired(countryCode)) {
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Bank name:", bankAccountContractData.getBankName());
-        else if (BankUtil.isBankIdRequired(countryCode))
+        } else if (BankUtil.isBankIdRequired(countryCode)) {
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankCodeLabel, bankAccountContractData.getBankId());
+        }
 
         String accountNrLabel = BankUtil.getAccountNrLabel(countryCode);
-        String branchCodeLabel = BankUtil.getBranchIdLabel(countryCode);
         String accountTypeLabel = BankUtil.getAccountTypeLabel(countryCode);
 
         String accountTypeString = "";
@@ -94,13 +100,14 @@ abstract class BankForm extends PaymentMethodForm {
 
         if (BankUtil.isAccountTypeRequired(countryCode)) {
             accountTypeString = " (" + bankAccountContractData.getAccountType() + ")";
-            accountTypeLabelString = " (" + accountTypeLabel + ")";
+            accountTypeLabelString = " (" + accountTypeLabel.substring(0, accountTypeLabel.length() - 1) + "):";
         }
 
-        if (BankUtil.isBranchIdRequired(countryCode))
+        if (!branchCodeDisplayed && BankUtil.isBranchIdRequired(countryCode))
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, branchCodeLabel, bankAccountContractData.getBranchId());
         if (BankUtil.isAccountNrRequired(countryCode))
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountNrLabel + accountTypeLabelString, bankAccountContractData.getAccountNr() + accountTypeString);
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountNrLabel.substring(0, accountNrLabel.length() - 1) +
+                    accountTypeLabelString, bankAccountContractData.getAccountNr() + accountTypeString);
 
         return gridRow;
     }

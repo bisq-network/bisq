@@ -36,6 +36,11 @@ public final class AccountNrValidator extends BankValidator {
                     return super.validate(input);
                 else
                     return new ValidationResult(false, BSResources.get("validation.accountNr", "4 - 17"));
+            case "BR":
+                if (isStringInRange(input, 1, 20))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, BSResources.get("validation.accountNrChars", "1 - 20"));
             default:
                 return super.validate(input);
         }

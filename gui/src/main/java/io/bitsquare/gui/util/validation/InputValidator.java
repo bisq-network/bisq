@@ -77,4 +77,12 @@ public class InputValidator {
     protected boolean isNumberInRange(String input, int minLength, int maxLength) {
         return isPositiveNumber(input) && input.length() >= minLength && input.length() <= maxLength;
     }
+
+    protected boolean isStringWithFixedLength(String input, int length) {
+        return input != null && input.length() == length;
+    }
+
+    protected boolean isStringInRange(String input, int minLength, int maxLength) {
+        return input != null && input.length() >= minLength && input.length() <= maxLength;
+    }
 }
