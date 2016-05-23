@@ -121,7 +121,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("MKR", "Maker"));
         result.add(new CryptoCurrency("DAO", "DAO"));
         result.add(new CryptoCurrency("POST", "PostCoin"));
-        
+        result.add(new CryptoCurrency("STEEM", "STEEM"));
+
         // For MKR we need a extra info box:
         // It's very important that users only use EIP-20 compliant contract wallets. 
         // Modern mist wallets should be able to do it but there are some older mist versions that can't. 
@@ -144,6 +145,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
+        result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
         return result;
     }
