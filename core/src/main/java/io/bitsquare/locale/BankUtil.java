@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BankUtil {
+
     private static final Logger log = LoggerFactory.getLogger(BankUtil.class);
 
     // BankName
@@ -32,12 +33,28 @@ public class BankUtil {
         switch (countryCode) {
             case "GB":
             case "US":
+            case "NZ":
+            case "AU":
+            case "CA":
+            case "SE":
+            case "HK":
                 return false;
+            case "MX":
+            case "BR":
+                return true;
             default:
                 return true;
         }
     }
 
+    public static String getBankNameLabel(String countryCode) {
+        switch (countryCode) {
+            case "BR":
+                return "Bank name:";
+            default:
+                return "Bank name (optional):";
+        }
+    }
 
     // BankId
     public static boolean isBankIdRequired(String countryCode) {
@@ -45,7 +62,14 @@ public class BankUtil {
             case "GB":
             case "US":
             case "BR":
+            case "NZ":
+            case "AU":
+            case "SE":
                 return false;
+            case "CA":
+            case "MX":
+            case "HK":
+                return true;
             default:
                 return true;
         }
@@ -53,12 +77,13 @@ public class BankUtil {
 
     public static String getBankIdLabel(String countryCode) {
         switch (countryCode) {
-            case "GB":
-            case "US":
-            case "BR":
-                log.warn("BankId must not be used for country " + countryCode);
+            case "CA":
+                return "Institution Number:";
+            case "MX":
+            case "HK":
+                return "Bank code:";
             default:
-                return "Bank nr. or BIC/SWIFT:";
+                return "Bank nr. (e.g. BIC or SWIFT) (optional):";
         }
 
     }
@@ -69,7 +94,14 @@ public class BankUtil {
             case "GB":
             case "US":
             case "BR":
+            case "AU":
+            case "CA":
                 return true;
+            case "NZ":
+            case "MX":
+            case "HK":
+            case "SE":
+                return false;
             default:
                 return true;
         }
@@ -83,6 +115,8 @@ public class BankUtil {
                 return "Routing Number:";
             case "BR":
                 return "Branch code:";
+            case "AU":
+                return "BSB code:";
             case "CA":
                 return "Transit Number:";
             default:
@@ -104,9 +138,17 @@ public class BankUtil {
             case "GB":
             case "US":
             case "BR":
+            case "NZ":
+            case "AU":
+            case "CA":
+            case "HK":
                 return "Account number:";
+            case "SE":
+                return "Bankgiro number:";
+            case "MX":
+                return "CLABE:";
             default:
-                return "Account nr. or IBAN:";
+                return "Account nr. (e.g. IBAN):";
         }
     }
 
@@ -115,6 +157,7 @@ public class BankUtil {
         switch (countryCode) {
             case "US":
             case "BR":
+            case "CA":
                 return true;
             default:
                 return false;
@@ -125,6 +168,7 @@ public class BankUtil {
         switch (countryCode) {
             case "US":
             case "BR":
+            case "CA":
                 return "Account type:";
             default:
                 return "";
@@ -135,6 +179,7 @@ public class BankUtil {
         switch (countryCode) {
             case "US":
             case "BR":
+            case "CA":
                 return Arrays.asList("Checking", "Savings");
             default:
                 return new ArrayList<>();
@@ -161,6 +206,24 @@ public class BankUtil {
                 return "RUT Number:";
             default:
                 return "Personal ID:";
+        }
+    }
+
+    // Validation
+    public static boolean useValidation(String countryCode) {
+        switch (countryCode) {
+            case "GB":
+            case "US":
+            case "BR":
+            case "AU":
+            case "CA":
+            case "NZ":
+            case "MX":
+            case "HK":
+            case "SE":
+                return true;
+            default:
+                return false;
         }
     }
 }

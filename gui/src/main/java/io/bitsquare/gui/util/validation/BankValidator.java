@@ -25,7 +25,7 @@ public abstract class BankValidator extends InputValidator {
         super();
     }
 
-    public void setCountryCode(String countryCode) {
+    public BankValidator(String countryCode) {
         this.countryCode = countryCode;
     }
 

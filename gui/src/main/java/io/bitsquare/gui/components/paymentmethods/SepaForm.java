@@ -25,7 +25,6 @@ import io.bitsquare.gui.util.validation.IBANValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.*;
 import io.bitsquare.payment.*;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -81,25 +80,25 @@ public class SepaForm extends PaymentMethodForm {
 
         InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:").second;
         holderNameInputTextField.setValidator(inputValidator);
-        holderNameInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setHolderName(newValue);
             updateFromInputs();
-        }));
+        });
 
         ibanInputTextField = addLabelInputTextField(gridPane, ++gridRow, "IBAN:").second;
         ibanInputTextField.setValidator(ibanValidator);
-        ibanInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setIban(newValue);
             updateFromInputs();
 
-        }));
+        });
         bicInputTextField = addLabelInputTextField(gridPane, ++gridRow, "BIC/SWIFT:").second;
         bicInputTextField.setValidator(bicValidator);
-        bicInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        bicInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setBic(newValue);
             updateFromInputs();
 
-        }));
+        });
 
 
         addLabel(gridPane, ++gridRow, "Country of your Bank:");

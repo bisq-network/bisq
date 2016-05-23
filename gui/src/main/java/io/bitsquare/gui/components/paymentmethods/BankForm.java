@@ -24,7 +24,7 @@ import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.AccountNrValidator;
-import io.bitsquare.gui.util.validation.BankValidator;
+import io.bitsquare.gui.util.validation.BankIdValidator;
 import io.bitsquare.gui.util.validation.BranchIdValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.*;
@@ -32,7 +32,6 @@ import io.bitsquare.payment.BankAccountContractData;
 import io.bitsquare.payment.CountryBasedPaymentAccount;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -63,51 +62,127 @@ abstract class BankForm extends PaymentMethodForm {
     private Tuple2<Label, ComboBox> accountTypeTuple;
     private Label accountTypeLabel;
     private ComboBox<String> accountTypeComboBox;
+    private boolean validatorsApplied;
 
     static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        BankAccountContractData bankAccountContractData = (BankAccountContractData) paymentAccountContractData;
+        BankAccountContractData data = (BankAccountContractData) paymentAccountContractData;
         String countryCode = ((BankAccountContractData) paymentAccountContractData).getCountryCode();
 
-        if (bankAccountContractData.getHolderTaxId() != null)
+        if (data.getHolderTaxId() != null)
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name / " + BankUtil.getHolderIdLabel(countryCode),
-                    bankAccountContractData.getHolderName() + " / " + bankAccountContractData.getHolderTaxId());
+                    data.getHolderName() + " / " + data.getHolderTaxId());
         else
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", bankAccountContractData.getHolderName());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", data.getHolderName());
 
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameAndCode(countryCode));
 
-        String bankCodeLabel = BankUtil.getBankIdLabel(countryCode);
-        String branchCodeLabel = BankUtil.getBranchIdLabel(countryCode);
-        boolean branchCodeDisplayed = false;
-        if (BankUtil.isBankNameRequired(countryCode) && BankUtil.isBankIdRequired(countryCode)) {
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Bank name / " + bankCodeLabel,
-                    bankAccountContractData.getBankName() + " / " + bankAccountContractData.getBankId());
-        } else if (BankUtil.isBankNameRequired(countryCode) && !BankUtil.isBankIdRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode)) {
-            branchCodeDisplayed = true;
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Bank name / " + branchCodeLabel,
-                    bankAccountContractData.getBankName() + " / " + bankAccountContractData.getBranchId());
-        } else if (BankUtil.isBankNameRequired(countryCode)) {
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Bank name:", bankAccountContractData.getBankName());
-        } else if (BankUtil.isBankIdRequired(countryCode)) {
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankCodeLabel, bankAccountContractData.getBankId());
-        }
+        // We don't want to display more than 6 rows to avoid scrolling, so if we get too many fields we combine them horizontally
+        int nrRows = 0;
+        if (BankUtil.isBankNameRequired(countryCode))
+            nrRows++;
+        if (BankUtil.isBankIdRequired(countryCode))
+            nrRows++;
+        if (BankUtil.isBranchIdRequired(countryCode))
+            nrRows++;
+        if (BankUtil.isAccountNrRequired(countryCode))
+            nrRows++;
+        if (BankUtil.isAccountTypeRequired(countryCode))
+            nrRows++;
 
+        String bankNameLabel = BankUtil.getBankNameLabel(countryCode);
+        String bankIdLabel = BankUtil.getBankIdLabel(countryCode);
+        String branchIdLabel = BankUtil.getBranchIdLabel(countryCode);
         String accountNrLabel = BankUtil.getAccountNrLabel(countryCode);
         String accountTypeLabel = BankUtil.getAccountTypeLabel(countryCode);
 
-        String accountTypeString = "";
-        String accountTypeLabelString = "";
 
-        if (BankUtil.isAccountTypeRequired(countryCode)) {
-            accountTypeString = " (" + bankAccountContractData.getAccountType() + ")";
-            accountTypeLabelString = " (" + accountTypeLabel.substring(0, accountTypeLabel.length() - 1) + "):";
+        boolean accountNrAccountTypeCombined = false;
+        boolean bankNameBankIdCombined = false;
+        boolean bankIdBranchIdCombined = false;
+        boolean bankNameBranchIdCombined = false;
+        boolean branchIdAccountNrCombined = false;
+        if (nrRows > 2) {
+            // Try combine AccountNr + AccountType
+            accountNrAccountTypeCombined = BankUtil.isAccountNrRequired(countryCode) && BankUtil.isAccountTypeRequired(countryCode);
+            if (accountNrAccountTypeCombined)
+                nrRows--;
+
+            if (nrRows > 2) {
+                // Next we try BankName + BankId
+                bankNameBankIdCombined = BankUtil.isBankNameRequired(countryCode) && BankUtil.isBankIdRequired(countryCode);
+                if (bankNameBankIdCombined)
+                    nrRows--;
+
+                if (nrRows > 2) {
+                    // Next we try BankId + BranchId
+                    bankIdBranchIdCombined = !bankNameBankIdCombined && BankUtil.isBankIdRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode);
+                    if (bankIdBranchIdCombined)
+                        nrRows--;
+
+                    if (nrRows > 2) {
+                        // Next we try BankId + BranchId
+                        bankNameBranchIdCombined = !bankNameBankIdCombined && !bankIdBranchIdCombined &&
+                                BankUtil.isBankNameRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode);
+                        if (bankNameBranchIdCombined)
+                            nrRows--;
+
+                        if (nrRows > 2) {
+                            branchIdAccountNrCombined = !bankNameBranchIdCombined && !bankIdBranchIdCombined && !accountNrAccountTypeCombined &&
+                                    BankUtil.isBranchIdRequired(countryCode) && BankUtil.isAccountNrRequired(countryCode);
+                            if (branchIdAccountNrCombined)
+                                nrRows--;
+
+                            if (nrRows > 2)
+                                log.warn("We still have too many rows....");
+                        }
+                    }
+                }
+            }
         }
 
-        if (!branchCodeDisplayed && BankUtil.isBranchIdRequired(countryCode))
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, branchCodeLabel, bankAccountContractData.getBranchId());
-        if (BankUtil.isAccountNrRequired(countryCode))
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountNrLabel.substring(0, accountNrLabel.length() - 1) +
-                    accountTypeLabelString, bankAccountContractData.getAccountNr() + accountTypeString);
+        if (bankNameBankIdCombined) {
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                    bankNameLabel.substring(0, bankNameLabel.length() - 1) + " / " + bankIdLabel.substring(0, bankIdLabel.length() - 1) + ":",
+                    data.getBankName() + " / " + data.getBankId());
+        }
+        if (bankNameBranchIdCombined) {
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                    bankNameLabel.substring(0, bankNameLabel.length() - 1) + " / " + branchIdLabel.substring(0, branchIdLabel.length() - 1) + ":",
+                    data.getBankName() + " / " + data.getBranchId());
+        }
+
+        if (!bankNameBankIdCombined && !bankNameBranchIdCombined && BankUtil.isBankNameRequired(countryCode))
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankNameLabel, data.getBankName());
+
+        if (!bankNameBankIdCombined && !bankNameBranchIdCombined && !branchIdAccountNrCombined && bankIdBranchIdCombined) {
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                    bankIdLabel.substring(0, bankIdLabel.length() - 1) + " / " + branchIdLabel.substring(0, branchIdLabel.length() - 1) + ":",
+                    data.getBankId() + " / " + data.getBranchId());
+        }
+
+        if (!bankNameBankIdCombined && !bankIdBranchIdCombined && BankUtil.isBankIdRequired(countryCode))
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankIdLabel, data.getBankId());
+
+        if (!bankNameBranchIdCombined && !bankIdBranchIdCombined && branchIdAccountNrCombined) {
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                    branchIdLabel.substring(0, branchIdLabel.length() - 1) + " / " + accountNrLabel.substring(0, accountNrLabel.length() - 1) + ":",
+                    data.getBranchId() + " / " + data.getAccountNr());
+        }
+
+        if (!bankNameBranchIdCombined && !bankIdBranchIdCombined && !branchIdAccountNrCombined && BankUtil.isBranchIdRequired(countryCode))
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, branchIdLabel, data.getBranchId());
+
+        if (!branchIdAccountNrCombined && accountNrAccountTypeCombined) {
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                    accountNrLabel.substring(0, accountNrLabel.length() - 1) + " / " + accountTypeLabel,
+                    data.getAccountNr() + " / " + data.getAccountType());
+        }
+
+        if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && BankUtil.isAccountNrRequired(countryCode))
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountNrLabel, data.getAccountNr());
+
+        if (!accountNrAccountTypeCombined && BankUtil.isAccountTypeRequired(countryCode))
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountTypeLabel, data.getAccountType());
 
         return gridRow;
     }
@@ -199,6 +274,7 @@ abstract class BankForm extends PaymentMethodForm {
                 branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
                 accountNrLabel.setText(BankUtil.getAccountNrLabel(countryCode));
                 accountTypeLabel.setText(BankUtil.getAccountTypeLabel(countryCode));
+                holderIdLabel.setText(BankUtil.getHolderIdLabel(countryCode));
 
                 bankNameInputTextField.setText("");
                 bankIdInputTextField.setText("");
@@ -207,58 +283,65 @@ abstract class BankForm extends PaymentMethodForm {
                 accountTypeComboBox.getSelectionModel().clearSelection();
                 accountTypeComboBox.setItems(FXCollections.observableArrayList(BankUtil.getAccountTypeValues(countryCode)));
 
+                if (BankUtil.useValidation(countryCode) && !validatorsApplied) {
+                    validatorsApplied = true;
+                    holderIdInputTextField.setValidator(inputValidator);
+                    bankNameInputTextField.setValidator(inputValidator);
+                    bankIdInputTextField.setValidator(new BankIdValidator(countryCode));
+                    branchIdInputTextField.setValidator(new BranchIdValidator(countryCode));
+                    accountNrInputTextField.setValidator(new AccountNrValidator(countryCode));
+                } else {
+                    validatorsApplied = false;
+                    holderIdInputTextField.setValidator(null);
+                    bankNameInputTextField.setValidator(null);
+                    bankIdInputTextField.setValidator(null);
+                    branchIdInputTextField.setValidator(null);
+                    accountNrInputTextField.setValidator(null);
+                }
+                holderNameInputTextField.resetValidation();
+                holderIdInputTextField.resetValidation();
                 bankNameInputTextField.resetValidation();
                 bankIdInputTextField.resetValidation();
                 branchIdInputTextField.resetValidation();
                 accountNrInputTextField.resetValidation();
 
-                if (holderIdInputTextField != null) {
-                    holderIdInputTextField.resetValidation();
-                    holderIdLabel.setText(BankUtil.getHolderIdLabel(countryCode));
-                    boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
-                    if (requiresHolderId) {
-                        holderNameInputTextField.minWidthProperty().unbind();
-                        holderNameInputTextField.setMinWidth(300);
-                    } else {
-                        holderNameInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
-                        holderIdInputTextField.setText("");
-                    }
-                    holderIdLabel.setVisible(requiresHolderId);
-                    holderIdLabel.setManaged(requiresHolderId);
-                    holderIdInputTextField.setVisible(requiresHolderId);
-                    holderIdInputTextField.setManaged(requiresHolderId);
-                }
 
-                bankNameTuple.second.resetValidation();
-                bankIdTuple.second.resetValidation();
-                branchIdTuple.second.resetValidation();
-                accountNrTuple.second.resetValidation();
+                boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
+                if (requiresHolderId) {
+                    holderNameInputTextField.minWidthProperty().unbind();
+                    holderNameInputTextField.setMinWidth(300);
+                } else {
+                    holderNameInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
+                    holderIdInputTextField.setText("");
+                }
+                holderIdLabel.setVisible(requiresHolderId);
+                holderIdLabel.setManaged(requiresHolderId);
+                holderIdInputTextField.setVisible(requiresHolderId);
+                holderIdInputTextField.setManaged(requiresHolderId);
 
                 boolean bankNameRequired = BankUtil.isBankNameRequired(countryCode);
                 bankNameTuple.first.setVisible(bankNameRequired);
                 bankNameTuple.first.setManaged(bankNameRequired);
-                bankNameTuple.second.setVisible(bankNameRequired);
-                bankNameTuple.second.setManaged(bankNameRequired);
+                bankNameInputTextField.setVisible(bankNameRequired);
+                bankNameInputTextField.setManaged(bankNameRequired);
 
                 boolean bankIdRequired = BankUtil.isBankIdRequired(countryCode);
                 bankIdTuple.first.setVisible(bankIdRequired);
                 bankIdTuple.first.setManaged(bankIdRequired);
-                bankIdTuple.second.setVisible(bankIdRequired);
-                bankIdTuple.second.setManaged(bankIdRequired);
+                bankIdInputTextField.setVisible(bankIdRequired);
+                bankIdInputTextField.setManaged(bankIdRequired);
 
                 boolean branchIdRequired = BankUtil.isBranchIdRequired(countryCode);
                 branchIdTuple.first.setVisible(branchIdRequired);
                 branchIdTuple.first.setManaged(branchIdRequired);
-                branchIdTuple.second.setVisible(branchIdRequired);
-                branchIdTuple.second.setManaged(branchIdRequired);
-                ((BankValidator) branchIdTuple.second.getValidator()).setCountryCode(bankAccountContractData.getCountryCode());
+                branchIdInputTextField.setVisible(branchIdRequired);
+                branchIdInputTextField.setManaged(branchIdRequired);
 
                 boolean accountNrRequired = BankUtil.isAccountNrRequired(countryCode);
                 accountNrTuple.first.setVisible(accountNrRequired);
                 accountNrTuple.first.setManaged(accountNrRequired);
-                accountNrTuple.second.setVisible(accountNrRequired);
-                accountNrTuple.second.setManaged(accountNrRequired);
-                ((BankValidator) accountNrTuple.second.getValidator()).setCountryCode(bankAccountContractData.getCountryCode());
+                accountNrInputTextField.setVisible(accountNrRequired);
+                accountNrInputTextField.setManaged(accountNrRequired);
 
                 boolean accountTypeRequired = BankUtil.isAccountTypeRequired(countryCode);
                 accountTypeTuple.first.setVisible(accountTypeRequired);
@@ -286,43 +369,39 @@ abstract class BankForm extends PaymentMethodForm {
 
         bankNameTuple = addLabelInputTextField(gridPane, ++gridRow, "Bank name:");
         bankNameInputTextField = bankNameTuple.second;
-        bankNameInputTextField.setValidator(inputValidator);
-        bankNameInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+
+        bankNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setBankName(newValue);
             updateFromInputs();
 
-        }));
+        });
 
         bankIdTuple = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(""));
         bankIdLabel = bankIdTuple.first;
         bankIdInputTextField = bankIdTuple.second;
-        bankIdInputTextField.setValidator(inputValidator);
-        bankIdInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        bankIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setBankId(newValue);
             updateFromInputs();
 
-        }));
+        });
 
         branchIdTuple = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(""));
         branchIdLabel = branchIdTuple.first;
         branchIdInputTextField = branchIdTuple.second;
-        branchIdInputTextField.setValidator(new BranchIdValidator());
-        branchIdInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        branchIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setBranchId(newValue);
             updateFromInputs();
 
-        }));
+        });
 
         accountNrTuple = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(""));
         accountNrLabel = accountNrTuple.first;
         accountNrInputTextField = accountNrTuple.second;
-        accountNrInputTextField.setValidator(new AccountNrValidator());
-        accountNrInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setAccountNr(newValue);
             updateFromInputs();
 
-        }));
-
+        });
 
         accountTypeTuple = addLabelComboBox(gridPane, ++gridRow, "");
         accountTypeLabel = accountTypeTuple.first;
@@ -352,12 +431,12 @@ abstract class BankForm extends PaymentMethodForm {
         Tuple4<Label, InputTextField, Label, InputTextField> tuple = addLabelInputTextFieldLabelInputTextField(gridPane, ++gridRow, "Account holder name:", BankUtil.getHolderIdLabel(""));
         holderNameInputTextField = tuple.second;
         holderNameInputTextField.setMinWidth(300);
-        holderNameInputTextField.setValidator(inputValidator);
-        holderNameInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setHolderName(newValue);
             updateFromInputs();
-        }));
+        });
         holderNameInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
+        holderNameInputTextField.setValidator(inputValidator);
 
         holderIdLabel = tuple.third;
         holderIdLabel.setVisible(false);
@@ -366,11 +445,10 @@ abstract class BankForm extends PaymentMethodForm {
         holderIdInputTextField = tuple.forth;
         holderIdInputTextField.setVisible(false);
         holderIdInputTextField.setManaged(false);
-        holderIdInputTextField.setValidator(inputValidator);
-        holderIdInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        holderIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setHolderTaxId(newValue);
             updateFromInputs();
-        }));
+        });
     }
 
     @Override
@@ -409,37 +487,38 @@ abstract class BankForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         boolean result = isAccountNameValid()
-                && holderNameInputTextField.getValidator().validate(bankAccountContractData.getHolderName()).isValid
                 && paymentAccount.getSingleTradeCurrency() != null
-                && getCountryBasedPaymentAccount().getCountry() != null;
+                && getCountryBasedPaymentAccount().getCountry() != null
+                && holderNameInputTextField.getValidator().validate(bankAccountContractData.getHolderName()).isValid;
 
         String countryCode = bankAccountContractData.getCountryCode();
-        if (BankUtil.isBankNameRequired(countryCode))
-            result &= bankNameInputTextField.getValidator().validate(bankAccountContractData.getBankName()).isValid;
+        if (validatorsApplied && BankUtil.useValidation(countryCode)) {
+            if (BankUtil.isBankNameRequired(countryCode))
+                result &= bankNameInputTextField.getValidator().validate(bankAccountContractData.getBankName()).isValid;
 
-        if (BankUtil.isBankIdRequired(countryCode))
-            result &= bankIdInputTextField.getValidator().validate(bankAccountContractData.getBankId()).isValid;
+            if (BankUtil.isBankIdRequired(countryCode))
+                result &= bankIdInputTextField.getValidator().validate(bankAccountContractData.getBankId()).isValid;
 
-        if (BankUtil.isBranchIdRequired(countryCode))
-            result &= branchIdInputTextField.getValidator().validate(bankAccountContractData.getBranchId()).isValid;
+            if (BankUtil.isBranchIdRequired(countryCode))
+                result &= branchIdInputTextField.getValidator().validate(bankAccountContractData.getBranchId()).isValid;
 
-        if (BankUtil.isAccountNrRequired(countryCode))
-            result &= accountNrInputTextField.getValidator().validate(bankAccountContractData.getAccountNr()).isValid;
+            if (BankUtil.isAccountNrRequired(countryCode))
+                result &= accountNrInputTextField.getValidator().validate(bankAccountContractData.getAccountNr()).isValid;
 
-        if (BankUtil.isAccountTypeRequired(countryCode))
-            result &= bankAccountContractData.getAccountType() != null;
+            if (BankUtil.isAccountTypeRequired(countryCode))
+                result &= bankAccountContractData.getAccountType() != null;
 
-        if (getCountryBasedPaymentAccount().getCountry() != null &&
-                BankUtil.isHolderIdRequired(getCountryBasedPaymentAccount().getCountry().code))
-            result &= holderIdInputTextField.getValidator().validate(bankAccountContractData.getHolderTaxId()).isValid;
-
+            if (BankUtil.isHolderIdRequired(countryCode))
+                result &= holderIdInputTextField.getValidator().validate(bankAccountContractData.getHolderTaxId()).isValid;
+        }
         allInputsValid.set(result);
     }
 
     protected void addHolderNameAndIdForDisplayAccount() {
-        if (BankUtil.isHolderIdRequired(bankAccountContractData.getCountryCode())) {
+        String countryCode = bankAccountContractData.getCountryCode();
+        if (BankUtil.isHolderIdRequired(countryCode)) {
             Tuple4<Label, TextField, Label, TextField> tuple = addLabelTextFieldLabelTextField(gridPane, ++gridRow,
-                    "Account holder name:", BankUtil.getHolderIdLabel(bankAccountContractData.getCountryCode()));
+                    "Account holder name:", BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(bankAccountContractData.getHolderName());
             holderNameTextField.setMinWidth(300);

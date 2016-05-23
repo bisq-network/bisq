@@ -25,7 +25,6 @@ import io.bitsquare.locale.BankUtil;
 import io.bitsquare.payment.CountryBasedPaymentAccount;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
-import javafx.beans.value.WeakChangeListener;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -52,10 +51,10 @@ public class SameBankForm extends BankForm {
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:");
         InputTextField holderNameInputTextField = tuple.second;
         holderNameInputTextField.setValidator(inputValidator);
-        holderNameInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setHolderName(newValue);
             updateFromInputs();
-        }));
+        });
     }
 
     @Override

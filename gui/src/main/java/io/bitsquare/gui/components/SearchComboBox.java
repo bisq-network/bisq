@@ -1,7 +1,6 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.common.UserThread;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -22,11 +21,11 @@ public class SearchComboBox<T> extends ComboBox<T> {
         filteredList = new FilteredList<>(items);
         setEditable(true);
 
-        itemsProperty().addListener(new WeakChangeListener<>((observable, oldValue, newValue) -> {
+        itemsProperty().addListener((observable, oldValue, newValue) -> {
             filteredList = new FilteredList<>(newValue);
             setItems(filteredList);
-        }));
-        getEditor().textProperty().addListener(new WeakChangeListener<>((observable, oldValue, newValue) -> {
+        });
+        getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
             if (!filteredList.stream().filter(item -> getConverter().toString(item).equals(newValue)).
                     findAny().isPresent()) {
                 UserThread.execute(() -> {
@@ -37,6 +36,6 @@ public class SearchComboBox<T> extends ComboBox<T> {
                     show();
                 });
             }
-        }));
+        });
     }
 }

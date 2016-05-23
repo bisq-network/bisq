@@ -19,18 +19,24 @@ package io.bitsquare.gui.util.validation;
 
 
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.BankUtil;
 
 public final class AccountNrValidator extends BankValidator {
+    public AccountNrValidator(String countryCode) {
+        super(countryCode);
+    }
 
     @Override
     public ValidationResult validate(String input) {
-        String message;
+        int length;
+        String input2;
         switch (countryCode) {
             case "GB":
-                if (isNumberWithFixedLength(input, 8))
+                length = 8;
+                if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.accountNr", 8));
+                    return new ValidationResult(false, BSResources.get("validation.accountNr", length));
             case "US":
                 if (isNumberInRange(input, 4, 17))
                     return super.validate(input);
@@ -41,9 +47,43 @@ public final class AccountNrValidator extends BankValidator {
                     return super.validate(input);
                 else
                     return new ValidationResult(false, BSResources.get("validation.accountNrChars", "1 - 20"));
+            case "NZ":
+                input2 = input != null ? input.replaceAll("-", "") : null;
+                if (isNumberInRange(input2, 15, 16))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, "Account number must be of format: 03-1587-0050000-00");
+            case "AU":
+                if (isNumberInRange(input, 4, 10))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, BSResources.get("validation.accountNr", "4 - 10"));
+            case "CA":
+                if (isNumberInRange(input, 7, 12))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, BSResources.get("validation.accountNr", "7 - 12"));
+            case "MX":
+                length = 18;
+                if (isNumberWithFixedLength(input, length))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, BSResources.get("validation.sortCodeNumber", getLabel(), length));
+            case "HK":
+                input2 = input != null ? input.replaceAll("-", "") : null;
+                if (isNumberInRange(input2, 9, 12))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, "Account number must be of format: 005-231289-112");
             default:
                 return super.validate(input);
         }
 
+    }
+
+
+    private String getLabel() {
+        String label = BankUtil.getAccountNrLabel(countryCode);
+        return label.substring(0, label.length() - 1);
     }
 }

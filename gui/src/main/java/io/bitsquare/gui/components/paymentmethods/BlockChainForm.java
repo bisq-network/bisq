@@ -30,7 +30,6 @@ import io.bitsquare.payment.CryptoCurrencyAccount;
 import io.bitsquare.payment.CryptoCurrencyAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -81,10 +80,10 @@ public class BlockChainForm extends PaymentMethodForm {
         addressInputTextField = tuple2.second;
         addressInputTextField.setValidator(altCoinAddressValidator);
 
-        addressInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        addressInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             cryptoCurrencyAccount.setAddress(newValue);
             updateFromInputs();
-        }));
+        });
 
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();

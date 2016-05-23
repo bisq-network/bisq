@@ -52,13 +52,12 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        String holderIdString = BankUtil.isHolderIdRequired(countryCode) ? (BankUtil.getHolderIdLabel(countryCode) + ": " + holderTaxId + "\n") : "";
-
-        String bankName = BankUtil.isBankNameRequired(countryCode) ? "Bank name: " + this.bankName + "\n" : "";
-        String bankId = BankUtil.isBankIdRequired(countryCode) ? BankUtil.getBankIdLabel(countryCode) + this.bankId + "\n" : "";
-        String branchId = BankUtil.isBranchIdRequired(countryCode) ? BankUtil.getBranchIdLabel(countryCode) + this.branchId + "\n" : "";
-        String accountNr = BankUtil.isAccountNrRequired(countryCode) ? BankUtil.getAccountNrLabel(countryCode) + this.accountNr + "\n" : "";
-        String accountType = BankUtil.isAccountTypeRequired(countryCode) ? BankUtil.getAccountTypeLabel(countryCode) + this.accountType + "\n" : "";
+        String bankName = BankUtil.isBankNameRequired(countryCode) ? BankUtil.getBankNameLabel(countryCode) + " " + this.bankName + "\n" : "";
+        String bankId = BankUtil.isBankIdRequired(countryCode) ? BankUtil.getBankIdLabel(countryCode) + " " + this.bankId + "\n" : "";
+        String branchId = BankUtil.isBranchIdRequired(countryCode) ? BankUtil.getBranchIdLabel(countryCode) + " " + this.branchId + "\n" : "";
+        String accountNr = BankUtil.isAccountNrRequired(countryCode) ? BankUtil.getAccountNrLabel(countryCode) + " " + this.accountNr + "\n" : "";
+        String accountType = BankUtil.isAccountTypeRequired(countryCode) ? BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
+        String holderIdString = BankUtil.isHolderIdRequired(countryCode) ? (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
 
         return "Holder name: " + holderName + "\n" +
                 bankName +

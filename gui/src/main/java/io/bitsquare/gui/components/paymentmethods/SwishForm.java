@@ -27,7 +27,6 @@ import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.SwishAccount;
 import io.bitsquare.payment.SwishAccountContractData;
-import javafx.beans.value.WeakChangeListener;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -62,17 +61,17 @@ public class SwishForm extends PaymentMethodForm {
 
         InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:").second;
         holderNameInputTextField.setValidator(inputValidator);
-        holderNameInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             swishAccount.setHolderName(newValue);
             updateFromInputs();
-        }));
+        });
 
         mobileNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Mobile nr.:").second;
         mobileNrInputTextField.setValidator(swishValidator);
-        mobileNrInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
+        mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             swishAccount.setMobileNr(newValue);
             updateFromInputs();
-        }));
+        });
 
         addLabelTextField(gridPane, ++gridRow, "Currency:", swishAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
