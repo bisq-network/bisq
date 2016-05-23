@@ -17,14 +17,20 @@
 
 package io.bitsquare.locale;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BankUtil {
+    private static final Logger log = LoggerFactory.getLogger(BankUtil.class);
 
 
     //TODO set country specific labels
-    public static String getBankCodeLabel(String countryCode) {
+    public static String getBankIdLabel(String countryCode) {
         if (countryCode == null)
             countryCode = "";
         switch (countryCode) {
+            case "GB":
+                return "Bank nr. or BIC/SWIFT:";
             default:
                 return "Bank nr. or BIC/SWIFT:";
         }
@@ -32,7 +38,7 @@ public class BankUtil {
     }
 
     //TODO set country specific labels
-    public static String getBranchCodeLabel(String countryCode) {
+    public static String getBranchIdLabel(String countryCode) {
         if (countryCode == null)
             countryCode = "";
         switch (countryCode) {
