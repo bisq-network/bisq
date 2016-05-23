@@ -25,19 +25,20 @@ public final class BranchIdValidator extends BankValidator {
     public ValidationResult validate(String input) {
         switch (countryCode) {
             case "GB":
-                try {
-                    Integer.parseInt(input);
-                    if (input.length() != 6) {
-                        return new ValidationResult(false, BSResources.get("Sort code must consist of 6 numbers"));
-                    } else {
-                        return super.validate(input);
-                    }
-                } catch (Throwable t) {
-                    return new ValidationResult(false, BSResources.get("validation.ukSortCode"));
-                }
+                if (isNumberWithFixedLength(input, 6))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, BSResources.get("validation.sortCode", "Sort code", 6));
+            case "US":
+                if (isNumberWithFixedLength(input, 9))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, BSResources.get("validation.sortCode", "Routing number", 9));
             default:
                 return super.validate(input);
         }
 
     }
+
+
 }

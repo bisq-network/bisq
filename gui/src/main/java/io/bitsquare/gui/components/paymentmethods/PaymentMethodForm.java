@@ -27,6 +27,7 @@ import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -91,10 +92,10 @@ public abstract class PaymentMethodForm {
         accountNameTextField.setEditable(false);
         accountNameTextField.setValidator(inputValidator);
         accountNameTextField.setFocusTraversable(false);
-        accountNameTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+        accountNameTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
             paymentAccount.setAccountName(newValue);
             updateAllInputsValid();
-        });
+        }));
         useCustomAccountNameCheckBox = tuple.third;
         useCustomAccountNameCheckBox.setSelected(false);
         useCustomAccountNameCheckBox.setOnAction(e -> {

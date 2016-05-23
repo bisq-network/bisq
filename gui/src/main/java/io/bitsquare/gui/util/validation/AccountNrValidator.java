@@ -24,18 +24,18 @@ public final class AccountNrValidator extends BankValidator {
 
     @Override
     public ValidationResult validate(String input) {
+        String message;
         switch (countryCode) {
             case "GB":
-                try {
-                    Integer.parseInt(input);
-                    if (input.length() != 8) {
-                        return new ValidationResult(false, BSResources.get("validation.ukAccountNr"));
-                    } else {
-                        return super.validate(input);
-                    }
-                } catch (Throwable t) {
-                    return new ValidationResult(false, BSResources.get("validation.ukAccountNr"));
-                }
+                if (isNumberWithFixedLength(input, 8))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, BSResources.get("validation.accountNr", 8));
+            case "US":
+                if (isNumberInRange(input, 4, 17))
+                    return super.validate(input);
+                else
+                    return new ValidationResult(false, BSResources.get("validation.accountNr", "4 - 17"));
             default:
                 return super.validate(input);
         }

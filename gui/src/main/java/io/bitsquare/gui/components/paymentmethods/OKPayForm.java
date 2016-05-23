@@ -28,6 +28,7 @@ import io.bitsquare.payment.OKPayAccount;
 import io.bitsquare.payment.OKPayAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.CheckBox;
@@ -66,10 +67,10 @@ public class OKPayForm extends PaymentMethodForm {
 
         accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Wallet ID:").second;
         accountNrInputTextField.setValidator(okPayValidator);
-        accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+        accountNrInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
             okPayAccount.setAccountNr(newValue);
             updateFromInputs();
-        });
+        }));
 
         addCurrenciesGrid(true);
         addAllowedPeriod();

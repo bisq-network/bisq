@@ -36,6 +36,7 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
     protected String bankId;
     protected String branchId;
     protected String accountNr;
+    protected String accountType;
 
     @Nullable
     protected String holderTaxId;
@@ -51,16 +52,28 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        String holderIdString = BankUtil.isHolderIdRequired(countryCode) ? (getHolderIdLabel() + ": " + holderTaxId + "\n") : "";
+        String holderIdString = BankUtil.isHolderIdRequired(countryCode) ? (BankUtil.getHolderIdLabel(countryCode) + ": " + holderTaxId + "\n") : "";
+
+        String bankName = BankUtil.isBankNameRequired(countryCode) ? "Bank name: " + this.bankName + "\n" : "";
+        String bankId = BankUtil.isBankIdRequired(countryCode) ? BankUtil.getBankIdLabel(countryCode) + this.bankId + "\n" : "";
+        String branchId = BankUtil.isBranchIdRequired(countryCode) ? BankUtil.getBranchIdLabel(countryCode) + this.branchId + "\n" : "";
+        String accountNr = BankUtil.isAccountNrRequired(countryCode) ? BankUtil.getAccountNrLabel(countryCode) + this.accountNr + "\n" : "";
+        String accountType = BankUtil.isAccountTypeRequired(countryCode) ? BankUtil.getAccountTypeLabel(countryCode) + this.accountType + "\n" : "";
+
         return "Holder name: " + holderName + "\n" +
-                "Bank name: " + bankName + "\n" +
-                "Bank Nr.: " + bankId + "\n" +
-                "Branch Nr.: " + branchId + "\n" +
-                "Account Nr.: " + accountNr + "\n" +
+                bankName +
+                bankId +
+                branchId +
+                accountNr +
+                accountType +
                 holderIdString +
                 "Country of bank: " + CountryUtil.getNameAndCode(getCountryCode());
     }
 
+
+    protected String getHolderIdLabel() {
+        return BankUtil.getHolderIdLabel(countryCode);
+    }
 
     public void setHolderName(String holderName) {
         this.holderName = holderName;
@@ -74,6 +87,7 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
         this.bankName = bankName;
     }
 
+    @Nullable
     public String getBankName() {
         return bankName;
     }
@@ -82,20 +96,18 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
         this.bankId = bankId;
     }
 
+    @Nullable
     public String getBankId() {
         return bankId;
-    }
-
-    public String getBranchId() {
-        return branchId;
     }
 
     public void setBranchId(String branchId) {
         this.branchId = branchId;
     }
 
-    public String getAccountNr() {
-        return accountNr;
+    @Nullable
+    public String getBranchId() {
+        return branchId;
     }
 
     public void setAccountNr(String accountNr) {
@@ -103,15 +115,25 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
     }
 
     @Nullable
-    public String getHolderTaxId() {
-        return holderTaxId;
+    public String getAccountNr() {
+        return accountNr;
     }
 
     public void setHolderTaxId(String holderTaxId) {
         this.holderTaxId = holderTaxId;
     }
 
-    public String getHolderIdLabel() {
-        return BankUtil.getHolderIdLabel(countryCode);
+    @Nullable
+    public String getHolderTaxId() {
+        return holderTaxId;
+    }
+
+    public void setAccountType(String accountType) {
+        this.accountType = accountType;
+    }
+
+    @Nullable
+    public String getAccountType() {
+        return accountType;
     }
 }

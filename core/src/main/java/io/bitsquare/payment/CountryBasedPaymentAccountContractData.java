@@ -18,16 +18,12 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
-import org.jetbrains.annotations.NotNull;
-
-import javax.annotation.Nullable;
 
 public abstract class CountryBasedPaymentAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    @Nullable
-    protected String countryCode;
+    protected String countryCode = "";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -42,11 +38,10 @@ public abstract class CountryBasedPaymentAccountContractData extends PaymentAcco
     // Getter, Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setCountryCode(@NotNull String countryCode) {
+    public void setCountryCode(String countryCode) {
         this.countryCode = countryCode;
     }
 
-    @Nullable
     public String getCountryCode() {
         return countryCode;
     }

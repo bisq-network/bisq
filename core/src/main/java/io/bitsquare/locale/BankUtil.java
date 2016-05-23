@@ -20,32 +20,64 @@ package io.bitsquare.locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class BankUtil {
     private static final Logger log = LoggerFactory.getLogger(BankUtil.class);
 
-
-    //TODO set country specific labels
-    public static String getBankIdLabel(String countryCode) {
-        if (countryCode == null)
-            countryCode = "";
+    // BankName
+    public static boolean isBankNameRequired(String countryCode) {
         switch (countryCode) {
             case "GB":
-                return "Bank nr. or BIC/SWIFT:";
+            case "US":
+                return false;
+            default:
+                return true;
+        }
+    }
+
+
+    // BankId
+    public static boolean isBankIdRequired(String countryCode) {
+        switch (countryCode) {
+            case "GB":
+            case "US":
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    public static String getBankIdLabel(String countryCode) {
+        switch (countryCode) {
+            case "GB":
+            case "US":
+                log.warn("BankId must not be used for country " + countryCode);
             default:
                 return "Bank nr. or BIC/SWIFT:";
         }
 
     }
 
-    //TODO set country specific labels
-    public static String getBranchIdLabel(String countryCode) {
-        if (countryCode == null)
-            countryCode = "";
+    // BranchId
+    public static boolean isBranchIdRequired(String countryCode) {
         switch (countryCode) {
+            case "GB":
             case "US":
-                return "Routing Number:";
+                return true;
+            default:
+                return true;
+        }
+    }
+
+    public static String getBranchIdLabel(String countryCode) {
+        switch (countryCode) {
             case "GB":
                 return "UK Sort code:";
+            case "US":
+                return "Routing Number:";
             case "CA":
                 return "Transit Number:";
             default:
@@ -53,21 +85,66 @@ public class BankUtil {
         }
     }
 
-    //TODO set country specific labels
+
+    // AccountNr
+    public static boolean isAccountNrRequired(String countryCode) {
+        switch (countryCode) {
+            default:
+                return true;
+        }
+    }
+
     public static String getAccountNrLabel(String countryCode) {
-        if (countryCode == null)
-            countryCode = "";
         switch (countryCode) {
             case "GB":
-                return "Account number";
+            case "US":
+                return "Account number:";
             default:
                 return "Account nr. or IBAN:";
         }
     }
 
+    // AccountType
+    public static boolean isAccountTypeRequired(String countryCode) {
+        switch (countryCode) {
+            case "US":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static String getAccountTypeLabel(String countryCode) {
+        switch (countryCode) {
+            case "US":
+                return "Account type:";
+            default:
+                return "";
+        }
+    }
+
+    public static List<String> getAccountTypeValues(String countryCode) {
+        switch (countryCode) {
+            case "US":
+                return Arrays.asList("Checking", "Savings");
+            default:
+                return new ArrayList<>();
+        }
+    }
+
+
+    // HolderId
+    public static boolean isHolderIdRequired(String countryCode) {
+        switch (countryCode) {
+            case "BR":
+            case "CL":
+                return true;
+            default:
+                return false;
+        }
+    }
+
     public static String getHolderIdLabel(String countryCode) {
-        if (countryCode == null)
-            countryCode = "";
         switch (countryCode) {
             case "BR":
                 return "CPF Number:";
@@ -75,60 +152,6 @@ public class BankUtil {
                 return "RUT Number:";
             default:
                 return "Personal ID:";
-        }
-    }
-
-    public static boolean isBankNameRequired(String countryCode) {
-        if (countryCode == null)
-            countryCode = "";
-        switch (countryCode) {
-            case "GB":
-                return false;
-            default:
-                return true;
-        }
-    }
-
-    public static boolean isBankIdRequired(String countryCode) {
-        if (countryCode == null)
-            countryCode = "";
-        switch (countryCode) {
-            case "GB":
-                return false;
-            default:
-                return true;
-        }
-    }
-
-    public static boolean isBranchIdRequired(String countryCode) {
-        if (countryCode == null)
-            countryCode = "";
-        switch (countryCode) {
-            case "GB":
-                return true;
-            default:
-                return true;
-        }
-    }
-
-    public static boolean isAccountNrRequired(String countryCode) {
-        if (countryCode == null)
-            countryCode = "";
-        switch (countryCode) {
-            default:
-                return true;
-        }
-    }
-
-    public static boolean isHolderIdRequired(String countryCode) {
-        if (countryCode == null)
-            countryCode = "";
-        switch (countryCode) {
-            case "BR":
-            case "CL":
-                return true;
-            default:
-                return false;
         }
     }
 }

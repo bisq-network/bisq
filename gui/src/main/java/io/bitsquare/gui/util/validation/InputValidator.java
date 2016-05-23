@@ -18,6 +18,7 @@
 package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.locale.BSResources;
+import org.apache.commons.lang3.math.NumberUtils;
 
 public class InputValidator {
 
@@ -59,5 +60,21 @@ public class InputValidator {
                     ", errorMessage='" + errorMessage + '\'' +
                     '}';
         }
+    }
+
+    protected boolean isPositiveNumber(String input) {
+        try {
+            return input != null && NumberUtils.isNumber(input) && Long.parseLong(input) >= 0;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    protected boolean isNumberWithFixedLength(String input, int length) {
+        return isPositiveNumber(input) && input.length() == length;
+    }
+
+    protected boolean isNumberInRange(String input, int minLength, int maxLength) {
+        return isPositiveNumber(input) && input.length() >= minLength && input.length() <= maxLength;
     }
 }

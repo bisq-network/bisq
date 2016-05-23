@@ -27,6 +27,7 @@ import io.bitsquare.payment.AliPayAccount;
 import io.bitsquare.payment.AliPayAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
+import javafx.beans.value.WeakChangeListener;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -59,10 +60,10 @@ public class AliPayForm extends PaymentMethodForm {
 
         accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account nr.:").second;
         accountNrInputTextField.setValidator(aliPayValidator);
-        accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+        accountNrInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
             aliPayAccount.setAccountNr(newValue);
             updateFromInputs();
-        });
+        }));
 
         addLabelTextField(gridPane, ++gridRow, "Currency:", aliPayAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();

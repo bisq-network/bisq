@@ -27,6 +27,7 @@ import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PerfectMoneyAccount;
 import io.bitsquare.payment.PerfectMoneyAccountContractData;
+import javafx.beans.value.WeakChangeListener;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -60,10 +61,10 @@ public class PerfectMoneyForm extends PaymentMethodForm {
 
         accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account nr.:").second;
         accountNrInputTextField.setValidator(perfectMoneyValidator);
-        accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+        accountNrInputTextField.textProperty().addListener(new WeakChangeListener<>((ov, oldValue, newValue) -> {
             perfectMoneyAccount.setAccountNr(newValue);
             updateFromInputs();
-        });
+        }));
 
         addLabelTextField(gridPane, ++gridRow, "Currency:", perfectMoneyAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
