@@ -231,7 +231,8 @@ public class MainViewModel implements ViewModel {
                 startupTimeout.stop();
                 walletInitialized.removeListener(walletInitializedListener);
                 onAllServicesInitialized();
-                startupTimeoutPopup.hide();
+                if (startupTimeoutPopup != null)
+                    startupTimeoutPopup.hide();
             }
         });
     }
