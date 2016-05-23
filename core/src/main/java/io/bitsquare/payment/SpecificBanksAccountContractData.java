@@ -62,7 +62,7 @@ public final class SpecificBanksAccountContractData extends BankAccountContractD
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        String holderIdString = BankUtil.requiresHolderId(countryCode) ? (getHolderIdLabel() + ": " + holderTaxId + "\n") : "";
+        String holderIdString = BankUtil.isHolderIdRequired(countryCode) ? (getHolderIdLabel() + ": " + holderTaxId + "\n") : "";
         return "Holder name: " + holderName + "\n" +
                 holderIdString +
                 "Bank name: " + bankName + "\n" +

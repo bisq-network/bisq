@@ -19,17 +19,6 @@ package io.bitsquare.locale;
 
 public class BankUtil {
 
-    public static boolean requiresHolderId(String countryCode) {
-        if (countryCode == null)
-            countryCode = "";
-        switch (countryCode) {
-            case "BR":
-            case "CL":
-                return true;
-            default:
-                return false;
-        }
-    }
 
     //TODO set country specific labels
     public static String getBankCodeLabel(String countryCode) {
@@ -50,7 +39,7 @@ public class BankUtil {
             case "US":
                 return "Routing Number:";
             case "GB":
-                return "Sort Number:";
+                return "UK Sort code:";
             case "CA":
                 return "Transit Number:";
             default:
@@ -63,6 +52,8 @@ public class BankUtil {
         if (countryCode == null)
             countryCode = "";
         switch (countryCode) {
+            case "GB":
+                return "Account number";
             default:
                 return "Account nr. or IBAN:";
         }
@@ -78,6 +69,60 @@ public class BankUtil {
                 return "RUT Number:";
             default:
                 return "Personal ID:";
+        }
+    }
+
+    public static boolean isBankNameRequired(String countryCode) {
+        if (countryCode == null)
+            countryCode = "";
+        switch (countryCode) {
+            case "GB":
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    public static boolean isBankIdRequired(String countryCode) {
+        if (countryCode == null)
+            countryCode = "";
+        switch (countryCode) {
+            case "GB":
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    public static boolean isBranchIdRequired(String countryCode) {
+        if (countryCode == null)
+            countryCode = "";
+        switch (countryCode) {
+            case "GB":
+                return true;
+            default:
+                return true;
+        }
+    }
+
+    public static boolean isAccountNrRequired(String countryCode) {
+        if (countryCode == null)
+            countryCode = "";
+        switch (countryCode) {
+            default:
+                return true;
+        }
+    }
+
+    public static boolean isHolderIdRequired(String countryCode) {
+        if (countryCode == null)
+            countryCode = "";
+        switch (countryCode) {
+            case "BR":
+            case "CL":
+                return true;
+            default:
+                return false;
         }
     }
 }

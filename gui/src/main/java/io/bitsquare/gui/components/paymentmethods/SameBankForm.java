@@ -21,6 +21,7 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.locale.BankUtil;
 import io.bitsquare.payment.CountryBasedPaymentAccount;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
@@ -58,14 +59,24 @@ public class SameBankForm extends BankForm {
 
     @Override
     public void updateAllInputsValid() {
-        allInputsValid.set(isAccountNameValid()
+        boolean result = isAccountNameValid()
                 && inputValidator.validate(bankAccountContractData.getHolderName()).isValid
-                && inputValidator.validate(bankAccountContractData.getBankName()).isValid
-                && inputValidator.validate(bankAccountContractData.getBankId()).isValid
-                && inputValidator.validate(bankAccountContractData.getBranchId()).isValid
-                && inputValidator.validate(bankAccountContractData.getAccountNr()).isValid
                 && paymentAccount.getSingleTradeCurrency() != null
-                && ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null);
+                && ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null;
+
+        if (BankUtil.isBankNameRequired(bankAccountContractData.getCountryCode()))
+            result &= inputValidator.validate(bankAccountContractData.getBankName()).isValid;
+
+        if (BankUtil.isBankIdRequired(bankAccountContractData.getCountryCode()))
+            result &= inputValidator.validate(bankAccountContractData.getBankId()).isValid;
+
+        if (BankUtil.isBranchIdRequired(bankAccountContractData.getCountryCode()))
+            result &= inputValidator.validate(bankAccountContractData.getBranchId()).isValid;
+
+        if (BankUtil.isAccountNrRequired(bankAccountContractData.getCountryCode()))
+            result &= inputValidator.validate(bankAccountContractData.getAccountNr()).isValid;
+
+        allInputsValid.set(result);
     }
 
     @Override
