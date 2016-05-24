@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 // Run in UserThread
 public class P2PDataStorage implements MessageListener, ConnectionListener {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
+
     /**
      * How many days to keep an entry before it is purged.
      */
@@ -54,6 +55,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private Timer removeExpiredEntriesTimer;
     private HashMap<ByteArray, MapValue> sequenceNumberMap = new HashMap<>();
     private final Storage<HashMap> storage;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -237,7 +239,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
                 if (result) {
                     log.info("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
-                    storedData.updateTimeStamp();
+                    storedData.refreshTTL();
                     storedData.updateSequenceNumber(sequenceNumber);
                     storedData.updateSignature(signature);
 

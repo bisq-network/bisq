@@ -26,14 +26,14 @@ public class ProtectedStorageEntry implements Payload {
     public int sequenceNumber;
     public byte[] signature;
     @VisibleForTesting
-    transient public long timeStamp;
+    public long creationTimeStamp;
 
     public ProtectedStorageEntry(StoragePayload storagePayload, PublicKey ownerPubKey, int sequenceNumber, byte[] signature) {
         this.storagePayload = storagePayload;
         this.ownerPubKey = ownerPubKey;
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
-        this.timeStamp = System.currentTimeMillis();
+        this.creationTimeStamp = System.currentTimeMillis();
         this.ownerPubKeyBytes = new X509EncodedKeySpec(this.ownerPubKey.getEncoded()).getEncoded();
     }
 
@@ -41,7 +41,7 @@ public class ProtectedStorageEntry implements Payload {
         try {
             in.defaultReadObject();
             ownerPubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(ownerPubKeyBytes));
-            updateTimeStamp();
+            checkCreationTimeStamp();
         } catch (Throwable t) {
             log.warn("Exception at readObject: " + t.getMessage());
         }
@@ -51,8 +51,16 @@ public class ProtectedStorageEntry implements Payload {
         return storagePayload;
     }
 
-    public void updateTimeStamp() {
-        timeStamp = System.currentTimeMillis();
+    public void checkCreationTimeStamp() {
+        // We don't allow creation date in the future, but we cannot be too strict as clocks are not synced
+        // The 0 test is needed to be backward compatible as creationTimeStamp (timeStamp) was transient before 0.4.7
+        // TODO "|| creationTimeStamp == 0" can removed after we don't support 0.4.6 anymore
+        if (creationTimeStamp > System.currentTimeMillis() || creationTimeStamp == 0)
+            creationTimeStamp = System.currentTimeMillis();
+    }
+
+    public void refreshTTL() {
+        creationTimeStamp = System.currentTimeMillis();
     }
 
     public void updateSequenceNumber(int sequenceNumber) {
@@ -64,14 +72,14 @@ public class ProtectedStorageEntry implements Payload {
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - timeStamp) > storagePayload.getTTL();
+        return (System.currentTimeMillis() - creationTimeStamp) > storagePayload.getTTL();
     }
 
     @Override
     public String toString() {
         return "ProtectedStorageEntry{" +
                 "expirablePayload=" + storagePayload +
-                ", timeStamp=" + timeStamp +
+                ", creationTimeStamp=" + creationTimeStamp +
                 ", sequenceNumber=" + sequenceNumber +
                 ", ownerPubKey.hashCode()=" + (ownerPubKey != null ? ownerPubKey.hashCode() : "null") +
                 ", signature.hashCode()=" + (signature != null ? Arrays.toString(signature).hashCode() : "null") +

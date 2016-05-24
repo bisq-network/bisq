@@ -36,7 +36,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         try {
             in.defaultReadObject();
             receiversPubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(receiversPubKeyBytes));
-            updateTimeStamp();
+            checkCreationTimeStamp();
         } catch (Throwable t) {
             log.warn("Exception at readObject: " + t.getMessage());
         }
