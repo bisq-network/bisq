@@ -30,6 +30,7 @@ import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountFactory;
 import io.bitsquare.payment.PaymentMethod;
@@ -123,6 +124,18 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
+        TradeCurrency selectedTradeCurrency = paymentAccount.getSelectedTradeCurrency();
+        String code = selectedTradeCurrency.getCode();
+        if (code.equals("MKR") || code.equals("DAO")) {
+            new Popup().information("Please be sure that you follow the requirements for the usage of " +
+                    selectedTradeCurrency.getCodeAndName() + " wallets as described on the " +
+                    selectedTradeCurrency.getName() + " web page.\n" +
+                    "Using wallets from centralized exchanges where you don't have your keys under your control or " +
+                    "using a not compatible wallet software can lead to loss of the traded funds!\n" +
+                    "The arbitrator is not a " + selectedTradeCurrency.getName() + " specialist and cannot help in such cases.")
+                    .closeButtonText("I understand and confirm that I know which wallet I need to use.")
+                    .show();
+        }
         if (!model.getPaymentAccounts().stream().filter(e -> {
             if (e.getAccountName() != null)
                 return e.getAccountName().equals(paymentAccount.getAccountName());
