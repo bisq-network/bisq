@@ -73,6 +73,11 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("ETH", "Ether"));
+
+        // TODO DAO will be open for sale on 28.5. Check can be removed at next release. 
+        if (new GregorianCalendar().after(new GregorianCalendar(2016, Calendar.MAY, 28)))
+            result.add(new CryptoCurrency("DAO", "DAO"));
+
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
@@ -86,9 +91,11 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
         result.add(new CryptoCurrency("GEMZ", "Gemz"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("MKR", "Maker"));
         result.add(new CryptoCurrency("BLK", "Blackcoin"));
         result.add(new CryptoCurrency("FCT", "Factom"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
+        result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
@@ -118,10 +125,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SLR", "SolarCoin"));
         result.add(new CryptoCurrency("SHIFT", "Shift"));
         result.add(new CryptoCurrency("ERC", "Europecoin"));
-        result.add(new CryptoCurrency("MKR", "Maker"));
-        result.add(new CryptoCurrency("DAO", "DAO"));
         result.add(new CryptoCurrency("POST", "PostCoin"));
-        result.add(new CryptoCurrency("STEEM", "STEEM"));
 
         // For MKR we need a extra info box:
         // It's very important that users only use EIP-20 compliant contract wallets. 
@@ -135,7 +139,11 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("DAO", "DAO"));
+
+        // TODO DAO will be open for sale on 28.5. Check can be removed at next release. 
+        if (new GregorianCalendar().after(new GregorianCalendar(2016, Calendar.MAY, 28)))
+            result.add(new CryptoCurrency("DAO", "DAO"));
+
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("SDC", "ShadowCash"));
