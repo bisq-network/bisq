@@ -163,7 +163,7 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = "Sellers " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " address:";
-                gridRow = BlockChainForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData, labelTitle);
+                gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData, labelTitle);
                 break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodName);

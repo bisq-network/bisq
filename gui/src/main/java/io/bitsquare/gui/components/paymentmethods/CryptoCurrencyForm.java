@@ -44,8 +44,8 @@ import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
-public class BlockChainForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(BlockChainForm.class);
+public class CryptoCurrencyForm extends PaymentMethodForm {
+    private static final Logger log = LoggerFactory.getLogger(CryptoCurrencyForm.class);
 
     private final CryptoCurrencyAccount cryptoCurrencyAccount;
     private final AltCoinAddressValidator altCoinAddressValidator;
@@ -62,8 +62,8 @@ public class BlockChainForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public BlockChainForm(PaymentAccount paymentAccount, AltCoinAddressValidator altCoinAddressValidator, InputValidator inputValidator, GridPane gridPane,
-                          int gridRow, BSFormatter formatter) {
+    public CryptoCurrencyForm(PaymentAccount paymentAccount, AltCoinAddressValidator altCoinAddressValidator, InputValidator inputValidator, GridPane gridPane,
+                              int gridRow, BSFormatter formatter) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.cryptoCurrencyAccount = (CryptoCurrencyAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;

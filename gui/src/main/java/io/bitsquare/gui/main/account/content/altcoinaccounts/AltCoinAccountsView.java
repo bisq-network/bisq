@@ -22,7 +22,7 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.components.paymentmethods.BlockChainForm;
+import io.bitsquare.gui.components.paymentmethods.CryptoCurrencyForm;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
@@ -259,7 +259,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
-        return new BlockChainForm(paymentAccount, altCoinAddressValidator, inputValidator, root, gridRow, formatter);
+        return new CryptoCurrencyForm(paymentAccount, altCoinAddressValidator, inputValidator, root, gridRow, formatter);
     }
 
     private void removeNewAccountForm() {
