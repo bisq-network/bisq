@@ -85,6 +85,7 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
         totalAmountColumn.setComparator((o1, o2) -> o1.totalAmount.compareTo(o2.totalAmount));
         spreadColumn.setComparator((o1, o2) -> o1.spread != null && o2.spread != null ? formatter.formatFiatWithCode(o1.spread).compareTo(formatter.formatFiatWithCode(o2.spread)) : 0);
 
+        numberOfOffersColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(numberOfOffersColumn);
     }
 
