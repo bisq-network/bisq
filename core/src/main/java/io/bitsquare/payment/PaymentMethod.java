@@ -48,9 +48,6 @@ public final class PaymentMethod implements Persistable, Comparable {
     public static final String SPECIFIC_BANKS_ID = "SPECIFIC_BANKS";
     public static final String SWISH_ID = "SWISH";
     public static final String ALI_PAY_ID = "ALI_PAY";
-    /* public static final String FED_WIRE="FED_WIRE";*/
-   /* public static final String TRANSFER_WISE="TRANSFER_WISE";*/
-   /* public static final String US_POSTAL_MONEY_ORDER="US_POSTAL_MONEY_ORDER";*/
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
 
     public static PaymentMethod OK_PAY;
@@ -61,24 +58,18 @@ public final class PaymentMethod implements Persistable, Comparable {
     public static PaymentMethod SPECIFIC_BANKS;
     public static PaymentMethod SWISH;
     public static PaymentMethod ALI_PAY;
-    /* public static PaymentMethod FED_WIRE;*/
-   /* public static PaymentMethod TRANSFER_WISE;*/
-   /* public static PaymentMethod US_POSTAL_MONEY_ORDER;*/
     public static PaymentMethod BLOCK_CHAINS;
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
-            OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY, Coin.parseCoin("1")), // tx instant so min. wait time 
-            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("0.5")), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
-            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
-            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY, Coin.parseCoin("0.5")),
-            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
-            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY, Coin.parseCoin("0.75")),
-            SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("0.75")),
-            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("0.75")),
-           /* FED_WIRE = new PaymentMethod(FED_WIRE_ID, 0, DAY, Coin.parseCoin("0.1")),*/
-           /* TRANSFER_WISE = new PaymentMethod(TRANSFER_WISE_ID, 0, DAY, Coin.parseCoin("0.1")),*/
-           /* US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, DAY, Coin.parseCoin("0.1")),*/
-            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("1"))
+            OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY, Coin.parseCoin("1.5")), // tx instant so min. wait time 
+            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("0.75")), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
+            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("0.75")),
+            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY, Coin.parseCoin("0.75")),
+            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY, Coin.parseCoin("0.75")),
+            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY, Coin.parseCoin("1")),
+            SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("1")),
+            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("1")),
+            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("2"))
     ));
 
 
