@@ -73,11 +73,7 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("ETH", "Ether"));
-
-        // TODO DAO will be open for sale on 28.5. Check can be removed at next release. 
-        if (new GregorianCalendar().after(new GregorianCalendar(2016, Calendar.MAY, 28)))
-            result.add(new CryptoCurrency("DAO", "DAO"));
-
+        result.add(new CryptoCurrency("DAO", "DAO"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
@@ -127,10 +123,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ERC", "Europecoin"));
         result.add(new CryptoCurrency("POST", "PostCoin"));
 
-        // For MKR we need a extra info box:
-        // It's very important that users only use EIP-20 compliant contract wallets. 
-        // Modern mist wallets should be able to do it but there are some older mist versions that can't. 
-
         // result.add(new CryptoCurrency("XMR", "Monero")); 
         // result.add(new CryptoCurrency("BCN", "Bytecoin"));
         return result;
@@ -139,11 +131,7 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("ETH", "Ether"));
-
-        // TODO DAO will be open for sale on 28.5. Check can be removed at next release. 
-        if (new GregorianCalendar().after(new GregorianCalendar(2016, Calendar.MAY, 28)))
-            result.add(new CryptoCurrency("DAO", "DAO"));
-
+        result.add(new CryptoCurrency("DAO", "DAO"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("SDC", "ShadowCash"));

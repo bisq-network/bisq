@@ -136,6 +136,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     .closeButtonText("I understand and confirm that I know which wallet I need to use.")
                     .show();
         }
+
         if (!model.getPaymentAccounts().stream().filter(e -> {
             if (e.getAccountName() != null)
                 return e.getAccountName().equals(paymentAccount.getAccountName());

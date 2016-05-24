@@ -19,6 +19,7 @@ package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.AltCoinAddressValidator;
@@ -40,6 +41,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -151,7 +154,22 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
             }
         });
         currencyComboBox.setOnAction(e -> {
-            paymentAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+            TradeCurrency selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                String code = selectedItem.getCode();
+                // TODO DAO will be open for sale on 28.5. Check can be removed at next release. 
+                if (code.equals("DAO") && new GregorianCalendar().before(new GregorianCalendar(2016, Calendar.MAY, 28))) {
+                    new Popup().information("The DAO tokens are not tradable before the pre-sale is over (28th of May).\n" +
+                            "From the 28th of May on you can setup a DAO account and trade DAO tokens in Bitsquare.")
+                            .closeButtonText("I understand")
+                            .onClose(() -> currencyComboBox.getSelectionModel().clearSelection())
+                            .show();
+
+                    return;
+                }
+            }
+
+            paymentAccount.setSingleTradeCurrency(selectedItem);
             updateFromInputs();
         });
     }
