@@ -61,6 +61,8 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -173,16 +175,24 @@ public class TradeManager {
     private void initPendingTrades() {
         Log.traceCall();
 
+        List<Trade> toAdd = new ArrayList<>();
+        List<Trade> toRemove = new ArrayList<>();
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
             if (trade.isDepositFeePaid()) {
                 initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
                 trade.updateDepositTxFromWallet();
             } else if (trade.isTakerFeePaid()) {
-                addTradeToFailedTrades(trade);
+                toAdd.add(trade);
             } else {
-                removePreparedTrade(trade);
+                toRemove.add(trade);
             }
+        }
+        for (Trade trade : toAdd) {
+            addTradeToFailedTrades(trade);
+        }
+        for (Trade trade : toRemove) {
+            removePreparedTrade(trade);
         }
         pendingTradesInitialized.set(true);
     }
