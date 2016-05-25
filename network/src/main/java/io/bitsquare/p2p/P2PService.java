@@ -375,9 +375,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         log.info("\n\nDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n" +
                                 "Decrypted SealedAndSignedMessage:\ndecryptedMsgWithPubKey={}"
                                 + "\nDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n", decryptedMsgWithPubKey);
-                        connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress ->
-                                decryptedDirectMessageListeners.stream().forEach(
-                                        e -> e.onDirectMessage(decryptedMsgWithPubKey, peersNodeAddress)));
+                        if (connection.getPeersNodeAddressOptional().isPresent())
+                            decryptedDirectMessageListeners.stream().forEach(
+                                    e -> e.onDirectMessage(decryptedMsgWithPubKey, connection.getPeersNodeAddressOptional().get()));
+                        else
+                            log.error("peersNodeAddress is not available at onMessage.");
                     } else {
                         log.info("Wrong receiverAddressMaskHash. The message is not intended for us.");
                     }
@@ -778,7 +780,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @VisibleForTesting
     @Nullable
     public KeyRing getKeyRing() {
-        return optionalKeyRing.isPresent()? optionalKeyRing.get() : null;
+        return optionalKeyRing.isPresent() ? optionalKeyRing.get() : null;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
