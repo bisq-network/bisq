@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 public class GetDataRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetDataRequestHandler.class);
 
-    private static final long TIME_OUT_SEC = Timer.STRESS_TEST ? 5 : 20;
+    private static final long TIME_OUT_SEC = 20;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

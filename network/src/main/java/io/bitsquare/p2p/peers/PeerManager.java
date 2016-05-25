@@ -24,9 +24,9 @@ public class PeerManager implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
 
-    private static final long CHECK_MAX_CONN_DELAY_SEC = Timer.STRESS_TEST ? 1 : 5;
+    private static final long CHECK_MAX_CONN_DELAY_SEC = 5;
     // Use a long delay as the bootstrapping peer might need a while until it knows its onion address
-    private static final long REMOVE_ANONYMOUS_PEER_SEC = Timer.STRESS_TEST ? 10 : 120;
+    private static final long REMOVE_ANONYMOUS_PEER_SEC = 120;
 
     private static final int MAX_REPORTED_PEERS = 1000;
     private static final int MAX_PERSISTED_PEERS = 500;

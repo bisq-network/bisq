@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class RequestDataManager implements MessageListener, ConnectionListener, PeerManager.Listener {
     private static final Logger log = LoggerFactory.getLogger(RequestDataManager.class);
 
-    private static final long RETRY_DELAY_SEC = Timer.STRESS_TEST ? 3 : 10;
+    private static final long RETRY_DELAY_SEC = 10;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

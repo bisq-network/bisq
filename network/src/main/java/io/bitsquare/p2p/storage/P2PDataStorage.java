@@ -47,7 +47,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     public static final int PURGE_AGE_DAYS = 10;
 
     @VisibleForTesting
-    public static int CHECK_TTL_INTERVAL_SEC = Timer.STRESS_TEST ? 5 : 60;
+    public static int CHECK_TTL_INTERVAL_SEC = 60;
 
     private final Broadcaster broadcaster;
     private final Map<ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
