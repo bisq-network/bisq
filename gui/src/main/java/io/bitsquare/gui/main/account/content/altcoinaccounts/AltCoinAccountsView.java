@@ -137,6 +137,28 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     .show();
         }
 
+        if (code.equals("XMR")) {
+            new Popup().information("If you want to trade XMR on Bitsquare please be sure you understand and fulfill " +
+                    "the following requirements:\n\n" +
+                    "For sending XMR you need to use the Monero simple wallet with the " +
+                    "store-tx-info flag enabled (default in new versions).\n" +
+                    "Please be sure that you can access the tx key (use the get_tx_key command in simplewallet) as that " +
+                    "would be required in case of a dispute to enable the arbitrator to verify the XMR transfer with " +
+                    "the XMR checktx tool (http://xmr.llcoins.net/checktx.html).\n" +
+                    "At normal block explorers the transfer is not verifiable.\n\n" +
+                    "You need to provide the arbitrator the following data in case of a dispute:\n" +
+                    "- The tx private key\n" +
+                    "- The transaction hash\n" +
+                    "- The recipient's public address\n\n" +
+                    "If you cannot provide the above data or if you used an incompatible wallet it would result in losing the " +
+                    "dispute case. The XMR sender is responsible to be able to verify the XMR transfer to the " +
+                    "arbitrator in case of a dispute.\n\n" +
+                    "There is no payment ID required, just the normal public address.\n\n" +
+                    "If you are not sure about that process visit the Monero forum to find more information.")
+                    .closeButtonText("I understand")
+                    .show();
+        }
+        
         if (!model.getPaymentAccounts().stream().filter(e -> {
             if (e.getAccountName() != null)
                 return e.getAccountName().equals(paymentAccount.getAccountName());
