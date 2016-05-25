@@ -225,9 +225,8 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     private void showDisputeInfoLabel() {
-        if (notificationGroup != null) {
+        if (notificationGroup != null)
             notificationGroup.setLabelAndHeadlineVisible(true);
-        }
     }
 
     private void showOpenDisputeButton() {
@@ -306,6 +305,10 @@ public abstract class TradeStepView extends AnchorPane {
 
         if (notificationGroup != null)
             notificationGroup.label.setText(getWarningText());
+    }
+
+    private void removeWarning() {
+        hideNotificationGroup();
     }
 
     protected String getWarningText() {
@@ -402,7 +405,10 @@ public abstract class TradeStepView extends AnchorPane {
                 case NORMAL:
                     break;
                 case HALF_REACHED:
-                    showWarning();
+                    if (trade.getState().getPhase().ordinal() < Trade.Phase.FIAT_RECEIVED.ordinal())
+                        showWarning();
+                    else
+                        removeWarning();
                     break;
                 case TRADE_PERIOD_OVER:
                     onOpenForDispute();

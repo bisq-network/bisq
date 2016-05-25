@@ -60,9 +60,8 @@ public abstract class TradeProtocol {
                     TradeMessage tradeMessage = (TradeMessage) message;
                     nonEmptyStringOf(tradeMessage.tradeId);
 
-                    if (tradeMessage.tradeId.equals(processModel.getId())) {
+                    if (tradeMessage.tradeId.equals(processModel.getId()))
                         doHandleDecryptedMessage(tradeMessage, peersNodeAddress);
-                    }
                 }
             } else {
                 //TODO not clear anymore what case is handled here
@@ -82,14 +81,14 @@ public abstract class TradeProtocol {
 
     public void completed() {
         cleanup();
+        processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
     }
 
     private void cleanup() {
         log.debug("cleanup " + this);
         stopTimeout();
-
-        processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
-
+        // Don't remove removeDecryptedDirectMessageListener as it might be a non critical bug and it would prevent 
+        // that we get further messages
     }
 
     public void applyMailboxMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Trade trade) {
