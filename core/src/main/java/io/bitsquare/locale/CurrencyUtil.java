@@ -199,10 +199,6 @@ public class CurrencyUtil {
         return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
     }
 
-    public static boolean isCryptoNoteCoin(String currencyCode) {
-        return currencyCode.equals("XMR") || currencyCode.equals("BCN");
-    }
-
     public static FiatCurrency getCurrencyByCountryCode(String countryCode) {
         return new FiatCurrency(Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode)).getCurrencyCode());
     }

@@ -59,9 +59,6 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData, String labelTitle) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, labelTitle, ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress());
-        if (((CryptoCurrencyAccountContractData) paymentAccountContractData).getPaymentId() != null)
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Payment ID:", ((CryptoCurrencyAccountContractData) paymentAccountContractData).getPaymentId());
-
         return gridRow;
     }
 

@@ -25,7 +25,6 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.payment.CryptoCurrencyAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Contract;
@@ -110,13 +109,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         if (showAcceptedBanks)
             rows++;
 
-        boolean isPaymentIdAvailable = false;
         PaymentAccountContractData sellerPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
-        if (sellerPaymentAccountContractData instanceof CryptoCurrencyAccountContractData &&
-                ((CryptoCurrencyAccountContractData) sellerPaymentAccountContractData).getPaymentId() != null) {
-            rows++;
-            isPaymentIdAvailable = true;
-        }
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Contract");
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(),
                 Layout.FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
@@ -138,9 +131,6 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 BSResources.get(contract.getBuyerPaymentAccountContractData().getPaymentDetails())).second.setMouseTransparent(false);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Seller payment details:",
                 BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second.setMouseTransparent(false);
-        if (isPaymentIdAvailable)
-            addLabelTextField(gridPane, ++rowIndex, "Seller payment ID:",
-                    ((CryptoCurrencyAccountContractData) sellerPaymentAccountContractData).getPaymentId());
 
         if (showAcceptedCountryCodes) {
             String countries;
