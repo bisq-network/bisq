@@ -23,6 +23,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -34,6 +35,7 @@ import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -61,6 +63,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -141,7 +144,11 @@ public class DepositView extends ActivatableView<VBox, Void> {
         qrCodeImageView = new ImageView();
         qrCodeImageView.setStyle("-fx-cursor: hand;");
         Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
-        qrCodeImageView.setOnMouseClicked(e -> new QRCodeWindow(getBitcoinURI()).show());
+        qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
+                () -> UserThread.runAfter(
+                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        200, TimeUnit.MILLISECONDS)
+        ));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 1);
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));

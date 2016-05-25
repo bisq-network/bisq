@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.util;
 
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.user.Preferences;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollBar;
@@ -34,5 +36,22 @@ public class GUIUtil {
                 return bar.getWidth();
         }
         return 0;
+    }
+
+    public static void showFeeInfoBeforeExecute(Runnable runnable) {
+        String key = "miningFeeInfo";
+        if (Preferences.INSTANCE.showAgain(key)) {
+            new Popup<>().information("Please be sure that the mining fee used at your external wallet is " +
+                    "sufficiently high so that the funding transaction will be added to the blockchain.\n" +
+                    "Otherwise the trade transactions cannot be confirmed and a trade would end up in a dispute.\n\n" +
+                    "The recommended fee is about 0.0001 - 0.0002 BTC.\n\n" +
+                    "You can view typically used fees at: https://tradeblock.com/blockchain")
+                    .dontShowAgainId(key, Preferences.INSTANCE)
+                    .onClose(runnable::run)
+                    .closeButtonText("I understand")
+                    .show();
+        } else {
+            runnable.run();
+        }
     }
 }

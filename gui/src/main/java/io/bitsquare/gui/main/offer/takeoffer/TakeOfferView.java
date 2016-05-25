@@ -42,6 +42,7 @@ import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.payment.PaymentAccount;
@@ -195,44 +196,44 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Offer offer) {
-            model.initWithData(offer);
-            priceAsPercentageInputBox.setVisible(offer.getUseMarketBasedPrice());
+        model.initWithData(offer);
+        priceAsPercentageInputBox.setVisible(offer.getUseMarketBasedPrice());
 
-            if (model.getOffer().getDirection() == Offer.Direction.SELL) {
-                imageView.setId("image-buy-large");
-                directionLabel.setId("direction-icon-label-buy");
+        if (model.getOffer().getDirection() == Offer.Direction.SELL) {
+            imageView.setId("image-buy-large");
+            directionLabel.setId("direction-icon-label-buy");
 
-                takeOfferButton.setId("buy-button-big");
-                takeOfferButton.setText("Review offer for buying bitcoin");
-                nextButton.setId("buy-button");
-            } else {
-                imageView.setId("image-sell-large");
-                directionLabel.setId("direction-icon-label-sell");
+            takeOfferButton.setId("buy-button-big");
+            takeOfferButton.setText("Review offer for buying bitcoin");
+            nextButton.setId("buy-button");
+        } else {
+            imageView.setId("image-sell-large");
+            directionLabel.setId("direction-icon-label-sell");
 
-                takeOfferButton.setId("sell-button-big");
-                nextButton.setId("sell-button");
-                takeOfferButton.setText("Review offer for selling bitcoin");
-            }
+            takeOfferButton.setId("sell-button-big");
+            nextButton.setId("sell-button");
+            takeOfferButton.setText("Review offer for selling bitcoin");
+        }
 
-            boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
-            paymentAccountsLabel.setVisible(showComboBox);
-            paymentAccountsLabel.setManaged(showComboBox);
-            paymentAccountsComboBox.setVisible(showComboBox);
-            paymentAccountsComboBox.setManaged(showComboBox);
-            paymentMethodTextField.setVisible(!showComboBox);
-            paymentMethodTextField.setManaged(!showComboBox);
-            paymentMethodLabel.setVisible(!showComboBox);
-            paymentMethodLabel.setManaged(!showComboBox);
-            if (!showComboBox)
-                paymentMethodTextField.setText(BSResources.get(model.getPaymentMethod().getId()));
-            currencyTextField.setText(model.dataModel.getCurrencyNameAndCode());
-            directionLabel.setText(model.getDirectionLabel());
-            amountDescriptionLabel.setText(model.getAmountDescription());
-            amountRangeTextField.setText(model.getAmountRange());
-            priceTextField.setText(model.getPrice());
-            priceAsPercentageTextField.setText(model.marketPriceMargin);
-            addressTextField.setPaymentLabel(model.getPaymentLabel());
-            addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
+        boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
+        paymentAccountsLabel.setVisible(showComboBox);
+        paymentAccountsLabel.setManaged(showComboBox);
+        paymentAccountsComboBox.setVisible(showComboBox);
+        paymentAccountsComboBox.setManaged(showComboBox);
+        paymentMethodTextField.setVisible(!showComboBox);
+        paymentMethodTextField.setManaged(!showComboBox);
+        paymentMethodLabel.setVisible(!showComboBox);
+        paymentMethodLabel.setManaged(!showComboBox);
+        if (!showComboBox)
+            paymentMethodTextField.setText(BSResources.get(model.getPaymentMethod().getId()));
+        currencyTextField.setText(model.dataModel.getCurrencyNameAndCode());
+        directionLabel.setText(model.getDirectionLabel());
+        amountDescriptionLabel.setText(model.getAmountDescription());
+        amountRangeTextField.setText(model.getAmountRange());
+        priceTextField.setText(model.getPrice());
+        priceAsPercentageTextField.setText(model.marketPriceMargin);
+        addressTextField.setPaymentLabel(model.getPaymentLabel());
+        addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
 
         if (offer.getPrice() == null)
             new Popup().warning("You cannot take that offer as it uses a percentage price based on the " +
@@ -717,7 +718,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         qrCodeImageView.setVisible(false);
         qrCodeImageView.setStyle("-fx-cursor: hand;");
         Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
-        qrCodeImageView.setOnMouseClicked(e -> new QRCodeWindow(getBitcoinURI()).show());
+        qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
+                () -> UserThread.runAfter(
+                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        200, TimeUnit.MILLISECONDS)
+        ));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 2);
         GridPane.setRowSpan(qrCodeImageView, 3);
@@ -748,15 +753,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         label.setPadding(new Insets(5, 0, 0, 0));
         fundFromExternalWalletButton = new Button("Open your external wallet for funding");
         fundFromExternalWalletButton.setDefaultButton(false);
-        fundFromExternalWalletButton.setOnAction(e -> {
-            try {
-                Utilities.openURI(URI.create(getBitcoinURI()));
-            } catch (Exception ex) {
-                log.warn(ex.getMessage());
-                new Popup().warning("Opening a default bitcoin wallet application has failed. " +
-                        "Perhaps you don't have one installed?").show();
-            }
-        });
+        fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         spinner = new ProgressIndicator(0);
         spinner.setPrefHeight(18);
         spinner.setPrefWidth(18);
@@ -795,6 +792,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);
+    }
+
+    private void openWallet() {
+        try {
+            Utilities.openURI(URI.create(getBitcoinURI()));
+        } catch (Exception ex) {
+            log.warn(ex.getMessage());
+            new Popup().warning("Opening a default bitcoin wallet application has failed. " +
+                    "Perhaps you don't have one installed?").show();
+        }
     }
 
     @NotNull

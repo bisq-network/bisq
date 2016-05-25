@@ -47,6 +47,9 @@ public final class Preferences implements Persistable {
 
     private static final Logger log = LoggerFactory.getLogger(Preferences.class);
 
+
+    public static Preferences INSTANCE;
+
     // Deactivate mBit for now as most screens are not supporting it yet
     private static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
     transient static final private ArrayList<BlockChainExplorer> blockChainExplorersTestNet = new ArrayList<>(Arrays.asList(
@@ -128,6 +131,7 @@ public final class Preferences implements Persistable {
     @Inject
     public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment) {
         log.debug("Preferences " + this);
+        INSTANCE = this;
         this.storage = storage;
         this.bitsquareEnvironment = bitsquareEnvironment;
 

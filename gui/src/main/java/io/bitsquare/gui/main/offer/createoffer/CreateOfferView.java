@@ -41,6 +41,7 @@ import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bitsquare.gui.util.FormBuilder;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.TradeCurrency;
@@ -828,7 +829,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         qrCodeImageView.setVisible(false);
         qrCodeImageView.setStyle("-fx-cursor: hand;");
         Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
-        qrCodeImageView.setOnMouseClicked(e -> new QRCodeWindow(getBitcoinURI()).show());
+        qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
+                () -> UserThread.runAfter(
+                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        200, TimeUnit.MILLISECONDS)
+        ));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 2);
         GridPane.setRowSpan(qrCodeImageView, 3);
@@ -859,15 +864,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         label.setPadding(new Insets(5, 0, 0, 0));
         fundFromExternalWalletButton = new Button("Open your external wallet for funding");
         fundFromExternalWalletButton.setDefaultButton(false);
-        fundFromExternalWalletButton.setOnAction(e -> {
-            try {
-                Utilities.openURI(URI.create(getBitcoinURI()));
-            } catch (Exception ex) {
-                log.warn(ex.getMessage());
-                new Popup().warning("Opening a default bitcoin wallet application has failed. " +
-                        "Perhaps you don't have one installed?").show();
-            }
-        });
+        fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         spinner = new ProgressIndicator(0);
         spinner.setPrefHeight(18);
         spinner.setPrefWidth(18);
@@ -906,6 +903,16 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         });
         cancelButton2.setDefaultButton(false);
         cancelButton2.setVisible(false);
+    }
+
+    private void openWallet() {
+        try {
+            Utilities.openURI(URI.create(getBitcoinURI()));
+        } catch (Exception ex) {
+            log.warn(ex.getMessage());
+            new Popup().warning("Opening a default bitcoin wallet application has failed. " +
+                    "Perhaps you don't have one installed?").show();
+        }
     }
 
     @NotNull

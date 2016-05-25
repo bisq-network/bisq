@@ -21,6 +21,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.util.GUIUtil;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -55,7 +56,7 @@ public class AddressTextField extends AnchorPane {
         textField.textProperty().bind(address);
         String tooltipText = "Open your default bitcoin wallet";
         Tooltip.install(textField, new Tooltip(tooltipText));
-        textField.setOnMouseClicked(mouseEvent -> openExtWallet());
+        textField.setOnMouseClicked(mouseEvent -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
         //TODO app wide focus
         //focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
@@ -65,17 +66,17 @@ public class AddressTextField extends AnchorPane {
         extWalletIcon.getStyleClass().add("copy-icon");
         Tooltip.install(extWalletIcon, new Tooltip(tooltipText));
         AwesomeDude.setIcon(extWalletIcon, AwesomeIcon.SIGNIN);
-        extWalletIcon.setOnMouseClicked(e -> openExtWallet());
+        extWalletIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
 
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().add("copy-icon");
         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
-        copyIcon.setOnMouseClicked(e -> {
+        copyIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(() -> {
             if (address.get() != null && address.get().length() > 0)
                 Utilities.copyToClipboard(address.get());
-        });
+        }));
 
         AnchorPane.setRightAnchor(copyIcon, 5.0);
         AnchorPane.setRightAnchor(extWalletIcon, 30.0);
@@ -85,7 +86,7 @@ public class AddressTextField extends AnchorPane {
         getChildren().addAll(textField, extWalletIcon, copyIcon);
     }
 
-    private void openExtWallet() {
+    private void openWallet() {
         try {
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception e) {
