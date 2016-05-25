@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.util;
 
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.user.Preferences;
 import javafx.geometry.Orientation;
@@ -40,7 +41,7 @@ public class GUIUtil {
 
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
         String key = "miningFeeInfo";
-        if (Preferences.INSTANCE.showAgain(key)) {
+        if (!DevFlags.DEV_MODE && Preferences.INSTANCE.showAgain(key)) {
             new Popup<>().information("Please be sure that the mining fee used at your external wallet is " +
                     "sufficiently high so that the funding transaction will be added to the blockchain.\n" +
                     "Otherwise the trade transactions cannot be confirmed and a trade would end up in a dispute.\n\n" +

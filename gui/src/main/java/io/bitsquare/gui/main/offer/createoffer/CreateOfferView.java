@@ -195,6 +195,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         onPaymentAccountsComboBoxSelected();
 
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
+
+        if (DevFlags.DEV_MODE)
+            UserThread.runAfter(() -> onShowPayFundsScreen(), 200, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -266,10 +269,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (model.isBootstrapped()) {
             if (model.hasAcceptedArbitrators()) {
                 Offer offer = model.createAndGetOffer();
-                offerDetailsWindow.onPlaceOffer(() ->
-                        model.onPlaceOffer(offer, () ->
-                                offerDetailsWindow.hide()))
-                        .show(offer);
+                if (!DevFlags.DEV_MODE)
+                    offerDetailsWindow.onPlaceOffer(() ->
+                            model.onPlaceOffer(offer, () ->
+                                    offerDetailsWindow.hide()))
+                            .show(offer);
+                else
+                    model.onPlaceOffer(offer, () -> {
+                    });
             } else {
                 new Popup().warning("You have no arbitrator selected.\n" +
                         "You need to select at least one arbitrator.")
@@ -613,7 +620,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         placeOfferCompletedListener = (o, oldValue, newValue) -> {
             if (DevFlags.DEV_MODE) {
                 close();
-                navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
             } else if (newValue) {
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups 
                 String key = "createOfferSuccessInfo";

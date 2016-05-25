@@ -275,12 +275,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void onTakeOffer() {
         if (model.hasAcceptedArbitrators()) {
-            offerDetailsWindow.onTakeOffer(() ->
-                            model.onTakeOffer(() -> {
-                                offerDetailsWindow.hide();
-                                offerDetailsWindowDisplayed = false;
-                            })
-            ).show(model.getOffer(), model.dataModel.amountAsCoin.get(), model.dataModel.tradePrice);
+            if (!DevFlags.DEV_MODE)
+                offerDetailsWindow.onTakeOffer(() ->
+                                model.onTakeOffer(() -> {
+                                    offerDetailsWindow.hide();
+                                    offerDetailsWindowDisplayed = false;
+                                })
+                ).show(model.getOffer(), model.dataModel.amountAsCoin.get(), model.dataModel.tradePrice);
+            else
+                model.onTakeOffer(() -> {
+                });
             offerDetailsWindowDisplayed = true;
         } else {
             new Popup().warning("You have no arbitrator selected.\n" +

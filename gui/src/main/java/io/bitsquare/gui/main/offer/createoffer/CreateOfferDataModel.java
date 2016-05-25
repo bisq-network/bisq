@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.offer.createoffer;
 
 import com.google.inject.Inject;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
@@ -460,7 +461,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         log.debug("missingCoin " + missingCoin.get().toFriendlyString());
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
-        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null) {
+        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevFlags.DEV_MODE) {
             walletFundedNotification = new Notification()
                     .headLine("Trading wallet update")
                     .notification("Your trading wallet is sufficiently funded.\n" +
