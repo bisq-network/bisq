@@ -356,7 +356,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         log.debug("missingCoin " + missingCoin.get().toFriendlyString());
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
-        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null) {
+        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevFlags.DEV_MODE) {
             walletFundedNotification = new Notification()
                     .headLine("Trading wallet update")
                     .notification("Your trading wallet is sufficiently funded.\n" +
