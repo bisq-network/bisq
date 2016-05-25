@@ -22,7 +22,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bitsquare</groupId>
-        <version>0.4.7</version>
+        <version>0.4.8</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
