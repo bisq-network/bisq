@@ -45,6 +45,30 @@ public class BuyerStep1View extends TradeStepView {
         return "Deposit transaction has been published.\n" +
                 "You need to wait for at least one blockchain confirmation.";
     }
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Warning
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected String getWarningText() {
+        setWarningHeadline();
+        return "The deposit transaction still did not get confirmed.\n" +
+                "That might happen in rare cases when the funding fee of one trader from the external wallet was too low.";
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Dispute
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected String getOpenForDisputeText() {
+        return "The deposit transaction still did not get confirmed.\n" +
+                "That might happen in rare cases when the funding fee of one trader from the external wallet was too low.\n" +
+                "The max. period for the trade has elapsed.\n" +
+                "\nPlease contact the arbitrator for opening a dispute.";
+    }
 }
 
 
