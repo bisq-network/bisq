@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
@@ -90,7 +90,7 @@ public class BuyerStep2View extends TradeStepView {
                                 "Bitcoin, Btc or Bitsquare.\n\n" +
                                 "If your bank charges fees you have to cover those fees.";
 
-                    if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
+                    if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                         preferences.dontShowAgain(key, true);
                         new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
                                 .attention(message)
@@ -222,7 +222,7 @@ public class BuyerStep2View extends TradeStepView {
     private void onPaymentStarted() {
         if (model.p2PService.isBootstrapped()) {
             String key = "confirmPaymentStarted";
-            if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
+            if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                 Popup popup = new Popup();
                 popup.headLine("Confirm that you have started the payment")
                         .confirmation("Did you initiate the " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) +

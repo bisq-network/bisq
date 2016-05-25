@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
@@ -120,7 +120,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         }
 
         String key = "accountPrivacyInfo";
-        if (!BitsquareApp.DEV_MODE)
+        if (!DevFlags.DEV_MODE)
             new Popup().backgroundInfo("In the account screen you can setup your payment accounts for national currencies " +
                     "as well as for crypto currencies.\n\n" +
                     "Please note that this data is stored locally on your computer only. Bitsquare does not operate servers " +

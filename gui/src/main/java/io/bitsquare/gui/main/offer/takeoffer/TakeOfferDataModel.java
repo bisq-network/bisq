@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.offer.takeoffer;
 
 import com.google.inject.Inject;
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
@@ -170,7 +170,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         amountAsCoin.set(offer.getAmount());
 
-        if (BitsquareApp.DEV_MODE)
+        if (DevFlags.DEV_MODE)
             amountAsCoin.set(offer.getAmount());
 
         calculateVolume();

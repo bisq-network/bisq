@@ -75,9 +75,6 @@ import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
 
-    public static final boolean DEV_MODE = false;
-    public static final boolean IS_RELEASE_VERSION = !DEV_MODE && true;
-
     private static Environment env;
 
     private BitsquareAppModule bitsquareAppModule;
@@ -104,7 +101,7 @@ public class BitsquareApp extends Application {
         log.info("Log files under: " + logPath);
         Version.printVersion();
         Utilities.printSysInfo();
-        Log.setLevel(!IS_RELEASE_VERSION);
+        Log.setLevel(!DevFlags.IS_RELEASE_VERSION);
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
@@ -184,7 +181,7 @@ public class BitsquareApp extends Application {
                     showSendAlertMessagePopup();
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                     showFPSWindow();
-                else if (BitsquareApp.DEV_MODE) {
+                else if (DevFlags.DEV_MODE) {
                     if (new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                         showDebugWindow();
                 }

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
@@ -84,7 +84,7 @@ public class SellerStep3View extends TradeStepView {
                             tradeAmountWithCode + " from the bitcoin buyer.\n\n" +
                             "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
                 }
-                if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
+                if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                     preferences.dontShowAgain(key, true);
                     new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
                             .attention(message)
@@ -237,7 +237,7 @@ public class SellerStep3View extends TradeStepView {
         if (model.p2PService.isBootstrapped()) {
             Preferences preferences = model.dataModel.preferences;
             String key = "confirmPaymentReceived";
-            if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
+            if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                 new Popup()
                         .headLine("Confirm that you have received the payment")
                         .confirmation("Have you received the " + CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()) +

@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.offer.takeoffer;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
@@ -303,7 +303,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
 
-        if (!BitsquareApp.DEV_MODE) {
+        if (!DevFlags.DEV_MODE) {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
                     "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
@@ -503,7 +503,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
 
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
-            if (newValue && BitsquareApp.DEV_MODE) {
+            if (newValue && DevFlags.DEV_MODE) {
                 close();
                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
             } else if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {

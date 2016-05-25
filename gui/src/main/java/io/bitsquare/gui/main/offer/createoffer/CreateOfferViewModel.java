@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.offer.createoffer;
 
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.pricefeed.MarketPrice;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.Timer;
@@ -149,7 +149,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Override
     protected void activate() {
-        if (BitsquareApp.DEV_MODE) {
+        if (DevFlags.DEV_MODE) {
             amount.set("0.0001");
             minAmount.set(amount.get());
             price.set("400");

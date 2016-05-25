@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.funds.withdrawal;
 
 import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.WalletService;
@@ -212,7 +212,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         withdrawToTextField.getText(), amountOfSelectedItems);
                 Coin receiverAmount = senderAmountAsCoinProperty.get().subtract(requiredFee);
                 if (receiverAmount.isPositive()) {
-                    if (BitsquareApp.DEV_MODE) {
+                    if (DevFlags.DEV_MODE) {
                         doWithdraw(receiverAmount, callback);
                     } else {
                         new Popup().headLine("Confirm withdrawal request")
@@ -356,7 +356,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawToTextField.setText("");
         withdrawToTextField.setPromptText("Fill in your destination address");
 
-        if (BitsquareApp.DEV_MODE)
+        if (DevFlags.DEV_MODE)
             withdrawToTextField.setText("mjYhQYSbET2bXJDyCdNqYhqSye5QX2WHPz");
     }
 

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
@@ -118,7 +118,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
 
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, "Your destination address:");
         addressInputTextField = tuple.second;
-        if (BitsquareApp.DEV_MODE)
+        if (DevFlags.DEV_MODE)
             addressInputTextField.setText("mjYhQYSbET2bXJDyCdNqYhqSye5QX2WHPz");
 
         emptyWalletButton = new Button("Empty wallet");

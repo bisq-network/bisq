@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.funds.deposit;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
@@ -165,7 +165,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         Tuple2<Label, InputTextField> amountTuple = addLabelInputTextField(gridPane, ++gridRow, "Amount in BTC (optional):");
         amountLabel = amountTuple.first;
         amountTextField = amountTuple.second;
-        if (BitsquareApp.DEV_MODE)
+        if (DevFlags.DEV_MODE)
             amountTextField.setText("10");
 
         titledGroupBg.setVisible(false);

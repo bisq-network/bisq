@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.offer.createoffer;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
@@ -293,7 +293,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
-        if (!BitsquareApp.DEV_MODE) {
+        if (!DevFlags.DEV_MODE) {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
                     "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
@@ -611,7 +611,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         };
 
         placeOfferCompletedListener = (o, oldValue, newValue) -> {
-            if (BitsquareApp.DEV_MODE) {
+            if (DevFlags.DEV_MODE) {
                 close();
                 navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class);
             } else if (newValue) {

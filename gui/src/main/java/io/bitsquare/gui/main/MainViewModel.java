@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import io.bitsquare.alert.Alert;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
@@ -502,7 +503,7 @@ public class MainViewModel implements ViewModel {
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();
-        if (BitsquareApp.DEV_MODE) {
+        if (DevFlags.DEV_MODE) {
             preferences.setShowOwnOffersInOfferBook(true);
             if (user.getPaymentAccounts().isEmpty())
                 setupDevDummyPaymentAccounts();

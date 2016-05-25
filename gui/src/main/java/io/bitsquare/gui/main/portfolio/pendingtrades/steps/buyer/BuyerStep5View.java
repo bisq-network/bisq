@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
@@ -149,11 +149,11 @@ public class BuyerStep5View extends TradeStepView {
         });
         withdrawToExternalWalletButton.setOnAction(e -> reviewWithdrawal());
 
-        if (BitsquareApp.DEV_MODE) {
+        if (DevFlags.DEV_MODE) {
             withdrawAddressTextField.setText("mjYhQYSbET2bXJDyCdNqYhqSye5QX2WHPz");
         } else {
             String key = "tradeCompleted" + trade.getId();
-            if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
+            if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                 preferences.dontShowAgain(key, true);
                 new Notification().headLine("Trade completed")
                         .notification("You can withdraw your funds now to your external Bitcoin wallet or transfer it to the Bitsquare wallet.")
@@ -185,12 +185,12 @@ public class BuyerStep5View extends TradeStepView {
                     validateWithdrawAddress();
                 } else if (Restrictions.isAboveFixedTxFeeForTradesAndDust(senderAmount)) {
 
-                    if (BitsquareApp.DEV_MODE) {
+                    if (DevFlags.DEV_MODE) {
                         doWithdrawal(receiverAmount);
                     } else {
                         BSFormatter formatter = model.formatter;
                         String key = "reviewWithdrawalAtTradeComplete";
-                        if (!BitsquareApp.DEV_MODE && preferences.showAgain(key)) {
+                        if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                             new Popup().headLine("Confirm withdrawal request")
                                     .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
                                             "From address: " + fromAddresses + "\n" +
@@ -255,7 +255,7 @@ public class BuyerStep5View extends TradeStepView {
     }
 
     private void handleTradeCompleted() {
-        if (!BitsquareApp.DEV_MODE) {
+        if (!DevFlags.DEV_MODE) {
             String key = "tradeCompleteWithdrawCompletedInfo";
             new Popup().headLine("Withdrawal completed")
                     .feedback("Your completed trades are stored under \"Portfolio/History\".\n" +

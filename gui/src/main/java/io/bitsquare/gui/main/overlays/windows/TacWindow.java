@@ -2,6 +2,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.user.Preferences;
 import org.slf4j.Logger;
@@ -21,7 +22,7 @@ public class TacWindow extends Overlay<TacWindow> {
     }
 
     public void showIfNeeded() {
-        if (!preferences.getTacAccepted() && !BitsquareApp.DEV_MODE) {
+        if (!preferences.getTacAccepted() && !DevFlags.DEV_MODE) {
             headLine("User agreement");
             String text = "1. This software is experimental and provided \"as is\", without warranty of any kind, " +
                     "express or implied, including but not limited to the warranties of " +

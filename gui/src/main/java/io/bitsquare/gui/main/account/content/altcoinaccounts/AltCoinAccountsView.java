@@ -154,7 +154,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     "dispute case. The XMR sender is responsible to be able to verify the XMR transfer to the " +
                     "arbitrator in case of a dispute.\n\n" +
                     "There is no payment ID required, just the normal public address.\n\n" +
-                    "If you are not sure about that process visit the Monero forum to find more information.")
+                    "If you are not sure about that process visit the Monero forum (https://forum.getmonero.org) to find more information.")
                     .closeButtonText("I understand")
                     .show();
         }

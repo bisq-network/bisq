@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.disputes;
 
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.common.crypto.KeyRing;
@@ -119,7 +119,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
             navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
 
         String key = "supportInfo";
-        if (!BitsquareApp.DEV_MODE)
+        if (!DevFlags.DEV_MODE)
             new Popup().backgroundInfo("Bitsquare is not a company and not operating any kind of customer support.\n\n" +
                     "If there are disputes in the trade process (e.g. one trader does not follow the trade protocol) " +
                     "the application will display a \"Open dispute\" button after the trade period is over " +
