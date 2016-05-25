@@ -49,7 +49,7 @@ public class SameBankForm extends BankForm {
     @Override
     protected void addHolderNameAndId() {
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:");
-        InputTextField holderNameInputTextField = tuple.second;
+        holderNameInputTextField = tuple.second;
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountContractData.setHolderName(newValue);

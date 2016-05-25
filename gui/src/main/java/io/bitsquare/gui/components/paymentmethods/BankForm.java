@@ -51,7 +51,7 @@ abstract class BankForm extends PaymentMethodForm {
     private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
     private TextField currencyTextField;
     private Label holderIdLabel;
-    private InputTextField holderNameInputTextField;
+    protected InputTextField holderNameInputTextField;
     private Label bankIdLabel;
     private Label branchIdLabel;
     private Label accountNrLabel;
@@ -63,6 +63,7 @@ abstract class BankForm extends PaymentMethodForm {
     private Label accountTypeLabel;
     private ComboBox<String> accountTypeComboBox;
     private boolean validatorsApplied;
+    private boolean useHolderID;
 
     static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         BankAccountContractData data = (BankAccountContractData) paymentAccountContractData;
@@ -274,7 +275,6 @@ abstract class BankForm extends PaymentMethodForm {
                 branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
                 accountNrLabel.setText(BankUtil.getAccountNrLabel(countryCode));
                 accountTypeLabel.setText(BankUtil.getAccountTypeLabel(countryCode));
-                holderIdLabel.setText(BankUtil.getHolderIdLabel(countryCode));
 
                 bankNameInputTextField.setText("");
                 bankIdInputTextField.setText("");
@@ -285,26 +285,26 @@ abstract class BankForm extends PaymentMethodForm {
 
                 if (BankUtil.useValidation(countryCode) && !validatorsApplied) {
                     validatorsApplied = true;
-                    holderIdInputTextField.setValidator(inputValidator);
+                    if (useHolderID)
+                        holderIdInputTextField.setValidator(inputValidator);
                     bankNameInputTextField.setValidator(inputValidator);
                     bankIdInputTextField.setValidator(new BankIdValidator(countryCode));
                     branchIdInputTextField.setValidator(new BranchIdValidator(countryCode));
                     accountNrInputTextField.setValidator(new AccountNrValidator(countryCode));
                 } else {
                     validatorsApplied = false;
-                    holderIdInputTextField.setValidator(null);
+                    if (useHolderID)
+                        holderIdInputTextField.setValidator(null);
                     bankNameInputTextField.setValidator(null);
                     bankIdInputTextField.setValidator(null);
                     branchIdInputTextField.setValidator(null);
                     accountNrInputTextField.setValidator(null);
                 }
                 holderNameInputTextField.resetValidation();
-                holderIdInputTextField.resetValidation();
                 bankNameInputTextField.resetValidation();
                 bankIdInputTextField.resetValidation();
                 branchIdInputTextField.resetValidation();
                 accountNrInputTextField.resetValidation();
-
 
                 boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
                 if (requiresHolderId) {
@@ -312,12 +312,21 @@ abstract class BankForm extends PaymentMethodForm {
                     holderNameInputTextField.setMinWidth(300);
                 } else {
                     holderNameInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
-                    holderIdInputTextField.setText("");
                 }
-                holderIdLabel.setVisible(requiresHolderId);
-                holderIdLabel.setManaged(requiresHolderId);
-                holderIdInputTextField.setVisible(requiresHolderId);
-                holderIdInputTextField.setManaged(requiresHolderId);
+
+                if (useHolderID) {
+                    if (!requiresHolderId)
+                        holderIdInputTextField.setText("");
+
+                    holderIdInputTextField.resetValidation();
+                    holderIdInputTextField.setVisible(requiresHolderId);
+                    holderIdInputTextField.setManaged(requiresHolderId);
+
+                    holderIdLabel.setText(BankUtil.getHolderIdLabel(countryCode));
+                    holderIdLabel.setVisible(requiresHolderId);
+                    holderIdLabel.setManaged(requiresHolderId);
+                }
+
 
                 boolean bankNameRequired = BankUtil.isBankNameRequired(countryCode);
                 bankNameTuple.first.setVisible(bankNameRequired);
@@ -438,6 +447,7 @@ abstract class BankForm extends PaymentMethodForm {
         holderNameInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
         holderNameInputTextField.setValidator(inputValidator);
 
+        useHolderID = true;
         holderIdLabel = tuple.third;
         holderIdLabel.setVisible(false);
         holderIdLabel.setManaged(false);
@@ -508,7 +518,7 @@ abstract class BankForm extends PaymentMethodForm {
             if (BankUtil.isAccountTypeRequired(countryCode))
                 result &= bankAccountContractData.getAccountType() != null;
 
-            if (BankUtil.isHolderIdRequired(countryCode))
+            if (useHolderID && BankUtil.isHolderIdRequired(countryCode))
                 result &= holderIdInputTextField.getValidator().validate(bankAccountContractData.getHolderTaxId()).isValid;
         }
         allInputsValid.set(result);
