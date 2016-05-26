@@ -18,6 +18,7 @@
 package io.bitsquare.user;
 
 import io.bitsquare.app.BitsquareEnvironment;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
@@ -95,7 +96,7 @@ public final class Preferences implements Persistable {
 
     // Persisted fields
     private String btcDenomination = MonetaryFormat.CODE_BTC;
-    private boolean useAnimations = true;
+    private boolean useAnimations = DevFlags.STRESS_TEST_MODE ? false : true;
     private final ArrayList<FiatCurrency> fiatCurrencies;
     private final ArrayList<CryptoCurrency> cryptoCurrencies;
     private BlockChainExplorer blockChainExplorerMainNet;
