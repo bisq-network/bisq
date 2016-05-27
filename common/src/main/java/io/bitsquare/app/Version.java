@@ -32,7 +32,7 @@ public class Version {
     // VERSION = 0.3.5 -> P2P_NETWORK_VERSION = 2
     // VERSION = 0.4.0 -> P2P_NETWORK_VERSION = 3
     // VERSION = 0.4.2 -> P2P_NETWORK_VERSION = 4
-    public static final int P2P_NETWORK_VERSION = 4;
+    public static final int P2P_NETWORK_VERSION = DevFlags.STRESS_TEST_MODE ? 100 : 4;
 
     // The version nr. of the serialized data stored to disc. A change will break the serialization of old objects.
     // VERSION = 0.3.4 -> LOCAL_DB_VERSION = 1

@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.seed;
 
 import com.google.common.collect.Sets;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +34,10 @@ public class SeedNodesRepository {
             new NodeAddress("b66vnevaljo6xt5a.onion:8000"),*/
 
             // v0.4.2
-            new NodeAddress("uadzuib66jupaept.onion:8000"),
-            new NodeAddress("hbma455xxbqhcuqh.onion:8000"),
-            new NodeAddress("wgthuiqn3aoiovbm.onion:8000"),
-            new NodeAddress("2zxtnprnx5wqr7a3.onion:8000"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("TBD.onion:8000") : new NodeAddress("uadzuib66jupaept.onion:8000"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("TBD.onion:8000") : new NodeAddress("hbma455xxbqhcuqh.onion:8000"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("TBD.onion:8000") : new NodeAddress("wgthuiqn3aoiovbm.onion:8000"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("TBD.onion:8000") : new NodeAddress("2zxtnprnx5wqr7a3.onion:8000"),
 
             // testnet
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),
