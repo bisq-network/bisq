@@ -338,7 +338,7 @@ public abstract class Trade implements Tradable, Model {
         return state.getPhase() != null && state.getPhase().ordinal() >= Phase.TAKER_FEE_PAID.ordinal();
     }
 
-    public boolean isDepositFeePaid() {
+    public boolean isDepositPaid() {
         return state.getPhase() != null && state.getPhase().ordinal() >= Phase.DEPOSIT_PAID.ordinal();
     }
 

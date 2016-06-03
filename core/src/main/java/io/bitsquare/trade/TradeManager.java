@@ -179,7 +179,7 @@ public class TradeManager {
         List<Trade> toRemove = new ArrayList<>();
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
-            if (trade.isDepositFeePaid()) {
+            if (trade.isDepositPaid() || (trade.isTakerFeePaid() && trade.errorMessageProperty().get() == null)) {
                 initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
                 trade.updateDepositTxFromWallet();
             } else if (trade.isTakerFeePaid()) {
