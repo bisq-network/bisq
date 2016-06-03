@@ -103,8 +103,8 @@ public final class MailboxStoragePayload implements StoragePayload {
     public String toString() {
         return "MailboxStoragePayload{" +
                 "prefixedSealedAndSignedMessage=" + prefixedSealedAndSignedMessage +
-                ", senderStoragePublicKey.hashCode()=" + senderPubKeyForAddOperation.hashCode() +
-                ", receiverStoragePublicKey.hashCode()=" + receiverPubKeyForRemoveOperation.hashCode() +
+                ", senderPubKeyForAddOperation.hashCode()=" + (senderPubKeyForAddOperation != null ? senderPubKeyForAddOperation.hashCode() : "null") +
+                ", receiverPubKeyForRemoveOperation.hashCode()=" + (receiverPubKeyForRemoveOperation != null ? receiverPubKeyForRemoveOperation.hashCode() : "null") +
                 '}';
     }
 }

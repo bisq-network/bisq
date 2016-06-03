@@ -696,7 +696,7 @@ public class Connection implements MessageListener {
                             exceeds = size > MAX_MSG_SIZE_GET_DATA;
                         else
                             exceeds = size > MAX_MSG_SIZE;
-                        
+
                         if (exceeds)
                             log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, message);
 
@@ -793,7 +793,8 @@ public class Connection implements MessageListener {
                     } catch (Throwable t) {
                         t.printStackTrace();
                         stop();
-                        sharedModel.handleConnectionException(new Exception(t));
+                        if (sharedModel != null)
+                            sharedModel.handleConnectionException(new Exception(t));
                     }
                 }
             } catch (Throwable t) {
