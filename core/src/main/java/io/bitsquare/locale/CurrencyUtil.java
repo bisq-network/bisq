@@ -72,11 +72,13 @@ public class CurrencyUtil {
     // https://forum.bitsquare.io/t/how-to-add-your-favorite-altcoin/
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
+        result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("DAO", "DAO"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
-        result.add(new CryptoCurrency("XMR", "Monero"));
+        result.add(new CryptoCurrency("DAO", "DAO", true));
+        result.add(new CryptoCurrency("MKR", "Maker", true));
+        result.add(new CryptoCurrency("DGD", "DigixDAO Tokens", true));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
@@ -88,7 +90,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
         result.add(new CryptoCurrency("GEMZ", "Gemz"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
-        result.add(new CryptoCurrency("MKR", "Maker"));
         result.add(new CryptoCurrency("BLK", "Blackcoin"));
         result.add(new CryptoCurrency("FCT", "Factom"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
@@ -129,7 +130,7 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("DAO", "DAO"));
+        result.add(new CryptoCurrency("DAO", "DAO", true));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("DASH", "Dash"));
