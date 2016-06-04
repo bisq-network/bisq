@@ -176,7 +176,8 @@ public class BroadcastHandler implements PeerManager.Listener {
                                 resultHandler.onCompleted(BroadcastHandler.this);
                             }
                         } else {
-                            onFault("stopped at onSuccess: " + errorMessage);
+                            // TODO investigate why that is called very often at seed nodes
+                            onFault("stopped at onSuccess: " + errorMessage, false);
                         }
                     }
 
