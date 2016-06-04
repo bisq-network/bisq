@@ -30,6 +30,7 @@ import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
+import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountFactory;
@@ -126,7 +127,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
         TradeCurrency selectedTradeCurrency = paymentAccount.getSelectedTradeCurrency();
         String code = selectedTradeCurrency.getCode();
-        if (code.equals("MKR") || code.equals("DAO")) {
+        if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
             new Popup().information("Please be sure that you follow the requirements for the usage of " +
                     selectedTradeCurrency.getCodeAndName() + " wallets as described on the " +
                     selectedTradeCurrency.getName() + " web page.\n" +
@@ -158,7 +159,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     .closeButtonText("I understand")
                     .show();
         }
-        
+
         if (!model.getPaymentAccounts().stream().filter(e -> {
             if (e.getAccountName() != null)
                 return e.getAccountName().equals(paymentAccount.getAccountName());

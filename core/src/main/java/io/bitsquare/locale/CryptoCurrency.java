@@ -22,13 +22,22 @@ import io.bitsquare.app.Version;
 public final class CryptoCurrency extends TradeCurrency {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+    private boolean isAsset;
 
     public CryptoCurrency(String currencyCode, String name) {
+        this(currencyCode, name, false);
+    }
+
+    public CryptoCurrency(String currencyCode, String name, boolean isAsset) {
         super(currencyCode, name);
+        this.isAsset = isAsset;
     }
 
     public CryptoCurrency(String currencyCode, String name, String symbol) {
         super(currencyCode, name, symbol);
     }
 
+    public boolean isAsset() {
+        return isAsset;
+    }
 }
