@@ -57,6 +57,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.controlsfx.dialog.Dialogs;
@@ -116,7 +117,11 @@ public class BitsquareApp extends Application {
                 log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
                 log.error("Uncaught Exception throwableMessage= " + throwable.getMessage());
                 throwable.printStackTrace();
-                UserThread.execute(() -> showErrorPopup(throwable, false));
+                if (throwable instanceof ArrayIndexOutOfBoundsException) {
+                    log.error("StackTrace:\n" + ExceptionUtils.getStackTrace(throwable));
+                } else {
+                    UserThread.execute(() -> showErrorPopup(throwable, false));
+                }
             }
         };
         Thread.setDefaultUncaughtExceptionHandler(handler);
