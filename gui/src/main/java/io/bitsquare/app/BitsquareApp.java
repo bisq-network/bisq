@@ -115,10 +115,11 @@ public class BitsquareApp extends Application {
                 log.error(throwable.getMessage());
             } else {
                 log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
-                log.error("Uncaught Exception throwableMessage= " + throwable.getMessage());
+                log.error("throwableMessage= " + throwable.getMessage());
+                log.error("throwableClass= " + throwable.getClass());
                 throwable.printStackTrace();
                 if (throwable instanceof ArrayIndexOutOfBoundsException) {
-                    log.error("StackTrace:\n" + ExceptionUtils.getStackTrace(throwable));
+                    log.error("Stack trace:\n" + ExceptionUtils.getStackTrace(throwable));
                 } else {
                     UserThread.execute(() -> showErrorPopup(throwable, false));
                 }
