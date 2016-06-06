@@ -40,7 +40,7 @@ import static io.bitsquare.gui.util.FormBuilder.addMultilineLabel;
 public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
     private static final Logger log = LoggerFactory.getLogger(SelectDepositTxWindow.class);
     private ComboBox<Transaction> transactionsComboBox;
-    private List<Transaction> transaction;
+    private List<Transaction> transactions;
     private Optional<Consumer<Transaction>> selectHandlerOptional;
 
 
@@ -73,7 +73,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
     }
 
     public SelectDepositTxWindow transactions(List<Transaction> transaction) {
-        this.transaction = transaction;
+        this.transactions = transaction;
         return this;
     }
 
@@ -110,7 +110,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
                 return null;
             }
         });
-        transactionsComboBox.setItems(FXCollections.observableArrayList(transaction));
+        transactionsComboBox.setItems(FXCollections.observableArrayList(transactions));
         transactionsComboBox.setOnAction(event -> {
             selectHandlerOptional.get().accept(transactionsComboBox.getSelectionModel().getSelectedItem());
             hide();
