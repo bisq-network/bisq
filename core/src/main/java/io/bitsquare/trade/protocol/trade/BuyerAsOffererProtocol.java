@@ -54,7 +54,8 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
 
         // If we are after the time lock state we need to setup the listener again
         Trade.State tradeState = trade.getState();
-        if ((tradeState.getPhase() == Trade.Phase.FIAT_RECEIVED || tradeState.getPhase() == Trade.Phase.PAYOUT_PAID) && tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
+        Trade.Phase phase = tradeState.getPhase();
+        if (trade.getPayoutTx() != null && (phase == Trade.Phase.FIAT_RECEIVED || phase == Trade.Phase.PAYOUT_PAID) && tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
 
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
