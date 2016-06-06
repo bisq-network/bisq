@@ -507,6 +507,15 @@ public class DisputeManager {
 
                                         dispute.setDisputePayoutTxId(transaction.getHashAsString());
                                         sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
+
+                                        // set state after payout as we call swapTradeEntryToAvailableEntry 
+                                        if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())
+                                            tradeManager.closeDisputedTrade(dispute.getTradeId());
+                                        else {
+                                            Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
+                                            if (openOfferOptional.isPresent())
+                                                openOfferManager.closeOpenOffer(openOfferOptional.get().getOffer());
+                                        }
                                     }
 
                                     @Override
@@ -517,6 +526,7 @@ public class DisputeManager {
                                 });
                             } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                                 e.printStackTrace();
+                                log.error("Error at traderSignAndFinalizeDisputedPayoutTx " + e.getMessage());
                             }
                         } else {
                             log.warn("DepositTx is null. TradeId = " + disputeResult.tradeId);
@@ -524,15 +534,6 @@ public class DisputeManager {
                     }
                 } else {
                     log.warn("We got a dispute msg what we have already stored. TradeId = " + disputeResult.tradeId);
-                }
-
-                // set state after payout as we call swapTradeEntryToAvailableEntry 
-                if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())
-                    tradeManager.closeDisputedTrade(dispute.getTradeId());
-                else {
-                    Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
-                    if (openOfferOptional.isPresent())
-                        openOfferManager.closeOpenOffer(openOfferOptional.get().getOffer());
                 }
             } else {
                 log.warn("We got a dispute result msg but we don't have a matching dispute. TradeId = " + disputeResult.tradeId);
