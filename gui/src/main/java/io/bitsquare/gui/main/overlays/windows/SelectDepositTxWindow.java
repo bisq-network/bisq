@@ -72,8 +72,8 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         return this;
     }
 
-    public SelectDepositTxWindow transactions(List<Transaction> transaction) {
-        this.transactions = transaction;
+    public SelectDepositTxWindow transactions(List<Transaction> transactions) {
+        this.transactions = transactions;
         return this;
     }
 
