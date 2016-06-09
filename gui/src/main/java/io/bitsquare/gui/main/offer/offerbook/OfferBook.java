@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
@@ -56,8 +57,12 @@ public class OfferBook {
             @Override
             public void onAdded(Offer offer) {
                 OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
-                if (!offerBookListItems.contains(offerBookListItem))
+                if (!offerBookListItems.contains(offerBookListItem)) {
                     offerBookListItems.add(offerBookListItem);
+
+                    if (DevFlags.STRESS_TEST_MODE)
+                        System.err.println("Offer added: Nr. of offers = " + offerBookListItems.size());
+                }
             }
 
             @Override
@@ -72,8 +77,12 @@ public class OfferBook {
                 if (candidate.isPresent()) {
                     OfferBookListItem item = candidate.get();
                     synchronized (offerBookListItems) {
-                        if (offerBookListItems.contains(item))
+                        if (offerBookListItems.contains(item)) {
                             offerBookListItems.remove(item);
+
+                            if (DevFlags.STRESS_TEST_MODE)
+                                System.err.println("Offer removed: Nr. of offers = " + offerBookListItems.size());
+                        }
                     }
                 }
             }
@@ -94,6 +103,9 @@ public class OfferBook {
         }
 
         offerBookListItems.addAll(list);
+
+        if (DevFlags.STRESS_TEST_MODE)
+            System.err.println("Offer filled: Nr. of offers = " + offerBookListItems.size());
 
         log.debug("offerBookListItems " + offerBookListItems.size());
     }
