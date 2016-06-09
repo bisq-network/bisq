@@ -102,13 +102,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       @Named(ProgramArguments.TOR_DIR) File torDir,
                       @Named(ProgramArguments.USE_LOCALHOST) boolean useLocalhost,
                       @Named(ProgramArguments.NETWORK_ID) int networkId,
+                      @Named(ProgramArguments.MAX_CONNECTIONS) int maxConnections,
                       @Named("storage.dir") File storageDir,
                       Clock clock,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
         this(
                 seedNodesRepository,
-                port, MAX_CONNECTIONS_DEFAULT,
+                port,
+                maxConnections,
                 torDir,
                 useLocalhost,
                 networkId,

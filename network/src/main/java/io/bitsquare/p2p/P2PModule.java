@@ -50,6 +50,9 @@ public class P2PModule extends AppModule {
         Integer port = env.getProperty(ProgramArguments.PORT_KEY, int.class, 9999);
         bind(int.class).annotatedWith(Names.named(ProgramArguments.PORT_KEY)).toInstance(port);
 
+        Integer maxConnections = env.getProperty(ProgramArguments.MAX_CONNECTIONS, int.class, P2PService.MAX_CONNECTIONS_DEFAULT);
+        bind(int.class).annotatedWith(Names.named(ProgramArguments.MAX_CONNECTIONS)).toInstance(maxConnections);
+
         Integer networkId = env.getProperty(ProgramArguments.NETWORK_ID, int.class, 1);
         bind(int.class).annotatedWith(Names.named(ProgramArguments.NETWORK_ID)).toInstance(networkId);
     }
