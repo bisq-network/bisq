@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.peers;
 
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
@@ -211,6 +212,9 @@ public class PeerManager implements ConnectionListener {
         Set<Connection> allConnections = networkNode.getAllConnections();
         int size = allConnections.size();
         log.info("We have {} connections open. Our limit is {}", size, limit);
+        if (DevFlags.STRESS_TEST_MODE)
+            System.err.println("Connections = " + size);
+        
         if (size > limit) {
             log.info("We have too many connections open.\n\t" +
                     "Lets try first to remove the inbound connections of type PEER.");
