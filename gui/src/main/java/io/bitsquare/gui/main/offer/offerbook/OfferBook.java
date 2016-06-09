@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -61,7 +63,7 @@ public class OfferBook {
                     offerBookListItems.add(offerBookListItem);
 
                     if (DevFlags.STRESS_TEST_MODE)
-                        System.err.println("Offer added: Nr. of offers = " + offerBookListItems.size());
+                        System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer added: Nr. of offers = " + offerBookListItems.size());
                 }
             }
 
@@ -81,7 +83,7 @@ public class OfferBook {
                             offerBookListItems.remove(item);
 
                             if (DevFlags.STRESS_TEST_MODE)
-                                System.err.println("Offer removed: Nr. of offers = " + offerBookListItems.size());
+                                System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer removed: Nr. of offers = " + offerBookListItems.size());
                         }
                     }
                 }
@@ -105,7 +107,7 @@ public class OfferBook {
         offerBookListItems.addAll(list);
 
         if (DevFlags.STRESS_TEST_MODE)
-            System.err.println("Offer filled: Nr. of offers = " + offerBookListItems.size());
+            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer filled: Nr. of offers = " + offerBookListItems.size());
 
         log.debug("offerBookListItems " + offerBookListItems.size());
     }

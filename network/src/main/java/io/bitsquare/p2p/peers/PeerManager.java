@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -213,7 +214,7 @@ public class PeerManager implements ConnectionListener {
         int size = allConnections.size();
         log.info("We have {} connections open. Our limit is {}", size, limit);
         if (DevFlags.STRESS_TEST_MODE)
-            System.err.println("Connections = " + size);
+            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Connections = " + size);
         
         if (size > limit) {
             log.info("We have too many connections open.\n\t" +
