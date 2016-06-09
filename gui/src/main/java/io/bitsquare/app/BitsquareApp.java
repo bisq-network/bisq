@@ -102,7 +102,7 @@ public class BitsquareApp extends Application {
         log.info("Log files under: " + logPath);
         Version.printVersion();
         Utilities.printSysInfo();
-        Log.setLevel(!DevFlags.IS_RELEASE_VERSION);
+        Log.setLevel(!DevFlags.IS_RELEASE_VERSION && !DevFlags.STRESS_TEST_MODE);
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
