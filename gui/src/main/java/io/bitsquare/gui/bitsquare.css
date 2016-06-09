@@ -460,6 +460,12 @@ textfield */
     -fx-text-fill: #333000;
 }
 
+/* Offer book */
+#num-offers {
+    -fx-font-size: 12;
+}
+
+
 /* Create offer */
 #direction-icon-label {
     -fx-font-weight: bold;

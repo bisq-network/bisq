@@ -43,6 +43,7 @@ import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
@@ -75,6 +76,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private OfferView.OfferActionHandler offerActionHandler;
     private int gridRow = 0;
     private TitledGroupBg offerBookTitle;
+    private Label nrOfOffersLabel;
+    private ListChangeListener<OfferBookListItem> offerListListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +184,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
         avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().hostName.compareTo(o2.getOffer().getOwnerNodeAddress().hostName));
 
-        createOfferButton = addButton(root, ++gridRow, "");
+        nrOfOffersLabel = new Label("Nr. of offers: -");
+        nrOfOffersLabel.setId("num-offers");
+        GridPane.setHalignment(nrOfOffersLabel, HPos.LEFT);
+        GridPane.setVgrow(nrOfOffersLabel, Priority.NEVER);
+        GridPane.setValignment(nrOfOffersLabel, VPos.TOP);
+        GridPane.setRowIndex(nrOfOffersLabel, ++gridRow);
+        GridPane.setColumnIndex(nrOfOffersLabel, 0);
+        GridPane.setMargin(nrOfOffersLabel, new Insets(10, 0, 0, -5));
+        root.getChildren().add(nrOfOffersLabel);
+
+        createOfferButton = addButton(root, gridRow, "");
         createOfferButton.setMinHeight(40);
         createOfferButton.setPadding(new Insets(0, 20, 0, 20));
         createOfferButton.setGraphicTextGap(10);
@@ -233,6 +246,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         tableView.setItems(model.getOfferList());
         priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
+
+        offerListListener = c -> nrOfOffersLabel.setText("Nr. of offers: " + model.getOfferList().size());
+        model.getOfferList().addListener(offerListListener);
+        nrOfOffersLabel.setText("Nr. of offers: " + model.getOfferList().size());
     }
 
     @Override
@@ -245,6 +262,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         priceColumn.sortableProperty().unbind();
         amountColumn.sortableProperty().unbind();
+        model.getOfferList().removeListener(offerListListener);
     }
 
 
