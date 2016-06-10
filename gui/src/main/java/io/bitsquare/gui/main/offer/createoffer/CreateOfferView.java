@@ -28,6 +28,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.*;
+import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -91,7 +92,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
     private TitledGroupBg payFundsPane;
-    private ProgressIndicator spinner;
+    private ConfidenceProgressIndicator spinner;
     private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, placeOfferButton;
     private InputTextField amountTextField, minAmountTextField, fixedPriceTextField, marketBasedPriceTextField, volumeTextField;
     private TextField currencyTextField;
@@ -871,7 +872,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundFromExternalWalletButton = new Button("Open your external wallet for funding");
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
-        spinner = new ProgressIndicator(0);
+        spinner = new ConfidenceProgressIndicator(0);
         spinner.setPrefHeight(18);
         spinner.setPrefWidth(18);
         spinnerInfoLabel = new Label();
