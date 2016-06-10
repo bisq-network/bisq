@@ -5,6 +5,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Profiler;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.peerexchange.Peer;
@@ -214,7 +215,7 @@ public class PeerManager implements ConnectionListener {
         int size = allConnections.size();
         log.info("We have {} connections open. Our limit is {}", size, limit);
         if (DevFlags.STRESS_TEST_MODE)
-            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Connections = " + size);
+            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Connections = " + size + " / Memory(MB): " + Profiler.getUsedMemory());
         
         if (size > limit) {
             log.info("We have too many connections open.\n\t" +
