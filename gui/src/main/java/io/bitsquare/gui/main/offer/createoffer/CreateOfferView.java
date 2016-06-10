@@ -581,7 +581,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         errorMessageListener = (o, oldValue, newValue) -> {
             if (newValue != null)
                 UserThread.runAfter(() -> new Popup().error(BSResources.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()) +
-                        "\n\nThere have no funds left your wallet yet.\n" +
+                        "\n\nNo funds have left your wallet yet.\n" +
                         "Please try to restart you application and check your network connection to see if you can resolve the issue.")
                         .show(), 100, TimeUnit.MILLISECONDS);
         };
