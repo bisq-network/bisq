@@ -1,7 +1,7 @@
 #!/bin/bash
 
 logpath=/Users/bs/bitsquare/logs
-datapath=/Users/bs/.local/shared
+datapath=/Users/bs/.local/share
 
 mkdir -p $logpath
 
