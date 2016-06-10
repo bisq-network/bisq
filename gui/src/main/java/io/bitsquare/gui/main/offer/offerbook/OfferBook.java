@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.offer.offerbook;
 
 import io.bitsquare.app.DevFlags;
+import io.bitsquare.common.util.Profiler;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
@@ -63,7 +64,7 @@ public class OfferBook {
                     offerBookListItems.add(offerBookListItem);
 
                     if (DevFlags.STRESS_TEST_MODE)
-                        System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer added: Nr. of offers = " + offerBookListItems.size());
+                        System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer added: Nr. of offers = " + offerBookListItems.size() + " / Memory(MB): " + Profiler.getUsedMemory());
                 }
             }
 
@@ -83,7 +84,7 @@ public class OfferBook {
                             offerBookListItems.remove(item);
 
                             if (DevFlags.STRESS_TEST_MODE)
-                                System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer removed: Nr. of offers = " + offerBookListItems.size());
+                                System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer removed: Nr. of offers = " + offerBookListItems.size() + " / Memory(MB): " + Profiler.getUsedMemory());
                         }
                     }
                 }
@@ -107,7 +108,7 @@ public class OfferBook {
         offerBookListItems.addAll(list);
 
         if (DevFlags.STRESS_TEST_MODE)
-            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer filled: Nr. of offers = " + offerBookListItems.size());
+            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer filled: Nr. of offers = " + offerBookListItems.size() + " / Memory(MB): " + Profiler.getUsedMemory());
 
         log.debug("offerBookListItems " + offerBookListItems.size());
     }

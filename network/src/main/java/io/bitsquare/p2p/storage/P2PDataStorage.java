@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.Timer;
@@ -9,6 +10,7 @@ import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.persistance.Persistable;
+import io.bitsquare.common.util.Profiler;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
@@ -32,6 +34,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -159,6 +162,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                 if (containsKey) {
                                     log.info("We remove the data as the data owner got disconnected with " +
                                             "closeConnectionReason=" + closeConnectionReason);
+                                    if (DevFlags.STRESS_TEST_MODE)
+                                        System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) +
+                                                " - We remove the data as the data owner got disconnected with " +
+                                                "closeConnectionReason=" + closeConnectionReason +
+                                                " / isIntended=" + closeConnectionReason.isIntended +
+                                                " / Memory(MB): " + Profiler.getUsedMemory());
                                     doRemoveProtectedExpirableData(protectedData, hashOfPayload);
                                 } else {
                                     log.debug("Remove data ignored as we don't have an entry for that data.");
