@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-public class Profiler {
-    private static final Logger log = LoggerFactory.getLogger(Profiler.class);
+public class GUIProfiler {
+    private static final Logger log = LoggerFactory.getLogger(GUIProfiler.class);
 
     private static final Stopwatch globalStopwatch = Stopwatch.createStarted();
     private static final ThreadLocal<Stopwatch> threadStopwatch = ThreadLocal.withInitial(Stopwatch::createStarted);
