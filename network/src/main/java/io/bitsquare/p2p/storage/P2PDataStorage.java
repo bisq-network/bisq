@@ -168,7 +168,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                                 "closeConnectionReason=" + closeConnectionReason +
                                                 " / isIntended=" + closeConnectionReason.isIntended +
                                                 " / Memory(MB): " + Profiler.getUsedMemory());
-                                    doRemoveProtectedExpirableData(protectedData, hashOfPayload);
+
+                                    // TODO We get closeConnectionReason TERMINATED which removes offers which should nto be removed
+                                    // TODO investigate why EOFException happens
+                                    //doRemoveProtectedExpirableData(protectedData, hashOfPayload);
+                                    
                                 } else {
                                     log.debug("Remove data ignored as we don't have an entry for that data.");
                                 }
