@@ -19,6 +19,7 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
@@ -67,11 +68,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     public static void blurLight() {
-        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 5);
+        if (!DevFlags.STRESS_TEST_MODE)
+            transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 5);
     }
 
     public static void blurUltraLight() {
-        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
+        if (!DevFlags.STRESS_TEST_MODE)
+            transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
     }
 
     public static void darken() {
@@ -335,7 +338,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
 
-        btcSyncIndicator = new ProgressBar(-1);
+        btcSyncIndicator = new ProgressBar();
         btcSyncIndicator.setPrefWidth(120);
         btcSyncIndicator.progressProperty().bind(model.btcSyncProgress);
 
