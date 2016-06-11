@@ -7,7 +7,7 @@ mkdir -p $logpath
 
 cd ../../gui/target
 
-delay=5
+delay=30
 for i in `seq 1 10`;
   do
 	echo $i
