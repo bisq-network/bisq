@@ -8,4 +8,4 @@ find . -name \*SequenceNumberMap -type f -delete
 find . -name \*PersistedPeers -type f -delete
 find . -name \*bitsquare.log -type f -delete
 find . -name \*__MACOSX -type d -delete
-find . -name \*backup -type d -exec rm -R -f {}
+find . -name \*backup -type d -exec rm -R -f {} +
