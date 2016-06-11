@@ -51,6 +51,11 @@ public class PeerManager implements ConnectionListener {
         maxConnectionsPeer = maxConnections + 4;
         maxConnectionsNonDirect = maxConnections + 8;
         maxConnectionsAbsolute = maxConnections + 18;
+
+        if (DevFlags.STRESS_TEST_MODE)
+            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) +
+                    " - maxConnections = " + maxConnections +
+                    " / maxConnectionsAbsolute = " + maxConnectionsAbsolute);
     }
 
 
@@ -216,7 +221,7 @@ public class PeerManager implements ConnectionListener {
         log.info("We have {} connections open. Our limit is {}", size, limit);
         if (DevFlags.STRESS_TEST_MODE)
             System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Connections = " + size + " / Memory(MB): " + Profiler.getUsedMemory());
-        
+
         if (size > limit) {
             log.info("We have too many connections open.\n\t" +
                     "Lets try first to remove the inbound connections of type PEER.");
