@@ -23,7 +23,7 @@ public enum CloseConnectionReason {
     UNKNOWN_PEER_ADDRESS(true, true),
 
     // illegal requests
-    RULE_VIOLATION(true, true);
+    RULE_VIOLATION(true, false);
 
     public final boolean sendCloseMessage;
     public boolean isIntended;
