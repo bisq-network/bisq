@@ -7,8 +7,9 @@ mkdir -p $logpath
 
 cd ../../gui/target
 
-delay=30
-for i in `seq 1 10`;
+delay=40
+# edit start end index
+for i in `seq 0 0`;
   do
 	echo $i
 	nohup java -jar shaded.jar --app.name=BS_$i --maxConnections=12 >/dev/null 2>$logpath/ST_$i.log &  
