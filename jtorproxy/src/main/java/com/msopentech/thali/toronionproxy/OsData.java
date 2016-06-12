@@ -87,12 +87,18 @@ public class OsData {
                 throw new RuntimeException("Uname returned error code " + exit);
             }
 
+            System.out.println("INFO: uname -m call results in:" + unameOutput);
+
             if (unameOutput.matches("i.86")) {
                 return OsType.Linux32;
             }
             if (unameOutput.compareTo("x86_64") == 0) {
                 return OsType.Linux64;
             }
+
+            if (unameOutput.contains("arm"))
+                return unameOutput.contains("64") ? OsType.Linux64 : OsType.Linux32;
+
             throw new RuntimeException("Could not understand uname output, not sure what bitness");
         } catch (IOException e) {
             throw new RuntimeException("Uname failure", e);
