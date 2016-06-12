@@ -51,11 +51,6 @@ public class PeerManager implements ConnectionListener {
         maxConnectionsPeer = maxConnections + 4;
         maxConnectionsNonDirect = maxConnections + 8;
         maxConnectionsAbsolute = maxConnections + 18;
-
-        if (DevFlags.STRESS_TEST_MODE)
-            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) +
-                    " - maxConnections = " + maxConnections +
-                    " / maxConnectionsAbsolute = " + maxConnectionsAbsolute);
     }
 
 
