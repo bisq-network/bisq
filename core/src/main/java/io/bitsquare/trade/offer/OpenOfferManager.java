@@ -18,6 +18,7 @@
 package io.bitsquare.trade.offer;
 
 import com.google.inject.Inject;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
@@ -67,8 +68,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = 10;
     private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 10;
-    private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(15);
-    private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(4);
+    private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 6 : 12);
+    private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 2 : 4);
 
     private final KeyRing keyRing;
     private final User user;
