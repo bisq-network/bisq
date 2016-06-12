@@ -133,6 +133,8 @@ public class Utilities {
             return arch.endsWith("64")
                     || wow64Arch != null && wow64Arch.endsWith("64")
                     ? "64" : "32";
+        } else if (osArch.contains("arm")) {
+            return osArch.contains("64") ? "64" : "32";
         } else if (isLinux()) {
             return osArch.startsWith("i") ? "32" : "64";
         } else {
