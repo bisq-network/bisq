@@ -24,7 +24,11 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
+import io.bitsquare.common.util.Profiler;
 import org.slf4j.LoggerFactory;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Log {
     private static SizeBasedTriggeringPolicy triggeringPolicy;
@@ -104,5 +108,12 @@ public class Log {
             String className = stackTraceElement.getClassName();
             LoggerFactory.getLogger(className).trace("Called: {} [{}]", methodName, message);
         }
+    }
+
+    public static void logIfStressTests(String msg) {
+        if (DevFlags.STRESS_TEST_MODE)
+            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) +
+                    msg +
+                    " / Memory(MB): " + Profiler.getUsedMemory());
     }
 }

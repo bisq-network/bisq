@@ -17,8 +17,7 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
-import io.bitsquare.app.DevFlags;
-import io.bitsquare.common.util.Profiler;
+import io.bitsquare.app.Log;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
@@ -28,8 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -63,8 +60,7 @@ public class OfferBook {
                 if (!offerBookListItems.contains(offerBookListItem)) {
                     offerBookListItems.add(offerBookListItem);
 
-                    if (DevFlags.STRESS_TEST_MODE)
-                        System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer added: Nr. of offers = " + offerBookListItems.size() + " / Memory(MB): " + Profiler.getUsedMemory());
+                    Log.logIfStressTests("Offer added: Nr. of offers = " + offerBookListItems.size());
                 }
             }
 
@@ -83,8 +79,7 @@ public class OfferBook {
                         if (offerBookListItems.contains(item)) {
                             offerBookListItems.remove(item);
 
-                            if (DevFlags.STRESS_TEST_MODE)
-                                System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer removed: Nr. of offers = " + offerBookListItems.size() + " / Memory(MB): " + Profiler.getUsedMemory());
+                            Log.logIfStressTests("Offer removed: Nr. of offers = " + offerBookListItems.size());
                         }
                     }
                 }
@@ -107,8 +102,7 @@ public class OfferBook {
 
         offerBookListItems.addAll(list);
 
-        if (DevFlags.STRESS_TEST_MODE)
-            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Offer filled: Nr. of offers = " + offerBookListItems.size() + " / Memory(MB): " + Profiler.getUsedMemory());
+        Log.logIfStressTests("Offer filled: Nr. of offers = " + offerBookListItems.size());
 
         log.debug("offerBookListItems " + offerBookListItems.size());
     }

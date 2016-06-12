@@ -1,11 +1,9 @@
 package io.bitsquare.p2p.peers;
 
-import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.util.Profiler;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.peerexchange.Peer;
@@ -15,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -158,6 +155,7 @@ public class PeerManager implements ConnectionListener {
 
     @Override
     public void onConnection(Connection connection) {
+        Log.logIfStressTests("onConnection to peer " + networkNode.getAllConnections().size() + (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown"));
         if (isSeedNode(connection))
             connection.setPeerType(Connection.PeerType.SEED_NODE);
 
@@ -172,6 +170,7 @@ public class PeerManager implements ConnectionListener {
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+        Log.logIfStressTests("onDisconnect of peer " + networkNode.getAllConnections().size() + (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown"));
         handleConnectionFault(connection);
 
         lostAllConnections = networkNode.getAllConnections().isEmpty();
@@ -214,8 +213,6 @@ public class PeerManager implements ConnectionListener {
         Set<Connection> allConnections = networkNode.getAllConnections();
         int size = allConnections.size();
         log.info("We have {} connections open. Our limit is {}", size, limit);
-        if (DevFlags.STRESS_TEST_MODE)
-            System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) + " - Connections = " + size + " / Memory(MB): " + Profiler.getUsedMemory());
 
         if (size > limit) {
             log.info("We have too many connections open.\n\t" +
