@@ -63,6 +63,10 @@ public class ProtectedStorageEntry implements Payload {
         creationTimeStamp = System.currentTimeMillis();
     }
 
+    public void backDate() {
+        creationTimeStamp -= storagePayload.getTTL() / 2;
+    }
+
     public void updateSequenceNumber(int sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
     }
