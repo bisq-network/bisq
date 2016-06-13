@@ -165,9 +165,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                             " / isIntended=" + closeConnectionReason.isIntended +
                                             " / peer=" + (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown"));
 
-                                    // TODO We get closeConnectionReason TERMINATED which removes offers which should not be removed
-                                    // TODO investigate why EOFException happens
-                                    doRemoveProtectedExpirableData(protectedData, hashOfPayload);
+                                    // We only set the data back by half of the TTL and remove the data only if is has 
+                                    // expired after tha back dating. 
+                                    // We might get connection drops which are not caused by the node going offline, so 
+                                    // we give more tolerance with that approach, giving the node the change to 
+                                    // refresh the TTL with a refresh message.
+                                    // We observed those issues during stress tests, but it might have been caused by the 
+                                    // test set up (many nodes/connections over 1 router)
+                                    // TODO investigate what causes the disconnections. 
+                                    // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException) 
+                                    protectedData.backDate();
+                                    if (protectedData.isExpired())
+                                        doRemoveProtectedExpirableData(protectedData, hashOfPayload);
                                 } else {
                                     log.debug("Remove data ignored as we don't have an entry for that data.");
                                 }
