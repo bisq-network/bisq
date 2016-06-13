@@ -37,7 +37,7 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class OfferAvailabilityProtocol {
     private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityProtocol.class);
 
-    private static final long TIMEOUT_SEC = 30;
+    private static final long TIMEOUT_SEC = 45;
 
     private final OfferAvailabilityModel model;
     private final ResultHandler resultHandler;
