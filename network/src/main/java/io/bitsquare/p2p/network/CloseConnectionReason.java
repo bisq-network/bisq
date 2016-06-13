@@ -32,4 +32,12 @@ public enum CloseConnectionReason {
         this.sendCloseMessage = sendCloseMessage;
         this.isIntended = isIntended;
     }
+
+    @Override
+    public String toString() {
+        return "CloseConnectionReason{" +
+                "sendCloseMessage=" + sendCloseMessage +
+                ", isIntended=" + isIntended +
+                "} " + super.toString();
+    }
 }
