@@ -124,6 +124,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SHIFT", "Shift"));
         result.add(new CryptoCurrency("ERC", "Europecoin"));
         result.add(new CryptoCurrency("POST", "PostCoin"));
+        result.add(new CryptoCurrency("LSK", "Lisk"));
         return result;
     }
 
