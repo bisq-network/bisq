@@ -324,7 +324,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             String appendMsg = "";
             switch (trade.getState().getPhase()) {
                 case PREPARATION:
-                    appendMsg = "\n\nThere have no funds left your wallet yet.\n" +
+                    appendMsg = "\n\nNo funds have left your wallet yet.\n" +
                             "Please try to restart you application and check your network connection to see if you can resolve the issue.";
                     break;
                 case TAKER_FEE_PAID:

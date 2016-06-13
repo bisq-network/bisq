@@ -159,6 +159,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                 if (containsKey) {
                                     log.info("We remove the data as the data owner got disconnected with " +
                                             "closeConnectionReason=" + closeConnectionReason);
+
+                                    Log.logIfStressTests("We remove the data as the data owner got disconnected with " +
+                                            "closeConnectionReason=" + closeConnectionReason +
+                                            " / isIntended=" + closeConnectionReason.isIntended +
+                                            " / peer=" + (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown"));
+
+                                    // TODO We get closeConnectionReason TERMINATED which removes offers which should not be removed
+                                    // TODO investigate why EOFException happens
                                     doRemoveProtectedExpirableData(protectedData, hashOfPayload);
                                 } else {
                                     log.debug("Remove data ignored as we don't have an entry for that data.");

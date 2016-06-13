@@ -110,7 +110,7 @@ public class MainViewModel implements ViewModel {
 
     // BTC network
     final StringProperty btcInfo = new SimpleStringProperty("Initializing");
-    final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(-1);
+    final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevFlags.STRESS_TEST_MODE ? 0 : -1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
     final StringProperty marketPrice = new SimpleStringProperty("N/A");
@@ -126,7 +126,7 @@ public class MainViewModel implements ViewModel {
     // P2P network
     final StringProperty p2PNetworkInfo = new SimpleStringProperty();
     private MonadicBinding<String> p2PNetworkInfoBinding;
-    final DoubleProperty splashP2PNetworkProgress = new SimpleDoubleProperty(-1);
+    final DoubleProperty splashP2PNetworkProgress = new SimpleDoubleProperty(DevFlags.STRESS_TEST_MODE ? 0 : -1);
     final StringProperty p2pNetworkWarnMsg = new SimpleStringProperty();
     final StringProperty p2PNetworkIconId = new SimpleStringProperty();
     final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();

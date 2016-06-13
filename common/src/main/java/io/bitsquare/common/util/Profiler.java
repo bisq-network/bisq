@@ -20,15 +20,24 @@ package io.bitsquare.common.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class Profiler {
+public class Profiler {
     private static final Logger log = LoggerFactory.getLogger(Profiler.class);
 
     public static void printSystemLoad(Logger log) {
+        String msg = printSystemLoadString();
+        log.info(msg);
+    }
+
+    public static String printSystemLoadString() {
+        long used = getUsedMemory();
+        return "System load (nr. threads/used memory (MB)): " + Thread.activeCount() + "/" + used;
+    }
+
+    public static long getUsedMemory() {
         Runtime runtime = Runtime.getRuntime();
         long free = runtime.freeMemory() / 1024 / 1024;
         long total = runtime.totalMemory() / 1024 / 1024;
-        long used = total - free;
-        log.info("System load (nr. threads/used memory (MB)): " + Thread.activeCount() + "/" + used);
+        return total - free;
     }
 
 }

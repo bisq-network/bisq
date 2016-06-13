@@ -20,6 +20,7 @@ package io.bitsquare.app;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.RegTestHost;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -106,6 +107,9 @@ public class BitsquareAppMain extends BitsquareExecutable {
         parser.accepts(ProgramArguments.USE_LOCALHOST, description("Use localhost network for development", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
+        parser.accepts(ProgramArguments.MAX_CONNECTIONS, description("Max. connections a peer will try to keep", P2PService.MAX_CONNECTIONS_DEFAULT))
+                .withRequiredArg()
+                .ofType(int.class);
         parser.accepts(BitcoinNetwork.KEY, description("Bitcoin network", BitcoinNetwork.DEFAULT))
                 .withRequiredArg()
                 .ofType(BitcoinNetwork.class)

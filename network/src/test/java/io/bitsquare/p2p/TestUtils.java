@@ -131,7 +131,7 @@ public class TestUtils {
         }
 
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost,
-                2, new File("dummy"), new Clock(), encryptionService, keyRing);
+                2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), new Clock(), encryptionService, keyRing);
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {

@@ -150,7 +150,7 @@ public class Utilities {
         log.info("JRE: " + System.getProperty("java.runtime.version", "-") + " (" + System.getProperty("java.vendor", "-") + ")");
         log.info("JVM: " + System.getProperty("java.vm.version", "-") + " (" + System.getProperty("java.vm.name", "-") + ")");
     }
-    
+
     public static String getJVMArchitecture() {
         return System.getProperty("sun.arch.data.model");
     }
