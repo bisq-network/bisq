@@ -134,7 +134,8 @@ public class Utilities {
                     || wow64Arch != null && wow64Arch.endsWith("64")
                     ? "64" : "32";
         } else if (osArch.contains("arm")) {
-            return osArch.contains("64") ? "64" : "32";
+            // armv8 is 64 bit, armv7l is 32 bit
+            return osArch.contains("64") || osArch.contains("v8") ? "64" : "32"; 
         } else if (isLinux()) {
             return osArch.startsWith("i") ? "32" : "64";
         } else {
