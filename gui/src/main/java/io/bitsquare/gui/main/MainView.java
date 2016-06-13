@@ -64,7 +64,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     public static void blur() {
-        transitions.blur(MainView.rootContainer);
+        if (!DevFlags.STRESS_TEST_MODE)
+            transitions.blur(MainView.rootContainer);
     }
 
     public static void blurLight() {
@@ -78,7 +79,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     public static void darken() {
-        transitions.darken(MainView.rootContainer, Transitions.DEFAULT_DURATION, false);
+        if (!DevFlags.STRESS_TEST_MODE)
+            transitions.darken(MainView.rootContainer, Transitions.DEFAULT_DURATION, false);
     }
 
     public static void removeEffect() {
