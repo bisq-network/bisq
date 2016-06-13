@@ -174,7 +174,8 @@ public class PeerManager implements ConnectionListener {
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.logIfStressTests("onDisconnect of peer " +
                 (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown") +
-                " / Nr. of connections: " + networkNode.getAllConnections().size());
+                " / Nr. of connections: " + networkNode.getAllConnections().size() +
+                " / closeConnectionReason: " + closeConnectionReason);
         handleConnectionFault(connection);
 
         lostAllConnections = networkNode.getAllConnections().isEmpty();
