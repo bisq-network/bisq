@@ -6,7 +6,7 @@
 # You may drop this under ``/etc/cron.hourly``.
 # Please make sure that your system can send emails.
 #
-# Requirements: coreutils, torify, netcat, mail.
+# Requirements: coreutils, tor, netcat, mail.
 #
 # Author: Ivan Vilata-i-Balaguer <ivan@selidor.net>
 
@@ -30,7 +30,7 @@ wgthuiqn3aoiovbm.onion:8000
 
 failing_seed_nodes=''
 for sn in $SEED_NODES; do
-    true | torify nc $(echo "$sn" | tr ':' ' ') > /dev/null 2>&1
+    torify nc -z $(echo "$sn" | tr ':' ' ') > /dev/null 2>&1
     if [ $? != 0 ]; then
         failing_seed_nodes="$failing_seed_nodes $sn"
     fi
