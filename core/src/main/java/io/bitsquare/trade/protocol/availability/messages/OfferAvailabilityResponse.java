@@ -18,22 +18,23 @@
 package io.bitsquare.trade.protocol.availability.messages;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.trade.protocol.availability.AvailabilityResult;
 
 public final class OfferAvailabilityResponse extends OfferMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final boolean isAvailable;
+    public final AvailabilityResult availabilityResult;
 
-    public OfferAvailabilityResponse(String offerId, boolean isAvailable) {
+    public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
         super(offerId);
-        this.isAvailable = isAvailable;
+        this.availabilityResult = availabilityResult;
     }
 
     @Override
     public String toString() {
         return "OfferAvailabilityResponse{" +
-                "isAvailable=" + isAvailable +
+                "availabilityResult=" + availabilityResult +
                 "} " + super.toString();
     }
 }

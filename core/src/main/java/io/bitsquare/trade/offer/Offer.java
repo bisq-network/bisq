@@ -30,6 +30,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.trade.exceptions.TradePriceOutOfToleranceException;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
 import javafx.beans.property.*;
@@ -378,6 +379,25 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
             }
         } else {
             return Fiat.valueOf(currencyCode, fiatPrice);
+        }
+    }
+
+    public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException, IllegalArgumentException {
+        checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
+        Fiat tradePriceAsFiat = Fiat.valueOf(getCurrencyCode(), takersTradePrice);
+        Fiat offerPriceAsFiat = getPrice();
+        checkArgument(offerPriceAsFiat != null, "offerPriceAsFiat must not be null");
+        double factor = (double) takersTradePrice / (double) offerPriceAsFiat.value;
+        // We allow max. 2 % difference between own offer price calculation and takers calculation.
+        // Market price might be different at offerers and takers side so we need a bit of tolerance.
+        // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations 
+        // from one provider.
+        if (Math.abs(1 - factor) > 0.02) {
+            String msg = "Taker's trade price is too far away from our calculated price based on the market price.\n" +
+                    "tradePriceAsFiat=" + tradePriceAsFiat.toFriendlyString() + "\n" +
+                    "offerPriceAsFiat=" + offerPriceAsFiat.toFriendlyString();
+            log.warn(msg);
+            throw new TradePriceOutOfToleranceException(msg);
         }
     }
 
