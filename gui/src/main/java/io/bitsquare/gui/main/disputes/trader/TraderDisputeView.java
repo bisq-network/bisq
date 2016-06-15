@@ -48,9 +48,15 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextAlignment;
@@ -68,9 +74,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
@@ -110,6 +114,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages;
     private Button sendButton;
     private Subscription inputTextAreaTextSubscription;
+    private EventHandler<KeyEvent> keyEventEventHandler;
+    private Scene scene;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -173,6 +179,66 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         };
 
         disputeDirectMessageListListener = c -> scrollToBottom();
+
+        keyEventEventHandler = event -> {
+            if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(event)) {
+                Map<String, List<Dispute>> map = new HashMap<>();
+                disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> {
+                    String tradeId = dispute.getTradeId();
+                    List<Dispute> list;
+                    if (!map.containsKey(tradeId))
+                        map.put(tradeId, new ArrayList<>());
+
+                    list = map.get(tradeId);
+                    list.add(dispute);
+                });
+                List<List<Dispute>> disputeGroups = new ArrayList<>();
+                map.entrySet().stream().forEach(entry -> {
+                    disputeGroups.add(entry.getValue());
+                });
+                disputeGroups.sort((o1, o2) -> !o1.isEmpty() && !o2.isEmpty() ? o1.get(0).getOpeningDate().compareTo(o2.get(0).getOpeningDate()) : 0);
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("Summary of all disputes (Nr. of disputes: " + disputeGroups.size() + ")\n\n");
+                disputeGroups.stream().forEach(disputeGroup -> {
+                    Dispute dispute0 = disputeGroup.get(0);
+                    stringBuilder
+                            .append("##########################################################################################/\n")
+                            .append("## Trade ID: ")
+                            .append(dispute0.getTradeId())
+                            .append("\n")
+                            .append("## Date: ")
+                            .append(formatter.formatDateTime(dispute0.getOpeningDate()))
+                            .append("\n")
+                            .append("## Is support ticket: ")
+                            .append(dispute0.isSupportTicket())
+                            .append("\n##########################################################################################/\n")
+                            .append("\n");
+                    disputeGroup.stream().forEach(dispute -> {
+                        stringBuilder
+                                .append("*******************************************************************************************\n")
+                                .append("** Traders ID: ")
+                                .append(dispute.getTraderId())
+                                .append("\n*******************************************************************************************\n")
+                                .append("\n");
+                        dispute.getDisputeCommunicationMessagesAsObservableList().stream().forEach(m -> {
+                            String role = m.isSenderIsTrader() ? ">> Traders msg: " : "<< Arbitrators msg: ";
+                            stringBuilder.append(role)
+                                    .append(m.getMessage())
+                                    .append("\n");
+                        });
+                        stringBuilder.append("\n");
+                    });
+                    stringBuilder.append("\n");
+                });
+                String message = stringBuilder.toString();
+                new Popup().headLine("All disputes (" + disputeGroups.size() + ")")
+                        .information(message)
+                        .width(1000)
+                        .actionButtonText("Copy")
+                        .onAction(() -> Utilities.copyToClipboard(message))
+                        .show();
+            }
+        };
     }
 
     @Override
@@ -193,6 +259,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             tableView.getSelectionModel().select(selectedItem);
 
         scrollToBottom();
+
+        scene = root.getScene();
+        if (scene != null)
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     @Override
@@ -200,6 +270,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         sortedList.comparatorProperty().unbind();
         selectedDisputeSubscription.unsubscribe();
         removeListenersOnSelectDispute();
+
+        if (scene != null)
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     protected void setFilteredListPredicate(FilteredList<Dispute> filteredList) {
