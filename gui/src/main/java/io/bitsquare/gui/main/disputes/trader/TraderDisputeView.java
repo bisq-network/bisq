@@ -201,8 +201,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 stringBuilder.append("Summary of all disputes (Nr. of disputes: " + disputeGroups.size() + ")\n\n");
                 disputeGroups.stream().forEach(disputeGroup -> {
                     Dispute dispute0 = disputeGroup.get(0);
-                    stringBuilder
-                            .append("##########################################################################################/\n")
+                    stringBuilder.append("##########################################################################################/\n")
                             .append("## Trade ID: ")
                             .append(dispute0.getTradeId())
                             .append("\n")
@@ -211,7 +210,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             .append("\n")
                             .append("## Is support ticket: ")
                             .append(dispute0.isSupportTicket())
-                            .append("\n##########################################################################################/\n")
+                            .append("\n");
+                    if (dispute0.disputeResultProperty().get() != null && dispute0.disputeResultProperty().get().getReason() != null) {
+                        stringBuilder.append("## Reason: ")
+                                .append(dispute0.disputeResultProperty().get().getReason())
+                                .append("\n");
+                    }
+                    stringBuilder.append("##########################################################################################/\n")
                             .append("\n");
                     disputeGroup.stream().forEach(dispute -> {
                         stringBuilder

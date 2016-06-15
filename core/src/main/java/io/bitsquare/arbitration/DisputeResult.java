@@ -47,6 +47,13 @@ public final class DisputeResult implements Payload {
         STALE_MATE
     }
 
+    public enum Reason {
+        BUG,
+        USABILITY,
+        SCAM,
+        OTHER
+    }
+
     public final String tradeId;
     public final int traderId;
     private DisputeFeePolicy disputeFeePolicy;
@@ -64,6 +71,7 @@ public final class DisputeResult implements Payload {
     private byte[] arbitratorPubKey;
     private long closeDate;
     private Winner winner;
+    private Reason reason;
 
     transient private BooleanProperty tamperProofEvidenceProperty = new SimpleBooleanProperty();
     transient private BooleanProperty idVerificationProperty = new SimpleBooleanProperty();
@@ -137,7 +145,18 @@ public final class DisputeResult implements Payload {
         return disputeFeePolicy;
     }
 
+    public void setReason(Reason reason) {
+        this.reason = reason;
+    }
 
+    public Reason getReason() {
+        return reason;
+    }
+
+    public void setSummaryNotes(String summaryNotes) {
+        this.summaryNotesProperty.set(summaryNotes);
+    }
+    
     public StringProperty summaryNotesProperty() {
         return summaryNotesProperty;
     }
@@ -231,6 +250,7 @@ public final class DisputeResult implements Payload {
         if (closeDate != that.closeDate) return false;
         if (tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null) return false;
         if (disputeFeePolicy != that.disputeFeePolicy) return false;
+        if (reason != that.reason) return false;
         if (summaryNotes != null ? !summaryNotes.equals(that.summaryNotes) : that.summaryNotes != null) return false;
         if (disputeCommunicationMessage != null ? !disputeCommunicationMessage.equals(that.disputeCommunicationMessage) : that.disputeCommunicationMessage != null)
             return false;
@@ -247,6 +267,7 @@ public final class DisputeResult implements Payload {
         int result = tradeId != null ? tradeId.hashCode() : 0;
         result = 31 * result + traderId;
         result = 31 * result + (disputeFeePolicy != null ? disputeFeePolicy.hashCode() : 0);
+        result = 31 * result + (reason != null ? reason.hashCode() : 0);
         result = 31 * result + (tamperProofEvidence ? 1 : 0);
         result = 31 * result + (idVerification ? 1 : 0);
         result = 31 * result + (screenCast ? 1 : 0);

@@ -70,16 +70,16 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private ToggleGroup tradeAmountToggleGroup;
     private DisputeResult disputeResult;
     private RadioButton buyerIsWinnerRadioButton, sellerIsWinnerRadioButton, shareRadioButton, loserPaysFeeRadioButton, splitFeeRadioButton,
-            waiveFeeRadioButton;
+            waiveFeeRadioButton, reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton, reasonWasScamRadioButton, reasonWasOtherRadioButton;
     private Optional<Dispute> peersDisputeOptional;
     private Coin arbitratorPayoutAmount, winnerPayoutAmount, loserPayoutAmount, stalematePayoutAmount;
-    private ToggleGroup feeToggleGroup;
+    private ToggleGroup feeToggleGroup, reasonToggleGroup;
     private String role;
     private TextArea summaryNotesTextArea;
     private ObjectBinding<Tuple2<DisputeResult.DisputeFeePolicy, Toggle>> feePaymentPolicyChanged;
     private ChangeListener<Tuple2<DisputeResult.DisputeFeePolicy, Toggle>> feePaymentPolicyListener;
     private ChangeListener<Boolean> shareRadioButtonSelectedListener;
-    private ChangeListener<Toggle> feeToggleSelectionListener;
+    private ChangeListener<Toggle> feeToggleSelectionListener, reasonToggleSelectionListener;
     // keep a reference to not get GCed
 
 
@@ -127,6 +127,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         if (feeToggleGroup != null)
             feeToggleGroup.selectedToggleProperty().removeListener(feeToggleSelectionListener);
+
+        if (reasonToggleGroup != null)
+            reasonToggleGroup.selectedToggleProperty().removeListener(reasonToggleSelectionListener);
     }
 
     @Override
@@ -169,6 +172,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         addTradeAmountPayoutControls();
         addFeeControls();
+        addReasonControls();
 
         boolean applyPeersDisputeResult = peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed();
         if (applyPeersDisputeResult) {
@@ -179,6 +183,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setArbitratorPayoutAmount(peersDisputeResult.getArbitratorPayoutAmount());
             disputeResult.setDisputeFeePolicy(peersDisputeResult.getDisputeFeePolicy());
             disputeResult.setWinner(peersDisputeResult.getWinner());
+            disputeResult.setReason(peersDisputeResult.getReason());
+            disputeResult.setSummaryNotes(peersDisputeResult.summaryNotesProperty().get());
 
             if (disputeResult.getBuyerPayoutAmount() != null) {
                 log.debug("buyerPayoutAmount " + disputeResult.getBuyerPayoutAmount().toFriendlyString());
@@ -186,14 +192,17 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 log.debug("arbitratorPayoutAmount " + disputeResult.getArbitratorPayoutAmount().toFriendlyString());
             }
 
-            //setFeeRadioButtonState();
-
             buyerIsWinnerRadioButton.setDisable(true);
             sellerIsWinnerRadioButton.setDisable(true);
             shareRadioButton.setDisable(true);
             loserPaysFeeRadioButton.setDisable(true);
             splitFeeRadioButton.setDisable(true);
             waiveFeeRadioButton.setDisable(true);
+
+            reasonWasBugRadioButton.setDisable(true);
+            reasonWasUsabilityIssueRadioButton.setDisable(true);
+            reasonWasScamRadioButton.setDisable(true);
+            reasonWasOtherRadioButton.setDisable(true);
 
             calculatePayoutAmounts(disputeResult.getDisputeFeePolicy());
             applyTradeAmountRadioButtonStates();
@@ -210,6 +219,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
 
         setFeeRadioButtonState();
+        setReasonRadioButtonState();
 
         addSummaryNotes();
         addButtons(contract);
@@ -339,6 +349,62 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             case WAIVE:
                 feeToggleGroup.selectToggle(waiveFeeRadioButton);
                 break;
+        }
+    }
+
+    private void addReasonControls() {
+        Label label = addLabel(gridPane, ++rowIndex, "Reason of dispute:", 10);
+        GridPane.setValignment(label, VPos.TOP);
+
+        reasonWasBugRadioButton = new RadioButton("Bug");
+        reasonWasUsabilityIssueRadioButton = new RadioButton("Usability");
+        reasonWasScamRadioButton = new RadioButton("Scam");
+        reasonWasOtherRadioButton = new RadioButton("Other");
+
+        HBox feeRadioButtonPane = new HBox();
+        feeRadioButtonPane.setSpacing(20);
+        feeRadioButtonPane.getChildren().addAll(reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton,
+                reasonWasScamRadioButton, reasonWasOtherRadioButton);
+        GridPane.setRowIndex(feeRadioButtonPane, rowIndex);
+        GridPane.setColumnIndex(feeRadioButtonPane, 1);
+        GridPane.setMargin(feeRadioButtonPane, new Insets(10, 0, 10, 0));
+        gridPane.getChildren().add(feeRadioButtonPane);
+
+        reasonToggleGroup = new ToggleGroup();
+        reasonWasBugRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonWasUsabilityIssueRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonWasScamRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonWasOtherRadioButton.setToggleGroup(reasonToggleGroup);
+
+        reasonToggleSelectionListener = (observable, oldValue, newValue) -> {
+            if (newValue == reasonWasBugRadioButton)
+                disputeResult.setReason(DisputeResult.Reason.BUG);
+            else if (newValue == reasonWasUsabilityIssueRadioButton)
+                disputeResult.setReason(DisputeResult.Reason.USABILITY);
+            else if (newValue == reasonWasScamRadioButton)
+                disputeResult.setReason(DisputeResult.Reason.SCAM);
+            else if (newValue == reasonWasOtherRadioButton)
+                disputeResult.setReason(DisputeResult.Reason.OTHER);
+        };
+        reasonToggleGroup.selectedToggleProperty().addListener(reasonToggleSelectionListener);
+    }
+
+    private void setReasonRadioButtonState() {
+        if (disputeResult.getReason() != null) {
+            switch (disputeResult.getReason()) {
+                case BUG:
+                    reasonToggleGroup.selectToggle(reasonWasBugRadioButton);
+                    break;
+                case USABILITY:
+                    reasonToggleGroup.selectToggle(reasonWasUsabilityIssueRadioButton);
+                    break;
+                case SCAM:
+                    reasonToggleGroup.selectToggle(reasonWasScamRadioButton);
+                    break;
+                case OTHER:
+                    reasonToggleGroup.selectToggle(reasonWasOtherRadioButton);
+                    break;
+            }
         }
     }
 
