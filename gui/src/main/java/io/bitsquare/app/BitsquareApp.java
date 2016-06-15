@@ -95,7 +95,9 @@ public class BitsquareApp extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws IOException {
+    public void start(Stage stage) throws IOException {
+        BitsquareApp.primaryStage = stage;
+        
         String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
 
         Log.setup(logPath);
@@ -131,8 +133,6 @@ public class BitsquareApp extends Application {
         if (Utilities.isRestrictedCryptography())
             Utilities.removeCryptographyRestrictions();
         Security.addProvider(new BouncyCastleProvider());
-
-        BitsquareApp.primaryStage = primaryStage;
 
         shutDownHandler = this::stop;
 
@@ -246,7 +246,11 @@ public class BitsquareApp extends Application {
     private void showErrorPopup(Throwable throwable, boolean doShutDown) {
         if (!shutDownRequested) {
             if (scene == null) {
+                log.warn("Scene not available yet, we create a new scene. The bug might be caused by a guice circular dependency.");
                 scene = new Scene(new StackPane(), 1000, 650);
+                scene.getStylesheets().setAll(
+                        "/io/bitsquare/gui/bitsquare.css",
+                        "/io/bitsquare/gui/images.css");
                 primaryStage.setScene(scene);
                 primaryStage.show();
             }
