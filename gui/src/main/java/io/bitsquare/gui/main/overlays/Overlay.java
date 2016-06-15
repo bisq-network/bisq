@@ -374,43 +374,45 @@ public abstract class Overlay<T extends Overlay> {
         if (owner == null)
             owner = MainView.getRootContainer();
 
-        Scene rootScene = owner.getScene();
-        if (rootScene != null) {
-            Scene scene = new Scene(gridPane);
-            scene.getStylesheets().setAll(rootScene.getStylesheets());
-            scene.setFill(Color.TRANSPARENT);
+        if (owner != null) {
+            Scene rootScene = owner.getScene();
+            if (rootScene != null) {
+                Scene scene = new Scene(gridPane);
+                scene.getStylesheets().setAll(rootScene.getStylesheets());
+                scene.setFill(Color.TRANSPARENT);
 
-            setupKeyHandler(scene);
+                setupKeyHandler(scene);
 
-            stage = new Stage();
-            stage.setScene(scene);
-            Window window = rootScene.getWindow();
-            setModality();
-            stage.initStyle(StageStyle.TRANSPARENT);
-            stage.show();
+                stage = new Stage();
+                stage.setScene(scene);
+                Window window = rootScene.getWindow();
+                setModality();
+                stage.initStyle(StageStyle.TRANSPARENT);
+                stage.show();
 
-            layout();
+                layout();
 
-            addEffectToBackground();
+                addEffectToBackground();
 
-            // On Linux the owner stage does not move the child stage as it does on Mac
-            // So we need to apply centerPopup. Further with fast movements the handler loses
-            // the latest position, with a delay it fixes that.
-            // Also on Mac sometimes the popups are positioned outside of the main app, so keep it for all OS
-            positionListener = (observable, oldValue, newValue) -> {
-                if (stage != null) {
-                    layout();
-                    if (centerTime != null)
-                        centerTime.stop();
+                // On Linux the owner stage does not move the child stage as it does on Mac
+                // So we need to apply centerPopup. Further with fast movements the handler loses
+                // the latest position, with a delay it fixes that.
+                // Also on Mac sometimes the popups are positioned outside of the main app, so keep it for all OS
+                positionListener = (observable, oldValue, newValue) -> {
+                    if (stage != null) {
+                        layout();
+                        if (centerTime != null)
+                            centerTime.stop();
 
-                    centerTime = UserThread.runAfter(this::layout, 3);
-                }
-            };
-            window.xProperty().addListener(positionListener);
-            window.yProperty().addListener(positionListener);
-            window.widthProperty().addListener(positionListener);
+                        centerTime = UserThread.runAfter(this::layout, 3);
+                    }
+                };
+                window.xProperty().addListener(positionListener);
+                window.yProperty().addListener(positionListener);
+                window.widthProperty().addListener(positionListener);
 
-            animateDisplay();
+                animateDisplay();
+            }
         }
     }
 
