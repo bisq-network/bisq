@@ -265,7 +265,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (price != null) {
             String postFix = "";
             if (offer.getUseMarketBasedPrice()) {
-                postFix = " (" + formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin()) + ")";
+                postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
             }
             if (showAllTradeCurrenciesProperty.get())
                 return formatter.formatPriceWithCode(price) + postFix;

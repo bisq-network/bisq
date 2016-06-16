@@ -596,7 +596,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         Popup popup = new Popup();
         popup.warning("The price you have entered is outside the max. allowed deviation from the market price.\n" +
                 "The max. allowed deviation is " +
-                formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent()) +
+                formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent()) +
                 " and can be adjusted in the preferences.")
                 .actionButtonText("Change price")
                 .onAction(() -> popup.hide())

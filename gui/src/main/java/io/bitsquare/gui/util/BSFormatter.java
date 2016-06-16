@@ -357,6 +357,10 @@ public class BSFormatter {
         return formatToPercent(value) + " %";
     }
 
+    public String formatPercentagePrice(double value) {
+        return formatToPercent(value, 2) + " %";
+    }
+
     public double parsePercentStringToDouble(String percentString) throws NumberFormatException {
         try {
             String input = percentString.replace("%", "");

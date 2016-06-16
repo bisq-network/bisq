@@ -164,7 +164,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         amountRange = formatter.formatCoin(offer.getMinAmount()) + " - " + formatter.formatCoin(offer.getAmount());
         price = formatter.formatFiat(dataModel.tradePrice);
-        marketPriceMargin = formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin());
+        marketPriceMargin = formatter.formatPercentagePrice(offer.getMarketPriceMargin());
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");

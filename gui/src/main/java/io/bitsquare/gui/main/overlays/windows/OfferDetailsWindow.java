@@ -185,7 +185,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             Fiat price = offer.getPrice();
             if (offer.getUseMarketBasedPrice()) {
                 addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price) +
-                        " (distance from market price: " + formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin()) + ")");
+                        " (distance from market price: " + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")");
             } else {
                 addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price));
             }
