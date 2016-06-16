@@ -1042,3 +1042,9 @@ textfield */
     -fx-font-size: 11;
 }
 
+#ident-num-label {
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-font-size: 11;
+    -fx-text-fill: white;
+}

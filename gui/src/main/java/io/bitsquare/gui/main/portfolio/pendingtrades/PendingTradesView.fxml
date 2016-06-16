@@ -36,7 +36,7 @@
             <TableColumn text="Trade amount" fx:id="tradeVolumeColumn" minWidth="130"/>
             <TableColumn text="Payment method" fx:id="paymentMethodColumn" minWidth="120"/>
             <TableColumn text="My role" fx:id="roleColumn" minWidth="120" maxWidth="120"/>
-            <TableColumn text="" fx:id="avatarColumn" minWidth="32" maxWidth="32"/>
+            <TableColumn text="" fx:id="avatarColumn" minWidth="40" maxWidth="40"/>
         </columns>
     </TableView>
 </VBox>

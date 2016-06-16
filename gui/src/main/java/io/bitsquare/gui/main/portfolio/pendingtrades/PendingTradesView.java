@@ -442,6 +442,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
                         return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+
                             @Override
                             public void updateItem(final PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);

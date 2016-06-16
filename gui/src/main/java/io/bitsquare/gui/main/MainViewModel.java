@@ -904,7 +904,7 @@ public class MainViewModel implements ViewModel {
                             if (openDisputes > 0)
                                 numOpenDisputesAsString.set(String.valueOf(openDisputes));
                             if (openDisputes > 9)
-                                numOpenDisputesAsString.set("*");
+                                numOpenDisputesAsString.set("★");
 
                             showOpenDisputesNotification.set(openDisputes > 0);
                         });
@@ -918,7 +918,7 @@ public class MainViewModel implements ViewModel {
         if (numPendingTrades > 0)
             numPendingTradesAsString.set(String.valueOf(numPendingTrades));
         if (numPendingTrades > 9)
-            numPendingTradesAsString.set("*");
+            numPendingTradesAsString.set("★");
 
         showPendingTradesNotification.set(numPendingTrades > 0);
     }

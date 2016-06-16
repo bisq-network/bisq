@@ -222,10 +222,10 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         avatarColumn.setCellFactory(
                 new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
                         ClosedTradableListItem>>() {
-
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
                         return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+
                             @Override
                             public void updateItem(final ClosedTradableListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);

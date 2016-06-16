@@ -666,8 +666,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("") {
             {
-                setMinWidth(32);
-                setMaxWidth(32);
+                setMinWidth(40);
+                setMaxWidth(40);
                 setSortable(true);
             }
         };

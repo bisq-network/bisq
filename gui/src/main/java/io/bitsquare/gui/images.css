@@ -22,6 +22,10 @@
     -fx-image: url("../../../images/alert_round.png");
 }
 
+#image-green_circle {
+    -fx-image: url("../../../images/green_circle.png");
+}
+
 #image-remove {
     -fx-image: url("../../../images/remove.png");
 }

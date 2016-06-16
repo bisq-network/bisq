@@ -23,9 +23,11 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,30 +98,28 @@ public class ImageUtil {
                 double size = 26;
                 Group iconGroup = new Group();
 
+                Pane numTradesPane = new Pane();
+                numTradesPane.relocate(16, 16);
+                numTradesPane.setMouseTransparent(true);
+                if (numPastTrades > 0) {
+                    Label label = new Label(numPastTrades < 10 ? String.valueOf(numPastTrades) : "★");
+                    label.relocate(5, 1);
+                    label.setId("ident-num-label");
+                    ImageView icon = new ImageView();
+                    icon.setLayoutX(0.5);
+                    icon.setId("image-green_circle");
+                    numTradesPane.getChildren().addAll(icon, label);
+                }
+
                 Color color = Color.rgb(red, green, blue);
                 color = color.deriveColor(1, saturation, 1, 1); // reduce saturation
 
-                if (numPastTrades > 0) {
-                    Canvas outerBg = new Canvas(size, size);
-                    GraphicsContext gc = outerBg.getGraphicsContext2D();
-                    gc.setFill(Color.rgb(0, 170, 51)); // green
-                    gc.fillOval(0, 0, size, size);
-                    outerBg.setLayoutY(1);
-
-                    Canvas innerBg = new Canvas(size, size);
-                    GraphicsContext gc2 = innerBg.getGraphicsContext2D();
-                    gc2.setFill(color);
-                    gc2.fillOval(3, 3, size - 6, size - 6);
-                    innerBg.setLayoutY(1);
-                    iconGroup.getChildren().addAll(outerBg, innerBg, iconView);
-                } else {
-                    Canvas bg = new Canvas(size, size);
-                    GraphicsContext gc = bg.getGraphicsContext2D();
-                    gc.setFill(color);
-                    gc.fillOval(0, 0, size, size);
-                    bg.setLayoutY(1);
-                    iconGroup.getChildren().addAll(bg, iconView);
-                }
+                Canvas bg = new Canvas(size, size);
+                GraphicsContext gc = bg.getGraphicsContext2D();
+                gc.setFill(color);
+                gc.fillOval(0, 0, size, size);
+                bg.setLayoutY(1);
+                iconGroup.getChildren().addAll(bg, iconView, numTradesPane);
 
                 Tooltip.install(iconGroup, new Tooltip(tooltipText));
                 return iconGroup;
