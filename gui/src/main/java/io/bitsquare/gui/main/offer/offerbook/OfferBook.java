@@ -27,9 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 /**
  * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.
@@ -42,6 +41,11 @@ public class OfferBook {
     private static final Logger log = LoggerFactory.getLogger(OfferBook.class);
 
     private final OfferBookService offerBookService;
+
+    // TODO: We got repeated ArrayIndexOutOfBoundsException's at the remove and clear method calls on the list. It seems to be caused by the 
+    // Sorted list which uses our list for wrapping. There are change events fired and that might cause race conditions 
+    // similar to concurrency issues (though we cannot have those as it is single threaded).
+    // See: https://github.com/bitsquare/bitsquare/issues/421 -> SortedList.findPosition(SortedList.java:318 in logs
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
 
 
@@ -71,16 +75,14 @@ public class OfferBook {
 
                 // clean up possible references in openOfferManager 
                 tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
-
-                Optional<OfferBookListItem> candidate = offerBookListItems.stream().filter(item -> item.getOffer().getId().equals(offer.getId())).findAny();
+                Optional<OfferBookListItem> candidate = offerBookListItems.stream()
+                        .filter(item -> item.getOffer().getId().equals(offer.getId()))
+                        .findAny();
                 if (candidate.isPresent()) {
                     OfferBookListItem item = candidate.get();
-                    synchronized (offerBookListItems) {
-                        if (offerBookListItems.contains(item)) {
-                            offerBookListItems.remove(item);
-
-                            Log.logIfStressTests("Offer removed: Nr. of offers = " + offerBookListItems.size());
-                        }
+                    if (offerBookListItems.contains(item)) {
+                        offerBookListItems.remove(item);
+                        Log.logIfStressTests("Offer removed: Nr. of offers = " + offerBookListItems.size());
                     }
                 }
             }
@@ -93,14 +95,11 @@ public class OfferBook {
 
     public void fillOfferBookListItems() {
         log.debug("fillOfferBookListItems");
-        List<Offer> offers = offerBookService.getOffers();
-        CopyOnWriteArraySet<OfferBookListItem> list = new CopyOnWriteArraySet<>();
-        offers.stream().forEach(e -> list.add(new OfferBookListItem(e)));
-        synchronized (offerBookListItems) {
-            offerBookListItems.clear();
-        }
 
-        offerBookListItems.addAll(list);
+        offerBookListItems.clear();
+        offerBookListItems.addAll(offerBookService.getOffers().stream()
+                .map(OfferBookListItem::new)
+                .collect(Collectors.toList()));
 
         Log.logIfStressTests("Offer filled: Nr. of offers = " + offerBookListItems.size());
 
