@@ -173,9 +173,6 @@ public final class Preferences implements Persistable {
             usePercentageBasedPrice = persisted.getUsePercentageBasedPrice();
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
             maxPriceDistanceInPercent = persisted.getMaxPriceDistanceInPercent();
-            // Backward compatible to version 0.3.6. Can be removed after a while
-            if (maxPriceDistanceInPercent == 0d)
-                maxPriceDistanceInPercent = 0.2;
 
             try {
                 setNonTradeTxFeePerKB(persisted.getNonTradeTxFeePerKB());
@@ -195,7 +192,7 @@ public final class Preferences implements Persistable {
             dontShowAgainMap = new HashMap<>();
             preferredLocale = getDefaultLocale();
             preferredTradeCurrency = getDefaultTradeCurrency();
-            maxPriceDistanceInPercent = 0.2;
+            maxPriceDistanceInPercent = 0.1;
 
             storage.queueUpForSave();
         }
