@@ -25,7 +25,7 @@ import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
@@ -120,7 +120,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         FormBuilder.addLabelTextField(gridPane, ++rowIndex, "Onion address:", hostName);
         FormBuilder.addLabelTextField(gridPane, ++rowIndex, "Number of completed trades:", String.valueOf(numTrades));
         inputTextField = FormBuilder.addLabelInputTextField(gridPane, ++rowIndex, "Set tag for that peer:").second;
-        HashMap<String, String> peerTagMap = Preferences.INSTANCE.getPeerTagMap();
+        Map<String, String> peerTagMap = Preferences.INSTANCE.getPeerTagMap();
         String tag = peerTagMap.containsKey(hostName) ? peerTagMap.get(hostName) : "";
         inputTextField.setText(tag);
     }
