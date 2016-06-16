@@ -843,9 +843,13 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateBalance() {
-        updateAvailableBalance();
-        updateReservedBalance();
-        updateLockedBalance();
+        // Without delaying to the next cycle it does not update. 
+        // Seems order of events we are listening on causes that...
+        UserThread.execute(() -> {
+            updateAvailableBalance();
+            updateReservedBalance();
+            updateLockedBalance();
+        });
     }
 
     private void updateAvailableBalance() {
