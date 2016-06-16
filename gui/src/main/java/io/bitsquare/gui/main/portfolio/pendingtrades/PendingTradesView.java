@@ -452,7 +452,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ? "Trading peers onion address: " + hostName + "\n" +
                                             "You have already traded " + numPastTrades + " times with that peer." : "Trading peers onion address: " + hostName;
-                                    Node identIcon = ImageUtil.getIdentIcon(hostName, tooltipText, hasTraded);
+                                    Node identIcon = ImageUtil.getIdentIcon(hostName, tooltipText, numPastTrades);
                                     if (identIcon != null)
                                         setGraphic(identIcon);
                                 } else {

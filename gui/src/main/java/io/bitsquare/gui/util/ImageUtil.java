@@ -71,7 +71,7 @@ public class ImageUtil {
         return isRetina;
     }
 
-    public static Node getIdentIcon(String hostName, String tooltipText, boolean hasTraded) {
+    public static Node getIdentIcon(String hostName, String tooltipText, int numPastTrades) {
         if (!hostName.isEmpty()) {
             // for testing locally we use a random hostname to get dif. colors
             if (hostName.startsWith("localhost"))
@@ -99,7 +99,7 @@ public class ImageUtil {
                 Color color = Color.rgb(red, green, blue);
                 color = color.deriveColor(1, saturation, 1, 1); // reduce saturation
 
-                if (hasTraded) {
+                if (numPastTrades > 0) {
                     Canvas outerBg = new Canvas(size, size);
                     GraphicsContext gc = outerBg.getGraphicsContext2D();
                     gc.setFill(Color.rgb(0, 170, 51)); // green

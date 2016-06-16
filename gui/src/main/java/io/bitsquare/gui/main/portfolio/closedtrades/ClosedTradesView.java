@@ -232,8 +232,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
                                 if (newItem != null && !empty && newItem.getTradable() instanceof Trade) {
 
+                                    int numPastTrades = model.getNumPastTrades(newItem.getTradable());
                                     String hostName = ((Trade) newItem.getTradable()).getTradingPeerNodeAddress().hostName;
-                                    Node identIcon = ImageUtil.getIdentIcon(hostName, "Trading peers onion address: " + hostName, true);
+                                    Node identIcon = ImageUtil.getIdentIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades);
                                     if (identIcon != null)
                                         setGraphic(identIcon);
                                 } else {

@@ -689,7 +689,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ? "Offerers onion address: " + hostName + "\n" +
                                             "You have already traded " + numPastTrades + " times with that offerer." : "Offerers onion address: " + hostName;
-                                    Node identIcon = ImageUtil.getIdentIcon(hostName, tooltipText, hasTraded);
+                                    Node identIcon = ImageUtil.getIdentIcon(hostName, tooltipText, numPastTrades);
                                     if (identIcon != null)
                                         setGraphic(identIcon);
                                 } else {

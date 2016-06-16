@@ -26,6 +26,8 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.collections.ObservableList;
 
+import java.util.stream.Collectors;
+
 class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
     private final BSFormatter formatter;
 
@@ -116,5 +118,17 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             }
         }
         return "";
+    }
+
+
+    int getNumPastTrades(Tradable tradable) {
+        return dataModel.closedTradableManager.getClosedTrades().stream()
+                .filter(e -> e instanceof Trade &&
+                        tradable instanceof Trade &&
+                        ((Trade) e).getTradingPeerNodeAddress() != null &&
+                        ((Trade) tradable).getTradingPeerNodeAddress() != null &&
+                        ((Trade) e).getTradingPeerNodeAddress().hostName.equals(((Trade) tradable).getTradingPeerNodeAddress().hostName))
+                .collect(Collectors.toSet())
+                .size();
     }
 }
