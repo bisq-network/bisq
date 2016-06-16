@@ -696,6 +696,9 @@ public class MainViewModel implements ViewModel {
                         walletServiceErrorMsg.set("You lost the connection to all bitcoin network peers.\n" +
                                 "Maybe you lost your internet connection or your computer was in standby mode.");
                     } else {
+                        //TODO remove after testing
+                        log.warn("INFO: we got again btc network peers");
+                        
                         walletServiceErrorMsg.set(null);
                     }
                 }, 5);

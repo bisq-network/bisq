@@ -458,8 +458,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 btcInfoLabel.setId("splash-error-state-msg");
-                btcNetworkWarnMsgPopup = new Popup().warning(newValue);
-                btcNetworkWarnMsgPopup.show();
+                if (btcNetworkWarnMsgPopup == null) {
+                    btcNetworkWarnMsgPopup = new Popup().warning(newValue);
+                    btcNetworkWarnMsgPopup.show();
+                }
             } else {
                 btcInfoLabel.setId("footer-pane");
                 if (btcNetworkWarnMsgPopup != null)
