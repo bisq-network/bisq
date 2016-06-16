@@ -34,7 +34,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
-import static java.util.Arrays.asList;
 
 public class BitsquareAppMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);
@@ -94,10 +93,8 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
-        parser.acceptsAll(asList(APP_DATA_DIR_CLEAN_KEY, "clean"),
-                description("Clean application data directory", DEFAULT_APP_DATA_DIR_CLEAN))
-                .withRequiredArg()
-                .ofType(boolean.class);
+        parser.accepts(LOG_LEVEL_KEY, description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", LOG_LEVEL_DEFAULT))
+                .withRequiredArg();
         parser.accepts(ProgramArguments.NAME_KEY, description("Name of this node", null))
                 .withRequiredArg();
         // use a fixed port as arbitrator use that for his ID

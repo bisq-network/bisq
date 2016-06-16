@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.seed;
 
+import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
@@ -9,7 +10,6 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
-import io.bitsquare.p2p.peers.PeerManager;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,7 +124,7 @@ public class SeedNode {
         log.info("Log files under: " + logPath);
         Version.printVersion();
         Utilities.printSysInfo();
-        Log.setLevel(useDetailedLogging);
+        Log.setLevel(Level.WARN);
 
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (progArgSeedNodes != null && !progArgSeedNodes.isEmpty()) {

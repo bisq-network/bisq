@@ -84,8 +84,8 @@ public class Log {
         logbackLogger.addAppender(errorAppender);*/
     }
 
-    public static void setLevel(boolean useDetailedLogging) {
-        logbackLogger.setLevel(useDetailedLogging ? Level.TRACE : Level.WARN);
+    public static void setLevel(Level logLevel) {
+        logbackLogger.setLevel(logLevel);
     }
 
     public static void traceCall() {

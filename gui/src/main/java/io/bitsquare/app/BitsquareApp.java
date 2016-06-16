@@ -17,6 +17,7 @@
 
 package io.bitsquare.app;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -72,6 +73,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
+import static io.bitsquare.app.BitsquareEnvironment.LOG_LEVEL_KEY;
 
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
@@ -97,14 +99,13 @@ public class BitsquareApp extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         BitsquareApp.primaryStage = stage;
-        
-        String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
 
+        String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Version.printVersion();
         Utilities.printSysInfo();
-        Log.setLevel(!DevFlags.IS_RELEASE_VERSION && !DevFlags.STRESS_TEST_MODE);
+        Log.setLevel(Level.toLevel(env.getRequiredProperty(LOG_LEVEL_KEY)));
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
