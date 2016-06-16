@@ -123,7 +123,7 @@ public abstract class Overlay<T extends Overlay> {
     protected String truncatedMessage;
     private StaticProgressIndicator progressIndicator;
     private boolean showProgressIndicator;
-    private Button actionButton;
+    protected Button actionButton;
     protected Label headLineLabel;
     protected String dontShowAgainId;
     protected String dontShowAgainText;

@@ -26,6 +26,10 @@
     -fx-image: url("../../../images/green_circle.png");
 }
 
+#image-blue_circle {
+    -fx-image: url("../../../images/blue_circle.png");
+}
+
 #image-remove {
     -fx-image: url("../../../images/remove.png");
 }

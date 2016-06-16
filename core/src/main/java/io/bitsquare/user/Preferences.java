@@ -117,6 +117,7 @@ public final class Preferences implements Persistable {
     private boolean useInvertedMarketPrice;
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
+    private Map<String, String> peerTagMap = new HashMap<>();
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -179,6 +180,9 @@ public final class Preferences implements Persistable {
             } catch (Exception e) {
                 // leave default value
             }
+
+            if (persisted.getPeerTagMap() != null)
+                peerTagMap = persisted.getPeerTagMap();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
@@ -379,6 +383,11 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setTagForPeer(String hostName, String tag) {
+        peerTagMap.put(hostName, tag);
+        storage.queueUpForSave();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -502,6 +511,10 @@ public final class Preferences implements Persistable {
 
     public boolean getUsePercentageBasedPrice() {
         return usePercentageBasedPrice;
+    }
+
+    public Map<String, String> getPeerTagMap() {
+        return peerTagMap;
     }
 
 

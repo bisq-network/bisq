@@ -152,7 +152,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (DevFlags.DEV_MODE) {
             amount.set("0.0001");
             minAmount.set(amount.get());
-            price.set("400");
+            price.set("700");
             volume.set("0.04");
 
             setAmountToModel();
