@@ -27,7 +27,9 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -55,8 +57,8 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     private final ObservableList<Offer> top3BuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<Offer> top3SellOfferList = FXCollections.observableArrayList();
-    private final ChangeListener<Number> cacheFilledListener;
-
+    private final ChangeListener<Number> currenciesUpdatedListener;
+    final IntegerProperty updateChartDataFlag = new SimpleIntegerProperty(0);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -69,15 +71,27 @@ class MarketsChartsViewModel extends ActivatableViewModel {
         this.priceFeed = priceFeed;
 
         offerBookListItems = offerBook.getOfferBookListItems();
-        listChangeListener = c -> updateChartData(offerBookListItems);
+        listChangeListener = c -> {
+            c.next();
+            if (c.wasAdded() || c.wasRemoved()) {
+                ArrayList<OfferBookListItem> list = new ArrayList<>(c.getRemoved());
+                list.addAll(c.getAddedSubList());
+                if (list.stream()
+                        .map(OfferBookListItem::getOffer)
+                        .filter(e -> e.getCurrencyCode().equals(tradeCurrency.get().getCode()))
+                        .findAny()
+                        .isPresent())
+                    updateChartData();
+            }
+        };
 
-        cacheFilledListener = new ChangeListener<Number>() {
+        currenciesUpdatedListener = new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                if (!offerBookListItems.stream().filter(item -> item.getOffer().getPrice() == null).findAny().isPresent()) {
+                if (!isAnyPricePresent()) {
                     offerBook.fillOfferBookListItems();
-                    updateChartData(offerBookListItems);
-                    priceFeed.currenciesUpdateFlagProperty().removeListener(cacheFilledListener);
+                    updateChartData();
+                    priceFeed.currenciesUpdateFlagProperty().removeListener(currenciesUpdatedListener);
                 }
             }
         };
@@ -89,10 +103,10 @@ class MarketsChartsViewModel extends ActivatableViewModel {
         offerBookListItems.addListener(listChangeListener);
 
         offerBook.fillOfferBookListItems();
-        updateChartData(offerBookListItems);
+        updateChartData();
 
-        if (offerBookListItems.stream().filter(item -> item.getOffer().getPrice() == null).findAny().isPresent())
-            priceFeed.currenciesUpdateFlagProperty().addListener(cacheFilledListener);
+        if (isAnyPricePresent())
+            priceFeed.currenciesUpdateFlagProperty().addListener(currenciesUpdatedListener);
 
         if (!preferences.getUseStickyMarketPrice())
             priceFeed.setCurrencyCode(tradeCurrency.get().getCode());
@@ -103,7 +117,12 @@ class MarketsChartsViewModel extends ActivatableViewModel {
         offerBookListItems.removeListener(listChangeListener);
     }
 
-    private void updateChartData(ObservableList<OfferBookListItem> offerBookListItems) {
+    private boolean isAnyPricePresent() {
+        return offerBookListItems.stream().filter(item -> item.getOffer().getPrice() == null).findAny().isPresent();
+    }
+
+    private void updateChartData() {
+        updateChartDataFlag.set(updateChartDataFlag.get() + 1);
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(tradeCurrency.get().getCode())
@@ -159,7 +178,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
     public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
         this.tradeCurrency.set(tradeCurrency);
-        updateChartData(offerBookListItems);
+        updateChartData();
 
         if (!preferences.getUseStickyMarketPrice())
             priceFeed.setCurrencyCode(tradeCurrency.getCode());
