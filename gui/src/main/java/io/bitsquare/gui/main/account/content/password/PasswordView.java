@@ -26,6 +26,7 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.PasswordTextField;
 import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -33,7 +34,6 @@ import io.bitsquare.gui.util.validation.PasswordValidator;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.GridPane;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
@@ -84,9 +84,10 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         repeatedPasswordField.setValidator(passwordValidator);
         repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
-        Tuple3<Button, ProgressIndicator, Label> tuple = addButtonWithStatus(root, ++gridRow, "", 15);
+        Tuple3<Button, StaticProgressIndicator, Label> tuple = addButtonWithStatus(root, ++gridRow, "", 15);
         pwButton = tuple.first;
-        ProgressIndicator progressIndicator = tuple.second;
+        StaticProgressIndicator progressIndicator = tuple.second;
+        progressIndicator.setPrefSize(24, 24);
         progressIndicator.setVisible(false);
         Label deriveStatusLabel = tuple.third;
         pwButton.setDisable(true);

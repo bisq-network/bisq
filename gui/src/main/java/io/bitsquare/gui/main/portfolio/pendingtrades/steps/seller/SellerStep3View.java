@@ -21,6 +21,7 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -33,7 +34,6 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.user.Preferences;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import org.fxmisc.easybind.EasyBind;
@@ -45,7 +45,7 @@ public class SellerStep3View extends TradeStepView {
 
     private Button confirmButton;
     private Label statusLabel;
-    private ProgressIndicator statusProgressIndicator;
+    private StaticProgressIndicator statusProgressIndicator;
     private Subscription tradeStatePropertySubscription;
 
 
@@ -164,10 +164,11 @@ public class SellerStep3View extends TradeStepView {
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
-        Tuple3<Button, ProgressIndicator, Label> tuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "Confirm payment receipt");
+        Tuple3<Button, StaticProgressIndicator, Label> tuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "Confirm payment receipt");
         confirmButton = tuple.first;
         confirmButton.setOnAction(e -> onPaymentReceived());
         statusProgressIndicator = tuple.second;
+        statusProgressIndicator.setPrefSize(24, 24);
         statusLabel = tuple.third;
 
         hideStatusInfo();

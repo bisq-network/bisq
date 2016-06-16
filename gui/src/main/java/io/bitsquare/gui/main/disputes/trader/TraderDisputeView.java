@@ -31,6 +31,7 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.TableGroupHeadline;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.ContractWindow;
 import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
@@ -101,7 +102,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TextArea inputTextArea;
     private AnchorPane messagesAnchorPane;
     private VBox messagesInputBox;
-    private ProgressIndicator sendMsgProgressIndicator;
+    private StaticProgressIndicator sendMsgProgressIndicator;
     private Label sendMsgInfoLabel;
     private ChangeListener<Boolean> arrivedPropertyListener;
     private ChangeListener<Boolean> storedInMailboxPropertyListener;
@@ -509,9 +510,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendMsgInfoLabel.setManaged(false);
             sendMsgInfoLabel.setPadding(new Insets(5, 0, 0, 0));
 
-            sendMsgProgressIndicator = new ProgressIndicator(0);
-            sendMsgProgressIndicator.setPrefHeight(24);
-            sendMsgProgressIndicator.setPrefWidth(24);
+            sendMsgProgressIndicator = new StaticProgressIndicator(0);
+            sendMsgProgressIndicator.setPrefSize(24, 24);
             sendMsgProgressIndicator.setVisible(false);
             sendMsgProgressIndicator.setManaged(false);
 

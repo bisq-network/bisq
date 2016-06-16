@@ -26,6 +26,7 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.funds.FundsView;
@@ -97,7 +98,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ChangeListener<String> splashP2PNetworkErrorMsgListener;
     private ChangeListener<String> splashP2PNetworkIconIdListener;
     private ChangeListener<Number> splashP2PNetworkProgressListener;
-    private ProgressIndicator splashP2PNetworkIndicator;
+    private StaticProgressIndicator splashP2PNetworkIndicator;
     private Label splashP2PNetworkLabel;
     private ProgressBar btcSyncIndicator;
     private Label btcSplashInfo;
@@ -374,8 +375,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkLabel.setTextAlignment(TextAlignment.CENTER);
         splashP2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
 
-        splashP2PNetworkIndicator = new ProgressIndicator();
-        splashP2PNetworkIndicator.setMaxSize(24, 24);
+        splashP2PNetworkIndicator = new StaticProgressIndicator();
+        splashP2PNetworkIndicator.setPrefSize(24, 24);
         splashP2PNetworkIndicator.progressProperty().bind(model.splashP2PNetworkProgress);
 
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {

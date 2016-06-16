@@ -28,6 +28,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.*;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -88,7 +89,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private ImageView imageView;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
-    private ProgressIndicator spinner, offerAvailabilitySpinner;
+    private StaticProgressIndicator spinner, offerAvailabilitySpinner;
     private TitledGroupBg payFundsPane;
     private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, takeOfferButton;
     private InputTextField amountTextField;
@@ -680,8 +681,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             close();
         });
 
-        offerAvailabilitySpinner = new ProgressIndicator(0);
-        offerAvailabilitySpinner.setPrefSize(18, 18);
+        offerAvailabilitySpinner = new StaticProgressIndicator(0);
+        offerAvailabilitySpinner.setPrefSize(24, 24);
         offerAvailabilitySpinner.setProgress(-1);
 
         offerAvailabilitySpinnerLabel = new Label(BSResources.get("takeOffer.fundsBox.isOfferAvailable"));
@@ -762,9 +763,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         fundFromExternalWalletButton = new Button("Open your external wallet for funding");
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
-        spinner = new ProgressIndicator(0);
-        spinner.setPrefHeight(18);
-        spinner.setPrefWidth(18);
+        spinner = new StaticProgressIndicator(0);
+        spinner.setPrefSize(24, 24);
         spinnerInfoLabel = new Label();
         spinnerInfoLabel.setPadding(new Insets(5, 0, 0, 0));
         fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, spinner, spinnerInfoLabel);

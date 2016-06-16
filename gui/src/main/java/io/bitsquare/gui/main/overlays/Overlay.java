@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.overlays;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.BSResources;
@@ -35,7 +36,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -117,7 +121,7 @@ public abstract class Overlay<T extends Overlay> {
     private boolean showReportErrorButtons;
     protected Label messageLabel;
     protected String truncatedMessage;
-    private ProgressIndicator progressIndicator;
+    private StaticProgressIndicator progressIndicator;
     private boolean showProgressIndicator;
     private Button actionButton;
     protected Label headLineLabel;
@@ -691,8 +695,8 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void addProgressIndicator() {
-        progressIndicator = new ProgressIndicator(-1);
-        progressIndicator.setMaxSize(36, 36);
+        progressIndicator = new StaticProgressIndicator(-1);
+        progressIndicator.setPrefSize(24, 24);
         progressIndicator.setMouseTransparent(true);
         progressIndicator.setPadding(new Insets(0, 0, 20, 0));
         GridPane.setHalignment(progressIndicator, HPos.CENTER);
