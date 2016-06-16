@@ -92,7 +92,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     private CryptoCurrency showAllCurrenciesItem = new CryptoCurrency(SHOW_ALL_FLAG, SHOW_ALL_FLAG);
 
     private final ObservableList<OfferBookListItem> offerBookListItems;
-    private final ListChangeListener<OfferBookListItem> listChangeListener;
     private boolean isTabSelected;
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
     boolean showAllPaymentMethods = true;
@@ -120,7 +119,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.formatter = formatter;
 
         offerBookListItems = offerBook.getOfferBookListItems();
-        listChangeListener = c -> filterList();
 
         this.filteredItems = new FilteredList<>(offerBookListItems);
         this.sortedItems = new SortedList<>(filteredItems);
@@ -135,10 +133,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     protected void activate() {
         fillAllTradeCurrencies();
         btcCode.bind(preferences.btcDenominationProperty());
-        offerBookListItems.addListener(listChangeListener);
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
-        filterList();
+        applyFilterPredicate();
         setMarketPriceFeedCurrency();
     }
 
@@ -146,7 +143,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     @Override
     protected void deactivate() {
         btcCode.unbind();
-        offerBookListItems.removeListener(listChangeListener);
         preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
     }
 
@@ -199,7 +195,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
             setMarketPriceFeedCurrency();
 
-            filterList();
+            applyFilterPredicate();
         }
     }
 
@@ -208,7 +204,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (!showAllPaymentMethods)
             this.selectedPaymentMethod = paymentMethod;
 
-        filterList();
+        applyFilterPredicate();
     }
 
     void onRemoveOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
@@ -425,7 +421,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Filters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void filterList() {
+    private void applyFilterPredicate() {
         filteredItems.setPredicate(offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
             boolean directionResult = offer.getDirection() != direction;

@@ -197,7 +197,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
-        if (DevFlags.DEV_MODE)
+        if (DevFlags.STRESS_TEST_MODE)
             UserThread.runAfter(() -> onShowPayFundsScreen(), 200, TimeUnit.MILLISECONDS);
     }
 
