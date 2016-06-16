@@ -23,10 +23,10 @@
  * questions.
  */
 
-package io.bitsquare.gui.components.confidence.behavior;
+package io.bitsquare.gui.components.indicator.behavior;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 
 import java.util.Collections;
 
@@ -36,7 +36,7 @@ import java.util.Collections;
 /**
  * @param <C>
  */
-public class ConfidenceProgressIndicatorBehavior<C extends ConfidenceProgressIndicator> extends BehaviorBase<C> {
+public class StaticProgressIndicatorBehavior<C extends StaticProgressIndicator> extends BehaviorBase<C> {
 
     /**
      * ************************************************************************
@@ -46,7 +46,7 @@ public class ConfidenceProgressIndicatorBehavior<C extends ConfidenceProgressInd
      * ************************************************************************
      */
 
-    public ConfidenceProgressIndicatorBehavior(final C progress) {
+    public StaticProgressIndicatorBehavior(final C progress) {
         super(progress, Collections.emptyList());
     }
 }

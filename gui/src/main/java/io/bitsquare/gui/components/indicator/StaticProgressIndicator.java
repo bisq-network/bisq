@@ -23,9 +23,9 @@
  * questions.
  */
 
-package io.bitsquare.gui.components.confidence;
+package io.bitsquare.gui.components.indicator;
 
-import io.bitsquare.gui.components.confidence.skin.ConfidenceProgressIndicatorSkin;
+import io.bitsquare.gui.components.indicator.skin.StaticProgressIndicatorSkin;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.DoublePropertyBase;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -67,7 +67,7 @@ import javafx.scene.control.Skin;
  */
 
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
-public class ConfidenceProgressIndicator extends Control {
+public class StaticProgressIndicator extends Control {
 
     /**
      * Value for progress indicating that the progress is indeterminate.
@@ -121,7 +121,7 @@ public class ConfidenceProgressIndicator extends Control {
     /**
      * Creates a new indeterminate ProgressIndicator.
      */
-    public ConfidenceProgressIndicator() {
+    public StaticProgressIndicator() {
         this(INDETERMINATE_PROGRESS);
     }
 
@@ -129,7 +129,7 @@ public class ConfidenceProgressIndicator extends Control {
      * Creates a new ProgressIndicator with the given progress value.
      */
     @SuppressWarnings("unchecked")
-    public ConfidenceProgressIndicator(double progress) {
+    public StaticProgressIndicator(double progress) {
         // focusTraversable is styleable through css. Calling setFocusTraversable
         // makes it look to css like the user set the value and css will not
         // override. Initializing focusTraversable by calling applyStyle with null
@@ -169,7 +169,7 @@ public class ConfidenceProgressIndicator extends Control {
 
                 @Override
                 public Object getBean() {
-                    return ConfidenceProgressIndicator.this;
+                    return StaticProgressIndicator.this;
                 }
 
 
@@ -217,7 +217,7 @@ public class ConfidenceProgressIndicator extends Control {
 
                 @Override
                 public Object getBean() {
-                    return ConfidenceProgressIndicator.this;
+                    return StaticProgressIndicator.this;
                 }
 
 
@@ -236,7 +236,7 @@ public class ConfidenceProgressIndicator extends Control {
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new ConfidenceProgressIndicatorSkin(this);
+        return new StaticProgressIndicatorSkin(this);
     }
 
     /**

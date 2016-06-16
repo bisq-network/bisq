@@ -22,7 +22,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.user.Preferences;
 import javafx.scene.control.Label;
@@ -50,7 +50,7 @@ public class TxIdTextField extends AnchorPane {
 
     private final TextField textField;
     private final Tooltip progressIndicatorTooltip;
-    private final ConfidenceProgressIndicator progressIndicator;
+    private final StaticProgressIndicator progressIndicator;
     private final Label copyIcon;
     private final Label blockExplorerIcon;
     private TxConfidenceListener txConfidenceListener;
@@ -61,7 +61,7 @@ public class TxIdTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TxIdTextField() {
-        progressIndicator = new ConfidenceProgressIndicator();
+        progressIndicator = new StaticProgressIndicator();
         progressIndicator.setFocusTraversable(false);
         progressIndicator.setPrefSize(24, 24);
         progressIndicator.setId("funds-confidence");

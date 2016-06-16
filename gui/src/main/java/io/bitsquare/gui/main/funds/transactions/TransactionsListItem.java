@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
@@ -40,7 +40,7 @@ public class TransactionsListItem {
     private final Date date;
     private final String txId;
     private final WalletService walletService;
-    private final ConfidenceProgressIndicator progressIndicator;
+    private final StaticProgressIndicator progressIndicator;
     private final Tooltip tooltip;
     @Nullable
     private Tradable tradable;
@@ -111,7 +111,7 @@ public class TransactionsListItem {
         }
 
         // confidence
-        progressIndicator = new ConfidenceProgressIndicator();
+        progressIndicator = new StaticProgressIndicator();
         progressIndicator.setId("funds-confidence");
         tooltip = new Tooltip("Not used yet");
         progressIndicator.setProgress(0);
@@ -202,7 +202,7 @@ public class TransactionsListItem {
         }
     }
 
-    public ConfidenceProgressIndicator getProgressIndicator() {
+    public StaticProgressIndicator getProgressIndicator() {
         return progressIndicator;
     }
 

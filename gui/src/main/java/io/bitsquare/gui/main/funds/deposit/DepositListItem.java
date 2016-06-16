@@ -21,7 +21,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -39,7 +39,7 @@ public class DepositListItem {
     private final StringProperty balance = new SimpleStringProperty();
     private final WalletService walletService;
     private Coin balanceAsCoin;
-    private final ConfidenceProgressIndicator progressIndicator;
+    private final StaticProgressIndicator progressIndicator;
     private final Tooltip tooltip;
     private String addressString;
     private String usage = "-";
@@ -52,7 +52,7 @@ public class DepositListItem {
         addressString = addressEntry.getAddressString();
 
         // confidence
-        progressIndicator = new ConfidenceProgressIndicator();
+        progressIndicator = new StaticProgressIndicator();
         progressIndicator.setId("funds-confidence");
         tooltip = new Tooltip("Not used yet");
         progressIndicator.setProgress(0);
@@ -124,7 +124,7 @@ public class DepositListItem {
         }
     }
 
-    public ConfidenceProgressIndicator getProgressIndicator() {
+    public StaticProgressIndicator getProgressIndicator() {
         return progressIndicator;
     }
 

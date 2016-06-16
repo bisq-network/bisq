@@ -20,7 +20,7 @@ package io.bitsquare.gui.components;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -46,7 +46,7 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
 
     private final TextField textField;
     private final Tooltip progressIndicatorTooltip;
-    private final ConfidenceProgressIndicator progressIndicator;
+    private final StaticProgressIndicator progressIndicator;
 
     private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, 4, 0.0, 0, 0);
     private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, 4, 0.0, 0, 0);
@@ -62,7 +62,7 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
         textField.setFocusTraversable(false);
         textField.setEditable(false);
 
-        progressIndicator = new ConfidenceProgressIndicator();
+        progressIndicator = new StaticProgressIndicator();
         progressIndicator.setFocusTraversable(false);
         progressIndicator.setPrefSize(24, 24);
         progressIndicator.setId("funds-confidence");
