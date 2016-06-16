@@ -158,7 +158,6 @@ public class ArbitratorManager {
 
     public void applyArbitrators() {
         Map<NodeAddress, Arbitrator> map = arbitratorService.getArbitrators();
-        log.trace("Arbitrators . size=" + map.values().size());
         arbitratorsObservableMap.clear();
         Map<NodeAddress, Arbitrator> filtered = map.values().stream()
                 .filter(e -> isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()))
