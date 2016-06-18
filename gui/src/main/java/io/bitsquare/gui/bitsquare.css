@@ -1061,6 +1061,6 @@ textfield */
 #ident-num-label {
     -fx-font-weight: bold;
     -fx-alignment: center;
-    -fx-font-size: 11;
+    -fx-font-size: 10;
     -fx-text-fill: white;
 }

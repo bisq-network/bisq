@@ -79,7 +79,7 @@ public class PeerInfoIcon extends Group {
         numTradesCircle = new ImageView();
         numTradesCircle.setId("image-green_circle");
         numTradesLabel = new Label();
-        numTradesLabel.relocate(4, 0);
+        numTradesLabel.relocate(5, 1);
         numTradesLabel.setId("ident-num-label");
         numTradesPane.getChildren().addAll(numTradesCircle, numTradesLabel);
 
@@ -89,7 +89,7 @@ public class PeerInfoIcon extends Group {
         tagCircle = new ImageView();
         tagCircle.setId("image-blue_circle");
         tagLabel = new Label();
-        tagLabel.relocate(4, 0);
+        tagLabel.relocate(5, 1);
         tagLabel.setId("ident-num-label");
         tagPane.getChildren().addAll(tagCircle, tagLabel);
 
