@@ -21,6 +21,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.components.PeerInfoIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
@@ -32,7 +33,6 @@ import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.offer.OfferView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
-import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CryptoCurrency;
@@ -689,7 +689,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ? "Offerers onion address: " + hostName + "\n" +
                                             "You have already traded " + numPastTrades + " times with that offerer." : "Offerers onion address: " + hostName;
-                                    Node identIcon = ImageUtil.getIdentIcon(hostName, tooltipText, numPastTrades);
+                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades);
+                                    setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)
                                         setGraphic(identIcon);
                                 } else {

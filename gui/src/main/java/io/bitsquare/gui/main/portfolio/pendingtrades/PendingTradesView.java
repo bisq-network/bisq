@@ -21,14 +21,15 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.components.PeerInfoIcon;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.ImageUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -453,7 +454,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ? "Trading peers onion address: " + hostName + "\n" +
                                             "You have already traded " + numPastTrades + " times with that peer." : "Trading peers onion address: " + hostName;
-                                    Node identIcon = ImageUtil.getIdentIcon(hostName, tooltipText, numPastTrades);
+                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades);
+                                    setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)
                                         setGraphic(identIcon);
                                 } else {

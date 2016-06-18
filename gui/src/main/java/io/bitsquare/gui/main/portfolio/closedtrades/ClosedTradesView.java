@@ -20,10 +20,10 @@ package io.bitsquare.gui.main.portfolio.closedtrades;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.components.PeerInfoIcon;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
@@ -31,6 +31,7 @@ import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -234,7 +235,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
                                     int numPastTrades = model.getNumPastTrades(newItem.getTradable());
                                     String hostName = ((Trade) newItem.getTradable()).getTradingPeerNodeAddress().hostName;
-                                    Node identIcon = ImageUtil.getIdentIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades);
+                                    Node identIcon = new PeerInfoIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades);
+                                    setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)
                                         setGraphic(identIcon);
                                 } else {
