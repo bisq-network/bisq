@@ -26,7 +26,7 @@ import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.transformation.SortedList;
+import io.bitsquare.gui.util.SortedList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
