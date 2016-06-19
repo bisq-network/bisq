@@ -31,7 +31,6 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.TableGroupHeadline;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.ContractWindow;
 import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
@@ -48,16 +47,10 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
-import javafx.event.EventHandler;
+import io.bitsquare.gui.util.SortedList;
 import javafx.geometry.Insets;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextAlignment;
@@ -75,7 +68,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
@@ -102,7 +97,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TextArea inputTextArea;
     private AnchorPane messagesAnchorPane;
     private VBox messagesInputBox;
-    private StaticProgressIndicator sendMsgProgressIndicator;
+    private ProgressIndicator sendMsgProgressIndicator;
     private Label sendMsgInfoLabel;
     private ChangeListener<Boolean> arrivedPropertyListener;
     private ChangeListener<Boolean> storedInMailboxPropertyListener;
@@ -582,7 +577,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                             if (item != null && !empty) {
                                 copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(messageLabel.getText()));
-                                
+
                                /* messageAnchorPane.prefWidthProperty().bind(EasyBind.map(messageListView.widthProperty(),
                                         w -> (double) w - padding - GUIUtil.getScrollbarWidth(messageListView)));*/
                                 if (!messageAnchorPane.prefWidthProperty().isBound())
