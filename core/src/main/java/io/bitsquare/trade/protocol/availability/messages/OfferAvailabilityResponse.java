@@ -28,10 +28,11 @@ public final class OfferAvailabilityResponse extends OfferMessage {
 
     // TODO keep for backward compatibility. Can be removed once everyone is on v0.4.9
     public boolean isAvailable;
-    
+
     public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
         super(offerId);
         this.availabilityResult = availabilityResult;
+        isAvailable = availabilityResult == AvailabilityResult.AVAILABLE;
     }
 
     @Override
