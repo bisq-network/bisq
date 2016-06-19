@@ -47,7 +47,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
+import io.bitsquare.gui.util.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
@@ -504,7 +504,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                             if (item != null && !empty) {
                                 copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(messageLabel.getText()));
-                                
+
                                /* messageAnchorPane.prefWidthProperty().bind(EasyBind.map(messageListView.widthProperty(),
                                         w -> (double) w - padding - GUIUtil.getScrollbarWidth(messageListView)));*/
                                 if (!messageAnchorPane.prefWidthProperty().isBound())

@@ -45,7 +45,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
+import io.bitsquare.gui.util.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -205,7 +205,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 }
             };
             try {
-                // We need to use the max. amount (amountOfSelectedItems) as the senderAmount might be less then 
+                // We need to use the max. amount (amountOfSelectedItems) as the senderAmount might be less then
                 // we have available and then the fee calculation would return 0
                 // TODO Get a proper fee calculation from BitcoinJ directly
                 Coin requiredFee = walletService.getRequiredFeeForMultipleAddresses(fromAddresses,

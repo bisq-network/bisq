@@ -32,7 +32,7 @@ import io.bitsquare.p2p.network.Statistic;
 import io.bitsquare.user.Preferences;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
+import io.bitsquare.gui.util.SortedList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
