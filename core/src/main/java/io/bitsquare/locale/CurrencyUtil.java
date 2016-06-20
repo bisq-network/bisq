@@ -125,21 +125,22 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ERC", "Europecoin"));
         result.add(new CryptoCurrency("POST", "PostCoin"));
         result.add(new CryptoCurrency("LSK", "Lisk"));
+        result.add(new CryptoCurrency("USDT", "USD Tether"));
+        result.add(new CryptoCurrency("EURT", "EUR Tether"));
+        result.add(new CryptoCurrency("JPYT", "JPY Tether"));
         return result;
     }
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("DAO", "DAO", true));
-        result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
+        result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
-        result.add(new CryptoCurrency("SC", "Siacoin"));
-        result.add(new CryptoCurrency("FAIR", "FairCoin"));
+        result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
