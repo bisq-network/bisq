@@ -36,10 +36,6 @@ import javafx.scene.layout.Priority;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import static io.bitsquare.gui.util.FormBuilder.addLabel;
 import static io.bitsquare.gui.util.FormBuilder.addLabelTextArea;
 
@@ -150,9 +146,7 @@ public class AddBridgeEntriesWindow extends Overlay<AddBridgeEntriesWindow> {
 
     private void save() {
         if (!alertMessageTextArea.getText().isEmpty()) {
-            List<String> list = Arrays.asList(alertMessageTextArea.getText().split("\\n"));
-            list = list.stream().map(e -> "bridge " + e).collect(Collectors.toList());
-            Preferences.INSTANCE.setBridgeAddresses(list);
+            Preferences.INSTANCE.setBridgeAddressesAsString(alertMessageTextArea.getText());
             actionHandlerOptional.ifPresent(Runnable::run);
             hide();
         }

@@ -85,7 +85,7 @@ public class PeerServiceTest {
             seedNodes.add(seedNode);
             seedNode.createAndStartP2PService(true);
 
-            seedNode.getSeedNodeP2PService().start(new P2PServiceListener() {
+            seedNode.getSeedNodeP2PService().start(false, new P2PServiceListener() {
                 @Override
                 public void onRequestingDataCompleted() {
                 }

@@ -296,7 +296,7 @@ public class NetworkStressTest {
             //noinspection ConstantConditions
             peerPKRings.add(peer.getKeyRing().getPubKeyRing());
             peerNodes.add(peer);
-            peer.start(new PeerServiceListener(
+            peer.start(false, new PeerServiceListener(
                     localServicesLatch, localServicesFailed, prelimDataLatch, bootstrapLatch));
         }
         print("created peer nodes");
@@ -730,7 +730,7 @@ public class NetworkStressTest {
             final P2PService startedPeer = createPeerNode(firstOffline, peerPorts.get(firstOffline));
             addMailboxListeners(startedPeer, receivedMailboxLatch);
             peerNodes.set(firstOffline, startedPeer);
-            startedPeer.start(new MailboxStartListener(startLatch));
+            startedPeer.start(false, new MailboxStartListener(startLatch));
             assertLatch("timed out while starting peer " + firstOffline,
                     startLatch,
                     // this assumes some delay per received mailbox message

@@ -47,7 +47,6 @@ public class TorNetworkNode extends NetworkNode {
     private Timer shutDownTimeoutTimer;
     private int restartCounter;
     private MonadicBinding<Boolean> allShutDown;
-    private boolean useBridges;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +64,7 @@ public class TorNetworkNode extends NetworkNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void start(@Nullable SetupListener setupListener) {
+    public void start(boolean useBridges, @Nullable SetupListener setupListener) {
         if (setupListener != null)
             addSetupListener(setupListener);
 
@@ -73,6 +72,7 @@ public class TorNetworkNode extends NetworkNode {
 
         // Create the tor node (takes about 6 sec.)
         createTorNode(torDir,
+                useBridges,
                 torNode -> {
                     Log.traceCall("torNode created");
                     TorNetworkNode.this.torNetworkNode = torNode;
@@ -173,18 +173,17 @@ public class TorNetworkNode extends NetworkNode {
         restartCounter++;
         if (restartCounter <= MAX_RESTART_ATTEMPTS) {
             // If we failed we try with our default bridges
-            useBridges = true;
             if (restartCounter == 1) {
                 setupListeners.stream().forEach(SetupListener::onUseDefaultBridges);
                 shutDown(() -> UserThread.runAfter(() -> {
                     log.warn("Bridges: " + BridgeProvider.getBridges());
                     log.warn("We restart tor using default bridges.");
-                    start(null);
+                    start(true, null);
                 }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
             } else if (restartCounter == 2) {
                 setupListeners.stream().forEach(e -> e.onRequestCustomBridges(() -> {
                     log.warn("Bridges: " + BridgeProvider.getBridges());
-                    start(null);
+                    start(true, null);
                 }));
                 log.warn("We stop tor as starting tor with the default bridges failed. We request user to add custom bridges.");
                 shutDown(null);
@@ -192,7 +191,7 @@ public class TorNetworkNode extends NetworkNode {
                 shutDown(() -> UserThread.runAfter(() -> {
                     log.warn("We restart tor using custom bridges.");
                     log.warn("Bridges: " + BridgeProvider.getBridges());
-                    start(null);
+                    start(true, null);
                 }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
             }
         } else {
@@ -209,7 +208,7 @@ public class TorNetworkNode extends NetworkNode {
     // create tor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createTorNode(final File torDir, final Consumer<TorNode> resultHandler) {
+    private void createTorNode(final File torDir, boolean useBridges, final Consumer<TorNode> resultHandler) {
         Log.traceCall();
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(() -> {
             Utilities.setThreadName("TorNetworkNode:CreateTorNode");

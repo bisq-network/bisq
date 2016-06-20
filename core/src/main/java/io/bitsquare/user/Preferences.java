@@ -40,8 +40,10 @@ import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class Preferences implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -119,7 +121,8 @@ public final class Preferences implements Persistable {
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
-    private List<String> bridgeAddresses = new ArrayList<>();
+    @Nullable
+    private List<String> bridgeAddresses;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -179,7 +182,7 @@ public final class Preferences implements Persistable {
             bridgeAddresses = persisted.getBridgeAddresses();
             if (bridgeAddresses != null && !bridgeAddresses.isEmpty())
                 BridgeProvider.setBridges(bridgeAddresses);
-            
+
             try {
                 setNonTradeTxFeePerKB(persisted.getNonTradeTxFeePerKB());
             } catch (Exception e) {
@@ -392,9 +395,19 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
-    public void setBridgeAddresses(List<String> bridgeAddresses) {
+    public void setBridgeAddresses(@Nullable List<String> bridgeAddresses) {
         this.bridgeAddresses = bridgeAddresses;
         storage.queueUpForSave();
+    }
+
+    public void setBridgeAddressesAsString(@Nullable String bridgeAddressesAsString) {
+        if (bridgeAddressesAsString != null && !bridgeAddressesAsString.isEmpty()) {
+            List<String> list = Arrays.asList(bridgeAddressesAsString.split("\\n"));
+            list = list.stream().map(e -> "bridge " + e).collect(Collectors.toList());
+            setBridgeAddresses(list);
+        } else {
+            setBridgeAddresses(null);
+        }
     }
 
 
@@ -526,6 +539,7 @@ public final class Preferences implements Persistable {
         return peerTagMap;
     }
 
+    @Nullable
     public List<String> getBridgeAddresses() {
         return bridgeAddresses;
     }

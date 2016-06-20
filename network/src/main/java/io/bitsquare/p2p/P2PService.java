@@ -181,12 +181,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void start(@Nullable P2PServiceListener listener) {
+    public void start(boolean useBridges, @Nullable P2PServiceListener listener) {
         Log.traceCall();
         if (listener != null)
             addP2PServiceListener(listener);
 
-        networkNode.start(this);
+        networkNode.start(useBridges, this);
     }
 
     public void shutDown(Runnable shutDownCompleteHandler) {

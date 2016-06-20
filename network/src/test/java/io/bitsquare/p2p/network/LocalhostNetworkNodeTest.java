@@ -35,7 +35,7 @@ public class LocalhostNetworkNodeTest {
             msgLatch.countDown();
         });
         CountDownLatch startupLatch = new CountDownLatch(2);
-        node1.start(new SetupListener() {
+        node1.start(false, new SetupListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onTorNodeReady");
@@ -66,7 +66,7 @@ public class LocalhostNetworkNodeTest {
             log.debug("onMessage node2 " + message);
             msgLatch.countDown();
         });
-        node2.start(new SetupListener() {
+        node2.start(false, new SetupListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onTorNodeReady 2");

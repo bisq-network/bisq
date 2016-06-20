@@ -331,7 +331,8 @@ public class MainViewModel implements ViewModel {
         });
 
         final BooleanProperty p2pNetworkInitialized = new SimpleBooleanProperty();
-        p2PService.start(new P2PServiceListener() {
+        boolean useBridges = preferences.getBridgeAddresses() != null && !preferences.getBridgeAddresses().isEmpty();
+        p2PService.start(useBridges, new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
                 bootstrapState.set("Tor node created");
