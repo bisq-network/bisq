@@ -25,6 +25,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.locale.*;
 import io.bitsquare.storage.Storage;
+import io.nucleo.net.bridge.BridgeProvider;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -118,6 +119,7 @@ public final class Preferences implements Persistable {
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
+    private List<String> bridgeAddresses = new ArrayList<>();
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -174,7 +176,10 @@ public final class Preferences implements Persistable {
             usePercentageBasedPrice = persisted.getUsePercentageBasedPrice();
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
             maxPriceDistanceInPercent = persisted.getMaxPriceDistanceInPercent();
-
+            bridgeAddresses = persisted.getBridgeAddresses();
+            if (bridgeAddresses != null && !bridgeAddresses.isEmpty())
+                BridgeProvider.setBridges(bridgeAddresses);
+            
             try {
                 setNonTradeTxFeePerKB(persisted.getNonTradeTxFeePerKB());
             } catch (Exception e) {
@@ -200,7 +205,6 @@ public final class Preferences implements Persistable {
 
             storage.queueUpForSave();
         }
-
 
         this.bitcoinNetwork = bitsquareEnvironment.getBitcoinNetwork();
 
@@ -387,7 +391,12 @@ public final class Preferences implements Persistable {
         peerTagMap.put(hostName, tag);
         storage.queueUpForSave();
     }
-    
+
+    public void setBridgeAddresses(List<String> bridgeAddresses) {
+        this.bridgeAddresses = bridgeAddresses;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -517,6 +526,9 @@ public final class Preferences implements Persistable {
         return peerTagMap;
     }
 
+    public List<String> getBridgeAddresses() {
+        return bridgeAddresses;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

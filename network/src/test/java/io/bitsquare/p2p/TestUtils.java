@@ -18,7 +18,7 @@ public class TestUtils {
 
     public static int sleepTime;
     public static String test_dummy_dir = "test_dummy_dir";
-    
+
     public static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         long ts = System.currentTimeMillis();
         final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA");
@@ -112,6 +112,14 @@ public class TestUtils {
                     @Override
                     public void onSetupFailed(Throwable throwable) {
                     }
+
+                    @Override
+                    public void onUseDefaultBridges() {
+                    }
+
+                    @Override
+                    public void onRequestCustomBridges(Runnable resultHandler) {
+                    }
                 });
         latch.await();
         Thread.sleep(sleepTime);
@@ -160,7 +168,14 @@ public class TestUtils {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();

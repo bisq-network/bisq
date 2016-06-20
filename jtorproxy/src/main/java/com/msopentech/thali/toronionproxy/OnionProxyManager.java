@@ -29,8 +29,10 @@ See the Apache 2 License for the specific language governing permissions and lim
 
 package com.msopentech.thali.toronionproxy;
 
+import com.google.common.base.Preconditions;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.HiddenServiceReadyListener;
+import io.nucleo.net.bridge.BridgeProvider;
 import net.freehaven.tor.control.ConfigEntry;
 import net.freehaven.tor.control.TorControlConnection;
 import org.slf4j.Logger;
@@ -64,7 +66,7 @@ public abstract class OnionProxyManager {
     private static final String OWNER = "__OwningControllerProcess";
     private static final long COOKIE_TIMEOUT_IN_SEC = 10;
     private static final long HOSTNAME_TIMEOUT_IN_SEC = 30;
-    private static final Logger LOG = LoggerFactory.getLogger(OnionProxyManager.class);
+    private static final Logger log = LoggerFactory.getLogger(OnionProxyManager.class);
 
     protected final OnionProxyContext onionProxyContext;
 
@@ -106,15 +108,16 @@ public abstract class OnionProxyManager {
      * @throws java.lang.InterruptedException - You know, if we are interrupted
      * @throws java.io.IOException            - IO Exceptions
      */
-    public synchronized boolean startWithRepeat(int secondsBeforeTimeOut, int numberOfRetries)
+    public synchronized boolean startWithRepeat(int secondsBeforeTimeOut, int numberOfRetries, boolean useBridges)
             throws InterruptedException, IOException {
+
         if (secondsBeforeTimeOut <= 0 || numberOfRetries < 0) {
             throw new IllegalArgumentException("secondsBeforeTimeOut >= 0 & numberOfRetries > 0");
         }
 
         try {
             for (int retryCount = 0; retryCount < numberOfRetries; ++retryCount) {
-                if (installAndStartTorOp() == false) {
+                if (installAndStartTorOp(useBridges) == false) {
                     return false;
                 }
                 enableNetwork(true);
@@ -125,7 +128,7 @@ public abstract class OnionProxyManager {
                     if (isBootstrapped() == false) {
                         Thread.sleep(1000, 0);
                     } else {
-                        LOG.info("Tor has bootstrapped");
+                        log.info("Tor has bootstrapped");
                         return true;
                     }
                 }
@@ -208,7 +211,7 @@ public abstract class OnionProxyManager {
                     + "this.");
         }
 
-        LOG.info("Creating hidden service");
+        log.info("Creating hidden service");
         File hostnameFile = onionProxyContext.getHostNameFile();
 
         if (hostnameFile.getParentFile().exists() == false && hostnameFile.getParentFile().mkdirs() == false) {
@@ -254,7 +257,7 @@ public abstract class OnionProxyManager {
 
         // Publish the hidden service's onion hostname in transport properties
         String hostname = new String(FileUtilities.read(hostnameFile), "UTF-8").trim();
-        LOG.info("Hidden service config has completed.");
+        log.info("Hidden service config has completed.");
 
         return hostname;
     }
@@ -282,7 +285,7 @@ public abstract class OnionProxyManager {
             if (controlConnection == null) {
                 return;
             }
-            LOG.info("Stopping Tor");
+            log.info("Stopping Tor");
             controlConnection.setConf("DisableNetwork", "1");
             controlConnection.shutdownTor("TERM");
         } finally {
@@ -316,7 +319,7 @@ public abstract class OnionProxyManager {
         if (controlConnection == null) {
             throw new RuntimeException("Tor is not running!");
         }
-        LOG.info("Enabling network: " + enable);
+        log.info("Enabling network: " + enable);
         controlConnection.setConf("DisableNetwork", enable ? "0" : "1");
     }
 
@@ -361,7 +364,7 @@ public abstract class OnionProxyManager {
         try {
             phase = controlConnection.getInfo("status/bootstrap-phase");
         } catch (IOException e) {
-            LOG.warn("Control connection is not responding properly to getInfo", e);
+            log.warn("Control connection is not responding properly to getInfo", e);
         }
 
         if (phase != null && phase.contains("PROGRESS=100")) {
@@ -381,24 +384,24 @@ public abstract class OnionProxyManager {
      * @throws java.io.IOException            - IO Exceptions
      * @throws java.lang.InterruptedException - If we are, well, interrupted
      */
-    public synchronized boolean installAndStartTorOp() throws IOException, InterruptedException {
+    public synchronized boolean installAndStartTorOp(boolean useBridges) throws IOException, InterruptedException {
         // The Tor OP will die if it looses the connection to its socket so if
         // there is no controlSocket defined
         // then Tor is dead. This assumes, of course, that takeOwnership works
         // and we can't end up with Zombies.
         if (controlConnection != null) {
-            LOG.info("Tor is already running");
+            log.info("Tor is already running");
             return true;
         }
 
         // The code below is why this method is synchronized, we don't want two
         // instances of it running at once
         // as the result would be a mess of screwed up files and connections.
-        LOG.info("Tor is not running");
+        log.info("Tor is not running");
 
-        installAndConfigureFiles();
+        installAndConfigureFiles(useBridges);
 
-        LOG.info("Starting Tor");
+        log.info("Starting Tor");
         File cookieFile = onionProxyContext.getCookieFile();
         if (cookieFile.getParentFile().exists() == false && cookieFile.getParentFile().mkdirs() == false) {
             throw new RuntimeException("Could not create cookieFile parent directory");
@@ -449,14 +452,14 @@ public abstract class OnionProxyManager {
                 int exit = torProcess.waitFor();
                 torProcess = null;
                 if (exit != 0) {
-                    LOG.warn("Tor exited with value " + exit);
+                    log.warn("Tor exited with value " + exit);
                     return false;
                 }
             }
 
             // Wait for the auth cookie file to be created/updated
             if (!cookieObserver.poll(COOKIE_TIMEOUT_IN_SEC, SECONDS)) {
-                LOG.warn("Auth cookie not created");
+                log.warn("Auth cookie not created");
                 FileUtilities.listFilesToLog(workingDirectory);
                 return false;
             }
@@ -480,10 +483,10 @@ public abstract class OnionProxyManager {
             this.controlConnection = controlConnection;
             return true;
         } catch (SecurityException e) {
-            LOG.warn(e.toString(), e);
+            log.warn(e.toString(), e);
             return false;
         } catch (InterruptedException e) {
-            LOG.warn("Interrupted while starting Tor", e);
+            log.warn("Interrupted while starting Tor", e);
             Thread.currentThread().interrupt();
             return false;
         } finally {
@@ -518,7 +521,7 @@ public abstract class OnionProxyManager {
                 try {
                     while (scanner.hasNextLine()) {
                         if (stdError) {
-                            LOG.error(scanner.nextLine());
+                            log.error(scanner.nextLine());
                         } else {
                             String nextLine = scanner.nextLine();
                             // We need to find the line where it tells us what
@@ -533,7 +536,7 @@ public abstract class OnionProxyManager {
                                         nextLine.substring(nextLine.lastIndexOf(" ") + 1, nextLine.length() - 1));
                                 countDownLatch.countDown();
                             }
-                            LOG.info(nextLine);
+                            log.info(nextLine);
                         }
                     }
                 } finally {
@@ -542,14 +545,14 @@ public abstract class OnionProxyManager {
                         inputStream.close();
 
                     } catch (IOException e) {
-                        LOG.error("Couldn't close input stream in eatStream", e);
+                        log.error("Couldn't close input stream in eatStream", e);
                     }
                 }
             }
         }.start();
     }
 
-    protected synchronized void installAndConfigureFiles() throws IOException, InterruptedException {
+    protected synchronized void installAndConfigureFiles(boolean useBridges) throws IOException, InterruptedException {
         onionProxyContext.installFiles();
 
         if (!setExecutable(onionProxyContext.getTorExecutableFile())) {
@@ -573,6 +576,16 @@ public abstract class OnionProxyManager {
             printWriter.println("DataDirectory " + onionProxyContext.getWorkingDirectory().getAbsolutePath());
             printWriter.println("GeoIPFile " + onionProxyContext.getGeoIpFile().getName());
             printWriter.println("GeoIPv6File " + onionProxyContext.getGeoIpv6File().getName());
+
+            if (useBridges) {
+                List<String> bridges = BridgeProvider.getBridges();
+                Preconditions.checkNotNull(bridges, "Bridges must not be null");
+                Preconditions.checkArgument(!bridges.isEmpty(), "Bridges must not be empty");
+
+                printWriter.println("UseBridges 1");
+                for (String bridgeLine : bridges)
+                    printWriter.println(bridgeLine);
+            }
         } finally {
             if (printWriter != null) {
                 printWriter.close();

@@ -15,6 +15,7 @@ import io.bitsquare.p2p.Utils;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.JavaTorNode;
 import io.nucleo.net.TorNode;
+import io.nucleo.net.bridge.BridgeProvider;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.fxmisc.easybind.EasyBind;
@@ -46,10 +47,12 @@ public class TorNetworkNode extends NetworkNode {
     private Timer shutDownTimeoutTimer;
     private int restartCounter;
     private MonadicBinding<Boolean> allShutDown;
+    private boolean useBridges;
 
-    // /////////////////////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
-    // /////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TorNetworkNode(int servicePort, File torDir) {
         super(servicePort);
@@ -69,24 +72,25 @@ public class TorNetworkNode extends NetworkNode {
         createExecutorService();
 
         // Create the tor node (takes about 6 sec.)
-        createTorNode(torDir, torNode -> {
-            Log.traceCall("torNode created");
-            TorNetworkNode.this.torNetworkNode = torNode;
+        createTorNode(torDir,
+                torNode -> {
+                    Log.traceCall("torNode created");
+                    TorNetworkNode.this.torNetworkNode = torNode;
 
-            setupListeners.stream().forEach(SetupListener::onTorNodeReady);
+                    setupListeners.stream().forEach(SetupListener::onTorNodeReady);
 
-            // Create Hidden Service (takes about 40 sec.)
-            createHiddenService(torNode,
-                    Utils.findFreeSystemPort(),
-                    servicePort,
-                    hiddenServiceDescriptor -> {
-                        Log.traceCall("hiddenService created");
-                        TorNetworkNode.this.hiddenServiceDescriptor = hiddenServiceDescriptor;
-                        nodeAddressProperty.set(new NodeAddress(hiddenServiceDescriptor.getFullAddress()));
-                        startServer(hiddenServiceDescriptor.getServerSocket());
-                        setupListeners.stream().forEach(SetupListener::onHiddenServicePublished);
-                    });
-        });
+                    // Create Hidden Service (takes about 40 sec.)
+                    createHiddenService(torNode,
+                            Utils.findFreeSystemPort(),
+                            servicePort,
+                            hiddenServiceDescriptor -> {
+                                Log.traceCall("hiddenService created");
+                                TorNetworkNode.this.hiddenServiceDescriptor = hiddenServiceDescriptor;
+                                nodeAddressProperty.set(new NodeAddress(hiddenServiceDescriptor.getFullAddress()));
+                                startServer(hiddenServiceDescriptor.getServerSocket());
+                                setupListeners.stream().forEach(SetupListener::onHiddenServicePublished);
+                            });
+                });
     }
 
     @Override
@@ -96,7 +100,7 @@ public class TorNetworkNode extends NetworkNode {
         return torNetworkNode.connectToHiddenService(peerNodeAddress.hostName, peerNodeAddress.port);
     }
 
-    public void shutDown(Runnable shutDownCompleteHandler) {
+    public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
         Log.traceCall();
         BooleanProperty torNetworkNodeShutDown = torNetworkNodeShutDown();
         BooleanProperty networkNodeShutDown = networkNodeShutDown();
@@ -117,7 +121,8 @@ public class TorNetworkNode extends NetworkNode {
                     log.error("Shutdown executorService failed with exception: " + t.getMessage());
                     t.printStackTrace();
                 } finally {
-                    shutDownCompleteHandler.run();
+                    if (shutDownCompleteHandler != null)
+                        shutDownCompleteHandler.run();
                 }
             }
         });
@@ -167,10 +172,29 @@ public class TorNetworkNode extends NetworkNode {
         Log.traceCall();
         restartCounter++;
         if (restartCounter <= MAX_RESTART_ATTEMPTS) {
-            shutDown(() -> UserThread.runAfter(() -> {
-                log.warn("We restart tor as starting tor failed.");
-                start(null);
-            }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
+            // If we failed we try with our default bridges
+            useBridges = true;
+            if (restartCounter == 1) {
+                setupListeners.stream().forEach(SetupListener::onUseDefaultBridges);
+                shutDown(() -> UserThread.runAfter(() -> {
+                    log.warn("Bridges: " + BridgeProvider.getBridges());
+                    log.warn("We restart tor using default bridges.");
+                    start(null);
+                }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
+            } else if (restartCounter == 2) {
+                setupListeners.stream().forEach(e -> e.onRequestCustomBridges(() -> {
+                    log.warn("Bridges: " + BridgeProvider.getBridges());
+                    start(null);
+                }));
+                log.warn("We stop tor as starting tor with the default bridges failed. We request user to add custom bridges.");
+                shutDown(null);
+            } else {
+                shutDown(() -> UserThread.runAfter(() -> {
+                    log.warn("We restart tor using custom bridges.");
+                    log.warn("Bridges: " + BridgeProvider.getBridges());
+                    start(null);
+                }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
+            }
         } else {
             String msg = "We tried to restart Tor " + restartCounter +
                     " times, but it continued to fail with error message:\n" +
@@ -192,7 +216,7 @@ public class TorNetworkNode extends NetworkNode {
             long ts = System.currentTimeMillis();
             if (torDir.mkdirs())
                 log.trace("Created directory for tor at {}", torDir.getAbsolutePath());
-            TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode = new JavaTorNode(torDir);
+            TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode = new JavaTorNode(torDir, useBridges);
             log.info("\n\n############################################################\n" +
                     "TorNode created:" +
                     "\nTook " + (System.currentTimeMillis() - ts) + " ms"

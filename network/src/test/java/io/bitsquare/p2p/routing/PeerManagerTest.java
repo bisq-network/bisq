@@ -4,7 +4,6 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
-import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.seed.SeedNode;
 import org.junit.After;
 import org.junit.Before;
@@ -116,6 +115,14 @@ public class PeerManagerTest {
                     public void onSetupFailed(Throwable throwable) {
 
                     }
+
+                    @Override
+                    public void onUseDefaultBridges() {
+                    }
+
+                    @Override
+                    public void onRequestCustomBridges(Runnable resultHandler) {
+                    }
                 });
         P2PService p2PService1 = seedNode1.getSeedNodeP2PService();
         latch.await();
@@ -166,7 +173,14 @@ public class PeerManagerTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         P2PService p2PService1 = seedNode1.getSeedNodeP2PService();
@@ -204,7 +218,14 @@ public class PeerManagerTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         P2PService p2PService2 = seedNode2.getSeedNodeP2PService();
@@ -435,12 +456,18 @@ public class PeerManagerTest {
 
             @Override
             public void onHiddenServicePublished() {
-
             }
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();

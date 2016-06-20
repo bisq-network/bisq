@@ -275,6 +275,18 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         p2pServiceListeners.stream().forEach(e -> e.onSetupFailed(throwable));
     }
 
+    @Override
+    public void onUseDefaultBridges() {
+        Log.traceCall();
+        p2pServiceListeners.stream().forEach(e -> e.onUseDefaultBridges());
+    }
+
+    @Override
+    public void onRequestCustomBridges(Runnable resultHandler) {
+        Log.traceCall();
+        p2pServiceListeners.stream().forEach(e -> e.onRequestCustomBridges(resultHandler));
+    }
+
 
     // Called from networkReadyBinding
     private void onNetworkReady() {

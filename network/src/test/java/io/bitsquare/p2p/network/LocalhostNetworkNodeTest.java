@@ -48,6 +48,14 @@ public class LocalhostNetworkNodeTest {
             }
 
             @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+            }
+
+            @Override
             public void onSetupFailed(Throwable throwable) {
                 log.debug("onSetupFailed");
             }
@@ -73,6 +81,14 @@ public class LocalhostNetworkNodeTest {
             @Override
             public void onSetupFailed(Throwable throwable) {
                 log.debug("onSetupFailed 2");
+            }
+
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         startupLatch.await();

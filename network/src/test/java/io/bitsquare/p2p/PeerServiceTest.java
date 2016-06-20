@@ -1,7 +1,6 @@
 package io.bitsquare.p2p;
 
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
-import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.seed.SeedNode;
 import org.junit.After;
 import org.junit.Before;
@@ -89,37 +88,38 @@ public class PeerServiceTest {
             seedNode.getSeedNodeP2PService().start(new P2PServiceListener() {
                 @Override
                 public void onRequestingDataCompleted() {
-
                 }
 
                 @Override
                 public void onNoSeedNodeAvailable() {
-
                 }
 
                 @Override
                 public void onNoPeersAvailable() {
-
                 }
 
                 @Override
                 public void onBootstrapComplete() {
-
                 }
 
                 @Override
                 public void onTorNodeReady() {
-
                 }
 
                 @Override
                 public void onHiddenServicePublished() {
-
                 }
 
                 @Override
                 public void onSetupFailed(Throwable throwable) {
+                }
 
+                @Override
+                public void onUseDefaultBridges() {
+                }
+
+                @Override
+                public void onRequestCustomBridges(Runnable resultHandler) {
                 }
             });
         }
@@ -211,7 +211,14 @@ public class PeerServiceTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         P2PService p2PService1 = seedNode1.getSeedNodeP2PService();
@@ -249,7 +256,14 @@ public class PeerServiceTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         P2PService p2PService2 = seedNode2.getSeedNodeP2PService();
@@ -480,12 +494,18 @@ public class PeerServiceTest {
 
             @Override
             public void onHiddenServicePublished() {
-
             }
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();
