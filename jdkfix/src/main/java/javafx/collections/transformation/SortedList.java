@@ -90,8 +90,6 @@ public final class SortedList<E> extends TransformationList<E, E> {
         if (comparator != null) {
             setComparator(comparator);
         }
-//        throw new RuntimeException("it worked");
-
     }
 
     /**
