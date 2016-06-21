@@ -21,6 +21,7 @@ import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.ViewLoader;
+import io.bitsquare.user.Preferences;
 
 import javax.inject.Inject;
 
@@ -28,8 +29,8 @@ import javax.inject.Inject;
 public class BuyOfferView extends OfferView {
 
     @Inject
-    public BuyOfferView(ViewLoader viewLoader, Navigation navigation, PriceFeed priceFeed) {
-        super(viewLoader, navigation, priceFeed);
+    public BuyOfferView(ViewLoader viewLoader, Navigation navigation, PriceFeed priceFeed, Preferences preferences) {
+        super(viewLoader, navigation, priceFeed, preferences);
     }
 
     @Override

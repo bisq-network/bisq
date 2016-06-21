@@ -275,7 +275,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     public void setDirection(Offer.Direction direction) {
-        model.setDirection(direction);
+        model.initWithDirection(direction);
         ImageView iconView = new ImageView();
 
         createOfferButton.setGraphic(iconView);

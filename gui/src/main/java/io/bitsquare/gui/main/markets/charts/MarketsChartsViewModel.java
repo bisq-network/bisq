@@ -41,6 +41,7 @@ import org.bitcoinj.utils.Fiat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 class MarketsChartsViewModel extends ActivatableViewModel {
@@ -50,7 +51,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     private final Preferences preferences;
     final PriceFeed priceFeed;
 
-    final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>(CurrencyUtil.getDefaultTradeCurrency());
+    final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>();
     private final List<XYChart.Data> buyData = new ArrayList<>();
     private final List<XYChart.Data> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
@@ -69,6 +70,13 @@ class MarketsChartsViewModel extends ActivatableViewModel {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.priceFeed = priceFeed;
+
+        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getMarketScreenCurrencyCode());
+        if (tradeCurrencyOptional.isPresent())
+            tradeCurrency.set(tradeCurrencyOptional.get());
+        else {
+            tradeCurrency.set(CurrencyUtil.getDefaultTradeCurrency());
+        }
 
         offerBookListItems = offerBook.getOfferBookListItems();
         listChangeListener = c -> {
@@ -182,6 +190,8 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
         if (!preferences.getUseStickyMarketPrice())
             priceFeed.setCurrencyCode(tradeCurrency.getCode());
+
+        preferences.setMarketScreenCurrencyCode(tradeCurrency.getCode());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

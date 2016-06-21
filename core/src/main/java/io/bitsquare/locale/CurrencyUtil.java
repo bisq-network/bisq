@@ -206,6 +206,20 @@ public class CurrencyUtil {
         return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
     }
 
+    public static Optional<TradeCurrency> getTradeCurrency(String currencyCode) {
+        Optional<FiatCurrency> fiatCurrencyOptional = getFiatCurrency(currencyCode);
+        if (isFiatCurrency(currencyCode) && fiatCurrencyOptional.isPresent()) {
+            return Optional.of(fiatCurrencyOptional.get());
+        } else {
+            Optional<CryptoCurrency> cryptoCurrencyOptional = getCryptoCurrency(currencyCode);
+            if (isCryptoCurrency(currencyCode) && cryptoCurrencyOptional.isPresent()) {
+                return Optional.of(cryptoCurrencyOptional.get());
+            } else {
+                return Optional.empty();
+            }
+        }
+    }
+
     public static FiatCurrency getCurrencyByCountryCode(String countryCode) {
         return new FiatCurrency(Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode)).getCurrencyCode());
     }

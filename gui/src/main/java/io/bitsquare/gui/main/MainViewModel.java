@@ -728,6 +728,7 @@ public class MainViewModel implements ViewModel {
     private void setupMarketPriceFeed() {
         if (priceFeed.getCurrencyCode() == null)
             priceFeed.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
+
         if (priceFeed.getType() == null)
             priceFeed.setType(PriceFeed.Type.LAST);
         priceFeed.init(price -> {
@@ -817,7 +818,7 @@ public class MainViewModel implements ViewModel {
     }
 
     public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
-        if (!preferences.getUseStickyMarketPrice()) {
+        if (!preferences.getUseStickyMarketPrice() && item != null) {
             Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(item.currencyCode);
             if (itemOptional.isPresent())
                 selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());

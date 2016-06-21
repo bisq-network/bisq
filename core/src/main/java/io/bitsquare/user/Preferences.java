@@ -123,6 +123,9 @@ public final class Preferences implements Persistable {
     @Deprecated
     private boolean useInvertedMarketPrice;
 
+    private String marketScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
@@ -194,6 +197,10 @@ public final class Preferences implements Persistable {
 
             if (persisted.getPeerTagMap() != null)
                 peerTagMap = persisted.getPeerTagMap();
+
+            marketScreenCurrencyCode = persisted.getMarketScreenCurrencyCode();
+            buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
+            sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
@@ -400,6 +407,21 @@ public final class Preferences implements Persistable {
         }
     }
 
+    public void setMarketScreenCurrencyCode(String marketScreenCurrencyCode) {
+        this.marketScreenCurrencyCode = marketScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
+    public void setBuyScreenCurrencyCode(String buyScreenCurrencyCode) {
+        this.buyScreenCurrencyCode = buyScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
+    public void setSellScreenCurrencyCode(String sellScreenCurrencyCode) {
+        this.sellScreenCurrencyCode = sellScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -524,6 +546,19 @@ public final class Preferences implements Persistable {
     public List<String> getBridgeAddresses() {
         return bridgeAddresses;
     }
+
+    public String getMarketScreenCurrencyCode() {
+        return marketScreenCurrencyCode;
+    }
+
+    public String getBuyScreenCurrencyCode() {
+        return buyScreenCurrencyCode;
+    }
+
+    public String getSellScreenCurrencyCode() {
+        return sellScreenCurrencyCode;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

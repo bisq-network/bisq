@@ -29,6 +29,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.SortedList;
 import io.bitsquare.locale.*;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
@@ -47,7 +48,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import io.bitsquare.gui.util.SortedList;
 import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,9 +123,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filteredItems = new FilteredList<>(offerBookListItems);
         this.sortedItems = new SortedList<>(filteredItems);
 
-        selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
-        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
-
         tradeCurrencyListChangeListener = c -> fillAllTradeCurrencies();
     }
 
@@ -167,8 +164,18 @@ class OfferBookViewModel extends ActivatableViewModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void setDirection(Offer.Direction direction) {
+    void initWithDirection(Offer.Direction direction) {
         this.direction = direction;
+
+        String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        if (code != null && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
+            showAllTradeCurrenciesProperty.set(false);
+            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
+        } else {
+            showAllTradeCurrenciesProperty.set(true);
+            selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+        }
+        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
     }
 
     void onTabSelected(boolean isSelected) {
@@ -196,6 +203,11 @@ class OfferBookViewModel extends ActivatableViewModel {
             setMarketPriceFeedCurrency();
 
             applyFilterPredicate();
+
+            if (direction == Offer.Direction.BUY)
+                preferences.setBuyScreenCurrencyCode(code);
+            else
+                preferences.setSellScreenCurrencyCode(code);
         }
     }
 
