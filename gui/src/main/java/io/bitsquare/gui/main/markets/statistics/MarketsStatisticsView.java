@@ -23,8 +23,8 @@ import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import io.bitsquare.gui.util.SortedList;
 import javafx.collections.ListChangeListener;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -114,8 +114,8 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
         numberOfOffersColumn.setText("Total offers (" + sortedList.stream().mapToInt(item -> item.numberOfOffers).sum() + ")");
         totalAmountColumn.setText("Total amount (" + formatter.formatCoinWithCode(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
     }
-    
-    
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Columns
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -29,7 +29,7 @@
  * questions.
  */
 
-package io.bitsquare.gui.util;
+package javafx.collections.transformation;
 
 import com.sun.javafx.collections.NonIterableChange.SimplePermutationChange;
 import com.sun.javafx.collections.SortHelper;
@@ -90,7 +90,6 @@ public final class SortedList<E> extends TransformationList<E, E> {
         if (comparator != null) {
             setComparator(comparator);
         }
-
     }
 
     /**

@@ -46,6 +46,7 @@
         <module>network</module>
         <module>seednode</module>
         <module>gui</module>
+        <module>jdkfix</module>
     </modules>
 
     <build>
@@ -91,7 +92,7 @@
     </repositories>
 
     <dependencies>
-        <!--bitcoin 
+        <!--bitcoin
             Needs local installation!
             See doc/build.md for further info
         -->
