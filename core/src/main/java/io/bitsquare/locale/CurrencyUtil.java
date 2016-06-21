@@ -186,7 +186,11 @@ public class CurrencyUtil {
     }
 
     public static boolean isFiatCurrency(String currencyCode) {
-        return !isCryptoCurrency(currencyCode) && Currency.getInstance(currencyCode) != null;
+        try {
+            return currencyCode != null && !currencyCode.isEmpty() && !isCryptoCurrency(currencyCode) && Currency.getInstance(currencyCode) != null;
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     public static Optional<FiatCurrency> getFiatCurrency(String currencyCode) {
