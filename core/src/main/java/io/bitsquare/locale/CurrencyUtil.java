@@ -73,20 +73,16 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("XMR", "Monero"));
+        result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
-        result.add(new CryptoCurrency("NMC", "Namecoin"));
-        result.add(new CryptoCurrency("DAO", "DAO", true));
-        result.add(new CryptoCurrency("MKR", "Maker", true));
-        result.add(new CryptoCurrency("DGD", "DigixDAO Tokens", true));
         result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("SDC", "ShadowCash"));
+        result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
+        result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("XPM", "Primecoin"));
-        result.add(new CryptoCurrency("FAIR", "FairCoin"));
-        result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
         result.add(new CryptoCurrency("GEMZ", "Gemz"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
@@ -97,6 +93,10 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
+        result.add(new CryptoCurrency("FAIR", "FairCoin"));
+        result.add(new CryptoCurrency("MKR", "Maker", true));
+        result.add(new CryptoCurrency("DGD", "DigixDAO Tokens", true));
+        result.add(new CryptoCurrency("DAO", "DAO", true));
         result.add(new CryptoCurrency("XEM", "NEM"));
         result.add(new CryptoCurrency("ANTI", "Anti"));
         result.add(new CryptoCurrency("VPN", "VPNCoin"));
@@ -133,9 +133,9 @@ public class CurrencyUtil {
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
-        result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
