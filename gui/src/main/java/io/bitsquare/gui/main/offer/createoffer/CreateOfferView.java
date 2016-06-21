@@ -129,6 +129,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private Subscription cancelButton2StyleSubscription;
     private Subscription balanceSubscription;
     private List<Node> editOfferElements = new ArrayList<>();
+    private boolean isActivated;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -172,49 +173,70 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     @Override
     protected void activate() {
-        currencyComboBox.setPrefWidth(250);
-        paymentAccountsComboBox.setPrefWidth(250);
+        if (model.dataModel.isTabSelected)
+            doActivate();
+    }
 
-        addBindings();
-        addListeners();
-        addSubscriptions();
+    private void doActivate() {
+        if (!isActivated) {
+            isActivated = true;
+            currencyComboBox.setPrefWidth(250);
+            paymentAccountsComboBox.setPrefWidth(250);
 
-        if (spinner != null && spinner.isVisible())
-            spinner.setProgress(-1);
+            addBindings();
+            addListeners();
+            addSubscriptions();
 
-        useMarketBasedPriceButton.setSelected(model.dataModel.useMarketBasedPrice.get());
-        fixedPriceButton.setSelected(!model.dataModel.useMarketBasedPrice.get());
+            if (spinner != null && spinner.isVisible())
+                spinner.setProgress(-1);
 
-        directionLabel.setText(model.getDirectionLabel());
-        amountDescriptionLabel.setText(model.getAmountDescription());
-        addressTextField.setAddress(model.getAddressAsString());
-        addressTextField.setPaymentLabel(model.getPaymentLabel());
+            useMarketBasedPriceButton.setSelected(model.dataModel.useMarketBasedPrice.get());
+            fixedPriceButton.setSelected(!model.dataModel.useMarketBasedPrice.get());
 
-        paymentAccountsComboBox.setItems(model.getPaymentAccounts());
-        paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
+            directionLabel.setText(model.getDirectionLabel());
+            amountDescriptionLabel.setText(model.getAmountDescription());
+            addressTextField.setAddress(model.getAddressAsString());
+            addressTextField.setPaymentLabel(model.getPaymentLabel());
 
-        onPaymentAccountsComboBoxSelected();
+            paymentAccountsComboBox.setItems(model.getPaymentAccounts());
+            paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
 
-        balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
+            onPaymentAccountsComboBoxSelected();
 
-        if (DevFlags.STRESS_TEST_MODE)
-            UserThread.runAfter(() -> onShowPayFundsScreen(), 200, TimeUnit.MILLISECONDS);
+            balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
+
+            if (DevFlags.STRESS_TEST_MODE)
+                UserThread.runAfter(this::onShowPayFundsScreen, 200, TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
     protected void deactivate() {
-        removeBindings();
-        removeListeners();
-        removeSubscriptions();
+        if (isActivated) {
+            isActivated = false;
+            removeBindings();
+            removeListeners();
+            removeSubscriptions();
 
-        if (spinner != null)
-            spinner.setProgress(0);
+            if (spinner != null)
+                spinner.setProgress(0);
+        }
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onTabSelected(boolean isSelected) {
+        if (isSelected && !model.dataModel.isTabSelected)
+            doActivate();
+        else
+            deactivate();
+
+        isActivated = isSelected;
+        model.dataModel.onTabSelected(isSelected);
+    }
 
     public void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = model.initWithData(direction, tradeCurrency);
@@ -246,8 +268,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // we use model.placeOfferCompleted to not react on close which was triggered by a successful placeOffer
         if (model.dataModel.balance.get().isPositive() && !model.placeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
-            new Popup().information("You have already funds paid in.\n" +
-                    "In the \"Funds/Available for withdrawal\" section you can withdraw those funds.")
+            new Popup().information("You had already funded that offer.\n" +
+                    "Your funds have been moved to your local Bitsquare wallet and are available for " +
+                    "withdrawal in the \"Funds/Available for withdrawal\" screen.")
                     .actionButtonText("Go to \"Funds/Available for withdrawal\"")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                     .show();
@@ -258,9 +281,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         this.closeHandler = closeHandler;
     }
 
-    public void onTabSelected(boolean isSelected) {
-        model.dataModel.onTabSelected(isSelected);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -892,8 +912,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.isWalletFunded.get()) {
-                new Popup().warning("You have already paid the funds.\n" +
-                        "If you cancel now, your funds will be available immediately.\n" +
+                new Popup().warning("You have already funded that offer.\n" +
+                        "If you cancel now, your funds will be moved to your local Bitsquare wallet and are available " +
+                        "for withdrawal in the \"Funds/Available for withdrawal\" screen.\n" +
                         "Are you sure you want to cancel?")
                         .closeButtonText("No")
                         .actionButtonText("Yes, cancel")
