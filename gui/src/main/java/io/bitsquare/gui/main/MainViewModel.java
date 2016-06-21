@@ -45,6 +45,7 @@ import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.main.overlays.notifications.NotificationCenter;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.AddBridgeEntriesWindow;
 import io.bitsquare.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bitsquare.gui.main.overlays.windows.TacWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
@@ -118,6 +119,8 @@ public class MainViewModel implements ViewModel {
     final StringProperty marketPriceCurrency = new SimpleStringProperty("");
     final ObjectProperty<PriceFeed.Type> typeProperty = new SimpleObjectProperty<>(PriceFeed.Type.LAST);
     final ObjectProperty<PriceFeedComboBoxItem> selectedPriceFeedComboBoxItemProperty = new SimpleObjectProperty<>();
+    final BooleanProperty isFiatCurrencyPriceFeedSelected = new SimpleBooleanProperty(true);
+    final BooleanProperty isCryptoCurrencyPriceFeedSelected = new SimpleBooleanProperty(false);
     final StringProperty availableBalance = new SimpleStringProperty();
     final StringProperty reservedBalance = new SimpleStringProperty();
     final StringProperty lockedBalance = new SimpleStringProperty();
@@ -330,7 +333,8 @@ public class MainViewModel implements ViewModel {
         });
 
         final BooleanProperty p2pNetworkInitialized = new SimpleBooleanProperty();
-        p2PService.start(new P2PServiceListener() {
+        boolean useBridges = preferences.getBridgeAddresses() != null && !preferences.getBridgeAddresses().isEmpty();
+        p2PService.start(useBridges, new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
                 bootstrapState.set("Tor node created");
@@ -388,6 +392,17 @@ public class MainViewModel implements ViewModel {
                 splashP2PNetworkProgress.set(0);
                 bootstrapWarning.set("Bootstrapping to P2P network failed");
                 p2pNetworkLabelId.set("splash-error-state-msg");
+            }
+
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+                new AddBridgeEntriesWindow()
+                        .onAction(resultHandler::run)
+                        .show();
             }
         });
 
@@ -698,7 +713,7 @@ public class MainViewModel implements ViewModel {
                     } else {
                         //TODO remove after testing
                         log.warn("INFO: we got again btc network peers");
-                        
+
                         walletServiceErrorMsg.set(null);
                     }
                 }, 5);
@@ -786,11 +801,14 @@ public class MainViewModel implements ViewModel {
                 if (price != 0) {
                     double priceInverted = 1 / price;
                     priceString = useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, 8) : formatter.formatMarketPrice(price);
+                    item.setIsPriceAvailable(true);
                 } else {
                     priceString = "N/A";
+                    item.setIsPriceAvailable(false);
                 }
             } else {
                 priceString = "N/A";
+                item.setIsPriceAvailable(false);
             }
             item.setDisplayString(priceString + " " + currencyPairString);
         });
@@ -811,6 +829,16 @@ public class MainViewModel implements ViewModel {
             findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
                     .ifPresent(item2 -> selectedPriceFeedComboBoxItemProperty.set(item2));
         }
+
+        // Need a delay to next execute cycle as we get item.isPriceAvailable() set after that call. 
+        // (In case we add a new currency in settings)
+        UserThread.execute(() -> {
+            if (item != null) {
+                String code = item.currencyCode;
+                isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable());
+                isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable());
+            }
+        });
     }
 
     Optional<PriceFeedComboBoxItem> findPriceFeedComboBoxItem(String currencyCode) {

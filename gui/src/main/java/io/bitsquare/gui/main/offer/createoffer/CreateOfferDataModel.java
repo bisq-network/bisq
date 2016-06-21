@@ -107,7 +107,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     PaymentAccount paymentAccount;
-    private boolean isTabSelected;
+    boolean isTabSelected;
     private Notification walletFundedNotification;
     boolean useSavingsWallet;
     Coin totalAvailableBalance;

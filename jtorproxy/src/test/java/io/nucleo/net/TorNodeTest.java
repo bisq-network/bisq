@@ -23,7 +23,7 @@ public class TorNodeTest {
         dir.mkdirs();
         for (String str : args)
             System.out.print(str + " ");
-        node = new JavaTorNode(dir);
+        node = new JavaTorNode(dir, false);
         final ServiceDescriptor hiddenService = node.createHiddenService(hsPort, new HiddenServiceReadyListener() {
 
             @Override

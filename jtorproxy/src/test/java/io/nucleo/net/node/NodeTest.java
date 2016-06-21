@@ -61,7 +61,7 @@ public class NodeTest {
         if (args.length == 2) {
             File dir = new File(args[0]);
             dir.mkdirs();
-            TorNode<JavaOnionProxyManager, JavaOnionProxyContext> tor = new JavaTorNode(dir);
+            TorNode<JavaOnionProxyManager, JavaOnionProxyContext> tor = new JavaTorNode(dir, false);
 
             node = new Node(tor.createHiddenService(Integer.parseInt(args[1]), new HiddenServiceReadyListener() {
 

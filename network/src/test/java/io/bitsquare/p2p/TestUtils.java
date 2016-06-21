@@ -18,7 +18,7 @@ public class TestUtils {
 
     public static int sleepTime;
     public static String test_dummy_dir = "test_dummy_dir";
-    
+
     public static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         long ts = System.currentTimeMillis();
         final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA");
@@ -112,6 +112,14 @@ public class TestUtils {
                     @Override
                     public void onSetupFailed(Throwable throwable) {
                     }
+
+                    @Override
+                    public void onUseDefaultBridges() {
+                    }
+
+                    @Override
+                    public void onRequestCustomBridges(Runnable resultHandler) {
+                    }
                 });
         latch.await();
         Thread.sleep(sleepTime);
@@ -132,7 +140,7 @@ public class TestUtils {
 
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost,
                 2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), new Clock(), encryptionService, keyRing);
-        p2PService.start(new P2PServiceListener() {
+        p2PService.start(false, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
             }
@@ -160,7 +168,14 @@ public class TestUtils {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();

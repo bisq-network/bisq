@@ -25,6 +25,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.locale.*;
 import io.bitsquare.storage.Storage;
+import io.nucleo.net.bridge.BridgeProvider;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -39,8 +40,10 @@ import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class Preferences implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -118,6 +121,8 @@ public final class Preferences implements Persistable {
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
+    @Nullable
+    private List<String> bridgeAddresses;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -174,6 +179,9 @@ public final class Preferences implements Persistable {
             usePercentageBasedPrice = persisted.getUsePercentageBasedPrice();
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
             maxPriceDistanceInPercent = persisted.getMaxPriceDistanceInPercent();
+            bridgeAddresses = persisted.getBridgeAddresses();
+            if (bridgeAddresses != null && !bridgeAddresses.isEmpty())
+                BridgeProvider.setBridges(bridgeAddresses);
 
             try {
                 setNonTradeTxFeePerKB(persisted.getNonTradeTxFeePerKB());
@@ -200,7 +208,6 @@ public final class Preferences implements Persistable {
 
             storage.queueUpForSave();
         }
-
 
         this.bitcoinNetwork = bitsquareEnvironment.getBitcoinNetwork();
 
@@ -387,7 +394,22 @@ public final class Preferences implements Persistable {
         peerTagMap.put(hostName, tag);
         storage.queueUpForSave();
     }
-    
+
+    public void setBridgeAddresses(@Nullable List<String> bridgeAddresses) {
+        this.bridgeAddresses = bridgeAddresses;
+        storage.queueUpForSave();
+    }
+
+    public void setBridgeAddressesAsString(@Nullable String bridgeAddressesAsString) {
+        if (bridgeAddressesAsString != null && !bridgeAddressesAsString.isEmpty()) {
+            List<String> list = Arrays.asList(bridgeAddressesAsString.split("\\n"));
+            list = list.stream().map(e -> "bridge " + e).collect(Collectors.toList());
+            setBridgeAddresses(list);
+        } else {
+            setBridgeAddresses(null);
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -517,6 +539,10 @@ public final class Preferences implements Persistable {
         return peerTagMap;
     }
 
+    @Nullable
+    public List<String> getBridgeAddresses() {
+        return bridgeAddresses;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

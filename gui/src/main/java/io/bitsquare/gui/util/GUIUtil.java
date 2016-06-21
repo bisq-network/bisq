@@ -43,7 +43,7 @@ public class GUIUtil {
         String key = "miningFeeInfo";
         if (!DevFlags.DEV_MODE && Preferences.INSTANCE.showAgain(key)) {
             new Popup<>().information("Please be sure that the mining fee used at your external wallet is " +
-                    "sufficiently high so that the funding transaction will be added to the blockchain.\n" +
+                    "sufficiently high so that the funding transaction will be accepted by the miners.\n" +
                     "Otherwise the trade transactions cannot be confirmed and a trade would end up in a dispute.\n\n" +
                     "The recommended fee is about 0.0001 - 0.0002 BTC.\n\n" +
                     "You can view typically used fees at: https://tradeblock.com/blockchain")

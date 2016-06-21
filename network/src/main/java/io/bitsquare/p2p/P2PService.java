@@ -181,12 +181,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void start(@Nullable P2PServiceListener listener) {
+    public void start(boolean useBridges, @Nullable P2PServiceListener listener) {
         Log.traceCall();
         if (listener != null)
             addP2PServiceListener(listener);
 
-        networkNode.start(this);
+        networkNode.start(useBridges, this);
     }
 
     public void shutDown(Runnable shutDownCompleteHandler) {
@@ -273,6 +273,18 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onSetupFailed(Throwable throwable) {
         Log.traceCall();
         p2pServiceListeners.stream().forEach(e -> e.onSetupFailed(throwable));
+    }
+
+    @Override
+    public void onUseDefaultBridges() {
+        Log.traceCall();
+        p2pServiceListeners.stream().forEach(e -> e.onUseDefaultBridges());
+    }
+
+    @Override
+    public void onRequestCustomBridges(Runnable resultHandler) {
+        Log.traceCall();
+        p2pServiceListeners.stream().forEach(e -> e.onRequestCustomBridges(resultHandler));
     }
 
 

@@ -30,6 +30,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Statistic;
 import io.bitsquare.user.Preferences;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -61,11 +62,13 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     TextField onionAddress, totalTraffic;
     @FXML
+    CheckBox useBridgesCheckBox;
+    @FXML
     ComboBox<BitcoinNetwork> netWorkComboBox;
     @FXML
-    TextArea bitcoinPeersTextArea;
+    TextArea bitcoinPeersTextArea, bridgesTextArea;
     @FXML
-    Label bitcoinPeersLabel, p2PPeersLabel;
+    Label bitcoinPeersLabel, p2PPeersLabel, bridgesLabel;
     /* @FXML
      CheckBox useTorCheckBox;*/
     @FXML
@@ -78,6 +81,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private Subscription nodeAddressSubscription;
     private ObservableList<P2pNetworkListItem> networkListItems = FXCollections.observableArrayList();
     private final SortedList<P2pNetworkListItem> sortedList = new SortedList<>(networkListItems);
+    private ChangeListener<String> bridgesTextAreaListener;
 
     @Inject
     public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences, Clock clock,
@@ -126,6 +130,18 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 ((Integer) o1.statistic.getSentBytes()).compareTo(((Integer) o2.statistic.getSentBytes())));
         receivedBytesColumn.setComparator((o1, o2) ->
                 ((Integer) o1.statistic.getReceivedBytes()).compareTo(((Integer) o2.statistic.getReceivedBytes())));*/
+
+        GridPane.setMargin(bridgesLabel, new Insets(4, 0, 0, 0));
+        GridPane.setValignment(bridgesLabel, VPos.TOP);
+        boolean useBridges = preferences.getBridgeAddresses() != null && !preferences.getBridgeAddresses().isEmpty();
+        bridgesTextArea.setVisible(useBridges);
+        bridgesTextArea.setManaged(useBridges);
+        bridgesLabel.setVisible(useBridges);
+        bridgesLabel.setManaged(useBridges);
+        useBridgesCheckBox.setSelected(useBridges);
+        bridgesTextAreaListener = (observable, oldValue, newValue) -> preferences.setBridgeAddressesAsString(newValue);
+        if (preferences.getBridgeAddresses() != null)
+            bridgesTextArea.setText(preferences.getBridgeAddresses().stream().map(e -> e.replace("bridge ", "")).collect(Collectors.joining("\n")));
     }
 
     @Override
@@ -156,6 +172,18 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        bridgesTextArea.textProperty().addListener(bridgesTextAreaListener);
+        useBridgesCheckBox.setOnAction(e -> {
+            boolean useBridges = useBridgesCheckBox.isSelected();
+            bridgesTextArea.setVisible(useBridges);
+            bridgesTextArea.setManaged(useBridges);
+            bridgesLabel.setVisible(useBridges);
+            bridgesLabel.setManaged(useBridges);
+
+            if (!useBridges)
+                bridgesTextArea.setText("");
+        });
     }
 
     @Override
@@ -175,6 +203,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         sortedList.comparatorProperty().unbind();
         tableView.getItems().forEach(P2pNetworkListItem::cleanup);
+        bridgesTextArea.textProperty().removeListener(bridgesTextAreaListener);
+        useBridgesCheckBox.setOnAction(null);
     }
 
     private void updateP2PTable() {

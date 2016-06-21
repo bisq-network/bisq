@@ -116,6 +116,13 @@
     <TextField fx:id="totalTraffic" GridPane.rowIndex="4" GridPane.columnIndex="1" editable="false"
                focusTraversable="false"/>
 
+    <Label text="Use Tor bridges:" GridPane.rowIndex="5"/>
+    <CheckBox fx:id="useBridgesCheckBox" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+    <Label fx:id="bridgesLabel" text="Tor bridges:" GridPane.rowIndex="6" visible="false" managed="false"/>
+    <TextArea fx:id="bridgesTextArea" GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+              minHeight="60"
+              GridPane.vgrow="SOMETIMES" editable="true" focusTraversable="true" visible="false" managed="false"/>
+
     <columnConstraints>
         <ColumnConstraints hgrow="ALWAYS" halignment="RIGHT"/>
         <ColumnConstraints hgrow="SOMETIMES"/>

@@ -24,6 +24,7 @@ import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
@@ -299,7 +300,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         invertIconButton.setPadding(new Insets(0, 0, 0, 0));
         invertIconButton.setFocusTraversable(false);
         invertIconButton.setStyle("-fx-background-color: transparent;");
-        //invertIconButton.setStyle("-fx-focus-color: transparent; -fx-border-radius: 0 2 2 0; -fx-border-color: #aaa; -fx-border-insets: 0 0 0 -1; -fx-border-style: solid solid solid none; -fx-padding: 1 0 1 0;");
         HBox.setMargin(invertIconButton, new Insets(2, 0, 0, 0));
         invertIconButton.setOnAction(e -> model.preferences.flipUseInvertedMarketPrice());
 
@@ -309,14 +309,44 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Label label = new Label(text);
         label.setId("nav-balance-label");
         label.setTextAlignment(TextAlignment.CENTER);
-        label.setPadding(new Insets(0, 25, 0, 5));
-        label.prefWidthProperty().bind(hBox.widthProperty());
+        label.setPadding(new Insets(0, 8, 0, 3));
 
+        final ImageView btcAverageIcon = new ImageView();
+        btcAverageIcon.setId("btcaverage");
+        final Button btcAverageIconButton = new Button("", btcAverageIcon);
+        btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
+        btcAverageIconButton.setFocusTraversable(false);
+        btcAverageIconButton.setStyle("-fx-background-color: transparent;");
+        HBox.setMargin(btcAverageIconButton, new Insets(-1, 28, 0, 0));
+        btcAverageIconButton.setOnAction(e -> Utilities.openWebPage("https://bitcoinaverage.com"));
+        btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
+        btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
+        btcAverageIconButton.setTooltip(new Tooltip("Market price is provided by https://bitcoinaverage.com"));
+
+        final ImageView poloniexIcon = new ImageView();
+        poloniexIcon.setId("poloniex");
+        final Button poloniexIconButton = new Button("", poloniexIcon);
+        poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
+        poloniexIconButton.setFocusTraversable(false);
+        poloniexIconButton.setStyle("-fx-background-color: transparent;");
+        HBox.setMargin(poloniexIconButton, new Insets(1, 28, 0, 0));
+        poloniexIconButton.setOnAction(e -> Utilities.openWebPage("https://poloniex.com"));
+        poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
+        poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
+        poloniexIconButton.setTooltip(new Tooltip("Market price is provided by https://poloniex.com"));
+
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox hBox2 = new HBox();
+        hBox2.getChildren().setAll(label, spacer, btcAverageIconButton, poloniexIconButton);
+        hBox2.prefWidthProperty().bind(hBox.widthProperty());
+        
         VBox vBox = new VBox();
         vBox.setSpacing(3);
         vBox.setPadding(new Insets(11, 0, 0, 0));
-        vBox.getChildren().addAll(hBox, label);
-        return new Tuple3(priceComboBox, label, vBox);
+        vBox.getChildren().addAll(hBox, hBox2);
+        return new Tuple3<>(priceComboBox, label, vBox);
     }
 
     public void setPersistedFilesCorrupted(List<String> persistedFilesCorrupted) {

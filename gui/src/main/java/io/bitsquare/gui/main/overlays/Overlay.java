@@ -615,15 +615,6 @@ public abstract class Overlay<T extends Overlay> {
     protected void addHeadLine() {
         if (headLine != null) {
             ++rowIndex;
-                    
-           /* Label icon = AwesomeDude.createIconLabel(awesomeIcon, "40.0");
-            icon.getStyleClass().add("popup-icon-" + type);
-
-            GridPane.setHalignment(icon, HPos.RIGHT);
-            GridPane.setRowIndex(icon, ++rowIndex);
-            GridPane.setColumnIndex(icon, 1);
-            GridPane.setMargin(icon, new Insets(0, 0, -10, 0));
-            gridPane.getChildren().add(icon);*/
 
             headLineLabel = new Label(BSResources.get(headLine));
             headLineLabel.setMouseTransparent(true);

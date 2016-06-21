@@ -255,8 +255,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Coin balance = model.dataModel.balance.get();
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
-            new Popup().information("You have already funds paid in.\n" +
-                    "In the \"Funds/Available for withdrawal\" section you can withdraw those funds.")
+            new Popup().information("You had already funded that offer.\n" +
+                    "Your funds have been moved to your local Bitsquare wallet and are available for " +
+                    "withdrawal in the \"Funds/Available for withdrawal\" screen.")
                     .actionButtonText("Go to \"Funds/Available for withdrawal\"")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                     .show();
@@ -783,8 +784,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.isWalletFunded.get()) {
-                new Popup().warning("You have already paid the funds.\n" +
-                        "If you cancel now, your funds will be available immediately.\n" +
+                new Popup().warning("You have already funded that offer.\n" +
+                        "If you cancel now, your funds will be moved to your local Bitsquare wallet and are available " +
+                        "for withdrawal in the \"Funds/Available for withdrawal\" screen.\n" +
                         "Are you sure you want to cancel?")
                         .closeButtonText("No")
                         .actionButtonText("Yes, cancel")

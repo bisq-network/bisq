@@ -286,4 +286,13 @@
     -fx-image: url("../../../images/avatars/avatar_15.png");
 }
 
+#poloniex {
+    -fx-image: url("../../../images/poloniex.png");
+}
+
+#btcaverage {
+    -fx-image: url("../../../images/btcaverage.png");
+}
+
+
 
