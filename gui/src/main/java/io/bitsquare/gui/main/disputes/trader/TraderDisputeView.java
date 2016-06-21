@@ -717,7 +717,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                 // Need to set it here otherwise style is not correct
                                 AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY, "16.0");
-                                copyIcon.getStyleClass().add("copy-icon");
+                                copyIcon.getStyleClass().add("copy-icon-disputes");
 
                                 // TODO There are still some cell rendering issues on updates
                                 setGraphic(messageAnchorPane);

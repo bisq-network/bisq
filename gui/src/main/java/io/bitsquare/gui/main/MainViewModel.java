@@ -116,7 +116,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
     final StringProperty marketPrice = new SimpleStringProperty("N/A");
     final StringProperty marketPriceInverted = new SimpleStringProperty("N/A");
-    final StringProperty marketPriceCurrency = new SimpleStringProperty("");
+    final StringProperty marketPriceCurrencyCode = new SimpleStringProperty("");
     final ObjectProperty<PriceFeed.Type> typeProperty = new SimpleObjectProperty<>(PriceFeed.Type.LAST);
     final ObjectProperty<PriceFeedComboBoxItem> selectedPriceFeedComboBoxItemProperty = new SimpleObjectProperty<>();
     final BooleanProperty isFiatCurrencyPriceFeedSelected = new SimpleBooleanProperty(true);
@@ -738,14 +738,16 @@ public class MainViewModel implements ViewModel {
                     marketPrice.set("N/A");
                     marketPriceInverted.set("N/A");
                 });
-        marketPriceCurrency.bind(priceFeed.currencyCodeProperty());
+        marketPriceCurrencyCode.bind(priceFeed.currencyCodeProperty());
         typeProperty.bind(priceFeed.typeProperty());
 
         marketPriceBinding = EasyBind.combine(
-                marketPriceCurrency, marketPrice, marketPriceInverted, preferences.useInvertedMarketPriceProperty(),
-                (marketPriceCurrency, marketPrice, marketPriceInverted, useInvertedMarketPrice) ->
-                        (useInvertedMarketPrice ? marketPriceInverted : marketPrice) +
-                                (useInvertedMarketPrice ? " BTC/" + marketPriceCurrency : " " + marketPriceCurrency + "/BTC"));
+                marketPriceCurrencyCode, marketPrice, marketPriceInverted,
+                (marketPriceCurrencyCode, marketPrice, marketPriceInverted) -> {
+                    boolean useInvertedMarketPrice = CurrencyUtil.isCryptoCurrency(marketPriceCurrencyCode);
+                    return (useInvertedMarketPrice ? marketPriceInverted : marketPrice) +
+                            (useInvertedMarketPrice ? " BTC/" + marketPriceCurrencyCode : " " + marketPriceCurrencyCode + "/BTC");
+                });
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
@@ -793,7 +795,7 @@ public class MainViewModel implements ViewModel {
         priceFeedComboBoxItems.stream().forEach(item -> {
             String currencyCode = item.currencyCode;
             MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
-            boolean useInvertedMarketPrice = preferences.getUseInvertedMarketPrice();
+            boolean useInvertedMarketPrice = CurrencyUtil.isCryptoCurrency(currencyCode);
             String priceString;
             String currencyPairString = useInvertedMarketPrice ? "BTC/" + currencyCode : currencyCode + "/BTC";
             if (marketPrice != null) {
@@ -816,7 +818,7 @@ public class MainViewModel implements ViewModel {
 
     public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
         if (!preferences.getUseStickyMarketPrice()) {
-            Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(priceFeed.currencyCodeProperty().get());
+            Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(item.currencyCode);
             if (itemOptional.isPresent())
                 selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
             else
