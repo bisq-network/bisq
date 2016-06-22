@@ -304,7 +304,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(btcAverageIconButton, new Insets(-1, 10, 0, 0));
+        HBox.setMargin(btcAverageIconButton, new Insets(0, 10, 0, 0));
         btcAverageIconButton.setOnAction(e -> Utilities.openWebPage("https://bitcoinaverage.com"));
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);

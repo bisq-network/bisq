@@ -163,13 +163,24 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            //Font.loadFont(getClass().getResource("/fonts/ArialUnicode.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/ARIALUNI.TTF").toExternalForm(), 13);
-            
             scene = new Scene(mainView.getRoot(), 1190, 740);
-            scene.getStylesheets().setAll(
-                    "/io/bitsquare/gui/bitsquare.css",
-                    "/io/bitsquare/gui/images.css");
+
+            if (Utilities.isWindows()) {
+                Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
+                Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
+                Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
+                Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
+                scene.getStylesheets().setAll(
+                        "/io/bitsquare/gui/bs_root_windows.css",
+                        "/io/bitsquare/gui/bitsquare.css",
+                        "/io/bitsquare/gui/images.css");
+            } else {
+                Font.loadFont(getClass().getResource("/fonts/ArialUnicode.ttf").toExternalForm(), 13);
+                scene.getStylesheets().setAll(
+                        "/io/bitsquare/gui/bs_root.css",
+                        "/io/bitsquare/gui/bitsquare.css",
+                        "/io/bitsquare/gui/images.css");
+            }
 
             // configure the system tray
             SystemTray.create(primaryStage, shutDownHandler);
