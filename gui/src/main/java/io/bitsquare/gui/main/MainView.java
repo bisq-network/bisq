@@ -296,7 +296,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Label label = new Label(text);
         label.setId("nav-balance-label");
         label.setTextAlignment(TextAlignment.CENTER);
-        label.setPadding(new Insets(0, 10, 0, 10));
+        label.setPadding(new Insets(0, 5, 0, 6));
 
         final ImageView btcAverageIcon = new ImageView();
         btcAverageIcon.setId("btcaverage");
@@ -304,7 +304,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(btcAverageIconButton, new Insets(0, 8, 0, 0));
+        HBox.setMargin(btcAverageIconButton, new Insets(0, 7, 0, 0));
         btcAverageIconButton.setOnAction(e -> Utilities.openWebPage("https://bitcoinaverage.com"));
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
@@ -316,7 +316,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(poloniexIconButton, new Insets(1, 10, 0, 0));
+        HBox.setMargin(poloniexIconButton, new Insets(1, 7, 0, 0));
         poloniexIconButton.setOnAction(e -> Utilities.openWebPage("https://poloniex.com"));
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
