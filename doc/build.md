@@ -62,6 +62,12 @@ Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List
 E.g.:
 security.provider.11=org.bouncycastle.jce.provider.BouncyCastleProvider
 
+##### 5. Copy the jdkfix jar file
+
+Copy the jdkfix jar file (lib/jdkfix-0.4.9.jar) from the Bitsquare src directory to $JavaHome/jre/lib/ext/. 
+Jdkfix.jar include a bugfix of the SortedList class which will be released with the next JDK version. 
+As we need to load that before the default java class we need that hack.
+
 
 Steps
 -----

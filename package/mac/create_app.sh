@@ -19,7 +19,7 @@ cp seednode/target/SeedNode.jar "gui/deploy/SeedNode.jar"
 
 $JAVA_HOME/bin/javapackager \
     -deploy \
-    -BjvmOptions=-Xbootclasspath/p:"jdkfix/jdkfix-$fullVersion.jar":"$JAVA_HOME/../../jre/lib/ext/jfxrt.jar" \
+    -BjvmOptions=-Xbootclasspath/a:"$JAVA_HOME/jre/lib/ext/jdkfix-0.4.9.jar":"$JAVA_HOME/jre/lib/ext/jfxrt.jar" \
     -BappVersion=$fullVersion \
     -Bmac.CFBundleIdentifier=io.bitsquare \
     -Bmac.CFBundleName=Bitsquare \
