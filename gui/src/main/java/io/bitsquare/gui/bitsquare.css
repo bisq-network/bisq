@@ -78,7 +78,7 @@ bg color of non edit textFields: fafafa
     -fx-selection-bar: derive(-fx-accent, 50%);
 
     -fx-font-size: 13;
-    -fx-font-family: "Arial Unicode";
+    -fx-font-family: "Arial Unicode MS";
 }
 
 #splash {

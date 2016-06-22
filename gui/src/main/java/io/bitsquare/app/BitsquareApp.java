@@ -163,7 +163,8 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            Font.loadFont(getClass().getResource("/fonts/Arial Unicode.ttf").toExternalForm(), 13);
+            //Font.loadFont(getClass().getResource("/fonts/ArialUnicode.ttf").toExternalForm(), 13);
+            Font.loadFont(getClass().getResource("/fonts/ARIALUNI.TTF").toExternalForm(), 13);
             
             scene = new Scene(mainView.getRoot(), 1190, 740);
             scene.getStylesheets().setAll(
