@@ -55,6 +55,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -162,13 +163,15 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
+            Font.loadFont(getClass().getResource("/fonts/Arial Unicode.ttf").toExternalForm(), 13);
+            
             scene = new Scene(mainView.getRoot(), 1190, 740);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css");
 
             // configure the system tray
-            SystemTray systemTray = SystemTray.create(primaryStage, shutDownHandler);
+            SystemTray.create(primaryStage, shutDownHandler);
 
             primaryStage.setOnCloseRequest(event -> {
                 event.consume();

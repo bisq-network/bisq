@@ -78,6 +78,7 @@ bg color of non edit textFields: fafafa
     -fx-selection-bar: derive(-fx-accent, 50%);
 
     -fx-font-size: 13;
+    -fx-font-family: "Arial Unicode";
 }
 
 #splash {
@@ -212,7 +213,6 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: #999;
     -fx-cursor: hand;
 }
-
 
 /*******************************************************************************
  *                                                                             *
@@ -469,7 +469,6 @@ textfield */
 #num-offers {
     -fx-font-size: 12;
 }
-
 
 /* Create offer */
 #direction-icon-label {
@@ -1039,7 +1038,6 @@ textfield */
     -fx-font-weight: bold;
     -fx-text-fill: #333;
 }
-
 
 .popup-icon-information {
     -fx-text-fill: #ddd;
