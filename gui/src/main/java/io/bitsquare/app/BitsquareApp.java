@@ -167,9 +167,9 @@ public class BitsquareApp extends Application {
 
             if (Utilities.isWindows()) {
                 Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
-                Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
-                Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
-                Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
+                Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 13);
+                Font.loadFont(getClass().getResource("/fonts/VerdanaItalic.ttf").toExternalForm(), 13);
+                Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 13);
                 scene.getStylesheets().setAll(
                         "/io/bitsquare/gui/bs_root_windows.css",
                         "/io/bitsquare/gui/bitsquare.css",
