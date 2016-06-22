@@ -60,7 +60,7 @@ public class PeerInfoIcon extends Group {
         int blue = (intValue >> 24) % 256;
 
         Color color = Color.rgb(red, green, blue);
-        color = color.deriveColor(1, saturation, 1, 1); // reduce saturation
+        color = color.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
 
         Canvas background = new Canvas(SIZE, SIZE);
         GraphicsContext gc = background.getGraphicsContext2D();
