@@ -70,8 +70,17 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty minAmount = new SimpleStringProperty();
+
+    // Price in the viewModel is always dependent on fiat/altcoin: Fiat Fiat/BTC, for altcoins we use inverted price.
+    // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
+    // If we would change the price representation in the domain we would not be backward compatible
     final StringProperty price = new SimpleStringProperty();
+
+    // Positive % value means always a better price form the offerers perspective: 
+    // Buyer (with fiat): lower price as market
+    // Buyer (with altcoin): higher (display) price as market (display price is inverted)
     final StringProperty priceAsPercentage = new SimpleStringProperty();
+
     final StringProperty volume = new SimpleStringProperty();
     final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
     final StringProperty volumePromptLabel = new SimpleStringProperty();
@@ -152,7 +161,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (DevFlags.DEV_MODE) {
             amount.set("0.0001");
             minAmount.set(amount.get());
-            price.set("700");
+            price.set("0.02");
             volume.set("0.04");
 
             setAmountToModel();
@@ -243,11 +252,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 if (!inputIsMarketBasedPrice) {
                     MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
                     if (marketPrice != null) {
-                        double marketPriceAsDouble = formatter.roundDouble(marketPrice.getPrice(priceFeedType), 2);
+                        double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
                         try {
                             double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
                             double relation = priceAsDouble / marketPriceAsDouble;
-                            relation = formatter.roundDouble(relation, 2);
                             double marketPriceMargin = dataModel.getDirection() == Offer.Direction.BUY ? 1 - relation : relation - 1;
                             priceAsPercentage.set(formatter.formatToPercent(marketPriceMargin, 2));
                         } catch (NumberFormatException t) {
@@ -275,12 +283,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         } else {
                             MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
                             if (marketPrice != null) {
-                                marketPriceMargin = formatter.roundDouble(marketPriceMargin, 4);
                                 dataModel.setMarketPriceMargin(marketPriceMargin);
                                 Offer.Direction direction = dataModel.getDirection();
-                                double marketPriceAsDouble = formatter.roundDouble(marketPrice.getPrice(priceFeedType), 2);
+                                double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
                                 double factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
-                                double targetPrice = formatter.roundDouble(marketPriceAsDouble * factor, 2);
+                                double targetPrice = marketPriceAsDouble * factor;
                                 price.set(formatter.formatToNumberString(targetPrice, 2));
                                 setPriceToModel();
                                 calculateVolume();
@@ -580,7 +587,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             long shiftDivisor = checkedPow(10, priceAsFiat.smallestUnitExponent());
             double offerPrice = ((double) priceAsFiat.longValue()) / ((double) shiftDivisor);
             double percentage = Math.abs(1 - (offerPrice / marketPriceAsDouble));
-            percentage = formatter.roundDouble(percentage, 2);
             if (marketPriceAsDouble != 0 && percentage > preferences.getMaxPriceDistanceInPercent()) {
                 displayPriceOutOfRangePopup();
                 return false;

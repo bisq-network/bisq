@@ -977,6 +977,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         xLabel = new Label();
         xLabel.setFont(Font.font("Helvetica-Bold", 20));
         xLabel.setPadding(new Insets(14, 3, 0, 3));
+        xLabel.setMinWidth(14);
+        xLabel.setMaxWidth(14);
 
         // price as fiat
         Tuple3<HBox, InputTextField, Label> priceValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.price.prompt"));
