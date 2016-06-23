@@ -114,8 +114,6 @@ public class MainViewModel implements ViewModel {
     final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevFlags.STRESS_TEST_MODE ? 0 : -1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
-    final StringProperty marketPrice = new SimpleStringProperty("N/A");
-    final StringProperty marketPriceInverted = new SimpleStringProperty("N/A");
     final StringProperty marketPriceCurrencyCode = new SimpleStringProperty("");
     final ObjectProperty<PriceFeed.Type> typeProperty = new SimpleObjectProperty<>(PriceFeed.Type.LAST);
     final ObjectProperty<PriceFeedComboBoxItem> selectedPriceFeedComboBoxItemProperty = new SimpleObjectProperty<>();
@@ -731,23 +729,23 @@ public class MainViewModel implements ViewModel {
 
         if (priceFeed.getType() == null)
             priceFeed.setType(PriceFeed.Type.LAST);
-        priceFeed.init(price -> {
-                    marketPrice.set(formatter.formatMarketPrice(price));
-                    marketPriceInverted.set(price != 0 ? formatter.formatAltcoinMarketPrice(1 / price) : "");
-                },
-                (errorMessage, throwable) -> {
-                    marketPrice.set("N/A");
-                    marketPriceInverted.set("N/A");
-                });
+
+        DoubleProperty marketPriceProperty = new SimpleDoubleProperty(0);
+        priceFeed.init(marketPriceProperty::set,
+                (errorMessage, throwable) -> marketPriceProperty.set(0));
         marketPriceCurrencyCode.bind(priceFeed.currencyCodeProperty());
         typeProperty.bind(priceFeed.typeProperty());
 
         marketPriceBinding = EasyBind.combine(
-                marketPriceCurrencyCode, marketPrice, marketPriceInverted,
-                (marketPriceCurrencyCode, marketPrice, marketPriceInverted) -> {
-                    boolean useInvertedMarketPrice = CurrencyUtil.isCryptoCurrency(marketPriceCurrencyCode);
-                    return (useInvertedMarketPrice ? marketPriceInverted : marketPrice) +
-                            (useInvertedMarketPrice ? " BTC/" + marketPriceCurrencyCode : " " + marketPriceCurrencyCode + "/BTC");
+                marketPriceCurrencyCode, marketPriceProperty,
+                (code, marketPrice) -> {
+                    double marketPriceAsDouble = (double) marketPrice;
+                    if (marketPriceAsDouble > 0) {
+                        String postFix = CurrencyUtil.isCryptoCurrency(code) ? " BTC/" + code : " " + code + "/BTC";
+                        return formatter.formatMarketPrice(marketPriceAsDouble, code) + postFix;
+                    } else {
+                        return "N/A";
+                    }
                 });
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
@@ -784,6 +782,7 @@ public class MainViewModel implements ViewModel {
 
         priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeed.currenciesUpdateFlagProperty(), newPriceUpdate -> setMarketPriceInItems());
 
+        // If we get a currency added or removed we need an update
         preferences.getTradeCurrenciesAsObservable().addListener((ListChangeListener<TradeCurrency>) c -> {
             UserThread.runAfter(() -> {
                 fillPriceFeedComboBoxItems();
@@ -794,16 +793,13 @@ public class MainViewModel implements ViewModel {
 
     private void setMarketPriceInItems() {
         priceFeedComboBoxItems.stream().forEach(item -> {
-            String currencyCode = item.currencyCode;
-            MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
-            boolean useInvertedMarketPrice = CurrencyUtil.isCryptoCurrency(currencyCode);
+            String code = item.currencyCode;
+            MarketPrice marketPrice = priceFeed.getMarketPrice(code);
             String priceString;
-            String currencyPairString = useInvertedMarketPrice ? "BTC/" + currencyCode : currencyCode + "/BTC";
             if (marketPrice != null) {
                 double price = marketPrice.getPrice(priceFeed.getType());
                 if (price != 0) {
-                    double priceInverted = 1 / price;
-                    priceString = useInvertedMarketPrice ? formatter.formatAltcoinMarketPrice(priceInverted) : formatter.formatMarketPrice(price);
+                    priceString = formatter.formatMarketPrice(price, code);
                     item.setIsPriceAvailable(true);
                 } else {
                     priceString = "N/A";
@@ -813,7 +809,8 @@ public class MainViewModel implements ViewModel {
                 priceString = "N/A";
                 item.setIsPriceAvailable(false);
             }
-            item.setDisplayString(priceString + " " + currencyPairString);
+            String postFix = CurrencyUtil.isCryptoCurrency(code) ? "BTC/" + code : code + "/BTC";
+            item.setDisplayString(priceString + " " + postFix);
         });
     }
 
