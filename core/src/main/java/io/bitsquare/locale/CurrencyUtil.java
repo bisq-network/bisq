@@ -106,7 +106,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("VRC", "VeriCoin"));
         result.add(new CryptoCurrency("ESP", "Espers"));
         result.add(new CryptoCurrency("XVG", "Verge"));
-        result.add(new CryptoCurrency("MYRC", "Myriadcoin"));
+        result.add(new CryptoCurrency("XMY", "Myriadcoin"));
         result.add(new CryptoCurrency("MXT", "MarteXcoin"));
         result.add(new CryptoCurrency("GRS", "Groestlcoin"));
         result.add(new CryptoCurrency("IOC", "I/O Coin"));
