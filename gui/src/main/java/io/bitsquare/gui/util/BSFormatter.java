@@ -218,7 +218,11 @@ public class BSFormatter {
     }
 
     public String formatPriceWithCode(Fiat fiat) {
-        return formatFiatWithCode(fiat) + "/BTC";
+        if (fiat != null) {
+            return formatFiat(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
+        } else {
+            return "N/A";
+        }
     }
 
     private Fiat parseToFiat(String input, String currencyCode) {
@@ -507,4 +511,10 @@ public class BSFormatter {
             return decimalFormat.format(bytes / mb) + " MB";
     }
 
+    public String getCurrencyPair(String currencyCode) {
+        if (CurrencyUtil.isCryptoCurrency(currencyCode))
+            return "BTC/" + currencyCode;
+        else
+            return currencyCode + "/BTC";
+    }
 }

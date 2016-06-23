@@ -145,7 +145,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                     String code = tradeCurrency.getCode();
                     String tradeCurrencyName = tradeCurrency.getName();
                     areaChart.setTitle("Offer book for " + tradeCurrencyName);
-                    priceColumnLabel.set("Price (" + code + "/BTC)");
+                    priceColumnLabel.set("Price (" + formatter.getCurrencyPair(code) + ")");
                     volumeColumnLabel.set("Volume (" + code + ")");
                     xAxis.setLabel(priceColumnLabel.get());
                     xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis, "", ""));

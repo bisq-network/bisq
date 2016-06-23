@@ -33,6 +33,7 @@ import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.offer.OfferView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CryptoCurrency;
@@ -66,6 +67,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
+    private BSFormatter formatter;
 
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
@@ -85,11 +87,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow) {
+    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, BSFormatter formatter) {
         super(model);
 
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
+        this.formatter = formatter;
     }
 
     @Override
@@ -233,7 +236,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     String tradeCurrencyCode = model.tradeCurrencyCode.get();
                     boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
                     priceColumn.setText(!showAllTradeCurrencies ?
-                            "Price in " + tradeCurrencyCode + "/BTC" :
+                            "Price in " + formatter.getCurrencyPair(tradeCurrencyCode) :
                             "Price");
                     return !showAllTradeCurrencies ?
                             "Amount in " + tradeCurrencyCode + " (Min.)" :

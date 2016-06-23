@@ -46,6 +46,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
@@ -167,7 +168,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             spinner.setProgress(-1);
 
         volumeCurrencyLabel.setText(model.dataModel.getCurrencyCode());
-        priceDescriptionLabel.setText(BSResources.get("createOffer.amountPriceBox.priceDescription", model.dataModel.getCurrencyCode()));
+        String currencyCode = model.dataModel.getCurrencyCode();
+        priceDescriptionLabel.setText(CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                BSResources.get("createOffer.amountPriceBox.priceDescriptionAltcoin", currencyCode) :
+                BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode));
         volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
 
         if (model.getPossiblePaymentAccounts().size() > 1) {

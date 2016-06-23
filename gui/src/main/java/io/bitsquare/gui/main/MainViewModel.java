@@ -741,8 +741,7 @@ public class MainViewModel implements ViewModel {
                 (code, marketPrice) -> {
                     double marketPriceAsDouble = (double) marketPrice;
                     if (marketPriceAsDouble > 0) {
-                        String postFix = CurrencyUtil.isCryptoCurrency(code) ? " BTC/" + code : " " + code + "/BTC";
-                        return formatter.formatMarketPrice(marketPriceAsDouble, code) + postFix;
+                        return formatter.formatMarketPrice(marketPriceAsDouble, code) + " " + formatter.getCurrencyPair(code);
                     } else {
                         return "N/A";
                     }
@@ -809,8 +808,7 @@ public class MainViewModel implements ViewModel {
                 priceString = "N/A";
                 item.setIsPriceAvailable(false);
             }
-            String postFix = CurrencyUtil.isCryptoCurrency(code) ? "BTC/" + code : code + "/BTC";
-            item.setDisplayString(priceString + " " + postFix);
+            item.setDisplayString(priceString + " " + formatter.getCurrencyPair(code));
         });
     }
 
