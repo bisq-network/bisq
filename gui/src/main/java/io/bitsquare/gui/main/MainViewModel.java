@@ -733,7 +733,7 @@ public class MainViewModel implements ViewModel {
             priceFeed.setType(PriceFeed.Type.LAST);
         priceFeed.init(price -> {
                     marketPrice.set(formatter.formatMarketPrice(price));
-                    marketPriceInverted.set(price != 0 ? formatter.formatMarketPrice(1 / price, 8) : "");
+                    marketPriceInverted.set(price != 0 ? formatter.formatAltcoinMarketPrice(1 / price) : "");
                 },
                 (errorMessage, throwable) -> {
                     marketPrice.set("N/A");
@@ -803,7 +803,7 @@ public class MainViewModel implements ViewModel {
                 double price = marketPrice.getPrice(priceFeed.getType());
                 if (price != 0) {
                     double priceInverted = 1 / price;
-                    priceString = useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, 8) : formatter.formatMarketPrice(price);
+                    priceString = useInvertedMarketPrice ? formatter.formatAltcoinMarketPrice(priceInverted) : formatter.formatMarketPrice(price);
                     item.setIsPriceAvailable(true);
                 } else {
                     priceString = "N/A";

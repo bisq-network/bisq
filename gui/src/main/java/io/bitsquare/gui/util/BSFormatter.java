@@ -260,6 +260,14 @@ public class BSFormatter {
         return parseToFiat(input, currencyCode).equals(parseToFiatWith2Decimals(input, currencyCode));
     }
 
+    public String formatAltcoinMarketPrice(double price) {
+        return formatMarketPrice(price, 8);
+    }
+
+    public String formatFiatMarketPrice(double price) {
+        return formatMarketPrice(price, 2);
+    }
+
     public String formatMarketPrice(double price) {
         return formatMarketPrice(price, 3);
     }
