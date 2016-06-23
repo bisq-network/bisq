@@ -5,7 +5,6 @@ import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
@@ -26,19 +25,19 @@ public class BitSquareProgressIndicator extends Application {
     public void start(Stage stage) throws Exception {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
         Pane pane = new Pane();
-        /*for (int i = 0; i < 1; ++i) {
+        for (int i = 0; i < 10; ++i) {
             Parent node = new Indicator(scheduler, 6.0, 1.0).getNode();
             node.relocate(i * 50, 30);
             pane.getChildren().add(node);
-        }*/
+        }
 
-        for (int i = 0; i < 1; ++i) {
+       /* for (int i = 0; i < 10; ++i) {
             ProgressIndicator node = new ProgressIndicator(-1);
             node.setMaxWidth(20);
             node.setMaxHeight(20);
             node.relocate(i * 50, 30);
             pane.getChildren().add(node);
-        }
+        }*/
 
         stage.setScene(new Scene(pane));
         stage.setOnCloseRequest(evt -> scheduler.shutdown());
