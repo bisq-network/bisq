@@ -44,6 +44,18 @@ If `javac` is not found, or your version is anything less than `1.8.0_66`, then 
 > _**TIP:** Here are [instructions](http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html) for installing the JDK via `apt` on Debian/Ubuntu systems.
 > Bitsquare can be built with OpenJDK as well, but this hasn't been thoroughly tested yet._
 
+###### 1.1 Debian based systems (Ubuntu)
+
+To install the dependencies
+
+    $ sudo apt-get install openjdk-8-jdk maven libopenjfx-java
+    
+should suffice.
+
+###### 1.2 Other systems
+
+Install the packages accordingly.
+
 ##### 2. Enable unlimited Strength for cryptographic keys
 
 Bitsquare uses 256 bit length keys which are still not permitted by default. 
