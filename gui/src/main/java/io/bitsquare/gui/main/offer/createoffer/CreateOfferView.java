@@ -46,7 +46,6 @@ import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.offer.Offer;
@@ -456,11 +455,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         minAmountBtcLabel.textProperty().bind(model.btcCode);
         priceDescriptionLabel.textProperty().bind(createStringBinding(() -> {
             String currencyCode = model.tradeCurrencyCode.get();
-            return CurrencyUtil.isCryptoCurrency(currencyCode) ?
+            return BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode);
+           /* return CurrencyUtil.isCryptoCurrency(currencyCode) ?
                     BSResources.get("createOffer.amountPriceBox.priceDescriptionAltcoin", currencyCode) :
-                    BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode);
+                    BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode);*/
+            
         }, model.tradeCurrencyCode));
-        xLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.isCryptoCurrency(model.tradeCurrencyCode.get()) ? "/" : "x", model.tradeCurrencyCode));
+        //xLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.isCryptoCurrency(model.tradeCurrencyCode.get()) ? "/" : "x", model.tradeCurrencyCode));
+        xLabel.setText("x");
         volumeDescriptionLabel.textProperty().bind(createStringBinding(model.volumeDescriptionLabel::get, model.tradeCurrencyCode, model.volumeDescriptionLabel));
         amountTextField.textProperty().bindBidirectional(model.amount);
         minAmountTextField.textProperty().bindBidirectional(model.minAmount);

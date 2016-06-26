@@ -48,8 +48,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.event.EventHandler;
 import javafx.collections.transformation.SortedList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -182,7 +182,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         disputeDirectMessageListListener = c -> scrollToBottom();
 
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(event)) {
+            if (new KeyCodeCombination(KeyCode.L, KeyCombination.SHORTCUT_DOWN).match(event)) {
                 Map<String, List<Dispute>> map = new HashMap<>();
                 disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> {
                     String tradeId = dispute.getTradeId();

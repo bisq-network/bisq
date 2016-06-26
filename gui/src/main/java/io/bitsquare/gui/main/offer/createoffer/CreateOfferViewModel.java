@@ -252,10 +252,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 if (!inputIsMarketBasedPrice) {
                     MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
                     if (marketPrice != null) {
-                        double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
+                        double marketPriceAsDouble = formatter.roundDouble(marketPrice.getPrice(priceFeedType), 2);
                         try {
                             double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
                             double relation = priceAsDouble / marketPriceAsDouble;
+                            relation = formatter.roundDouble(relation, 2);
                             double marketPriceMargin = dataModel.getDirection() == Offer.Direction.BUY ? 1 - relation : relation - 1;
                             priceAsPercentage.set(formatter.formatToPercent(marketPriceMargin, 2));
                         } catch (NumberFormatException t) {
@@ -283,11 +284,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         } else {
                             MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
                             if (marketPrice != null) {
+                                marketPriceMargin = formatter.roundDouble(marketPriceMargin, 4);
                                 dataModel.setMarketPriceMargin(marketPriceMargin);
                                 Offer.Direction direction = dataModel.getDirection();
-                                double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
+                                double marketPriceAsDouble = formatter.roundDouble(marketPrice.getPrice(priceFeedType), 2);
                                 double factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
-                                double targetPrice = marketPriceAsDouble * factor;
+                                double targetPrice = formatter.roundDouble(marketPriceAsDouble * factor, 2);
                                 price.set(formatter.formatToNumberString(targetPrice, 2));
                                 setPriceToModel();
                                 calculateVolume();
@@ -587,6 +589,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             long shiftDivisor = checkedPow(10, priceAsFiat.smallestUnitExponent());
             double offerPrice = ((double) priceAsFiat.longValue()) / ((double) shiftDivisor);
             double percentage = Math.abs(1 - (offerPrice / marketPriceAsDouble));
+            percentage = formatter.roundDouble(percentage, 2);
             if (marketPriceAsDouble != 0 && percentage > preferences.getMaxPriceDistanceInPercent()) {
                 displayPriceOutOfRangePopup();
                 return false;
@@ -602,7 +605,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         Popup popup = new Popup();
         popup.warning("The price you have entered is outside the max. allowed deviation from the market price.\n" +
                 "The max. allowed deviation is " +
-                formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent()) +
+                formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent()) +
                 " and can be adjusted in the preferences.")
                 .actionButtonText("Change price")
                 .onAction(() -> popup.hide())

@@ -731,7 +731,7 @@ public class MainViewModel implements ViewModel {
         if (priceFeed.getType() == null)
             priceFeed.setType(PriceFeed.Type.LAST);
 
-        DoubleProperty marketPriceProperty = new SimpleDoubleProperty(0);
+        // DoubleProperty marketPriceProperty = new SimpleDoubleProperty(0);
        /* priceFeed.init(marketPriceProperty::set,
                 (errorMessage, throwable) -> marketPriceProperty.set(0));*/
         marketPriceCurrencyCode.bind(priceFeed.currencyCodeProperty());
