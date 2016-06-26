@@ -724,46 +724,26 @@ public class MainViewModel implements ViewModel {
     }
 
     private void setupMarketPriceFeed() {
-        final String currencyCode = priceFeed.getCurrencyCode();
-        if (currencyCode == null)
+        if (priceFeed.getCurrencyCode() == null)
             priceFeed.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
-
         if (priceFeed.getType() == null)
             priceFeed.setType(PriceFeed.Type.LAST);
-
-        // DoubleProperty marketPriceProperty = new SimpleDoubleProperty(0);
-       /* priceFeed.init(marketPriceProperty::set,
-                (errorMessage, throwable) -> marketPriceProperty.set(0));*/
-        marketPriceCurrencyCode.bind(priceFeed.currencyCodeProperty());
-        typeProperty.bind(priceFeed.typeProperty());
-
-      /*  marketPriceBinding = EasyBind.combine(
-                marketPriceCurrencyCode, marketPriceProperty,
-                (code, marketPrice) -> {
-                    double marketPriceAsDouble = (double) marketPrice;
-                    if (marketPriceAsDouble > 0) {
-                        return formatter.formatMarketPrice(marketPriceAsDouble, code) + " " + formatter.getCurrencyPair(code);
-                    } else {
-                        return "N/A";
-                    }
-                });*/
-
-
-        //TODO icon
         priceFeed.init(price -> {
-                    marketPrice.set(formatter.formatMarketPrice(price, currencyCode));
-                    marketPriceInverted.set(price != 0 ? formatter.formatMarketPrice(1 / price, currencyCode) : "");
+                    marketPrice.set(formatter.formatMarketPrice(price));
+                    marketPriceInverted.set(price != 0 ? formatter.formatMarketPrice(1 / price, 8) : "");
                 },
                 (errorMessage, throwable) -> {
                     marketPrice.set("N/A");
                     marketPriceInverted.set("N/A");
                 });
+        marketPriceCurrencyCode.bind(priceFeed.currencyCodeProperty());
+        typeProperty.bind(priceFeed.typeProperty());
 
         marketPriceBinding = EasyBind.combine(
                 marketPriceCurrencyCode, marketPrice, marketPriceInverted, preferences.useInvertedMarketPriceProperty(),
-                (code, marketPrice, marketPriceInverted, useInvertedMarketPrice) ->
-                        (useInvertedMarketPrice ? marketPriceInverted : marketPrice) + " " + formatter.getCurrencyPair(code));
-
+                (marketPriceCurrency, marketPrice, marketPriceInverted, useInvertedMarketPrice) ->
+                        (useInvertedMarketPrice ? marketPriceInverted : marketPrice) +
+                                (useInvertedMarketPrice ? " BTC/" + marketPriceCurrency : " " + marketPriceCurrency + "/BTC"));
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
@@ -799,7 +779,6 @@ public class MainViewModel implements ViewModel {
 
         priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeed.currenciesUpdateFlagProperty(), newPriceUpdate -> setMarketPriceInItems());
 
-        // If we get a currency added or removed we need an update
         preferences.getTradeCurrenciesAsObservable().addListener((ListChangeListener<TradeCurrency>) c -> {
             UserThread.runAfter(() -> {
                 fillPriceFeedComboBoxItems();
@@ -810,15 +789,16 @@ public class MainViewModel implements ViewModel {
 
     private void setMarketPriceInItems() {
         priceFeedComboBoxItems.stream().forEach(item -> {
-            String code = item.currencyCode;
-            MarketPrice marketPrice = priceFeed.getMarketPrice(code);
+            String currencyCode = item.currencyCode;
+            MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
             boolean useInvertedMarketPrice = preferences.getUseInvertedMarketPrice();
             String priceString;
+            String currencyPairString = useInvertedMarketPrice ? "BTC/" + currencyCode : currencyCode + "/BTC";
             if (marketPrice != null) {
                 double price = marketPrice.getPrice(priceFeed.getType());
                 if (price != 0) {
                     double priceInverted = 1 / price;
-                    priceString = useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, code) : formatter.formatMarketPrice(price, code);
+                    priceString = useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, 8) : formatter.formatMarketPrice(price);
                     item.setIsPriceAvailable(true);
                 } else {
                     priceString = "N/A";
@@ -828,13 +808,13 @@ public class MainViewModel implements ViewModel {
                 priceString = "N/A";
                 item.setIsPriceAvailable(false);
             }
-            item.setDisplayString(priceString + " " + formatter.getCurrencyPair(code));
+            item.setDisplayString(priceString + " " + currencyPairString);
         });
     }
 
     public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
         if (!preferences.getUseStickyMarketPrice() && item != null) {
-            Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(item.currencyCode);
+            Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(priceFeed.currencyCodeProperty().get());
             if (itemOptional.isPresent())
                 selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
             else

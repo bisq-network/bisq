@@ -264,9 +264,8 @@ public class BSFormatter {
         return parseToFiat(input, currencyCode).equals(parseToFiatWith2Decimals(input, currencyCode));
     }
 
-    public String formatMarketPrice(double price, String currencyCode) {
+    public String formatMarketPrice(double price) {
         return formatMarketPrice(price, 3);
-        // return formatMarketPrice(price, CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 3);
     }
 
     public String formatMarketPrice(double price, int decimals) {
@@ -512,9 +511,6 @@ public class BSFormatter {
     }
 
     public String getCurrencyPair(String currencyCode) {
-       /* if (CurrencyUtil.isCryptoCurrency(currencyCode))
-            return "BTC/" + currencyCode;
-        else*/
-            return currencyCode + "/BTC";
+        return currencyCode + "/BTC";
     }
 }
