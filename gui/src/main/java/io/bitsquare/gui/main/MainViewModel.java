@@ -124,6 +124,9 @@ public class MainViewModel implements ViewModel {
     final StringProperty lockedBalance = new SimpleStringProperty();
     private MonadicBinding<String> btcInfoBinding;
 
+    final StringProperty marketPrice = new SimpleStringProperty("N/A");
+    final StringProperty marketPriceInverted = new SimpleStringProperty("N/A");
+
     // P2P network
     final StringProperty p2PNetworkInfo = new SimpleStringProperty();
     private MonadicBinding<String> p2PNetworkInfoBinding;
@@ -709,9 +712,6 @@ public class MainViewModel implements ViewModel {
                         walletServiceErrorMsg.set("You lost the connection to all bitcoin network peers.\n" +
                                 "Maybe you lost your internet connection or your computer was in standby mode.");
                     } else {
-                        //TODO remove after testing
-                        log.warn("INFO: we got again btc network peers");
-
                         walletServiceErrorMsg.set(null);
                     }
                 }, 5);
@@ -724,19 +724,20 @@ public class MainViewModel implements ViewModel {
     }
 
     private void setupMarketPriceFeed() {
-        if (priceFeed.getCurrencyCode() == null)
+        final String currencyCode = priceFeed.getCurrencyCode();
+        if (currencyCode == null)
             priceFeed.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
 
         if (priceFeed.getType() == null)
             priceFeed.setType(PriceFeed.Type.LAST);
 
         DoubleProperty marketPriceProperty = new SimpleDoubleProperty(0);
-        priceFeed.init(marketPriceProperty::set,
-                (errorMessage, throwable) -> marketPriceProperty.set(0));
+       /* priceFeed.init(marketPriceProperty::set,
+                (errorMessage, throwable) -> marketPriceProperty.set(0));*/
         marketPriceCurrencyCode.bind(priceFeed.currencyCodeProperty());
         typeProperty.bind(priceFeed.typeProperty());
 
-        marketPriceBinding = EasyBind.combine(
+      /*  marketPriceBinding = EasyBind.combine(
                 marketPriceCurrencyCode, marketPriceProperty,
                 (code, marketPrice) -> {
                     double marketPriceAsDouble = (double) marketPrice;
@@ -745,7 +746,24 @@ public class MainViewModel implements ViewModel {
                     } else {
                         return "N/A";
                     }
+                });*/
+
+
+        //TODO icon
+        priceFeed.init(price -> {
+                    marketPrice.set(formatter.formatMarketPrice(price, currencyCode));
+                    marketPriceInverted.set(price != 0 ? formatter.formatMarketPrice(1 / price, currencyCode) : "");
+                },
+                (errorMessage, throwable) -> {
+                    marketPrice.set("N/A");
+                    marketPriceInverted.set("N/A");
                 });
+
+        marketPriceBinding = EasyBind.combine(
+                marketPriceCurrencyCode, marketPrice, marketPriceInverted, preferences.useInvertedMarketPriceProperty(),
+                (code, marketPrice, marketPriceInverted, useInvertedMarketPrice) ->
+                        (useInvertedMarketPrice ? marketPriceInverted : marketPrice) + " " + formatter.getCurrencyPair(code));
+
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
@@ -794,11 +812,13 @@ public class MainViewModel implements ViewModel {
         priceFeedComboBoxItems.stream().forEach(item -> {
             String code = item.currencyCode;
             MarketPrice marketPrice = priceFeed.getMarketPrice(code);
+            boolean useInvertedMarketPrice = preferences.getUseInvertedMarketPrice();
             String priceString;
             if (marketPrice != null) {
                 double price = marketPrice.getPrice(priceFeed.getType());
                 if (price != 0) {
-                    priceString = formatter.formatMarketPrice(price, code);
+                    double priceInverted = 1 / price;
+                    priceString = useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, code) : formatter.formatMarketPrice(price, code);
                     item.setIsPriceAvailable(true);
                 } else {
                     priceString = "N/A";

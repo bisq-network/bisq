@@ -117,12 +117,7 @@ public final class Preferences implements Persistable {
     private TradeCurrency preferredTradeCurrency;
     private long nonTradeTxFeePerKB = FeePolicy.getNonTradeFeePerKb().value;
     private double maxPriceDistanceInPercent;
-
-    // Need to keep it for backward compatibility. Not used anymore from v0.4.9 on. 
-    // TODO Can be removed once we don't support old versions anymore.
-    @Deprecated
     private boolean useInvertedMarketPrice;
-
     private String marketScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
@@ -138,7 +133,7 @@ public final class Preferences implements Persistable {
     transient private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
-
+    transient private final BooleanProperty useInvertedMarketPriceProperty = new SimpleBooleanProperty(useInvertedMarketPrice);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -155,7 +150,8 @@ public final class Preferences implements Persistable {
         if (persisted != null) {
             setBtcDenomination(persisted.btcDenomination);
             setUseAnimations(persisted.useAnimations);
-
+            setUseInvertedMarketPrice(persisted.useInvertedMarketPrice);
+            
             setFiatCurrencies(persisted.fiatCurrencies);
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
 
@@ -231,6 +227,10 @@ public final class Preferences implements Persistable {
             staticUseAnimations = useAnimations;
             storage.queueUpForSave(2000);
         });
+        useInvertedMarketPriceProperty.addListener((ov) -> {
+            useInvertedMarketPrice = useInvertedMarketPriceProperty.get();
+            storage.queueUpForSave(2000);
+        });
         fiatCurrenciesAsObservable.addListener((Observable ov) -> {
             fiatCurrencies.clear();
             fiatCurrencies.addAll(fiatCurrenciesAsObservable);
@@ -269,6 +269,10 @@ public final class Preferences implements Persistable {
 
     public void setUseAnimations(boolean useAnimations) {
         this.useAnimationsProperty.set(useAnimations);
+    }
+
+    public void setUseInvertedMarketPrice(boolean useInvertedMarketPrice) {
+        this.useInvertedMarketPriceProperty.set(useInvertedMarketPrice);
     }
 
     public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
@@ -377,6 +381,11 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public boolean flipUseInvertedMarketPrice() {
+        setUseInvertedMarketPrice(!getUseInvertedMarketPrice());
+        return getUseInvertedMarketPrice();
+    }
+
     public void setUseStickyMarketPrice(boolean useStickyMarketPrice) {
         this.useStickyMarketPrice = useStickyMarketPrice;
         storage.queueUpForSave();
@@ -445,6 +454,14 @@ public final class Preferences implements Persistable {
 
     public static boolean useAnimations() {
         return staticUseAnimations;
+    }
+
+    public boolean getUseInvertedMarketPrice() {
+        return useInvertedMarketPriceProperty.get();
+    }
+
+    public BooleanProperty useInvertedMarketPriceProperty() {
+        return useInvertedMarketPriceProperty;
     }
 
     public BitcoinNetwork getBitcoinNetwork() {
