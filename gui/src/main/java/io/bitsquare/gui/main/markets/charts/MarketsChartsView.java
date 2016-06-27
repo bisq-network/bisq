@@ -25,6 +25,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
+import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.*;
 import io.bitsquare.trade.offer.Offer;
@@ -33,6 +34,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.chart.AreaChart;
@@ -57,7 +59,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
     private NumberAxis xAxis, yAxis;
     XYChart.Series seriesBuy, seriesSell;
-    private final ChangeListener<Number> updateChartDataFlagListener;
+    private final ListChangeListener<OfferBookListItem> changeListener;
     private final Navigation navigation;
     private final BSFormatter formatter;
     private TableView<Offer> buyOfferTableView;
@@ -81,7 +83,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         this.navigation = navigation;
         this.formatter = formatter;
 
-        updateChartDataFlagListener = (ov, o, n) -> updateChartData();
+        changeListener = c -> updateChartData();
     }
 
     @Override
@@ -142,7 +144,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
             updateChartData();
         });
 
-        model.updateChartDataFlag.addListener(updateChartDataFlagListener);
+        model.getOfferBookListItems().addListener(changeListener);
         tradeCurrencySubscriber = EasyBind.subscribe(model.tradeCurrency,
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
@@ -170,7 +172,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
     @Override
     protected void deactivate() {
-        model.updateChartDataFlag.removeListener(updateChartDataFlagListener);
+        model.getOfferBookListItems().removeListener(changeListener);
         tradeCurrencySubscriber.unsubscribe();
         currencyComboBox.setOnAction(null);
     }
