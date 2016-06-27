@@ -29,6 +29,7 @@ public class BusyAnimation extends Pane {
 
         setMinSize(24, 24);
         setMaxSize(24, 24);
+        setMouseTransparent(true);
 
         increment = 360 / 12;
 
