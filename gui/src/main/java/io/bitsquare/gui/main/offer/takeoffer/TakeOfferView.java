@@ -508,7 +508,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
 
         isWaitingForFundsSubscription = EasyBind.subscribe(model.isWaitingForFunds, isWaitingForFunds -> {
-            waitingForFundsBusyAnimation.setRunning(isWaitingForFunds);
+            waitingForFundsBusyAnimation.setIsRunning(isWaitingForFunds);
             waitingForFundsLabel.setVisible(isWaitingForFunds);
             waitingForFundsLabel.setManaged(isWaitingForFunds);
         });

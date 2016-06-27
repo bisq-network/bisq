@@ -1,44 +1,32 @@
 package io.bitsquare.gui.components;
 
-import ch.qos.logback.classic.Logger;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-public class BusyAnimation extends Pane {
-    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BusyAnimation.class);
+public class BusyAnimation extends ImageView {
+    private static final Logger log = LoggerFactory.getLogger(BusyAnimation.class);
 
     private Timer timer;
-    private ImageView img1, img2;
-    private int increment;
-    private int rotation1, rotation2;
-    private BooleanProperty runningProperty = new SimpleBooleanProperty();
+    private final int increment = 36;
+    private int rotation;
+    private BooleanProperty isRunningProperty = new SimpleBooleanProperty();
 
     public BusyAnimation() {
         this(true);
     }
 
     public BusyAnimation(boolean isRunning) {
-        runningProperty.set(isRunning);
+        isRunningProperty.set(isRunning);
 
-        setMinSize(24, 24);
-        setMaxSize(24, 24);
         setMouseTransparent(true);
-
-        increment = 360 / 12;
-
-        img1 = new ImageView();
-        img1.setId("spinner");
-        img2 = new ImageView();
-        img2.setId("spinner");
-
-        getChildren().addAll(img1, img2);
+        setId("spinner");
 
         sceneProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null)
@@ -46,7 +34,7 @@ public class BusyAnimation extends Pane {
             else if (isRunning())
                 play();
         });
-        runningProperty.addListener((obs, oldVal, newVal) -> {
+        isRunningProperty.addListener((obs, oldVal, newVal) -> {
             if (newVal)
                 play();
             else
@@ -57,7 +45,7 @@ public class BusyAnimation extends Pane {
     }
 
     public void play() {
-        runningProperty.set(true);
+        isRunningProperty.set(true);
 
         if (timer != null)
             timer.stop();
@@ -67,7 +55,7 @@ public class BusyAnimation extends Pane {
     }
 
     public void stop() {
-        runningProperty.set(false);
+        isRunningProperty.set(false);
         if (timer != null) {
             timer.stop();
             timer = null;
@@ -75,27 +63,25 @@ public class BusyAnimation extends Pane {
         updateVisibility();
     }
 
+    public boolean isRunning() {
+        return isRunningProperty.get();
+    }
+
+    public BooleanProperty isRunningProperty() {
+        return isRunningProperty;
+    }
+
+    public void setIsRunning(boolean isRunning) {
+        isRunningProperty.set(isRunning);
+    }
+
     private void updateAnimation() {
-        rotation1 += increment;
-        rotation2 -= increment;
-        img1.setRotate(rotation1);
-        img2.setRotate(rotation2);
+        rotation += increment;
+        setRotate(rotation);
     }
 
     private void updateVisibility() {
         setVisible(isRunning());
         setManaged(isRunning());
-    }
-
-    public boolean isRunning() {
-        return runningProperty.get();
-    }
-
-    public BooleanProperty runningProperty() {
-        return runningProperty;
-    }
-
-    public void setRunning(boolean running) {
-        runningProperty.set(running);
     }
 }

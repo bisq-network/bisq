@@ -48,6 +48,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -58,6 +60,7 @@ import static javafx.scene.layout.AnchorPane.*;
 
 @FxmlView
 public class MainView extends InitializableView<StackPane, MainViewModel> {
+    private static final Logger log = LoggerFactory.getLogger(MainView.class);
 
     public static final String TITLE_KEY = "view.title";
 
@@ -429,7 +432,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
         model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
 
-        splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> splashP2PNetworkBusyAnimation.setRunning(newValue);
+        splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> splashP2PNetworkBusyAnimation.setIsRunning(newValue);
         model.splashP2PNetworkAnimationVisible.addListener(splashP2PNetworkVisibleListener);
 
         HBox splashP2PNetworkBox = new HBox();

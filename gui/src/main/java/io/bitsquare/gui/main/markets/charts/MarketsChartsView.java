@@ -46,11 +46,14 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
 @FxmlView
 public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChartsViewModel> {
+    private static final Logger log = LoggerFactory.getLogger(MarketsChartsView.class);
 
     private NumberAxis xAxis, yAxis;
     XYChart.Series seriesBuy, seriesSell;

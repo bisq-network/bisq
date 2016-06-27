@@ -687,7 +687,6 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void addBusyAnimation() {
         busyAnimation = new BusyAnimation();
-        busyAnimation.setPadding(new Insets(0, 0, 20, 0));
         GridPane.setHalignment(busyAnimation, HPos.CENTER);
         GridPane.setRowIndex(busyAnimation, ++rowIndex);
         GridPane.setColumnSpan(busyAnimation, 2);

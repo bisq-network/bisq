@@ -613,7 +613,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                         arrow.setId("bubble_arrow_blue_right");
 
                                     if (sendMsgBusyAnimationListener != null)
-                                        sendMsgBusyAnimation.runningProperty().removeListener(sendMsgBusyAnimationListener);
+                                        sendMsgBusyAnimation.isRunningProperty().removeListener(sendMsgBusyAnimationListener);
 
                                     sendMsgBusyAnimationListener = (observable, oldValue, newValue) -> {
                                         if (!newValue) {
@@ -623,7 +623,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                                 showMailboxIcon();
                                         }
                                     };
-                                    sendMsgBusyAnimation.runningProperty().addListener(sendMsgBusyAnimationListener);
+                                    sendMsgBusyAnimation.isRunningProperty().addListener(sendMsgBusyAnimationListener);
 
                                     if (item.arrivedProperty().get())
                                         showArrivedIcon();
@@ -717,7 +717,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 setGraphic(messageAnchorPane);
                             } else {
                                 if (sendMsgBusyAnimation != null && sendMsgBusyAnimationListener != null)
-                                    sendMsgBusyAnimation.runningProperty().removeListener(sendMsgBusyAnimationListener);
+                                    sendMsgBusyAnimation.isRunningProperty().removeListener(sendMsgBusyAnimationListener);
 
                                 messageAnchorPane.prefWidthProperty().unbind();
 

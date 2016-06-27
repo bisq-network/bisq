@@ -548,7 +548,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addSubscriptions() {
         isWaitingForFundsSubscription = EasyBind.subscribe(model.isWaitingForFunds, isWaitingForFunds -> {
-            waitingForFundsBusyAnimation.setRunning(isWaitingForFunds);
+            waitingForFundsBusyAnimation.setIsRunning(isWaitingForFunds);
             waitingForFundsLabel.setVisible(isWaitingForFunds);
             waitingForFundsLabel.setManaged(isWaitingForFunds);
         });

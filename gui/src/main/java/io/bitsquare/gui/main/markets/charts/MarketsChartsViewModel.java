@@ -38,6 +38,8 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;
 import org.bitcoinj.utils.Fiat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +47,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 class MarketsChartsViewModel extends ActivatableViewModel {
+    private static final Logger log = LoggerFactory.getLogger(MarketsChartsViewModel.class);
+
     final static String EDIT_FLAG = "EDIT_FLAG";
 
     private final OfferBook offerBook;
