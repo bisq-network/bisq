@@ -24,7 +24,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.crypto.ScryptUtil;
 import io.bitsquare.gui.components.PasswordTextField;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Transitions;
@@ -183,7 +183,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void addButtons() {
-        StaticProgressIndicator spinner = new StaticProgressIndicator();
+        TxConfidenceIndicator spinner = new TxConfidenceIndicator();
         spinner.setVisible(false);
         spinner.setManaged(spinner.isVisible());
 

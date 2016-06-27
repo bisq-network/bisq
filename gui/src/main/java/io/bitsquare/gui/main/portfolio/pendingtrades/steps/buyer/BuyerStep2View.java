@@ -21,7 +21,7 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.components.paymentmethods.*;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
@@ -45,7 +45,7 @@ public class BuyerStep2View extends TradeStepView {
 
     private Button confirmButton;
     private Label statusLabel;
-    private StaticProgressIndicator statusProgressIndicator;
+    private TxConfidenceIndicator statusProgressIndicator;
     private Subscription tradeStatePropertySubscription;
 
 
@@ -174,7 +174,7 @@ public class BuyerStep2View extends TradeStepView {
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
 
-        Tuple3<Button, StaticProgressIndicator, Label> tuple3 = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "Payment started");
+        Tuple3<Button, TxConfidenceIndicator, Label> tuple3 = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "Payment started");
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
         statusProgressIndicator = tuple3.second;

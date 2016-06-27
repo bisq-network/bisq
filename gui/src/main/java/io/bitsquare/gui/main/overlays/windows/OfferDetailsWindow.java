@@ -22,7 +22,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -69,7 +69,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private Fiat tradePrice;
     private Optional<Runnable> placeOfferHandlerOptional = Optional.empty();
     private Optional<Runnable> takeOfferHandlerOptional = Optional.empty();
-    private StaticProgressIndicator spinner;
+    private TxConfidenceIndicator spinner;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -278,7 +278,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         ImageView iconView = new ImageView();
         iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");
 
-        Tuple3<Button, StaticProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
+        Tuple3<Button, TxConfidenceIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
         Button button = placeOfferTuple.first;
         button.setMinHeight(40);

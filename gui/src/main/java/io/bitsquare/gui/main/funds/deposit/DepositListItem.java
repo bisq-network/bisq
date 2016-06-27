@@ -21,7 +21,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -39,7 +39,7 @@ public class DepositListItem {
     private final StringProperty balance = new SimpleStringProperty();
     private final WalletService walletService;
     private Coin balanceAsCoin;
-    private final StaticProgressIndicator progressIndicator;
+    private final TxConfidenceIndicator txConfidenceIndicator;
     private final Tooltip tooltip;
     private String addressString;
     private String usage = "-";
@@ -52,13 +52,13 @@ public class DepositListItem {
         addressString = addressEntry.getAddressString();
 
         // confidence
-        progressIndicator = new StaticProgressIndicator();
-        progressIndicator.setId("funds-confidence");
+        txConfidenceIndicator = new TxConfidenceIndicator();
+        txConfidenceIndicator.setId("funds-confidence");
         tooltip = new Tooltip("Not used yet");
-        progressIndicator.setProgress(0);
-        progressIndicator.setPrefHeight(30);
-        progressIndicator.setPrefWidth(30);
-        Tooltip.install(progressIndicator, tooltip);
+        txConfidenceIndicator.setProgress(0);
+        txConfidenceIndicator.setPrefHeight(30);
+        txConfidenceIndicator.setPrefWidth(30);
+        Tooltip.install(txConfidenceIndicator, tooltip);
 
         final Address address = addressEntry.getAddress();
         walletService.addBalanceListener(new BalanceListener(address) {
@@ -104,28 +104,28 @@ public class DepositListItem {
             switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
                     tooltip.setText("Unknown transaction status");
-                    progressIndicator.setProgress(0);
+                    txConfidenceIndicator.setProgress(0);
                     break;
                 case PENDING:
                     tooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
-                    progressIndicator.setProgress(-1.0);
+                    txConfidenceIndicator.setProgress(-1.0);
                     break;
                 case BUILDING:
                     tooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                    progressIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
+                    txConfidenceIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
                     break;
                 case DEAD:
                     tooltip.setText("Transaction is invalid.");
-                    progressIndicator.setProgress(0);
+                    txConfidenceIndicator.setProgress(0);
                     break;
             }
 
-            progressIndicator.setPrefSize(24, 24);
+            txConfidenceIndicator.setPrefSize(24, 24);
         }
     }
 
-    public StaticProgressIndicator getProgressIndicator() {
-        return progressIndicator;
+    public TxConfidenceIndicator getTxConfidenceIndicator() {
+        return txConfidenceIndicator;
     }
 
     public String getAddressString() {

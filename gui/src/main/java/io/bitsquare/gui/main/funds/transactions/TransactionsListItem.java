@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
@@ -40,7 +40,7 @@ public class TransactionsListItem {
     private final Date date;
     private final String txId;
     private final WalletService walletService;
-    private final StaticProgressIndicator progressIndicator;
+    private final TxConfidenceIndicator txConfidenceIndicator;
     private final Tooltip tooltip;
     @Nullable
     private Tradable tradable;
@@ -111,13 +111,13 @@ public class TransactionsListItem {
         }
 
         // confidence
-        progressIndicator = new StaticProgressIndicator();
-        progressIndicator.setId("funds-confidence");
+        txConfidenceIndicator = new TxConfidenceIndicator();
+        txConfidenceIndicator.setId("funds-confidence");
         tooltip = new Tooltip("Not used yet");
-        progressIndicator.setProgress(0);
-        progressIndicator.setPrefHeight(30);
-        progressIndicator.setPrefWidth(30);
-        Tooltip.install(progressIndicator, tooltip);
+        txConfidenceIndicator.setProgress(0);
+        txConfidenceIndicator.setPrefHeight(30);
+        txConfidenceIndicator.setPrefWidth(30);
+        Tooltip.install(txConfidenceIndicator, tooltip);
 
         if (address != null) {
             txConfidenceListener = new TxConfidenceListener(txId) {
@@ -155,7 +155,7 @@ public class TransactionsListItem {
                         details = "Dispute payout: " + tradable.getShortId();
                     } else {
                         details = "Lost dispute case: " + tradable.getShortId();
-                        progressIndicator.setVisible(false);
+                        txConfidenceIndicator.setVisible(false);
                     }
                 } else {
                     details = "Unknown reason: " + tradable.getShortId();
@@ -182,28 +182,28 @@ public class TransactionsListItem {
             switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
                     tooltip.setText("Unknown transaction status");
-                    progressIndicator.setProgress(0);
+                    txConfidenceIndicator.setProgress(0);
                     break;
                 case PENDING:
                     tooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
-                    progressIndicator.setProgress(-1.0);
+                    txConfidenceIndicator.setProgress(-1.0);
                     break;
                 case BUILDING:
                     tooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                    progressIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
+                    txConfidenceIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
                     break;
                 case DEAD:
                     tooltip.setText("Transaction is invalid.");
-                    progressIndicator.setProgress(0);
+                    txConfidenceIndicator.setProgress(0);
                     break;
             }
 
-            progressIndicator.setPrefSize(24, 24);
+            txConfidenceIndicator.setPrefSize(24, 24);
         }
     }
 
-    public StaticProgressIndicator getProgressIndicator() {
-        return progressIndicator;
+    public TxConfidenceIndicator getTxConfidenceIndicator() {
+        return txConfidenceIndicator;
     }
 
     public final String getDateString() {

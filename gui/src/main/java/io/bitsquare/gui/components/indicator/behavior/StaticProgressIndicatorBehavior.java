@@ -26,7 +26,7 @@
 package io.bitsquare.gui.components.indicator.behavior;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 
 import java.util.Collections;
 
@@ -36,7 +36,7 @@ import java.util.Collections;
 /**
  * @param <C>
  */
-public class StaticProgressIndicatorBehavior<C extends StaticProgressIndicator> extends BehaviorBase<C> {
+public class StaticProgressIndicatorBehavior<C extends TxConfidenceIndicator> extends BehaviorBase<C> {
 
     /**
      * ************************************************************************

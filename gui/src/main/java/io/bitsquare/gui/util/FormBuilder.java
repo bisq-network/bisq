@@ -23,7 +23,7 @@ import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Tuple4;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.*;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -830,13 +830,13 @@ public class FormBuilder {
     // Button + ProgressIndicator + Label
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Button, StaticProgressIndicator, Label> addButtonWithStatusAfterGroup(GridPane gridPane,
+    public static Tuple3<Button, TxConfidenceIndicator, Label> addButtonWithStatusAfterGroup(GridPane gridPane,
                                                                                          int rowIndex,
                                                                                          String buttonTitle) {
         return addButtonWithStatus(gridPane, rowIndex, buttonTitle, 15);
     }
 
-    public static Tuple3<Button, StaticProgressIndicator, Label> addButtonWithStatus(GridPane gridPane,
+    public static Tuple3<Button, TxConfidenceIndicator, Label> addButtonWithStatus(GridPane gridPane,
                                                                                int rowIndex,
                                                                                String buttonTitle,
                                                                                double top) {
@@ -846,7 +846,7 @@ public class FormBuilder {
         Button button = new Button(buttonTitle);
         button.setDefaultButton(true);
 
-        StaticProgressIndicator progressIndicator = new StaticProgressIndicator(0);
+        TxConfidenceIndicator progressIndicator = new TxConfidenceIndicator(0);
         progressIndicator.setPrefHeight(24);
         progressIndicator.setPrefWidth(24);
 

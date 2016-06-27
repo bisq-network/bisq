@@ -67,7 +67,7 @@ import javafx.scene.control.Skin;
  */
 
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
-public class StaticProgressIndicator extends Control {
+public class TxConfidenceIndicator extends Control {
 
     /**
      * Value for progress indicating that the progress is indeterminate.
@@ -121,7 +121,7 @@ public class StaticProgressIndicator extends Control {
     /**
      * Creates a new indeterminate ProgressIndicator.
      */
-    public StaticProgressIndicator() {
+    public TxConfidenceIndicator() {
         this(INDETERMINATE_PROGRESS);
     }
 
@@ -129,7 +129,7 @@ public class StaticProgressIndicator extends Control {
      * Creates a new ProgressIndicator with the given progress value.
      */
     @SuppressWarnings("unchecked")
-    public StaticProgressIndicator(double progress) {
+    public TxConfidenceIndicator(double progress) {
         // focusTraversable is styleable through css. Calling setFocusTraversable
         // makes it look to css like the user set the value and css will not
         // override. Initializing focusTraversable by calling applyStyle with null
@@ -169,7 +169,7 @@ public class StaticProgressIndicator extends Control {
 
                 @Override
                 public Object getBean() {
-                    return StaticProgressIndicator.this;
+                    return TxConfidenceIndicator.this;
                 }
 
 
@@ -217,7 +217,7 @@ public class StaticProgressIndicator extends Control {
 
                 @Override
                 public Object getBean() {
-                    return StaticProgressIndicator.this;
+                    return TxConfidenceIndicator.this;
                 }
 
 

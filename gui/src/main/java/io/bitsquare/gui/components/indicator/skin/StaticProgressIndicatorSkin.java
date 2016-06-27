@@ -29,7 +29,7 @@ import com.sun.javafx.css.converters.BooleanConverter;
 import com.sun.javafx.css.converters.PaintConverter;
 import com.sun.javafx.css.converters.SizeConverter;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.components.indicator.behavior.StaticProgressIndicatorBehavior;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -58,8 +58,8 @@ import java.util.List;
 // TODO Copied form OpenJFX, check license issues and way how we integrated it
 // We changed behaviour which was not exposed via APIs
 
-public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgressIndicator,
-        StaticProgressIndicatorBehavior<StaticProgressIndicator>> {
+public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIndicator,
+        StaticProgressIndicatorBehavior<TxConfidenceIndicator>> {
 
     /**
      * ************************************************************************
@@ -97,7 +97,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgress
 
 
         @Override
-        public CssMetaData<StaticProgressIndicator, Number> getCssMetaData() {
+        public CssMetaData<TxConfidenceIndicator, Number> getCssMetaData() {
             return StyleableProperties.INDETERMINATE_SEGMENT_COUNT;
         }
     };
@@ -115,7 +115,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgress
 
 
         @Override
-        public CssMetaData<StaticProgressIndicator, Boolean> getCssMetaData() {
+        public CssMetaData<TxConfidenceIndicator, Boolean> getCssMetaData() {
             return StyleableProperties.SPIN_ENABLED;
         }
 
@@ -169,7 +169,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgress
 
 
         @Override
-        public CssMetaData<StaticProgressIndicator, Paint> getCssMetaData() {
+        public CssMetaData<TxConfidenceIndicator, Paint> getCssMetaData() {
             return StyleableProperties.PROGRESS_COLOR;
         }
     };
@@ -183,7 +183,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgress
      * ************************************************************************
      */
     @SuppressWarnings("deprecation")
-    public StaticProgressIndicatorSkin(StaticProgressIndicator control) {
+    public StaticProgressIndicatorSkin(TxConfidenceIndicator control) {
         super(control, new StaticProgressIndicatorBehavior<>(control));
 
         InvalidationListener indeterminateListener = valueModel -> initialize();
@@ -249,7 +249,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgress
 
     @SuppressWarnings("deprecation")
     private void initialize() {
-        StaticProgressIndicator control = getSkinnable();
+        TxConfidenceIndicator control = getSkinnable();
         boolean isIndeterminate = control.isIndeterminate();
         if (isIndeterminate) {
             // clean up determinateIndicator
@@ -317,7 +317,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgress
         //private double textGap = 2.0F;
 
 
-        private final StaticProgressIndicator control;
+        private final TxConfidenceIndicator control;
         //private Text text;
 
         private final StackPane indicator;
@@ -334,7 +334,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgress
         // only update pie arc to nearest degree
         private int degProgress;
 
-        public DeterminateIndicator(StaticProgressIndicator control, StaticProgressIndicatorSkin s,
+        public DeterminateIndicator(TxConfidenceIndicator control, StaticProgressIndicatorSkin s,
                                     Paint fillOverride) {
             this.control = control;
 
@@ -534,7 +534,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgress
 
     @SuppressWarnings("ConstantConditions")
     static class IndeterminateSpinner extends Region {
-        private final StaticProgressIndicator control;
+        private final TxConfidenceIndicator control;
         private final StaticProgressIndicatorSkin skin;
 
         private final IndicatorPaths pathsG;
@@ -544,7 +544,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgress
 
         private Paint fillOverride = null;
 
-        public IndeterminateSpinner(StaticProgressIndicator control, StaticProgressIndicatorSkin s,
+        public IndeterminateSpinner(TxConfidenceIndicator control, StaticProgressIndicatorSkin s,
                                     boolean spinEnabled, Paint fillOverride) {
             this.control = control;
             this.skin = s;
@@ -678,62 +678,62 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<StaticProgress
     private static class StyleableProperties {
         public static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
-        private static final CssMetaData<StaticProgressIndicator, Paint> PROGRESS_COLOR =
-                new CssMetaData<StaticProgressIndicator, Paint>(
+        private static final CssMetaData<TxConfidenceIndicator, Paint> PROGRESS_COLOR =
+                new CssMetaData<TxConfidenceIndicator, Paint>(
                         "-fx-progress-color", PaintConverter.getInstance(), null) {
 
                     @Override
-                    public boolean isSettable(StaticProgressIndicator n) {
+                    public boolean isSettable(TxConfidenceIndicator n) {
                         final StaticProgressIndicatorSkin skin = (StaticProgressIndicatorSkin) n.getSkin();
                         return skin.progressColor == null || !skin.progressColor.isBound();
                     }
 
 
                     @Override
-                    public StyleableProperty<Paint> getStyleableProperty(StaticProgressIndicator n) {
+                    public StyleableProperty<Paint> getStyleableProperty(TxConfidenceIndicator n) {
                         final StaticProgressIndicatorSkin skin = (StaticProgressIndicatorSkin) n.getSkin();
                         return (StyleableProperty<Paint>) skin.progressColor;
                     }
                 };
 
 
-        private static final CssMetaData<StaticProgressIndicator, Number> INDETERMINATE_SEGMENT_COUNT =
-                new CssMetaData<StaticProgressIndicator, Number>(
+        private static final CssMetaData<TxConfidenceIndicator, Number> INDETERMINATE_SEGMENT_COUNT =
+                new CssMetaData<TxConfidenceIndicator, Number>(
                         "-fx-indeterminate-segment-count", SizeConverter.getInstance(), 8) {
 
                     @Override
-                    public void set(StaticProgressIndicator node, Number value, StyleOrigin origin) {
+                    public void set(TxConfidenceIndicator node, Number value, StyleOrigin origin) {
                         super.set(node, value.intValue(), origin);
                     }
 
                     @Override
-                    public boolean isSettable(StaticProgressIndicator n) {
+                    public boolean isSettable(TxConfidenceIndicator n) {
                         final StaticProgressIndicatorSkin skin = (StaticProgressIndicatorSkin) n.getSkin();
                         return skin.indeterminateSegmentCount == null || !skin.indeterminateSegmentCount.isBound();
                     }
 
 
                     @Override
-                    public StyleableProperty<Number> getStyleableProperty(StaticProgressIndicator n) {
+                    public StyleableProperty<Number> getStyleableProperty(TxConfidenceIndicator n) {
                         final StaticProgressIndicatorSkin skin = (StaticProgressIndicatorSkin) n.getSkin();
                         return (StyleableProperty<Number>) skin.indeterminateSegmentCount;
                     }
                 };
 
-        private static final CssMetaData<StaticProgressIndicator, Boolean> SPIN_ENABLED = new
-                CssMetaData<StaticProgressIndicator, Boolean>("-fx-spin-enabled",
+        private static final CssMetaData<TxConfidenceIndicator, Boolean> SPIN_ENABLED = new
+                CssMetaData<TxConfidenceIndicator, Boolean>("-fx-spin-enabled",
                         BooleanConverter.getInstance(),
                         Boolean.FALSE) {
 
                     @Override
-                    public boolean isSettable(StaticProgressIndicator node) {
+                    public boolean isSettable(TxConfidenceIndicator node) {
                         final StaticProgressIndicatorSkin skin = (StaticProgressIndicatorSkin) node.getSkin();
                         return skin.spinEnabled == null || !skin.spinEnabled.isBound();
                     }
 
 
                     @Override
-                    public StyleableProperty<Boolean> getStyleableProperty(StaticProgressIndicator node) {
+                    public StyleableProperty<Boolean> getStyleableProperty(TxConfidenceIndicator node) {
                         final StaticProgressIndicatorSkin skin = (StaticProgressIndicatorSkin) node.getSkin();
                         return (StyleableProperty<Boolean>) skin.spinEnabled;
                     }

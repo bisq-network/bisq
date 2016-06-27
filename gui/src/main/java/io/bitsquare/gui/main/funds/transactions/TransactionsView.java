@@ -132,8 +132,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
         transactionColumn.setComparator((o1, o2) -> o1.getTxId().compareTo(o2.getTxId()));
         amountColumn.setComparator((o1, o2) -> o1.getAmountAsCoin().compareTo(o2.getAmountAsCoin()));
-        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getProgressIndicator().getProgress())
-                .compareTo(o2.getProgressIndicator().getProgress()));
+        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getTxConfidenceIndicator().getProgress())
+                .compareTo(o2.getTxConfidenceIndicator().getProgress()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -550,7 +550,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setGraphic(item.getProgressIndicator());
+                                    setGraphic(item.getTxConfidenceIndicator());
                                 } else {
                                     setGraphic(null);
                                 }
