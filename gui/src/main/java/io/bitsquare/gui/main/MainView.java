@@ -409,7 +409,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             if (newValue != null) {
                 splashP2PNetworkLabel.setId("splash-error-state-msg");
                 splashP2PNetworkBusyAnimation.stop();
-            } else if (model.splashP2PNetworkVisible.get()) {
+            } else if (model.splashP2PNetworkAnimationVisible.get()) {
                 splashP2PNetworkBusyAnimation.play();
             }
         };
@@ -430,7 +430,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
 
         splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> splashP2PNetworkBusyAnimation.setRunning(newValue);
-        model.splashP2PNetworkVisible.addListener(splashP2PNetworkVisibleListener);
+        model.splashP2PNetworkAnimationVisible.addListener(splashP2PNetworkVisibleListener);
 
         HBox splashP2PNetworkBox = new HBox();
         splashP2PNetworkBox.setSpacing(10);
@@ -448,7 +448,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         model.p2pNetworkWarnMsg.removeListener(splashP2PNetworkErrorMsgListener);
         model.p2PNetworkIconId.removeListener(splashP2PNetworkIconIdListener);
-        model.splashP2PNetworkVisible.removeListener(splashP2PNetworkVisibleListener);
+        model.splashP2PNetworkAnimationVisible.removeListener(splashP2PNetworkVisibleListener);
 
         btcSplashInfo.textProperty().unbind();
         btcSyncIndicator.progressProperty().unbind();
