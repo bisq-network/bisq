@@ -23,8 +23,8 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.crypto.ScryptUtil;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.PasswordTextField;
-import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Transitions;
@@ -183,9 +183,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void addButtons() {
-        TxConfidenceIndicator spinner = new TxConfidenceIndicator();
-        spinner.setVisible(false);
-        spinner.setManaged(spinner.isVisible());
+        BusyAnimation busyAnimation = new BusyAnimation(false);
 
         unlockButton = new Button("Unlock");
         unlockButton.setDefaultButton(true);
@@ -196,8 +194,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             Wallet wallet = walletService.getWallet();
             KeyCrypterScrypt keyCrypterScrypt = (KeyCrypterScrypt) wallet.getKeyCrypter();
             if (keyCrypterScrypt != null) {
-                spinner.setVisible(true);
-                spinner.setManaged(spinner.isVisible());
+                busyAnimation.play();
                 ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, password, aesKey -> {
                     if (wallet.checkAESKey(aesKey)) {
                         if (aesKeyHandler != null)
@@ -205,8 +202,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
                         hide();
                     } else {
-                        spinner.setVisible(false);
-                        spinner.setManaged(spinner.isVisible());
+                        busyAnimation.stop();
 
                         UserThread.runAfter(() -> new Popup()
                                 .warning("You entered the wrong password.\n\n" +
@@ -238,7 +234,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         if (hideCloseButton)
-            hBox.getChildren().addAll(unlockButton, forgotPasswordButton, spinner);
+            hBox.getChildren().addAll(unlockButton, forgotPasswordButton, busyAnimation);
         else
             hBox.getChildren().addAll(unlockButton, cancelButton);
         gridPane.getChildren().add(hBox);

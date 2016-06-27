@@ -407,12 +407,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkBusyAnimation.setPrefSize(24, 24);
 
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
-            if (newValue != null) 
+            if (newValue != null) {
                 splashP2PNetworkLabel.setId("splash-error-state-msg");
-
-            splashP2PNetworkBusyAnimation.setVisible(newValue == null);
-            splashP2PNetworkBusyAnimation.setManaged(newValue == null);
-           
+                splashP2PNetworkBusyAnimation.stop();
+            } else if (model.splashP2PNetworkVisible.get()) {
+                splashP2PNetworkBusyAnimation.play();
+            }
         };
         model.p2pNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
 
@@ -431,8 +431,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
 
         splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> {
-            splashP2PNetworkBusyAnimation.setVisible(newValue);
-            splashP2PNetworkBusyAnimation.setManaged(newValue);
+            if (newValue)
+                splashP2PNetworkBusyAnimation.play();
+            else
+                splashP2PNetworkBusyAnimation.stop();
         };
         model.splashP2PNetworkVisible.addListener(splashP2PNetworkVisibleListener);
 

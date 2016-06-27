@@ -16,8 +16,14 @@ public class BusyAnimation extends Pane {
     private ImageView img1, img2;
     private int incr;
     private int rotation1, rotation2;
+    private boolean animate;
 
     public BusyAnimation() {
+        this(true);
+    }
+
+    public BusyAnimation(boolean animate) {
+        this.animate = animate;
         setMinSize(24, 24);
         setMaxSize(24, 24);
 
@@ -28,39 +34,45 @@ public class BusyAnimation extends Pane {
         img2 = new ImageView();
         img2.setId("spinner");
 
-        sceneProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null) {
-                stop();
-            } else {
-                play();
-            }
-        });
         getChildren().addAll(img1, img2);
 
         sceneProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null)
                 stop();
-            else
+            else if (animate)
                 play();
         });
+
+        updateVisibility();
     }
 
-    private void update() {
+    public void play() {
+        animate = true;
+        updateVisibility();
+
+        if (timer != null)
+            timer.stop();
+        timer = UserThread.runPeriodically(this::updateAnimation, 100, TimeUnit.MILLISECONDS);
+    }
+
+    public void stop() {
+        animate = false;
+        if (timer != null) {
+            timer.stop();
+            timer = null;
+        }
+        updateVisibility();
+    }
+
+    private void updateAnimation() {
         rotation1 += incr;
         rotation2 -= incr;
         img1.setRotate(rotation1);
         img2.setRotate(rotation2);
     }
 
-    public void play() {
-        stop();
-        timer = UserThread.runPeriodically(this::update, 100, TimeUnit.MILLISECONDS);
-    }
-
-    public void stop() {
-        if (timer != null) {
-            timer.stop();
-            timer = null;
-        }
+    private void updateVisibility() {
+        setVisible(animate);
+        setManaged(animate);
     }
 }
