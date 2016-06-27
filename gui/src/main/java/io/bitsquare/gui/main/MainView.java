@@ -404,7 +404,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
 
         splashP2PNetworkBusyAnimation = new BusyAnimation();
-        splashP2PNetworkBusyAnimation.setPrefSize(24, 24);
 
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
@@ -430,12 +429,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
         model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
 
-        splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> {
-            if (newValue)
-                splashP2PNetworkBusyAnimation.play();
-            else
-                splashP2PNetworkBusyAnimation.stop();
-        };
+        splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> splashP2PNetworkBusyAnimation.setRunning(newValue);
         model.splashP2PNetworkVisible.addListener(splashP2PNetworkVisibleListener);
 
         HBox splashP2PNetworkBox = new HBox();

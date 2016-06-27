@@ -100,7 +100,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
-    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty();
+    final BooleanProperty isBusyAnimationRunning = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new
@@ -751,7 +751,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             spinnerInfoText.set("Waiting for funds...");
         }
 
-        isSpinnerVisible.set(!spinnerInfoText.get().isEmpty());
+        isBusyAnimationRunning.set(!spinnerInfoText.get().isEmpty());
     }
 
     private void updateButtonDisableState() {

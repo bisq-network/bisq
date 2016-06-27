@@ -28,7 +28,6 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.*;
-import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -93,7 +92,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
     private TitledGroupBg payFundsPane;
-    private TxConfidenceIndicator spinner;
+    private BusyAnimation busyAnimation;
     private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, placeOfferButton;
     private InputTextField amountTextField, minAmountTextField, fixedPriceTextField, marketBasedPriceTextField, volumeTextField;
     private TextField currencyTextField;
@@ -127,7 +126,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<String> tradeCurrencyCodeListener;
     private ImageView qrCodeImageView;
     private HBox fundingHBox;
-    private Subscription isSpinnerVisibleSubscription;
+    private Subscription busyAnimationRunningSubscription;
     private Subscription cancelButton2StyleSubscription;
     private Subscription balanceSubscription;
     private List<Node> editOfferElements = new ArrayList<>();
@@ -191,8 +190,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             addListeners();
             addSubscriptions();
 
-            if (spinner != null && spinner.isVisible())
-                spinner.setProgress(-1);
+            if (busyAnimation != null)
+                busyAnimation.play();
 
             useMarketBasedPriceButton.setSelected(model.dataModel.useMarketBasedPrice.get());
             fixedPriceButton.setSelected(!model.dataModel.useMarketBasedPrice.get());
@@ -222,8 +221,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             removeListeners();
             removeSubscriptions();
 
-            if (spinner != null)
-                spinner.setProgress(0);
+            if (busyAnimation != null)
+                busyAnimation.stop();
         }
     }
 
@@ -372,7 +371,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton1.setManaged(false);
         cancelButton1.setOnAction(null);
 
-        spinner.setProgress(-1);
+        busyAnimation.play();
 
         payFundsPane.setVisible(true);
         totalToPayLabel.setVisible(true);
@@ -482,10 +481,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // funding
         fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
         fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
-        spinner.visibleProperty().bind(model.isSpinnerVisible);
-        spinner.managedProperty().bind(model.isSpinnerVisible);
-        spinnerInfoLabel.visibleProperty().bind(model.isSpinnerVisible);
-        spinnerInfoLabel.managedProperty().bind(model.isSpinnerVisible);
+        busyAnimation.runningProperty().bind(model.isBusyAnimationRunning);
+        spinnerInfoLabel.visibleProperty().bind(model.isBusyAnimationRunning);
+        spinnerInfoLabel.managedProperty().bind(model.isBusyAnimationRunning);
         spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
         placeOfferButton.visibleProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
         placeOfferButton.managedProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
@@ -534,8 +532,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // funding
         fundingHBox.visibleProperty().unbind();
         fundingHBox.managedProperty().unbind();
-        spinner.visibleProperty().unbind();
-        spinner.managedProperty().unbind();
+        busyAnimation.runningProperty().unbind();
         spinnerInfoLabel.visibleProperty().unbind();
         spinnerInfoLabel.managedProperty().unbind();
         spinnerInfoLabel.textProperty().unbind();
@@ -556,8 +553,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addSubscriptions() {
-        isSpinnerVisibleSubscription = EasyBind.subscribe(model.isSpinnerVisible,
-                isSpinnerVisible -> spinner.setProgress(isSpinnerVisible ? -1 : 0));
+        busyAnimationRunningSubscription = EasyBind.subscribe(model.isBusyAnimationRunning, busyAnimation::setRunning);
 
         cancelButton2StyleSubscription = EasyBind.subscribe(placeOfferButton.visibleProperty(),
                 isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
@@ -566,7 +562,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void removeSubscriptions() {
-        isSpinnerVisibleSubscription.unsubscribe();
+        busyAnimationRunningSubscription.unsubscribe();
         cancelButton2StyleSubscription.unsubscribe();
         balanceSubscription.unsubscribe();
     }
@@ -906,12 +902,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundFromExternalWalletButton = new Button("Open your external wallet for funding");
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
-        spinner = new TxConfidenceIndicator(-1);
-        spinner.setPrefSize(24, 24);
+        busyAnimation = new BusyAnimation();
         spinnerInfoLabel = new Label();
         spinnerInfoLabel.setPadding(new Insets(5, 0, 0, 0));
 
-        fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, spinner, spinnerInfoLabel);
+        fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, busyAnimation, spinnerInfoLabel);
         GridPane.setRowIndex(fundingHBox, ++gridRow);
         GridPane.setColumnIndex(fundingHBox, 1);
         GridPane.setMargin(fundingHBox, new Insets(15, 10, 0, 0));
