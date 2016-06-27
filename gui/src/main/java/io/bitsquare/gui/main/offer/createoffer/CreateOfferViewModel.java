@@ -89,7 +89,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    final StringProperty spinnerInfoText = new SimpleStringProperty("");
+    final StringProperty waitingForFundsText = new SimpleStringProperty("");
 
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
@@ -100,7 +100,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
-    final BooleanProperty isBusyAnimationRunning = new SimpleBooleanProperty();
+    final BooleanProperty isWaitingForFunds = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new
@@ -739,19 +739,19 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (!showPayFundsScreenDisplayed.get() ||
                 errorMessage.get() != null ||
                 showTransactionPublishedScreen.get()) {
-            spinnerInfoText.set("");
+            waitingForFundsText.set("");
         } else if (dataModel.isWalletFunded.get()) {
-            spinnerInfoText.set("");
+            waitingForFundsText.set("");
            /* if (dataModel.isFeeFromFundingTxSufficient.get()) {
                 spinnerInfoText.set("");
             } else {
                 spinnerInfoText.set("Check if funding tx miner fee is sufficient...");
             }*/
         } else {
-            spinnerInfoText.set("Waiting for funds...");
+            waitingForFundsText.set("Waiting for funds...");
         }
 
-        isBusyAnimationRunning.set(!spinnerInfoText.get().isEmpty());
+        isWaitingForFunds.set(!waitingForFundsText.get().isEmpty());
     }
 
     private void updateButtonDisableState() {

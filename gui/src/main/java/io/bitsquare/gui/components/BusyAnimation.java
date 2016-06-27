@@ -57,25 +57,24 @@ public class BusyAnimation extends Pane {
     }
 
     public void play() {
-        if (!isRunning()) {
-            runningProperty.set(true);
-            updateVisibility();
+        log.error("play " + isRunning());
+        runningProperty.set(true);
 
-            if (timer != null)
-                timer.stop();
-            timer = UserThread.runPeriodically(this::updateAnimation, 100, TimeUnit.MILLISECONDS);
-        }
+        if (timer != null)
+            timer.stop();
+        timer = UserThread.runPeriodically(this::updateAnimation, 100, TimeUnit.MILLISECONDS);
+
+        updateVisibility();
     }
 
     public void stop() {
-        if (isRunning()) {
-            runningProperty.set(false);
-            if (timer != null) {
-                timer.stop();
-                timer = null;
-            }
-            updateVisibility();
+        log.error("stop " + isRunning());
+        runningProperty.set(false);
+        if (timer != null) {
+            timer.stop();
+            timer = null;
         }
+        updateVisibility();
     }
 
     private void updateAnimation() {
@@ -86,6 +85,7 @@ public class BusyAnimation extends Pane {
     }
 
     private void updateVisibility() {
+        log.error("updateVisibility " + isRunning());
         setVisible(isRunning());
         setManaged(isRunning());
     }
@@ -99,6 +99,7 @@ public class BusyAnimation extends Pane {
     }
 
     public void setRunning(boolean running) {
+        log.error("setRunning " + running);
         runningProperty.set(running);
     }
 }

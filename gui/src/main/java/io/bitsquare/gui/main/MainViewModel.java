@@ -352,6 +352,7 @@ public class MainViewModel implements ViewModel {
             public void onRequestingDataCompleted() {
                 initialP2PNetworkDataReceived.set(true);
                 bootstrapState.set("Initial data received");
+                splashP2PNetworkVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
 
@@ -362,6 +363,7 @@ public class MainViewModel implements ViewModel {
                 else
                     bootstrapWarning.set(null);
 
+                splashP2PNetworkVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
 
@@ -376,6 +378,7 @@ public class MainViewModel implements ViewModel {
                     bootstrapWarning.set(null);
                     p2pNetworkLabelId.set("footer-pane");
                 }
+                splashP2PNetworkVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
 

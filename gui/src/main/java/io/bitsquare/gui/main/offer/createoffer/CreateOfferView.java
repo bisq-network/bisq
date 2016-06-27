@@ -92,13 +92,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
     private TitledGroupBg payFundsPane;
-    private BusyAnimation busyAnimation;
+    private BusyAnimation waitingForFundsBusyAnimation;
     private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, placeOfferButton;
     private InputTextField amountTextField, minAmountTextField, fixedPriceTextField, marketBasedPriceTextField, volumeTextField;
     private TextField currencyTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
             volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, currencyTextFieldLabel,
-            currencyComboBoxLabel, spinnerInfoLabel, marketBasedPriceLabel;
+            currencyComboBoxLabel, waitingForFundsLabel, marketBasedPriceLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -126,7 +126,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<String> tradeCurrencyCodeListener;
     private ImageView qrCodeImageView;
     private HBox fundingHBox;
-    private Subscription busyAnimationRunningSubscription;
+    private Subscription isWaitingForFundsSubscription;
     private Subscription cancelButton2StyleSubscription;
     private Subscription balanceSubscription;
     private List<Node> editOfferElements = new ArrayList<>();
@@ -190,8 +190,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             addListeners();
             addSubscriptions();
 
-            if (busyAnimation != null)
-                busyAnimation.play();
+            if (waitingForFundsBusyAnimation != null)
+                waitingForFundsBusyAnimation.play();
 
             useMarketBasedPriceButton.setSelected(model.dataModel.useMarketBasedPrice.get());
             fixedPriceButton.setSelected(!model.dataModel.useMarketBasedPrice.get());
@@ -221,8 +221,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             removeListeners();
             removeSubscriptions();
 
-            if (busyAnimation != null)
-                busyAnimation.stop();
+            if (waitingForFundsBusyAnimation != null)
+                waitingForFundsBusyAnimation.stop();
         }
     }
 
@@ -371,7 +371,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton1.setManaged(false);
         cancelButton1.setOnAction(null);
 
-        busyAnimation.play();
+        waitingForFundsBusyAnimation.play();
 
         payFundsPane.setVisible(true);
         totalToPayLabel.setVisible(true);
@@ -458,7 +458,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
            /* return CurrencyUtil.isCryptoCurrency(currencyCode) ?
                     BSResources.get("createOffer.amountPriceBox.priceDescriptionAltcoin", currencyCode) :
                     BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode);*/
-            
+
         }, model.tradeCurrencyCode));
         //xLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.isCryptoCurrency(model.tradeCurrencyCode.get()) ? "/" : "x", model.tradeCurrencyCode));
         xLabel.setText("x");
@@ -481,10 +481,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // funding
         fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
         fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
-        busyAnimation.runningProperty().bind(model.isBusyAnimationRunning);
-        spinnerInfoLabel.visibleProperty().bind(model.isBusyAnimationRunning);
-        spinnerInfoLabel.managedProperty().bind(model.isBusyAnimationRunning);
-        spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
+        waitingForFundsLabel.textProperty().bind(model.waitingForFundsText);
         placeOfferButton.visibleProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
         placeOfferButton.managedProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
         placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
@@ -532,10 +529,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // funding
         fundingHBox.visibleProperty().unbind();
         fundingHBox.managedProperty().unbind();
-        busyAnimation.runningProperty().unbind();
-        spinnerInfoLabel.visibleProperty().unbind();
-        spinnerInfoLabel.managedProperty().unbind();
-        spinnerInfoLabel.textProperty().unbind();
+        waitingForFundsLabel.textProperty().unbind();
         placeOfferButton.visibleProperty().unbind();
         placeOfferButton.managedProperty().unbind();
         placeOfferButton.disableProperty().unbind();
@@ -553,7 +547,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addSubscriptions() {
-        busyAnimationRunningSubscription = EasyBind.subscribe(model.isBusyAnimationRunning, busyAnimation::setRunning);
+        isWaitingForFundsSubscription = EasyBind.subscribe(model.isWaitingForFunds, isWaitingForFunds -> {
+            waitingForFundsBusyAnimation.setRunning(isWaitingForFunds);
+            waitingForFundsLabel.setVisible(isWaitingForFunds);
+            waitingForFundsLabel.setManaged(isWaitingForFunds);
+        });
 
         cancelButton2StyleSubscription = EasyBind.subscribe(placeOfferButton.visibleProperty(),
                 isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
@@ -562,7 +560,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void removeSubscriptions() {
-        busyAnimationRunningSubscription.unsubscribe();
+        isWaitingForFundsSubscription.unsubscribe();
         cancelButton2StyleSubscription.unsubscribe();
         balanceSubscription.unsubscribe();
     }
@@ -902,11 +900,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundFromExternalWalletButton = new Button("Open your external wallet for funding");
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
-        busyAnimation = new BusyAnimation();
-        spinnerInfoLabel = new Label();
-        spinnerInfoLabel.setPadding(new Insets(5, 0, 0, 0));
+        waitingForFundsBusyAnimation = new BusyAnimation();
+        waitingForFundsLabel = new Label();
+        waitingForFundsLabel.setPadding(new Insets(5, 0, 0, 0));
 
-        fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, busyAnimation, spinnerInfoLabel);
+        fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, waitingForFundsBusyAnimation, waitingForFundsLabel);
         GridPane.setRowIndex(fundingHBox, ++gridRow);
         GridPane.setColumnIndex(fundingHBox, 1);
         GridPane.setMargin(fundingHBox, new Insets(15, 10, 0, 0));
