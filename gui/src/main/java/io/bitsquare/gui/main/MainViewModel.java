@@ -130,7 +130,7 @@ public class MainViewModel implements ViewModel {
     // P2P network
     final StringProperty p2PNetworkInfo = new SimpleStringProperty();
     private MonadicBinding<String> p2PNetworkInfoBinding;
-    final DoubleProperty splashP2PNetworkProgress = new SimpleDoubleProperty(DevFlags.STRESS_TEST_MODE ? 0 : -1);
+    final BooleanProperty splashP2PNetworkVisible = new SimpleBooleanProperty(true);
     final StringProperty p2pNetworkWarnMsg = new SimpleStringProperty();
     final StringProperty p2PNetworkIconId = new SimpleStringProperty();
     final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();
@@ -381,7 +381,7 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onBootstrapComplete() {
-                splashP2PNetworkProgress.set(1);
+                splashP2PNetworkVisible.set(false);
                 bootstrapComplete.set(true);
             }
 
@@ -390,7 +390,7 @@ public class MainViewModel implements ViewModel {
                 p2pNetworkWarnMsg.set("Connecting to the P2P network failed (reported error: "
                         + throwable.getMessage() + ").\n" +
                         "Please check your internet connection or try to restart the application.");
-                splashP2PNetworkProgress.set(0);
+                splashP2PNetworkVisible.set(false);
                 bootstrapWarning.set("Bootstrapping to P2P network failed");
                 p2pNetworkLabelId.set("splash-error-state-msg");
             }
@@ -458,7 +458,7 @@ public class MainViewModel implements ViewModel {
 
                     if (walletService.getWallet().isEncrypted()) {
                         if (p2pNetWorkReady.get())
-                            splashP2PNetworkProgress.set(0);
+                            splashP2PNetworkVisible.set(false);
 
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {

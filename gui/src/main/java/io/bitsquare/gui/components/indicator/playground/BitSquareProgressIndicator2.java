@@ -1,4 +1,4 @@
-package io.bitsquare.gui.components.indicator;
+package io.bitsquare.gui.components.indicator.playground;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -9,13 +9,17 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.stage.Stage;
+import org.reactfx.EventStream;
+import org.reactfx.EventStreams;
 
+import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
-public class BitSquareProgressIndicator extends Application {
+public class BitSquareProgressIndicator2 extends Application {
+
+    private static final double FPS = 6.0;
+    private static final double cycleDurationSeconds = 1.0;
 
     public static void main(String[] args) {
         launch(args);
@@ -23,21 +27,15 @@ public class BitSquareProgressIndicator extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        EventStream<?> ticks = EventStreams.ticks(Duration.ofMillis((long) (1000 / FPS)), scheduler, Platform::runLater);
+
         Pane pane = new Pane();
         for (int i = 0; i < 10; ++i) {
-            Parent node = new Indicator(scheduler, 6.0, 1.0).getNode();
+            Parent node = new Indicator2(ticks, (int) (FPS * cycleDurationSeconds)).getNode();
             node.relocate(i * 50, 30);
             pane.getChildren().add(node);
         }
-
-       /* for (int i = 0; i < 10; ++i) {
-            ProgressIndicator node = new ProgressIndicator(-1);
-            node.setMaxWidth(20);
-            node.setMaxHeight(20);
-            node.relocate(i * 50, 30);
-            pane.getChildren().add(node);
-        }*/
 
         stage.setScene(new Scene(pane));
         stage.setOnCloseRequest(evt -> scheduler.shutdown());
@@ -48,7 +46,7 @@ public class BitSquareProgressIndicator extends Application {
 
 }
 
-class Indicator {
+class Indicator2 {
 
     private static final Color lColor = Color.rgb(0x66, 0x66, 0x66);
     private static final Color rColor = Color.rgb(0x0f, 0x87, 0xc3);
@@ -86,18 +84,13 @@ class Indicator {
     private final Path left;
     private final Path right;
     private final Group g;
-    private final ScheduledExecutorService scheduler;
-    private final long periodMs;
     private final int steps;
 
-    private boolean fw;
-    private int step;
-    private ScheduledFuture<?> scheduled = null;
+    private boolean fw = true;
+    private int step = 0;
 
-    Indicator(ScheduledExecutorService scheduler, double fps, double durationSeconds) {
-        this.scheduler = scheduler;
-        this.periodMs = (long) (1000 * durationSeconds / fps);
-        this.steps = (int) (fps * durationSeconds);
+    Indicator2(EventStream<?> ticks, int ticksPerCycle) {
+        this.steps = ticksPerCycle;
 
         left = new Path(ELEMS);
         right = new Path(ELEMS);
@@ -114,13 +107,7 @@ class Indicator {
 
         g = new Group(left, right);
 
-        g.sceneProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null) {
-                stop();
-            } else {
-                play();
-            }
-        });
+        ticks.conditionOnShowing(g).subscribe(tick -> step());
     }
 
     public Parent getNode() {
@@ -147,20 +134,6 @@ class Indicator {
 
         left.setOpacity(lOpacity);
         right.setOpacity(rOpacity);
-    }
-
-    private void play() {
-        stop();
-        fw = true;
-        step = 0;
-        scheduled = scheduler.scheduleAtFixedRate(() -> Platform.runLater(this::step), periodMs, periodMs, TimeUnit.MILLISECONDS);
-    }
-
-    private void stop() {
-        if (scheduled != null) {
-            scheduled.cancel(false);
-            scheduled = null;
-        }
     }
 
 }

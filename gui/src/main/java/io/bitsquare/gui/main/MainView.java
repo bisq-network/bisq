@@ -27,7 +27,7 @@ import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.funds.FundsView;
@@ -98,8 +98,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ChangeListener<String> btcSyncIconIdListener;
     private ChangeListener<String> splashP2PNetworkErrorMsgListener;
     private ChangeListener<String> splashP2PNetworkIconIdListener;
-    private ChangeListener<Number> splashP2PNetworkProgressListener;
-    private StaticProgressIndicator splashP2PNetworkIndicator;
+    private ChangeListener<Boolean> splashP2PNetworkVisibleListener;
+    private BusyAnimation splashP2PNetworkBusyAnimation;
     private Label splashP2PNetworkLabel;
     private ProgressBar btcSyncIndicator;
     private Label btcSplashInfo;
@@ -339,7 +339,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         HBox hBox2 = new HBox();
         hBox2.getChildren().setAll(label, spacer, btcAverageIconButton, poloniexIconButton);
-        
+
         VBox vBox = new VBox();
         vBox.setSpacing(3);
         vBox.setPadding(new Insets(11, 0, 0, 0));
@@ -403,15 +403,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkLabel.setTextAlignment(TextAlignment.CENTER);
         splashP2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
 
-        splashP2PNetworkIndicator = new StaticProgressIndicator();
-        splashP2PNetworkIndicator.setPrefSize(24, 24);
-        splashP2PNetworkIndicator.progressProperty().bind(model.splashP2PNetworkProgress);
+        splashP2PNetworkBusyAnimation = new BusyAnimation();
+        splashP2PNetworkBusyAnimation.setPrefSize(24, 24);
 
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
-            if (newValue != null) {
+            if (newValue != null) 
                 splashP2PNetworkLabel.setId("splash-error-state-msg");
-                splashP2PNetworkIndicator.setVisible(false);
-            }
+
+            splashP2PNetworkBusyAnimation.setVisible(newValue == null);
+            splashP2PNetworkBusyAnimation.setManaged(newValue == null);
+           
         };
         model.p2pNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
 
@@ -429,19 +430,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
         model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
 
-        splashP2PNetworkProgressListener = (ov, oldValue, newValue) -> {
-            if ((double) newValue != -1) {
-                splashP2PNetworkIndicator.setVisible(false);
-                splashP2PNetworkIndicator.setManaged(false);
-            }
+        splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> {
+            splashP2PNetworkBusyAnimation.setVisible(newValue);
+            splashP2PNetworkBusyAnimation.setManaged(newValue);
         };
-        model.splashP2PNetworkProgress.addListener(splashP2PNetworkProgressListener);
+        model.splashP2PNetworkVisible.addListener(splashP2PNetworkVisibleListener);
 
         HBox splashP2PNetworkBox = new HBox();
         splashP2PNetworkBox.setSpacing(10);
         splashP2PNetworkBox.setAlignment(Pos.CENTER);
         splashP2PNetworkBox.setPrefHeight(50);
-        splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkIndicator, splashP2PNetworkIcon);
+        splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkBusyAnimation, splashP2PNetworkIcon);
 
         vBox.getChildren().addAll(logo, blockchainSyncBox, splashP2PNetworkBox);
         return vBox;
@@ -453,13 +452,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         model.p2pNetworkWarnMsg.removeListener(splashP2PNetworkErrorMsgListener);
         model.p2PNetworkIconId.removeListener(splashP2PNetworkIconIdListener);
-        model.splashP2PNetworkProgress.removeListener(splashP2PNetworkProgressListener);
+        model.splashP2PNetworkVisible.removeListener(splashP2PNetworkVisibleListener);
 
         btcSplashInfo.textProperty().unbind();
         btcSyncIndicator.progressProperty().unbind();
 
         splashP2PNetworkLabel.textProperty().unbind();
-        splashP2PNetworkIndicator.progressProperty().unbind();
 
         model.onSplashScreenRemoved();
     }
