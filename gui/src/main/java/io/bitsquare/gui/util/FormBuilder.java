@@ -23,7 +23,6 @@ import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Tuple4;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.*;
-import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -830,36 +829,34 @@ public class FormBuilder {
     // Button + ProgressIndicator + Label
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Button, TxConfidenceIndicator, Label> addButtonWithStatusAfterGroup(GridPane gridPane,
-                                                                                         int rowIndex,
-                                                                                         String buttonTitle) {
-        return addButtonWithStatus(gridPane, rowIndex, buttonTitle, 15);
+    public static Tuple3<Button, BusyAnimation, Label> addButtonBusyAnimationLabelAfterGroup(GridPane gridPane,
+                                                                                             int rowIndex,
+                                                                                             String buttonTitle) {
+        return addButtonBusyAnimationLabel(gridPane, rowIndex, buttonTitle, 15);
     }
 
-    public static Tuple3<Button, TxConfidenceIndicator, Label> addButtonWithStatus(GridPane gridPane,
-                                                                               int rowIndex,
-                                                                               String buttonTitle,
-                                                                               double top) {
+    public static Tuple3<Button, BusyAnimation, Label> addButtonBusyAnimationLabel(GridPane gridPane,
+                                                                                   int rowIndex,
+                                                                                   String buttonTitle,
+                                                                                   double top) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
         Button button = new Button(buttonTitle);
         button.setDefaultButton(true);
 
-        TxConfidenceIndicator progressIndicator = new TxConfidenceIndicator(0);
-        progressIndicator.setPrefHeight(24);
-        progressIndicator.setPrefWidth(24);
+        BusyAnimation busyAnimation = new BusyAnimation(false);
 
         Label label = new Label();
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(button, progressIndicator, label);
+        hBox.getChildren().addAll(button, busyAnimation, label);
 
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(hBox);
 
-        return new Tuple3<>(button, progressIndicator, label);
+        return new Tuple3<>(button, busyAnimation, label);
     }
 
 

@@ -36,6 +36,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -184,6 +185,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     private void addButtons() {
         BusyAnimation busyAnimation = new BusyAnimation(false);
+        Label deriveStatusLabel = new Label();
 
         unlockButton = new Button("Unlock");
         unlockButton.setDefaultButton(true);
@@ -195,6 +197,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             KeyCrypterScrypt keyCrypterScrypt = (KeyCrypterScrypt) wallet.getKeyCrypter();
             if (keyCrypterScrypt != null) {
                 busyAnimation.play();
+                deriveStatusLabel.setText("Derive key from password");
                 ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, password, aesKey -> {
                     if (wallet.checkAESKey(aesKey)) {
                         if (aesKeyHandler != null)
@@ -203,6 +206,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
                         hide();
                     } else {
                         busyAnimation.stop();
+                        deriveStatusLabel.setText("");
 
                         UserThread.runAfter(() -> new Popup()
                                 .warning("You entered the wrong password.\n\n" +
@@ -233,8 +237,9 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
+        hBox.setAlignment(Pos.CENTER_LEFT);
         if (hideCloseButton)
-            hBox.getChildren().addAll(unlockButton, forgotPasswordButton, busyAnimation);
+            hBox.getChildren().addAll(unlockButton, forgotPasswordButton, busyAnimation, deriveStatusLabel);
         else
             hBox.getChildren().addAll(unlockButton, cancelButton);
         gridPane.getChildren().add(hBox);
