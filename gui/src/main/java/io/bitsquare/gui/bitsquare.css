@@ -20,8 +20,6 @@ lower gradient color on tab: dddddd
 bg color of non edit textFields: fafafa
 */
 
-/* Splash */
-
 .root {
     -bs-grey: #666666;
     -bs-bg-grey: #dddddd;
@@ -78,7 +76,13 @@ bg color of non edit textFields: fafafa
     -fx-selection-bar: derive(-fx-accent, 50%);
 
     -fx-font-size: 13;
+    -fx-font-family: "Verdana";
 }
+
+
+
+/* Splash */
+
 
 #splash {
     -fx-background-color: #ffffff;
@@ -174,6 +178,11 @@ bg color of non edit textFields: fafafa
     -fx-cursor: hand;
 }
 
+.copy-icon-disputes {
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+
 .copy-icon:hover {
     -fx-text-fill: black;
 }
@@ -207,7 +216,6 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: #999;
     -fx-cursor: hand;
 }
-
 
 /*******************************************************************************
  *                                                                             *
@@ -464,7 +472,6 @@ textfield */
 #num-offers {
     -fx-font-size: 12;
 }
-
 
 /* Create offer */
 #direction-icon-label {
@@ -1034,7 +1041,6 @@ textfield */
     -fx-font-weight: bold;
     -fx-text-fill: #333;
 }
-
 
 .popup-icon-information {
     -fx-text-fill: #ddd;

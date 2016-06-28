@@ -28,7 +28,6 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.*;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -89,14 +88,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private ImageView imageView;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
-    private StaticProgressIndicator spinner, offerAvailabilitySpinner;
+    private BusyAnimation waitingForFundsBusyAnimation, offerAvailabilityBusyAnimation;
     private TitledGroupBg payFundsPane;
     private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, takeOfferButton;
     private InputTextField amountTextField;
     private TextField paymentMethodTextField, currencyTextField, priceTextField, priceAsPercentageTextField, volumeTextField, amountRangeTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
             amountBtcLabel, priceCurrencyLabel, priceAsPercentageLabel,
-            volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, spinnerInfoLabel, offerAvailabilitySpinnerLabel;
+            volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, waitingForFundsLabel, offerAvailabilityLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
     private PopOver totalToPayInfoPopover;
     private OfferView.CloseHandler closeHandler;
@@ -107,7 +106,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Label paymentMethodLabel;
     private Subscription offerWarningSubscription;
     private Subscription errorMessageSubscription, isOfferAvailableSubscription;
-    private Subscription isSpinnerVisibleSubscription;
+    private Subscription isWaitingForFundsSubscription;
     private Subscription showWarningInvalidBtcDecimalPlacesSubscription;
     private Subscription showTransactionPublishedScreenSubscription;
     private SimpleBooleanProperty errorPopupDisplayed;
@@ -160,14 +159,30 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addSubscriptions();
         amountTextField.focusedProperty().addListener(amountFocusedListener);
 
-        if (offerAvailabilitySpinner != null && offerAvailabilitySpinner.isVisible())
-            offerAvailabilitySpinner.setProgress(-1);
+        if (offerAvailabilityBusyAnimation != null && !model.showPayFundsScreenDisplayed.get()) {
+            offerAvailabilityBusyAnimation.play();
+            offerAvailabilityLabel.setVisible(true);
+            offerAvailabilityLabel.setManaged(true);
+        } else {
+            offerAvailabilityLabel.setVisible(false);
+            offerAvailabilityLabel.setManaged(false);
+        }
 
-        if (spinner != null && spinner.isVisible())
-            spinner.setProgress(-1);
+        if (waitingForFundsBusyAnimation != null && model.isWaitingForFunds.get()) {
+            waitingForFundsBusyAnimation.play();
+            waitingForFundsLabel.setVisible(true);
+            waitingForFundsLabel.setManaged(true);
+        } else {
+            waitingForFundsLabel.setVisible(false);
+            waitingForFundsLabel.setManaged(false);
+        }
 
         volumeCurrencyLabel.setText(model.dataModel.getCurrencyCode());
-        priceDescriptionLabel.setText(BSResources.get("createOffer.amountPriceBox.priceDescription", model.dataModel.getCurrencyCode()));
+        String currencyCode = model.dataModel.getCurrencyCode();
+        priceDescriptionLabel.setText(BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode));
+       /* priceDescriptionLabel.setText(CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                BSResources.get("createOffer.amountPriceBox.priceDescriptionAltcoin", currencyCode) :
+                BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode));*/
         volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
 
         if (model.getPossiblePaymentAccounts().size() > 1) {
@@ -187,11 +202,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         removeSubscriptions();
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
 
-        if (offerAvailabilitySpinner != null)
-            offerAvailabilitySpinner.setProgress(0);
+        if (offerAvailabilityBusyAnimation != null)
+            offerAvailabilityBusyAnimation.stop();
 
-        if (spinner != null)
-            spinner.setProgress(0);
+        if (waitingForFundsBusyAnimation != null)
+            waitingForFundsBusyAnimation.stop();
     }
 
 
@@ -348,14 +363,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         }
 
         nextButton.setVisible(false);
-        offerAvailabilitySpinner.setProgress(0);
-        offerAvailabilitySpinner.setVisible(false);
-        offerAvailabilitySpinnerLabel.setVisible(false);
+        offerAvailabilityBusyAnimation.stop();
         cancelButton1.setVisible(false);
         cancelButton1.setOnAction(null);
         cancelButton2.setVisible(true);
 
-        spinner.setProgress(-1);
+        waitingForFundsBusyAnimation.play();
 
         payFundsPane.setVisible(true);
         totalToPayLabel.setVisible(true);
@@ -420,11 +433,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         // funding
         fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
         fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
-        spinner.visibleProperty().bind(model.isSpinnerVisible);
-        spinner.managedProperty().bind(model.isSpinnerVisible);
-        spinnerInfoLabel.visibleProperty().bind(model.isSpinnerVisible);
-        spinnerInfoLabel.managedProperty().bind(model.isSpinnerVisible);
-        spinnerInfoLabel.textProperty().bind(model.spinnerInfoText);
+        waitingForFundsLabel.textProperty().bind(model.spinnerInfoText);
         takeOfferButton.disableProperty().bind(model.isTakeOfferButtonDisabled);
         takeOfferButton.visibleProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
         takeOfferButton.managedProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
@@ -445,11 +454,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         // funding
         fundingHBox.visibleProperty().unbind();
         fundingHBox.managedProperty().unbind();
-        spinner.visibleProperty().unbind();
-        spinner.managedProperty().unbind();
-        spinnerInfoLabel.visibleProperty().unbind();
-        spinnerInfoLabel.managedProperty().unbind();
-        spinnerInfoLabel.textProperty().unbind();
+        waitingForFundsLabel.textProperty().unbind();
         takeOfferButton.visibleProperty().unbind();
         takeOfferButton.managedProperty().unbind();
         takeOfferButton.disableProperty().unbind();
@@ -494,16 +499,19 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             }
         });
 
-        isOfferAvailableSubscription = EasyBind.subscribe(model.isOfferAvailable, newValue -> {
-            if (newValue) {
-                offerAvailabilitySpinner.setProgress(0);
-                offerAvailabilitySpinner.setVisible(false);
-                offerAvailabilitySpinnerLabel.setVisible(false);
-            }
+        isOfferAvailableSubscription = EasyBind.subscribe(model.isOfferAvailable, isOfferAvailable -> {
+            if (isOfferAvailable)
+                offerAvailabilityBusyAnimation.stop();
+
+            offerAvailabilityLabel.setVisible(!isOfferAvailable);
+            offerAvailabilityLabel.setManaged(!isOfferAvailable);
         });
 
-        isSpinnerVisibleSubscription = EasyBind.subscribe(model.isSpinnerVisible,
-                isSpinnerVisible -> spinner.setProgress(isSpinnerVisible ? -1 : 0));
+        isWaitingForFundsSubscription = EasyBind.subscribe(model.isWaitingForFunds, isWaitingForFunds -> {
+            waitingForFundsBusyAnimation.setIsRunning(isWaitingForFunds);
+            waitingForFundsLabel.setVisible(isWaitingForFunds);
+            waitingForFundsLabel.setManaged(isWaitingForFunds);
+        });
 
         showWarningInvalidBtcDecimalPlacesSubscription = EasyBind.subscribe(model.showWarningInvalidBtcDecimalPlaces, newValue -> {
             if (newValue) {
@@ -568,7 +576,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         offerWarningSubscription.unsubscribe();
         errorMessageSubscription.unsubscribe();
         isOfferAvailableSubscription.unsubscribe();
-        isSpinnerVisibleSubscription.unsubscribe();
+        isWaitingForFundsSubscription.unsubscribe();
         showWarningInvalidBtcDecimalPlacesSubscription.unsubscribe();
         showTransactionPublishedScreenSubscription.unsubscribe();
         // noSufficientFeeSubscription.unsubscribe();
@@ -682,14 +690,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             close();
         });
 
-        offerAvailabilitySpinner = new StaticProgressIndicator(0);
-        offerAvailabilitySpinner.setPrefSize(24, 24);
-        offerAvailabilitySpinner.setProgress(-1);
-
-        offerAvailabilitySpinnerLabel = new Label(BSResources.get("takeOffer.fundsBox.isOfferAvailable"));
+        offerAvailabilityBusyAnimation = new BusyAnimation();
+        offerAvailabilityLabel = new Label(BSResources.get("takeOffer.fundsBox.isOfferAvailable"));
 
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(nextButton, cancelButton1, offerAvailabilitySpinner, offerAvailabilitySpinnerLabel);
+        hBox.getChildren().addAll(nextButton, cancelButton1, offerAvailabilityBusyAnimation, offerAvailabilityLabel);
 
         GridPane.setRowIndex(hBox, ++gridRow);
         GridPane.setColumnIndex(hBox, 1);
@@ -764,11 +769,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         fundFromExternalWalletButton = new Button("Open your external wallet for funding");
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
-        spinner = new StaticProgressIndicator(0);
-        spinner.setPrefSize(24, 24);
-        spinnerInfoLabel = new Label();
-        spinnerInfoLabel.setPadding(new Insets(5, 0, 0, 0));
-        fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, spinner, spinnerInfoLabel);
+        waitingForFundsBusyAnimation = new BusyAnimation(false);
+        waitingForFundsLabel = new Label();
+        waitingForFundsLabel.setPadding(new Insets(5, 0, 0, 0));
+        fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, waitingForFundsBusyAnimation, waitingForFundsLabel);
         GridPane.setRowIndex(fundingHBox, ++gridRow);
         GridPane.setColumnIndex(fundingHBox, 1);
         GridPane.setMargin(fundingHBox, new Insets(15, 10, 0, 0));

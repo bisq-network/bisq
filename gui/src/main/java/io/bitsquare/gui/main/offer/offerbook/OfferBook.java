@@ -41,11 +41,6 @@ public class OfferBook {
     private static final Logger log = LoggerFactory.getLogger(OfferBook.class);
 
     private final OfferBookService offerBookService;
-
-    // TODO: We got repeated ArrayIndexOutOfBoundsException's at the remove and clear method calls on the list. It seems to be caused by the 
-    // Sorted list which uses our list for wrapping. There are change events fired and that might cause race conditions 
-    // similar to concurrency issues (though we cannot have those as it is single threaded).
-    // See: https://github.com/bitsquare/bitsquare/issues/421 -> SortedList.findPosition(SortedList.java:318 in logs
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
 
 

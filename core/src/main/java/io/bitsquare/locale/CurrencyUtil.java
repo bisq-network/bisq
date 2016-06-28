@@ -107,7 +107,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("VRC", "VeriCoin"));
         result.add(new CryptoCurrency("ESP", "Espers"));
         result.add(new CryptoCurrency("XVG", "Verge"));
-        result.add(new CryptoCurrency("MYRC", "Myriadcoin"));
+        result.add(new CryptoCurrency("XMY", "Myriadcoin"));
         result.add(new CryptoCurrency("MXT", "MarteXcoin"));
         result.add(new CryptoCurrency("GRS", "Groestlcoin"));
         result.add(new CryptoCurrency("IOC", "I/O Coin"));
@@ -204,6 +204,20 @@ public class CurrencyUtil {
 
     public static Optional<CryptoCurrency> getCryptoCurrency(String currencyCode) {
         return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
+    }
+
+    public static Optional<TradeCurrency> getTradeCurrency(String currencyCode) {
+        Optional<FiatCurrency> fiatCurrencyOptional = getFiatCurrency(currencyCode);
+        if (isFiatCurrency(currencyCode) && fiatCurrencyOptional.isPresent()) {
+            return Optional.of(fiatCurrencyOptional.get());
+        } else {
+            Optional<CryptoCurrency> cryptoCurrencyOptional = getCryptoCurrency(currencyCode);
+            if (isCryptoCurrency(currencyCode) && cryptoCurrencyOptional.isPresent()) {
+                return Optional.of(cryptoCurrencyOptional.get());
+            } else {
+                return Optional.empty();
+            }
+        }
     }
 
     public static FiatCurrency getCurrencyByCountryCode(String countryCode) {

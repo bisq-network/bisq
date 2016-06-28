@@ -24,9 +24,9 @@ import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.crypto.ScryptUtil;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.PasswordTextField;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -84,11 +84,9 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         repeatedPasswordField.setValidator(passwordValidator);
         repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
-        Tuple3<Button, StaticProgressIndicator, Label> tuple = addButtonWithStatus(root, ++gridRow, "", 15);
+        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabel(root, ++gridRow, "", 15);
         pwButton = tuple.first;
-        StaticProgressIndicator progressIndicator = tuple.second;
-        progressIndicator.setPrefSize(24, 24);
-        progressIndicator.setVisible(false);
+        BusyAnimation busyAnimation = tuple.second;
         Label deriveStatusLabel = tuple.third;
         pwButton.setDisable(true);
 
@@ -100,8 +98,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
             pwButton.setDisable(true);
             deriveStatusLabel.setText("Derive key from password");
-            progressIndicator.setProgress(-1);
-            progressIndicator.setVisible(true);
+            busyAnimation.play();
 
             KeyCrypterScrypt keyCrypterScrypt;
             Wallet wallet = walletService.getWallet();
@@ -112,7 +109,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
             ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, password, aesKey -> {
                 deriveStatusLabel.setText("");
-                progressIndicator.setVisible(false);
+                busyAnimation.stop();
 
                 if (wallet.isEncrypted()) {
                     if (wallet.checkAESKey(aesKey)) {
@@ -126,6 +123,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                         repeatedPasswordField.setText("");
                         walletService.backupWallet();
                     } else {
+                        pwButton.setDisable(false);
                         new Popup()
                                 .warning("You entered the wrong password.\n\n" +
                                         "Please try entering your password again, carefully checking for typos or spelling errors.")

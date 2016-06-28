@@ -294,5 +294,9 @@
     -fx-image: url("../../../images/btcaverage.png");
 }
 
+#spinner {
+    -fx-image: url("../../../images/spinner.png");
+}
+
 
 

@@ -27,9 +27,7 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -38,19 +36,24 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;
 import org.bitcoinj.utils.Fiat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 class MarketsChartsViewModel extends ActivatableViewModel {
+    private static final Logger log = LoggerFactory.getLogger(MarketsChartsViewModel.class);
+
     final static String EDIT_FLAG = "EDIT_FLAG";
 
     private final OfferBook offerBook;
     private final Preferences preferences;
     final PriceFeed priceFeed;
 
-    final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>(CurrencyUtil.getDefaultTradeCurrency());
+    final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>();
     private final List<XYChart.Data> buyData = new ArrayList<>();
     private final List<XYChart.Data> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
@@ -58,7 +61,6 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     private final ObservableList<Offer> top3BuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<Offer> top3SellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
-    final IntegerProperty updateChartDataFlag = new SimpleIntegerProperty(0);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -69,6 +71,13 @@ class MarketsChartsViewModel extends ActivatableViewModel {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.priceFeed = priceFeed;
+
+        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getMarketScreenCurrencyCode());
+        if (tradeCurrencyOptional.isPresent())
+            tradeCurrency.set(tradeCurrencyOptional.get());
+        else {
+            tradeCurrency.set(CurrencyUtil.getDefaultTradeCurrency());
+        }
 
         offerBookListItems = offerBook.getOfferBookListItems();
         listChangeListener = c -> {
@@ -122,7 +131,6 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     }
 
     private void updateChartData() {
-        updateChartDataFlag.set(updateChartDataFlag.get() + 1);
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(tradeCurrency.get().getCode())
@@ -182,6 +190,8 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
         if (!preferences.getUseStickyMarketPrice())
             priceFeed.setCurrencyCode(tradeCurrency.getCode());
+
+        preferences.setMarketScreenCurrencyCode(tradeCurrency.getCode());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

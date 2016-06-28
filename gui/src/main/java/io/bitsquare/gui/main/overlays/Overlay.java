@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.overlays;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.BSResources;
@@ -121,8 +121,8 @@ public abstract class Overlay<T extends Overlay> {
     private boolean showReportErrorButtons;
     protected Label messageLabel;
     protected String truncatedMessage;
-    private StaticProgressIndicator progressIndicator;
-    private boolean showProgressIndicator;
+    private BusyAnimation busyAnimation;
+    private boolean showBusyAnimation;
     protected Button actionButton;
     protected Label headLineLabel;
     protected String dontShowAgainId;
@@ -149,8 +149,8 @@ public abstract class Overlay<T extends Overlay> {
             addHeadLine();
             addSeparator();
 
-            if (showProgressIndicator)
-                addProgressIndicator();
+            if (showBusyAnimation)
+                addBusyAnimation();
 
             addMessage();
             if (showReportErrorButtons)
@@ -324,8 +324,8 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
-    public T showProgressIndicator() {
-        this.showProgressIndicator = true;
+    public T showBusyAnimation() {
+        this.showBusyAnimation = true;
         return (T) this;
     }
 
@@ -685,15 +685,12 @@ public abstract class Overlay<T extends Overlay> {
         });
     }
 
-    protected void addProgressIndicator() {
-        progressIndicator = new StaticProgressIndicator(-1);
-        progressIndicator.setPrefSize(24, 24);
-        progressIndicator.setMouseTransparent(true);
-        progressIndicator.setPadding(new Insets(0, 0, 20, 0));
-        GridPane.setHalignment(progressIndicator, HPos.CENTER);
-        GridPane.setRowIndex(progressIndicator, ++rowIndex);
-        GridPane.setColumnSpan(progressIndicator, 2);
-        gridPane.getChildren().add(progressIndicator);
+    protected void addBusyAnimation() {
+        busyAnimation = new BusyAnimation();
+        GridPane.setHalignment(busyAnimation, HPos.CENTER);
+        GridPane.setRowIndex(busyAnimation, ++rowIndex);
+        GridPane.setColumnSpan(busyAnimation, 2);
+        gridPane.getChildren().add(busyAnimation);
     }
 
     protected void addDontShowAgainCheckBox() {

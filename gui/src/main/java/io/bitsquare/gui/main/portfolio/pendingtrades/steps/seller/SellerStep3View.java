@@ -19,16 +19,18 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.payment.BankAccountContractData;
 import io.bitsquare.payment.CryptoCurrencyAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
+import io.bitsquare.payment.SepaAccountContractData;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.user.Preferences;
@@ -39,13 +41,15 @@ import javafx.scene.layout.GridPane;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
+
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class SellerStep3View extends TradeStepView {
 
     private Button confirmButton;
     private Label statusLabel;
-    private StaticProgressIndicator statusProgressIndicator;
+    private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
 
 
@@ -83,6 +87,13 @@ public class SellerStep3View extends TradeStepView {
                             "Please go to your online banking web page and check if you have received " +
                             tradeAmountWithCode + " from the bitcoin buyer.\n\n" +
                             "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
+                    Optional<String> optionalHolderName = getOptionalHolderName();
+                    if (optionalHolderName.isPresent()) {
+                        message = message + "\n\n" +
+                                "Please also verify that the senders name in your bank statement matches that one from the trade contract:\n" +
+                                "Senders name: " + optionalHolderName.get() + "\n\n" +
+                                "If the name is not the same as the one displayed here, please don't confirm but open a dispute by entering \"cmd + o\" or \"ctrl + o\".";
+                    }
                 }
                 if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                     preferences.dontShowAgain(key, true);
@@ -164,11 +175,10 @@ public class SellerStep3View extends TradeStepView {
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
-        Tuple3<Button, StaticProgressIndicator, Label> tuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "Confirm payment receipt");
+        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow, "Confirm payment receipt");
         confirmButton = tuple.first;
         confirmButton.setOnAction(e -> onPaymentReceived());
-        statusProgressIndicator = tuple.second;
-        statusProgressIndicator.setPrefSize(24, 24);
+        busyAnimation = tuple.second;
         statusLabel = tuple.third;
 
         hideStatusInfo();
@@ -239,17 +249,27 @@ public class SellerStep3View extends TradeStepView {
             Preferences preferences = model.dataModel.preferences;
             String key = "confirmPaymentReceived";
             if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+                String message = "Have you received the " + CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()) +
+                        " payment from your trading partner?\n\n" +
+                        "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"\n\n";
+
+                Optional<String> optionalHolderName = getOptionalHolderName();
+                if (optionalHolderName.isPresent()) {
+                    message = message +
+                            "Please also verify that the senders name in your bank statement matches that one from the trade contract:\n" +
+                            "Senders name: " + optionalHolderName.get() + "\n\n" +
+                            "If the name is not the same as the one displayed here, please don't confirm but open a " +
+                            "dispute by entering \"cmd + o\" or \"ctrl + o\".\n\n";
+                }
+                message = message + "Please note, that as soon you have confirmed the receipt, the locked trade amount will be released " +
+                        "to the bitcoin buyer and the security deposit will be refunded.";
                 new Popup()
                         .headLine("Confirm that you have received the payment")
-                        .confirmation("Have you received the " + CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()) +
-                                " payment from your trading partner?\n\n" +
-                                "Please note that as soon you have confirmed the receipt, the locked trade amount will be released " +
-                                "to the bitcoin buyer and the security deposit will be refunded.")
+                        .confirmation(message)
                         .width(700)
                         .actionButtonText("Yes, I have received the payment")
                         .onAction(this::confirmPaymentReceived)
                         .closeButtonText("Cancel")
-                        .dontShowAgainId(key, preferences)
                         .show();
             } else {
                 confirmPaymentReceived();
@@ -278,16 +298,28 @@ public class SellerStep3View extends TradeStepView {
     }
 
     private void showStatusInfo() {
-        statusProgressIndicator.setVisible(true);
-        statusProgressIndicator.setManaged(true);
-        statusProgressIndicator.setProgress(-1);
+        busyAnimation.play();
     }
 
     private void hideStatusInfo() {
-        statusProgressIndicator.setVisible(false);
-        statusProgressIndicator.setManaged(false);
-        statusProgressIndicator.setProgress(0);
+        busyAnimation.stop();
         statusLabel.setText("");
+    }
+
+
+    private Optional<String> getOptionalHolderName() {
+        Contract contract = trade.getContract();
+        if (contract != null) {
+            PaymentAccountContractData paymentAccountContractData = contract.getBuyerPaymentAccountContractData();
+            if (paymentAccountContractData instanceof BankAccountContractData)
+                return Optional.of(((BankAccountContractData) paymentAccountContractData).getHolderName());
+            else if (paymentAccountContractData instanceof SepaAccountContractData)
+                return Optional.of(((SepaAccountContractData) paymentAccountContractData).getHolderName());
+            else
+                return Optional.empty();
+        } else {
+            return Optional.empty();
+        }
     }
 }
 

@@ -114,9 +114,7 @@ public class MainViewModel implements ViewModel {
     final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevFlags.STRESS_TEST_MODE ? 0 : -1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
-    final StringProperty marketPrice = new SimpleStringProperty("N/A");
-    final StringProperty marketPriceInverted = new SimpleStringProperty("N/A");
-    final StringProperty marketPriceCurrency = new SimpleStringProperty("");
+    final StringProperty marketPriceCurrencyCode = new SimpleStringProperty("");
     final ObjectProperty<PriceFeed.Type> typeProperty = new SimpleObjectProperty<>(PriceFeed.Type.LAST);
     final ObjectProperty<PriceFeedComboBoxItem> selectedPriceFeedComboBoxItemProperty = new SimpleObjectProperty<>();
     final BooleanProperty isFiatCurrencyPriceFeedSelected = new SimpleBooleanProperty(true);
@@ -126,10 +124,13 @@ public class MainViewModel implements ViewModel {
     final StringProperty lockedBalance = new SimpleStringProperty();
     private MonadicBinding<String> btcInfoBinding;
 
+    final StringProperty marketPrice = new SimpleStringProperty("N/A");
+    final StringProperty marketPriceInverted = new SimpleStringProperty("N/A");
+
     // P2P network
     final StringProperty p2PNetworkInfo = new SimpleStringProperty();
     private MonadicBinding<String> p2PNetworkInfoBinding;
-    final DoubleProperty splashP2PNetworkProgress = new SimpleDoubleProperty(DevFlags.STRESS_TEST_MODE ? 0 : -1);
+    final BooleanProperty splashP2PNetworkAnimationVisible = new SimpleBooleanProperty(true);
     final StringProperty p2pNetworkWarnMsg = new SimpleStringProperty();
     final StringProperty p2PNetworkIconId = new SimpleStringProperty();
     final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();
@@ -351,6 +352,7 @@ public class MainViewModel implements ViewModel {
             public void onRequestingDataCompleted() {
                 initialP2PNetworkDataReceived.set(true);
                 bootstrapState.set("Initial data received");
+                splashP2PNetworkAnimationVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
 
@@ -361,6 +363,7 @@ public class MainViewModel implements ViewModel {
                 else
                     bootstrapWarning.set(null);
 
+                splashP2PNetworkAnimationVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
 
@@ -375,12 +378,13 @@ public class MainViewModel implements ViewModel {
                     bootstrapWarning.set(null);
                     p2pNetworkLabelId.set("footer-pane");
                 }
+                splashP2PNetworkAnimationVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
 
             @Override
             public void onBootstrapComplete() {
-                splashP2PNetworkProgress.set(1);
+                splashP2PNetworkAnimationVisible.set(false);
                 bootstrapComplete.set(true);
             }
 
@@ -389,7 +393,7 @@ public class MainViewModel implements ViewModel {
                 p2pNetworkWarnMsg.set("Connecting to the P2P network failed (reported error: "
                         + throwable.getMessage() + ").\n" +
                         "Please check your internet connection or try to restart the application.");
-                splashP2PNetworkProgress.set(0);
+                splashP2PNetworkAnimationVisible.set(false);
                 bootstrapWarning.set("Bootstrapping to P2P network failed");
                 p2pNetworkLabelId.set("splash-error-state-msg");
             }
@@ -457,7 +461,7 @@ public class MainViewModel implements ViewModel {
 
                     if (walletService.getWallet().isEncrypted()) {
                         if (p2pNetWorkReady.get())
-                            splashP2PNetworkProgress.set(0);
+                            splashP2PNetworkAnimationVisible.set(false);
 
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {
@@ -711,9 +715,6 @@ public class MainViewModel implements ViewModel {
                         walletServiceErrorMsg.set("You lost the connection to all bitcoin network peers.\n" +
                                 "Maybe you lost your internet connection or your computer was in standby mode.");
                     } else {
-                        //TODO remove after testing
-                        log.warn("INFO: we got again btc network peers");
-
                         walletServiceErrorMsg.set(null);
                     }
                 }, 5);
@@ -738,11 +739,11 @@ public class MainViewModel implements ViewModel {
                     marketPrice.set("N/A");
                     marketPriceInverted.set("N/A");
                 });
-        marketPriceCurrency.bind(priceFeed.currencyCodeProperty());
+        marketPriceCurrencyCode.bind(priceFeed.currencyCodeProperty());
         typeProperty.bind(priceFeed.typeProperty());
 
         marketPriceBinding = EasyBind.combine(
-                marketPriceCurrency, marketPrice, marketPriceInverted, preferences.useInvertedMarketPriceProperty(),
+                marketPriceCurrencyCode, marketPrice, marketPriceInverted, preferences.useInvertedMarketPriceProperty(),
                 (marketPriceCurrency, marketPrice, marketPriceInverted, useInvertedMarketPrice) ->
                         (useInvertedMarketPrice ? marketPriceInverted : marketPrice) +
                                 (useInvertedMarketPrice ? " BTC/" + marketPriceCurrency : " " + marketPriceCurrency + "/BTC"));
@@ -815,7 +816,7 @@ public class MainViewModel implements ViewModel {
     }
 
     public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
-        if (!preferences.getUseStickyMarketPrice()) {
+        if (!preferences.getUseStickyMarketPrice() && item != null) {
             Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(priceFeed.currencyCodeProperty().get());
             if (itemOptional.isPresent())
                 selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());

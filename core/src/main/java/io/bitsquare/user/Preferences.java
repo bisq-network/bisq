@@ -65,9 +65,9 @@ public final class Preferences implements Persistable {
     ));
 
     transient static final private ArrayList<BlockChainExplorer> blockChainExplorersMainNet = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
-            new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/BTC/tx/", "https://www.blocktrail.com/BTC/address/"),
             new BlockChainExplorer("Tradeblock.com", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
+            new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/BTC/tx/", "https://www.blocktrail.com/BTC/address/"),
+            new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
             new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/tx/", "https://blockexplorer.com/address/"),
             new BlockChainExplorer("Blockr.io", "https://btc.blockr.io/tx/info/", "https://btc.blockr.io/address/info/"),
@@ -118,6 +118,9 @@ public final class Preferences implements Persistable {
     private long nonTradeTxFeePerKB = FeePolicy.getNonTradeFeePerKb().value;
     private double maxPriceDistanceInPercent;
     private boolean useInvertedMarketPrice;
+    private String marketScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
@@ -191,6 +194,10 @@ public final class Preferences implements Persistable {
 
             if (persisted.getPeerTagMap() != null)
                 peerTagMap = persisted.getPeerTagMap();
+
+            marketScreenCurrencyCode = persisted.getMarketScreenCurrencyCode();
+            buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
+            sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
@@ -410,6 +417,21 @@ public final class Preferences implements Persistable {
         }
     }
 
+    public void setMarketScreenCurrencyCode(String marketScreenCurrencyCode) {
+        this.marketScreenCurrencyCode = marketScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
+    public void setBuyScreenCurrencyCode(String buyScreenCurrencyCode) {
+        this.buyScreenCurrencyCode = buyScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
+    public void setSellScreenCurrencyCode(String sellScreenCurrencyCode) {
+        this.sellScreenCurrencyCode = sellScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -430,7 +452,6 @@ public final class Preferences implements Persistable {
     public BooleanProperty useAnimationsProperty() {
         return useAnimationsProperty;
     }
-
 
     public static boolean useAnimations() {
         return staticUseAnimations;
@@ -543,6 +564,19 @@ public final class Preferences implements Persistable {
     public List<String> getBridgeAddresses() {
         return bridgeAddresses;
     }
+
+    public String getMarketScreenCurrencyCode() {
+        return marketScreenCurrencyCode;
+    }
+
+    public String getBuyScreenCurrencyCode() {
+        return buyScreenCurrencyCode;
+    }
+
+    public String getSellScreenCurrencyCode() {
+        return sellScreenCurrencyCode;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

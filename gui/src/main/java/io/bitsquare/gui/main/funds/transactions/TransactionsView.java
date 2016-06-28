@@ -132,8 +132,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
         transactionColumn.setComparator((o1, o2) -> o1.getTxId().compareTo(o2.getTxId()));
         amountColumn.setComparator((o1, o2) -> o1.getAmountAsCoin().compareTo(o2.getAmountAsCoin()));
-        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getProgressIndicator().getProgress())
-                .compareTo(o2.getProgressIndicator().getProgress()));
+        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getTxConfidenceIndicator().getProgress())
+                .compareTo(o2.getTxConfidenceIndicator().getProgress()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -336,7 +336,19 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         observableList.setAll(transactionsListItems);
     }
 
-    private void openBlockExplorer(TransactionsListItem item) {
+    private void openTxInBlockExplorer(TransactionsListItem item) {
+        if (item.getTxId() != null) {
+            try {
+                Utilities.openWebPage(preferences.getBlockChainExplorer().txUrl + item.getTxId());
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                new Popup().warning("Opening browser failed. Please check your internet " +
+                        "connection.").show();
+            }
+        }
+    }
+
+    private void openAddressInBlockExplorer(TransactionsListItem item) {
         if (item.getAddressString() != null) {
             try {
                 Utilities.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
@@ -445,7 +457,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     String addressString = item.getAddressString();
                                     field = new AddressWithIconAndDirection(item.getDirection(), addressString,
                                             AwesomeIcon.EXTERNAL_LINK, item.getReceived());
-                                    field.setOnAction(event -> openBlockExplorer(item));
+                                    field.setOnAction(event -> openAddressInBlockExplorer(item));
                                     field.setTooltip(new Tooltip("Open external blockchain explorer for " +
                                             "address: " + addressString));
                                     setGraphic(field);
@@ -479,7 +491,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
-                                    hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
+                                    hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip("Open external blockchain explorer for " +
                                             "transaction: " + transactionId));
                                     setGraphic(hyperlinkWithIcon);
@@ -538,7 +550,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setGraphic(item.getProgressIndicator());
+                                    setGraphic(item.getTxConfidenceIndicator());
                                 } else {
                                     setGraphic(null);
                                 }

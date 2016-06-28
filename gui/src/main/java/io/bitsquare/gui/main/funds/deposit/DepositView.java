@@ -130,8 +130,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
         addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
         balanceColumn.setComparator((o1, o2) -> o1.getBalanceAsCoin().compareTo(o2.getBalanceAsCoin()));
-        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getProgressIndicator().getProgress())
-                .compareTo(o2.getProgressIndicator().getProgress()));
+        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getTxConfidenceIndicator().getProgress())
+                .compareTo(o2.getTxConfidenceIndicator().getProgress()));
         usageColumn.setComparator((a, b) -> (a.getNumTxOutputs() < b.getNumTxOutputs()) ? -1 : ((a.getNumTxOutputs() == b.getNumTxOutputs()) ? 0 : 1));
         tableView.getSortOrder().add(usageColumn);
         tableView.setItems(sortedList);
@@ -462,7 +462,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setGraphic(item.getProgressIndicator());
+                                    setGraphic(item.getTxConfidenceIndicator());
                                 } else {
                                     setGraphic(null);
                                 }

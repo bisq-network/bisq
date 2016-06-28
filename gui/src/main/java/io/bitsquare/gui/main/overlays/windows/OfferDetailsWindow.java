@@ -22,7 +22,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -69,7 +69,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private Fiat tradePrice;
     private Optional<Runnable> placeOfferHandlerOptional = Optional.empty();
     private Optional<Runnable> takeOfferHandlerOptional = Optional.empty();
-    private StaticProgressIndicator spinner;
+    private BusyAnimation busyAnimation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,8 +124,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
     @Override
     protected void onHidden() {
-        if (spinner != null)
-            spinner.setProgress(0);
+        if (busyAnimation != null)
+            busyAnimation.stop();
     }
 
     @Override
@@ -278,7 +278,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         ImageView iconView = new ImageView();
         iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");
 
-        Tuple3<Button, StaticProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
+        Tuple3<Button, BusyAnimation, Label> placeOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
         Button button = placeOfferTuple.first;
         button.setMinHeight(40);
@@ -288,9 +288,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         button.setId(isBuyerRole ? "buy-button-big" : "sell-button-big");
         button.setText(isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
-        spinner = placeOfferTuple.second;
-        //spinner.setPrefSize(18, 18);
-        spinner.setVisible(false);
+        busyAnimation = placeOfferTuple.second;
         Label spinnerInfoLabel = placeOfferTuple.third;
 
         Button cancelButton = addButton(gridPane, ++rowIndex, BSResources.get("shared.cancel"));
@@ -305,8 +303,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             if (user.getAcceptedArbitrators().size() > 0) {
                 button.setDisable(true);
                 cancelButton.setDisable(true);
-                spinner.setVisible(true);
-                spinner.setProgress(-1);
+                busyAnimation.play();
                 if (isPlaceOffer) {
                     spinnerInfoLabel.setText(BSResources.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
                     placeOfferHandlerOptional.get().run();

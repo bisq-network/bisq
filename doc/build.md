@@ -39,10 +39,31 @@ In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll n
     $ javac -version
     javac 1.8.0_66
 
-If `javac` is not found, or your version is anything less than `1.8.0_66`, then you'll need to [download and install the latest JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
+If `javac` is not found, or your version is anything less than `1.8.0_66`, then follow the next steps, otherwise you can skip to step 2:
 
-> _**TIP:** Here are [instructions](http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html) for installing the JDK via `apt` on Debian/Ubuntu systems.
-> Bitsquare can be built with OpenJDK as well, but this hasn't been thoroughly tested yet._
+###### 1.1 Debian based systems (Ubuntu)
+
+To install OpenJDK use:
+
+    $ sudo apt-get install openjdk-8-jdk maven libopenjfx-java
+
+To install the Oracle JDK use:
+ 
+    $ sudo add-apt-repository ppa:webupd8team/java
+    $ sudo apt-get update
+    $ sudo apt-get install oracle-java8-installer 
+
+If $JAVA_HOME is not present, add it to the .bashrc file
+
+    $ touch .bashrc
+    $ gedit .bashrc
+    $ export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+    $ echo $JAVA_HOME 
+
+###### 1.2 Other systems
+
+[Download and install the latest JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
+
 
 ##### 2. Enable unlimited Strength for cryptographic keys
 
@@ -61,6 +82,12 @@ This prevent a "JCE cannot authenticate the provider BC" exception when starting
 Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
 E.g.:
 security.provider.11=org.bouncycastle.jce.provider.BouncyCastleProvider
+
+##### 5. Copy the jdkfix jar file
+
+Copy the jdkfix jar file (lib/jdkfix-0.4.9.jar) from the Bitsquare src directory to $JavaHome/jre/lib/ext/. 
+Jdkfix.jar include a bugfix of the SortedList class which will be released with the next JDK version. 
+As we need to load that before the default java class we need that hack.
 
 
 Steps

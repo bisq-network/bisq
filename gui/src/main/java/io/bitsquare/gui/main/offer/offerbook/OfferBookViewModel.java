@@ -123,9 +123,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filteredItems = new FilteredList<>(offerBookListItems);
         this.sortedItems = new SortedList<>(filteredItems);
 
-        selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
-        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
-
         tradeCurrencyListChangeListener = c -> fillAllTradeCurrencies();
     }
 
@@ -167,8 +164,18 @@ class OfferBookViewModel extends ActivatableViewModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void setDirection(Offer.Direction direction) {
+    void initWithDirection(Offer.Direction direction) {
         this.direction = direction;
+
+        String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        if (code != null && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
+            showAllTradeCurrenciesProperty.set(false);
+            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
+        } else {
+            showAllTradeCurrenciesProperty.set(true);
+            selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+        }
+        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
     }
 
     void onTabSelected(boolean isSelected) {
@@ -196,6 +203,11 @@ class OfferBookViewModel extends ActivatableViewModel {
             setMarketPriceFeedCurrency();
 
             applyFilterPredicate();
+
+            if (direction == Offer.Direction.BUY)
+                preferences.setBuyScreenCurrencyCode(code);
+            else
+                preferences.setSellScreenCurrencyCode(code);
         }
     }
 
