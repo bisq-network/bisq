@@ -7,7 +7,7 @@ set -e
 
 fullVersion="0.4.9"
 
-#mvn clean package -DskipTests -Dmaven.javadoc.skip=true
+mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
 cp gui/target/shaded.jar "gui/deploy/Bitsquare-$fullVersion.jar"
 cp gui/target/shaded.jar "/Users/mk/vm_shared_ubuntu/Bitsquare-$fullVersion.jar"
