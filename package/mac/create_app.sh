@@ -7,7 +7,7 @@ set -e
 
 fullVersion="0.4.9"
 
-mvn clean package -DskipTests -Dmaven.javadoc.skip=true
+#mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
 cp gui/target/shaded.jar "gui/deploy/Bitsquare-$fullVersion.jar"
 cp gui/target/shaded.jar "/Users/mk/vm_shared_ubuntu/Bitsquare-$fullVersion.jar"
@@ -21,7 +21,6 @@ echo "Using $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BjvmOptions=-Xbootclasspath/a:"jdkfix-$fullVersion.jar":"$JAVA_HOME/jre/lib/ext/jfxrt.jar" \
-    #-BjvmOptions=-verbose:class \
     -BappVersion=$fullVersion \
     -Bmac.CFBundleIdentifier=io.bitsquare \
     -Bmac.CFBundleName=Bitsquare \
