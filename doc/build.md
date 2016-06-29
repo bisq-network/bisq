@@ -74,14 +74,14 @@ You will get an error when building Bitsquare package if you don't have these.
 
 ##### 3. Copy the BountyCastle provider jar file
 
-Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2) to $JavaHome/jre/lib/ext/. 
+Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar) to $JavaHome/jre/lib/ext/. 
 This prevent a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
 
 ##### 4. Edit the jre\lib\security\java.security file to add BouncyCastleProvider
 
 Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
 E.g.:
-security.provider.11=org.bouncycastle.jce.provider.BouncyCastleProvider
+security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider
 
 ##### 5. Copy the jdkfix jar file
 
