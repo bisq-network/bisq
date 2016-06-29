@@ -547,6 +547,7 @@ public class DisputeManager {
     private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
         Transaction transaction = tradeWalletService.addTransactionToWallet(peerPublishedPayoutTxMessage.transaction);
         findOwnDispute(peerPublishedPayoutTxMessage.tradeId).ifPresent(dispute -> dispute.setDisputePayoutTxId(transaction.getHashAsString()));
+        tradeManager.closeDisputedTrade(peerPublishedPayoutTxMessage.tradeId);
     }
 
 
