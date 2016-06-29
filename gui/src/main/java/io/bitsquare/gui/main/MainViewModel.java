@@ -922,11 +922,10 @@ public class MainViewModel implements ViewModel {
         }
         addedList.stream().forEach(dispute -> {
             String id = dispute.getId();
-            if (disputeIsClosedSubscriptionsMap.containsKey(id)) {
-                log.warn("We have already an entry in disputeStateSubscriptionsMap. That should never happen.");
-            } else {
-                Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
-                        disputeState -> {
+            Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
+                    isClosed -> {
+                        // We get event before list gets updated, so we execute on next frame
+                        UserThread.execute(() -> {
                             int openDisputes = disputeManager.getDisputesAsObservableList().stream()
                                     .filter(e -> !e.isClosed())
                                     .collect(Collectors.toList()).size();
@@ -937,8 +936,8 @@ public class MainViewModel implements ViewModel {
 
                             showOpenDisputesNotification.set(openDisputes > 0);
                         });
-                disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
-            }
+                    });
+            disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
         });
     }
 
