@@ -17,6 +17,12 @@ cp gui/target/shaded.jar "/Users/mk/vm_shared_windows_32bit/Bitsquare-$version.j
 
 cp seednode/target/SeedNode.jar "gui/deploy/SeedNode.jar"
 
+cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_ubuntu/jdkfix-$version.jar"
+cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_windows/jdkfix-$version.jar"
+cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_ubuntu14_32bit/jdkfix-$version.jar"
+cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_windows_32bit/jdkfix-$version.jar"
+exit
+
 echo "Using $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
     -deploy \
