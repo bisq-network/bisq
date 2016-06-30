@@ -33,6 +33,7 @@
             <TableColumn text="Transaction" fx:id="transactionColumn" minWidth="180"/>
             <TableColumn text="Amount (BTC)" fx:id="amountColumn" minWidth="110" maxWidth="110"/>
             <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="110" maxWidth="110"/>
+            <TableColumn text="Revert Tx" fx:id="revertTxColumn" minWidth="110" maxWidth="110" visible="false"/>
         </columns>
     </TableView>
 </VBox>

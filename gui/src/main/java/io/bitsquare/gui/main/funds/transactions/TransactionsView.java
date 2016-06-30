@@ -69,7 +69,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<TransactionsListItem> tableView;
     @FXML
-    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, confidenceColumn;
+    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, confidenceColumn, revertTxColumn;
 
     private final ObservableList<TransactionsListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<TransactionsListItem> sortedList = new SortedList<>(observableList);
@@ -122,6 +122,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         setTransactionColumnCellFactory();
         setAmountColumnCellFactory();
         setConfidenceColumnCellFactory();
+        setRevertTxColumnCellFactory();
 
         dateColumn.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
         detailsColumn.setComparator((o1, o2) -> {
@@ -175,92 +176,10 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         };
 
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(event)) {
-                Map<Long, List<Coin>> map = new HashMap<>();
-                Map<String, Tuple4<Date, Integer, Integer, Integer>> dataByDayMap = new HashMap<>();
-                observableList.stream().forEach(item -> {
-                    Coin amountAsCoin = item.getAmountAsCoin();
-                    List<Coin> amounts;
-                    long key = amountAsCoin.getValue();
-                    if (!map.containsKey(key)) {
-                        amounts = new ArrayList<>();
-                        map.put(key, amounts);
-                    } else {
-                        amounts = map.get(key);
-                    }
-                    amounts.add(amountAsCoin);
-
-                    DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.US);
-                    String day = dateFormatter.format(item.getDate());
-
-                    if (!dataByDayMap.containsKey(day)) {
-                        int numOffers = 0;
-                        int numTrades = 0;
-                        if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
-                            numOffers++;
-                        else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
-                            numTrades++;
-
-                        dataByDayMap.put(day, new Tuple4<>(item.getDate(), 1, numOffers, numTrades));
-                    } else {
-                        Tuple4<Date, Integer, Integer, Integer> tuple = dataByDayMap.get(day);
-                        int prev = tuple.second;
-                        int numOffers = tuple.third;
-                        int numTrades = tuple.forth;
-                        if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
-                            numOffers++;
-                        else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
-                            numTrades++;
-
-                        dataByDayMap.put(day, new Tuple4<>(tuple.first, ++prev, numOffers, numTrades));
-                    }
-                });
-
-                StringBuilder stringBuilder = new StringBuilder();
-                map.entrySet().stream().forEach(e -> {
-                    stringBuilder.append("Nr. of transactions for amount ").
-                            append(formatter.formatCoinWithCode(Coin.valueOf(e.getKey()))).
-                            append(": ").
-                            append(e.getValue().size()).
-                            append("\n");
-                });
-
-                List<Tuple4<String, Date, Integer, Tuple2<Integer, Integer>>> sortedDataByDayList = dataByDayMap.entrySet().stream().
-                        map(e -> {
-                            Tuple4<Date, Integer, Integer, Integer> data = e.getValue();
-                            return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.forth));
-                        }).
-                        collect(Collectors.toList());
-                sortedDataByDayList.sort((o1, o2) -> o2.second.compareTo(o1.second));
-                StringBuilder transactionsByDayStringBuilder = new StringBuilder();
-                StringBuilder offersStringBuilder = new StringBuilder();
-                StringBuilder tradesStringBuilder = new StringBuilder();
-                StringBuilder allStringBuilder = new StringBuilder();
-                allStringBuilder.append("Date").append(";").append("Offers").append(";").append("Trades").append("\n");
-                sortedDataByDayList.stream().forEach(tuple4 -> {
-                    offersStringBuilder.append(tuple4.forth.first).append(",");
-                    tradesStringBuilder.append(tuple4.forth.second).append(",");
-                    allStringBuilder.append(tuple4.first).append(";").append(tuple4.forth.first).append(";").append(tuple4.forth.second).append("\n");
-                    transactionsByDayStringBuilder.append("\n").
-                            append(tuple4.first).
-                            append(": ").
-                            append(tuple4.third).
-                            append(" (Offers: ").
-                            append(tuple4.forth.first).
-                            append(" / Trades: ").
-                            append(tuple4.forth.second).
-                            append(")");
-                });
-                String message = stringBuilder.toString() + "\nNr. of transactions by day:" + transactionsByDayStringBuilder.toString();
-                new Popup().headLine("Statistical info")
-                        .information(message)
-                        .actionButtonText("Copy")
-                        .onAction(() -> Utilities.copyToClipboard(message +
-                                "\n\nCSV (Offers):\n" + offersStringBuilder.toString() +
-                                "\n\nCSV (Trades):\n" + tradesStringBuilder.toString() +
-                                "\n\nCSV (all):\n" + allStringBuilder.toString()))
-                        .show();
-            }
+            if (new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN).match(event))
+                revertTxColumn.setVisible(!revertTxColumn.isVisible());
+            else if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(event))
+                showStatisticsPopup();
         };
     }
 
@@ -559,5 +478,147 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                     }
                 });
     }
+
+    private void setRevertTxColumnCellFactory() {
+        revertTxColumn.setCellValueFactory((addressListItem) ->
+                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        revertTxColumn.setCellFactory(
+                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
+                        TransactionsListItem>>() {
+
+                    @Override
+                    public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
+                            TransactionsListItem> column) {
+                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+                            Button button;
+
+                            @Override
+                            public void updateItem(final TransactionsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    if (walletService.getConfidenceForTxId(item.getTxId()).getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
+                                        if (button == null) {
+                                            button = new Button("Revert");
+                                            button.setOnAction(e -> revertTransaction(item.getTxId()));
+                                            setGraphic(button);
+                                        }
+                                    } else {
+                                        if (button != null) {
+                                            button.setOnAction(null);
+                                            button = null;
+                                        }
+                                    }
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void revertTransaction(String txId) {
+        try {
+            walletService.doubleSpendTransaction(txId, () -> {
+                new Popup().information("Transaction successfully sent to a new address in the local Bitsquare wallet.").show();
+            }, errorMessage -> {
+                new Popup().warning(errorMessage).show();
+            });
+        } catch (InsufficientMoneyException e) {
+            new Popup().warning(e.getMessage()).show();
+        }
+    }
+
+    private void showStatisticsPopup() {
+        Map<Long, List<Coin>> map = new HashMap<>();
+        Map<String, Tuple4<Date, Integer, Integer, Integer>> dataByDayMap = new HashMap<>();
+        observableList.stream().forEach(item -> {
+            Coin amountAsCoin = item.getAmountAsCoin();
+            List<Coin> amounts;
+            long key = amountAsCoin.getValue();
+            if (!map.containsKey(key)) {
+                amounts = new ArrayList<>();
+                map.put(key, amounts);
+            } else {
+                amounts = map.get(key);
+            }
+            amounts.add(amountAsCoin);
+
+            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.US);
+            String day = dateFormatter.format(item.getDate());
+
+            if (!dataByDayMap.containsKey(day)) {
+                int numOffers = 0;
+                int numTrades = 0;
+                if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                    numOffers++;
+                else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                    numTrades++;
+
+                dataByDayMap.put(day, new Tuple4<>(item.getDate(), 1, numOffers, numTrades));
+            } else {
+                Tuple4<Date, Integer, Integer, Integer> tuple = dataByDayMap.get(day);
+                int prev = tuple.second;
+                int numOffers = tuple.third;
+                int numTrades = tuple.forth;
+                if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                    numOffers++;
+                else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                    numTrades++;
+
+                dataByDayMap.put(day, new Tuple4<>(tuple.first, ++prev, numOffers, numTrades));
+            }
+        });
+
+        StringBuilder stringBuilder = new StringBuilder();
+        map.entrySet().stream().forEach(e -> {
+            stringBuilder.append("Nr. of transactions for amount ").
+                    append(formatter.formatCoinWithCode(Coin.valueOf(e.getKey()))).
+                    append(": ").
+                    append(e.getValue().size()).
+                    append("\n");
+        });
+
+        List<Tuple4<String, Date, Integer, Tuple2<Integer, Integer>>> sortedDataByDayList = dataByDayMap.entrySet().stream().
+                map(e -> {
+                    Tuple4<Date, Integer, Integer, Integer> data = e.getValue();
+                    return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.forth));
+                }).
+                collect(Collectors.toList());
+        sortedDataByDayList.sort((o1, o2) -> o2.second.compareTo(o1.second));
+        StringBuilder transactionsByDayStringBuilder = new StringBuilder();
+        StringBuilder offersStringBuilder = new StringBuilder();
+        StringBuilder tradesStringBuilder = new StringBuilder();
+        StringBuilder allStringBuilder = new StringBuilder();
+        allStringBuilder.append("Date").append(";").append("Offers").append(";").append("Trades").append("\n");
+        sortedDataByDayList.stream().forEach(tuple4 -> {
+            offersStringBuilder.append(tuple4.forth.first).append(",");
+            tradesStringBuilder.append(tuple4.forth.second).append(",");
+            allStringBuilder.append(tuple4.first).append(";").append(tuple4.forth.first).append(";").append(tuple4.forth.second).append("\n");
+            transactionsByDayStringBuilder.append("\n").
+                    append(tuple4.first).
+                    append(": ").
+                    append(tuple4.third).
+                    append(" (Offers: ").
+                    append(tuple4.forth.first).
+                    append(" / Trades: ").
+                    append(tuple4.forth.second).
+                    append(")");
+        });
+        String message = stringBuilder.toString() + "\nNr. of transactions by day:" + transactionsByDayStringBuilder.toString();
+        new Popup().headLine("Statistical info")
+                .information(message)
+                .actionButtonText("Copy")
+                .onAction(() -> Utilities.copyToClipboard(message +
+                        "\n\nCSV (Offers):\n" + offersStringBuilder.toString() +
+                        "\n\nCSV (Trades):\n" + tradesStringBuilder.toString() +
+                        "\n\nCSV (all):\n" + allStringBuilder.toString()))
+                .show();
+    }
+
 }
 
