@@ -119,16 +119,14 @@ public class TransactionsListItem {
         txConfidenceIndicator.setPrefWidth(30);
         Tooltip.install(txConfidenceIndicator, tooltip);
 
-        if (address != null) {
-            txConfidenceListener = new TxConfidenceListener(txId) {
-                @Override
-                public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                    updateConfidence(confidence);
-                }
-            };
-            walletService.addTxConfidenceListener(txConfidenceListener);
-            updateConfidence(transaction.getConfidence());
-        }
+        txConfidenceListener = new TxConfidenceListener(txId) {
+            @Override
+            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
+                updateConfidence(confidence);
+            }
+        };
+        walletService.addTxConfidenceListener(txConfidenceListener);
+        updateConfidence(transaction.getConfidence());
 
 
         if (tradableOptional.isPresent()) {
