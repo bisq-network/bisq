@@ -194,7 +194,8 @@ public class TransactionsListItem {
                     break;
                 case DEAD:
                     tooltip.setText("Transaction is invalid.");
-                    txConfidenceIndicator.setProgress(0);
+                    txConfidenceIndicator.setStyle(" -fx-progress-color: -bs-error-red;");
+                    txConfidenceIndicator.setProgress(-1);
                     break;
             }
 
