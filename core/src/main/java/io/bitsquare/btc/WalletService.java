@@ -397,8 +397,15 @@ public class WalletService {
             return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
     }
 
-    public AddressEntry createAddressEntry(AddressEntry.Context context) {
-        return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+    public AddressEntry getOrCreateUnusedAddressEntry(AddressEntry.Context context) {
+        Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
+                .filter(e -> context == e.getContext())
+                .filter(e -> getNumTxOutputsForAddress(e.getAddress()) == 0)
+                .findAny();
+        if (addressEntry.isPresent())
+            return addressEntry.get();
+        else
+            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
     }
 
     public Optional<AddressEntry> findAddressEntry(String address, AddressEntry.Context context) {
@@ -566,6 +573,75 @@ public class WalletService {
             }
         }
         return outputs;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Revert unconfirmed transaction (unlock in case we got into a tx with a too low mining fee)
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void doubleSpendTransaction(String txId, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException {
+        Optional<Transaction> transactionOptional = wallet.getTransactions(true).stream()
+                .filter(t -> t.getHashAsString().equals(txId))
+                .findAny();
+        if (transactionOptional.isPresent())
+            doubleSpendTransaction(transactionOptional.get(), resultHandler, errorMessageHandler);
+    }
+
+    public void doubleSpendTransaction(Transaction txToDoubleSpend, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException {
+        final TransactionConfidence.ConfidenceType confidenceType = txToDoubleSpend.getConfidence().getConfidenceType();
+        if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
+            Transaction newTransaction = new Transaction(params);
+            txToDoubleSpend.getInputs().stream().forEach(input -> {
+                        if (input.getConnectedOutput() != null && input.getConnectedOutput().isMine(wallet) &&
+                                input.getConnectedOutput().getParentTransaction() != null && input.getValue() != null) {
+                            newTransaction.addInput(new TransactionInput(params,
+                                    input.getParentTransaction(),
+                                    new byte[]{},
+                                    new TransactionOutPoint(params, input.getOutpoint().getIndex(),
+                                            new Transaction(params, input.getConnectedOutput().getParentTransaction().bitcoinSerialize())),
+                                    Coin.valueOf(input.getValue().value)));
+                        } else {
+                            log.error("input had null values: " + input.toString());
+                        }
+                    }
+            );
+            if (!newTransaction.getInputs().isEmpty() && txToDoubleSpend.getFee() != null) {
+                AddressEntry addressEntry = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
+                // We use a higher fee to be sure we get that tx confirmed
+                final Coin newFee = txToDoubleSpend.getFee().add(FeePolicy.getFixedTxFeeForTrades());
+                checkNotNull(addressEntry.getAddress(), "addressEntry.getAddress() must not be null");
+                newTransaction.addOutput(txToDoubleSpend.getValueSentFromMe(wallet).subtract(newFee), addressEntry.getAddress());
+
+                // We set the old tx to dead state, as we double spent its inputs
+                wallet.killTx(txToDoubleSpend);
+
+                Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(newTransaction);
+                sendRequest.aesKey = aesKey;
+                sendRequest.coinSelector = new TradeWalletCoinSelector(params, addressEntry.getAddress());
+                // We don't expect change but set it just in case
+                sendRequest.changeAddress = addressEntry.getAddress();
+                sendRequest.feePerKb = newFee;
+                Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
+                Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
+                    @Override
+                    public void onSuccess(Transaction result) {
+                        log.error(result.toString());
+                        resultHandler.run();
+                    }
+
+                    @Override
+                    public void onFailure(@NotNull Throwable t) {
+                        errorMessageHandler.handleErrorMessage(t.getMessage());
+                    }
+                });
+            } else {
+                errorMessageHandler.handleErrorMessage("We could not generate inputs for the new transaction.");
+            }
+        } else if (confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
+            errorMessageHandler.handleErrorMessage("That transaction is already in the blockchain so we cannot revert it.");
+        } else if (confidenceType == TransactionConfidence.ConfidenceType.DEAD) {
+            errorMessageHandler.handleErrorMessage("One of the inputs of that transaction has been double spended.");
+        }
     }
 
 
@@ -830,9 +906,9 @@ public class WalletService {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Inner classes
-    ///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+// Inner classes
+///////////////////////////////////////////////////////////////////////////////////////////
 
     private static class DownloadListener extends DownloadProgressTracker {
         private final DoubleProperty percentage = new SimpleDoubleProperty(-1);
