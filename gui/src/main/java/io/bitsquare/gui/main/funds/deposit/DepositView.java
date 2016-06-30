@@ -191,7 +191,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                 new Popup().warning("You have already at least one address which is not used yet in any transaction.\n" +
                         "Please select in the address table an unused address.").show();
             } else {
-                AddressEntry newSavingsAddressEntry = walletService.createAddressEntry(AddressEntry.Context.AVAILABLE);
+                AddressEntry newSavingsAddressEntry = walletService.getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
                 updateList();
                 observableList.stream()
                         .filter(depositListItem -> depositListItem.getAddressString().equals(newSavingsAddressEntry.getAddressString()))
