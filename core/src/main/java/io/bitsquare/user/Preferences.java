@@ -126,6 +126,7 @@ public final class Preferences implements Persistable {
     private Map<String, String> peerTagMap = new HashMap<>();
     @Nullable
     private List<String> bridgeAddresses;
+    private List<String> ignoreTradersList = new ArrayList<>();
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -198,6 +199,9 @@ public final class Preferences implements Persistable {
             marketScreenCurrencyCode = persisted.getMarketScreenCurrencyCode();
             buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
             sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
+            ignoreTradersList = persisted.getIgnoreTradersList();
+            if (ignoreTradersList == null)
+                ignoreTradersList = new ArrayList<>();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
@@ -432,6 +436,10 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setIgnoreTradersList(List<String> ignoreTradersList) {
+        this.ignoreTradersList = ignoreTradersList;
+        storage.queueUpForSave();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -577,6 +585,9 @@ public final class Preferences implements Persistable {
         return sellScreenCurrencyCode;
     }
 
+    public List<String> getIgnoreTradersList() {
+        return ignoreTradersList;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

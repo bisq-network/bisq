@@ -334,7 +334,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         }
     }
 
-    private void onShowInfo(boolean isPaymentAccountValidForOffer, boolean hasMatchingArbitrator, boolean hasSameProtocolVersion) {
+    private void onShowInfo(boolean isPaymentAccountValidForOffer, boolean hasMatchingArbitrator, boolean hasSameProtocolVersion, boolean isIgnored) {
         if (!hasMatchingArbitrator) {
             openPopupForMissingAccountSetup("You don't have an arbitrator selected.",
                     "You need to setup at least one arbitrator to be able to trade.\n" +
@@ -350,6 +350,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     "Please check if you have the latest version installed, otherwise the user " +
                     "who created the offer has used an older version.\n\n" +
                     "Users cannot trade with an incompatible trade protocol version.")
+                    .show();
+        } else if (isIgnored) {
+            new Popup().warning("You have added that users onion address to your ignore list.")
                     .show();
         }
     }
@@ -596,6 +599,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             boolean isPaymentAccountValidForOffer;
                             boolean hasMatchingArbitrator;
                             boolean hasSameProtocolVersion;
+                            boolean isIgnored;
 
                             {
                                 button.setGraphic(iconView);
@@ -616,8 +620,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
                                         hasMatchingArbitrator = model.hasMatchingArbitrator(offer);
                                         hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
+                                        isIgnored = model.isIgnored(offer);
                                         isTradable = isPaymentAccountValidForOffer && hasMatchingArbitrator &&
-                                                hasSameProtocolVersion;
+                                                hasSameProtocolVersion &&
+                                                !isIgnored;
 
                                         tableRow.setOpacity(isTradable || myOffer ? 1 : 0.4);
 
@@ -629,7 +635,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             button.setDefaultButton(false);
                                             tableRow.setOnMouseClicked(e ->
                                                     onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator,
-                                                            hasSameProtocolVersion));
+                                                            hasSameProtocolVersion, isIgnored));
 
                                             //TODO
                                             //tableRow.setTooltip(new Tooltip(""));
@@ -653,7 +659,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     }
 
                                     if (!myOffer && !isTradable)
-                                        button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator, hasSameProtocolVersion));
+                                        button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator, hasSameProtocolVersion, isIgnored));
 
                                     button.setText(title);
                                     setGraphic(button);

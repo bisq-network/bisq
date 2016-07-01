@@ -456,7 +456,11 @@ class OfferBookViewModel extends ActivatableViewModel {
         return false;
     }
 
-    public boolean hasSameProtocolVersion(Offer offer) {
+    boolean isIgnored(Offer offer) {
+        return preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().hostName)).findAny().isPresent();
+    }
+
+    boolean hasSameProtocolVersion(Offer offer) {
         return offer.getProtocolVersion() == Version.TRADE_PROTOCOL_VERSION;
     }
 
@@ -468,7 +472,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return id.equals(EDIT_FLAG);
     }
 
-    public int getNumPastTrades(Offer offer) {
+    int getNumPastTrades(Offer offer) {
         return closedTradableManager.getClosedTrades().stream()
                 .filter(e -> e instanceof Trade && ((Trade) e).getTradingPeerNodeAddress() != null &&
                         ((Trade) e).getTradingPeerNodeAddress().hostName.equals(offer.getOffererNodeAddress().hostName))
