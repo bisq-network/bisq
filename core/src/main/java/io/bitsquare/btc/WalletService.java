@@ -577,10 +577,10 @@ public class WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Revert unconfirmed transaction (unlock in case we got into a tx with a too low mining fee)
+    // Double spend unconfirmed transaction (unlock in case we got into a tx with a too low mining fee)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void doubleSpendTransaction(String txId, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException {
+    public void doubleSpendTransaction(String txId, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException, AddressFormatException, AddressEntryException {
         AddressEntry addressEntry = getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
         checkNotNull(addressEntry.getAddress(), "addressEntry.getAddress() must not be null");
         Optional<Transaction> transactionOptional = wallet.getTransactions(true).stream()
@@ -590,48 +590,104 @@ public class WalletService {
             doubleSpendTransaction(transactionOptional.get(), addressEntry.getAddress(), resultHandler, errorMessageHandler);
     }
 
-    public void doubleSpendTransaction(Transaction txToDoubleSpend, Address newOutputAddress, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException {
+    public void doubleSpendTransaction(Transaction txToDoubleSpend, Address toAddress, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException, AddressFormatException, AddressEntryException {
         final TransactionConfidence.ConfidenceType confidenceType = txToDoubleSpend.getConfidence().getConfidenceType();
         if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
+            log.info("txToDoubleSpend nr. of inputs " + txToDoubleSpend.getInputs().size());
+
             Transaction newTransaction = new Transaction(params);
             txToDoubleSpend.getInputs().stream().forEach(input -> {
-                        if (input.getConnectedOutput() != null && input.getConnectedOutput().isMine(wallet) &&
-                                input.getConnectedOutput().getParentTransaction() != null && input.getValue() != null) {
-                            newTransaction.addInput(new TransactionInput(params,
-                                    newTransaction,
-                                    new byte[]{},
-                                    new TransactionOutPoint(params, input.getOutpoint().getIndex(),
-                                            new Transaction(params, input.getConnectedOutput().getParentTransaction().bitcoinSerialize())),
-                                    Coin.valueOf(input.getValue().value)));
-                        } else {
-                            log.error("Input had null values: " + input.toString());
+                        final TransactionOutput connectedOutput = input.getConnectedOutput();
+                        if (connectedOutput != null &&
+                                connectedOutput.isMine(wallet) &&
+                                connectedOutput.getParentTransaction() != null &&
+                                connectedOutput.getParentTransaction().getConfidence() != null &&
+                                input.getValue() != null) {
+                            if (connectedOutput.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+                                newTransaction.addInput(new TransactionInput(params,
+                                        newTransaction,
+                                        new byte[]{},
+                                        new TransactionOutPoint(params, input.getOutpoint().getIndex(),
+                                                new Transaction(params, connectedOutput.getParentTransaction().bitcoinSerialize())),
+                                        Coin.valueOf(input.getValue().value)));
+                            } else {
+                                log.warn("Confidence of parent tx is not of type BUILDING: ConfidenceType=" +
+                                        connectedOutput.getParentTransaction().getConfidence().getConfidenceType());
+                            }
                         }
                     }
             );
-            if (!newTransaction.getInputs().isEmpty() && txToDoubleSpend.getFee() != null) {
-                // We use a higher fee to be sure we get that tx confirmed
-                final Coin newFee = txToDoubleSpend.getFee().add(FeePolicy.getFixedTxFeeForTrades());
-                newTransaction.addOutput(txToDoubleSpend.getValueSentFromMe(wallet).subtract(newFee), newOutputAddress);
+
+            log.info("newTransaction nr. of inputs " + newTransaction.getInputs().size());
+            log.info("newTransaction size in kB " + newTransaction.bitcoinSerialize().length / 1024);
+
+            if (!newTransaction.getInputs().isEmpty()) {
+                Coin amount = Coin.valueOf(newTransaction.getInputs().stream()
+                        .mapToLong(input -> input.getValue() != null ? input.getValue().value : 0)
+                        .sum());
+                newTransaction.addOutput(amount, toAddress);
 
                 Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(newTransaction);
                 sendRequest.aesKey = aesKey;
-                sendRequest.coinSelector = new TradeWalletCoinSelector(params, newOutputAddress);
-                // We don't expect change but set it just in case
-                sendRequest.changeAddress = newOutputAddress;
-                sendRequest.feePerKb = newFee;
-                Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-                Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
-                    @Override
-                    public void onSuccess(Transaction result) {
-                        log.error(result.toString());
-                        resultHandler.run();
-                    }
+                sendRequest.coinSelector = new TradeWalletCoinSelector(params, toAddress, false);
+                sendRequest.changeAddress = toAddress;
+                sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
 
-                    @Override
-                    public void onFailure(@NotNull Throwable t) {
-                        errorMessageHandler.handleErrorMessage(t.getMessage());
+                Coin requiredFee = getFeeForDoubleSpend(sendRequest,
+                        toAddress,
+                        amount,
+                        FeePolicy.getFixedTxFeeForTrades());
+
+                amount = (amount.subtract(requiredFee)).subtract(FeePolicy.getFixedTxFeeForTrades());
+                newTransaction.clearOutputs();
+                newTransaction.addOutput(amount, toAddress);
+
+                sendRequest = Wallet.SendRequest.forTx(newTransaction);
+                sendRequest.aesKey = aesKey;
+                sendRequest.coinSelector = new TradeWalletCoinSelector(params, toAddress, false);
+                // We don't expect change but set it just in case
+                sendRequest.changeAddress = toAddress;
+                sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+
+                Wallet.SendResult sendResult = null;
+                try {
+                    sendResult = wallet.sendCoins(sendRequest);
+                } catch (InsufficientMoneyException e) {
+                    // in some cases getFee did not calculate correctly and we still get an InsufficientMoneyException
+                    log.warn("We still have a missing fee " + (e.missing != null ? e.missing.toFriendlyString() : ""));
+
+                    amount = (amount.subtract(e.missing));
+                    newTransaction.clearOutputs();
+                    newTransaction.addOutput(amount, toAddress);
+
+                    sendRequest = Wallet.SendRequest.forTx(newTransaction);
+                    sendRequest.aesKey = aesKey;
+                    sendRequest.coinSelector = new TradeWalletCoinSelector(params, toAddress, false);
+                    sendRequest.changeAddress = toAddress;
+                    sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+
+                    try {
+                        sendResult = wallet.sendCoins(sendRequest);
+                    } catch (InsufficientMoneyException e2) {
+                        errorMessageHandler.handleErrorMessage("We did not get the correct fee calculated. " + (e2.missing != null ? e2.missing.toFriendlyString() : ""));
                     }
-                });
+                }
+                if (sendResult != null) {
+                    log.info("Broadcasting double spending transaction. " + newTransaction);
+                    Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
+                        @Override
+                        public void onSuccess(Transaction result) {
+                            log.info("Double spending transaction published. " + result);
+                            resultHandler.run();
+                        }
+
+                        @Override
+                        public void onFailure(@NotNull Throwable t) {
+                            log.info("Broadcasting double spending transaction failed. " + t.getMessage());
+                            errorMessageHandler.handleErrorMessage(t.getMessage());
+                        }
+                    });
+                }
             } else {
                 errorMessageHandler.handleErrorMessage("We could not find inputs we control in the transaction we want to double spend.");
             }
@@ -642,6 +698,38 @@ public class WalletService {
         }
     }
 
+    private Coin getFeeForDoubleSpend(Wallet.SendRequest sendRequest,
+                                      Address toAddress,
+                                      Coin amount,
+                                      Coin fee) throws AddressEntryException, AddressFormatException {
+        try {
+            sendRequest.tx.clearOutputs();
+            sendRequest.tx.addOutput(amount, toAddress);
+
+            Wallet.SendRequest newSendRequest = Wallet.SendRequest.forTx(sendRequest.tx);
+            newSendRequest.aesKey = aesKey;
+            newSendRequest.coinSelector = new TradeWalletCoinSelector(params, toAddress);
+            newSendRequest.changeAddress = toAddress;
+            newSendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+            wallet.completeTx(newSendRequest);
+
+            log.info("After fee check: amount  " + amount.toFriendlyString());
+            log.info("Output fee  " + sendRequest.tx.getFee().toFriendlyString());
+            sendRequest.tx.getOutputs().stream().forEach(o -> log.info("Output value " + o.getValue().toFriendlyString()));
+        } catch (InsufficientMoneyException e) {
+            if (e.missing != null) {
+                log.trace("missing fee " + e.missing.toFriendlyString());
+                fee = fee.add(e.missing);
+                amount = amount.subtract(fee);
+                return getFeeForDoubleSpend(sendRequest,
+                        toAddress,
+                        amount,
+                        fee);
+            }
+        }
+        return fee;
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Withdrawal Fee calculation
@@ -951,7 +1039,10 @@ public class WalletService {
             }
 
             txConfidenceListeners.stream()
-                    .filter(txConfidenceListener -> tx.getHashAsString().equals(txConfidenceListener.getTxID()))
+                    .filter(txConfidenceListener -> tx != null &&
+                            tx.getHashAsString() != null &&
+                            txConfidenceListener != null &&
+                            tx.getHashAsString().equals(txConfidenceListener.getTxID()))
                     .forEach(txConfidenceListener ->
                             txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
         }

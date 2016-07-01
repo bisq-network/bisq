@@ -539,7 +539,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             }, errorMessage -> {
                 new Popup().warning(errorMessage).show();
             });
-        } catch (InsufficientMoneyException e) {
+        } catch (Throwable e) {
             new Popup().warning(e.getMessage()).show();
         }
     }

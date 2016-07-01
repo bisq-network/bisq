@@ -19,6 +19,7 @@ package io.bitsquare.btc;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import java.util.Set;
 class MultiAddressesCoinSelector extends BitsquareCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(MultiAddressesCoinSelector.class);
     private final Set<AddressEntry> addressEntries;
+    private final boolean allowUnconfirmedSpend;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -40,19 +42,35 @@ class MultiAddressesCoinSelector extends BitsquareCoinSelector {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public MultiAddressesCoinSelector(NetworkParameters params, @NotNull Set<AddressEntry> addressEntries) {
+        this(params, addressEntries, true);
+    }
+
+
+    public MultiAddressesCoinSelector(NetworkParameters params, @NotNull Set<AddressEntry> addressEntries, boolean allowUnconfirmedSpend) {
         super(params);
         this.addressEntries = addressEntries;
+        this.allowUnconfirmedSpend = allowUnconfirmedSpend;
     }
 
     @Override
     protected boolean matchesRequirement(TransactionOutput transactionOutput) {
         if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+            boolean confirmationCheck = allowUnconfirmedSpend || false;
+            if (!allowUnconfirmedSpend && transactionOutput.getParentTransaction() != null &&
+                    transactionOutput.getParentTransaction().getConfidence() != null) {
+                final TransactionConfidence.ConfidenceType confidenceType = transactionOutput.getParentTransaction().getConfidence().getConfidenceType();
+                confirmationCheck = confidenceType == TransactionConfidence.ConfidenceType.BUILDING;
+                if (!confirmationCheck)
+                    log.error("Tx is not in blockchain yet. confidenceType=" + confidenceType);
+            }
+
+
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
             log.trace("matchesRequiredAddress(es)?");
             log.trace(addressOutput.toString());
             log.trace(addressEntries.toString());
             for (AddressEntry entry : addressEntries) {
-                if (addressOutput.equals(entry.getAddress()))
+                if (addressOutput.equals(entry.getAddress()) && confirmationCheck)
                     return true;
             }
 
