@@ -369,10 +369,11 @@ public class TradeManager {
     public void removeTrade(Trade trade) {
         trades.remove(trade);
 
-        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.OFFER_FUNDING);
-        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
-        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+        final String id = trade.getId();
+        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
+        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.MULTI_SIG);
+        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.TRADE_PAYOUT);
     }
 
 

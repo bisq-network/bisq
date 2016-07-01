@@ -575,19 +575,22 @@ public class WalletService {
         return outputs;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Revert unconfirmed transaction (unlock in case we got into a tx with a too low mining fee)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void doubleSpendTransaction(String txId, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException {
+        AddressEntry addressEntry = getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
+        checkNotNull(addressEntry.getAddress(), "addressEntry.getAddress() must not be null");
         Optional<Transaction> transactionOptional = wallet.getTransactions(true).stream()
                 .filter(t -> t.getHashAsString().equals(txId))
                 .findAny();
         if (transactionOptional.isPresent())
-            doubleSpendTransaction(transactionOptional.get(), resultHandler, errorMessageHandler);
+            doubleSpendTransaction(transactionOptional.get(), addressEntry.getAddress(), resultHandler, errorMessageHandler);
     }
 
-    public void doubleSpendTransaction(Transaction txToDoubleSpend, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException {
+    public void doubleSpendTransaction(Transaction txToDoubleSpend, Address newOutputAddress, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException {
         final TransactionConfidence.ConfidenceType confidenceType = txToDoubleSpend.getConfidence().getConfidenceType();
         if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
             Transaction newTransaction = new Transaction(params);
@@ -595,31 +598,26 @@ public class WalletService {
                         if (input.getConnectedOutput() != null && input.getConnectedOutput().isMine(wallet) &&
                                 input.getConnectedOutput().getParentTransaction() != null && input.getValue() != null) {
                             newTransaction.addInput(new TransactionInput(params,
-                                    input.getParentTransaction(),
+                                    newTransaction,
                                     new byte[]{},
                                     new TransactionOutPoint(params, input.getOutpoint().getIndex(),
                                             new Transaction(params, input.getConnectedOutput().getParentTransaction().bitcoinSerialize())),
                                     Coin.valueOf(input.getValue().value)));
                         } else {
-                            log.error("input had null values: " + input.toString());
+                            log.error("Input had null values: " + input.toString());
                         }
                     }
             );
             if (!newTransaction.getInputs().isEmpty() && txToDoubleSpend.getFee() != null) {
-                AddressEntry addressEntry = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
                 // We use a higher fee to be sure we get that tx confirmed
                 final Coin newFee = txToDoubleSpend.getFee().add(FeePolicy.getFixedTxFeeForTrades());
-                checkNotNull(addressEntry.getAddress(), "addressEntry.getAddress() must not be null");
-                newTransaction.addOutput(txToDoubleSpend.getValueSentFromMe(wallet).subtract(newFee), addressEntry.getAddress());
-
-                // We set the old tx to dead state, as we double spent its inputs
-                wallet.killTx(txToDoubleSpend);
+                newTransaction.addOutput(txToDoubleSpend.getValueSentFromMe(wallet).subtract(newFee), newOutputAddress);
 
                 Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(newTransaction);
                 sendRequest.aesKey = aesKey;
-                sendRequest.coinSelector = new TradeWalletCoinSelector(params, addressEntry.getAddress());
+                sendRequest.coinSelector = new TradeWalletCoinSelector(params, newOutputAddress);
                 // We don't expect change but set it just in case
-                sendRequest.changeAddress = addressEntry.getAddress();
+                sendRequest.changeAddress = newOutputAddress;
                 sendRequest.feePerKb = newFee;
                 Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
                 Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
@@ -635,12 +633,12 @@ public class WalletService {
                     }
                 });
             } else {
-                errorMessageHandler.handleErrorMessage("We could not generate inputs for the new transaction.");
+                errorMessageHandler.handleErrorMessage("We could not find inputs we control in the transaction we want to double spend.");
             }
         } else if (confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
-            errorMessageHandler.handleErrorMessage("That transaction is already in the blockchain so we cannot revert it.");
+            errorMessageHandler.handleErrorMessage("That transaction is already in the blockchain so we cannot double spend it.");
         } else if (confidenceType == TransactionConfidence.ConfidenceType.DEAD) {
-            errorMessageHandler.handleErrorMessage("One of the inputs of that transaction has been double spended.");
+            errorMessageHandler.handleErrorMessage("One of the inputs of that transaction has been already double spent.");
         }
     }
 
