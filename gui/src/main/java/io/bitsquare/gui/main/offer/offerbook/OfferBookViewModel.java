@@ -68,7 +68,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final OpenOfferManager openOfferManager;
     private final User user;
     private final OfferBook offerBook;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final P2PService p2PService;
     final PriceFeed priceFeed;
     private ClosedTradableManager closedTradableManager;

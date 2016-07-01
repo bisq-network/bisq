@@ -364,12 +364,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onRemoveOpenOffer(Offer offer) {
         if (model.isBootstrapped()) {
-            new Popup().warning("Are you sure you want to remove that offer?\n" +
-                    "The offer fee you have paid will be lost if you remove that offer.")
-                    .actionButtonText("Remove offer")
-                    .onAction(() -> doRemoveOffer(offer))
-                    .closeButtonText("Don't remove the offer")
-                    .show();
+            String key = "RemoveOfferWarning";
+            if (model.preferences.showAgain(key))
+                new Popup().warning("Are you sure you want to remove that offer?\n" +
+                        "The offer fee you have paid will be lost if you remove that offer.")
+                        .actionButtonText("Remove offer")
+                        .onAction(() -> doRemoveOffer(offer))
+                        .closeButtonText("Don't remove the offer")
+                        .dontShowAgainId(key, model.preferences)
+                        .show();
+            else
+                doRemoveOffer(offer);
         } else {
             new Popup().information("You need to wait until you are fully connected to the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
@@ -377,13 +382,16 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void doRemoveOffer(Offer offer) {
+        String key = "WithdrawFundsAfterRemoveOfferInfo";
         model.onRemoveOpenOffer(offer,
                 () -> {
                     log.debug("Remove offer was successful");
-                    new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
-                            .actionButtonText("Go to \"Funds/Available for withdrawal\"")
-                            .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                            .show();
+                    if (model.preferences.showAgain(key))
+                        new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
+                                .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+                                .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                                .dontShowAgainId(key, model.preferences)
+                                .show();
                 },
                 (message) -> {
                     log.error(message);
