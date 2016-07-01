@@ -508,6 +508,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                         if (button != null) {
                                             button.setOnAction(null);
                                             button = null;
+                                            setGraphic(null);
                                         }
                                     }
                                 } else {
