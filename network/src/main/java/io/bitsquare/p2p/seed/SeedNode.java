@@ -10,6 +10,7 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.p2p.peers.BanList;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,53 +53,91 @@ public class SeedNode {
     // eg. lmvdenjkyvx2ovga.onion:8001 0 20 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
     // or when using localhost:  localhost:8001 2 20 true localhost:8002|localhost:8003
     // BitcoinNetworkId: The id for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
+    // localhost:3002 2 50 true
+    // localhost:3002 2 50 localhost:4442|localhost:4443 true
+    // Usage: -myAddress=<my onion address> -networkId=<networkId (Mainnet = 0, TestNet = 1, Regtest = 2)> -maxConnections=<Nr. of max. connections allowed> -useLocalhost=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
+    // Example usage: -myAddress=lmvdenjkyvx2ovga.onion:8001 -networkId=0 -maxConnections=20 -useLocalhost=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
+    public static final String MY_ADDRESS = "-myAddress=";
+    public static final String NETWORK_ID = "-networkId=";
+    public static final String MAX_CONNECTIONS = "-maxConnections=";
+    public static final String USE_LOCALHOST = "-useLocalhost=";
+    public static final String SEED_NODES_LIST = "-seedNodes=";
+    public static final String BAN_LIST = "-banList=";
+    public static final String HELP = "-help";
+    public static final String USAGE = "Usage:\n" +
+            "-myAddress=<my onion address>\n" +
+            "-networkId=[0|1|2] (Mainnet = 0, TestNet = 1, Regtest = 2)\n" +
+            "-maxConnections=<Nr. of max. connections allowed>\n" +
+            "-useLocalhost=[true|false]\n" +
+            "-seedNodes=[onion addresses separated with |]\n" +
+            "-ignore=[onion addresses separated with |]\n" +
+            "-help";
+
     public void processArgs(String[] args) {
+        int networkId = -1;
         try {
-            if (args.length > 0) {
-                String arg0 = args[0];
-                checkArgument(arg0.contains(":") && arg0.split(":").length == 2 && arg0.split(":")[1].length() > 3, "Wrong program argument: " + arg0);
-                mySeedNodeAddress = new NodeAddress(arg0);
-                log.info("From processArgs: mySeedNodeAddress=" + mySeedNodeAddress);
-                if (args.length > 1) {
-                    String arg1 = args[1];
-                    int networkId = Integer.parseInt(arg1);
+            for (int i = 0; i < args.length; i++) {
+                String arg = args[i];
+                if (arg.startsWith(MY_ADDRESS)) {
+                    arg = arg.substring(MY_ADDRESS.length());
+                    checkArgument(arg.contains(":") && arg.split(":").length == 2 && arg.split(":")[1].length() > 3, "Wrong program argument: " + arg);
+                    mySeedNodeAddress = new NodeAddress(arg);
+                    log.info("From processArgs: mySeedNodeAddress=" + mySeedNodeAddress);
+                } else if (arg.startsWith(NETWORK_ID)) {
+                    arg = arg.substring(NETWORK_ID.length());
+                    networkId = Integer.parseInt(arg);
                     log.info("From processArgs: networkId=" + networkId);
                     checkArgument(networkId > -1 && networkId < 3,
                             "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
                     Version.setBtcNetworkId(networkId);
-                    if (args.length > 2) {
-                        String arg2 = args[2];
-                        maxConnections = Integer.parseInt(arg2);
-                        log.info("From processArgs: maxConnections=" + maxConnections);
-                        checkArgument(maxConnections < MAX_CONNECTIONS_LIMIT, "maxConnections seems to be a bit too high...");
-                    }
-                    if (args.length > 3) {
-                        String arg3 = args[3];
-                        checkArgument(arg3.equals("true") || arg3.equals("false"));
-                        useLocalhost = ("true").equals(arg3);
-                        log.info("From processArgs: useLocalhost=" + useLocalhost);
-                    }
-                    if (args.length > 4) {
-                        String arg4 = args[4];
-                        checkArgument(arg4.contains(":") && arg4.split(":").length > 1 && arg4.split(":")[1].length() > 3,
-                                "Wrong program argument");
-                        List<String> list = Arrays.asList(arg4.split("\\|"));
-                        progArgSeedNodes = new HashSet<>();
-                        list.forEach(e -> {
-                            checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4,
-                                    "Wrong program argument");
-                            progArgSeedNodes.add(new NodeAddress(e));
-                        });
-                        log.info("From processArgs: progArgSeedNodes=" + progArgSeedNodes);
-                        progArgSeedNodes.remove(mySeedNodeAddress);
-                    } else if (args.length > 5) {
-                        log.error("Too many program arguments." +
-                                "\nProgram arguments: myAddress (incl. port) bitcoinNetworkId " +
-                                "maxConnections useLocalhost seedNodes (separated with |)");
-                    }
+                } else if (arg.startsWith(MAX_CONNECTIONS)) {
+                    arg = arg.substring(MAX_CONNECTIONS.length());
+                    maxConnections = Integer.parseInt(arg);
+                    log.info("From processArgs: maxConnections=" + maxConnections);
+                    checkArgument(maxConnections < MAX_CONNECTIONS_LIMIT, "maxConnections seems to be a bit too high...");
+                } else if (arg.startsWith(USE_LOCALHOST)) {
+                    arg = arg.substring(USE_LOCALHOST.length());
+                    checkArgument(arg.equals("true") || arg.equals("false"));
+                    useLocalhost = ("true").equals(arg);
+                    log.info("From processArgs: useLocalhost=" + useLocalhost);
+                } else if (arg.startsWith(SEED_NODES_LIST)) {
+                    arg = arg.substring(SEED_NODES_LIST.length());
+                    checkArgument(arg.contains(":") && arg.split(":").length > 1 && arg.split(":")[1].length() > 3,
+                            "Wrong program argument " + arg);
+                    List<String> list = Arrays.asList(arg.split("\\|"));
+                    progArgSeedNodes = new HashSet<>();
+                    list.forEach(e -> {
+                        checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4,
+                                "Wrong program argument " + e);
+                        progArgSeedNodes.add(new NodeAddress(e));
+                    });
+                    log.info("From processArgs: progArgSeedNodes=" + progArgSeedNodes);
+                    progArgSeedNodes.remove(mySeedNodeAddress);
+                } else if (arg.startsWith(BAN_LIST)) {
+                    arg = arg.substring(BAN_LIST.length());
+                    checkArgument(arg.contains(":") && arg.split(":").length > 1 && arg.split(":")[1].length() > 3,
+                            "Wrong program argument " + arg);
+                    List<String> list = Arrays.asList(arg.split("\\|"));
+                    list.forEach(e -> {
+                        checkArgument(e.contains(":") && e.split(":").length == 2 && e.split(":")[1].length() == 4,
+                                "Wrong program argument " + e);
+                        BanList.add(new NodeAddress(e));
+                    });
+                    log.info("From processArgs: ignoreList=" + list);
+                } else if (arg.startsWith(HELP)) {
+                    log.info(USAGE);
+                } else {
+                    log.error("Invalid argument. " + arg + "\n" + USAGE);
                 }
             }
+
+            if (mySeedNodeAddress == null)
+                log.error("My seed node must be set.\n" + USAGE);
+            if (networkId == -1)
+                log.error("NetworkId must be set.\n" + USAGE);
+
         } catch (Throwable t) {
+            log.error("Some arguments caused an exception. " + Arrays.toString(args) + "\nException: " + t.getMessage() + "\n" + USAGE);
             shutDown();
         }
     }
