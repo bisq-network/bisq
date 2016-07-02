@@ -1,7 +1,4 @@
-﻿﻿cd ..\..\
-mkdir gui\deploy
-
-:: edit iss file -> AppVersion
+﻿﻿:: edit iss file -> AppVersion
 
 :: Copy gui/deploy.Bitsquare.jar file from mac build to windows
 :: edit -> -BappVersion and -srcfiles
@@ -14,8 +11,8 @@ SET jdk=C:\Program Files\Java\jdk1.8.0_92
 SET outdir=\\VBOXSVR\vm_shared_windows
 
 call "%jdk%\bin\javapackager.exe" -deploy ^
--BjvmOptions=-Xbootclasspath/a:^"jdkfix-%version%.jar^";^"..\runtime\lib\ext\jfxrt.jar^" ^
--BappVersion=%version% ^
+-BjvmOptions=-Xbootclasspath/a:^"jdkfix-0.4.9.jar^";^"..\runtime\lib\ext\jfxrt.jar^" ^
+-BappVersion="%version%" ^
 -native exe ^
 -name Bitsquare ^
 -title Bitsquare ^
@@ -28,7 +25,6 @@ call "%jdk%\bin\javapackager.exe" -deploy ^
 -BjvmProperties=-Djava.net.preferIPv4Stack=true
 
 :: -BjvmOptions=-verbose:class
-:: that works if used form the terminal:
-:: java -Xbootclasspath/a:"jdkfix-0.4.9.jar";"C:\Users\asd\AppData\Local\Bitsquare\runtime\lib\ext\jfxrt.jar" -jar Bitsquare-0.4.9.jar
-
-cd package\windows
+:: those works
+:: java -Xbootclasspath/a:^"jdkfix-0.4.9.jar^";^"..\runtime\lib\ext\jfxrt.jar^" -jar Bitsquare-0.4.9.jar
+:: java -Xbootclasspath/a:"jdkfix-0.4.9.jar";"..\runtime\lib\ext\jfxrt.jar" -jar Bitsquare-0.4.9.jar
