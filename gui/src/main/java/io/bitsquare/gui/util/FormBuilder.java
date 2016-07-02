@@ -827,6 +827,46 @@ public class FormBuilder {
         return new Tuple2<>(button1, button2);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Button + Button + Button
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple3<Button, Button, Button> add3Buttons(GridPane gridPane,
+                                                             int rowIndex,
+                                                             String title1,
+                                                             String title2,
+                                                             String title3) {
+        return add3Buttons(gridPane, rowIndex, title1, title2, title3, 0);
+    }
+
+    public static Tuple3<Button, Button, Button> add3ButtonsAfterGroup(GridPane gridPane,
+                                                                       int rowIndex,
+                                                                       String title1,
+                                                                       String title2,
+                                                                       String title3) {
+        return add3Buttons(gridPane, rowIndex, title1, title2, title3, 15);
+    }
+
+    public static Tuple3<Button, Button, Button> add3Buttons(GridPane gridPane,
+                                                             int rowIndex,
+                                                             String title1,
+                                                             String title2,
+                                                             String title3,
+                                                             double top) {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        Button button1 = new Button(title1);
+        button1.setDefaultButton(true);
+        Button button2 = new Button(title2);
+        Button button3 = new Button(title3);
+        hBox.getChildren().addAll(button1, button2, button3);
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
+        gridPane.getChildren().add(hBox);
+        return new Tuple3<>(button1, button2, button3);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Button + ProgressIndicator + Label

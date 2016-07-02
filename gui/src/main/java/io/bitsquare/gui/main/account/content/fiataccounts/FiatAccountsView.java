@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.account.content.fiataccounts;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
@@ -69,8 +70,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
 
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
-    private Button addAccountButton;
-    private Button saveNewAccountButton;
+    private Button addAccountButton, saveNewAccountButton, exportButton, importButton;
     private int gridRow = 0;
     private ChangeListener<PaymentAccount> paymentAccountChangeListener;
 
@@ -114,12 +114,19 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     protected void activate() {
         paymentAccountsListView.setItems(model.getPaymentAccounts());
         paymentAccountsListView.getSelectionModel().selectedItemProperty().addListener(paymentAccountChangeListener);
+        addAccountButton.setOnAction(event -> addNewAccount());
+        exportButton.setOnAction(event -> model.dataModel.exportAccounts());
+        importButton.setOnAction(event -> model.dataModel.importAccounts());
     }
 
     @Override
     protected void deactivate() {
         paymentAccountsListView.getSelectionModel().selectedItemProperty().removeListener(paymentAccountChangeListener);
+        addAccountButton.setOnAction(null);
+        exportButton.setOnAction(null);
+        importButton.setOnAction(null);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -204,8 +211,10 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             }
         });
 
-        addAccountButton = addButtonAfterGroup(root, ++gridRow, "Add new account");
-        addAccountButton.setOnAction(event -> addNewAccount());
+        Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, "Add new account", "Export Accounts", "Import Accounts");
+        addAccountButton = tuple3.first;
+        exportButton = tuple3.second;
+        importButton = tuple3.third;
     }
 
     // Add new account form

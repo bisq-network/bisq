@@ -17,10 +17,6 @@
 
 package io.bitsquare.gui.main.account.content.backup;
 
-import com.google.common.base.Charsets;
-import com.googlecode.jcsv.CSVStrategy;
-import com.googlecode.jcsv.writer.CSVWriter;
-import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
@@ -28,9 +24,7 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.user.Preferences;
-import io.bitsquare.user.User;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -41,28 +35,22 @@ import org.apache.commons.io.FileUtils;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Date;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
-
-
     private final File dataDir;
     private int gridRow = 0;
     private final Stage stage;
     private final Preferences preferences;
-    private User user;
     private Button selectBackupDir, backupNow;
     private TextField backUpLocationTextField;
-    private Button openDataDir, exportButton, importButton;
+    private Button openDataDir;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,11 +58,10 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BackupView(Stage stage, Preferences preferences, BitsquareEnvironment environment, User user) {
+    private BackupView(Stage stage, Preferences preferences, BitsquareEnvironment environment) {
         super();
         this.stage = stage;
         this.preferences = preferences;
-        this.user = user;
         dataDir = new File(environment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY));
     }
 
@@ -95,8 +82,6 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
 
         addTitledGroupBg(root, ++gridRow, 2, "Backup wallet and data directory", Layout.GROUP_DISTANCE);
-        exportButton = addLabelButton(root, gridRow, "Export Account data:", "Export", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        importButton = addLabelButton(root, ++gridRow, "Import Account data:", "Import").second;
     }
 
     @Override
@@ -139,69 +124,12 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                 }
             }
         });
-        exportButton.setOnAction(e -> {
-            Set<PaymentAccount> accounts = user.getPaymentAccounts();
-            // log.error(accounts.toString());
-            String json = Utilities.objectToJson(accounts);
-            // log.error(json.toString());
-            Object obj = Utilities.jsonToObject(json, HashSet.class);
-
-            // log.error(obj.toString());
-            //log.error(obj.toString());
-
-            List<Person> persons = new ArrayList<>();
-            persons.add(new Person("Holger", "Schmidt", 35));
-            persons.add(new Person("Max", "Mustermann", 17));
-            persons.add(new Person("Lisa", "Stein", 19));
-
-
-            try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream("___persons.csv", true), Charsets.UTF_8)) {
-             /*   CSVWriter<Person> csvHeaderWriter = new CSVWriterBuilder<Person>(outputStreamWriter)
-             .strategy(CSVStrategy.UK_DEFAULT)
-             .entryConverter(new PersonEntryConverter())
-             .build();
-                csvHeaderWriter.write(persons.get(0));*/
-                CSVWriter<PaymentAccount> csvWriter = new CSVWriterBuilder<PaymentAccount>(outputStreamWriter)
-                        .strategy(CSVStrategy.UK_DEFAULT)
-                        .entryConverter(new PaymentAccountEntryConverter())
-                        .build();
-                csvWriter.writeAll(user.getPaymentAccounts().stream().collect(Collectors.toList()));
-            } catch (RuntimeException | IOException e1) {
-            }
-
-
-            
-           /* CSVWriter writer = null;
-            try {
-                
-                writer = new CSVWriter(new FileWriter(dataDir.getAbsolutePath()+"/accounts.csv"), '\t'); 
-                // feed in your array (or convert your data to an array)
-                String[] entries = "first#second#third".split("#");
-                writer.writeNext(entries);
-
-                ColumnPositionMappingStrategy strat = new ColumnPositionMappingStrategy();
-                strat.setType(PaymentAccount.class);
-                String[] columns = new String[] {"name", "orderNumber", "id"}; // the fields to bind do in your JavaBean
-                strat.setColumnMapping(columns);
-
-                CsvToBean csv = new CsvToBean();
-               // List list = csv.parse(strat, yourReader);
-                
-                writer.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }*/
-        });
-        importButton.setOnAction(e -> {
-        });
     }
 
     @Override
     protected void deactivate() {
         selectBackupDir.setOnAction(null);
         openDataDir.setOnAction(null);
-        exportButton.setOnAction(null);
-        importButton.setOnAction(null);
     }
 }
 

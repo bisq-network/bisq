@@ -19,11 +19,14 @@ package io.bitsquare.gui.main.account.content.altcoinaccounts;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.payment.CryptoCurrencyAccount;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.Preferences;
@@ -32,6 +35,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 
+import javax.inject.Named;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,15 +47,18 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     private Preferences preferences;
     private final OpenOfferManager openOfferManager;
     private final TradeManager tradeManager;
+    private File storageDir;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
 
     @Inject
-    public AltCoinAccountsDataModel(User user, Preferences preferences, OpenOfferManager openOfferManager, TradeManager tradeManager) {
+    public AltCoinAccountsDataModel(User user, Preferences preferences, OpenOfferManager openOfferManager,
+                                    TradeManager tradeManager, @Named("storage.dir") File storageDir) {
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
+        this.storageDir = storageDir;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
@@ -115,5 +124,40 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
         user.setCurrentPaymentAccount(paymentAccount);
     }
 
+    public void exportAccounts() {
+        ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
+                .filter(paymentAccount -> (paymentAccount instanceof CryptoCurrencyAccount))
+                .collect(Collectors.toList()));
+        if (!accounts.isEmpty()) {
+            Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(storageDir);
+            paymentAccountsStorage.initAndGetPersisted(accounts, "AltcoinPaymentAccounts");
+            paymentAccountsStorage.queueUpForSave(20);
+            new Popup<>().feedback("Payment accounts saved to data directory at:\n" + storageDir.getAbsolutePath()).show();
+        } else {
+            new Popup<>().warning("You have no payment accounts set up for export.").show();
+        }
+    }
+
+    public void importAccounts() {
+        Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(storageDir);
+        ArrayList<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersisted("AltcoinPaymentAccounts");
+        if (persisted != null) {
+            final StringBuilder msg = new StringBuilder();
+            persisted.stream().forEach(paymentAccount -> {
+                final String id = paymentAccount.getId();
+
+                if (user.getPaymentAccount(id) == null) {
+                    user.addPaymentAccount(paymentAccount);
+                    msg.append("Payment account with id ").append(id).append("\n");
+                } else {
+                    msg.append("Payment account with id ").append(id).append(" exists already. We did not import that.").append("\n");
+                }
+            });
+            new Popup<>().feedback("Payment account imported from data directory at:\n" + storageDir.getAbsolutePath() + "\n\nImported accounts:\n" + msg).show();
+
+        } else {
+            new Popup<>().warning("No exported payment account has been found at data directory at: " + storageDir.getAbsolutePath()).show();
+        }
+    }
 
 }
