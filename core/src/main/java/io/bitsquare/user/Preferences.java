@@ -23,6 +23,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.persistance.Persistable;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.*;
 import io.bitsquare.storage.Storage;
 import io.nucleo.net.bridge.BridgeProvider;
@@ -127,6 +128,7 @@ public final class Preferences implements Persistable {
     @Nullable
     private List<String> bridgeAddresses;
     private List<String> ignoreTradersList = new ArrayList<>();
+    private String defaultPath;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -147,6 +149,12 @@ public final class Preferences implements Persistable {
         INSTANCE = this;
         this.storage = storage;
         this.bitsquareEnvironment = bitsquareEnvironment;
+
+        if (Utilities.isWindows())
+            defaultPath = System.getenv("USERPROFILE");
+        else
+            defaultPath = System.getProperty("user.home");
+
 
         Preferences persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
@@ -199,9 +207,12 @@ public final class Preferences implements Persistable {
             marketScreenCurrencyCode = persisted.getMarketScreenCurrencyCode();
             buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
             sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
-            ignoreTradersList = persisted.getIgnoreTradersList();
-            if (ignoreTradersList == null)
-                ignoreTradersList = new ArrayList<>();
+
+            if (persisted.getIgnoreTradersList() != null)
+                ignoreTradersList = persisted.getIgnoreTradersList();
+
+            if (persisted.getDefaultPath() != null)
+                defaultPath = persisted.getDefaultPath();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
@@ -441,6 +452,12 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setDefaultPath(String defaultPath) {
+        this.defaultPath = defaultPath;
+        storage.queueUpForSave();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -589,6 +606,9 @@ public final class Preferences implements Persistable {
         return ignoreTradersList;
     }
 
+    public String getDefaultPath() {
+        return defaultPath;
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////

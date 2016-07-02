@@ -80,7 +80,6 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         backupNow.setDisable(preferences.getBackupDirectory() == null || preferences.getBackupDirectory().length() == 0);
         backupNow.setDefaultButton(preferences.getBackupDirectory() != null);
 
-
         addTitledGroupBg(root, ++gridRow, 2, "Backup wallet and data directory", Layout.GROUP_DISTANCE);
     }
 
@@ -88,11 +87,12 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     protected void activate() {
         selectBackupDir.setOnAction(e -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            directoryChooser.setInitialDirectory(new File(preferences.getDefaultPath()));
             directoryChooser.setTitle("Select backup location");
             File dir = directoryChooser.showDialog(stage);
             if (dir != null) {
                 String backupDirectory = dir.getAbsolutePath();
+                preferences.setDefaultPath(backupDirectory);
                 backUpLocationTextField.setText(backupDirectory);
                 preferences.setBackupDirectory(backupDirectory);
                 backupNow.setDisable(false);
@@ -130,6 +130,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     protected void deactivate() {
         selectBackupDir.setOnAction(null);
         openDataDir.setOnAction(null);
+        backupNow.setOnAction(null);
     }
 }
 
