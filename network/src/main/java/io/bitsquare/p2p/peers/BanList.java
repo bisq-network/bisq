@@ -26,4 +26,8 @@ public class BanList {
     public static void remove(NodeAddress onionAddress) {
         list.add(onionAddress);
     }
+
+    public static boolean contains(NodeAddress nodeAddress) {
+        return list.contains(nodeAddress);
+    }
 }

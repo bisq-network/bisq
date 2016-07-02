@@ -183,6 +183,18 @@ public class PeerManager implements ConnectionListener {
             stopped = true;
             listeners.stream().forEach(Listener::onAllConnectionsLost);
         }
+
+        if (connection.getPeersNodeAddressOptional().isPresent() && isNodeBanned(closeConnectionReason, connection)) {
+            final NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+            seedNodeAddresses.remove(nodeAddress);
+            removePersistedPeer(nodeAddress);
+            removeReportedPeer(nodeAddress);
+        }
+    }
+
+    public boolean isNodeBanned(CloseConnectionReason closeConnectionReason, Connection connection) {
+        return closeConnectionReason == CloseConnectionReason.PEER_BANNED &&
+                connection.getPeersNodeAddressOptional().isPresent();
     }
 
     @Override
@@ -206,7 +218,7 @@ public class PeerManager implements ConnectionListener {
                     removeTooOldPersistedPeers();
                     checkMaxConnections(maxConnections);
                 } else {
-                    log.warn("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
+                    log.debug("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
                 }
             }, CHECK_MAX_CONN_DELAY_SEC);
 

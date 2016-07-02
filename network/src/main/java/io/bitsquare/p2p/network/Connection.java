@@ -13,6 +13,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
+import io.bitsquare.p2p.peers.BanList;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
@@ -327,6 +328,11 @@ public class Connection implements MessageListener {
         }
 
         peersNodeAddressProperty.set(peerNodeAddress);
+
+        if (BanList.contains(peerNodeAddress)) {
+            log.warn("We detected a connection to a banned peer. We will close that connection. (setPeersNodeAddress)");
+            sharedModel.reportInvalidRequest(RuleViolation.PEER_BANNED);
+        }
     }
 
 
@@ -525,7 +531,13 @@ public class Connection implements MessageListener {
                         "corruptRequests={}\n\t" +
                         "connection={}", numRuleViolations, ruleViolation, ruleViolations.toString(), connection);
                 this.ruleViolation = ruleViolation;
-                shutDown(CloseConnectionReason.RULE_VIOLATION);
+                if (ruleViolation == RuleViolation.PEER_BANNED) {
+                    log.warn("We detected a connection to a banned peer. We will close that connection. (reportInvalidRequest)");
+                    shutDown(CloseConnectionReason.PEER_BANNED);
+                } else {
+                    shutDown(CloseConnectionReason.RULE_VIOLATION);
+                }
+
                 return true;
             } else {
                 return false;
@@ -745,7 +757,12 @@ public class Connection implements MessageListener {
                             log.info("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", ((CloseConnectionMessage) message).reason, connection);
                             stop();
-                            sharedModel.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
+                            if (CloseConnectionReason.PEER_BANNED.name().equals(((CloseConnectionMessage) message).reason)) {
+                                log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
+                                sharedModel.shutDown(CloseConnectionReason.PEER_BANNED);
+                            } else {
+                                sharedModel.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
+                            }
                         } else if (!stopped) {
                             // We don't want to get the activity ts updated by ping/pong msg
                             if (!(message instanceof KeepAliveMessage))
@@ -766,6 +783,10 @@ public class Connection implements MessageListener {
                             // 4. DirectMessage (implements SendersNodeAddressMessage)
                             if (message instanceof SendersNodeAddressMessage) {
                                 NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) message).getSenderNodeAddress();
+                                // We must not shut down a banned peer at that moment as it would trigger a connection termination 
+                                // and we could not send the CloseConnectionMessage.
+                                // We shut down a banned peer at the next step at setPeersNodeAddress().
+
                                 Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
                                 if (peersNodeAddressOptional.isPresent()) {
                                     // If we have already the peers address we check again if it matches our stored one
