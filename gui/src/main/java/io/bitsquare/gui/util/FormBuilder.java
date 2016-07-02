@@ -752,6 +752,9 @@ public class FormBuilder {
     // Label  + Button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public static Tuple2<Label, Button> addLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle) {
+        return addLabelButton(gridPane, rowIndex, labelText, buttonTitle, 0);
+    }
 
     public static Tuple2<Label, Button> addLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle, double top) {
         Label label = addLabel(gridPane, rowIndex, labelText, top);

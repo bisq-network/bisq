@@ -142,5 +142,19 @@
              <version>0.4.1</version>
          </dependency>-->
 
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>3.8</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.googlecode.jcsv/jcsv -->
+        <dependency>
+            <groupId>com.googlecode.jcsv</groupId>
+            <artifactId>jcsv</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+
+
     </dependencies>
 </project>
