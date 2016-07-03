@@ -92,18 +92,19 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         displaySeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_DISTANCE).second;
         displaySeedWordsTextArea.setPrefHeight(60);
         displaySeedWordsTextArea.setEditable(false);
-        datePicker = addLabelDatePicker(root, ++gridRow, "Creation Date:").second;
+        datePicker = addLabelDatePicker(root, ++gridRow, "Wallet Date:").second;
         datePicker.setMouseTransparent(true);
 
         addTitledGroupBg(root, ++gridRow, 2, "Restore your wallet seed words", Layout.GROUP_DISTANCE);
         restoreSeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         restoreSeedWordsTextArea.setPrefHeight(60);
-        restoreDatePicker = addLabelDatePicker(root, ++gridRow, "Creation Date:").second;
+        restoreDatePicker = addLabelDatePicker(root, ++gridRow, "Wallet Date:").second;
         restoreButton = addButtonAfterGroup(root, ++gridRow, "Restore wallet");
 
         addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
-        addMultilineLabel(root, gridRow, "Please write down you wallet seed words and the creation date.\n" +
-                        "You can recover your wallet with those seed words and the creation date.",
+        addMultilineLabel(root, gridRow, "Please write down you wallet seed words.\n" +
+                        "You can recover your wallet with those seed words.\n" +
+                        "Please note that the wallet date is the date of the wallet into which you want to restore!",
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
 
