@@ -235,8 +235,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
-        addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++rowIndex, "Offerers onion address:", offer.getOffererNodeAddress().getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Offerers onion address:", offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit()));
 
@@ -244,7 +244,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addLabelTextField(gridPane, ++rowIndex, "Offerers country of bank:",
                     CountryUtil.getNameAndCode(paymentMethodCountryCode));
 
-        addLabelTextField(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
         if (offer.getOfferFeePaymentTxID() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
 
