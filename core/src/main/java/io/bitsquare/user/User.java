@@ -191,6 +191,13 @@ public final class User implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void clearAcceptedArbitrators() {
+        if (acceptedArbitrators != null) {
+            acceptedArbitrators.clear();
+            storage.queueUpForSave();
+        }
+    }
+
     public void setRegisteredArbitrator(@org.jetbrains.annotations.Nullable Arbitrator arbitrator) {
         this.registeredArbitrator = arbitrator;
         storage.queueUpForSave();
