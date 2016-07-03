@@ -52,6 +52,15 @@ public class TransactionsListItem {
     private boolean detailsAvailable;
     private Coin amountAsCoin = Coin.ZERO;
     private BSFormatter formatter;
+    private int confirmations = 0;
+
+    public TransactionsListItem() {
+        date = null;
+        walletService = null;
+        txConfidenceIndicator = null;
+        tooltip = null;
+        txId = null;
+    }
 
     public TransactionsListItem(Transaction transaction, WalletService walletService, Optional<Tradable> tradableOptional, BSFormatter formatter) {
         this.formatter = formatter;
@@ -176,6 +185,7 @@ public class TransactionsListItem {
     }
 
     private void updateConfidence(TransactionConfidence confidence) {
+        confirmations = confidence.getDepthInBlocks();
         if (confidence != null) {
             switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
@@ -250,6 +260,10 @@ public class TransactionsListItem {
     @Nullable
     public Tradable getTradable() {
         return tradable;
+    }
+
+    public String getNumConfirmations() {
+        return String.valueOf(confirmations);
     }
 }
 

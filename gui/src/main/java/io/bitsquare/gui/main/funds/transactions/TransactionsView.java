@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.funds.transactions;
 
+import com.googlecode.jcsv.writer.CSVEntryConverter;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.FeePolicy;
@@ -32,6 +33,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -53,6 +55,7 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
@@ -71,6 +74,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     TableView<TransactionsListItem> tableView;
     @FXML
     TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, confidenceColumn, revertTxColumn;
+    @FXML
+    Button exportButton;
 
     private final ObservableList<TransactionsListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<TransactionsListItem> sortedList = new SortedList<>(observableList);
@@ -84,6 +89,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final DisputeManager disputeManager;
+    private Stage stage;
     private final OfferDetailsWindow offerDetailsWindow;
     private WalletEventListener walletEventListener;
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -97,7 +103,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private TransactionsView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                              ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager,
                              BSFormatter formatter, Preferences preferences, TradeDetailsWindow tradeDetailsWindow,
-                             DisputeManager disputeManager,
+                             DisputeManager disputeManager, Stage stage,
                              OfferDetailsWindow offerDetailsWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
@@ -108,6 +114,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.disputeManager = disputeManager;
+        this.stage = stage;
         this.offerDetailsWindow = offerDetailsWindow;
     }
 
@@ -182,6 +189,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             else if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(event))
                 showStatisticsPopup();
         };
+
+        exportButton.setText("Export to csv");
     }
 
     @Override
@@ -195,6 +204,30 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         scene = root.getScene();
         if (scene != null)
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
+        exportButton.setOnAction(event -> {
+            final ObservableList<TableColumn<TransactionsListItem, ?>> tableColumns = tableView.getColumns();
+            CSVEntryConverter<TransactionsListItem> headerConverter = transactionsListItem -> {
+                String[] columns = new String[6];
+                for (int i = 0; i < columns.length; i++)
+                    columns[i] = tableColumns.get(i).getText();
+
+                return columns;
+            };
+            CSVEntryConverter<TransactionsListItem> contentConverter = item -> {
+                String[] columns = new String[6];
+                columns[0] = item.getDateString();
+                columns[1] = item.getDetails();
+                columns[2] = item.getDirection() + " " + item.getAddressString();
+                columns[3] = item.getTxId();
+                columns[4] = item.getAmount();
+                columns[5] = item.getNumConfirmations();
+                return columns;
+            };
+
+            GUIUtil.exportCSV("transactions.csv", headerConverter, contentConverter,
+                    new TransactionsListItem(), sortedList, stage);
+        });
     }
 
     @Override
@@ -205,6 +238,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
+        exportButton.setOnAction(null);
     }
 
 
@@ -528,7 +563,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             walletService.doubleSpendTransaction(txId, () -> {
                 if (tradable != null)
                     walletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
-                
 
                 new Popup().information("Transaction successfully sent to a new address in the local Bitsquare wallet.").show();
             }, errorMessage -> {
