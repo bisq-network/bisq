@@ -125,7 +125,7 @@ public class AlertManager {
     private void signAndAddSignatureToAlertMessage(Alert alert) {
         String alertMessageAsHex = Utils.HEX.encode(alert.message.getBytes());
         String signatureAsBase64 = alertSigningKey.signMessage(alertMessageAsHex);
-        alert.setSigAndStoragePubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
+        alert.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 
     private boolean verifySignature(Alert alert) {

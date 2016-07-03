@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -68,6 +69,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
     private BSFormatter formatter;
+    private PrivateNotificationManager privateNotificationManager;
 
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
@@ -87,12 +89,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, BSFormatter formatter) {
+    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, BSFormatter formatter, PrivateNotificationManager privateNotificationManager) {
         super(model);
 
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
         this.formatter = formatter;
+        this.privateNotificationManager = privateNotificationManager;
     }
 
     @Override
@@ -706,7 +709,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ? "Offerers onion address: " + hostName + "\n" +
                                             "You have already traded " + numPastTrades + " times with that offerer." : "Offerers onion address: " + hostName;
-                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades);
+                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)
                                         setGraphic(identIcon);

@@ -57,7 +57,7 @@ public final class Alert implements StoragePayload {
         }
     }
 
-    public void setSigAndStoragePubKey(String signatureAsBase64, PublicKey storagePublicKey) {
+    public void setSigAndPubKey(String signatureAsBase64, PublicKey storagePublicKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.storagePublicKey = storagePublicKey;
         this.storagePublicKeyBytes = new X509EncodedKeySpec(this.storagePublicKey.getEncoded()).getEncoded();

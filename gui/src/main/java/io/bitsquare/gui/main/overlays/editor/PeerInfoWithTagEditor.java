@@ -1,8 +1,11 @@
 package io.bitsquare.gui.main.overlays.editor;
 
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.main.overlays.windows.SendPrivateNotificationWindow;
 import io.bitsquare.gui.util.FormBuilder;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -16,6 +19,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Camera;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.transform.Rotate;
@@ -38,9 +42,13 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private String hostName;
     private int numTrades;
     private ChangeListener<Boolean> focusListener;
+    private PrivateNotificationManager privateNotificationManager;
+    private Offer offer;
 
 
-    public PeerInfoWithTagEditor() {
+    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer) {
+        this.privateNotificationManager = privateNotificationManager;
+        this.offer = offer;
         width = 400;
         type = Type.Undefined;
         if (INSTANCE != null)
@@ -123,6 +131,14 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         Map<String, String> peerTagMap = Preferences.INSTANCE.getPeerTagMap();
         String tag = peerTagMap.containsKey(hostName) ? peerTagMap.get(hostName) : "";
         inputTextField.setText(tag);
+
+        Button button = FormBuilder.addButton(gridPane, ++rowIndex, "Send private message");
+        button.setOnAction(e -> {
+            new SendPrivateNotificationWindow(offer)
+                    .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
+                    .onRemoveAlertMessage(privateNotificationManager::removePrivateNotificationMessageIfKeyIsValid)
+                    .show();
+        });
     }
 
     @Override

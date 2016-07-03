@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.closedtrades;
 
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
@@ -52,14 +53,16 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private final BSFormatter formatter;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
+    private PrivateNotificationManager privateNotificationManager;
     private SortedList<ClosedTradableListItem> sortedList;
 
     @Inject
-    public ClosedTradesView(ClosedTradesViewModel model, BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
+    public ClosedTradesView(ClosedTradesViewModel model, BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow, PrivateNotificationManager privateNotificationManager) {
         super(model);
         this.formatter = formatter;
         this.offerDetailsWindow = offerDetailsWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
+        this.privateNotificationManager = privateNotificationManager;
     }
 
     @Override
@@ -235,7 +238,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
                                     int numPastTrades = model.getNumPastTrades(newItem.getTradable());
                                     String hostName = ((Trade) newItem.getTradable()).getTradingPeerNodeAddress().hostName;
-                                    Node identIcon = new PeerInfoIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades);
+                                    Node identIcon = new PeerInfoIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades, privateNotificationManager, newItem.getTradable().getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)
                                         setGraphic(identIcon);

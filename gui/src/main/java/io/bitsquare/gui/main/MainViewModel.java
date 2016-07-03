@@ -20,6 +20,8 @@ package io.bitsquare.gui.main;
 import com.google.inject.Inject;
 import io.bitsquare.alert.Alert;
 import io.bitsquare.alert.AlertManager;
+import io.bitsquare.alert.PrivateNotification;
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
@@ -101,6 +103,7 @@ public class MainViewModel implements ViewModel {
     private final DisputeManager disputeManager;
     final Preferences preferences;
     private final AlertManager alertManager;
+    private PrivateNotificationManager privateNotificationManager;
     private final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
     private final TacWindow tacWindow;
@@ -171,7 +174,8 @@ public class MainViewModel implements ViewModel {
                          PriceFeed priceFeed,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
-                         User user, AlertManager alertManager, WalletPasswordWindow walletPasswordWindow,
+                         User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
+                         WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.priceFeed = priceFeed;
@@ -185,6 +189,7 @@ public class MainViewModel implements ViewModel {
         this.disputeManager = disputeManager;
         this.preferences = preferences;
         this.alertManager = alertManager;
+        this.privateNotificationManager = privateNotificationManager;
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
@@ -517,6 +522,7 @@ public class MainViewModel implements ViewModel {
         openOfferManager.onAllServicesInitialized();
         arbitratorManager.onAllServicesInitialized();
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue));
+        privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
         displayAlertIfPresent(alertManager.alertMessageProperty().get());
 
         setupBtcNumPeersWatcher();
@@ -865,6 +871,12 @@ public class MainViewModel implements ViewModel {
             new DisplayAlertMessageWindow().alertMessage(alert).show();
     }
 
+    private void displayPrivateNotification(PrivateNotification privateNotification) {
+        new Popup<>().headLine("Important notification from Bitsquare developers!")
+                .information(privateNotification.message)
+                .show();
+    }
+    
     private void swapPendingOfferFundingEntries() {
         tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)
