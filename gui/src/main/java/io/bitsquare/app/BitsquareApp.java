@@ -27,6 +27,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.common.UITimer;
 import io.bitsquare.gui.common.view.CachingViewLoader;
@@ -38,6 +39,7 @@ import io.bitsquare.gui.main.MainViewModel;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.EmptyWalletWindow;
+import io.bitsquare.gui.main.overlays.windows.FilterWindow;
 import io.bitsquare.gui.main.overlays.windows.SendAlertMessageWindow;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.P2PService;
@@ -189,6 +191,8 @@ public class BitsquareApp extends Application {
                     showEmptyWalletPopup();
                 } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showSendAlertMessagePopup();
+                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                    showFilterPopup();
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                     showFPSWindow();
                 else if (DevFlags.DEV_MODE) {
@@ -243,6 +247,14 @@ public class BitsquareApp extends Application {
                 .show();
     }
 
+    private void showFilterPopup() {
+        FilterManager filterManager = injector.getInstance(FilterManager.class);
+        new FilterWindow(filterManager)
+                .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
+                .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
+                .show();
+    }
+    
     private void showEmptyWalletPopup() {
         injector.getInstance(EmptyWalletWindow.class).show();
     }

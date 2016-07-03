@@ -22,6 +22,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.persistance.Persistable;
+import io.bitsquare.filter.Filter;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.NodeAddress;
@@ -65,7 +66,8 @@ public final class User implements Persistable {
     private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
     private Alert developersAlert;
     private Alert displayedAlert;
-
+    @Nullable
+    private Filter filter;
 
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
     @Nullable
@@ -99,6 +101,7 @@ public final class User implements Persistable {
             registeredArbitrator = persisted.getRegisteredArbitrator();
             developersAlert = persisted.getDevelopersAlert();
             displayedAlert = persisted.getDisplayedAlert();
+            filter = persisted.getFilter();
         } else {
             accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
 
@@ -203,6 +206,10 @@ public final class User implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setFilter(Filter filter) {
+        this.filter = filter;
+        storage.queueUpForSave();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -277,6 +284,10 @@ public final class User implements Persistable {
             return arbitratorOptional.get();
         else
             return null;
+    }
+
+    public Filter getFilter() {
+        return filter;
     }
 
 

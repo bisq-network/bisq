@@ -25,6 +25,7 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.crypto.EncryptionServiceModule;
+import io.bitsquare.filter.FilterModule;
 import io.bitsquare.gui.GuiModule;
 import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.main.overlays.notifications.NotificationCenter;
@@ -62,7 +63,7 @@ class BitsquareAppModule extends AppModule {
         bind(Preferences.class).in(Singleton.class);
         bind(NotificationCenter.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
-        
+
         File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
         bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
 
@@ -80,6 +81,7 @@ class BitsquareAppModule extends AppModule {
         install(bitcoinModule());
         install(guiModule());
         install(alertModule());
+        install(filterModule());
     }
 
     private TradeModule tradeModule() {
@@ -96,6 +98,10 @@ class BitsquareAppModule extends AppModule {
 
     private AlertModule alertModule() {
         return new AlertModule(env);
+    }
+
+    private FilterModule filterModule() {
+        return new FilterModule(env);
     }
 
     private OfferModule offerModule() {

@@ -22,6 +22,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ObjectProperty;
@@ -40,7 +41,7 @@ import static org.bitcoinj.core.Utils.HEX;
 public class PrivateNotificationManager {
     private static final Logger log = LoggerFactory.getLogger(PrivateNotificationManager.class);
 
-    private final PrivateNotificationService privateNotificationService;
+    private final P2PService p2PService;
     private final KeyRing keyRing;
     private final ObjectProperty<PrivateNotification> privateNotificationMessageProperty = new SimpleObjectProperty<>();
 
@@ -55,12 +56,12 @@ public class PrivateNotificationManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PrivateNotificationManager(PrivateNotificationService privateNotificationService, KeyRing keyRing) {
-        this.privateNotificationService = privateNotificationService;
+    public PrivateNotificationManager(P2PService p2PService, KeyRing keyRing) {
+        this.p2PService = p2PService;
         this.keyRing = keyRing;
 
-        privateNotificationService.addDecryptedDirectMessageListener(this::handleMessage);
-        privateNotificationService.addDecryptedMailboxListener(this::handleMessage);
+        this.p2PService.addDecryptedDirectMessageListener(this::handleMessage);
+        this.p2PService.addDecryptedMailboxListener(this::handleMessage);
     }
 
     private void handleMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
@@ -93,15 +94,19 @@ public class PrivateNotificationManager {
         boolean isKeyValid = isKeyValid(privKeyString);
         if (isKeyValid) {
             signAndAddSignatureToPrivateNotificationMessage(privateNotification);
-            privateNotificationService.sendPrivateNotificationMessage(privateNotification, offer, sendMailboxMessageListener);
+            p2PService.sendEncryptedMailboxMessage(offer.getOffererNodeAddress(),
+                    offer.getPubKeyRing(),
+                    new PrivateNotificationMessage(privateNotification, p2PService.getNetworkNode().getNodeAddress()),
+                    sendMailboxMessageListener);
         }
 
         return isKeyValid;
     }
 
-    public void removePrivateNotification(PrivateNotification privateNotification) {
-        privateNotificationService.removePrivateNotification(decryptedMsgWithPubKey);
+    public void removePrivateNotification() {
+        p2PService.removeEntryFromMailbox(decryptedMsgWithPubKey);
     }
+
     private boolean isKeyValid(String privKeyString) {
         try {
             privateNotificationSigningKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(privKeyString)));

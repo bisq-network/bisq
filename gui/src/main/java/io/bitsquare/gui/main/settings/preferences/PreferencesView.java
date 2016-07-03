@@ -332,7 +332,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         };
 
         ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow, "Ignore traders with onion address (comma sep.):").second;
-        ignoreTradersListListener = (observable, oldValue, newValue) -> preferences.setIgnoreTradersList(Arrays.asList(newValue.replace(" ", "").replace(".onion", "").replace(":9999", "").split(",")));
+        ignoreTradersListListener = (observable, oldValue, newValue) ->
+                preferences.setIgnoreTradersList(Arrays.asList(newValue.replace(" ", "").replace(":9999", "").replace(".onion", "").split(",")));
     }
 
     private void initializeDisplayOptions() {

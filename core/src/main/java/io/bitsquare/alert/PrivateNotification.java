@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 public final class PrivateNotification implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -59,5 +60,37 @@ public final class PrivateNotification implements Payload {
 
     public String getSignatureAsBase64() {
         return signatureAsBase64;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PrivateNotification)) return false;
+
+        PrivateNotification that = (PrivateNotification) o;
+
+        if (message != null ? !message.equals(that.message) : that.message != null) return false;
+        if (signatureAsBase64 != null ? !signatureAsBase64.equals(that.signatureAsBase64) : that.signatureAsBase64 != null)
+            return false;
+        return Arrays.equals(publicKeyBytes, that.publicKeyBytes);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = message != null ? message.hashCode() : 0;
+        result = 31 * result + (signatureAsBase64 != null ? signatureAsBase64.hashCode() : 0);
+        result = 31 * result + (publicKeyBytes != null ? Arrays.hashCode(publicKeyBytes) : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "PrivateNotification{" +
+                "message='" + message + '\'' +
+                ", signatureAsBase64='" + signatureAsBase64 + '\'' +
+                ", publicKeyBytes=" + Arrays.toString(publicKeyBytes) +
+                '}';
     }
 }

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.alert;
+package io.bitsquare.filter;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
@@ -28,31 +28,32 @@ import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public final class Alert implements StoragePayload {
+public final class Filter implements StoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(Alert.class);
+    private static final Logger log = LoggerFactory.getLogger(Filter.class);
     private static final long TTL = TimeUnit.DAYS.toMillis(21);
 
-    public final String message;
-    public final String version;
-    public final boolean isUpdateInfo;
+    public final List<String> bannedNodeAddress;
+    public final List<String> bannedOfferIds;
+    public final List<PaymentAccountFilter> bannedPaymentAccounts;
     private String signatureAsBase64;
-    private transient PublicKey storagePublicKey;
-    private byte[] storagePublicKeyBytes;
+    private transient PublicKey publicKey;
+    private byte[] publicKeyBytes;
 
-    public Alert(String message, boolean isUpdateInfo, String version) {
-        this.message = message;
-        this.isUpdateInfo = isUpdateInfo;
-        this.version = version;
+    public Filter(List<String> bannedNodeAddress, List<String> bannedOfferIds, List<PaymentAccountFilter> bannedPaymentAccounts) {
+        this.bannedNodeAddress = bannedNodeAddress;
+        this.bannedOfferIds = bannedOfferIds;
+        this.bannedPaymentAccounts = bannedPaymentAccounts;
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            storagePublicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(storagePublicKeyBytes));
+            publicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(publicKeyBytes));
         } catch (Throwable t) {
             log.warn("Exception at readObject: " + t.getMessage());
         }
@@ -60,18 +61,12 @@ public final class Alert implements StoragePayload {
 
     public void setSigAndPubKey(String signatureAsBase64, PublicKey storagePublicKey) {
         this.signatureAsBase64 = signatureAsBase64;
-        this.storagePublicKey = storagePublicKey;
-        this.storagePublicKeyBytes = new X509EncodedKeySpec(this.storagePublicKey.getEncoded()).getEncoded();
+        this.publicKey = storagePublicKey;
+        this.publicKeyBytes = new X509EncodedKeySpec(this.publicKey.getEncoded()).getEncoded();
     }
 
     public String getSignatureAsBase64() {
         return signatureAsBase64;
-    }
-
-    public boolean isNewVersion() {
-        int versionNum = Integer.valueOf(Version.VERSION.replace(".", ""));
-        int alertVersionNum = Integer.valueOf(version.replace(".", ""));
-        return versionNum < alertVersionNum;
     }
 
     @Override
@@ -81,44 +76,45 @@ public final class Alert implements StoragePayload {
 
     @Override
     public PublicKey getOwnerPubKey() {
-        return storagePublicKey;
+        return publicKey;
     }
+
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Alert)) return false;
+        if (!(o instanceof Filter)) return false;
 
-        Alert alert = (Alert) o;
+        Filter filter = (Filter) o;
 
-        if (isUpdateInfo != alert.isUpdateInfo) return false;
-        if (message != null ? !message.equals(alert.message) : alert.message != null) return false;
-        if (version != null ? !version.equals(alert.version) : alert.version != null) return false;
-        if (signatureAsBase64 != null ? !signatureAsBase64.equals(alert.signatureAsBase64) : alert.signatureAsBase64 != null)
+        if (bannedNodeAddress != null ? !bannedNodeAddress.equals(filter.bannedNodeAddress) : filter.bannedNodeAddress != null)
             return false;
-        return Arrays.equals(storagePublicKeyBytes, alert.storagePublicKeyBytes);
+        if (bannedOfferIds != null ? !bannedOfferIds.equals(filter.bannedOfferIds) : filter.bannedOfferIds != null)
+            return false;
+        if (bannedPaymentAccounts != null ? !bannedPaymentAccounts.equals(filter.bannedPaymentAccounts) : filter.bannedPaymentAccounts != null)
+            return false;
+        if (signatureAsBase64 != null ? !signatureAsBase64.equals(filter.signatureAsBase64) : filter.signatureAsBase64 != null)
+            return false;
+        return Arrays.equals(publicKeyBytes, filter.publicKeyBytes);
 
     }
 
     @Override
     public int hashCode() {
-        int result = message != null ? message.hashCode() : 0;
-        result = 31 * result + (version != null ? version.hashCode() : 0);
-        result = 31 * result + (isUpdateInfo ? 1 : 0);
+        int result = bannedNodeAddress != null ? bannedNodeAddress.hashCode() : 0;
+        result = 31 * result + (bannedOfferIds != null ? bannedOfferIds.hashCode() : 0);
+        result = 31 * result + (bannedPaymentAccounts != null ? bannedPaymentAccounts.hashCode() : 0);
         result = 31 * result + (signatureAsBase64 != null ? signatureAsBase64.hashCode() : 0);
-        result = 31 * result + (storagePublicKeyBytes != null ? Arrays.hashCode(storagePublicKeyBytes) : 0);
+        result = 31 * result + (publicKeyBytes != null ? Arrays.hashCode(publicKeyBytes) : 0);
         return result;
     }
 
-
     @Override
     public String toString() {
-        return "Alert{" +
-                "message='" + message + '\'' +
-                ", version='" + version + '\'' +
-                ", isUpdateInfo=" + isUpdateInfo +
-                ", signatureAsBase64='" + signatureAsBase64 + '\'' +
-                ", storagePublicKeyBytes=" + Arrays.toString(storagePublicKeyBytes) +
+        return "Filter{" +
+                "bannedNodeAddress=" + bannedNodeAddress +
+                ", bannedOfferIds=" + bannedOfferIds +
+                ", bannedPaymentAccounts=" + bannedPaymentAccounts +
                 '}';
     }
 }

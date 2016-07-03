@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.alert;
+package io.bitsquare.filter;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
@@ -23,16 +23,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
-public class AlertModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(AlertModule.class);
+public class FilterModule extends AppModule {
+    private static final Logger log = LoggerFactory.getLogger(FilterModule.class);
 
-    public AlertModule(Environment env) {
+    public FilterModule(Environment env) {
         super(env);
     }
 
     @Override
     protected final void configure() {
-        bind(AlertManager.class).in(Singleton.class);
-        bind(PrivateNotificationManager.class).in(Singleton.class);
+        bind(FilterManager.class).in(Singleton.class);
     }
 }

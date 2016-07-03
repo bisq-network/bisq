@@ -875,7 +875,7 @@ public class MainViewModel implements ViewModel {
         new Popup<>().headLine("Important private notification!")
                 .attention(privateNotification.message)
                 .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
-                .onClose(() -> privateNotificationManager.removePrivateNotification(privateNotification))
+                .onClose(() -> privateNotificationManager.removePrivateNotification())
                 .closeButtonText("I understand")
                 .show();
     }
