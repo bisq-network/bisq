@@ -95,6 +95,7 @@ public class ArbitratorManager {
     private final ArbitratorService arbitratorService;
     private final User user;
     private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
+    private final List<Arbitrator> persistedAcceptedArbitrators;
     private Timer republishArbitratorTimer, retryRepublishArbitratorTimer;
 
 
@@ -107,6 +108,9 @@ public class ArbitratorManager {
         this.keyRing = keyRing;
         this.arbitratorService = arbitratorService;
         this.user = user;
+
+        persistedAcceptedArbitrators = new ArrayList<>(user.getAcceptedArbitrators());
+        user.clearAcceptedArbitrators();
 
         arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -167,17 +171,20 @@ public class ArbitratorManager {
         arbitratorsObservableMap.putAll(filtered);
         // we need to remove accepted arbitrators which are not available anymore
         if (user.getAcceptedArbitrators() != null) {
-            List<Arbitrator> removeList = user.getAcceptedArbitrators().stream()
-                    .filter(e -> !arbitratorsObservableMap.containsValue(e))
-                    .collect(Collectors.toList());
-            removeList.stream().forEach(user::removeAcceptedArbitrator);
+
+            arbitratorsObservableMap.values().stream()
+                    .filter(arbitrator -> persistedAcceptedArbitrators.contains(arbitrator))
+                    .forEach(user::addAcceptedArbitrator);
 
             // if we don't have any arbitrator anymore we set all matching
-            if (user.getAcceptedArbitrators().isEmpty()) {
-                arbitratorsObservableMap.values().stream()
-                        .filter(user::hasMatchingLanguage)
-                        .forEach(user::addAcceptedArbitrator);
-            }
+            // we use a delay as we might get our matching arbitrator a bit delayed
+            UserThread.runAfter(() -> {
+                if (user.getAcceptedArbitrators().isEmpty()) {
+                    arbitratorsObservableMap.values().stream()
+                            .filter(user::hasMatchingLanguage)
+                            .forEach(user::addAcceptedArbitrator);
+                }
+            }, 1);
         }
     }
 
