@@ -67,7 +67,7 @@ public final class User implements Persistable {
     private Alert developersAlert;
     private Alert displayedAlert;
     @Nullable
-    private Filter filter;
+    private Filter developersFilter;
 
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
     @Nullable
@@ -101,7 +101,7 @@ public final class User implements Persistable {
             registeredArbitrator = persisted.getRegisteredArbitrator();
             developersAlert = persisted.getDevelopersAlert();
             displayedAlert = persisted.getDisplayedAlert();
-            filter = persisted.getFilter();
+            developersFilter = persisted.getDevelopersFilter();
         } else {
             accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
 
@@ -206,8 +206,8 @@ public final class User implements Persistable {
         storage.queueUpForSave();
     }
 
-    public void setFilter(Filter filter) {
-        this.filter = filter;
+    public void setDevelopersFilter(Filter developersFilter) {
+        this.developersFilter = developersFilter;
         storage.queueUpForSave();
     }
 
@@ -286,8 +286,8 @@ public final class User implements Persistable {
             return null;
     }
 
-    public Filter getFilter() {
-        return filter;
+    public Filter getDevelopersFilter() {
+        return developersFilter;
     }
 
 

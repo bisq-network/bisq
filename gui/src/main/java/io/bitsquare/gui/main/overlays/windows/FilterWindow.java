@@ -111,15 +111,12 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Private key to unlock:", 10).second;
-
-        keyInputTextField.setText("b6c0961cf1cdedcbec6a69bef80af98e95392feeac521f1c25a2102bdefc071d");
         InputTextField offerIdsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Filtered offers (comma sep.):").second;
         InputTextField nodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Filtered onion addresses (comma sep.):").second;
         InputTextField paymentAccountFilterInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Filtered payment account data:\nFormat: comma sep. list of [payment method id | data field | value]").second;
         GridPane.setHalignment(paymentAccountFilterInputTextField, HPos.RIGHT);
 
-
-        final Filter filter = filterManager.getFilter();
+        final Filter filter = filterManager.getDevelopersFilter();
         if (filter != null) {
             offerIdsInputTextField.setText(filter.bannedOfferIds.stream().collect(Collectors.joining(", ")));
             nodesInputTextField.setText(filter.bannedNodeAddress.stream().collect(Collectors.joining(", ")));
@@ -129,7 +126,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                     if (e != null && e.paymentMethodId != null) {
                         sb.append(e.paymentMethodId)
                                 .append("|")
-                                .append(e.dataField)
+                                .append(e.getMethodName)
                                 .append("|")
                                 .append(e.value)
                                 .append(", ");

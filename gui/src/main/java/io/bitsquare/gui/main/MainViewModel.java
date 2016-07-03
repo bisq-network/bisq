@@ -40,6 +40,7 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.components.BalanceTextField;
@@ -104,6 +105,7 @@ public class MainViewModel implements ViewModel {
     final Preferences preferences;
     private final AlertManager alertManager;
     private PrivateNotificationManager privateNotificationManager;
+    private FilterManager filterManager;
     private final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
     private final TacWindow tacWindow;
@@ -175,7 +177,7 @@ public class MainViewModel implements ViewModel {
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
-                         WalletPasswordWindow walletPasswordWindow,
+                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.priceFeed = priceFeed;
@@ -190,6 +192,7 @@ public class MainViewModel implements ViewModel {
         this.preferences = preferences;
         this.alertManager = alertManager;
         this.privateNotificationManager = privateNotificationManager;
+        this.filterManager = filterManager; // Needed to be referenced so we get it initialized and get the eventlistener registered
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;

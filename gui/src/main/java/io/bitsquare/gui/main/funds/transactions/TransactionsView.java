@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.funds.transactions;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
@@ -527,13 +526,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void revertTransaction(String txId, @Nullable Tradable tradable) {
         try {
             walletService.doubleSpendTransaction(txId, () -> {
-                if (tradable != null) {
-                    final String id = tradable.getId();
-                    walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
-                    walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
-                    walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.MULTI_SIG);
-                    walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.TRADE_PAYOUT);
-                }
+                if (tradable != null)
+                    walletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
+                
 
                 new Popup().information("Transaction successfully sent to a new address in the local Bitsquare wallet.").show();
             }, errorMessage -> {

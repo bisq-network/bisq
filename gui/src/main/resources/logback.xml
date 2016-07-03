@@ -14,6 +14,9 @@
     <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
     <logger name="io.bitsquare.locale.BSResources" level="ERROR"/>
 
+    <logger name="io.bitsquare.p2p" level="WARN"/>
+    <logger name="io.bitsquare.btc.pricefeed" level="WARN"/>
+
     <!-- <logger name="io.bitsquare.p2p.peers.PeerGroup" level="TRACE"/>
     
     

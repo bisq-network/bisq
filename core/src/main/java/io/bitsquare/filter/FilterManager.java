@@ -46,12 +46,10 @@ public class FilterManager {
     private P2PService p2PService;
     private final KeyRing keyRing;
     private final User user;
-    private final ObjectProperty<Filter> filterMessageProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
 
-    // Pub key for developer global filter message
-    private static final String pubKeyAsHex = "0239e53df5dc5b27bb01ca0934860f142f08d811033b4b164778cf1cd9de1438de";
+    private static final String pubKeyAsHex = "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";
     private ECKey filterSigningKey;
-    private String filter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,12 +65,10 @@ public class FilterManager {
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
-
                 if (data.getStoragePayload() instanceof Filter) {
                     Filter filter = (Filter) data.getStoragePayload();
-                    log.error("Add " + data.getStoragePayload().toString());
                     if (verifySignature(filter))
-                        filterMessageProperty.set(filter);
+                        filterProperty.set(filter);
                 }
             }
 
@@ -80,9 +76,8 @@ public class FilterManager {
             public void onRemoved(ProtectedStorageEntry data) {
                 if (data.getStoragePayload() instanceof Filter) {
                     Filter filter = (Filter) data.getStoragePayload();
-                    log.error("REM " + data.getStoragePayload().toString());
                     if (verifySignature(filter))
-                        filterMessageProperty.set(null);
+                        filterProperty.set(null);
                 }
             }
         });
@@ -93,19 +88,23 @@ public class FilterManager {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ReadOnlyObjectProperty<Filter> filterMessageProperty() {
-        return filterMessageProperty;
+    public ReadOnlyObjectProperty<Filter> filterProperty() {
+        return filterProperty;
+    }
+
+    public Filter getFilter() {
+        return filterProperty.get();
     }
 
     public boolean addFilterMessageIfKeyIsValid(Filter filter, String privKeyString) {
         // if there is a previous message we remove that first
-        if (user.getFilter() != null)
+        if (user.getDevelopersFilter() != null)
             removeFilterMessageIfKeyIsValid(privKeyString);
 
         boolean isKeyValid = isKeyValid(privKeyString);
         if (isKeyValid) {
             signAndAddSignatureToFilter(filter);
-            user.setFilter(filter);
+            user.setDevelopersFilter(filter);
 
             boolean result = p2PService.addData(filter, true);
             if (result)
@@ -116,11 +115,16 @@ public class FilterManager {
     }
 
     public boolean removeFilterMessageIfKeyIsValid(String privKeyString) {
-        Filter filter = user.getFilter();
-        user.setFilter(null);
-        if (isKeyValid(privKeyString) && filter != null) {
-            if (p2PService.removeData(filter, true))
+        if (isKeyValid(privKeyString)) {
+            Filter filter = user.getDevelopersFilter();
+            if (filter == null) {
+                log.warn("Developers filter is null");
+            } else if (p2PService.removeData(filter, true)) {
                 log.trace("Remove filter from network was successful. FilterMessage = " + filter);
+                user.setDevelopersFilter(null);
+            } else {
+                log.warn("Filter remove failed");
+            }
             return true;
         } else {
             return false;
@@ -156,7 +160,7 @@ public class FilterManager {
     }
 
     @Nullable
-    public Filter getFilter() {
-        return user.getFilter();
+    public Filter getDevelopersFilter() {
+        return user.getDevelopersFilter();
     }
 }

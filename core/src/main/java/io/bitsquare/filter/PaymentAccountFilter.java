@@ -11,12 +11,12 @@ public class PaymentAccountFilter implements Serializable {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(PaymentAccountFilter.class);
     public final String paymentMethodId;
-    public final String dataField;
+    public final String getMethodName;
     public final String value;
 
-    public PaymentAccountFilter(String paymentMethodId, String dataField, String value) {
+    public PaymentAccountFilter(String paymentMethodId, String getMethodName, String value) {
         this.paymentMethodId = paymentMethodId;
-        this.dataField = dataField;
+        this.getMethodName = getMethodName;
         this.value = value;
     }
 
@@ -24,7 +24,7 @@ public class PaymentAccountFilter implements Serializable {
     public String toString() {
         return "PaymentAccountFilter{" +
                 "paymentMethodId='" + paymentMethodId + '\'' +
-                ", dataField='" + dataField + '\'' +
+                ", getMethodName='" + getMethodName + '\'' +
                 ", value='" + value + '\'' +
                 '}';
     }

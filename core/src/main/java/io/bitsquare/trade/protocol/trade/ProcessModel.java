@@ -26,6 +26,8 @@ import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.taskrunner.Model;
+import io.bitsquare.filter.FilterManager;
+import io.bitsquare.filter.PaymentAccountFilter;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccount;
@@ -46,6 +48,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,6 +68,7 @@ public class ProcessModel implements Model, Serializable {
     transient private ArbitratorManager arbitratorManager;
     transient private Offer offer;
     transient private User user;
+    transient private FilterManager filterManager;
     transient private KeyRing keyRing;
     transient private P2PService p2PService;
 
@@ -107,6 +111,7 @@ public class ProcessModel implements Model, Serializable {
                                          TradeWalletService tradeWalletService,
                                          ArbitratorManager arbitratorManager,
                                          User user,
+                                         FilterManager filterManager,
                                          KeyRing keyRing,
                                          boolean useSavingsWallet,
                                          Coin fundsNeededForTrade) {
@@ -117,6 +122,7 @@ public class ProcessModel implements Model, Serializable {
         this.tradeWalletService = tradeWalletService;
         this.arbitratorManager = arbitratorManager;
         this.user = user;
+        this.filterManager = filterManager;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
@@ -292,5 +298,28 @@ public class ProcessModel implements Model, Serializable {
 
     public boolean getUseSavingsWallet() {
         return useSavingsWallet;
+    }
+
+    public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountContractData paymentAccountContractData, PaymentAccountFilter[] appliedPaymentAccountFilter) {
+        return filterManager.getFilter() != null &&
+                filterManager.getFilter().bannedPaymentAccounts.stream()
+                        .filter(paymentAccountFilter -> {
+                            final boolean samePaymentMethodId = paymentAccountFilter.paymentMethodId.equals(paymentAccountContractData.getPaymentMethodName());
+                            if (samePaymentMethodId) {
+                                try {
+                                    Method method = paymentAccountContractData.getClass().getMethod(paymentAccountFilter.getMethodName);
+                                    String result = (String) method.invoke(paymentAccountContractData);
+                                    appliedPaymentAccountFilter[0] = paymentAccountFilter;
+                                    return result.equals(paymentAccountFilter.value);
+                                } catch (Throwable e) {
+                                    log.error(e.getMessage());
+                                    return false;
+                                }
+                            } else {
+                                return false;
+                            }
+                        })
+                        .findAny()
+                        .isPresent();
     }
 }

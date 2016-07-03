@@ -445,6 +445,13 @@ public class WalletService {
         addressEntryOptional.ifPresent(addressEntryList::swapToAvailable);
     }
 
+    public void swapAnyTradeEntryContextToAvailableEntry(String offerId) {
+        swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
+        swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
+        swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.MULTI_SIG);
+        swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.TRADE_PAYOUT);
+    }
+
     public void saveAddressEntryList() {
         addressEntryList.queueUpForSave();
     }

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -44,10 +45,14 @@ public final class Filter implements StoragePayload {
     private transient PublicKey publicKey;
     private byte[] publicKeyBytes;
 
-    public Filter(List<String> bannedNodeAddress, List<String> bannedOfferIds, List<PaymentAccountFilter> bannedPaymentAccounts) {
-        this.bannedNodeAddress = bannedNodeAddress;
+    public Filter(List<String> bannedOfferIds, List<String> bannedNodeAddress, List<PaymentAccountFilter> bannedPaymentAccounts) {
         this.bannedOfferIds = bannedOfferIds;
+        this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
+    }
+
+    public Filter() {
+        this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {

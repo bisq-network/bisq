@@ -29,6 +29,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
@@ -80,6 +81,7 @@ public class TradeManager {
     private final FailedTradesManager failedTradesManager;
     private final ArbitratorManager arbitratorManager;
     private final P2PService p2PService;
+    private FilterManager filterManager;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
@@ -101,6 +103,7 @@ public class TradeManager {
                         ArbitratorManager arbitratorManager,
                         P2PService p2PService,
                         PriceFeed priceFeed,
+                        FilterManager filterManager,
                         @Named("storage.dir") File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
@@ -111,6 +114,7 @@ public class TradeManager {
         this.failedTradesManager = failedTradesManager;
         this.arbitratorManager = arbitratorManager;
         this.p2PService = p2PService;
+        this.filterManager = filterManager;
 
         tradableListStorage = new Storage<>(storageDir);
         trades = new TradableList<>(tradableListStorage, "PendingTrades");
@@ -238,6 +242,7 @@ public class TradeManager {
                 this,
                 openOfferManager,
                 user,
+                filterManager,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
@@ -368,12 +373,8 @@ public class TradeManager {
 
     public void removeTrade(Trade trade) {
         trades.remove(trade);
-
-        final String id = trade.getId();
-        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
-        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
-        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.MULTI_SIG);
-        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.TRADE_PAYOUT);
+        if (!openOfferManager.findOpenOffer(trade.getId()).isPresent())
+            walletService.swapAnyTradeEntryContextToAvailableEntry(trade.getId());
     }
 
 

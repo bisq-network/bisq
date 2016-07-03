@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.filter.PaymentAccountFilter;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
@@ -47,8 +48,15 @@ public class ProcessPublishDepositTxRequest extends TradeTask {
             checkNotNull(publishDepositTxRequest);
 
             PaymentAccountContractData paymentAccountContractData = checkNotNull(publishDepositTxRequest.offererPaymentAccountContractData);
-            processModel.tradingPeer.setPaymentAccountContractData(paymentAccountContractData);
+            final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
+            if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountContractData, appliedPaymentAccountFilter)) {
+                failed("Other trader is banned by his payment account data.\n" +
+                        "paymentAccountContractData=" + paymentAccountContractData.getPaymentDetails() + "\n" +
+                        "banFilter=" + appliedPaymentAccountFilter[0].toString());
+                return;
+            }
 
+            processModel.tradingPeer.setPaymentAccountContractData(paymentAccountContractData);
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(publishDepositTxRequest.offererAccountId));
             processModel.tradingPeer.setMultiSigPubKey(checkNotNull(publishDepositTxRequest.offererMultiSigPubKey));
             processModel.tradingPeer.setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.offererContractAsJson));
