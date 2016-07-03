@@ -872,11 +872,14 @@ public class MainViewModel implements ViewModel {
     }
 
     private void displayPrivateNotification(PrivateNotification privateNotification) {
-        new Popup<>().headLine("Important notification from Bitsquare developers!")
-                .information(privateNotification.message)
+        new Popup<>().headLine("Important private notification!")
+                .attention(privateNotification.message)
+                .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
+                .onClose(() -> privateNotificationManager.removePrivateNotification(privateNotification))
+                .closeButtonText("I understand")
                 .show();
     }
-    
+
     private void swapPendingOfferFundingEntries() {
         tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)

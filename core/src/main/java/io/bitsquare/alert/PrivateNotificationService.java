@@ -17,14 +17,12 @@
 
 package io.bitsquare.alert;
 
-import io.bitsquare.common.handlers.ErrorMessageHandler;
-import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.p2p.messaging.DecryptedMailboxListener;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.offer.Offer;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,32 +55,14 @@ public class PrivateNotificationService {
     }
 
 
-    public void sendPrivateNotificationMessage(PrivateNotification privateNotification, Offer offer, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+    public void sendPrivateNotificationMessage(PrivateNotification privateNotification, Offer offer, SendMailboxMessageListener sendMailboxMessageListener) {
         p2PService.sendEncryptedMailboxMessage(offer.getOffererNodeAddress(),
                 offer.getPubKeyRing(),
                 new PrivateNotificationMessage(privateNotification, p2PService.getNetworkNode().getNodeAddress()),
-                new SendMailboxMessageListener() {
-                    @Override
-                    public void onArrived() {
-                        log.trace("PrivateNotificationMessage arrived at peer. PrivateNotificationMessage = " + privateNotification);
-                        if (resultHandler != null) resultHandler.handleResult();
-                    }
-
-                    @Override
-                    public void onStoredInMailbox() {
-                        log.trace("PrivateNotificationMessage was stored in mailbox. PrivateNotificationMessage = " + privateNotification);
-                        if (resultHandler != null) resultHandler.handleResult();
-                    }
-
-                    @Override
-                    public void onFault(String errorMessage) {
-                        if (errorMessageHandler != null)
-                            errorMessageHandler.handleErrorMessage("Add privateNotificationMessage failed");
-                    }
-                });
+                sendMailboxMessageListener);
     }
 
-    public void removePrivateNotificationMessage(PrivateNotification privateNotification, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+    public void removePrivateNotification(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
+        p2PService.removeEntryFromMailbox(decryptedMsgWithPubKey);
     }
-
 }

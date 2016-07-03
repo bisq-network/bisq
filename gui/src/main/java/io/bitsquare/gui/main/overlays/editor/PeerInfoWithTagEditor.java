@@ -13,14 +13,17 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Camera;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Modality;
@@ -44,6 +47,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private ChangeListener<Boolean> focusListener;
     private PrivateNotificationManager privateNotificationManager;
     private Offer offer;
+    private EventHandler<KeyEvent> keyEventEventHandler;
 
 
     public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer) {
@@ -98,6 +102,10 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
                     hide();
             };
             stage.focusedProperty().addListener(focusListener);
+
+            Scene scene = stage.getScene();
+            if (scene != null)
+                scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
         }
     }
 
@@ -120,8 +128,14 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     protected void onHidden() {
         INSTANCE = null;
 
-        if (stage != null && focusListener != null)
-            stage.focusedProperty().removeListener(focusListener);
+        if (stage != null) {
+            if (focusListener != null)
+                stage.focusedProperty().removeListener(focusListener);
+
+            Scene scene = stage.getScene();
+            if (scene != null)
+                scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        }
     }
 
     protected void addContent() {
@@ -132,13 +146,14 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         String tag = peerTagMap.containsKey(hostName) ? peerTagMap.get(hostName) : "";
         inputTextField.setText(tag);
 
-        Button button = FormBuilder.addButton(gridPane, ++rowIndex, "Send private message");
-        button.setOnAction(e -> {
-            new SendPrivateNotificationWindow(offer)
-                    .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
-                    .onRemoveAlertMessage(privateNotificationManager::removePrivateNotificationMessageIfKeyIsValid)
-                    .show();
-        });
+        keyEventEventHandler = event -> {
+            if (new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN).match(event)) {
+                new SendPrivateNotificationWindow(offer)
+                        .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
+                        .show();
+            }
+        };
+
     }
 
     @Override

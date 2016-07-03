@@ -22,6 +22,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -46,6 +47,7 @@ public class PrivateNotificationManager {
     // Pub key for developer global privateNotification message
     private static final String pubKeyAsHex = "02ba7c5de295adfe57b60029f3637a2c6b1d0e969a8aaefb9e0ddc3a7963f26925";
     private ECKey privateNotificationSigningKey;
+    private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,6 +64,7 @@ public class PrivateNotificationManager {
     }
 
     private void handleMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
+        this.decryptedMsgWithPubKey = decryptedMsgWithPubKey;
         Message message = decryptedMsgWithPubKey.message;
         if (message instanceof PrivateNotificationMessage) {
             PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) message;
@@ -85,33 +88,20 @@ public class PrivateNotificationManager {
         return privateNotificationMessageProperty;
     }
 
-    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotification privateNotification, Offer offer, String privKeyString) {
-        // if there is a previous message we remove that first
-        // if (user.getDevelopersPrivateNotification() != null)
-        //     removePrivateNotificationMessageIfKeyIsValid(privKeyString);
-
+    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotification privateNotification, Offer offer,
+                                                              String privKeyString, SendMailboxMessageListener sendMailboxMessageListener) {
         boolean isKeyValid = isKeyValid(privKeyString);
         if (isKeyValid) {
             signAndAddSignatureToPrivateNotificationMessage(privateNotification);
-            //  user.setDevelopersPrivateNotification(privateNotification);
-            privateNotificationService.sendPrivateNotificationMessage(privateNotification, offer, null, null);
+            privateNotificationService.sendPrivateNotificationMessage(privateNotification, offer, sendMailboxMessageListener);
         }
 
         return isKeyValid;
     }
 
-    public boolean removePrivateNotificationMessageIfKeyIsValid(String privKeyString) {
-    /*    PrivateNotification developersPrivateNotification = user.getDevelopersPrivateNotification();
-        if (isKeyValid(privKeyString) && developersPrivateNotification != null) {
-            privateNotificationService.removePrivateNotificationMessage(developersPrivateNotification, null, null);
-            user.setDevelopersPrivateNotification(null);
-            return true;
-        } else {
-            return false;
-        }*/
-        return false;
+    public void removePrivateNotification(PrivateNotification privateNotification) {
+        privateNotificationService.removePrivateNotification(decryptedMsgWithPubKey);
     }
-
     private boolean isKeyValid(String privKeyString) {
         try {
             privateNotificationSigningKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(privKeyString)));
@@ -137,4 +127,6 @@ public class PrivateNotificationManager {
             return false;
         }
     }
+
+
 }

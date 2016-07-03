@@ -61,6 +61,7 @@ import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 public abstract class Overlay<T extends Overlay> {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +135,8 @@ public abstract class Overlay<T extends Overlay> {
     protected Type type = Type.Undefined;
     protected boolean hideCloseButton;
     protected boolean useAnimation = true;
-
+    private String headlineStyle;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -350,6 +352,11 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
+    public T setHeadlineStyle(String headlineStyle) {
+        this.headlineStyle = headlineStyle;
+        return (T) this;
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -618,6 +625,10 @@ public abstract class Overlay<T extends Overlay> {
 
             headLineLabel = new Label(BSResources.get(headLine));
             headLineLabel.setMouseTransparent(true);
+
+            if (headlineStyle != null)
+                headLineLabel.setStyle(headlineStyle);
+            
             GridPane.setHalignment(headLineLabel, HPos.LEFT);
             GridPane.setRowIndex(headLineLabel, rowIndex);
             GridPane.setColumnSpan(headLineLabel, 2);

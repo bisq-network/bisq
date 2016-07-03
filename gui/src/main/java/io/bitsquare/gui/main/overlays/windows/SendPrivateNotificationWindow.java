@@ -22,6 +22,7 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.offer.Offer;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -41,7 +42,6 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     private static final Logger log = LoggerFactory.getLogger(SendPrivateNotificationWindow.class);
     private Button sendButton;
     private SendPrivateNotificationHandler sendPrivateNotificationHandler;
-    private RemoveAlertMessageHandler removeAlertMessageHandler;
     private Offer offer;
 
 
@@ -49,11 +49,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     // Interface
     ///////////////////////////////////////////////////////////////////////////////////////////
     public interface SendPrivateNotificationHandler {
-        boolean handle(PrivateNotification privateNotification, Offer offer, String privKey);
-    }
-
-    public interface RemoveAlertMessageHandler {
-        boolean handle(String privKey);
+        boolean handle(PrivateNotification privateNotification, Offer offer, String privKey, SendMailboxMessageListener sendMailboxMessageListener);
     }
 
 
@@ -68,9 +64,9 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
 
     public void show() {
         if (headLine == null)
-            headLine = "Edit ban list";
+            headLine = "Send private message";
 
-        width = 600;
+        width = 800;
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -84,10 +80,6 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         return this;
     }
 
-    public SendPrivateNotificationWindow onRemoveAlertMessage(RemoveAlertMessageHandler removeAlertMessageHandler) {
-        this.removeAlertMessageHandler = removeAlertMessageHandler;
-        return this;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -106,31 +98,37 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Ban list private key:", 10).second;
-        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, "Private alert message:", "Enter message");
+        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Key for private notification:", 10).second;
+        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, "Private notification:", "Enter notification");
         TextArea alertMessageTextArea = labelTextAreaTuple2.second;
         Label first = labelTextAreaTuple2.first;
-        first.setMinWidth(150);
+        first.setMinWidth(200);
 
-        sendButton = new Button("Send private alert message");
+        sendButton = new Button("Send private notification");
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
-                if (sendPrivateNotificationHandler.handle(
+                if (!sendPrivateNotificationHandler.handle(
                         new PrivateNotification(alertMessageTextArea.getText()),
                         offer,
-                        keyInputTextField.getText()))
-                    hide();
-                else
-                    new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
-            }
-        });
+                        keyInputTextField.getText(),
+                        new SendMailboxMessageListener() {
+                            @Override
+                            public void onArrived() {
+                                log.trace("PrivateNotificationMessage arrived at peer.");
+                                new Popup<>().feedback("Message arrived.").onClose(SendPrivateNotificationWindow.this::hide).show();
+                            }
 
-        Button removeAlertMessageButton = new Button("Remove notification");
-        removeAlertMessageButton.setOnAction(e -> {
-            if (keyInputTextField.getText().length() > 0) {
-                if (removeAlertMessageHandler.handle(keyInputTextField.getText()))
-                    hide();
-                else
+                            @Override
+                            public void onStoredInMailbox() {
+                                log.trace("PrivateNotificationMessage was stored in mailbox.");
+                                new Popup<>().feedback("Message stored in mailbox.").onClose(SendPrivateNotificationWindow.this::hide).show();
+                            }
+
+                            @Override
+                            public void onFault(String errorMessage) {
+                                new Popup<>().feedback("Message sending failed. error=" + errorMessage).onClose(SendPrivateNotificationWindow.this::hide).show();
+                            }
+                        }))
                     new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
             }
         });
@@ -145,7 +143,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        hBox.getChildren().addAll(sendButton, removeAlertMessageButton, closeButton);
+        hBox.getChildren().addAll(sendButton, closeButton);
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
     }
