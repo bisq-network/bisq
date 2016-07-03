@@ -104,7 +104,7 @@ public class TradeManager {
                         P2PService p2PService,
                         PriceFeed priceFeed,
                         FilterManager filterManager,
-                        @Named("storage.dir") File storageDir) {
+                        @Named(Storage.DIR_KEY) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
         this.walletService = walletService;

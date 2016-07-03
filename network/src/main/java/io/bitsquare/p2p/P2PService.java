@@ -7,7 +7,6 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.Log;
-import io.bitsquare.app.ProgramArguments;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
@@ -15,6 +14,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
+import io.bitsquare.network.OptionKeys;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.BroadcastHandler;
@@ -34,6 +34,7 @@ import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bitsquare.storage.FileUtil;
+import io.bitsquare.storage.Storage;
 import javafx.beans.property.*;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -48,6 +49,7 @@ import java.nio.file.Paths;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -98,12 +100,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // Called also from SeedNodeP2PService
     @Inject
     public P2PService(SeedNodesRepository seedNodesRepository,
-                      @Named(ProgramArguments.PORT_KEY) int port,
-                      @Named(ProgramArguments.TOR_DIR) File torDir,
-                      @Named(ProgramArguments.USE_LOCALHOST) boolean useLocalhost,
-                      @Named(ProgramArguments.NETWORK_ID) int networkId,
-                      @Named(ProgramArguments.MAX_CONNECTIONS) int maxConnections,
-                      @Named("storage.dir") File storageDir,
+                      @Named(OptionKeys.PORT_KEY) int port,
+                      @Named(OptionKeys.TOR_DIR) File torDir,
+                      @Named(OptionKeys.USE_LOCALHOST) boolean useLocalhost,
+                      @Named(OptionKeys.NETWORK_ID) int networkId,
+                      @Named(OptionKeys.MAX_CONNECTIONS) int maxConnections,
+                      @Named(Storage.DIR_KEY) File storageDir,
+                      @Named(OptionKeys.SEED_NODES_KEY) String seedNodes,
                       Clock clock,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
@@ -115,6 +118,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 useLocalhost,
                 networkId,
                 storageDir,
+                seedNodes,
                 clock,
                 encryptionService,
                 keyRing
@@ -128,6 +132,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       boolean useLocalhost,
                       int networkId,
                       File storageDir,
+                      String seedNodes,
                       Clock clock,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
@@ -140,10 +145,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         optionalEncryptionService = Optional.ofNullable(encryptionService);
         optionalKeyRing = Optional.ofNullable(keyRing);
 
-        init(useLocalhost, networkId, storageDir);
+        init(useLocalhost, networkId, storageDir, seedNodes);
     }
 
-    private void init(boolean useLocalhost, int networkId, File storageDir) {
+    private void init(boolean useLocalhost, int networkId, File storageDir, String seedNodes) {
         if (!useLocalhost)
             FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key");
 
@@ -151,7 +156,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
 
-        Set<NodeAddress> seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, networkId);
+        Set<NodeAddress> seedNodeAddresses;
+        if (seedNodes != null && !seedNodes.isEmpty())
+            seedNodeAddresses = Arrays.asList(seedNodes.replace(" ", "").split(",")).stream().map(NodeAddress::new).collect(Collectors.toSet());
+        else
+            seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, networkId);
+
         peerManager = new PeerManager(networkNode, maxConnections, seedNodeAddresses, storageDir, clock);
 
         broadcaster = new Broadcaster(networkNode, peerManager);

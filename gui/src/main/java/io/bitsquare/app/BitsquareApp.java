@@ -24,6 +24,7 @@ import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.OptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
@@ -76,7 +77,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
-import static io.bitsquare.app.BitsquareEnvironment.LOG_LEVEL_KEY;
 
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
@@ -108,7 +108,7 @@ public class BitsquareApp extends Application {
         log.info("Log files under: " + logPath);
         Version.printVersion();
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(env.getRequiredProperty(LOG_LEVEL_KEY)));
+        Log.setLevel(Level.toLevel(env.getRequiredProperty(OptionKeys.LOG_LEVEL_KEY)));
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
@@ -254,7 +254,7 @@ public class BitsquareApp extends Application {
                 .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
                 .show();
     }
-    
+
     private void showEmptyWalletPopup() {
         injector.getInstance(EmptyWalletWindow.class).show();
     }

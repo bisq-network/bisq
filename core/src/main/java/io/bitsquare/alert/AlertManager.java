@@ -18,6 +18,8 @@
 package io.bitsquare.alert;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import io.bitsquare.common.OptionKeys;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
@@ -54,30 +56,32 @@ public class AlertManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AlertManager(P2PService p2PService, KeyRing keyRing, User user) {
+    public AlertManager(P2PService p2PService, KeyRing keyRing, User user, @Named(OptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
 
-        p2PService.addHashSetChangedListener(new HashMapChangedListener() {
-            @Override
-            public void onAdded(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Alert) {
-                    Alert alert = (Alert) data.getStoragePayload();
-                    if (verifySignature(alert))
-                        alertMessageProperty.set(alert);
+        if (!ignoreDevMsg) {
+            p2PService.addHashSetChangedListener(new HashMapChangedListener() {
+                @Override
+                public void onAdded(ProtectedStorageEntry data) {
+                    if (data.getStoragePayload() instanceof Alert) {
+                        Alert alert = (Alert) data.getStoragePayload();
+                        if (verifySignature(alert))
+                            alertMessageProperty.set(alert);
+                    }
                 }
-            }
 
-            @Override
-            public void onRemoved(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Alert) {
-                    Alert alert = (Alert) data.getStoragePayload();
-                    if (verifySignature(alert))
-                        alertMessageProperty.set(null);
+                @Override
+                public void onRemoved(ProtectedStorageEntry data) {
+                    if (data.getStoragePayload() instanceof Alert) {
+                        Alert alert = (Alert) data.getStoragePayload();
+                        if (verifySignature(alert))
+                            alertMessageProperty.set(null);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
 

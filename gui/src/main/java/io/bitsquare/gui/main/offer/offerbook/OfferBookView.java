@@ -50,6 +50,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -647,9 +648,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             tableRow.setOnMouseClicked(null);
                                         } else {
                                             button.setDefaultButton(false);
-                                            tableRow.setOnMouseClicked(e ->
+                                            tableRow.setOnMousePressed(e -> {
+                                                // ugly hack to get the icon clickable when deactivated
+                                                if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
                                                     onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator,
-                                                            hasSameProtocolVersion, isIgnored, isOfferBanned, isNodeBanned));
+                                                            hasSameProtocolVersion, isIgnored, isOfferBanned, isNodeBanned);
+                                            });
 
                                             //TODO
                                             //tableRow.setTooltip(new Tooltip(""));

@@ -20,7 +20,7 @@ package io.bitsquare.p2p;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import io.bitsquare.app.AppModule;
-import io.bitsquare.app.ProgramArguments;
+import io.bitsquare.network.OptionKeys;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import org.springframework.core.env.Environment;
 
@@ -40,20 +40,21 @@ public class P2PModule extends AppModule {
         bind(SeedNodesRepository.class).in(Singleton.class);
         bind(P2PService.class).in(Singleton.class);
 
-        Boolean useLocalhost = env.getProperty(ProgramArguments.USE_LOCALHOST, boolean.class, false);
-        bind(boolean.class).annotatedWith(Names.named(ProgramArguments.USE_LOCALHOST)).toInstance(useLocalhost);
+        Boolean useLocalhost = env.getProperty(OptionKeys.USE_LOCALHOST, boolean.class, false);
+        bind(boolean.class).annotatedWith(Names.named(OptionKeys.USE_LOCALHOST)).toInstance(useLocalhost);
 
-        File torDir = new File(env.getRequiredProperty(ProgramArguments.TOR_DIR));
-        bind(File.class).annotatedWith(named(ProgramArguments.TOR_DIR)).toInstance(torDir);
+        File torDir = new File(env.getRequiredProperty(OptionKeys.TOR_DIR));
+        bind(File.class).annotatedWith(named(OptionKeys.TOR_DIR)).toInstance(torDir);
 
         // use a fixed port as arbitrator use that for his ID
-        Integer port = env.getProperty(ProgramArguments.PORT_KEY, int.class, 9999);
-        bind(int.class).annotatedWith(Names.named(ProgramArguments.PORT_KEY)).toInstance(port);
+        Integer port = env.getProperty(OptionKeys.PORT_KEY, int.class, 9999);
+        bind(int.class).annotatedWith(Names.named(OptionKeys.PORT_KEY)).toInstance(port);
 
-        Integer maxConnections = env.getProperty(ProgramArguments.MAX_CONNECTIONS, int.class, P2PService.MAX_CONNECTIONS_DEFAULT);
-        bind(int.class).annotatedWith(Names.named(ProgramArguments.MAX_CONNECTIONS)).toInstance(maxConnections);
+        Integer maxConnections = env.getProperty(OptionKeys.MAX_CONNECTIONS, int.class, P2PService.MAX_CONNECTIONS_DEFAULT);
+        bind(int.class).annotatedWith(Names.named(OptionKeys.MAX_CONNECTIONS)).toInstance(maxConnections);
 
-        Integer networkId = env.getProperty(ProgramArguments.NETWORK_ID, int.class, 1);
-        bind(int.class).annotatedWith(Names.named(ProgramArguments.NETWORK_ID)).toInstance(networkId);
+        Integer networkId = env.getProperty(OptionKeys.NETWORK_ID, int.class, 1);
+        bind(int.class).annotatedWith(Names.named(OptionKeys.NETWORK_ID)).toInstance(networkId);
+        bindConstant().annotatedWith(named(OptionKeys.SEED_NODES_KEY)).to(env.getRequiredProperty(OptionKeys.SEED_NODES_KEY));
     }
 }

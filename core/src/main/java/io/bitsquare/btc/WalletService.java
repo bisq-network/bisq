@@ -69,8 +69,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class WalletService {
     private static final Logger log = LoggerFactory.getLogger(WalletService.class);
 
-    public static final String DIR_KEY = "wallet.dir";
-    public static final String PREFIX_KEY = "wallet.prefix";
+    public static final String DIR_KEY = "walletDir";
+    public static final String PREFIX_KEY = "walletPrefix";
     private static final long STARTUP_TIMEOUT_SEC = 60;
 
     private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();

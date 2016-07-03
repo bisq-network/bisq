@@ -85,7 +85,7 @@ public class DisputeManager {
                           TradeManager tradeManager,
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
-                          @Named("storage.dir") File storageDir) {
+                          @Named(Storage.DIR_KEY) File storageDir) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;

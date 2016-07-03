@@ -19,9 +19,12 @@ package io.bitsquare.filter;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
+import io.bitsquare.common.OptionKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+
+import static com.google.inject.name.Names.named;
 
 public class FilterModule extends AppModule {
     private static final Logger log = LoggerFactory.getLogger(FilterModule.class);
@@ -33,5 +36,6 @@ public class FilterModule extends AppModule {
     @Override
     protected final void configure() {
         bind(FilterManager.class).in(Singleton.class);
+        bindConstant().annotatedWith(named(OptionKeys.IGNORE_DEV_MSG_KEY)).to(env.getRequiredProperty(OptionKeys.IGNORE_DEV_MSG_KEY));
     }
 }
