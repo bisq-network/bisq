@@ -589,6 +589,7 @@ public class Connection implements MessageListener {
         }
     }
 
+    // TODO put this into its own class
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // InputHandler
@@ -615,6 +616,7 @@ public class Connection implements MessageListener {
             this.messageListener = messageListener;
         }
 
+        // TODO should be synchronized? Guaranteed only one thread?
         public void stop() {
             if (!stopped) {
                 try {
