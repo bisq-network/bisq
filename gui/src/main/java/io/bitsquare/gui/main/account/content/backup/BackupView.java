@@ -79,8 +79,6 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         backupNow = addButtonAfterGroup(root, ++gridRow, "Backup now (backup is not encrypted!)");
         backupNow.setDisable(preferences.getBackupDirectory() == null || preferences.getBackupDirectory().length() == 0);
         backupNow.setDefaultButton(preferences.getBackupDirectory() != null);
-
-        addTitledGroupBg(root, ++gridRow, 2, "Backup wallet and data directory", Layout.GROUP_DISTANCE);
     }
 
     @Override
