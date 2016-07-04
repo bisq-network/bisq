@@ -69,8 +69,17 @@ public final class Alert implements StoragePayload {
     }
 
     public boolean isNewVersion() {
-        int versionNum = Integer.valueOf(Version.VERSION.replace(".", ""));
-        int alertVersionNum = Integer.valueOf(version.replace(".", ""));
+        // Usually we use 3 digits (0.4.8) but to support also 4 digits in case of hotfixes (0.4.8.1) we 
+        // add a 0 at all 3 digit versions to allow correct comparison: 0.4.8 -> 480; 0.4.8.1 -> 481; 481 > 480
+        String myVersionString = Version.VERSION.replace(".", "");
+        if (myVersionString.length() == 3)
+            myVersionString += "0";
+        int versionNum = Integer.valueOf(myVersionString);
+
+        String alertVersionString = version.replace(".", "");
+        if (alertVersionString.length() == 3)
+            alertVersionString += "0";
+        int alertVersionNum = Integer.valueOf(alertVersionString);
         return versionNum < alertVersionNum;
     }
 
