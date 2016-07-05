@@ -22,7 +22,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -69,7 +69,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private Fiat tradePrice;
     private Optional<Runnable> placeOfferHandlerOptional = Optional.empty();
     private Optional<Runnable> takeOfferHandlerOptional = Optional.empty();
-    private StaticProgressIndicator spinner;
+    private BusyAnimation busyAnimation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,8 +124,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
     @Override
     protected void onHidden() {
-        if (spinner != null)
-            spinner.setProgress(0);
+        if (busyAnimation != null)
+            busyAnimation.stop();
     }
 
     @Override
@@ -235,8 +235,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
-        addLabelTextField(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++rowIndex, "Offerers onion address:", offer.getOffererNodeAddress().getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Offerers onion address:", offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit()));
 
@@ -244,7 +244,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addLabelTextField(gridPane, ++rowIndex, "Offerers country of bank:",
                     CountryUtil.getNameAndCode(paymentMethodCountryCode));
 
-        addLabelTextField(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
         if (offer.getOfferFeePaymentTxID() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
 
@@ -278,7 +278,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         ImageView iconView = new ImageView();
         iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");
 
-        Tuple3<Button, StaticProgressIndicator, Label> placeOfferTuple = addButtonWithStatusAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
+        Tuple3<Button, BusyAnimation, Label> placeOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
         Button button = placeOfferTuple.first;
         button.setMinHeight(40);
@@ -288,9 +288,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         button.setId(isBuyerRole ? "buy-button-big" : "sell-button-big");
         button.setText(isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
-        spinner = placeOfferTuple.second;
-        //spinner.setPrefSize(18, 18);
-        spinner.setVisible(false);
+        busyAnimation = placeOfferTuple.second;
         Label spinnerInfoLabel = placeOfferTuple.third;
 
         Button cancelButton = addButton(gridPane, ++rowIndex, BSResources.get("shared.cancel"));
@@ -305,8 +303,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             if (user.getAcceptedArbitrators().size() > 0) {
                 button.setDisable(true);
                 cancelButton.setDisable(true);
-                spinner.setVisible(true);
-                spinner.setProgress(-1);
+                busyAnimation.play();
                 if (isPlaceOffer) {
                     spinnerInfoLabel.setText(BSResources.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
                     placeOfferHandlerOptional.get().run();

@@ -27,7 +27,7 @@ import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.funds.FundsView;
@@ -48,6 +48,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -58,8 +60,9 @@ import static javafx.scene.layout.AnchorPane.*;
 
 @FxmlView
 public class MainView extends InitializableView<StackPane, MainViewModel> {
+    private static final Logger log = LoggerFactory.getLogger(MainView.class);
 
-    public static final String TITLE_KEY = "view.title";
+    public static final String TITLE_KEY = "viewTitle";
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -98,8 +101,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ChangeListener<String> btcSyncIconIdListener;
     private ChangeListener<String> splashP2PNetworkErrorMsgListener;
     private ChangeListener<String> splashP2PNetworkIconIdListener;
-    private ChangeListener<Number> splashP2PNetworkProgressListener;
-    private StaticProgressIndicator splashP2PNetworkIndicator;
+    private ChangeListener<Boolean> splashP2PNetworkVisibleListener;
+    private BusyAnimation splashP2PNetworkBusyAnimation;
     private Label splashP2PNetworkLabel;
     private ProgressBar btcSyncIndicator;
     private Label btcSplashInfo;
@@ -159,7 +162,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                     return type != null ? "Market price (" + type.name + ")" : "";
                 },
                 model.marketPriceCurrencyCode, model.typeProperty));
-        HBox.setMargin(marketPriceBox.third, new Insets(0, 15, 0, 0));
+        HBox.setMargin(marketPriceBox.third, new Insets(0, 0, 0, 0));
 
 
         Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox("Available balance");
@@ -284,8 +287,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox(String text) {
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
         priceComboBox.setVisibleRowCount(40);
-        priceComboBox.setMaxWidth(210);
-        priceComboBox.setMinWidth(210);
+        priceComboBox.setMaxWidth(220);
+        priceComboBox.setMinWidth(220);
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
         priceComboBox.setCellFactory(p -> getPriceFeedComboBoxListCell());
@@ -293,10 +296,22 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
 
+        final ImageView invertIcon = new ImageView();
+        invertIcon.setId("invert");
+        final Button invertIconButton = new Button("", invertIcon);
+        invertIconButton.setPadding(new Insets(0, 0, 0, 0));
+        invertIconButton.setFocusTraversable(false);
+        invertIconButton.setStyle("-fx-background-color: transparent;");
+        HBox.setMargin(invertIconButton, new Insets(2, 0, 0, 0));
+        invertIconButton.setOnAction(e -> model.preferences.flipUseInvertedMarketPrice());
+
+        HBox hBox1 = new HBox();
+        hBox1.getChildren().setAll(priceComboBox, invertIconButton);
+
         Label label = new Label(text);
         label.setId("nav-balance-label");
         label.setTextAlignment(TextAlignment.CENTER);
-        label.setPadding(new Insets(0, 5, 0, 6));
+        label.setPadding(new Insets(0, 25, 0, 0));
 
         final ImageView btcAverageIcon = new ImageView();
         btcAverageIcon.setId("btcaverage");
@@ -304,7 +319,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(btcAverageIconButton, new Insets(0, 7, 0, 0));
+        HBox.setMargin(btcAverageIconButton, new Insets(0, 27, 0, 0));
         btcAverageIconButton.setOnAction(e -> Utilities.openWebPage("https://bitcoinaverage.com"));
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
@@ -316,7 +331,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(poloniexIconButton, new Insets(1, 7, 0, 0));
+        HBox.setMargin(poloniexIconButton, new Insets(1, 27, 0, 0));
         poloniexIconButton.setOnAction(e -> Utilities.openWebPage("https://poloniex.com"));
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
@@ -327,12 +342,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         HBox hBox2 = new HBox();
         hBox2.getChildren().setAll(label, spacer, btcAverageIconButton, poloniexIconButton);
-        hBox2.prefWidthProperty().bind(priceComboBox.widthProperty());
-        
+
         VBox vBox = new VBox();
         vBox.setSpacing(3);
         vBox.setPadding(new Insets(11, 0, 0, 0));
-        vBox.getChildren().addAll(priceComboBox, hBox2);
+        vBox.getChildren().addAll(hBox1, hBox2);
         return new Tuple3<>(priceComboBox, label, vBox);
     }
 
@@ -392,14 +406,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkLabel.setTextAlignment(TextAlignment.CENTER);
         splashP2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
 
-        splashP2PNetworkIndicator = new StaticProgressIndicator();
-        splashP2PNetworkIndicator.setPrefSize(24, 24);
-        splashP2PNetworkIndicator.progressProperty().bind(model.splashP2PNetworkProgress);
+        splashP2PNetworkBusyAnimation = new BusyAnimation();
 
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
                 splashP2PNetworkLabel.setId("splash-error-state-msg");
-                splashP2PNetworkIndicator.setVisible(false);
+                splashP2PNetworkBusyAnimation.stop();
+            } else if (model.splashP2PNetworkAnimationVisible.get()) {
+                splashP2PNetworkBusyAnimation.play();
             }
         };
         model.p2pNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
@@ -418,19 +432,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
         model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
 
-        splashP2PNetworkProgressListener = (ov, oldValue, newValue) -> {
-            if ((double) newValue != -1) {
-                splashP2PNetworkIndicator.setVisible(false);
-                splashP2PNetworkIndicator.setManaged(false);
-            }
-        };
-        model.splashP2PNetworkProgress.addListener(splashP2PNetworkProgressListener);
+        splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> splashP2PNetworkBusyAnimation.setIsRunning(newValue);
+        model.splashP2PNetworkAnimationVisible.addListener(splashP2PNetworkVisibleListener);
 
         HBox splashP2PNetworkBox = new HBox();
         splashP2PNetworkBox.setSpacing(10);
         splashP2PNetworkBox.setAlignment(Pos.CENTER);
         splashP2PNetworkBox.setPrefHeight(50);
-        splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkIndicator, splashP2PNetworkIcon);
+        splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkBusyAnimation, splashP2PNetworkIcon);
 
         vBox.getChildren().addAll(logo, blockchainSyncBox, splashP2PNetworkBox);
         return vBox;
@@ -442,13 +451,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         model.p2pNetworkWarnMsg.removeListener(splashP2PNetworkErrorMsgListener);
         model.p2PNetworkIconId.removeListener(splashP2PNetworkIconIdListener);
-        model.splashP2PNetworkProgress.removeListener(splashP2PNetworkProgressListener);
+        model.splashP2PNetworkAnimationVisible.removeListener(splashP2PNetworkVisibleListener);
 
         btcSplashInfo.textProperty().unbind();
         btcSyncIndicator.progressProperty().unbind();
 
         splashP2PNetworkLabel.textProperty().unbind();
-        splashP2PNetworkIndicator.progressProperty().unbind();
 
         model.onSplashScreenRemoved();
     }

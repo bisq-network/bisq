@@ -23,6 +23,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.MainView;
@@ -68,10 +69,11 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final OpenOfferManager openOfferManager;
     private final User user;
     private final OfferBook offerBook;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final P2PService p2PService;
     final PriceFeed priceFeed;
     private ClosedTradableManager closedTradableManager;
+    private FilterManager filterManager;
     private Navigation navigation;
     final BSFormatter formatter;
 
@@ -104,7 +106,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     @Inject
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
                               Preferences preferences, P2PService p2PService, PriceFeed priceFeed,
-                              ClosedTradableManager closedTradableManager,
+                              ClosedTradableManager closedTradableManager, FilterManager filterManager,
                               Navigation navigation, BSFormatter formatter) {
         super();
 
@@ -115,6 +117,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.p2PService = p2PService;
         this.priceFeed = priceFeed;
         this.closedTradableManager = closedTradableManager;
+        this.filterManager = filterManager;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -456,7 +459,27 @@ class OfferBookViewModel extends ActivatableViewModel {
         return false;
     }
 
-    public boolean hasSameProtocolVersion(Offer offer) {
+    boolean isIgnored(Offer offer) {
+        return preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().hostName)).findAny().isPresent();
+    }
+
+    boolean isOfferBanned(Offer offer) {
+        return filterManager.getFilter() != null &&
+                filterManager.getFilter().bannedOfferIds.stream()
+                        .filter(e -> e.equals(offer.getId()))
+                        .findAny()
+                        .isPresent();
+    }
+
+    boolean isNodeBanned(Offer offer) {
+        return filterManager.getFilter() != null &&
+                filterManager.getFilter().bannedNodeAddress.stream()
+                        .filter(e -> e.equals(offer.getOffererNodeAddress().hostName))
+                        .findAny()
+                        .isPresent();
+    }
+
+    boolean hasSameProtocolVersion(Offer offer) {
         return offer.getProtocolVersion() == Version.TRADE_PROTOCOL_VERSION;
     }
 
@@ -468,10 +491,13 @@ class OfferBookViewModel extends ActivatableViewModel {
         return id.equals(EDIT_FLAG);
     }
 
-    public int getNumPastTrades(Offer offer) {
+    int getNumPastTrades(Offer offer) {
         return closedTradableManager.getClosedTrades().stream()
-                .filter(e -> e instanceof Trade && ((Trade) e).getTradingPeerNodeAddress() != null &&
-                        ((Trade) e).getTradingPeerNodeAddress().hostName.equals(offer.getOffererNodeAddress().hostName))
+                .filter(e -> {
+                    final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;
+                    return tradingPeerNodeAddress != null &&
+                            tradingPeerNodeAddress.hostName.equals(offer.getOffererNodeAddress().hostName);
+                })
                 .collect(Collectors.toSet())
                 .size();
     }

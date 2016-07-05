@@ -18,7 +18,6 @@
 package io.bitsquare.gui.util;
 
 import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.offer.Offer;
@@ -265,8 +264,8 @@ public class BSFormatter {
         return parseToFiat(input, currencyCode).equals(parseToFiatWith2Decimals(input, currencyCode));
     }
 
-    public String formatMarketPrice(double price, String currencyCode) {
-        return formatMarketPrice(price, CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 3);
+    public String formatMarketPrice(double price) {
+        return formatMarketPrice(price, 3);
     }
 
     public String formatMarketPrice(double price, int decimals) {
@@ -512,9 +511,6 @@ public class BSFormatter {
     }
 
     public String getCurrencyPair(String currencyCode) {
-        if (CurrencyUtil.isCryptoCurrency(currencyCode))
-            return "BTC/" + currencyCode;
-        else
-            return currencyCode + "/BTC";
+        return currencyCode + "/BTC";
     }
 }

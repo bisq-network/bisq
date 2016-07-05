@@ -20,6 +20,8 @@ package io.bitsquare.gui.main;
 import com.google.inject.Inject;
 import io.bitsquare.alert.Alert;
 import io.bitsquare.alert.AlertManager;
+import io.bitsquare.alert.PrivateNotification;
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
@@ -38,6 +40,7 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.components.BalanceTextField;
@@ -101,6 +104,8 @@ public class MainViewModel implements ViewModel {
     private final DisputeManager disputeManager;
     final Preferences preferences;
     private final AlertManager alertManager;
+    private PrivateNotificationManager privateNotificationManager;
+    private FilterManager filterManager;
     private final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
     private final TacWindow tacWindow;
@@ -124,10 +129,13 @@ public class MainViewModel implements ViewModel {
     final StringProperty lockedBalance = new SimpleStringProperty();
     private MonadicBinding<String> btcInfoBinding;
 
+    final StringProperty marketPrice = new SimpleStringProperty("N/A");
+    final StringProperty marketPriceInverted = new SimpleStringProperty("N/A");
+
     // P2P network
     final StringProperty p2PNetworkInfo = new SimpleStringProperty();
     private MonadicBinding<String> p2PNetworkInfoBinding;
-    final DoubleProperty splashP2PNetworkProgress = new SimpleDoubleProperty(DevFlags.STRESS_TEST_MODE ? 0 : -1);
+    final BooleanProperty splashP2PNetworkAnimationVisible = new SimpleBooleanProperty(true);
     final StringProperty p2pNetworkWarnMsg = new SimpleStringProperty();
     final StringProperty p2PNetworkIconId = new SimpleStringProperty();
     final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();
@@ -168,7 +176,8 @@ public class MainViewModel implements ViewModel {
                          PriceFeed priceFeed,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
-                         User user, AlertManager alertManager, WalletPasswordWindow walletPasswordWindow,
+                         User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
+                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.priceFeed = priceFeed;
@@ -182,6 +191,8 @@ public class MainViewModel implements ViewModel {
         this.disputeManager = disputeManager;
         this.preferences = preferences;
         this.alertManager = alertManager;
+        this.privateNotificationManager = privateNotificationManager;
+        this.filterManager = filterManager; // Needed to be referenced so we get it initialized and get the eventlistener registered
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
@@ -349,6 +360,7 @@ public class MainViewModel implements ViewModel {
             public void onRequestingDataCompleted() {
                 initialP2PNetworkDataReceived.set(true);
                 bootstrapState.set("Initial data received");
+                splashP2PNetworkAnimationVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
 
@@ -359,6 +371,7 @@ public class MainViewModel implements ViewModel {
                 else
                     bootstrapWarning.set(null);
 
+                splashP2PNetworkAnimationVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
 
@@ -373,12 +386,13 @@ public class MainViewModel implements ViewModel {
                     bootstrapWarning.set(null);
                     p2pNetworkLabelId.set("footer-pane");
                 }
+                splashP2PNetworkAnimationVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
 
             @Override
             public void onBootstrapComplete() {
-                splashP2PNetworkProgress.set(1);
+                splashP2PNetworkAnimationVisible.set(false);
                 bootstrapComplete.set(true);
             }
 
@@ -387,7 +401,7 @@ public class MainViewModel implements ViewModel {
                 p2pNetworkWarnMsg.set("Connecting to the P2P network failed (reported error: "
                         + throwable.getMessage() + ").\n" +
                         "Please check your internet connection or try to restart the application.");
-                splashP2PNetworkProgress.set(0);
+                splashP2PNetworkAnimationVisible.set(false);
                 bootstrapWarning.set("Bootstrapping to P2P network failed");
                 p2pNetworkLabelId.set("splash-error-state-msg");
             }
@@ -455,7 +469,7 @@ public class MainViewModel implements ViewModel {
 
                     if (walletService.getWallet().isEncrypted()) {
                         if (p2pNetWorkReady.get())
-                            splashP2PNetworkProgress.set(0);
+                            splashP2PNetworkAnimationVisible.set(false);
 
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {
@@ -511,6 +525,7 @@ public class MainViewModel implements ViewModel {
         openOfferManager.onAllServicesInitialized();
         arbitratorManager.onAllServicesInitialized();
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue));
+        privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
         displayAlertIfPresent(alertManager.alertMessageProperty().get());
 
         setupBtcNumPeersWatcher();
@@ -709,9 +724,6 @@ public class MainViewModel implements ViewModel {
                         walletServiceErrorMsg.set("You lost the connection to all bitcoin network peers.\n" +
                                 "Maybe you lost your internet connection or your computer was in standby mode.");
                     } else {
-                        //TODO remove after testing
-                        log.warn("INFO: we got again btc network peers");
-
                         walletServiceErrorMsg.set(null);
                     }
                 }, 5);
@@ -726,26 +738,24 @@ public class MainViewModel implements ViewModel {
     private void setupMarketPriceFeed() {
         if (priceFeed.getCurrencyCode() == null)
             priceFeed.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
-
         if (priceFeed.getType() == null)
             priceFeed.setType(PriceFeed.Type.LAST);
-
-        DoubleProperty marketPriceProperty = new SimpleDoubleProperty(0);
-        priceFeed.init(marketPriceProperty::set,
-                (errorMessage, throwable) -> marketPriceProperty.set(0));
+        priceFeed.init(price -> {
+                    marketPrice.set(formatter.formatMarketPrice(price));
+                    marketPriceInverted.set(price != 0 ? formatter.formatMarketPrice(1 / price, 8) : "");
+                },
+                (errorMessage, throwable) -> {
+                    marketPrice.set("N/A");
+                    marketPriceInverted.set("N/A");
+                });
         marketPriceCurrencyCode.bind(priceFeed.currencyCodeProperty());
         typeProperty.bind(priceFeed.typeProperty());
 
         marketPriceBinding = EasyBind.combine(
-                marketPriceCurrencyCode, marketPriceProperty,
-                (code, marketPrice) -> {
-                    double marketPriceAsDouble = (double) marketPrice;
-                    if (marketPriceAsDouble > 0) {
-                        return formatter.formatMarketPrice(marketPriceAsDouble, code) + " " + formatter.getCurrencyPair(code);
-                    } else {
-                        return "N/A";
-                    }
-                });
+                marketPriceCurrencyCode, marketPrice, marketPriceInverted, preferences.useInvertedMarketPriceProperty(),
+                (marketPriceCurrency, marketPrice, marketPriceInverted, useInvertedMarketPrice) ->
+                        (useInvertedMarketPrice ? marketPriceInverted : marketPrice) +
+                                (useInvertedMarketPrice ? " BTC/" + marketPriceCurrency : " " + marketPriceCurrency + "/BTC"));
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
@@ -781,7 +791,6 @@ public class MainViewModel implements ViewModel {
 
         priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeed.currenciesUpdateFlagProperty(), newPriceUpdate -> setMarketPriceInItems());
 
-        // If we get a currency added or removed we need an update
         preferences.getTradeCurrenciesAsObservable().addListener((ListChangeListener<TradeCurrency>) c -> {
             UserThread.runAfter(() -> {
                 fillPriceFeedComboBoxItems();
@@ -792,13 +801,16 @@ public class MainViewModel implements ViewModel {
 
     private void setMarketPriceInItems() {
         priceFeedComboBoxItems.stream().forEach(item -> {
-            String code = item.currencyCode;
-            MarketPrice marketPrice = priceFeed.getMarketPrice(code);
+            String currencyCode = item.currencyCode;
+            MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
+            boolean useInvertedMarketPrice = preferences.getUseInvertedMarketPrice();
             String priceString;
+            String currencyPairString = useInvertedMarketPrice ? "BTC/" + currencyCode : currencyCode + "/BTC";
             if (marketPrice != null) {
                 double price = marketPrice.getPrice(priceFeed.getType());
                 if (price != 0) {
-                    priceString = formatter.formatMarketPrice(price, code);
+                    double priceInverted = 1 / price;
+                    priceString = useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, 8) : formatter.formatMarketPrice(price);
                     item.setIsPriceAvailable(true);
                 } else {
                     priceString = "N/A";
@@ -808,13 +820,13 @@ public class MainViewModel implements ViewModel {
                 priceString = "N/A";
                 item.setIsPriceAvailable(false);
             }
-            item.setDisplayString(priceString + " " + formatter.getCurrencyPair(code));
+            item.setDisplayString(priceString + " " + currencyPairString);
         });
     }
 
     public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
         if (!preferences.getUseStickyMarketPrice() && item != null) {
-            Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(item.currencyCode);
+            Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(priceFeed.currencyCodeProperty().get());
             if (itemOptional.isPresent())
                 selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
             else
@@ -860,6 +872,15 @@ public class MainViewModel implements ViewModel {
                 !alreadyDisplayed &&
                 (!alert.isUpdateInfo || alert.isNewVersion()))
             new DisplayAlertMessageWindow().alertMessage(alert).show();
+    }
+
+    private void displayPrivateNotification(PrivateNotification privateNotification) {
+        new Popup<>().headLine("Important private notification!")
+                .attention(privateNotification.message)
+                .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
+                .onClose(() -> privateNotificationManager.removePrivateNotification())
+                .closeButtonText("I understand")
+                .show();
     }
 
     private void swapPendingOfferFundingEntries() {
@@ -919,11 +940,10 @@ public class MainViewModel implements ViewModel {
         }
         addedList.stream().forEach(dispute -> {
             String id = dispute.getId();
-            if (disputeIsClosedSubscriptionsMap.containsKey(id)) {
-                log.warn("We have already an entry in disputeStateSubscriptionsMap. That should never happen.");
-            } else {
-                Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
-                        disputeState -> {
+            Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
+                    isClosed -> {
+                        // We get event before list gets updated, so we execute on next frame
+                        UserThread.execute(() -> {
                             int openDisputes = disputeManager.getDisputesAsObservableList().stream()
                                     .filter(e -> !e.isClosed())
                                     .collect(Collectors.toList()).size();
@@ -934,8 +954,8 @@ public class MainViewModel implements ViewModel {
 
                             showOpenDisputesNotification.set(openDisputes > 0);
                         });
-                disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
-            }
+                    });
+            disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
         });
     }
 

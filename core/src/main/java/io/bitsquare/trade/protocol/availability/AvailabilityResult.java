@@ -5,5 +5,6 @@ public enum AvailabilityResult {
     OFFER_TAKEN,
     PRICE_OUT_OF_TOLERANCE,
     NO_ARBITRATORS,
+    USER_IGNORED,
     UNKNOWN_FAILURE
 }

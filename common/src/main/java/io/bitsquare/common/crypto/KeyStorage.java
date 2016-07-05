@@ -39,7 +39,7 @@ import java.security.spec.*;
 public class KeyStorage {
     private static final Logger log = LoggerFactory.getLogger(KeyStorage.class);
 
-    public static final String DIR_KEY = "key.storage.dir";
+    public static final String DIR_KEY = "keyStorageDir";
 
     public enum KeyEntry {
         MSG_SIGNATURE("sig", Sig.KEY_ALGO),

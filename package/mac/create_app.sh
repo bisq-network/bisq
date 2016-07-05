@@ -5,32 +5,39 @@ mkdir -p gui/deploy
 
 set -e
 
-fullVersion="0.4.9"
+version="0.4.9"
 
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
-cp gui/target/shaded.jar "gui/deploy/Bitsquare-$fullVersion.jar"
-cp gui/target/shaded.jar "/Users/mk/vm_shared_ubuntu/Bitsquare-$fullVersion.jar"
-cp gui/target/shaded.jar "/Users/mk/vm_shared_windows/Bitsquare-$fullVersion.jar"
-cp gui/target/shaded.jar "/Users/mk/vm_shared_ubuntu14_32bit/Bitsquare-$fullVersion.jar"
-cp gui/target/shaded.jar "/Users/mk/vm_shared_windows_32bit/Bitsquare-$fullVersion.jar"
+cp gui/target/shaded.jar "gui/deploy/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/mk/vm_shared_ubuntu/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/mk/vm_shared_windows/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/mk/vm_shared_ubuntu14_32bit/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/mk/vm_shared_windows_32bit/Bitsquare-$version.jar"
 
 cp seednode/target/SeedNode.jar "gui/deploy/SeedNode.jar"
 
+cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_ubuntu/jdkfix-$version.jar"
+cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_windows/jdkfix-$version.jar"
+cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_ubuntu14_32bit/jdkfix-$version.jar"
+cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_windows_32bit/jdkfix-$version.jar"
+exit
+
+echo "Using $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
     -deploy \
-    -BjvmOptions=-Xbootclasspath/a:"$JAVA_HOME/jre/lib/ext/jdkfix-0.4.9.jar":"$JAVA_HOME/jre/lib/ext/jfxrt.jar" \
-    -BappVersion=$fullVersion \
+    -BjvmOptions=-Xbootclasspath/a:"jdkfix-$version.jar":"../PlugIns/Java.runtime/Contents/Home/jre/lib/ext/jfxrt.jar" \
+    -BappVersion=$version \
     -Bmac.CFBundleIdentifier=io.bitsquare \
     -Bmac.CFBundleName=Bitsquare \
     -Bicon=package/mac/Bitsquare.icns \
-    -Bruntime="$JAVA_HOME/../../" \
+    -Bruntime="$JAVA_HOME/jre" \
     -native dmg \
     -name Bitsquare \
     -title Bitsquare \
     -vendor Bitsquare \
     -outdir gui/deploy \
-    -srcfiles "gui/deploy/Bitsquare-$fullVersion.jar" \
+    -srcfiles "gui/deploy/Bitsquare-$version.jar:jdkfix/target/jdkfix-$version.jar" \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare \
     -BjvmProperties=-Djava.net.preferIPv4Stack=true
@@ -38,10 +45,9 @@ $JAVA_HOME/bin/javapackager \
 rm "gui/deploy/Bitsquare.html"
 rm "gui/deploy/Bitsquare.jnlp"
 
-mv "gui/deploy/bundles/Bitsquare-$fullVersion.dmg" "gui/deploy/Bitsquare-$fullVersion.dmg"
+mv "gui/deploy/bundles/Bitsquare-$version.dmg" "gui/deploy/Bitsquare-$version.dmg"
 rm -r "gui/deploy/bundles"
 
-mv "gui/deploy/SeedNode.jar" "gui/deploy/SeedNode-$fullVersion.jar"
-
+mv "gui/deploy/SeedNode.jar" "gui/deploy/SeedNode-$version.jar"
 
 cd package/mac

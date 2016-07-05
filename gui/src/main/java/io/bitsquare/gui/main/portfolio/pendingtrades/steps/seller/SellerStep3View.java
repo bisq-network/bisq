@@ -19,9 +19,9 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -49,7 +49,7 @@ public class SellerStep3View extends TradeStepView {
 
     private Button confirmButton;
     private Label statusLabel;
-    private StaticProgressIndicator statusProgressIndicator;
+    private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
 
 
@@ -175,11 +175,10 @@ public class SellerStep3View extends TradeStepView {
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
-        Tuple3<Button, StaticProgressIndicator, Label> tuple = addButtonWithStatusAfterGroup(gridPane, ++gridRow, "Confirm payment receipt");
+        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow, "Confirm payment receipt");
         confirmButton = tuple.first;
         confirmButton.setOnAction(e -> onPaymentReceived());
-        statusProgressIndicator = tuple.second;
-        statusProgressIndicator.setPrefSize(24, 24);
+        busyAnimation = tuple.second;
         statusLabel = tuple.third;
 
         hideStatusInfo();
@@ -299,15 +298,11 @@ public class SellerStep3View extends TradeStepView {
     }
 
     private void showStatusInfo() {
-        statusProgressIndicator.setVisible(true);
-        statusProgressIndicator.setManaged(true);
-        statusProgressIndicator.setProgress(-1);
+        busyAnimation.play();
     }
 
     private void hideStatusInfo() {
-        statusProgressIndicator.setVisible(false);
-        statusProgressIndicator.setManaged(false);
-        statusProgressIndicator.setProgress(0);
+        busyAnimation.stop();
         statusLabel.setText("");
     }
 

@@ -24,9 +24,11 @@ import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.OptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.common.UITimer;
 import io.bitsquare.gui.common.view.CachingViewLoader;
@@ -38,6 +40,7 @@ import io.bitsquare.gui.main.MainViewModel;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.EmptyWalletWindow;
+import io.bitsquare.gui.main.overlays.windows.FilterWindow;
 import io.bitsquare.gui.main.overlays.windows.SendAlertMessageWindow;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.P2PService;
@@ -74,7 +77,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
-import static io.bitsquare.app.BitsquareEnvironment.LOG_LEVEL_KEY;
 
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
@@ -106,7 +108,7 @@ public class BitsquareApp extends Application {
         log.info("Log files under: " + logPath);
         Version.printVersion();
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(env.getRequiredProperty(LOG_LEVEL_KEY)));
+        Log.setLevel(Level.toLevel(env.getRequiredProperty(OptionKeys.LOG_LEVEL_KEY)));
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
@@ -163,7 +165,7 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            scene = new Scene(mainView.getRoot(), 1190, 740);
+            scene = new Scene(mainView.getRoot(), 1200, 740);
 
             Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
             Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 13);
@@ -189,6 +191,8 @@ public class BitsquareApp extends Application {
                     showEmptyWalletPopup();
                 } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showSendAlertMessagePopup();
+                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                    showFilterPopup();
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                     showFPSWindow();
                 else if (DevFlags.DEV_MODE) {
@@ -200,7 +204,7 @@ public class BitsquareApp extends Application {
             // configure the primary stage
             primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
             primaryStage.setScene(scene);
-            primaryStage.setMinWidth(1170);
+            primaryStage.setMinWidth(1190);
             primaryStage.setMinHeight(620);
 
             // on windows the title icon is also used as task bar icon in a larger size
@@ -240,6 +244,14 @@ public class BitsquareApp extends Application {
         new SendAlertMessageWindow()
                 .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
                 .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
+                .show();
+    }
+
+    private void showFilterPopup() {
+        FilterManager filterManager = injector.getInstance(FilterManager.class);
+        new FilterWindow(filterManager)
+                .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
+                .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
                 .show();
     }
 

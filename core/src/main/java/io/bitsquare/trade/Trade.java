@@ -29,6 +29,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
@@ -221,6 +222,7 @@ public abstract class Trade implements Tradable, Model {
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      User user,
+                     FilterManager filterManager,
                      KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
@@ -233,6 +235,7 @@ public abstract class Trade implements Tradable, Model {
                 tradeWalletService,
                 arbitratorManager,
                 user,
+                filterManager,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);

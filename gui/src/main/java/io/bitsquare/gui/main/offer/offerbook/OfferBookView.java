@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -49,6 +50,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -68,6 +70,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
     private BSFormatter formatter;
+    private PrivateNotificationManager privateNotificationManager;
 
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
@@ -87,12 +90,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, BSFormatter formatter) {
+    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, BSFormatter formatter, PrivateNotificationManager privateNotificationManager) {
         super(model);
 
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
         this.formatter = formatter;
+        this.privateNotificationManager = privateNotificationManager;
     }
 
     @Override
@@ -334,7 +338,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         }
     }
 
-    private void onShowInfo(boolean isPaymentAccountValidForOffer, boolean hasMatchingArbitrator, boolean hasSameProtocolVersion) {
+    private void onShowInfo(boolean isPaymentAccountValidForOffer, boolean hasMatchingArbitrator,
+                            boolean hasSameProtocolVersion, boolean isIgnored,
+                            boolean isOfferBanned, boolean isNodeBanned) {
         if (!hasMatchingArbitrator) {
             openPopupForMissingAccountSetup("You don't have an arbitrator selected.",
                     "You need to setup at least one arbitrator to be able to trade.\n" +
@@ -351,6 +357,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     "who created the offer has used an older version.\n\n" +
                     "Users cannot trade with an incompatible trade protocol version.")
                     .show();
+        } else if (isIgnored) {
+            new Popup().warning("You have added that users onion address to your ignore list.")
+                    .show();
+        } else if (isOfferBanned) {
+            new Popup().warning("That offer was blocked by the Bitsquare developers.\n" +
+                    "Probably there is an unhandled bug causing issues when taking that offer.")
+                    .show();
+        } else if (isNodeBanned) {
+            new Popup().warning("The onion address of that trader was blocked by the Bitsquare developers.\n" +
+                    "Probably there is an unhandled bug causing issues when taking offers from that trader.")
+                    .show();
         }
     }
 
@@ -364,12 +381,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onRemoveOpenOffer(Offer offer) {
         if (model.isBootstrapped()) {
-            new Popup().warning("Are you sure you want to remove that offer?\n" +
-                    "The offer fee you have paid will be lost if you remove that offer.")
-                    .actionButtonText("Remove offer")
-                    .onAction(() -> doRemoveOffer(offer))
-                    .closeButtonText("Don't remove the offer")
-                    .show();
+            String key = "RemoveOfferWarning";
+            if (model.preferences.showAgain(key))
+                new Popup().warning("Are you sure you want to remove that offer?\n" +
+                        "The offer fee you have paid will be lost if you remove that offer.")
+                        .actionButtonText("Remove offer")
+                        .onAction(() -> doRemoveOffer(offer))
+                        .closeButtonText("Don't remove the offer")
+                        .dontShowAgainId(key, model.preferences)
+                        .show();
+            else
+                doRemoveOffer(offer);
         } else {
             new Popup().information("You need to wait until you are fully connected to the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
@@ -377,13 +399,16 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void doRemoveOffer(Offer offer) {
+        String key = "WithdrawFundsAfterRemoveOfferInfo";
         model.onRemoveOpenOffer(offer,
                 () -> {
                     log.debug("Remove offer was successful");
-                    new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
-                            .actionButtonText("Go to \"Funds/Available for withdrawal\"")
-                            .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                            .show();
+                    if (model.preferences.showAgain(key))
+                        new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
+                                .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+                                .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                                .dontShowAgainId(key, model.preferences)
+                                .show();
                 },
                 (message) -> {
                     log.error(message);
@@ -584,10 +609,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             final ImageView iconView = new ImageView();
                             final Button button = new Button();
-                            boolean isTradable;
-                            boolean isPaymentAccountValidForOffer;
-                            boolean hasMatchingArbitrator;
-                            boolean hasSameProtocolVersion;
+                            boolean isTradable, isPaymentAccountValidForOffer, hasMatchingArbitrator,
+                                    hasSameProtocolVersion, isIgnored, isOfferBanned, isNodeBanned;
 
                             {
                                 button.setGraphic(iconView);
@@ -608,8 +631,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
                                         hasMatchingArbitrator = model.hasMatchingArbitrator(offer);
                                         hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
+                                        isIgnored = model.isIgnored(offer);
+                                        isOfferBanned = model.isOfferBanned(offer);
+                                        isNodeBanned = model.isNodeBanned(offer);
                                         isTradable = isPaymentAccountValidForOffer && hasMatchingArbitrator &&
-                                                hasSameProtocolVersion;
+                                                hasSameProtocolVersion &&
+                                                !isIgnored &&
+                                                !isOfferBanned &&
+                                                !isNodeBanned;
 
                                         tableRow.setOpacity(isTradable || myOffer ? 1 : 0.4);
 
@@ -619,9 +648,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             tableRow.setOnMouseClicked(null);
                                         } else {
                                             button.setDefaultButton(false);
-                                            tableRow.setOnMouseClicked(e ->
+                                            tableRow.setOnMousePressed(e -> {
+                                                // ugly hack to get the icon clickable when deactivated
+                                                if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
                                                     onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator,
-                                                            hasSameProtocolVersion));
+                                                            hasSameProtocolVersion, isIgnored, isOfferBanned, isNodeBanned);
+                                            });
 
                                             //TODO
                                             //tableRow.setTooltip(new Tooltip(""));
@@ -645,7 +677,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     }
 
                                     if (!myOffer && !isTradable)
-                                        button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer, hasMatchingArbitrator, hasSameProtocolVersion));
+                                        button.setOnAction(e -> onShowInfo(isPaymentAccountValidForOffer,
+                                                hasMatchingArbitrator, hasSameProtocolVersion,
+                                                isIgnored, isOfferBanned, isNodeBanned));
 
                                     button.setText(title);
                                     setGraphic(button);
@@ -692,7 +726,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ? "Offerers onion address: " + hostName + "\n" +
                                             "You have already traded " + numPastTrades + " times with that offerer." : "Offerers onion address: " + hostName;
-                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades);
+                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)
                                         setGraphic(identIcon);

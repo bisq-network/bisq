@@ -34,17 +34,14 @@
 
     <TitledGroupBg text="Bitcoin network" GridPane.rowSpan="2"/>
 
-    <Label text="Select Network:" GridPane.rowIndex="0"/>
-    <ComboBox fx:id="netWorkComboBox" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-
     <!-- <Label text="Use tor:" GridPane.rowIndex="1"/>
      <CheckBox fx:id="useTorCheckBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
  -->
-    <Label fx:id="bitcoinPeersLabel" text="Connected peers:" GridPane.rowIndex="1"/>
-    <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+    <Label fx:id="bitcoinPeersLabel" text="Connected peers:" GridPane.rowIndex="0"/>
+    <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
               GridPane.vgrow="SOMETIMES" editable="false" focusTraversable="false"/>
 
-    <TitledGroupBg text="P2P network" GridPane.rowIndex="2" GridPane.rowSpan="5">
+    <TitledGroupBg text="P2P network" GridPane.rowIndex="1" GridPane.rowSpan="5">
         <padding>
             <Insets top="50.0"/>
         </padding>
@@ -53,20 +50,20 @@
         </GridPane.margin>
     </TitledGroupBg>
 
-    <Label text="My onion address:" GridPane.rowIndex="2">
+    <Label text="My onion address:" GridPane.rowIndex="1">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
     </Label>
-    <TextField fx:id="onionAddress" GridPane.rowIndex="2" GridPane.columnIndex="1"
+    <TextField fx:id="onionAddress" GridPane.rowIndex="1" GridPane.columnIndex="1"
                editable="false" focusTraversable="false">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
     </TextField>
 
-    <Label fx:id="p2PPeersLabel" text="Connected peers:" GridPane.rowIndex="3"/>
-    <TableView fx:id="tableView" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+    <Label fx:id="p2PPeersLabel" text="Connected peers:" GridPane.rowIndex="2"/>
+    <TableView fx:id="tableView" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
                GridPane.vgrow="ALWAYS">
         <columns>
             <TableColumn text="Onion address" fx:id="onionAddressColumn" minWidth="220">
@@ -112,14 +109,14 @@
         </columns>
     </TableView>
 
-    <Label text="Total traffic:" GridPane.rowIndex="4"/>
-    <TextField fx:id="totalTraffic" GridPane.rowIndex="4" GridPane.columnIndex="1" editable="false"
+    <Label text="Total traffic:" GridPane.rowIndex="3"/>
+    <TextField fx:id="totalTraffic" GridPane.rowIndex="3" GridPane.columnIndex="1" editable="false"
                focusTraversable="false"/>
 
-    <Label text="Use Tor bridges:" GridPane.rowIndex="5"/>
-    <CheckBox fx:id="useBridgesCheckBox" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
-    <Label fx:id="bridgesLabel" text="Tor bridges:" GridPane.rowIndex="6" visible="false" managed="false"/>
-    <TextArea fx:id="bridgesTextArea" GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+    <Label text="Use Tor bridges:" GridPane.rowIndex="4"/>
+    <CheckBox fx:id="useBridgesCheckBox" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+    <Label fx:id="bridgesLabel" text="Tor bridges:" GridPane.rowIndex="5" visible="false" managed="false"/>
+    <TextArea fx:id="bridgesTextArea" GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
               minHeight="60"
               GridPane.vgrow="SOMETIMES" editable="true" focusTraversable="true" visible="false" managed="false"/>
 

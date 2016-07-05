@@ -33,6 +33,6 @@ public class AlertModule extends AppModule {
     @Override
     protected final void configure() {
         bind(AlertManager.class).in(Singleton.class);
-        bind(AlertService.class).in(Singleton.class);
+        bind(PrivateNotificationManager.class).in(Singleton.class);
     }
 }

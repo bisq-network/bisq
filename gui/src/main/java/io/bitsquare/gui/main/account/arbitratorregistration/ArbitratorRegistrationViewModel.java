@@ -42,6 +42,7 @@ import java.util.Date;
 
 class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     private final ArbitratorManager arbitratorManager;
+    private User user;
     private final P2PService p2PService;
     private final WalletService walletService;
     private final KeyRing keyRing;
@@ -69,6 +70,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                                            WalletService walletService,
                                            KeyRing keyRing) {
         this.arbitratorManager = arbitratorManager;
+        this.user = user;
         this.p2PService = p2PService;
         this.walletService = walletService;
         this.keyRing = keyRing;
@@ -92,6 +94,8 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     @Override
     protected void activate() {
         arbitratorManager.getArbitratorsObservableMap().addListener(arbitratorMapChangeListener);
+        Arbitrator myRegisteredArbitrator = user.getRegisteredArbitrator();
+        myArbitratorProperty.set(myRegisteredArbitrator);
         updateDisableStates();
     }
 

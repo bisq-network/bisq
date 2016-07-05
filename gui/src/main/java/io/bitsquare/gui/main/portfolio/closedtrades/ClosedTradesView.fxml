@@ -21,7 +21,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView"
-      spacing="10" xmlns:fx="http://javafx.com/fxml">
+      spacing="10" alignment="CENTER_RIGHT" xmlns:fx="http://javafx.com/fxml">
     <padding>
         <Insets bottom="0.0" left="10.0" right="10.0" top="10.0"/>
     </padding>
@@ -38,5 +38,5 @@
             <TableColumn text="" fx:id="avatarColumn" minWidth="40" maxWidth="40"/>
         </columns>
     </TableView>
-
+    <Button fx:id="exportButton"/>
 </VBox>

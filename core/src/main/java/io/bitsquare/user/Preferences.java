@@ -23,6 +23,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.persistance.Persistable;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.*;
 import io.bitsquare.storage.Storage;
 import io.nucleo.net.bridge.BridgeProvider;
@@ -65,9 +66,9 @@ public final class Preferences implements Persistable {
     ));
 
     transient static final private ArrayList<BlockChainExplorer> blockChainExplorersMainNet = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
-            new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/BTC/tx/", "https://www.blocktrail.com/BTC/address/"),
             new BlockChainExplorer("Tradeblock.com", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
+            new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/BTC/tx/", "https://www.blocktrail.com/BTC/address/"),
+            new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
             new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/tx/", "https://blockexplorer.com/address/"),
             new BlockChainExplorer("Blockr.io", "https://btc.blockr.io/tx/info/", "https://btc.blockr.io/address/info/"),
@@ -117,12 +118,7 @@ public final class Preferences implements Persistable {
     private TradeCurrency preferredTradeCurrency;
     private long nonTradeTxFeePerKB = FeePolicy.getNonTradeFeePerKb().value;
     private double maxPriceDistanceInPercent;
-
-    // Need to keep it for backward compatibility. Not used anymore from v0.4.9 on. 
-    // TODO Can be removed once we don't support old versions anymore.
-    @Deprecated
     private boolean useInvertedMarketPrice;
-
     private String marketScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
@@ -131,10 +127,13 @@ public final class Preferences implements Persistable {
     private Map<String, String> peerTagMap = new HashMap<>();
     @Nullable
     private List<String> bridgeAddresses;
+    private List<String> ignoreTradersList = new ArrayList<>();
+    private String defaultPath;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
     transient private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(useAnimations);
+    transient private final BooleanProperty useInvertedMarketPriceProperty = new SimpleBooleanProperty(useInvertedMarketPrice);
     transient private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
@@ -151,10 +150,17 @@ public final class Preferences implements Persistable {
         this.storage = storage;
         this.bitsquareEnvironment = bitsquareEnvironment;
 
+        if (Utilities.isWindows())
+            defaultPath = System.getenv("USERPROFILE");
+        else
+            defaultPath = System.getProperty("user.home");
+
+
         Preferences persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             setBtcDenomination(persisted.btcDenomination);
             setUseAnimations(persisted.useAnimations);
+            setUseInvertedMarketPrice(persisted.useInvertedMarketPrice);
 
             setFiatCurrencies(persisted.fiatCurrencies);
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
@@ -201,6 +207,12 @@ public final class Preferences implements Persistable {
             marketScreenCurrencyCode = persisted.getMarketScreenCurrencyCode();
             buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
             sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
+
+            if (persisted.getIgnoreTradersList() != null)
+                ignoreTradersList = persisted.getIgnoreTradersList();
+
+            if (persisted.getDefaultPath() != null)
+                defaultPath = persisted.getDefaultPath();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
@@ -229,6 +241,10 @@ public final class Preferences implements Persistable {
         useAnimationsProperty.addListener((ov) -> {
             useAnimations = useAnimationsProperty.get();
             staticUseAnimations = useAnimations;
+            storage.queueUpForSave(2000);
+        });
+        useInvertedMarketPriceProperty.addListener((ov) -> {
+            useInvertedMarketPrice = useInvertedMarketPriceProperty.get();
             storage.queueUpForSave(2000);
         });
         fiatCurrenciesAsObservable.addListener((Observable ov) -> {
@@ -269,6 +285,10 @@ public final class Preferences implements Persistable {
 
     public void setUseAnimations(boolean useAnimations) {
         this.useAnimationsProperty.set(useAnimations);
+    }
+
+    public void setUseInvertedMarketPrice(boolean useInvertedMarketPrice) {
+        this.useInvertedMarketPriceProperty.set(useInvertedMarketPrice);
     }
 
     public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
@@ -377,6 +397,11 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public boolean flipUseInvertedMarketPrice() {
+        setUseInvertedMarketPrice(!getUseInvertedMarketPrice());
+        return getUseInvertedMarketPrice();
+    }
+
     public void setUseStickyMarketPrice(boolean useStickyMarketPrice) {
         this.useStickyMarketPrice = useStickyMarketPrice;
         storage.queueUpForSave();
@@ -422,6 +447,16 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setIgnoreTradersList(List<String> ignoreTradersList) {
+        this.ignoreTradersList = ignoreTradersList;
+        storage.queueUpForSave();
+    }
+
+    public void setDefaultPath(String defaultPath) {
+        this.defaultPath = defaultPath;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -445,6 +480,14 @@ public final class Preferences implements Persistable {
 
     public static boolean useAnimations() {
         return staticUseAnimations;
+    }
+
+    public boolean getUseInvertedMarketPrice() {
+        return useInvertedMarketPriceProperty.get();
+    }
+
+    public BooleanProperty useInvertedMarketPriceProperty() {
+        return useInvertedMarketPriceProperty;
     }
 
     public BitcoinNetwork getBitcoinNetwork() {
@@ -559,7 +602,13 @@ public final class Preferences implements Persistable {
         return sellScreenCurrencyCode;
     }
 
+    public List<String> getIgnoreTradersList() {
+        return ignoreTradersList;
+    }
 
+    public String getDefaultPath() {
+        return defaultPath;
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////

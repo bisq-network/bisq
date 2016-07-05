@@ -24,14 +24,15 @@ import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
 import io.bitsquare.arbitration.payload.Attachment;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.TableGroupHeadline;
-import io.bitsquare.gui.components.indicator.StaticProgressIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.ContractWindow;
 import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
@@ -48,8 +49,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.event.EventHandler;
 import javafx.collections.transformation.SortedList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -102,7 +103,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TextArea inputTextArea;
     private AnchorPane messagesAnchorPane;
     private VBox messagesInputBox;
-    private StaticProgressIndicator sendMsgProgressIndicator;
+    private BusyAnimation sendMsgBusyAnimation;
     private Label sendMsgInfoLabel;
     private ChangeListener<Boolean> arrivedPropertyListener;
     private ChangeListener<Boolean> storedInMailboxPropertyListener;
@@ -182,7 +183,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         disputeDirectMessageListListener = c -> scrollToBottom();
 
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(event)) {
+            if (new KeyCodeCombination(KeyCode.L, KeyCombination.SHORTCUT_DOWN).match(event)) {
                 Map<String, List<Dispute>> map = new HashMap<>();
                 disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> {
                     String tradeId = dispute.getTradeId();
@@ -249,7 +250,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-
+        disputeManager.cleanupDisputes();
+        
         FilteredList<Dispute> filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
         setFilteredListPredicate(filteredList);
 
@@ -307,14 +309,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         inputTextArea.setDisable(true);
         inputTextArea.clear();
 
-        io.bitsquare.common.Timer timer = UserThread.runAfter(() -> {
+        Timer timer = UserThread.runAfter(() -> {
             sendMsgInfoLabel.setVisible(true);
             sendMsgInfoLabel.setManaged(true);
             sendMsgInfoLabel.setText("Sending Message...");
 
-            sendMsgProgressIndicator.setProgress(-1);
-            sendMsgProgressIndicator.setVisible(true);
-            sendMsgProgressIndicator.setManaged(true);
+            sendMsgBusyAnimation.play();
         }, 500, TimeUnit.MILLISECONDS);
 
         arrivedPropertyListener = (observable, oldValue, newValue) -> {
@@ -335,7 +335,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         disputeCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
     }
 
-    private void hideSendMsgInfo(io.bitsquare.common.Timer timer) {
+    private void hideSendMsgInfo(Timer timer) {
         timer.stop();
         inputTextArea.setDisable(false);
 
@@ -343,9 +343,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendMsgInfoLabel.setVisible(false);
             sendMsgInfoLabel.setManaged(false);
         }, 5);
-        sendMsgProgressIndicator.setProgress(0);
-        sendMsgProgressIndicator.setVisible(false);
-        sendMsgProgressIndicator.setManaged(false);
+        sendMsgBusyAnimation.stop();
     }
 
     private void onCloseDispute(Dispute dispute) {
@@ -510,15 +508,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendMsgInfoLabel.setManaged(false);
             sendMsgInfoLabel.setPadding(new Insets(5, 0, 0, 0));
 
-            sendMsgProgressIndicator = new StaticProgressIndicator(0);
-            sendMsgProgressIndicator.setPrefSize(24, 24);
-            sendMsgProgressIndicator.setVisible(false);
-            sendMsgProgressIndicator.setManaged(false);
+            sendMsgBusyAnimation = new BusyAnimation(false);
 
             if (!selectedDispute.isClosed()) {
                 HBox buttonBox = new HBox();
                 buttonBox.setSpacing(10);
-                buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgProgressIndicator, sendMsgInfoLabel);
+                buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
                 if (!isTrader) {
                     Button closeDisputeButton = new Button("Close ticket");
@@ -550,7 +545,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 @Override
                 public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
                     return new ListCell<DisputeCommunicationMessage>() {
-                        public ChangeListener<Number> sendMsgProgressIndicatorListener;
+                        public ChangeListener<Boolean> sendMsgBusyAnimationListener;
                         final Pane bg = new Pane();
                         final ImageView arrow = new ImageView();
                         final Label headerLabel = new Label();
@@ -618,18 +613,18 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     else
                                         arrow.setId("bubble_arrow_blue_right");
 
-                                    if (sendMsgProgressIndicatorListener != null)
-                                        sendMsgProgressIndicator.progressProperty().removeListener(sendMsgProgressIndicatorListener);
+                                    if (sendMsgBusyAnimationListener != null)
+                                        sendMsgBusyAnimation.isRunningProperty().removeListener(sendMsgBusyAnimationListener);
 
-                                    sendMsgProgressIndicatorListener = (observable, oldValue, newValue) -> {
-                                        if ((double) oldValue == -1 && (double) newValue == 0) {
+                                    sendMsgBusyAnimationListener = (observable, oldValue, newValue) -> {
+                                        if (!newValue) {
                                             if (item.arrivedProperty().get())
                                                 showArrivedIcon();
                                             else if (item.storedInMailboxProperty().get())
                                                 showMailboxIcon();
                                         }
                                     };
-                                    sendMsgProgressIndicator.progressProperty().addListener(sendMsgProgressIndicatorListener);
+                                    sendMsgBusyAnimation.isRunningProperty().addListener(sendMsgBusyAnimationListener);
 
                                     if (item.arrivedProperty().get())
                                         showArrivedIcon();
@@ -722,8 +717,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 // TODO There are still some cell rendering issues on updates
                                 setGraphic(messageAnchorPane);
                             } else {
-                                if (sendMsgProgressIndicator != null && sendMsgProgressIndicatorListener != null)
-                                    sendMsgProgressIndicator.progressProperty().removeListener(sendMsgProgressIndicatorListener);
+                                if (sendMsgBusyAnimation != null && sendMsgBusyAnimationListener != null)
+                                    sendMsgBusyAnimation.isRunningProperty().removeListener(sendMsgBusyAnimationListener);
 
                                 messageAnchorPane.prefWidthProperty().unbind();
 

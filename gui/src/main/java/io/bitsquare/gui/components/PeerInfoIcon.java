@@ -1,6 +1,8 @@
 package io.bitsquare.gui.components;
 
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.gui.main.overlays.editor.PeerInfoWithTagEditor;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
@@ -24,6 +26,8 @@ public class PeerInfoIcon extends Group {
     private final String hostName;
     private final String tooltipText;
     private final int numTrades;
+    private PrivateNotificationManager privateNotificationManager;
+    private Offer offer;
     private final Map<String, String> peerTagMap;
     private final Label numTradesLabel;
     private final double SIZE = 26;
@@ -33,10 +37,12 @@ public class PeerInfoIcon extends Group {
     private final Pane tagPane;
     private final Pane numTradesPane;
 
-    public PeerInfoIcon(String hostName, String tooltipText, int numTrades) {
+    public PeerInfoIcon(String hostName, String tooltipText, int numTrades, PrivateNotificationManager privateNotificationManager, Offer offer) {
         this.hostName = hostName;
         this.tooltipText = tooltipText;
         this.numTrades = numTrades;
+        this.privateNotificationManager = privateNotificationManager;
+        this.offer = offer;
 
         peerTagMap = Preferences.INSTANCE.getPeerTagMap();
 
@@ -97,7 +103,7 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(background, avatarImageView, tagPane, numTradesPane);
 
-        setOnMouseClicked(e -> new PeerInfoWithTagEditor()
+        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer)
                 .hostName(hostName)
                 .numTrades(numTrades)
                 .position(localToScene(new Point2D(0, 0)))

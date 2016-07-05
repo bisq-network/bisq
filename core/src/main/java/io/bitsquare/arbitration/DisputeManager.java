@@ -51,9 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
@@ -72,6 +70,8 @@ public class DisputeManager {
     private final String disputeInfo;
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    private final Map<String, Dispute> openDisputes;
+    private final Map<String, Dispute> closedDisputes;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ public class DisputeManager {
                           TradeManager tradeManager,
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
-                          @Named("storage.dir") File storageDir) {
+                          @Named(Storage.DIR_KEY) File storageDir) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
@@ -96,7 +96,10 @@ public class DisputeManager {
         disputeStorage = new Storage<>(storageDir);
         disputes = new DisputeList<>(disputeStorage);
         disputesObservableList = FXCollections.observableArrayList(disputes);
-        disputes.stream().forEach(e -> e.setStorage(getDisputeStorage()));
+
+        openDisputes = new HashMap<>();
+        closedDisputes = new HashMap<>();
+        disputes.stream().forEach(dispute -> dispute.setStorage(getDisputeStorage()));
 
         disputeInfo = "Please note the basic rules for the dispute process:\n" +
                 "1. You need to respond to the arbitrators requests in between 2 days.\n" +
@@ -134,6 +137,25 @@ public class DisputeManager {
                     applyMessages();
                 }
             });
+
+        cleanupDisputes();
+    }
+
+    public void cleanupDisputes() {
+        disputes.stream().forEach(dispute -> {
+            dispute.setStorage(getDisputeStorage());
+            if (dispute.isClosed())
+                closedDisputes.put(dispute.getTradeId(), dispute);
+            else
+                openDisputes.put(dispute.getTradeId(), dispute);
+        });
+        openDisputes.entrySet().stream().forEach(stringDisputeEntry -> {
+            if (closedDisputes.containsKey(stringDisputeEntry.getKey())) {
+                final Dispute dispute = stringDisputeEntry.getValue();
+                dispute.setIsClosed(true);
+                tradeManager.closeDisputedTrade(dispute.getTradeId());
+            }
+        });
     }
 
     private void applyMessages() {
@@ -547,6 +569,7 @@ public class DisputeManager {
     private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
         Transaction transaction = tradeWalletService.addTransactionToWallet(peerPublishedPayoutTxMessage.transaction);
         findOwnDispute(peerPublishedPayoutTxMessage.tradeId).ifPresent(dispute -> dispute.setDisputePayoutTxId(transaction.getHashAsString()));
+        tradeManager.closeDisputedTrade(peerPublishedPayoutTxMessage.tradeId);
     }
 
 

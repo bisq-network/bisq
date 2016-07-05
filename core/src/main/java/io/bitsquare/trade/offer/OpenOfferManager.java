@@ -47,6 +47,7 @@ import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityReques
 import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
+import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
@@ -80,6 +81,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final TradeWalletService tradeWalletService;
     private final OfferBookService offerBookService;
     private final ClosedTradableManager closedTradableManager;
+    private Preferences preferences;
 
     private final TradableList<OpenOffer> openOffers;
     private final Storage<TradableList<OpenOffer>> openOffersStorage;
@@ -100,7 +102,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             OfferBookService offerBookService,
                             ClosedTradableManager closedTradableManager,
                             PriceFeed priceFeed,
-                            @Named("storage.dir") File storageDir) {
+                            Preferences preferences,
+                            @Named(Storage.DIR_KEY) File storageDir) {
         this.keyRing = keyRing;
         this.user = user;
         this.p2PService = p2PService;
@@ -108,6 +111,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.tradeWalletService = tradeWalletService;
         this.offerBookService = offerBookService;
         this.closedTradableManager = closedTradableManager;
+        this.preferences = preferences;
 
         openOffersStorage = new Storage<>(storageDir);
         openOffers = new TradableList<>(openOffersStorage, "OpenOffers");
@@ -352,27 +356,32 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             Optional<OpenOffer> openOfferOptional = findOpenOffer(message.offerId);
             AvailabilityResult availabilityResult;
             if (openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
-                availabilityResult = AvailabilityResult.AVAILABLE;
-                List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
-                if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
-                    // We need to be backward compatible. takersTradePrice was not used before 0.4.9.
-                    if (message.takersTradePrice > 0) {
-                        // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference 
-                        // in trade price between the peers. Also here poor connectivity might cause market price API connection 
-                        // losses and therefore an outdated market price.
-                        try {
-                            openOfferOptional.get().getOffer().checkTradePriceTolerance(message.takersTradePrice);
-                        } catch (TradePriceOutOfToleranceException e) {
-                            log.warn("Trade price check failed because takers price is outside out tolerance.");
-                            availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
-                        } catch (Throwable e) {
-                            log.warn("Trade price check failed. " + e.getMessage());
-                            availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                final Offer offer = openOfferOptional.get().getOffer();
+                if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().hostName)).findAny().isPresent()) {
+                    availabilityResult = AvailabilityResult.AVAILABLE;
+                    List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
+                    if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
+                        // We need to be backward compatible. takersTradePrice was not used before 0.4.9.
+                        if (message.takersTradePrice > 0) {
+                            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference 
+                            // in trade price between the peers. Also here poor connectivity might cause market price API connection 
+                            // losses and therefore an outdated market price.
+                            try {
+                                offer.checkTradePriceTolerance(message.takersTradePrice);
+                            } catch (TradePriceOutOfToleranceException e) {
+                                log.warn("Trade price check failed because takers price is outside out tolerance.");
+                                availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                            } catch (Throwable e) {
+                                log.warn("Trade price check failed. " + e.getMessage());
+                                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                            }
                         }
+                    } else {
+                        log.warn("acceptedArbitrators is null or empty: acceptedArbitrators=" + acceptedArbitrators);
+                        availabilityResult = AvailabilityResult.NO_ARBITRATORS;
                     }
                 } else {
-                    log.warn("acceptedArbitrators is null or empty: acceptedArbitrators=" + acceptedArbitrators);
-                    availabilityResult = AvailabilityResult.NO_ARBITRATORS;
+                    availabilityResult = AvailabilityResult.USER_IGNORED;
                 }
             } else {
                 availabilityResult = AvailabilityResult.OFFER_TAKEN;

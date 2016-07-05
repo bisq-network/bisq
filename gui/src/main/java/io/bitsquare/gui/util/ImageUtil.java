@@ -57,7 +57,7 @@ public class ImageUtil {
     public static boolean isRetina() {
         float maxRenderScale = ((QuantumToolkit) QuantumToolkit.getToolkit()).getMaxRenderScale();
         boolean isRetina = maxRenderScale > 1.9f;
-        log.info("isRetina=" + isRetina + " / maxRenderScale=" + maxRenderScale);
+        //log.info("isRetina=" + isRetina + " / maxRenderScale=" + maxRenderScale);
         return isRetina;
     }
 }

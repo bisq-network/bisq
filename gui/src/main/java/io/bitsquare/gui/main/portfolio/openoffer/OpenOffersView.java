@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.trade.offer.OpenOffer;
+import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
@@ -48,13 +49,15 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             directionColumn, dateColumn, offerIdColumn, removeItemColumn;
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
+    private Preferences preferences;
     private SortedList<OpenOfferListItem> sortedList;
 
     @Inject
-    public OpenOffersView(OpenOffersViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow) {
+    public OpenOffersView(OpenOffersViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, Preferences preferences) {
         super(model);
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
+        this.preferences = preferences;
     }
 
     @Override
@@ -103,12 +106,17 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private void onRemoveOpenOffer(OpenOffer openOffer) {
         if (model.isBootstrapped()) {
-            new Popup().warning("Are you sure you want to remove that offer?\n" +
-                    "The offer fee you have paid will be lost if you remove that offer.")
-                    .actionButtonText("Remove offer")
-                    .onAction(() -> doRemoveOpenOffer(openOffer))
-                    .closeButtonText("Don't remove the offer")
-                    .show();
+            String key = "RemoveOfferWarning";
+            if (preferences.showAgain(key))
+                new Popup().warning("Are you sure you want to remove that offer?\n" +
+                        "The offer fee you have paid will be lost if you remove that offer.")
+                        .actionButtonText("Remove offer")
+                        .onAction(() -> doRemoveOpenOffer(openOffer))
+                        .closeButtonText("Don't remove the offer")
+                        .dontShowAgainId(key, preferences)
+                        .show();
+            else
+                doRemoveOpenOffer(openOffer);
         } else {
             new Popup().information("You need to wait until you are fully connected to the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
@@ -119,10 +127,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         model.onCancelOpenOffer(openOffer,
                 () -> {
                     log.debug("Remove offer was successful");
-                    new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
-                            .actionButtonText("Go to \"Funds/Available for withdrawal\"")
-                            .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                            .show();
+                    String key = "WithdrawFundsAfterRemoveOfferInfo";
+                    if (preferences.showAgain(key))
+                        new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
+                                .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+                                .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                                .dontShowAgainId(key, preferences)
+                                .show();
                 },
                 (message) -> {
                     log.error(message);

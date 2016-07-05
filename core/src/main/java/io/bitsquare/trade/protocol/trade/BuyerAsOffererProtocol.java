@@ -55,7 +55,8 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
         // If we are after the time lock state we need to setup the listener again
         Trade.State tradeState = trade.getState();
         Trade.Phase phase = tradeState.getPhase();
-        if (trade.getPayoutTx() != null && (phase == Trade.Phase.FIAT_RECEIVED || phase == Trade.Phase.PAYOUT_PAID) && tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
+        if (trade.getPayoutTx() != null && (phase == Trade.Phase.FIAT_RECEIVED || phase == Trade.Phase.PAYOUT_PAID) &&
+                tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
 
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
@@ -208,6 +209,8 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
             handle((DepositTxPublishedMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof FinalizePayoutTxRequest) {
             handle((FinalizePayoutTxRequest) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof PayDepositRequest) {
+            // do nothing as we get called the handleTakeOfferRequest method from outside
         } else {
             log.error("Incoming decrypted tradeMessage not supported. " + tradeMessage);
         }

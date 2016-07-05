@@ -25,7 +25,6 @@ import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.trade.OffererTrade;
-import io.bitsquare.trade.TakerTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
@@ -38,7 +37,7 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public abstract class TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);
-    private static final long TIMEOUT_SEC = 90;
+    private static final long TIMEOUT_SEC = 60;
 
     protected final ProcessModel processModel;
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
@@ -81,14 +80,18 @@ public abstract class TradeProtocol {
 
     public void completed() {
         cleanup();
-        processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
+
+        // We only removed earlier the listner here, but then we migth have dangling trades after faults...
+        // so lets remove it at cleanup
+        //processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
     }
 
     private void cleanup() {
         log.debug("cleanup " + this);
         stopTimeout();
-        // Don't remove removeDecryptedDirectMessageListener as it might be a non critical bug and it would prevent 
-        // that we get further messages
+        // We removed that from here earlier as it broke the trade process in some non critical error cases.
+        // But it should be actually removed...
+        processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
     }
 
     public void applyMailboxMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Trade trade) {
@@ -138,15 +141,16 @@ public abstract class TradeProtocol {
         if (isOffererTrade && (tradeState == Trade.State.OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST || tradeState == Trade.State.DEPOSIT_SEEN_IN_NETWORK))
             processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
 
-        boolean isTakerTrade = trade instanceof TakerTrade;
+        //boolean isTakerTrade = trade instanceof TakerTrade;
 
-        if (isTakerTrade) {
-            TradeManager tradeManager = processModel.getTradeManager();
-            if (tradeState.getPhase() == Trade.Phase.PREPARATION) {
-                tradeManager.removePreparedTrade(trade);
-            } else if (tradeState.getPhase() == Trade.Phase.TAKER_FEE_PAID) {
-                tradeManager.addTradeToFailedTrades(trade);
-            }
+        // if (isTakerTrade) {
+        TradeManager tradeManager = processModel.getTradeManager();
+        if (tradeState.getPhase() == Trade.Phase.PREPARATION) {
+            tradeManager.removePreparedTrade(trade);
+        } else if (tradeState.getPhase() == Trade.Phase.TAKER_FEE_PAID) {
+            tradeManager.addTradeToFailedTrades(trade);
+            processModel.getWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
         }
+        // }
     }
 }
