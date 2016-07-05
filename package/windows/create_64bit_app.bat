@@ -1,4 +1,4 @@
-﻿﻿:: edit iss file -> AppVersion
+﻿﻿﻿:: edit iss file -> AppVersion
 
 :: Copy gui/deploy.Bitsquare.jar file from mac build to windows
 :: edit -> -BappVersion and -srcfiles
