@@ -5,6 +5,8 @@ version="0.4.9"
 target_dir="/Users/mk/Documents/__bitsquare/_releases/$version"
 src_dir="/Users/mk/Documents/_intellij/bitsquare"
 
+mkdir -p $target_dir
+
 mac="Bitsquare-$version.dmg"
 cp "$src_dir/gui/deploy/$mac" "$target_dir/"
 cp "$src_dir/gui/deploy/SeedNode-$version.jar" "$target_dir/"
