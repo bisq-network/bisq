@@ -7,7 +7,7 @@ set -e
 
 # Edit versions
 fullVersion=0.4.8.1
-jarFile="/home/bitsquare/Desktop/sf_vm_shared_ubuntu14_32bit/Bitsquare-$fullVersion.jar"
+jarFile="/media/sf_vm_shared_ubuntu14_32bit/Bitsquare-$fullVersion.jar"
 
 # Note: fakeroot needs to be installed on linux
 $JAVA_HOME/bin/javapackager \
@@ -33,7 +33,7 @@ rm gui/deploy/Bitsquare.jnlp
 rm gui/deploy/LICENSE
 mv "gui/deploy/bundles/bitsquare-$fullVersion.deb" "gui/deploy/Bitsquare-32bit-$fullVersion.deb"
 rmdir gui/deploy/bundles
-cp "gui/deploy/Bitsquare-32bit-$fullVersion.deb" "/home/bitsquare/Desktop/sf_vm_shared_ubuntu14_32bit/Bitsquare-32bit-$fullVersion.deb"
+cp "gui/deploy/Bitsquare-32bit-$fullVersion.deb" "/media/sf_vm_shared_ubuntu14_32bit/Bitsquare-32bit-$fullVersion.deb"
 cp "gui/deploy/Bitsquare-32bit-$fullVersion.deb" "/home/bitsquare/Desktop/Bitsquare-32bit-$fullVersion.deb"
 
 cd package/linux
