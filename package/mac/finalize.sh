@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.4.8"
+version="0.4.8.1"
 
 target_dir="/Users/mk/Documents/__bitsquare/_releases/$version"
 
