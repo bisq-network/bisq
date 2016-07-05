@@ -97,7 +97,8 @@ public final class User implements Persistable {
             currentPaymentAccountProperty.set(currentPaymentAccount);
 
             acceptedLanguageLocaleCodes = persisted.getAcceptedLanguageLocaleCodes();
-            acceptedArbitrators = persisted.getAcceptedArbitrators();
+            if (persisted.getAcceptedArbitrators() != null)
+                acceptedArbitrators = persisted.getAcceptedArbitrators();
             registeredArbitrator = persisted.getRegisteredArbitrator();
             developersAlert = persisted.getDevelopersAlert();
             displayedAlert = persisted.getDisplayedAlert();
@@ -195,10 +196,8 @@ public final class User implements Persistable {
     }
 
     public void clearAcceptedArbitrators() {
-        if (acceptedArbitrators != null) {
-            acceptedArbitrators.clear();
-            storage.queueUpForSave();
-        }
+        acceptedArbitrators.clear();
+        storage.queueUpForSave();
     }
 
     public void setRegisteredArbitrator(@org.jetbrains.annotations.Nullable Arbitrator arbitrator) {
@@ -254,13 +253,11 @@ public final class User implements Persistable {
     }
 
     public List<Arbitrator> getAcceptedArbitrators() {
-        return acceptedArbitrators != null ? acceptedArbitrators : new ArrayList<>();
+        return acceptedArbitrators;
     }
 
     public List<NodeAddress> getAcceptedArbitratorAddresses() {
-        return acceptedArbitrators != null ?
-                acceptedArbitrators.stream().map(Arbitrator::getArbitratorNodeAddress).collect(Collectors.toList()) :
-                new ArrayList<>();
+        return acceptedArbitrators.stream().map(Arbitrator::getArbitratorNodeAddress).collect(Collectors.toList());
     }
 
     public List<String> getAcceptedLanguageLocaleCodes() {
@@ -279,7 +276,9 @@ public final class User implements Persistable {
     }*/
 
     public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
-        Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream().filter(e -> e.getArbitratorNodeAddress().equals(nodeAddress)).findFirst();
+        Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream()
+                .filter(e -> e.getArbitratorNodeAddress().equals(nodeAddress))
+                .findFirst();
         if (arbitratorOptional.isPresent())
             return arbitratorOptional.get();
         else

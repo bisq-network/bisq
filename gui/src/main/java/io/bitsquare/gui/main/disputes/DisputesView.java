@@ -106,7 +106,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     @Override
     protected void activate() {
-        arbitratorManager.applyArbitrators();
+        arbitratorManager.updateArbitratorMap();
         arbitratorManager.getArbitratorsObservableMap().addListener(arbitratorMapChangeListener);
         updateArbitratorsDisputesTabDisableState();
 
