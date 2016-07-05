@@ -66,7 +66,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     protected void activate() {
         languageCodes.setAll(user.getAcceptedLanguageLocaleCodes());
         arbitratorManager.getArbitratorsObservableMap().addListener(arbitratorMapChangeListener);
-        arbitratorManager.applyArbitrators();
+        arbitratorManager.updateArbitratorMap();
         applyArbitratorMap();
 
         updateAutoSelectArbitrators();

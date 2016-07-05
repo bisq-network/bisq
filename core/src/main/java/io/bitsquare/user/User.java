@@ -272,6 +272,11 @@ public final class User implements Persistable {
             return null;
     }
 
+    public void clearAcceptedArbitrators() {
+        acceptedArbitrators.clear();
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
