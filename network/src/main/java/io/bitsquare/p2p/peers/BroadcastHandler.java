@@ -83,7 +83,7 @@ public class BroadcastHandler implements PeerManager.Listener {
 
     public void cancel() {
         stopped = true;
-        onFault("Broadcast canceled.");
+        onFault("Broadcast canceled.", false);
     }
 
 
