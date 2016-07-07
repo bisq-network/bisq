@@ -21,9 +21,8 @@ cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_ubuntu/jdkfix-$version
 cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_windows/jdkfix-$version.jar"
 cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_ubuntu14_32bit/jdkfix-$version.jar"
 cp jdkfix/target/jdkfix-$version.jar "/Users/mk/vm_shared_windows_32bit/jdkfix-$version.jar"
-exit
 
-echo "Using $JAVA_HOME"
+echo "Using JAVA_HOME: $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BjvmOptions=-Xbootclasspath/a:"jdkfix-$version.jar":"../PlugIns/Java.runtime/Contents/Home/jre/lib/ext/jfxrt.jar" \
