@@ -24,6 +24,7 @@ public class Monitor {
     private static Environment env;
     private final Injector injector;
     private final OfferBookService offerBookService;
+    private final Gateway gateway;
 
     private P2PService p2pService;
 
@@ -67,5 +68,6 @@ public class Monitor {
         p2pService = injector.getInstance(P2PService.class);
         offerBookService = injector.getInstance(OfferBookService.class);
         p2pService.start(false, null);
+        gateway = new Gateway(offerBookService);
     }
 }

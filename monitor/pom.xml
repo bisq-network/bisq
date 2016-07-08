@@ -81,5 +81,13 @@
             <artifactId>core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+
+        <!--py4j-->
+        <!-- http://mvnrepository.com/artifact/net.sf.py4j/py4j -->
+        <dependency>
+            <groupId>net.sf.py4j</groupId>
+            <artifactId>py4j</artifactId>
+            <version>0.10.1</version>
+        </dependency>
     </dependencies>
 </project>
