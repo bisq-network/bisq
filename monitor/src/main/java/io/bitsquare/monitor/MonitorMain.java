@@ -138,9 +138,11 @@ public class MonitorMain extends BitsquareExecutable {
         monitor = new Monitor();
 
         Scanner scanner = new Scanner(System.in);
-        String inputString = scanner.nextLine();
-        if (inputString.equals("q")) {
-            monitor.shutDown();
+        while (scanner.hasNextLine()) {
+            String inputString = scanner.nextLine();
+            if (inputString.equals("q")) {
+                monitor.shutDown();
+            }
         }
     }
 }
