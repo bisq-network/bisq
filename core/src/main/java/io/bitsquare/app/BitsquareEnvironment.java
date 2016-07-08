@@ -56,7 +56,12 @@ public class BitsquareEnvironment extends StandardEnvironment {
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
 
     public static final String APP_NAME_KEY = "appName";
-    public static final String DEFAULT_APP_NAME = "Bitsquare";
+
+    public static void setDefaultAppName(String defaultAppName) {
+        DEFAULT_APP_NAME = defaultAppName;
+    }
+
+    public static String DEFAULT_APP_NAME = "Bitsquare";
 
     public static final String APP_DATA_DIR_KEY = "appDataDir";
     public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
