@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.network;
 
 import io.bitsquare.app.Log;
+import io.bitsquare.p2p.network.connection.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

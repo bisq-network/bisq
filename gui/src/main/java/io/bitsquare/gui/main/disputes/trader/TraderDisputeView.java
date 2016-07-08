@@ -40,7 +40,7 @@ import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.connection.Connection;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import javafx.beans.property.ReadOnlyBooleanProperty;

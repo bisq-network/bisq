@@ -7,7 +7,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.connection.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.storage.messages.BroadcastMessage;
 import org.apache.commons.lang3.StringUtils;

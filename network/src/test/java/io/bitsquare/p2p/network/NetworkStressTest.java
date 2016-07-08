@@ -14,6 +14,7 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.messaging.*;
+import io.bitsquare.p2p.network.connection.Connection;
 import io.bitsquare.p2p.seed.SeedNode;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import javafx.beans.property.BooleanProperty;

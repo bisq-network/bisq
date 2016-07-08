@@ -147,6 +147,12 @@
             <artifactId>annotations</artifactId>
             <version>13.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.16.8</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!--logging-->
         <dependency>

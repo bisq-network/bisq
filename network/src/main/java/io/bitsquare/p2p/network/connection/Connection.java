@@ -1,26 +1,24 @@
-package io.bitsquare.p2p.network;
+package io.bitsquare.p2p.network.connection;
 
 import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.bitsquare.app.Log;
-import io.bitsquare.app.Version;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bitsquare.p2p.network.RuleViolation;
+import io.bitsquare.p2p.network.Statistic;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
-import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
-import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
-import io.bitsquare.p2p.peers.keepalive.messages.Pong;
 import io.bitsquare.p2p.storage.messages.RefreshTTLMessage;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -29,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -86,11 +83,13 @@ public class Connection implements MessageListener {
     // private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
     private final String portInfo;
+    @Getter
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
     private final ReentrantLock objectOutputStreamLock = cycleDetectingLockFactory.newReentrantLock("objectOutputStreamLock");
     // holder of state shared between InputHandler and Connection
     private final SharedModel sharedModel;
+    @Getter
     private final Statistic statistic;
 
     // set in init
@@ -98,14 +97,17 @@ public class Connection implements MessageListener {
     private ObjectOutputStream objectOutputStream;
 
     // mutable data, set from other threads but not changed internally.
+    @Getter
     private Optional<NodeAddress> peersNodeAddressOptional = Optional.empty();
+    @Getter
     private volatile boolean stopped;
+    @Getter
     private PeerType peerType;
+    @Getter
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
     private final List<Tuple2<Long, Serializable>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private volatile long lastSendTimeStamp = 0;
-    ;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -251,7 +253,7 @@ public class Connection implements MessageListener {
         return sharedModel.reportInvalidRequest(ruleViolation);
     }
 
-    private boolean violatesThrottleLimit(Serializable serializable) {
+    public boolean violatesThrottleLimit(Serializable serializable) {
         long now = System.currentTimeMillis();
         boolean violated = false;
         //TODO remove serializable storage after network is tested stable
@@ -334,38 +336,13 @@ public class Connection implements MessageListener {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<NodeAddress> getPeersNodeAddressOptional() {
-        return peersNodeAddressOptional;
-    }
-
-    public String getUid() {
-        return uid;
-    }
-
     public boolean hasPeersNodeAddress() {
         return peersNodeAddressOptional.isPresent();
-    }
-
-    public boolean isStopped() {
-        return stopped;
-    }
-
-    public PeerType getPeerType() {
-        return peerType;
-    }
-
-    public ReadOnlyObjectProperty<NodeAddress> peersNodeAddressProperty() {
-        return peersNodeAddressProperty;
     }
 
     public RuleViolation getRuleViolation() {
         return sharedModel.getRuleViolation();
     }
-
-    public Statistic getStatistic() {
-        return statistic;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ShutDown
@@ -486,341 +463,10 @@ public class Connection implements MessageListener {
     // SharedSpace
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Holds all shared data between Connection and InputHandler
-     * Runs in same thread as Connection
-     */
-    private static class SharedModel {
-        private static final Logger log = LoggerFactory.getLogger(SharedModel.class);
-
-        private final Connection connection;
-        private final Socket socket;
-        private final ConcurrentHashMap<RuleViolation, Integer> ruleViolations = new ConcurrentHashMap<>();
-
-        // mutable
-        private volatile boolean stopped;
-        private CloseConnectionReason closeConnectionReason;
-        private RuleViolation ruleViolation;
-
-        public SharedModel(Connection connection, Socket socket) {
-            this.connection = connection;
-            this.socket = socket;
-        }
-
-        public boolean reportInvalidRequest(RuleViolation ruleViolation) {
-            log.warn("We got reported an corrupt request " + ruleViolation + "\n\tconnection=" + this);
-            int numRuleViolations;
-            if (ruleViolations.contains(ruleViolation))
-                numRuleViolations = ruleViolations.get(ruleViolation);
-            else
-                numRuleViolations = 0;
-
-            numRuleViolations++;
-            ruleViolations.put(ruleViolation, numRuleViolations);
-
-            if (numRuleViolations >= ruleViolation.maxTolerance) {
-                log.warn("We close connection as we received too many corrupt requests.\n" +
-                        "numRuleViolations={}\n\t" +
-                        "corruptRequest={}\n\t" +
-                        "corruptRequests={}\n\t" +
-                        "connection={}", numRuleViolations, ruleViolation, ruleViolations.toString(), connection);
-                this.ruleViolation = ruleViolation;
-                shutDown(CloseConnectionReason.RULE_VIOLATION);
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        public void handleConnectionException(Throwable e) {
-            Log.traceCall(e.toString());
-            if (e instanceof SocketException) {
-                if (socket.isClosed())
-                    closeConnectionReason = CloseConnectionReason.SOCKET_CLOSED;
-                else
-                    closeConnectionReason = CloseConnectionReason.RESET;
-            } else if (e instanceof SocketTimeoutException || e instanceof TimeoutException) {
-                closeConnectionReason = CloseConnectionReason.SOCKET_TIMEOUT;
-                log.debug("SocketTimeoutException at socket " + socket.toString() + "\n\tconnection={}" + this);
-            } else if (e instanceof EOFException) {
-                closeConnectionReason = CloseConnectionReason.TERMINATED;
-            } else if (e instanceof OptionalDataException || e instanceof StreamCorruptedException) {
-                closeConnectionReason = CloseConnectionReason.CORRUPTED_DATA;
-            } else {
-                // TODO sometimes we get StreamCorruptedException, OptionalDataException, IllegalStateException
-                closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
-                log.warn("Unknown reason for exception at socket {}\n\t" +
-                                "connection={}\n\t" +
-                                "Exception=",
-                        socket.toString(),
-                        this,
-                        e.toString());
-                e.printStackTrace();
-            }
-
-            shutDown(closeConnectionReason);
-        }
-
-        public void shutDown(CloseConnectionReason closeConnectionReason) {
-            if (!stopped) {
-                stopped = true;
-                connection.shutDown(closeConnectionReason);
-            }
-        }
-
-        public Socket getSocket() {
-            return socket;
-        }
-
-        public void stop() {
-            this.stopped = true;
-        }
-
-        public RuleViolation getRuleViolation() {
-            return ruleViolation;
-        }
-
-        @Override
-        public String toString() {
-            return "SharedSpace{" +
-                    "socket=" + socket +
-                    ", ruleViolations=" + ruleViolations +
-                    '}';
-        }
-    }
-
-    // TODO put this into its own class
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // InputHandler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Runs in same thread as Connection, receives a message, performs several checks on it
-    // (including throttling limits, validity and statistics)
-    // and delivers it to the message listener given in the constructor.
-    private static class InputHandler implements Runnable {
-        private static final Logger log = LoggerFactory.getLogger(InputHandler.class);
 
-        private final SharedModel sharedModel;
-        private final ObjectInputStream objectInputStream;
-        private final String portInfo;
-        private final MessageListener messageListener;
-
-        private volatile boolean stopped;
-        private long lastReadTimeStamp;
-
-        public InputHandler(SharedModel sharedModel, ObjectInputStream objectInputStream, String portInfo, MessageListener messageListener) {
-            this.sharedModel = sharedModel;
-            this.objectInputStream = objectInputStream;
-            this.portInfo = portInfo;
-            this.messageListener = messageListener;
-        }
-
-        // TODO should be synchronized? Guaranteed only one thread?
-        public void stop() {
-            if (!stopped) {
-                try {
-                    objectInputStream.close();
-                } catch (IOException e) {
-                    log.error("IOException at InputHandler.stop\n" + e.getMessage());
-                    e.printStackTrace();
-                } finally {
-                    stopped = true;
-                }
-            }
-        }
-
-        @Override
-        public void run() {
-            try {
-                Thread.currentThread().setName("InputHandler-" + portInfo);
-                while (!stopped && !Thread.currentThread().isInterrupted()) {
-                    Connection connection = sharedModel.connection;
-                    log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
-                    try {
-                        Object rawInputObject = objectInputStream.readObject();
-
-                        // Throttle inbound messages
-                        long now = System.currentTimeMillis();
-                        long elapsed = now - lastReadTimeStamp;
-                        if (elapsed < 10) {
-                            log.info("We got 2 messages received in less than 10 ms. We set the thread to sleep " +
-                                            "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
-                                    lastReadTimeStamp, now, elapsed);
-                            Thread.sleep(20);
-                        }
-
-                        lastReadTimeStamp = now;
-                        int size = ByteArrayUtils.objectToByteArray(rawInputObject).length;
-
-                        if (rawInputObject instanceof Pong || rawInputObject instanceof RefreshTTLMessage) {
-                            // We only log Pong and RefreshTTLMessage when in dev environment (trace)
-                            log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "New data arrived at inputHandler of connection {}.\n" +
-                                            "Received object (truncated)={} / size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    StringUtils.abbreviate(rawInputObject.toString(), 100),
-                                    size);
-                        } else if (rawInputObject instanceof Message) {
-                            // We want to log all incoming messages (except Pong and RefreshTTLMessage) 
-                            // so we log before the data type checks
-                            log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "New data arrived at inputHandler of connection {}.\n" +
-                                            "Received object (truncated)={} / size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    StringUtils.abbreviate(rawInputObject.toString(), 100),
-                                    size);
-                        } else {
-                            log.error("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "Invalid data arrived at inputHandler of connection {}.\n" +
-                                            "Size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    size);
-                        }
-
-                        // We want to track the size of each object even if it is invalid data
-                        connection.statistic.addReceivedBytes(size);
-
-                        // We want to track the messages also before the checks, so do it early...
-                        Message message = null;
-                        if (rawInputObject instanceof Message) {
-                            message = (Message) rawInputObject;
-                            connection.statistic.addReceivedMessage((Message) rawInputObject);
-                        }
-
-
-                        // First we check the size
-                        boolean exceeds;
-                        if (rawInputObject instanceof GetDataResponse)
-                            exceeds = size > MAX_MSG_SIZE_GET_DATA;
-                        else
-                            exceeds = size > MAX_MSG_SIZE;
-
-                        if (exceeds)
-                            log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, message);
-
-                        if (exceeds && reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
-                            return;
-
-
-                        // Then we check if data is of type Serializable (objectInputStream supports  
-                        // Externalizable objects as well)
-                        Serializable serializable;
-                        if (rawInputObject instanceof Serializable) {
-                            serializable = (Serializable) rawInputObject;
-                        } else {
-                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
-                            // We return anyway here independent of the return value of reportInvalidRequest
-                            return;
-                        }
-
-                        // Then check data throttle limit. Do that for non-message type objects as well, 
-                        // so that's why we use serializable here.
-                        if (connection.violatesThrottleLimit(serializable) && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
-                            return;
-
-                        // We do the message type check after the size/throttle checks. 
-                        // The type check was done already earlier so we only check if message is not null.
-                        if (message == null) {
-                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
-                            // We return anyway here independent of the return value of reportInvalidRequest
-                            return;
-                        }
-
-                        // Check P2P network ID
-                        int messageVersion = message.getMessageVersion();
-                        int p2PMessageVersion = Version.getP2PMessageVersion();
-                        if (messageVersion != p2PMessageVersion) {
-                            log.warn("message.getMessageVersion()=" + messageVersion);
-                            log.warn("Version.getP2PMessageVersion()=" + p2PMessageVersion);
-                            log.warn("message=" + message);
-                            reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
-                            // We return anyway here independent of the return value of reportInvalidRequest
-                            return;
-                        }
-
-                        if (message instanceof CloseConnectionMessage) {
-                            // If we get a CloseConnectionMessage we shut down
-                            log.info("CloseConnectionMessage received. Reason={}\n\t" +
-                                    "connection={}", ((CloseConnectionMessage) message).reason, connection);
-                            stop();
-                            sharedModel.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
-                        } else if (!stopped) {
-                            // We don't want to get the activity ts updated by ping/pong msg
-                            if (!(message instanceof KeepAliveMessage))
-                                connection.statistic.updateLastActivityTimestamp();
-
-                            // First a seed node gets a message from a peer (PreliminaryDataRequest using
-                            // AnonymousMessage interface) which does not have its hidden service
-                            // published, so it does not know its address. As the IncomingConnection does not have the
-                            // peersNodeAddress set that connection cannot be used for outgoing messages until we 
-                            // get the address set.
-                            // At the data update message (DataRequest using SendersNodeAddressMessage interface) 
-                            // after the HS is published we get the peer's address set.
-
-                            // There are only those messages used for new connections to a peer:
-                            // 1. PreliminaryDataRequest
-                            // 2. DataRequest (implements SendersNodeAddressMessage)
-                            // 3. GetPeersRequest (implements SendersNodeAddressMessage)
-                            // 4. DirectMessage (implements SendersNodeAddressMessage)
-                            if (message instanceof SendersNodeAddressMessage) {
-                                NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) message).getSenderNodeAddress();
-                                Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
-                                if (peersNodeAddressOptional.isPresent()) {
-                                    // If we have already the peers address we check again if it matches our stored one
-                                    checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
-                                            "senderNodeAddress not matching connections peer address.\n\t" +
-                                                    "message=" + message);
-                                } else {
-                                    connection.setPeersNodeAddress(senderNodeAddress);
-                                }
-                            }
-
-                            if (message instanceof PrefixedSealedAndSignedMessage)
-                                connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
-
-                            messageListener.onMessage(message, connection);
-                        }
-                    } catch (ClassNotFoundException | NoClassDefFoundError e) {
-                        log.warn(e.getMessage());
-                        e.printStackTrace();
-                        reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
-                        return;
-                    } catch (IOException e) {
-                        stop();
-                        sharedModel.handleConnectionException(e);
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                        stop();
-                        if (sharedModel != null)
-                            sharedModel.handleConnectionException(new Exception(t));
-                    }
-                }
-            } catch (Throwable t) {
-                if (!(t instanceof OptionalDataException))
-                    t.printStackTrace();
-                stop();
-                sharedModel.handleConnectionException(new Exception(t));
-            }
-        }
-
-        private boolean reportInvalidRequest(RuleViolation ruleViolation) {
-            boolean causedShutDown = sharedModel.reportInvalidRequest(ruleViolation);
-            if (causedShutDown)
-                stop();
-            return causedShutDown;
-        }
-
-        @Override
-        public String toString() {
-            return "InputHandler{" +
-                    "sharedSpace=" + sharedModel +
-                    ", port=" + portInfo +
-                    ", stopped=" + stopped +
-                    '}';
-        }
-    }
 }

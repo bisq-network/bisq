@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.settings.network;
 
 import io.bitsquare.common.Clock;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.OutboundConnection;
+import io.bitsquare.p2p.network.connection.Connection;
+import io.bitsquare.p2p.network.connection.OutboundConnection;
 import io.bitsquare.p2p.network.Statistic;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
