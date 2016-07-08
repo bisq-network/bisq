@@ -6,9 +6,15 @@ import com.google.inject.Injector;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
+import io.bitsquare.arbitration.ArbitratorManager;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.UserThread;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.P2PService;
+import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.trade.offer.OfferBookService;
+import io.bitsquare.trade.offer.OpenOfferManager;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -25,6 +31,8 @@ public class Monitor {
     private final Injector injector;
     private final OfferBookService offerBookService;
     private final Gateway gateway;
+    private final OpenOfferManager openOfferManager;
+    private final MonitorModule monitorModule;
 
     private P2PService p2pService;
 
@@ -62,12 +70,93 @@ public class Monitor {
         Security.addProvider(new BouncyCastleProvider());
 
 
-        MonitorModule monitorModule = new MonitorModule(env);
+        monitorModule = new MonitorModule(env);
         injector = Guice.createInjector(monitorModule);
         Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
         p2pService = injector.getInstance(P2PService.class);
         offerBookService = injector.getInstance(OfferBookService.class);
-        p2pService.start(false, null);
+        openOfferManager = injector.getInstance(OpenOfferManager.class);
+        p2pService.start(false, new P2PServiceListener() {
+            @Override
+            public void onRequestingDataCompleted() {
+                openOfferManager.onAllServicesInitialized();
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
+
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
+
+            }
+
+            @Override
+            public void onBootstrapComplete() {
+
+            }
+
+            @Override
+            public void onTorNodeReady() {
+
+            }
+
+            @Override
+            public void onHiddenServicePublished() {
+
+            }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+
+            }
+
+            @Override
+            public void onUseDefaultBridges() {
+
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
+
+            }
+        });
+        
         gateway = new Gateway(offerBookService);
+    }
+
+    public void shutDown() {
+        gracefulShutDown(() -> {
+            log.info("Shutdown complete");
+            System.exit(0);
+        });
+    }
+
+    private void gracefulShutDown(ResultHandler resultHandler) {
+        log.debug("gracefulShutDown");
+        try {
+            if (injector != null) {
+                injector.getInstance(ArbitratorManager.class).shutDown();
+                injector.getInstance(OpenOfferManager.class).shutDown(() -> {
+                    injector.getInstance(P2PService.class).shutDown(() -> {
+                        injector.getInstance(WalletService.class).shutDownDone.addListener((ov, o, n) -> {
+                            monitorModule.close(injector);
+                            log.info("Graceful shutdown completed");
+                            resultHandler.handleResult();
+                        });
+                        injector.getInstance(WalletService.class).shutDown();
+                    });
+                });
+                // we wait max 5 sec.
+                UserThread.runAfter(resultHandler::handleResult, 5);
+            } else {
+                UserThread.runAfter(resultHandler::handleResult, 1);
+            }
+        } catch (Throwable t) {
+            log.info("App shutdown failed with exception");
+            t.printStackTrace();
+            System.exit(1);
+        }
     }
 }

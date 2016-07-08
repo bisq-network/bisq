@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Scanner;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
 
@@ -136,13 +137,10 @@ public class MonitorMain extends BitsquareExecutable {
         Monitor.setEnvironment(new BitsquareEnvironment(options));
         monitor = new Monitor();
 
-        while (true) {
-            try {
-                Thread.sleep(Long.MAX_VALUE);
-            } catch (InterruptedException e) {
-                log.error(e.getMessage());
-                e.printStackTrace();
-            }
+        Scanner scanner = new Scanner(System.in);
+        String inputString = scanner.nextLine();
+        if (inputString.equals("q")) {
+            monitor.shutDown();
         }
     }
 }
