@@ -50,7 +50,9 @@
     <logger name="org.bitcoinj.core.PeerGroup" level="ERROR"/>-->
     <logger name="org.bitcoinj.net.ConnectionHandler" level="ERROR"/>-->
     <logger name="org.bitcoinj.core.PeerSocketHandler" level="ERROR"/>-->
-
+    <logger name="org.bitcoinj.net.NioClientManager" level="ERROR"/>-->
+    <logger name="org.bitcoinj.net.MultiplexingDiscovery" level="ERROR"/>-->
+    
     <!-- <logger name="org.bitcoinj.core.Peer" level="TRACE"/>-->
 
 </configuration>

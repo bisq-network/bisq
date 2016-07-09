@@ -100,13 +100,13 @@ public class OfferBookService {
         }
     }
 
-    public void refreshOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void refreshTTL(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         boolean result = p2PService.refreshTTL(offer, true);
         if (result) {
-            log.trace("Add offer to network was successful. Offer ID = " + offer.getId());
+            log.trace("Refresh TTL was successful. Offer ID = " + offer.getId());
             resultHandler.handleResult();
         } else {
-            errorMessageHandler.handleErrorMessage("Add offer failed");
+            errorMessageHandler.handleErrorMessage("Refresh TTL failed.");
         }
     }
 

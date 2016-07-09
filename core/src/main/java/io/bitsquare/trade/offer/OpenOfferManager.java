@@ -520,9 +520,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void refreshOffer(OpenOffer openOffer) {
-        offerBookService.refreshOffer(openOffer.getOffer(),
+        offerBookService.refreshTTL(openOffer.getOffer(),
                 () -> log.debug("Successful refreshed TTL for offer"),
-                errorMessage -> log.error("Refresh TTL for offer failed. " + errorMessage));
+                errorMessage -> log.warn(errorMessage));
     }
 
     private void restart() {
