@@ -443,7 +443,7 @@ public class BSFormatter {
         duration = StringUtils.replaceOnce(duration, " 1 minutes", " 1 minute");
         duration = StringUtils.replaceOnce(duration, " 1 hours", " 1 hour");
         duration = StringUtils.replaceOnce(duration, " 1 days", " 1 day");
-        if (duration.startsWith(" ,"))
+        if (duration.startsWith(", "))
             duration = duration.replace(", ", "");
         if (duration.equals(""))
             duration = "Trade period is over";
