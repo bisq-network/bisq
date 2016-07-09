@@ -134,7 +134,8 @@ public class OfferBookService {
 
     public void removeOfferAtShutDown(Offer offer) {
         log.debug("removeOfferAtShutDown " + offer);
-        removeOffer(offer, null, null);
+        if (p2PService.isBootstrapped())
+            removeOffer(offer, null, null);
     }
 
 }
