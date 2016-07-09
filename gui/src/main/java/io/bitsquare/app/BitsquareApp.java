@@ -75,6 +75,7 @@ import java.nio.file.Paths;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 
@@ -346,20 +347,23 @@ public class BitsquareApp extends Application {
     @Override
     public void stop() {
         shutDownRequested = true;
-        gracefulShutDown(() -> {
-            log.info("App shutdown complete");
-            System.exit(0);
-        });
-    }
 
-    private void gracefulShutDown(ResultHandler resultHandler) {
-        log.debug("gracefulShutDown");
         new Popup().headLine("Shut down in progress")
                 .backgroundInfo("Shutting down application can take a few seconds.\n" +
                         "Please don't interrupt that process.")
                 .hideCloseButton()
                 .useAnimation(false)
                 .show();
+        UserThread.runAfter(() -> {
+            gracefulShutDown(() -> {
+                log.info("App shutdown complete");
+                System.exit(0);
+            });
+        }, 100, TimeUnit.MILLISECONDS);
+    }
+
+    private void gracefulShutDown(ResultHandler resultHandler) {
+        log.debug("gracefulShutDown");
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
