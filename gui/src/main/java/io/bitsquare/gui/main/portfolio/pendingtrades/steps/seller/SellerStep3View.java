@@ -51,6 +51,7 @@ public class SellerStep3View extends TradeStepView {
     private Label statusLabel;
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
+    private boolean disputeOpened;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +103,7 @@ public class SellerStep3View extends TradeStepView {
                             .show();
                 }
 
-            } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT) {
+            } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT && !disputeOpened) {
                 showStatusInfo();
                 statusLabel.setText("Sending confirmation...");
             } else if (state == Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG) {
@@ -235,6 +236,7 @@ public class SellerStep3View extends TradeStepView {
 
     @Override
     protected void applyOnDisputeOpened() {
+        disputeOpened = true;
         confirmButton.setDisable(true);
     }
 
