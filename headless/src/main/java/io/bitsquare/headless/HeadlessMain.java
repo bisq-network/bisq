@@ -42,6 +42,7 @@ import static io.bitsquare.app.BitsquareEnvironment.*;
 public class HeadlessMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(HeadlessMain.class);
     private Headless headless;
+    private boolean isStopped;
 
     public static void main(String[] args) throws Exception {
         // We don't want to do the full argument parsing here as that might easily change in update versions
@@ -137,11 +138,17 @@ public class HeadlessMain extends BitsquareExecutable {
         Headless.setEnvironment(new BitsquareEnvironment(options));
         headless = new Headless();
 
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String inputString = scanner.nextLine();
-            if (inputString.equals("q")) {
-                headless.shutDown();
+        while (!isStopped) {
+            try {
+                Scanner scanner = new Scanner(System.in);
+                while (scanner.hasNextLine()) {
+                    String inputString = scanner.nextLine();
+                    if (inputString.equals("q")) {
+                        headless.shutDown();
+                        isStopped = true;
+                    }
+                }
+            } catch (Throwable ignore) {
             }
         }
     }

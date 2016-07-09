@@ -42,6 +42,7 @@ import static io.bitsquare.app.BitsquareEnvironment.*;
 public class MonitorMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(MonitorMain.class);
     private Monitor monitor;
+    private boolean isStopped;
 
     public static void main(String[] args) throws Exception {
         // We don't want to do the full argument parsing here as that might easily change in update versions
@@ -137,11 +138,17 @@ public class MonitorMain extends BitsquareExecutable {
         Monitor.setEnvironment(new BitsquareEnvironment(options));
         monitor = new Monitor();
 
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String inputString = scanner.nextLine();
-            if (inputString.equals("q")) {
-                monitor.shutDown();
+        while (!isStopped) {
+            try {
+                Scanner scanner = new Scanner(System.in);
+                while (scanner.hasNextLine()) {
+                    String inputString = scanner.nextLine();
+                    if (inputString.equals("q")) {
+                        monitor.shutDown();
+                        isStopped = true;
+                    }
+                }
+            } catch (Throwable ignore) {
             }
         }
     }
