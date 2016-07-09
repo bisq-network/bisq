@@ -155,10 +155,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
 
         final int size = openOffers.size();
-        openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
-        if (completeHandler != null) {
-
-            UserThread.runAfter(completeHandler::run, size * 200 + 500, TimeUnit.MILLISECONDS);
+        if (offerBookService.isBootstrapped()) {
+            openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
+            if (completeHandler != null)
+                UserThread.runAfter(completeHandler::run, size * 200 + 500, TimeUnit.MILLISECONDS);
+        } else {
+            if (completeHandler != null)
+                completeHandler.run();
         }
     }
 
