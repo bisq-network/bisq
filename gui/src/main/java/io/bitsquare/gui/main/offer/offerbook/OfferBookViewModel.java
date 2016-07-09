@@ -460,7 +460,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isIgnored(Offer offer) {
-        return preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().hostName)).findAny().isPresent();
+        return preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent();
     }
 
     boolean isOfferBanned(Offer offer) {
@@ -474,7 +474,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     boolean isNodeBanned(Offer offer) {
         return filterManager.getFilter() != null &&
                 filterManager.getFilter().bannedNodeAddress.stream()
-                        .filter(e -> e.equals(offer.getOffererNodeAddress().hostName))
+                        .filter(e -> e.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix()))
                         .findAny()
                         .isPresent();
     }

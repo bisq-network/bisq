@@ -361,7 +361,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             AvailabilityResult availabilityResult;
             if (openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
                 final Offer offer = openOfferOptional.get().getOffer();
-                if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().hostName)).findAny().isPresent()) {
+                if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent()) {
                     availabilityResult = AvailabilityResult.AVAILABLE;
                     List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                     if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
