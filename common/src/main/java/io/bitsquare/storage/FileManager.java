@@ -174,6 +174,7 @@ public class FileManager<T> {
         UserThread.execute(() -> log.trace("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now));
     }
 
+    // TODO Sometimes we get a ConcurrentModificationException here
     private synchronized void saveToFile(T serializable, File dir, File storageFile) {
         File tempFile = null;
         FileOutputStream fileOutputStream = null;

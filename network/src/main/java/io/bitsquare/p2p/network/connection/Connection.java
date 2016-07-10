@@ -329,6 +329,11 @@ public class Connection implements MessageListener {
         }
 
         peersNodeAddressProperty.set(peerNodeAddress);
+
+        if (BanList.contains(peerNodeAddress)) {
+            log.warn("We detected a connection to a banned peer. We will close that connection. (setPeersNodeAddress)");
+            sharedModel.reportInvalidRequest(RuleViolation.PEER_BANNED);
+        }
     }
 
 
@@ -464,9 +469,9 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // InputHandler
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 }

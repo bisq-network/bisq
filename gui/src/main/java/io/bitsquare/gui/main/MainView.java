@@ -62,7 +62,7 @@ import static javafx.scene.layout.AnchorPane.*;
 public class MainView extends InitializableView<StackPane, MainViewModel> {
     private static final Logger log = LoggerFactory.getLogger(MainView.class);
 
-    public static final String TITLE_KEY = "view.title";
+    public static final String TITLE_KEY = "viewTitle";
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;

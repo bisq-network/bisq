@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -50,6 +51,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private final TradeDetailsWindow tradeDetailsWindow;
     private final BSFormatter formatter;
+    private PrivateNotificationManager privateNotificationManager;
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
@@ -70,10 +72,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesView(PendingTradesViewModel model, TradeDetailsWindow tradeDetailsWindow, BSFormatter formatter) {
+    public PendingTradesView(PendingTradesViewModel model, TradeDetailsWindow tradeDetailsWindow, BSFormatter formatter, PrivateNotificationManager privateNotificationManager) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;
+        this.privateNotificationManager = privateNotificationManager;
     }
 
     @Override
@@ -454,7 +457,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ? "Trading peers onion address: " + hostName + "\n" +
                                             "You have already traded " + numPastTrades + " times with that peer." : "Trading peers onion address: " + hostName;
-                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades);
+                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getTrade().getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)
                                         setGraphic(identIcon);

@@ -17,15 +17,11 @@
 
 package io.bitsquare.gui.main.settings.network;
 
-import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.Clock;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Statistic;
@@ -39,14 +35,12 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.util.StringConverter;
 import org.bitcoinj.core.Peer;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -63,8 +57,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     TextField onionAddress, totalTraffic;
     @FXML
     CheckBox useBridgesCheckBox;
-    @FXML
-    ComboBox<BitcoinNetwork> netWorkComboBox;
     @FXML
     TextArea bitcoinPeersTextArea, bridgesTextArea;
     @FXML
@@ -101,20 +93,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
 
         bitcoinPeersTextArea.setPrefRowCount(10);
-        netWorkComboBox.setItems(FXCollections.observableArrayList(BitcoinNetwork.values()));
-        netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork());
-        netWorkComboBox.setOnAction(e -> onSelectNetwork());
-        netWorkComboBox.setConverter(new StringConverter<BitcoinNetwork>() {
-            @Override
-            public String toString(BitcoinNetwork bitcoinNetwork) {
-                return formatter.formatBitcoinNetwork(bitcoinNetwork);
-            }
-
-            @Override
-            public BitcoinNetwork fromString(String string) {
-                return null;
-            }
-        });
 
         tableView.setMinHeight(300);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -225,25 +203,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 bitcoinPeersTextArea.appendText(e.getAddress().getSocketAddress().toString());
             });
         }
-    }
-
-    private void onSelectNetwork() {
-        if (netWorkComboBox.getSelectionModel().getSelectedItem() != preferences.getBitcoinNetwork())
-            selectNetwork();
-    }
-
-    private void selectNetwork() {
-        //TODO restart
-        new Popup().warning("You need to shut down and restart the application to apply the change of the Bitcoin network.\n\n" +
-                "Do you want to shut down now?")
-                .onAction(() -> {
-                    preferences.setBitcoinNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
-                    UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
-                })
-                .actionButtonText("Shut down")
-                .closeButtonText("Cancel")
-                .onClose(() -> netWorkComboBox.getSelectionModel().select(preferences.getBitcoinNetwork()))
-                .show();
     }
 }
 

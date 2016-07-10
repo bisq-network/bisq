@@ -20,6 +20,8 @@ package io.bitsquare.gui.main;
 import com.google.inject.Inject;
 import io.bitsquare.alert.Alert;
 import io.bitsquare.alert.AlertManager;
+import io.bitsquare.alert.PrivateNotification;
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
@@ -38,6 +40,7 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.components.BalanceTextField;
@@ -101,6 +104,8 @@ public class MainViewModel implements ViewModel {
     private final DisputeManager disputeManager;
     final Preferences preferences;
     private final AlertManager alertManager;
+    private PrivateNotificationManager privateNotificationManager;
+    private FilterManager filterManager;
     private final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
     private final TacWindow tacWindow;
@@ -171,7 +176,8 @@ public class MainViewModel implements ViewModel {
                          PriceFeed priceFeed,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
-                         User user, AlertManager alertManager, WalletPasswordWindow walletPasswordWindow,
+                         User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
+                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.priceFeed = priceFeed;
@@ -185,6 +191,8 @@ public class MainViewModel implements ViewModel {
         this.disputeManager = disputeManager;
         this.preferences = preferences;
         this.alertManager = alertManager;
+        this.privateNotificationManager = privateNotificationManager;
+        this.filterManager = filterManager; // Needed to be referenced so we get it initialized and get the eventlistener registered
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
@@ -517,6 +525,7 @@ public class MainViewModel implements ViewModel {
         openOfferManager.onAllServicesInitialized();
         arbitratorManager.onAllServicesInitialized();
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue));
+        privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
         displayAlertIfPresent(alertManager.alertMessageProperty().get());
 
         setupBtcNumPeersWatcher();
@@ -865,6 +874,15 @@ public class MainViewModel implements ViewModel {
             new DisplayAlertMessageWindow().alertMessage(alert).show();
     }
 
+    private void displayPrivateNotification(PrivateNotification privateNotification) {
+        new Popup<>().headLine("Important private notification!")
+                .attention(privateNotification.message)
+                .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
+                .onClose(() -> privateNotificationManager.removePrivateNotification())
+                .closeButtonText("I understand")
+                .show();
+    }
+
     private void swapPendingOfferFundingEntries() {
         tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)
@@ -922,11 +940,10 @@ public class MainViewModel implements ViewModel {
         }
         addedList.stream().forEach(dispute -> {
             String id = dispute.getId();
-            if (disputeIsClosedSubscriptionsMap.containsKey(id)) {
-                log.warn("We have already an entry in disputeStateSubscriptionsMap. That should never happen.");
-            } else {
-                Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
-                        disputeState -> {
+            Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
+                    isClosed -> {
+                        // We get event before list gets updated, so we execute on next frame
+                        UserThread.execute(() -> {
                             int openDisputes = disputeManager.getDisputesAsObservableList().stream()
                                     .filter(e -> !e.isClosed())
                                     .collect(Collectors.toList()).size();
@@ -937,8 +954,8 @@ public class MainViewModel implements ViewModel {
 
                             showOpenDisputesNotification.set(openDisputes > 0);
                         });
-                disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
-            }
+                    });
+            disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
         });
     }
 

@@ -128,8 +128,9 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("USDT", "USD Tether"));
         result.add(new CryptoCurrency("EURT", "EUR Tether"));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
+        result.add(new CryptoCurrency("WDC", "Worldcoin"));
         return result;
-    }
+    } 
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();

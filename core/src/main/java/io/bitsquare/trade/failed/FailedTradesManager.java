@@ -38,7 +38,7 @@ public class FailedTradesManager {
     private final KeyRing keyRing;
 
     @Inject
-    public FailedTradesManager(KeyRing keyRing, PriceFeed priceFeed, @Named("storage.dir") File storageDir) {
+    public FailedTradesManager(KeyRing keyRing, PriceFeed priceFeed, @Named(Storage.DIR_KEY) File storageDir) {
         this.keyRing = keyRing;
         this.failedTrades = new TradableList<>(new Storage<>(storageDir), "FailedTrades");
         failedTrades.forEach(e -> e.getOffer().setPriceFeed(priceFeed));

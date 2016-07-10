@@ -33,6 +33,8 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Every trade use a addressEntry with a dedicated address for all transactions related to the trade.
  * That way we have a kind of separated trade wallet, isolated from other transactions and avoiding coin merge.
@@ -95,6 +97,7 @@ public final class AddressEntry implements Persistable {
 
         paramId = params.getId();
 
+        checkNotNull(keyPair);
         pubKey = keyPair.getPubKey();
         pubKeyHash = keyPair.getPubKeyHash();
     }

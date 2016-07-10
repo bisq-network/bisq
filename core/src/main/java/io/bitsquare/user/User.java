@@ -22,6 +22,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.persistance.Persistable;
+import io.bitsquare.filter.Filter;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.NodeAddress;
@@ -65,7 +66,8 @@ public final class User implements Persistable {
     private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
     private Alert developersAlert;
     private Alert displayedAlert;
-
+    @Nullable
+    private Filter developersFilter;
 
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
     @Nullable
@@ -95,10 +97,12 @@ public final class User implements Persistable {
             currentPaymentAccountProperty.set(currentPaymentAccount);
 
             acceptedLanguageLocaleCodes = persisted.getAcceptedLanguageLocaleCodes();
-            acceptedArbitrators = persisted.getAcceptedArbitrators();
+            if (persisted.getAcceptedArbitrators() != null)
+                acceptedArbitrators = persisted.getAcceptedArbitrators();
             registeredArbitrator = persisted.getRegisteredArbitrator();
             developersAlert = persisted.getDevelopersAlert();
             displayedAlert = persisted.getDisplayedAlert();
+            developersFilter = persisted.getDevelopersFilter();
         } else {
             accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
 
@@ -191,11 +195,20 @@ public final class User implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void clearAcceptedArbitrators() {
+        acceptedArbitrators.clear();
+        storage.queueUpForSave();
+    }
+
     public void setRegisteredArbitrator(@org.jetbrains.annotations.Nullable Arbitrator arbitrator) {
         this.registeredArbitrator = arbitrator;
         storage.queueUpForSave();
     }
 
+    public void setDevelopersFilter(Filter developersFilter) {
+        this.developersFilter = developersFilter;
+        storage.queueUpForSave();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -240,13 +253,11 @@ public final class User implements Persistable {
     }
 
     public List<Arbitrator> getAcceptedArbitrators() {
-        return acceptedArbitrators != null ? acceptedArbitrators : new ArrayList<>();
+        return acceptedArbitrators;
     }
 
     public List<NodeAddress> getAcceptedArbitratorAddresses() {
-        return acceptedArbitrators != null ?
-                acceptedArbitrators.stream().map(Arbitrator::getArbitratorNodeAddress).collect(Collectors.toList()) :
-                new ArrayList<>();
+        return acceptedArbitrators.stream().map(Arbitrator::getArbitratorNodeAddress).collect(Collectors.toList());
     }
 
     public List<String> getAcceptedLanguageLocaleCodes() {
@@ -265,11 +276,17 @@ public final class User implements Persistable {
     }*/
 
     public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
-        Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream().filter(e -> e.getArbitratorNodeAddress().equals(nodeAddress)).findFirst();
+        Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream()
+                .filter(e -> e.getArbitratorNodeAddress().equals(nodeAddress))
+                .findFirst();
         if (arbitratorOptional.isPresent())
             return arbitratorOptional.get();
         else
             return null;
+    }
+
+    public Filter getDevelopersFilter() {
+        return developersFilter;
     }
 
 

@@ -94,14 +94,14 @@ public class NotificationCenter {
                 change.getAddedSubList().stream().forEach(trade -> {
                     String tradeId = trade.getId();
                     if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
-                        log.warn("We have already an entry in disputeStateSubscriptionsMap. That should never happen.");
+                        log.debug("We have already an entry in disputeStateSubscriptionsMap.");
                     } else {
                         Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), disputeState -> onDisputeStateChanged(trade, disputeState));
                         disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
                     }
 
                     if (tradeStateSubscriptionsMap.containsKey(tradeId)) {
-                        log.warn("We have already an entry in tradeStateSubscriptionsMap. That should never happen.");
+                        log.debug("We have already an entry in tradeStateSubscriptionsMap.");
                     } else {
                         Subscription tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), tradeState -> onTradeStateChanged(trade, tradeState));
                         tradeStateSubscriptionsMap.put(tradeId, tradeStateSubscription);

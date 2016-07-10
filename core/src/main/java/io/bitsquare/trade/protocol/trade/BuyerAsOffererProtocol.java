@@ -209,6 +209,8 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
             handle((DepositTxPublishedMessage) tradeMessage, peerNodeAddress);
         } else if (tradeMessage instanceof FinalizePayoutTxRequest) {
             handle((FinalizePayoutTxRequest) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof PayDepositRequest) {
+            // do nothing as we get called the handleTakeOfferRequest method from outside
         } else {
             log.error("Incoming decrypted tradeMessage not supported. " + tradeMessage);
         }

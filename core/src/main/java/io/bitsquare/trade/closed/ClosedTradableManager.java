@@ -38,7 +38,7 @@ public class ClosedTradableManager {
     private final KeyRing keyRing;
 
     @Inject
-    public ClosedTradableManager(KeyRing keyRing, PriceFeed priceFeed, @Named("storage.dir") File storageDir) {
+    public ClosedTradableManager(KeyRing keyRing, PriceFeed priceFeed, @Named(Storage.DIR_KEY) File storageDir) {
         this.keyRing = keyRing;
         this.closedTrades = new TradableList<>(new Storage<>(storageDir), "ClosedTrades");
         closedTrades.forEach(e -> e.getOffer().setPriceFeed(priceFeed));

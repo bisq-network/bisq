@@ -289,8 +289,8 @@ public abstract class TradeStepView extends AnchorPane {
         }
         new Popup().warning(trade.errorMessageProperty().getValue()
                 + "\n\nPlease report the problem to your arbitrator.\n\n" +
-                "He will forward teh information to the developers to investigate the problem.\n" +
-                "After the problem has be analyzed you will get back all the funds if they are locked.\n" +
+                "He will forward the information to the developers to investigate the problem.\n" +
+                "After the problem has be analyzed you will get back all the funds if funds was locked.\n" +
                 "There will be no arbitration fee charged in case of a software bug.")
                 .show();
 

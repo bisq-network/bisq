@@ -26,6 +26,8 @@ public class FeePolicy {
     // To see current fees check out:
     // https://tradeblock.com/blockchain
     // http://www.cointape.com
+    // http://p2sh.info/dashboard/db/fee-estimation
+    // https://bitcoinfees.github.io/#1d
     // Average values are 10-100 satoshis/byte in january 2016
     // 
     // Our trade transactions have a fixed set of inputs and outputs making the size very predictable 

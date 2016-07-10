@@ -52,6 +52,15 @@ public class TransactionsListItem {
     private boolean detailsAvailable;
     private Coin amountAsCoin = Coin.ZERO;
     private BSFormatter formatter;
+    private int confirmations = 0;
+
+    public TransactionsListItem() {
+        date = null;
+        walletService = null;
+        txConfidenceIndicator = null;
+        tooltip = null;
+        txId = null;
+    }
 
     public TransactionsListItem(Transaction transaction, WalletService walletService, Optional<Tradable> tradableOptional, BSFormatter formatter) {
         this.formatter = formatter;
@@ -119,16 +128,14 @@ public class TransactionsListItem {
         txConfidenceIndicator.setPrefWidth(30);
         Tooltip.install(txConfidenceIndicator, tooltip);
 
-        if (address != null) {
-            txConfidenceListener = new TxConfidenceListener(txId) {
-                @Override
-                public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                    updateConfidence(confidence);
-                }
-            };
-            walletService.addTxConfidenceListener(txConfidenceListener);
-            updateConfidence(transaction.getConfidence());
-        }
+        txConfidenceListener = new TxConfidenceListener(txId) {
+            @Override
+            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
+                updateConfidence(confidence);
+            }
+        };
+        walletService.addTxConfidenceListener(txConfidenceListener);
+        updateConfidence(transaction.getConfidence());
 
 
         if (tradableOptional.isPresent()) {
@@ -178,6 +185,7 @@ public class TransactionsListItem {
     }
 
     private void updateConfidence(TransactionConfidence confidence) {
+        confirmations = confidence.getDepthInBlocks();
         if (confidence != null) {
             switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
@@ -194,7 +202,8 @@ public class TransactionsListItem {
                     break;
                 case DEAD:
                     tooltip.setText("Transaction is invalid.");
-                    txConfidenceIndicator.setProgress(0);
+                    txConfidenceIndicator.setStyle(" -fx-progress-color: -bs-error-red;");
+                    txConfidenceIndicator.setProgress(-1);
                     break;
             }
 
@@ -251,6 +260,10 @@ public class TransactionsListItem {
     @Nullable
     public Tradable getTradable() {
         return tradable;
+    }
+
+    public String getNumConfirmations() {
+        return String.valueOf(confirmations);
     }
 }
 

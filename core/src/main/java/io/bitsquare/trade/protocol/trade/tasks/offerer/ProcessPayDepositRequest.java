@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.filter.PaymentAccountFilter;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.exceptions.TradePriceOutOfToleranceException;
@@ -48,6 +49,16 @@ public class ProcessPayDepositRequest extends TradeTask {
             checkNotNull(payDepositRequest);
             checkTradeId(processModel.getId(), payDepositRequest);
 
+            PaymentAccountContractData paymentAccountContractData = checkNotNull(payDepositRequest.takerPaymentAccountContractData);
+            final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
+            if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountContractData, appliedPaymentAccountFilter)) {
+                failed("Other trader is banned by his payment account data.\n" +
+                        "paymentAccountContractData=" + paymentAccountContractData.getPaymentDetails() + "\n" +
+                        "banFilter=" + appliedPaymentAccountFilter[0].toString());
+                return;
+            }
+            processModel.tradingPeer.setPaymentAccountContractData(paymentAccountContractData);
+
             processModel.tradingPeer.setRawTransactionInputs(checkNotNull(payDepositRequest.rawTransactionInputs));
             checkArgument(payDepositRequest.rawTransactionInputs.size() > 0);
 
@@ -58,9 +69,6 @@ public class ProcessPayDepositRequest extends TradeTask {
             processModel.tradingPeer.setMultiSigPubKey(checkNotNull(payDepositRequest.takerMultiSigPubKey));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(payDepositRequest.takerPayoutAddressString));
             processModel.tradingPeer.setPubKeyRing(checkNotNull(payDepositRequest.takerPubKeyRing));
-
-            PaymentAccountContractData paymentAccountContractData = checkNotNull(payDepositRequest.takerPaymentAccountContractData);
-            processModel.tradingPeer.setPaymentAccountContractData(paymentAccountContractData);
 
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(payDepositRequest.takerAccountId));
             trade.setTakeOfferFeeTxId(nonEmptyStringOf(payDepositRequest.takeOfferFeeTxId));

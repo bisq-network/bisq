@@ -48,7 +48,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class Storage<T extends Serializable> {
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
-    public static final String DIR_KEY = "storage.dir";
+    public static final String DIR_KEY = "storageDir";
 
     private static DataBaseCorruptionHandler databaseCorruptionHandler;
 

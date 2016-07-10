@@ -80,7 +80,9 @@ public class Utilities {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<>(maximumPoolSize), threadFactory);
         executor.allowCoreThreadTimeOut(true);
-        executor.setRejectedExecutionHandler((r, e) -> log.warn("RejectedExecutionHandler called"));
+        executor.setRejectedExecutionHandler((r, e) -> {
+            log.debug("RejectedExecutionHandler called");
+        });
         return executor;
     }
 
@@ -99,7 +101,9 @@ public class Utilities {
         executor.allowCoreThreadTimeOut(true);
         executor.setMaximumPoolSize(maximumPoolSize);
         executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        executor.setRejectedExecutionHandler((r, e) -> log.warn("RejectedExecutionHandler called"));
+        executor.setRejectedExecutionHandler((r, e) -> {
+            log.debug("RejectedExecutionHandler called");
+        });
         return executor;
     }
 
@@ -135,7 +139,7 @@ public class Utilities {
                     ? "64" : "32";
         } else if (osArch.contains("arm")) {
             // armv8 is 64 bit, armv7l is 32 bit
-            return osArch.contains("64") || osArch.contains("v8") ? "64" : "32"; 
+            return osArch.contains("64") || osArch.contains("v8") ? "64" : "32";
         } else if (isLinux()) {
             return osArch.startsWith("i") ? "32" : "64";
         } else {
