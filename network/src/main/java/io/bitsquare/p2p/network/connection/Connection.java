@@ -13,6 +13,7 @@ import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.network.RuleViolation;
 import io.bitsquare.p2p.network.Statistic;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
+import io.bitsquare.p2p.peers.BanList;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.p2p.storage.messages.RefreshTTLMessage;
@@ -462,16 +463,4 @@ public class Connection implements MessageListener {
                 ", stopped=" + stopped +
                 '}';
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // SharedSpace
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // InputHandler
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 }

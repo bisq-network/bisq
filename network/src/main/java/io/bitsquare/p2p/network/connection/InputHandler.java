@@ -108,6 +108,10 @@ public class InputHandler implements Runnable {
                                         + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                 connection,
                                 size);
+                        try {
+                            log.error("rawInputObject.className=" + rawInputObject.getClass().getName());
+                        } catch (Throwable ignore) {
+                        }
                     }
 
                     // We want to track the size of each object even if it is invalid data
