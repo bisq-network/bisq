@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.offer;
 
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.pricefeed.MarketPrice;
@@ -29,6 +30,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.trade.exceptions.TradePriceOutOfToleranceException;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
 import javafx.beans.property.*;
@@ -59,7 +61,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
     private static final Logger log = LoggerFactory.getLogger(Offer.class);
-    public static final long TTL = TimeUnit.MINUTES.toMillis(6);
+    public static final long TTL = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 6 : 6);
     public final static String TAC_OFFERER = "With placing that offer I agree to trade " +
             "with any trader who fulfills the conditions as defined above.";
     public static final String TAC_TAKER = "With taking that offer I agree to the trade conditions as defined above.";
@@ -377,6 +379,25 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
             }
         } else {
             return Fiat.valueOf(currencyCode, fiatPrice);
+        }
+    }
+
+    public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException, IllegalArgumentException {
+        checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
+        Fiat tradePriceAsFiat = Fiat.valueOf(getCurrencyCode(), takersTradePrice);
+        Fiat offerPriceAsFiat = getPrice();
+        checkArgument(offerPriceAsFiat != null, "offerPriceAsFiat must not be null");
+        double factor = (double) takersTradePrice / (double) offerPriceAsFiat.value;
+        // We allow max. 2 % difference between own offer price calculation and takers calculation.
+        // Market price might be different at offerers and takers side so we need a bit of tolerance.
+        // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations 
+        // from one provider.
+        if (Math.abs(1 - factor) > 0.02) {
+            String msg = "Taker's trade price is too far away from our calculated price based on the market price.\n" +
+                    "tradePriceAsFiat=" + tradePriceAsFiat.toFriendlyString() + "\n" +
+                    "offerPriceAsFiat=" + offerPriceAsFiat.toFriendlyString();
+            log.warn(msg);
+            throw new TradePriceOutOfToleranceException(msg);
         }
     }
 

@@ -31,9 +31,9 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.network.CloseConnectionReason;
-import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.ConnectionListener;
+import io.bitsquare.p2p.network.connection.CloseConnectionReason;
+import io.bitsquare.p2p.network.connection.Connection;
+import io.bitsquare.p2p.network.connection.ConnectionListener;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Trade;
@@ -78,7 +78,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final BooleanProperty isOfferAvailable = new SimpleBooleanProperty();
     final BooleanProperty isTakeOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
-    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty();
+    final BooleanProperty isWaitingForFunds = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty takeOfferCompleted = new SimpleBooleanProperty();
@@ -164,7 +164,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         amountRange = formatter.formatCoin(offer.getMinAmount()) + " - " + formatter.formatCoin(offer.getAmount());
         price = formatter.formatFiat(dataModel.tradePrice);
-        marketPriceMargin = formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin());
+        marketPriceMargin = formatter.formatPercentagePrice(offer.getMarketPriceMargin());
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");
@@ -324,7 +324,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             String appendMsg = "";
             switch (trade.getState().getPhase()) {
                 case PREPARATION:
-                    appendMsg = "\n\nThere have no funds left your wallet yet.\n" +
+                    appendMsg = "\n\nNo funds have left your wallet yet.\n" +
                             "Please try to restart you application and check your network connection to see if you can resolve the issue.";
                     break;
                 case TAKER_FEE_PAID:
@@ -476,7 +476,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             spinnerInfoText.set("Waiting for funds...");
         }
 
-        isSpinnerVisible.set(!spinnerInfoText.get().isEmpty());
+        isWaitingForFunds.set(!spinnerInfoText.get().isEmpty());
     }
 
     private void addListeners() {

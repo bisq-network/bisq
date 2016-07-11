@@ -24,11 +24,13 @@ import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
 import io.bitsquare.arbitration.payload.Attachment;
+import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.main.overlays.popups.Popup;
@@ -38,7 +40,7 @@ import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.connection.Connection;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -47,10 +49,16 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import io.bitsquare.gui.util.SortedList;
+import javafx.collections.transformation.SortedList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextAlignment;
@@ -68,9 +76,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
@@ -97,7 +103,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TextArea inputTextArea;
     private AnchorPane messagesAnchorPane;
     private VBox messagesInputBox;
-    private ProgressIndicator sendMsgProgressIndicator;
+    private BusyAnimation sendMsgBusyAnimation;
     private Label sendMsgInfoLabel;
     private ChangeListener<Boolean> arrivedPropertyListener;
     private ChangeListener<Boolean> storedInMailboxPropertyListener;
@@ -110,6 +116,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages;
     private Button sendButton;
     private Subscription inputTextAreaTextSubscription;
+    private EventHandler<KeyEvent> keyEventEventHandler;
+    private Scene scene;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -173,11 +181,77 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         };
 
         disputeDirectMessageListListener = c -> scrollToBottom();
+
+        keyEventEventHandler = event -> {
+            if (new KeyCodeCombination(KeyCode.L, KeyCombination.SHORTCUT_DOWN).match(event)) {
+                Map<String, List<Dispute>> map = new HashMap<>();
+                disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> {
+                    String tradeId = dispute.getTradeId();
+                    List<Dispute> list;
+                    if (!map.containsKey(tradeId))
+                        map.put(tradeId, new ArrayList<>());
+
+                    list = map.get(tradeId);
+                    list.add(dispute);
+                });
+                List<List<Dispute>> disputeGroups = new ArrayList<>();
+                map.entrySet().stream().forEach(entry -> {
+                    disputeGroups.add(entry.getValue());
+                });
+                disputeGroups.sort((o1, o2) -> !o1.isEmpty() && !o2.isEmpty() ? o1.get(0).getOpeningDate().compareTo(o2.get(0).getOpeningDate()) : 0);
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("Summary of all disputes (Nr. of disputes: " + disputeGroups.size() + ")\n\n");
+                disputeGroups.stream().forEach(disputeGroup -> {
+                    Dispute dispute0 = disputeGroup.get(0);
+                    stringBuilder.append("##########################################################################################/\n")
+                            .append("## Trade ID: ")
+                            .append(dispute0.getTradeId())
+                            .append("\n")
+                            .append("## Date: ")
+                            .append(formatter.formatDateTime(dispute0.getOpeningDate()))
+                            .append("\n")
+                            .append("## Is support ticket: ")
+                            .append(dispute0.isSupportTicket())
+                            .append("\n");
+                    if (dispute0.disputeResultProperty().get() != null && dispute0.disputeResultProperty().get().getReason() != null) {
+                        stringBuilder.append("## Reason: ")
+                                .append(dispute0.disputeResultProperty().get().getReason())
+                                .append("\n");
+                    }
+                    stringBuilder.append("##########################################################################################/\n")
+                            .append("\n");
+                    disputeGroup.stream().forEach(dispute -> {
+                        stringBuilder
+                                .append("*******************************************************************************************\n")
+                                .append("** Traders ID: ")
+                                .append(dispute.getTraderId())
+                                .append("\n*******************************************************************************************\n")
+                                .append("\n");
+                        dispute.getDisputeCommunicationMessagesAsObservableList().stream().forEach(m -> {
+                            String role = m.isSenderIsTrader() ? ">> Traders msg: " : "<< Arbitrators msg: ";
+                            stringBuilder.append(role)
+                                    .append(m.getMessage())
+                                    .append("\n");
+                        });
+                        stringBuilder.append("\n");
+                    });
+                    stringBuilder.append("\n");
+                });
+                String message = stringBuilder.toString();
+                new Popup().headLine("All disputes (" + disputeGroups.size() + ")")
+                        .information(message)
+                        .width(1000)
+                        .actionButtonText("Copy")
+                        .onAction(() -> Utilities.copyToClipboard(message))
+                        .show();
+            }
+        };
     }
 
     @Override
     protected void activate() {
-
+        disputeManager.cleanupDisputes();
+        
         FilteredList<Dispute> filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
         setFilteredListPredicate(filteredList);
 
@@ -193,6 +267,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             tableView.getSelectionModel().select(selectedItem);
 
         scrollToBottom();
+
+        scene = root.getScene();
+        if (scene != null)
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     @Override
@@ -200,6 +278,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         sortedList.comparatorProperty().unbind();
         selectedDisputeSubscription.unsubscribe();
         removeListenersOnSelectDispute();
+
+        if (scene != null)
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     protected void setFilteredListPredicate(FilteredList<Dispute> filteredList) {
@@ -228,14 +309,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         inputTextArea.setDisable(true);
         inputTextArea.clear();
 
-        io.bitsquare.common.Timer timer = UserThread.runAfter(() -> {
+        Timer timer = UserThread.runAfter(() -> {
             sendMsgInfoLabel.setVisible(true);
             sendMsgInfoLabel.setManaged(true);
             sendMsgInfoLabel.setText("Sending Message...");
 
-            sendMsgProgressIndicator.setProgress(-1);
-            sendMsgProgressIndicator.setVisible(true);
-            sendMsgProgressIndicator.setManaged(true);
+            sendMsgBusyAnimation.play();
         }, 500, TimeUnit.MILLISECONDS);
 
         arrivedPropertyListener = (observable, oldValue, newValue) -> {
@@ -256,7 +335,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         disputeCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
     }
 
-    private void hideSendMsgInfo(io.bitsquare.common.Timer timer) {
+    private void hideSendMsgInfo(Timer timer) {
         timer.stop();
         inputTextArea.setDisable(false);
 
@@ -264,9 +343,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendMsgInfoLabel.setVisible(false);
             sendMsgInfoLabel.setManaged(false);
         }, 5);
-        sendMsgProgressIndicator.setProgress(0);
-        sendMsgProgressIndicator.setVisible(false);
-        sendMsgProgressIndicator.setManaged(false);
+        sendMsgBusyAnimation.stop();
     }
 
     private void onCloseDispute(Dispute dispute) {
@@ -431,16 +508,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             sendMsgInfoLabel.setManaged(false);
             sendMsgInfoLabel.setPadding(new Insets(5, 0, 0, 0));
 
-            sendMsgProgressIndicator = new ProgressIndicator(0);
-            sendMsgProgressIndicator.setPrefHeight(24);
-            sendMsgProgressIndicator.setPrefWidth(24);
-            sendMsgProgressIndicator.setVisible(false);
-            sendMsgProgressIndicator.setManaged(false);
+            sendMsgBusyAnimation = new BusyAnimation(false);
 
             if (!selectedDispute.isClosed()) {
                 HBox buttonBox = new HBox();
                 buttonBox.setSpacing(10);
-                buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgProgressIndicator, sendMsgInfoLabel);
+                buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
                 if (!isTrader) {
                     Button closeDisputeButton = new Button("Close ticket");
@@ -472,7 +545,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 @Override
                 public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
                     return new ListCell<DisputeCommunicationMessage>() {
-                        public ChangeListener<Number> sendMsgProgressIndicatorListener;
+                        public ChangeListener<Boolean> sendMsgBusyAnimationListener;
                         final Pane bg = new Pane();
                         final ImageView arrow = new ImageView();
                         final Label headerLabel = new Label();
@@ -540,18 +613,18 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     else
                                         arrow.setId("bubble_arrow_blue_right");
 
-                                    if (sendMsgProgressIndicatorListener != null)
-                                        sendMsgProgressIndicator.progressProperty().removeListener(sendMsgProgressIndicatorListener);
+                                    if (sendMsgBusyAnimationListener != null)
+                                        sendMsgBusyAnimation.isRunningProperty().removeListener(sendMsgBusyAnimationListener);
 
-                                    sendMsgProgressIndicatorListener = (observable, oldValue, newValue) -> {
-                                        if ((double) oldValue == -1 && (double) newValue == 0) {
+                                    sendMsgBusyAnimationListener = (observable, oldValue, newValue) -> {
+                                        if (!newValue) {
                                             if (item.arrivedProperty().get())
                                                 showArrivedIcon();
                                             else if (item.storedInMailboxProperty().get())
                                                 showMailboxIcon();
                                         }
                                     };
-                                    sendMsgProgressIndicator.progressProperty().addListener(sendMsgProgressIndicatorListener);
+                                    sendMsgBusyAnimation.isRunningProperty().addListener(sendMsgBusyAnimationListener);
 
                                     if (item.arrivedProperty().get())
                                         showArrivedIcon();
@@ -639,13 +712,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                 // Need to set it here otherwise style is not correct
                                 AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY, "16.0");
-                                copyIcon.getStyleClass().add("copy-icon");
+                                copyIcon.getStyleClass().add("copy-icon-disputes");
 
                                 // TODO There are still some cell rendering issues on updates
                                 setGraphic(messageAnchorPane);
                             } else {
-                                if (sendMsgProgressIndicator != null && sendMsgProgressIndicatorListener != null)
-                                    sendMsgProgressIndicator.progressProperty().removeListener(sendMsgProgressIndicatorListener);
+                                if (sendMsgBusyAnimation != null && sendMsgBusyAnimationListener != null)
+                                    sendMsgBusyAnimation.isRunningProperty().removeListener(sendMsgBusyAnimationListener);
 
                                 messageAnchorPane.prefWidthProperty().unbind();
 

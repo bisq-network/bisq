@@ -44,7 +44,7 @@ public class SellerStep3bView extends TradeStepView {
     @Override
     protected String getInfoText() {
         return "We requested from the trading peer to sign and finalize the payout transaction.\n" +
-                "It might be that the other peer is offline, so we need to wait until he finalize the " +
+                "It might be that the other peer is offline, so we need to wait until he finalizes the " +
                 "transaction when he goes online again.";
     }
 

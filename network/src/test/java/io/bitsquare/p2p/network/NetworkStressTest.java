@@ -14,6 +14,7 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.Utils;
 import io.bitsquare.p2p.messaging.*;
+import io.bitsquare.p2p.network.connection.Connection;
 import io.bitsquare.p2p.seed.SeedNode;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import javafx.beans.property.BooleanProperty;
@@ -40,11 +41,11 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Bitsquare network stress tests.
- *
+ * <p>
  * You can invoke this class directly from the command line.
  * If the name of a single test is given as an argument, only that test is run.
  * Otherwise all tests in the class are run.
- *
+ * <p>
  * You can also set some {@code STRESS_TEST_*} environment variables to
  * customize the execution of tests.
  * See the {@code *_ENVVAR} constants for the names of these variables.
@@ -52,67 +53,119 @@ import java.util.concurrent.TimeUnit;
 public class NetworkStressTest {
     // Test parameters
 
-    /** Whether to log messages less important than warnings. */
+    /**
+     * Whether to log messages less important than warnings.
+     */
     private static final boolean USE_DETAILED_LOGGING = false;
 
     // Constants
 
-    /** Environment variable to specify the number of peers in the test. */
+    /**
+     * Environment variable to specify the number of peers in the test.
+     */
     private static final String NPEERS_ENVVAR = "STRESS_TEST_NPEERS";
-    /** Environment variable to specify a persistent test data directory. */
+    /**
+     * Environment variable to specify a persistent test data directory.
+     */
     private static final String TEST_DIR_ENVVAR = "STRESS_TEST_DIR";
-    /** Environment variable to specify the number of direct messages sent per peer. */
+    /**
+     * Environment variable to specify the number of direct messages sent per peer.
+     */
     private static final String DIRECT_COUNT_ENVVAR = "STRESS_TEST_NDIRECT";
-    /** Environment variable to specify the number of mailbox messages sent per peer. */
+    /**
+     * Environment variable to specify the number of mailbox messages sent per peer.
+     */
     private static final String MAILBOX_COUNT_ENVVAR = "STRESS_TEST_NMAILBOX";
 
-    /** Numeric identifier of the regtest Bitcoin network. */
+    /**
+     * Numeric identifier of the regtest Bitcoin network.
+     */
     private static final int REGTEST_NETWORK_ID = 2;
 
-    /** Default number of peers in the test. */
+    /**
+     * Default number of peers in the test.
+     */
     private static final int NPEERS_DEFAULT = 4;
-    /** Minimum number of peers for the test to work (2 for direct messages, 3 for mailbox messages). */
+    /**
+     * Minimum number of peers for the test to work (2 for direct messages, 3 for mailbox messages).
+     */
     private static final int NPEERS_MIN = 3;
-    /** Default number of direct messages to be sent by each peer. */
+    /**
+     * Default number of direct messages to be sent by each peer.
+     */
     private static final int DIRECT_COUNT_DEFAULT = 100;
-    /** Default number of mailbox messages to be sent by each peer. */
+    /**
+     * Default number of mailbox messages to be sent by each peer.
+     */
     private static final int MAILBOX_COUNT_DEFAULT = 100;
 
-    /** Maximum delay in seconds for a node to receive preliminary data. */
+    /**
+     * Maximum delay in seconds for a node to receive preliminary data.
+     */
     private static long MAX_PRELIMINARY_DELAY_SECS = 5;
-    /** Maximum delay in seconds for a node to bootstrap after receiving preliminary data. */
+    /**
+     * Maximum delay in seconds for a node to bootstrap after receiving preliminary data.
+     */
     private static long MAX_BOOTSTRAP_DELAY_SECS = 5;
-    /** Maximum delay in seconds for a node to shutdown. */
+    /**
+     * Maximum delay in seconds for a node to shutdown.
+     */
     private static long MAX_SHUTDOWN_DELAY_SECS = 2;
-    /** Minimum delay between direct messages in milliseconds, 25% larger than throttle limit. */
+    /**
+     * Minimum delay between direct messages in milliseconds, 25% larger than throttle limit.
+     */
     private static long MIN_DIRECT_DELAY_MILLIS = Math.round(1.25 * (1.0 / Connection.MSG_THROTTLE_PER_SEC) * 1000);
-    /** Maximum delay between direct messages in milliseconds, 10 times larger than minimum. */
+    /**
+     * Maximum delay between direct messages in milliseconds, 10 times larger than minimum.
+     */
     private static long MAX_DIRECT_DELAY_MILLIS = 10 * MIN_DIRECT_DELAY_MILLIS;
-    /** Estimated delay in seconds to send or receive a mailbox message. */
+    /**
+     * Estimated delay in seconds to send or receive a mailbox message.
+     */
     private static long MAILBOX_DELAY_SECS = 2;
 
     // Instance fields
 
-    /** The last time a progress bar update was printed (to throttle message printing). */
+    /**
+     * The last time a progress bar update was printed (to throttle message printing).
+     */
     private long lastProgressUpdateMillis = 0;
-    /** A directory to (temporarily) hold seed and normal nodes' configuration and state files. */
+    /**
+     * A directory to (temporarily) hold seed and normal nodes' configuration and state files.
+     */
     private Path testDataDir;
-    /** Whether to use localhost addresses instead of Tor hidden services. */
+    /**
+     * Whether to use localhost addresses instead of Tor hidden services.
+     */
     private boolean useLocalhost;
-    /** A single seed node that other nodes will contact to request initial data. */
+    /**
+     * A single seed node that other nodes will contact to request initial data.
+     */
     private SeedNode seedNode;
-    /** The repository of seed nodes used in the test. */
+    /**
+     * The repository of seed nodes used in the test.
+     */
     private SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
-    /** A list of peer nodes represented as P2P services. */
+    /**
+     * A list of peer nodes represented as P2P services.
+     */
     private List<P2PService> peerNodes = new ArrayList<>();
-    /** A list of peer node's service ports. */
+    /**
+     * A list of peer node's service ports.
+     */
     private List<Integer> peerPorts = new ArrayList<>();
-    /** A list of peer node's public key rings. */
+    /**
+     * A list of peer node's public key rings.
+     */
     private List<PubKeyRing> peerPKRings = new ArrayList<>();
 
-    /** Number of direct messages to be sent by each peer. */
+    /**
+     * Number of direct messages to be sent by each peer.
+     */
     private int directCount = DIRECT_COUNT_DEFAULT;
-    /** Number of mailbox messages to be sent by each peer. */
+    /**
+     * Number of mailbox messages to be sent by each peer.
+     */
     private int mailboxCount = MAILBOX_COUNT_DEFAULT;
 
 
@@ -138,13 +191,17 @@ public class NetworkStressTest {
                 + String.format(message, args));
     }
 
-    /** Decrease latch count and print a progress indicator based on the given character. */
+    /**
+     * Decrease latch count and print a progress indicator based on the given character.
+     */
     private void countDownAndPrint(CountDownLatch latch, char c) {
         latch.countDown();
-        printProgress(c, (int)latch.getCount());
+        printProgress(c, (int) latch.getCount());
     }
 
-    /** Print a progress indicator based on the given character. */
+    /**
+     * Print a progress indicator based on the given character.
+     */
     private void printProgress(char c, int n) {
         if (n < 1)
             return;  // completed tasks are not shown
@@ -240,7 +297,7 @@ public class NetworkStressTest {
             //noinspection ConstantConditions
             peerPKRings.add(peer.getKeyRing().getPubKeyRing());
             peerNodes.add(peer);
-            peer.start(new PeerServiceListener(
+            peer.start(false, new PeerServiceListener(
                     localServicesLatch, localServicesFailed, prelimDataLatch, bootstrapLatch));
         }
         print("created peer nodes");
@@ -266,7 +323,9 @@ public class NetworkStressTest {
         print("bootstrap complete");
     }
 
-    /** Parse an integer value from the given environment variable, with default and minimum values. */
+    /**
+     * Parse an integer value from the given environment variable, with default and minimum values.
+     */
     private int parseEnvInt(String envVar, int defValue, int minValue) {
         int value = defValue;
         final String envValue = System.getenv(envVar);
@@ -323,7 +382,7 @@ public class NetworkStressTest {
         final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing);
 
         return new P2PService(seedNodesRepository, port, peerTorDir, useLocalhost,
-                REGTEST_NETWORK_ID, peerStorageDir, new Clock(), peerEncryptionService, peerKeyRing);
+                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, new Clock(), peerEncryptionService, peerKeyRing);
     }
 
     // ## TEST SETUP: P2P service listener classes
@@ -354,6 +413,14 @@ public class NetworkStressTest {
             localServicesFailed.set(true);
             localServicesLatch.countDown();
         }
+
+        @Override
+        public void onUseDefaultBridges() {
+        }
+
+        @Override
+        public void onRequestCustomBridges(Runnable resultHandler) {
+        }
     }
 
     private class SeedServiceListener extends TestSetupListener implements P2PServiceListener {
@@ -379,6 +446,14 @@ public class NetworkStressTest {
         @Override
         public void onBootstrapComplete() {
             // not used in single seed node
+        }
+
+        @Override
+        public void onUseDefaultBridges() {
+        }
+
+        @Override
+        public void onRequestCustomBridges(Runnable resultHandler) {
         }
     }
 
@@ -480,7 +555,9 @@ public class NetworkStressTest {
 
     // # DIRECT SENDING AND RECEIVING
 
-    /** Test each peer sending a direct message to another random peer. */
+    /**
+     * Test each peer sending a direct message to another random peer.
+     */
     @Test
     public void test_direct() throws InterruptedException {
         final int nPeers = peerNodes.size();
@@ -564,7 +641,9 @@ public class NetworkStressTest {
 
     // # DIRECT + MAILBOX SENDING AND RECEIVING
 
-    /** Test sending and receiving mailbox messages. */
+    /**
+     * Test sending and receiving mailbox messages.
+     */
     @Test
     public void test_mailbox() throws InterruptedException {
         // We start by putting the first half of peers online and the second one offline.
@@ -581,7 +660,7 @@ public class NetworkStressTest {
         final CountDownLatch receivedMailboxLatch = new CountDownLatch(mailboxCount * nPeers);
 
         // Configure the first half of peers to receive messages...
-        int firstPeerDown = (int)Math.ceil(nPeers / 2.0);
+        int firstPeerDown = (int) Math.ceil(nPeers / 2.0);
         for (P2PService peer : peerNodes.subList(0, firstPeerDown)) {
             addMailboxListeners(peer, receivedMailboxLatch);
         }
@@ -600,8 +679,8 @@ public class NetworkStressTest {
         BooleanProperty sentMailboxFailed = new SimpleBooleanProperty(false);
         final long sendStartMillis = System.currentTimeMillis();
         for (int firstOnline = 0, firstOffline = firstPeerDown;
-                firstOnline < nPeers;
-                firstOnline++, firstOffline = ++firstOffline % nPeers) {
+             firstOnline < nPeers;
+             firstOnline++, firstOffline = ++firstOffline % nPeers) {
             // The first online peer sends messages to random other peers.
             final P2PService onlinePeer = peerNodes.get(firstOnline);
             final NodeAddress onlinePeerAddress = onlinePeer.getAddress();
@@ -652,7 +731,7 @@ public class NetworkStressTest {
             final P2PService startedPeer = createPeerNode(firstOffline, peerPorts.get(firstOffline));
             addMailboxListeners(startedPeer, receivedMailboxLatch);
             peerNodes.set(firstOffline, startedPeer);
-            startedPeer.start(new MailboxStartListener(startLatch));
+            startedPeer.start(false, new MailboxStartListener(startLatch));
             assertLatch("timed out while starting peer " + firstOffline,
                     startLatch,
                     // this assumes some delay per received mailbox message
@@ -670,7 +749,9 @@ public class NetworkStressTest {
         org.junit.Assert.assertFalse("some peer(s) failed to send a message", sentMailboxFailed.get());
     }
 
-    /** Configure the peer to decrease the latch on receipt of mailbox message (direct or via mailbox). */
+    /**
+     * Configure the peer to decrease the latch on receipt of mailbox message (direct or via mailbox).
+     */
     private void addMailboxListeners(P2PService peer, CountDownLatch receivedMailboxLatch) {
         class MailboxMessageListener implements DecryptedDirectMessageListener, DecryptedMailboxListener {
             private void handle(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
@@ -733,6 +814,14 @@ public class NetworkStressTest {
 
         @Override
         public void onSetupFailed(Throwable throwable) {
+        }
+
+        @Override
+        public void onUseDefaultBridges() {
+        }
+
+        @Override
+        public void onRequestCustomBridges(Runnable resultHandler) {
         }
     }
 }

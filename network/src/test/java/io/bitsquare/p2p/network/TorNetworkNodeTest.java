@@ -5,6 +5,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.mocks.MockPayload;
+import io.bitsquare.p2p.network.connection.Connection;
+import io.bitsquare.p2p.network.connection.MessageListener;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -36,7 +38,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(1);
         int port = 9001;
         TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port));
-        node1.start(new SetupListener() {
+        node1.start(false, new SetupListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onReadyForSendingMessages");
@@ -50,7 +52,14 @@ public class TorNetworkNodeTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();
@@ -58,7 +67,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(1);
         int port2 = 9002;
         TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port2));
-        node2.start(new SetupListener() {
+        node2.start(false, new SetupListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onReadyForSendingMessages");
@@ -73,7 +82,14 @@ public class TorNetworkNodeTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();
@@ -118,7 +134,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(2);
         int port = 9001;
         TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port));
-        node1.start(new SetupListener() {
+        node1.start(false, new SetupListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onReadyForSendingMessages");
@@ -133,12 +149,20 @@ public class TorNetworkNodeTest {
             @Override
             public void onSetupFailed(Throwable throwable) {
 
+            }
+
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
 
         int port2 = 9002;
         TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port));
-        node2.start(new SetupListener() {
+        node2.start(false, new SetupListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onReadyForSendingMessages");
@@ -152,7 +176,14 @@ public class TorNetworkNodeTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
 

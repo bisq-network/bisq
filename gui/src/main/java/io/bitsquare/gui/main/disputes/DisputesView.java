@@ -133,9 +133,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                     "If you have problems how to use Bitsquare or any questions please review the FAQ at the " +
                     "Bitsquare.io web page or contact the Bitsquare team using " +
                     "any of the communication channels offered " +
-                    "at the Bitsquare.io web page.\n\n" +
+                    "at the Bitsquare.io web page. The Bitsquare forum has a support section as well.\n\n" +
                     "If you are sure you want to open a support ticket please select the trade which causes the problem " +
-                    "under \"Portfolio/Open trades\" and type the key combination \"cmd + o\" to open the support ticket.")
+                    "under \"Portfolio/Open trades\" and type the key combination \"cmd + o\" or \"crtl + o\" to open " +
+                    "the support ticket.")
                     .actionButtonText("Go to \"Open trades\"")
                     .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class))
                     .dontShowAgainId(key, preferences)

@@ -45,7 +45,9 @@ import javafx.util.StringConverter;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -60,7 +62,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, useStickyMarketPriceCheckBox;
     private int gridRow = 0;
-    private InputTextField transactionFeeInputTextField;
+    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
     private BSFormatter formatter;
@@ -80,7 +82,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     public final ObservableList<CryptoCurrency> allCryptoCurrencies;
     public final ObservableList<TradeCurrency> tradeCurrencies;
     private InputTextField deviationInputTextField;
-    private ChangeListener<String> deviationListener;
+    private ChangeListener<String> deviationListener, ignoreTradersListListener;
     private ChangeListener<Boolean> deviationFocusedListener;
 
 
@@ -286,7 +288,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void initializeOtherOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, "General preferences", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 5, "General preferences", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
         // userLanguageComboBox = addLabelComboBox(root, gridRow, "Language:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
@@ -297,15 +299,20 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         deviationListener = (observable, oldValue, newValue) -> {
             try {
                 double value = formatter.parsePercentStringToDouble(newValue);
-                preferences.setMaxPriceDistanceInPercent(value);
+                if (value <= 0.2) {
+                    preferences.setMaxPriceDistanceInPercent(value);
+                } else {
+                    new Popup().warning("Amounts larger than 20 % are not allowed.").show();
+                    UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                }
             } catch (NumberFormatException t) {
                 log.error("Exception at parseDouble deviation: " + t.toString());
-                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
             }
         };
         deviationFocusedListener = (observable1, oldValue1, newValue1) -> {
             if (oldValue1 && !newValue1)
-                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
         };
 
         transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Withdrawal transaction fee (satoshi/byte):").second;
@@ -323,6 +330,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 }
             }
         };
+
+        ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow, "Ignore traders with onion address (comma sep.):").second;
+        ignoreTradersListListener = (observable, oldValue, newValue) ->
+                preferences.setIgnoreTradersList(Arrays.asList(newValue.replace(" ", "").replace(":9999", "").replace(".onion", "").split(",")));
     }
 
     private void initializeDisplayOptions() {
@@ -384,6 +395,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     private void activateOtherOptions() {
         transactionFeeInputTextField.setText(getNonTradeTxFeePerKB());
+        ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
         
     /* btcDenominationComboBox.setDisable(true);
      btcDenominationComboBox.setItems(btcDenominations);
@@ -424,11 +436,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         });
         blockChainExplorerComboBox.setOnAction(e -> preferences.setBlockChainExplorer(blockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
 
-        deviationInputTextField.setText(formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent()));
+        deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent()));
         deviationInputTextField.textProperty().addListener(deviationListener);
         deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
 
         transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
+        ignoreTradersListInputTextField.textProperty().addListener(ignoreTradersListListener);
     }
 
     @NotNull
@@ -467,6 +480,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         deviationInputTextField.textProperty().removeListener(deviationListener);
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
         transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
+        ignoreTradersListInputTextField.textProperty().removeListener(ignoreTradersListListener);
     }
 
 

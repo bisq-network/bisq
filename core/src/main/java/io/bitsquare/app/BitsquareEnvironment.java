@@ -17,12 +17,14 @@
 
 package io.bitsquare.app;
 
+import ch.qos.logback.classic.Level;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.network.OptionKeys;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
 import joptsimple.OptionSet;
@@ -49,18 +51,22 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private static final Logger log = LoggerFactory.getLogger(BitsquareEnvironment.class);
 
     private static final String BITCOIN_NETWORK_PROP = "bitcoinNetwork.properties";
-    public static final String USER_DATA_DIR_KEY = "user.data.dir";
+    public static final String USER_DATA_DIR_KEY = "userDataDir";
 
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
 
-    public static final String APP_NAME_KEY = "app.name";
-    public static final String DEFAULT_APP_NAME = "Bitsquare";
+    public static final String APP_NAME_KEY = "appName";
 
-    public static final String APP_DATA_DIR_KEY = "app.data.dir";
+    public static void setDefaultAppName(String defaultAppName) {
+        DEFAULT_APP_NAME = defaultAppName;
+    }
+
+    public static String DEFAULT_APP_NAME = "Bitsquare";
+
+    public static final String APP_DATA_DIR_KEY = "appDataDir";
     public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
 
-    public static final String APP_DATA_DIR_CLEAN_KEY = "app.data.dir.clean";
-    public static final String DEFAULT_APP_DATA_DIR_CLEAN = "false";
+    public static final String LOG_LEVEL_DEFAULT = (DevFlags.STRESS_TEST_MODE || DevFlags.DEV_MODE) ? Level.TRACE.levelStr : Level.WARN.levelStr;
 
     static final String BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME = "bitsquareCommandLineProperties";
     static final String BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME = "bitsquareAppDirProperties";
@@ -74,7 +80,9 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String userDataDir;
     private final String appDataDir;
     private final String btcNetworkDir;
+    private final String logLevel;
     private BitcoinNetwork bitcoinNetwork;
+    private final String seedNodes, ignoreDevMsg;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -122,6 +130,18 @@ public class BitsquareEnvironment extends StandardEnvironment {
         appDataDir = commandLineProperties.containsProperty(APP_DATA_DIR_KEY) ?
                 (String) commandLineProperties.getProperty(APP_DATA_DIR_KEY) :
                 appDataDir(userDataDir, appName);
+
+        logLevel = commandLineProperties.containsProperty(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY) ?
+                (String) commandLineProperties.getProperty(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY) :
+                LOG_LEVEL_DEFAULT;
+
+        seedNodes = commandLineProperties.containsProperty(OptionKeys.SEED_NODES_KEY) ?
+                (String) commandLineProperties.getProperty(OptionKeys.SEED_NODES_KEY) :
+                "";
+
+        ignoreDevMsg = commandLineProperties.containsProperty(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY) ?
+                (String) commandLineProperties.getProperty(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY) :
+                "";
 
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
@@ -178,7 +198,10 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
             {
                 setProperty(APP_DATA_DIR_KEY, appDataDir);
-                setProperty(APP_DATA_DIR_CLEAN_KEY, DEFAULT_APP_DATA_DIR_CLEAN);
+                setProperty(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY, logLevel);
+
+                setProperty(OptionKeys.SEED_NODES_KEY, seedNodes);
+                setProperty(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
 
                 setProperty(APP_NAME_KEY, appName);
                 setProperty(USER_DATA_DIR_KEY, userDataDir);
@@ -190,9 +213,9 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
                 setProperty(Storage.DIR_KEY, Paths.get(btcNetworkDir, "db").toString());
                 setProperty(KeyStorage.DIR_KEY, Paths.get(btcNetworkDir, "keys").toString());
-                setProperty(ProgramArguments.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
+                setProperty(OptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
 
-                setProperty(ProgramArguments.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
+                setProperty(OptionKeys.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
             }
         });
     }

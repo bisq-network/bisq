@@ -25,6 +25,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Contract;
@@ -40,6 +41,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import org.bitcoinj.core.Utils;
+import org.bitcoinj.utils.ExchangeRate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,7 +101,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
 
-        int rows = 17;
+        int rows = 18;
         if (dispute.getDepositTxSerialized() != null)
             rows++;
         if (dispute.getPayoutTxSerialized() != null)
@@ -118,15 +120,16 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addLabelTextField(gridPane, ++rowIndex, "Trade type:", formatter.getDirectionBothSides(offer.getDirection()));
         addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatFiat(contract.getTradePrice()) + " " + offer.getCurrencyCode());
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
+        addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount:", formatter.formatFiatWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer bitcoin address:",
                 contract.getBuyerPayoutAddressString()).second.setMouseTransparent(false);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Seller bitcoin address:",
                 contract.getSellerPayoutAddressString()).second.setMouseTransparent(false);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Contract hash:",
                 Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++rowIndex, "Buyer address:", contract.getBuyerNodeAddress().getFullAddress());
-        addLabelTextField(gridPane, ++rowIndex, "Seller address:", contract.getSellerNodeAddress().getFullAddress());
-        addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", contract.arbitratorNodeAddress.getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer address:", contract.getBuyerNodeAddress().getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Seller address:", contract.getSellerNodeAddress().getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Selected arbitrator:", contract.arbitratorNodeAddress.getFullAddress());
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer payment details:",
                 BSResources.get(contract.getBuyerPaymentAccountContractData().getPaymentDetails())).second.setMouseTransparent(false);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Seller payment details:",

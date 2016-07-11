@@ -42,7 +42,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import io.bitsquare.gui.util.SortedList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -130,8 +130,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
         addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
         balanceColumn.setComparator((o1, o2) -> o1.getBalanceAsCoin().compareTo(o2.getBalanceAsCoin()));
-        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getProgressIndicator().getProgress())
-                .compareTo(o2.getProgressIndicator().getProgress()));
+        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getTxConfidenceIndicator().getProgress())
+                .compareTo(o2.getTxConfidenceIndicator().getProgress()));
         usageColumn.setComparator((a, b) -> (a.getNumTxOutputs() < b.getNumTxOutputs()) ? -1 : ((a.getNumTxOutputs() == b.getNumTxOutputs()) ? 0 : 1));
         tableView.getSortOrder().add(usageColumn);
         tableView.setItems(sortedList);
@@ -191,7 +191,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                 new Popup().warning("You have already at least one address which is not used yet in any transaction.\n" +
                         "Please select in the address table an unused address.").show();
             } else {
-                AddressEntry newSavingsAddressEntry = walletService.createAddressEntry(AddressEntry.Context.AVAILABLE);
+                AddressEntry newSavingsAddressEntry = walletService.getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
                 updateList();
                 observableList.stream()
                         .filter(depositListItem -> depositListItem.getAddressString().equals(newSavingsAddressEntry.getAddressString()))
@@ -462,7 +462,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setGraphic(item.getProgressIndicator());
+                                    setGraphic(item.getTxConfidenceIndicator());
                                 } else {
                                     setGraphic(null);
                                 }

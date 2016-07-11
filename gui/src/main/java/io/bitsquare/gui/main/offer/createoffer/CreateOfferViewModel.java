@@ -70,8 +70,17 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty minAmount = new SimpleStringProperty();
+
+    // Price in the viewModel is always dependent on fiat/altcoin: Fiat Fiat/BTC, for altcoins we use inverted price.
+    // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
+    // If we would change the price representation in the domain we would not be backward compatible
     final StringProperty price = new SimpleStringProperty();
+
+    // Positive % value means always a better price form the offerers perspective: 
+    // Buyer (with fiat): lower price as market
+    // Buyer (with altcoin): higher (display) price as market (display price is inverted)
     final StringProperty priceAsPercentage = new SimpleStringProperty();
+
     final StringProperty volume = new SimpleStringProperty();
     final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
     final StringProperty volumePromptLabel = new SimpleStringProperty();
@@ -80,7 +89,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    final StringProperty spinnerInfoText = new SimpleStringProperty("");
+    final StringProperty waitingForFundsText = new SimpleStringProperty("");
 
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
@@ -91,7 +100,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
-    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty();
+    final BooleanProperty isWaitingForFunds = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new
@@ -152,7 +161,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (DevFlags.DEV_MODE) {
             amount.set("0.0001");
             minAmount.set(amount.get());
-            price.set("400");
+            price.set("0.02");
             volume.set("0.04");
 
             setAmountToModel();
@@ -730,19 +739,19 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (!showPayFundsScreenDisplayed.get() ||
                 errorMessage.get() != null ||
                 showTransactionPublishedScreen.get()) {
-            spinnerInfoText.set("");
+            waitingForFundsText.set("");
         } else if (dataModel.isWalletFunded.get()) {
-            spinnerInfoText.set("");
+            waitingForFundsText.set("");
            /* if (dataModel.isFeeFromFundingTxSufficient.get()) {
                 spinnerInfoText.set("");
             } else {
                 spinnerInfoText.set("Check if funding tx miner fee is sufficient...");
             }*/
         } else {
-            spinnerInfoText.set("Waiting for funds...");
+            waitingForFundsText.set("Waiting for funds...");
         }
 
-        isSpinnerVisible.set(!spinnerInfoText.get().isEmpty());
+        isWaitingForFunds.set(!waitingForFundsText.get().isEmpty());
     }
 
     private void updateButtonDisableState() {

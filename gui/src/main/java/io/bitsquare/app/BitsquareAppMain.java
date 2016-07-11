@@ -20,6 +20,8 @@ package io.bitsquare.app;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.RegTestHost;
+import io.bitsquare.network.OptionKeys;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -33,7 +35,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
-import static java.util.Arrays.asList;
 
 public class BitsquareAppMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);
@@ -93,19 +94,27 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
-        parser.acceptsAll(asList(APP_DATA_DIR_CLEAN_KEY, "clean"),
-                description("Clean application data directory", DEFAULT_APP_DATA_DIR_CLEAN))
+        parser.accepts(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY, description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", LOG_LEVEL_DEFAULT))
+                .withRequiredArg();
+
+        parser.accepts(OptionKeys.SEED_NODES_KEY, description("Override hard coded seed nodes as comma separated list: E.g. rxdkppp3vicnbgqt.onion:8002, mfla72c4igh5ta2t.onion:8002", ""))
+                .withRequiredArg();
+
+        parser.accepts(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY, description("If set to true all signed messages from Bitsquare developers are ignored " +
+                "(Global alert, Version update alert, Filters for offers, nodes or payment account data)", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
-        parser.accepts(ProgramArguments.NAME_KEY, description("Name of this node", null))
-                .withRequiredArg();
+        
         // use a fixed port as arbitrator use that for his ID
-        parser.accepts(ProgramArguments.PORT_KEY, description("Port to listen on", 9999))
+        parser.accepts(OptionKeys.PORT_KEY, description("Port to listen on", 9999))
                 .withRequiredArg()
                 .ofType(int.class);
-        parser.accepts(ProgramArguments.USE_LOCALHOST, description("Use localhost network for development", false))
+        parser.accepts(OptionKeys.USE_LOCALHOST, description("Use localhost network for development", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
+        parser.accepts(OptionKeys.MAX_CONNECTIONS, description("Max. connections a peer will try to keep", P2PService.MAX_CONNECTIONS_DEFAULT))
+                .withRequiredArg()
+                .ofType(int.class);
         parser.accepts(BitcoinNetwork.KEY, description("Bitcoin network", BitcoinNetwork.DEFAULT))
                 .withRequiredArg()
                 .ofType(BitcoinNetwork.class)

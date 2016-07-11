@@ -6,6 +6,10 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
+import io.bitsquare.p2p.network.connection.CloseConnectionReason;
+import io.bitsquare.p2p.network.connection.Connection;
+import io.bitsquare.p2p.network.connection.ConnectionListener;
+import io.bitsquare.p2p.network.connection.MessageListener;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.peerexchange.messages.GetPeersRequest;
 import org.slf4j.Logger;
@@ -98,6 +102,9 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 requestWithAvailablePeers();
             }, RETRY_DELAY_SEC);
         }
+
+        if (peerManager.isNodeBanned(closeConnectionReason, connection))
+            seedNodeAddresses.remove(connection.getPeersNodeAddressOptional().get());
     }
 
     @Override

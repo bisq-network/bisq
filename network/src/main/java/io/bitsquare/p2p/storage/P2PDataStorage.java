@@ -13,6 +13,10 @@ import io.bitsquare.common.wire.Payload;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
+import io.bitsquare.p2p.network.connection.CloseConnectionReason;
+import io.bitsquare.p2p.network.connection.Connection;
+import io.bitsquare.p2p.network.connection.ConnectionListener;
+import io.bitsquare.p2p.network.connection.MessageListener;
 import io.bitsquare.p2p.peers.BroadcastHandler;
 import io.bitsquare.p2p.peers.Broadcaster;
 import io.bitsquare.p2p.storage.messages.*;
@@ -159,7 +163,24 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                 if (containsKey) {
                                     log.info("We remove the data as the data owner got disconnected with " +
                                             "closeConnectionReason=" + closeConnectionReason);
-                                    doRemoveProtectedExpirableData(protectedData, hashOfPayload);
+
+                                    Log.logIfStressTests("We remove the data as the data owner got disconnected with " +
+                                            "closeConnectionReason=" + closeConnectionReason +
+                                            " / isIntended=" + closeConnectionReason.isIntended +
+                                            " / peer=" + (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown"));
+
+                                    // We only set the data back by half of the TTL and remove the data only if is has 
+                                    // expired after tha back dating. 
+                                    // We might get connection drops which are not caused by the node going offline, so 
+                                    // we give more tolerance with that approach, giving the node the change to 
+                                    // refresh the TTL with a refresh message.
+                                    // We observed those issues during stress tests, but it might have been caused by the 
+                                    // test set up (many nodes/connections over 1 router)
+                                    // TODO investigate what causes the disconnections. 
+                                    // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException) 
+                                    protectedData.backDate();
+                                    if (protectedData.isExpired())
+                                        doRemoveProtectedExpirableData(protectedData, hashOfPayload);
                                 } else {
                                     log.debug("Remove data ignored as we don't have an entry for that data.");
                                 }
@@ -203,7 +224,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             log.trace(sb.toString());
             log.info("Data set after doAdd: size=" + map.values().size());
 
-            if (hasSequenceNrIncreased(protectedStorageEntry.sequenceNumber, hashOfPayload)) {
+            if (hasSequenceNrIncreased(protectedStorageEntry.sequenceNumber, hashOfPayload, false)) {
                 sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
                 storage.queueUpForSave(sequenceNumberMap, 100);
 
@@ -233,11 +254,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 return true;
             } else {
                 PublicKey ownerPubKey = storedData.getStoragePayload().getOwnerPubKey();
-                boolean result = checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature) &&
-                        hasSequenceNrIncreased(sequenceNumber, hashOfPayload) &&
-                        checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload);
+                final boolean checkSignature = checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature);
+                final boolean hasSequenceNrIncreased = hasSequenceNrIncreased(sequenceNumber, hashOfPayload, true);
+                final boolean checkIfStoredDataPubKeyMatchesNewDataPubKey = checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload);
+                boolean allValid = checkSignature &&
+                        hasSequenceNrIncreased &&
+                        checkIfStoredDataPubKeyMatchesNewDataPubKey;
 
-                if (result) {
+                if (allValid) {
                     log.info("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
                     storedData.refreshTTL();
                     storedData.updateSequenceNumber(sequenceNumber);
@@ -255,7 +279,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
                     broadcast(refreshTTLMessage, sender, null, isDataOwner);
                 }
-                return result;
+                return allValid;
             }
         } else {
             log.debug("We don't have data for that refresh message in our map. That is expected if we missed the data publishing.");
@@ -402,23 +426,31 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
     }
 
-    private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData) {
+    private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData, boolean calledFromRefreshTTL) {
         if (sequenceNumberMap.containsKey(hashOfData)) {
             int storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
             if (newSequenceNumber > storedSequenceNumber) {
                 return true;
             } else if (newSequenceNumber == storedSequenceNumber) {
                 if (newSequenceNumber == 0) {
-                    log.debug("Sequence number is equal to the stored one and both are 0." +
-                            "That is expected for messages which never got updated (mailbox msg).");
+                    String msg = "Sequence number is equal to the stored one and both are 0." +
+                            "That is expected for messages which never got updated (mailbox msg).";
+                    if (calledFromRefreshTTL)
+                        log.warn(msg);
+                    else
+                        log.debug(msg);
                     return false;
                 } else {
-                    log.debug("Sequence number is equal to the stored one. sequenceNumber = "
-                            + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
+                    String msg = "Sequence number is equal to the stored one. sequenceNumber = "
+                            + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber;
+                    if (calledFromRefreshTTL)
+                        log.warn(msg);
+                    else
+                        log.debug(msg);
                     return false;
                 }
             } else {
-                log.debug("Sequence number is invalid. sequenceNumber = "
+                log.warn("Sequence number is invalid. sequenceNumber = "
                         + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
                         "That can happen if the data owner gets an old delayed data storage message.");
                 return false;
@@ -452,11 +484,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private boolean checkPublicKeys(ProtectedStorageEntry protectedStorageEntry, boolean isAddOperation) {
         boolean result;
         if (protectedStorageEntry.getStoragePayload() instanceof MailboxStoragePayload) {
-            MailboxStoragePayload expirableMailboxStoragePayload = (MailboxStoragePayload) protectedStorageEntry.getStoragePayload();
+            MailboxStoragePayload payload = (MailboxStoragePayload) protectedStorageEntry.getStoragePayload();
             if (isAddOperation)
-                result = expirableMailboxStoragePayload.senderPubKeyForAddOperation.equals(protectedStorageEntry.ownerPubKey);
+                result = payload.senderPubKeyForAddOperation != null &&
+                        payload.senderPubKeyForAddOperation.equals(protectedStorageEntry.ownerPubKey);
             else
-                result = expirableMailboxStoragePayload.receiverPubKeyForRemoveOperation.equals(protectedStorageEntry.ownerPubKey);
+                result = payload.receiverPubKeyForRemoveOperation != null &&
+                        payload.receiverPubKeyForRemoveOperation.equals(protectedStorageEntry.ownerPubKey);
         } else {
             // TODO We got sometimes a nullpointer at protectedStorageEntry.ownerPubKey
             // Probably caused by an exception at deserialization:  Offer: Cannot be deserialized.null 
@@ -482,10 +516,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private boolean checkIfStoredMailboxDataMatchesNewMailboxData(PublicKey receiversPubKey, ByteArray hashOfData) {
         ProtectedStorageEntry storedData = map.get(hashOfData);
         if (storedData instanceof ProtectedMailboxStorageEntry) {
-            ProtectedMailboxStorageEntry storedMailboxData = (ProtectedMailboxStorageEntry) storedData;
+            ProtectedMailboxStorageEntry entry = (ProtectedMailboxStorageEntry) storedData;
             // publicKey is not the same (stored: sender, new: receiver)
-            boolean result = storedMailboxData.receiversPubKey.equals(receiversPubKey)
-                    && getHashAsByteArray(storedMailboxData.getStoragePayload()).equals(hashOfData);
+            boolean result = entry.receiversPubKey.equals(receiversPubKey)
+                    && getHashAsByteArray(entry.getStoragePayload()).equals(hashOfData);
             if (!result)
                 log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
 

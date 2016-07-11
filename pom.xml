@@ -6,7 +6,7 @@
     <groupId>io.bitsquare</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.8.1</version>
+    <version>0.4.9</version>
     <description>Bitsquare - The decentralized bitcoin exchange</description>
     <url>https://bitsquare.io</url>
 
@@ -45,7 +45,10 @@
         <module>jtorproxy</module>
         <module>network</module>
         <module>seednode</module>
+        <module>headless</module>
+        <module>monitor</module>
         <module>gui</module>
+        <module>jdkfix</module>
     </modules>
 
     <build>
@@ -91,7 +94,7 @@
     </repositories>
 
     <dependencies>
-        <!--bitcoin 
+        <!--bitcoin
             Needs local installation!
             See doc/build.md for further info
         -->
@@ -145,6 +148,12 @@
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>13.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.16.8</version>
+            <scope>provided</scope>
         </dependency>
 
         <!--logging-->

@@ -7,7 +7,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.p2p.network.connection.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.storage.messages.BroadcastMessage;
 import org.apache.commons.lang3.StringUtils;
@@ -83,7 +83,7 @@ public class BroadcastHandler implements PeerManager.Listener {
 
     public void cancel() {
         stopped = true;
-        onFault("Broadcast canceled.");
+        onFault("Broadcast canceled.", false);
     }
 
 
@@ -176,7 +176,8 @@ public class BroadcastHandler implements PeerManager.Listener {
                                 resultHandler.onCompleted(BroadcastHandler.this);
                             }
                         } else {
-                            onFault("stopped at onSuccess: " + errorMessage);
+                            // TODO investigate why that is called very often at seed nodes
+                            onFault("stopped at onSuccess: " + errorMessage, false);
                         }
                     }
 
@@ -195,7 +196,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                     }
                 });
             } else {
-                onFault("Connection stopped already");
+                onFault("Connection stopped already", false);
             }
         } else {
             onFault("stopped at sendToPeer: " + errorMessage);
@@ -209,7 +210,7 @@ public class BroadcastHandler implements PeerManager.Listener {
 
     @Override
     public void onAllConnectionsLost() {
-        onFault("All connections lost");
+        onFault("All connections lost", false);
     }
 
     @Override

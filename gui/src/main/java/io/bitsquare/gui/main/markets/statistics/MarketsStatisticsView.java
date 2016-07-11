@@ -23,7 +23,8 @@ import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import io.bitsquare.gui.util.SortedList;
+import javafx.collections.ListChangeListener;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -32,6 +33,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
@@ -41,6 +43,9 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
     private final int gridRow = 0;
     private TableView<MarketStatisticItem> tableView;
     private SortedList<MarketStatisticItem> sortedList;
+    private ListChangeListener<MarketStatisticItem> itemListChangeListener;
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> totalAmountColumn;
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> numberOfOffersColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -72,9 +77,9 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
 
         TableColumn<MarketStatisticItem, MarketStatisticItem> currencyColumn = getCurrencyColumn();
         tableView.getColumns().add(currencyColumn);
-        TableColumn<MarketStatisticItem, MarketStatisticItem> numberOfOffersColumn = getNumberOfOffersColumn();
+        numberOfOffersColumn = getNumberOfOffersColumn();
         tableView.getColumns().add(numberOfOffersColumn);
-        TableColumn<MarketStatisticItem, MarketStatisticItem> totalAmountColumn = getTotalAmountColumn();
+        totalAmountColumn = getTotalAmountColumn();
         tableView.getColumns().add(totalAmountColumn);
         TableColumn<MarketStatisticItem, MarketStatisticItem> spreadColumn = getSpreadColumn();
         tableView.getColumns().add(spreadColumn);
@@ -87,6 +92,7 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
 
         numberOfOffersColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(numberOfOffersColumn);
+        itemListChangeListener = c -> updateHeaders();
     }
 
     @Override
@@ -94,11 +100,19 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
         sortedList = new SortedList<>(model.marketStatisticItems);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+        sortedList.addListener(itemListChangeListener);
+        updateHeaders();
     }
 
     @Override
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
+        sortedList.removeListener(itemListChangeListener);
+    }
+
+    private void updateHeaders() {
+        numberOfOffersColumn.setText("Total offers (" + sortedList.stream().mapToInt(item -> item.numberOfOffers).sum() + ")");
+        totalAmountColumn.setText("Total amount (" + formatter.formatCoinWithCode(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
     }
 
 
@@ -163,7 +177,7 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
     }
 
     private TableColumn<MarketStatisticItem, MarketStatisticItem> getTotalAmountColumn() {
-        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Total amount (BTC)") {
+        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Total amount") {
             {
                 setMinWidth(130);
             }

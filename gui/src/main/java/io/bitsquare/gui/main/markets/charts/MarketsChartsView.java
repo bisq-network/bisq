@@ -48,11 +48,14 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
 @FxmlView
 public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChartsViewModel> {
+    private static final Logger log = LoggerFactory.getLogger(MarketsChartsView.class);
 
     private NumberAxis xAxis, yAxis;
     XYChart.Series seriesBuy, seriesSell;
@@ -147,7 +150,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                     String code = tradeCurrency.getCode();
                     String tradeCurrencyName = tradeCurrency.getName();
                     areaChart.setTitle("Offer book for " + tradeCurrencyName);
-                    priceColumnLabel.set("Price (" + code + "/BTC)");
+                    priceColumnLabel.set("Price (" + formatter.getCurrencyPair(code) + ")");
                     volumeColumnLabel.set("Volume (" + code + ")");
                     xAxis.setLabel(priceColumnLabel.get());
                     xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis, "", ""));

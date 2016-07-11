@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.settings.network;
 
 import io.bitsquare.common.Clock;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.p2p.network.OutboundConnection;
+import io.bitsquare.p2p.network.connection.Connection;
+import io.bitsquare.p2p.network.connection.OutboundConnection;
 import io.bitsquare.p2p.network.Statistic;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -58,7 +58,7 @@ public class P2pNetworkListItem {
                 e -> sentBytes.set(formatter.formatBytes((long) e)));
         receivedBytesSubscription = EasyBind.subscribe(statistic.receivedBytesProperty(),
                 e -> receivedBytes.set(formatter.formatBytes((long) e)));
-        onionAddressSubscription = EasyBind.subscribe(connection.peersNodeAddressProperty(),
+        onionAddressSubscription = EasyBind.subscribe(connection.getPeersNodeAddressProperty(),
                 nodeAddress -> onionAddress.set(nodeAddress != null ? nodeAddress.getFullAddress() : "Not known yet"));
         roundTripTimeSubscription = EasyBind.subscribe(statistic.roundTripTimeProperty(),
                 roundTripTime -> this.roundTripTime.set((int) roundTripTime == 0 ? "-" : roundTripTime + " ms"));

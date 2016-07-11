@@ -44,8 +44,6 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
-
-
     private final File dataDir;
     private int gridRow = 0;
     private final Stage stage;
@@ -76,7 +74,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         if (preferences.getBackupDirectory() != null)
             backUpLocationTextField.setText(preferences.getBackupDirectory());
         selectBackupDir = tuple.third;
-        openDataDir = addLabelButton(root, ++gridRow, "Application data directory:", "Open directory", 0).second;
+        openDataDir = addLabelButton(root, ++gridRow, "Application data directory:", "Open directory").second;
         openDataDir.setDefaultButton(false);
         backupNow = addButtonAfterGroup(root, ++gridRow, "Backup now (backup is not encrypted!)");
         backupNow.setDisable(preferences.getBackupDirectory() == null || preferences.getBackupDirectory().length() == 0);
@@ -87,11 +85,12 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     protected void activate() {
         selectBackupDir.setOnAction(e -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            directoryChooser.setInitialDirectory(new File(preferences.getDefaultPath()));
             directoryChooser.setTitle("Select backup location");
             File dir = directoryChooser.showDialog(stage);
             if (dir != null) {
                 String backupDirectory = dir.getAbsolutePath();
+                preferences.setDefaultPath(backupDirectory);
                 backUpLocationTextField.setText(backupDirectory);
                 preferences.setBackupDirectory(backupDirectory);
                 backupNow.setDisable(false);
@@ -128,8 +127,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     @Override
     protected void deactivate() {
         selectBackupDir.setOnAction(null);
+        openDataDir.setOnAction(null);
+        backupNow.setOnAction(null);
     }
-
-
 }
 

@@ -727,7 +727,7 @@ public class TradeWalletService {
     }
 
     /**
-     * A trader who got the signed tx from the arbitrator finalize the payout tx
+     * A trader who got the signed tx from the arbitrator finalizes the payout tx
      *
      * @param depositTxSerialized     Serialized deposit tx
      * @param arbitratorSignature     DER encoded canonical signature of arbitrator
@@ -765,7 +765,7 @@ public class TradeWalletService {
         log.trace("depositTx " + depositTx);
         log.trace("arbitratorSignature r " + ECKey.ECDSASignature.decodeFromDER(arbitratorSignature).r.toString());
         log.trace("arbitratorSignature s " + ECKey.ECDSASignature.decodeFromDER(arbitratorSignature).s.toString());
-        log.trace("tradersOwnPayoutAmount " + buyerPayoutAmount.toFriendlyString());
+        log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
         log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
         log.trace("arbitratorPayoutAmount " + arbitratorPayoutAmount.toFriendlyString());
         log.trace("buyerAddressString " + buyerAddressString);

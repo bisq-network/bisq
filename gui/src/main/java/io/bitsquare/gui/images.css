@@ -22,6 +22,14 @@
     -fx-image: url("../../../images/alert_round.png");
 }
 
+#image-green_circle {
+    -fx-image: url("../../../images/green_circle.png");
+}
+
+#image-blue_circle {
+    -fx-image: url("../../../images/blue_circle.png");
+}
+
 #image-remove {
     -fx-image: url("../../../images/remove.png");
 }
@@ -277,5 +285,18 @@
 #avatar_15 {
     -fx-image: url("../../../images/avatars/avatar_15.png");
 }
+
+#poloniex {
+    -fx-image: url("../../../images/poloniex.png");
+}
+
+#btcaverage {
+    -fx-image: url("../../../images/btcaverage.png");
+}
+
+#spinner {
+    -fx-image: url("../../../images/spinner.png");
+}
+
 
 

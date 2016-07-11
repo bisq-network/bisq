@@ -752,6 +752,9 @@ public class FormBuilder {
     // Label  + Button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public static Tuple2<Label, Button> addLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle) {
+        return addLabelButton(gridPane, rowIndex, labelText, buttonTitle, 0);
+    }
 
     public static Tuple2<Label, Button> addLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle, double top) {
         Label label = addLabel(gridPane, rowIndex, labelText, top);
@@ -824,41 +827,79 @@ public class FormBuilder {
         return new Tuple2<>(button1, button2);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Button + Button + Button
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple3<Button, Button, Button> add3Buttons(GridPane gridPane,
+                                                             int rowIndex,
+                                                             String title1,
+                                                             String title2,
+                                                             String title3) {
+        return add3Buttons(gridPane, rowIndex, title1, title2, title3, 0);
+    }
+
+    public static Tuple3<Button, Button, Button> add3ButtonsAfterGroup(GridPane gridPane,
+                                                                       int rowIndex,
+                                                                       String title1,
+                                                                       String title2,
+                                                                       String title3) {
+        return add3Buttons(gridPane, rowIndex, title1, title2, title3, 15);
+    }
+
+    public static Tuple3<Button, Button, Button> add3Buttons(GridPane gridPane,
+                                                             int rowIndex,
+                                                             String title1,
+                                                             String title2,
+                                                             String title3,
+                                                             double top) {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        Button button1 = new Button(title1);
+        button1.setDefaultButton(true);
+        Button button2 = new Button(title2);
+        Button button3 = new Button(title3);
+        hBox.getChildren().addAll(button1, button2, button3);
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
+        gridPane.getChildren().add(hBox);
+        return new Tuple3<>(button1, button2, button3);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Button + ProgressIndicator + Label
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Button, ProgressIndicator, Label> addButtonWithStatusAfterGroup(GridPane gridPane,
-                                                                                         int rowIndex,
-                                                                                         String buttonTitle) {
-        return addButtonWithStatus(gridPane, rowIndex, buttonTitle, 15);
+    public static Tuple3<Button, BusyAnimation, Label> addButtonBusyAnimationLabelAfterGroup(GridPane gridPane,
+                                                                                             int rowIndex,
+                                                                                             String buttonTitle) {
+        return addButtonBusyAnimationLabel(gridPane, rowIndex, buttonTitle, 15);
     }
 
-    public static Tuple3<Button, ProgressIndicator, Label> addButtonWithStatus(GridPane gridPane,
-                                                                               int rowIndex,
-                                                                               String buttonTitle,
-                                                                               double top) {
+    public static Tuple3<Button, BusyAnimation, Label> addButtonBusyAnimationLabel(GridPane gridPane,
+                                                                                   int rowIndex,
+                                                                                   String buttonTitle,
+                                                                                   double top) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
         Button button = new Button(buttonTitle);
         button.setDefaultButton(true);
 
-        ProgressIndicator progressIndicator = new ProgressIndicator(0);
-        progressIndicator.setPrefHeight(24);
-        progressIndicator.setPrefWidth(24);
+        BusyAnimation busyAnimation = new BusyAnimation(false);
 
         Label label = new Label();
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(button, progressIndicator, label);
+        hBox.getChildren().addAll(button, busyAnimation, label);
 
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(hBox);
 
-        return new Tuple3<>(button, progressIndicator, label);
+        return new Tuple3<>(button, busyAnimation, label);
     }
 
 

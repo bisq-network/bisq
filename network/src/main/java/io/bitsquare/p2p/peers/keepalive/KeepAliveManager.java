@@ -8,6 +8,7 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.network.*;
+import io.bitsquare.p2p.network.connection.*;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.p2p.peers.keepalive.messages.Pong;

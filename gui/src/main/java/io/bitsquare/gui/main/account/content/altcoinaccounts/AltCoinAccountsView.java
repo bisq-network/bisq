@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.account.content.altcoinaccounts;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
@@ -30,6 +31,7 @@ import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
+import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountFactory;
@@ -67,8 +69,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
-    private Button addAccountButton;
-    private Button saveNewAccountButton;
+    private Button addAccountButton, saveNewAccountButton, exportButton, importButton;
     private int gridRow = 0;
     private ChangeListener<PaymentAccount> paymentAccountChangeListener;
 
@@ -112,11 +113,17 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     protected void activate() {
         paymentAccountsListView.setItems(model.getPaymentAccounts());
         paymentAccountsListView.getSelectionModel().selectedItemProperty().addListener(paymentAccountChangeListener);
+        addAccountButton.setOnAction(event -> addNewAccount());
+        exportButton.setOnAction(event -> model.dataModel.exportAccounts());
+        importButton.setOnAction(event -> model.dataModel.importAccounts());
     }
 
     @Override
     protected void deactivate() {
         paymentAccountsListView.getSelectionModel().selectedItemProperty().removeListener(paymentAccountChangeListener);
+        addAccountButton.setOnAction(null);
+        exportButton.setOnAction(null);
+        importButton.setOnAction(null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +133,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
         TradeCurrency selectedTradeCurrency = paymentAccount.getSelectedTradeCurrency();
         String code = selectedTradeCurrency.getCode();
-        if (code.equals("MKR") || code.equals("DAO")) {
+        if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
             new Popup().information("Please be sure that you follow the requirements for the usage of " +
                     selectedTradeCurrency.getCodeAndName() + " wallets as described on the " +
                     selectedTradeCurrency.getName() + " web page.\n" +
@@ -158,7 +165,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     .closeButtonText("I understand")
                     .show();
         }
-        
+
         if (!model.getPaymentAccounts().stream().filter(e -> {
             if (e.getAccountName() != null)
                 return e.getAccountName().equals(paymentAccount.getAccountName());
@@ -236,8 +243,10 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
             }
         });
 
-        addAccountButton = addButtonAfterGroup(root, ++gridRow, "Add new account");
-        addAccountButton.setOnAction(event -> addNewAccount());
+        Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, "Add new account", "Export Accounts", "Import Accounts");
+        addAccountButton = tuple3.first;
+        exportButton = tuple3.second;
+        importButton = tuple3.third;
     }
 
     // Add new account form

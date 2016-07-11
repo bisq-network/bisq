@@ -69,7 +69,7 @@ public final class MailboxStoragePayload implements StoragePayload {
             senderPubKeyForAddOperation = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(senderPubKeyForAddOperationBytes));
             receiverPubKeyForRemoveOperation = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(receiverPubKeyForRemoveOperationBytes));
         } catch (Throwable t) {
-            log.warn("Exception at readObject: " + t.getMessage());
+            log.warn("Exception at readObject: " + t.getMessage() + "\nThis= " + this.toString());
         }
     }
 
@@ -103,8 +103,8 @@ public final class MailboxStoragePayload implements StoragePayload {
     public String toString() {
         return "MailboxStoragePayload{" +
                 "prefixedSealedAndSignedMessage=" + prefixedSealedAndSignedMessage +
-                ", senderStoragePublicKey.hashCode()=" + senderPubKeyForAddOperation.hashCode() +
-                ", receiverStoragePublicKey.hashCode()=" + receiverPubKeyForRemoveOperation.hashCode() +
+                ", senderPubKeyForAddOperation.hashCode()=" + (senderPubKeyForAddOperation != null ? senderPubKeyForAddOperation.hashCode() : "null") +
+                ", receiverPubKeyForRemoveOperation.hashCode()=" + (receiverPubKeyForRemoveOperation != null ? receiverPubKeyForRemoveOperation.hashCode() : "null") +
                 '}';
     }
 }

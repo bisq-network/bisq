@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public final class Alert implements StoragePayload {
@@ -57,7 +58,7 @@ public final class Alert implements StoragePayload {
         }
     }
 
-    public void setSigAndStoragePubKey(String signatureAsBase64, PublicKey storagePublicKey) {
+    public void setSigAndPubKey(String signatureAsBase64, PublicKey storagePublicKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.storagePublicKey = storagePublicKey;
         this.storagePublicKeyBytes = new X509EncodedKeySpec(this.storagePublicKey.getEncoded()).getEncoded();
@@ -68,8 +69,17 @@ public final class Alert implements StoragePayload {
     }
 
     public boolean isNewVersion() {
-        int versionNum = Integer.valueOf(Version.VERSION.replace(".", ""));
-        int alertVersionNum = Integer.valueOf(version.replace(".", ""));
+        // Usually we use 3 digits (0.4.8) but to support also 4 digits in case of hotfixes (0.4.8.1) we 
+        // add a 0 at all 3 digit versions to allow correct comparison: 0.4.8 -> 480; 0.4.8.1 -> 481; 481 > 480
+        String myVersionString = Version.VERSION.replace(".", "");
+        if (myVersionString.length() == 3)
+            myVersionString += "0";
+        int versionNum = Integer.valueOf(myVersionString);
+
+        String alertVersionString = version.replace(".", "");
+        if (alertVersionString.length() == 3)
+            alertVersionString += "0";
+        int alertVersionNum = Integer.valueOf(alertVersionString);
         return versionNum < alertVersionNum;
     }
 
@@ -87,23 +97,37 @@ public final class Alert implements StoragePayload {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Alert)) return false;
-        Alert that = (Alert) o;
-        if (message != null ? !message.equals(that.message) : that.message != null) return false;
-        return !(getSignatureAsBase64() != null ? !getSignatureAsBase64().equals(that.getSignatureAsBase64()) : that.getSignatureAsBase64() != null);
+
+        Alert alert = (Alert) o;
+
+        if (isUpdateInfo != alert.isUpdateInfo) return false;
+        if (message != null ? !message.equals(alert.message) : alert.message != null) return false;
+        if (version != null ? !version.equals(alert.version) : alert.version != null) return false;
+        if (signatureAsBase64 != null ? !signatureAsBase64.equals(alert.signatureAsBase64) : alert.signatureAsBase64 != null)
+            return false;
+        return Arrays.equals(storagePublicKeyBytes, alert.storagePublicKeyBytes);
+
     }
 
     @Override
     public int hashCode() {
         int result = message != null ? message.hashCode() : 0;
-        result = 31 * result + (getSignatureAsBase64() != null ? getSignatureAsBase64().hashCode() : 0);
+        result = 31 * result + (version != null ? version.hashCode() : 0);
+        result = 31 * result + (isUpdateInfo ? 1 : 0);
+        result = 31 * result + (signatureAsBase64 != null ? signatureAsBase64.hashCode() : 0);
+        result = 31 * result + (storagePublicKeyBytes != null ? Arrays.hashCode(storagePublicKeyBytes) : 0);
         return result;
     }
 
+
     @Override
     public String toString() {
-        return "AlertMessage{" +
+        return "Alert{" +
                 "message='" + message + '\'' +
-                ", signature.hashCode()='" + signatureAsBase64.hashCode() + '\'' +
+                ", version='" + version + '\'' +
+                ", isUpdateInfo=" + isUpdateInfo +
+                ", signatureAsBase64='" + signatureAsBase64 + '\'' +
+                ", storagePublicKeyBytes=" + Arrays.toString(storagePublicKeyBytes) +
                 '}';
     }
 }

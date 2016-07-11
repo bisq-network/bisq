@@ -17,18 +17,20 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.components.PeerInfoIcon;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.ImageUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import io.bitsquare.gui.util.SortedList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -49,6 +51,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private final TradeDetailsWindow tradeDetailsWindow;
     private final BSFormatter formatter;
+    private PrivateNotificationManager privateNotificationManager;
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
@@ -69,10 +72,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesView(PendingTradesViewModel model, TradeDetailsWindow tradeDetailsWindow, BSFormatter formatter) {
+    public PendingTradesView(PendingTradesViewModel model, TradeDetailsWindow tradeDetailsWindow, BSFormatter formatter, PrivateNotificationManager privateNotificationManager) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;
+        this.privateNotificationManager = privateNotificationManager;
     }
 
     @Override
@@ -442,6 +446,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
                         return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+
                             @Override
                             public void updateItem(final PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
@@ -452,7 +457,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ? "Trading peers onion address: " + hostName + "\n" +
                                             "You have already traded " + numPastTrades + " times with that peer." : "Trading peers onion address: " + hostName;
-                                    Node identIcon = ImageUtil.getIdentIcon(hostName, tooltipText, hasTraded);
+                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getTrade().getOffer());
+                                    setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)
                                         setGraphic(identIcon);
                                 } else {

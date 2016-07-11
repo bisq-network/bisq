@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
@@ -170,25 +171,22 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
-        addLabelTextField(gridPane, rowIndex, "Trade ID:", trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Trade ID:", trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(trade.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit()));
-        addLabelTextField(gridPane, ++rowIndex, "Selected arbitrator:", trade.getArbitratorNodeAddress().getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Selected arbitrator:", trade.getArbitratorNodeAddress().getFullAddress());
 
         if (trade.getTradingPeerNodeAddress() != null)
-            addLabelTextField(gridPane, ++rowIndex, "Trading peers onion address:", trade.getTradingPeerNodeAddress().getFullAddress());
-
+            addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Trading peers onion address:", trade.getTradingPeerNodeAddress().getFullAddress());
 
         if (contract != null) {
             if (buyerPaymentAccountContractData != null) {
-                TextField tf = addLabelTextField(gridPane, ++rowIndex, "Buyer payment details:", BSResources.get(buyerPaymentAccountContractData.getPaymentDetails())).second;
+                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer payment details:", BSResources.get(buyerPaymentAccountContractData.getPaymentDetails())).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
-                tf.setMouseTransparent(false);
             }
             if (sellerPaymentAccountContractData != null) {
-                TextField tf = addLabelTextField(gridPane, ++rowIndex, "Seller payment details:", BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second;
+                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Seller payment details:", BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
-                tf.setMouseTransparent(false);
             }
             if (buyerPaymentAccountContractData == null && sellerPaymentAccountContractData == null)
                 addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(contract.getPaymentMethodName()));

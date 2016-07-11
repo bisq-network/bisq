@@ -6,6 +6,10 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
+import io.bitsquare.p2p.network.connection.CloseConnectionReason;
+import io.bitsquare.p2p.network.connection.Connection;
+import io.bitsquare.p2p.network.connection.ConnectionListener;
+import io.bitsquare.p2p.network.connection.InboundConnection;
 import io.bitsquare.p2p.peers.peerexchange.Peer;
 import io.bitsquare.storage.Storage;
 import org.slf4j.Logger;
@@ -155,6 +159,9 @@ public class PeerManager implements ConnectionListener {
 
     @Override
     public void onConnection(Connection connection) {
+        Log.logIfStressTests("onConnection to peer " +
+                (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown") +
+                " / Nr. of connections: " + networkNode.getAllConnections().size());
         if (isSeedNode(connection))
             connection.setPeerType(Connection.PeerType.SEED_NODE);
 
@@ -169,6 +176,10 @@ public class PeerManager implements ConnectionListener {
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+        Log.logIfStressTests("onDisconnect of peer " +
+                (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown") +
+                " / Nr. of connections: " + networkNode.getAllConnections().size() +
+                " / closeConnectionReason: " + closeConnectionReason);
         handleConnectionFault(connection);
 
         lostAllConnections = networkNode.getAllConnections().isEmpty();
@@ -176,6 +187,18 @@ public class PeerManager implements ConnectionListener {
             stopped = true;
             listeners.stream().forEach(Listener::onAllConnectionsLost);
         }
+
+        if (connection.getPeersNodeAddressOptional().isPresent() && isNodeBanned(closeConnectionReason, connection)) {
+            final NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+            seedNodeAddresses.remove(nodeAddress);
+            removePersistedPeer(nodeAddress);
+            removeReportedPeer(nodeAddress);
+        }
+    }
+
+    public boolean isNodeBanned(CloseConnectionReason closeConnectionReason, Connection connection) {
+        return closeConnectionReason == CloseConnectionReason.PEER_BANNED &&
+                connection.getPeersNodeAddressOptional().isPresent();
     }
 
     @Override
@@ -199,7 +222,7 @@ public class PeerManager implements ConnectionListener {
                     removeTooOldPersistedPeers();
                     checkMaxConnections(maxConnections);
                 } else {
-                    log.warn("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
+                    log.debug("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
                 }
             }, CHECK_MAX_CONN_DELAY_SEC);
 
@@ -211,6 +234,7 @@ public class PeerManager implements ConnectionListener {
         Set<Connection> allConnections = networkNode.getAllConnections();
         int size = allConnections.size();
         log.info("We have {} connections open. Our limit is {}", size, limit);
+
         if (size > limit) {
             log.info("We have too many connections open.\n\t" +
                     "Lets try first to remove the inbound connections of type PEER.");

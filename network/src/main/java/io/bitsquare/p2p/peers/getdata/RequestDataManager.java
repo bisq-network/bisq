@@ -6,6 +6,10 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
+import io.bitsquare.p2p.network.connection.CloseConnectionReason;
+import io.bitsquare.p2p.network.connection.Connection;
+import io.bitsquare.p2p.network.connection.ConnectionListener;
+import io.bitsquare.p2p.network.connection.MessageListener;
 import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
 import io.bitsquare.p2p.peers.peerexchange.Peer;
@@ -74,6 +78,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         this.listener = listener;
 
         networkNode.addMessageListener(this);
+        networkNode.addConnectionListener(this);
         peerManager.addListener(this);
     }
 
@@ -82,6 +87,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         stopped = true;
         stopRetryTimer();
         networkNode.removeMessageListener(this);
+        networkNode.removeConnectionListener(this);
         peerManager.removeListener(this);
         closeAllHandlers();
     }
@@ -133,6 +139,12 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
         closeHandler(connection);
+
+        if (peerManager.isNodeBanned(closeConnectionReason, connection)) {
+            final NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+            seedNodeAddresses.remove(nodeAddress);
+            handlerMap.remove(nodeAddress);
+        }
     }
 
     @Override

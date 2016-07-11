@@ -20,8 +20,6 @@ lower gradient color on tab: dddddd
 bg color of non edit textFields: fafafa
 */
 
-/* Splash */
-
 .root {
     -bs-grey: #666666;
     -bs-bg-grey: #dddddd;
@@ -78,7 +76,13 @@ bg color of non edit textFields: fafafa
     -fx-selection-bar: derive(-fx-accent, 50%);
 
     -fx-font-size: 13;
+    -fx-font-family: "Verdana";
 }
+
+
+
+/* Splash */
+
 
 #splash {
     -fx-background-color: #ffffff;
@@ -174,6 +178,11 @@ bg color of non edit textFields: fafafa
     -fx-cursor: hand;
 }
 
+.copy-icon-disputes {
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+
 .copy-icon:hover {
     -fx-text-fill: black;
 }
@@ -207,7 +216,6 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: #999;
     -fx-cursor: hand;
 }
-
 
 /*******************************************************************************
  *                                                                             *
@@ -458,6 +466,11 @@ textfield */
 #info-icon-label {
     -fx-font-size: 16;
     -fx-text-fill: #333000;
+}
+
+/* Offer book */
+#num-offers {
+    -fx-font-size: 12;
 }
 
 /* Create offer */
@@ -1014,6 +1027,21 @@ textfield */
     -fx-effect: dropshadow(gaussian, #666, 12, 0, -1, 3);
 }
 
+#peer-info-popup-bg {
+    -fx-font-size: 11;
+    -fx-text-fill: #3c3c3c;
+    -fx-background-color: linear-gradient(to bottom, #fafafa, #f1f1f1);
+    -fx-background-radius: 3 3 3 3;
+    -fx-background-insets: 5 5 20 20;
+    -fx-effect: dropshadow(gaussian, #666, 12, 0, -1, 3);
+}
+
+#peer-info-popup-headline {
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
 .popup-icon-information {
     -fx-text-fill: #ddd;
 }
@@ -1036,3 +1064,9 @@ textfield */
     -fx-font-size: 11;
 }
 
+#ident-num-label {
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-font-size: 10;
+    -fx-text-fill: white;
+}

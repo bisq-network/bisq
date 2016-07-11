@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
+import io.bitsquare.app.Log;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
@@ -26,9 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 /**
  * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.
@@ -56,8 +56,11 @@ public class OfferBook {
             @Override
             public void onAdded(Offer offer) {
                 OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
-                if (!offerBookListItems.contains(offerBookListItem))
+                if (!offerBookListItems.contains(offerBookListItem)) {
                     offerBookListItems.add(offerBookListItem);
+
+                    Log.logIfStressTests("Offer added: Nr. of offers = " + offerBookListItems.size());
+                }
             }
 
             @Override
@@ -67,13 +70,14 @@ public class OfferBook {
 
                 // clean up possible references in openOfferManager 
                 tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
-
-                Optional<OfferBookListItem> candidate = offerBookListItems.stream().filter(item -> item.getOffer().getId().equals(offer.getId())).findAny();
+                Optional<OfferBookListItem> candidate = offerBookListItems.stream()
+                        .filter(item -> item.getOffer().getId().equals(offer.getId()))
+                        .findAny();
                 if (candidate.isPresent()) {
                     OfferBookListItem item = candidate.get();
-                    synchronized (offerBookListItems) {
-                        if (offerBookListItems.contains(item))
-                            offerBookListItems.remove(item);
+                    if (offerBookListItems.contains(item)) {
+                        offerBookListItems.remove(item);
+                        Log.logIfStressTests("Offer removed: Nr. of offers = " + offerBookListItems.size());
                     }
                 }
             }
@@ -86,14 +90,13 @@ public class OfferBook {
 
     public void fillOfferBookListItems() {
         log.debug("fillOfferBookListItems");
-        List<Offer> offers = offerBookService.getOffers();
-        CopyOnWriteArraySet<OfferBookListItem> list = new CopyOnWriteArraySet<>();
-        offers.stream().forEach(e -> list.add(new OfferBookListItem(e)));
-        synchronized (offerBookListItems) {
-            offerBookListItems.clear();
-        }
 
-        offerBookListItems.addAll(list);
+        offerBookListItems.clear();
+        offerBookListItems.addAll(offerBookService.getOffers().stream()
+                .map(OfferBookListItem::new)
+                .collect(Collectors.toList()));
+
+        Log.logIfStressTests("Offer filled: Nr. of offers = " + offerBookListItems.size());
 
         log.debug("offerBookListItems " + offerBookListItems.size());
     }

@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.overlays;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.BSResources;
@@ -35,7 +36,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -56,6 +60,7 @@ import static io.bitsquare.gui.util.FormBuilder.addCheckBox;
 
 public abstract class Overlay<T extends Overlay> {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -117,9 +122,9 @@ public abstract class Overlay<T extends Overlay> {
     private boolean showReportErrorButtons;
     protected Label messageLabel;
     protected String truncatedMessage;
-    private ProgressIndicator progressIndicator;
-    private boolean showProgressIndicator;
-    private Button actionButton;
+    private BusyAnimation busyAnimation;
+    private boolean showBusyAnimation;
+    protected Button actionButton;
     protected Label headLineLabel;
     protected String dontShowAgainId;
     protected String dontShowAgainText;
@@ -130,7 +135,8 @@ public abstract class Overlay<T extends Overlay> {
     protected Type type = Type.Undefined;
     protected boolean hideCloseButton;
     protected boolean useAnimation = true;
-
+    private String headlineStyle;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -145,8 +151,8 @@ public abstract class Overlay<T extends Overlay> {
             addHeadLine();
             addSeparator();
 
-            if (showProgressIndicator)
-                addProgressIndicator();
+            if (showBusyAnimation)
+                addBusyAnimation();
 
             addMessage();
             if (showReportErrorButtons)
@@ -320,8 +326,8 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
-    public T showProgressIndicator() {
-        this.showProgressIndicator = true;
+    public T showBusyAnimation() {
+        this.showBusyAnimation = true;
         return (T) this;
     }
 
@@ -346,6 +352,11 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
+    public T setHeadlineStyle(String headlineStyle) {
+        this.headlineStyle = headlineStyle;
+        return (T) this;
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -374,43 +385,45 @@ public abstract class Overlay<T extends Overlay> {
         if (owner == null)
             owner = MainView.getRootContainer();
 
-        Scene rootScene = owner.getScene();
-        if (rootScene != null) {
-            Scene scene = new Scene(gridPane);
-            scene.getStylesheets().setAll(rootScene.getStylesheets());
-            scene.setFill(Color.TRANSPARENT);
+        if (owner != null) {
+            Scene rootScene = owner.getScene();
+            if (rootScene != null) {
+                Scene scene = new Scene(gridPane);
+                scene.getStylesheets().setAll(rootScene.getStylesheets());
+                scene.setFill(Color.TRANSPARENT);
 
-            setupKeyHandler(scene);
+                setupKeyHandler(scene);
 
-            stage = new Stage();
-            stage.setScene(scene);
-            Window window = rootScene.getWindow();
-            setModality();
-            stage.initStyle(StageStyle.TRANSPARENT);
-            stage.show();
+                stage = new Stage();
+                stage.setScene(scene);
+                Window window = rootScene.getWindow();
+                setModality();
+                stage.initStyle(StageStyle.TRANSPARENT);
+                stage.show();
 
-            layout();
+                layout();
 
-            addEffectToBackground();
+                addEffectToBackground();
 
-            // On Linux the owner stage does not move the child stage as it does on Mac
-            // So we need to apply centerPopup. Further with fast movements the handler loses
-            // the latest position, with a delay it fixes that.
-            // Also on Mac sometimes the popups are positioned outside of the main app, so keep it for all OS
-            positionListener = (observable, oldValue, newValue) -> {
-                if (stage != null) {
-                    layout();
-                    if (centerTime != null)
-                        centerTime.stop();
+                // On Linux the owner stage does not move the child stage as it does on Mac
+                // So we need to apply centerPopup. Further with fast movements the handler loses
+                // the latest position, with a delay it fixes that.
+                // Also on Mac sometimes the popups are positioned outside of the main app, so keep it for all OS
+                positionListener = (observable, oldValue, newValue) -> {
+                    if (stage != null) {
+                        layout();
+                        if (centerTime != null)
+                            centerTime.stop();
 
-                    centerTime = UserThread.runAfter(this::layout, 3);
-                }
-            };
-            window.xProperty().addListener(positionListener);
-            window.yProperty().addListener(positionListener);
-            window.widthProperty().addListener(positionListener);
+                        centerTime = UserThread.runAfter(this::layout, 3);
+                    }
+                };
+                window.xProperty().addListener(positionListener);
+                window.yProperty().addListener(positionListener);
+                window.widthProperty().addListener(positionListener);
 
-            animateDisplay();
+                animateDisplay();
+            }
         }
     }
 
@@ -609,18 +622,13 @@ public abstract class Overlay<T extends Overlay> {
     protected void addHeadLine() {
         if (headLine != null) {
             ++rowIndex;
-                    
-           /* Label icon = AwesomeDude.createIconLabel(awesomeIcon, "40.0");
-            icon.getStyleClass().add("popup-icon-" + type);
-
-            GridPane.setHalignment(icon, HPos.RIGHT);
-            GridPane.setRowIndex(icon, ++rowIndex);
-            GridPane.setColumnIndex(icon, 1);
-            GridPane.setMargin(icon, new Insets(0, 0, -10, 0));
-            gridPane.getChildren().add(icon);*/
 
             headLineLabel = new Label(BSResources.get(headLine));
             headLineLabel.setMouseTransparent(true);
+
+            if (headlineStyle != null)
+                headLineLabel.setStyle(headlineStyle);
+            
             GridPane.setHalignment(headLineLabel, HPos.LEFT);
             GridPane.setRowIndex(headLineLabel, rowIndex);
             GridPane.setColumnSpan(headLineLabel, 2);
@@ -688,15 +696,12 @@ public abstract class Overlay<T extends Overlay> {
         });
     }
 
-    protected void addProgressIndicator() {
-        progressIndicator = new ProgressIndicator(-1);
-        progressIndicator.setMaxSize(36, 36);
-        progressIndicator.setMouseTransparent(true);
-        progressIndicator.setPadding(new Insets(0, 0, 20, 0));
-        GridPane.setHalignment(progressIndicator, HPos.CENTER);
-        GridPane.setRowIndex(progressIndicator, ++rowIndex);
-        GridPane.setColumnSpan(progressIndicator, 2);
-        gridPane.getChildren().add(progressIndicator);
+    protected void addBusyAnimation() {
+        busyAnimation = new BusyAnimation();
+        GridPane.setHalignment(busyAnimation, HPos.CENTER);
+        GridPane.setRowIndex(busyAnimation, ++rowIndex);
+        GridPane.setColumnSpan(busyAnimation, 2);
+        gridPane.getChildren().add(busyAnimation);
     }
 
     protected void addDontShowAgainCheckBox() {

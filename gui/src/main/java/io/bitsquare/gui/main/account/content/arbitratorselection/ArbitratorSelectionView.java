@@ -204,8 +204,8 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         TableColumn<ArbitratorListItem, String> dateColumn = new TableColumn("Registration date");
         dateColumn.setSortable(false);
         dateColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getRegistrationDate()));
-        dateColumn.setMinWidth(130);
-        dateColumn.setMaxWidth(130);
+        dateColumn.setMinWidth(140);
+        dateColumn.setMaxWidth(140);
 
         TableColumn<ArbitratorListItem, String> nameColumn = new TableColumn("Onion address");
         nameColumn.setSortable(false);

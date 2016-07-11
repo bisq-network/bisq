@@ -22,7 +22,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bitsquare</groupId>
-        <version>0.4.8.1</version>
+        <version>0.4.9</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -141,6 +141,12 @@
              <artifactId>richtextfx</artifactId>
              <version>0.4.1</version>
          </dependency>-->
+
+        <dependency>
+            <groupId>com.googlecode.jcsv</groupId>
+            <artifactId>jcsv</artifactId>
+            <version>1.4.0</version>
+        </dependency>
 
     </dependencies>
 </project>

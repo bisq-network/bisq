@@ -194,8 +194,10 @@ public class PriceFeed {
             Futures.addCallback(future, new FutureCallback<MarketPrice>() {
                 public void onSuccess(MarketPrice marketPrice) {
                     UserThread.execute(() -> {
-                        cache.put(marketPrice.currencyCode, marketPrice);
-                        priceConsumer.accept(marketPrice.getPrice(type));
+                        if (marketPrice != null && priceConsumer != null) {
+                            cache.put(marketPrice.currencyCode, marketPrice);
+                            priceConsumer.accept(marketPrice.getPrice(type));
+                        }
                     });
                 }
 
