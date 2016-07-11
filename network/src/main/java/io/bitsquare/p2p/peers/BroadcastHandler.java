@@ -199,7 +199,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                 onFault("Connection stopped already", false);
             }
         } else {
-            onFault("stopped at sendToPeer: " + errorMessage);
+            onFault("stopped at sendToPeer: " + errorMessage, false);
         }
     }
 
