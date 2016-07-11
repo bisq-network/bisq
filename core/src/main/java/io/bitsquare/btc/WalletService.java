@@ -367,9 +367,8 @@ public class WalletService {
         wallet.encrypt(keyCrypterScrypt, key);
         addressEntryList.stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
-            if (keyPair != null && keyPair.isEncrypted()) {
-                keyPair.encrypt(keyCrypterScrypt, key);
-            }
+            if (keyPair != null && keyPair.isEncrypted())
+                e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
         });
         setAesKey(key);
         addressEntryList.queueUpForSave();
