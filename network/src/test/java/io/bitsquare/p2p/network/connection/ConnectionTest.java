@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.network;
+package io.bitsquare.p2p.network.connection;
 
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.connection.CloseConnectionReason;

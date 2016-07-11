@@ -19,7 +19,9 @@ import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.p2p.storage.messages.RefreshTTLMessage;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -43,6 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Connection is created by the server thread or by sendMessage from NetworkNode.
  * All handlers are called on User thread.
  */
+@EqualsAndHashCode(of = "iuid")
 public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
 
@@ -65,7 +68,7 @@ public class Connection implements MessageListener {
     static final int MAX_MSG_SIZE = 200 * 1024;                       // 200 kb
     static final int MAX_MSG_SIZE_GET_DATA = 6 * 1024 * 1024;         // 6 MB (425 offers resulted in about 660 kb, mailbox msg will add more to it) offer has usually 2 kb, mailbox 3kb.
     //TODO decrease limits again after testing
-    static final int MSG_THROTTLE_PER_SEC = 200;              // With MAX_MSG_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
+    public static final int MSG_THROTTLE_PER_SEC = 200;              // With MAX_MSG_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
     static final int MSG_THROTTLE_PER_10_SEC = 1000;          // With MAX_MSG_SIZE of 200kb results in bandwidth of 20MB/sec or 2.5 mbit/sec
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(90);
 
@@ -83,7 +86,6 @@ public class Connection implements MessageListener {
     private final Socket socket;
     // private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
-    private final String portInfo;
     @Getter
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
@@ -114,7 +116,7 @@ public class Connection implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener,
+    protected Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener,
                @Nullable NodeAddress peersNodeAddress) {
         this.socket = socket;
         this.connectionListener = connectionListener;
@@ -125,15 +127,16 @@ public class Connection implements MessageListener {
 
         sharedModel = new SharedModel(this, socket);
 
+        String portInfo;
         if (socket.getLocalPort() == 0)
             portInfo = "port=" + socket.getPort();
         else
             portInfo = "localPort=" + socket.getLocalPort() + "/port=" + socket.getPort();
 
-        init(peersNodeAddress);
+        init(peersNodeAddress, portInfo);
     }
 
-    private void init(@Nullable NodeAddress peersNodeAddress) {
+    private void init(@Nullable NodeAddress peersNodeAddress, @NonNull final String portInfo) {
         try {
             socket.setSoTimeout(SOCKET_TIMEOUT);
             // Need to access first the ObjectOutputStream otherwise the ObjectInputStream would block
@@ -428,39 +431,11 @@ public class Connection implements MessageListener {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Connection)) return false;
-
-        Connection that = (Connection) o;
-
-        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return uid != null ? uid.hashCode() : 0;
-    }
-
-    @Override
     public String toString() {
         return "Connection{" +
                 "peerAddress=" + peersNodeAddressOptional +
                 ", peerType=" + peerType +
                 ", uid='" + uid + '\'' +
-                '}';
-    }
-
-    @SuppressWarnings("unused")
-    public String printDetails() {
-        return "Connection{" +
-                "peerAddress=" + peersNodeAddressOptional +
-                ", peerType=" + peerType +
-                ", portInfo=" + portInfo +
-                ", uid='" + uid + '\'' +
-                ", sharedSpace=" + sharedModel.toString() +
-                ", stopped=" + stopped +
                 '}';
     }
 }
