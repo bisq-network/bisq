@@ -243,9 +243,8 @@ public abstract class Trade implements Tradable, Model {
         createProtocol();
 
         log.trace("decryptedMsgWithPubKey = " + decryptedMsgWithPubKey);
-        if (decryptedMsgWithPubKey != null) {
+        if (decryptedMsgWithPubKey != null) 
             tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
-        }
 
         reSendConfirmation();
     }

@@ -35,6 +35,8 @@ import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.*;
 import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -340,6 +342,37 @@ public class WalletService {
 
     public void setAesKey(KeyParameter aesKey) {
         this.aesKey = aesKey;
+    }
+
+    public void decryptWallet(@NotNull KeyParameter key) {
+        wallet.decrypt(key);
+        addressEntryList.stream().forEach(e -> {
+
+            final DeterministicKey keyPair = e.getKeyPair();
+            if (keyPair != null && keyPair.isEncrypted())
+                e.setDeterministicKey(keyPair.decrypt(key));
+        });
+
+        setAesKey(null);
+        addressEntryList.queueUpForSave();
+    }
+
+    public void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
+        if (this.aesKey != null) {
+            log.warn("encryptWallet called but we have a aesKey already set. " +
+                    "We decryptWallet with the old key before we apply the new key.");
+            decryptWallet(this.aesKey);
+        }
+
+        wallet.encrypt(keyCrypterScrypt, key);
+        addressEntryList.stream().forEach(e -> {
+            final DeterministicKey keyPair = e.getKeyPair();
+            if (keyPair != null && keyPair.isEncrypted()) {
+                keyPair.encrypt(keyCrypterScrypt, key);
+            }
+        });
+        setAesKey(key);
+        addressEntryList.queueUpForSave();
     }
 
 
@@ -736,7 +769,7 @@ public class WalletService {
         }
         return fee;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Withdrawal Fee calculation
