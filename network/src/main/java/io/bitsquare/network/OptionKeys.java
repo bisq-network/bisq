@@ -7,10 +7,9 @@ public class OptionKeys {
     public static final String PORT_KEY = "nodePort";
     public static final String NETWORK_ID = "networkId";
     public static final String SEED_NODES_KEY = "seedNodes";
-
-    // Seed nodes
     public static final String MY_ADDRESS = "myAddress";
-    public static final String SEED_NODES_LIST = "seedNodes";
     public static final String BAN_LIST = "banList";
+    
+    public static final String SEED_NODES_LIST = "seedNodes";
     public static final String HELP = "help";
 }

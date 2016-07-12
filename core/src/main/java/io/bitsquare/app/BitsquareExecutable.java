@@ -79,6 +79,10 @@ public abstract class BitsquareExecutable {
 
         parser.accepts(OptionKeys.SEED_NODES_KEY, description("Override hard coded seed nodes as comma separated list: E.g. rxdkppp3vicnbgqt.onion:8002, mfla72c4igh5ta2t.onion:8002", ""))
                 .withRequiredArg();
+        parser.accepts(OptionKeys.MY_ADDRESS, description("My own onion address (used for botstrap nodes to exclude itself)", ""))
+                .withRequiredArg();
+        parser.accepts(OptionKeys.BAN_LIST, description("Nodes to exclude from network connections.", ""))
+                .withRequiredArg();
 
         parser.accepts(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY, description("If set to true all signed messages from Bitsquare developers are ignored " +
                 "(Global alert, Version update alert, Filters for offers, nodes or payment account data)", false))
