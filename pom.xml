@@ -46,7 +46,7 @@
         <module>network</module>
         <module>gui</module>
         <module>headless</module>
-        <module>bootstrap</module>
+        <module>seednode</module>
         <module>monitor</module>
         <module>jdkfix</module>
     </modules>

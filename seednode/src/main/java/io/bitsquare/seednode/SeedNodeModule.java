@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.bootstrap;
+package io.bitsquare.seednode;
 
 import com.google.inject.Singleton;
 import io.bitsquare.alert.AlertModule;
@@ -42,10 +42,10 @@ import java.io.File;
 
 import static com.google.inject.name.Names.named;
 
-class BootstrapModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(BootstrapModule.class);
+class SeedNodeModule extends AppModule {
+    private static final Logger log = LoggerFactory.getLogger(SeedNodeModule.class);
 
-    public BootstrapModule(Environment env) {
+    public SeedNodeModule(Environment env) {
         super(env);
     }
 

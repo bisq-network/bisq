@@ -1,4 +1,4 @@
-package io.bitsquare.bootstrap;
+package io.bitsquare.seednode;
 
 import ch.qos.logback.classic.Level;
 import com.google.inject.Guice;
@@ -24,19 +24,19 @@ import org.springframework.core.env.Environment;
 import java.nio.file.Paths;
 import java.security.Security;
 
-public class Bootstrap {
-    private static final Logger log = LoggerFactory.getLogger(Bootstrap.class);
+public class SeedNode {
+    private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
     private static Environment env;
     private final Injector injector;
-    private final BootstrapModule bootstrapModule;
+    private final SeedNodeModule seedNodeModule;
 
     private P2PService p2pService;
 
     public static void setEnvironment(Environment env) {
-        Bootstrap.env = env;
+        SeedNode.env = env;
     }
 
-    public Bootstrap() {
+    public SeedNode() {
         String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
@@ -66,8 +66,8 @@ public class Bootstrap {
         Security.addProvider(new BouncyCastleProvider());
 
 
-        bootstrapModule = new BootstrapModule(env);
-        injector = Guice.createInjector(bootstrapModule);
+        seedNodeModule = new SeedNodeModule(env);
+        injector = Guice.createInjector(seedNodeModule);
         Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
         p2pService = injector.getInstance(P2PService.class);
         p2pService.start(false, new P2PServiceListener() {
@@ -132,7 +132,7 @@ public class Bootstrap {
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         injector.getInstance(WalletService.class).shutDownDone.addListener((ov, o, n) -> {
-                            bootstrapModule.close(injector);
+                            seedNodeModule.close(injector);
                             log.info("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
