@@ -9,12 +9,8 @@ import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
-import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.P2PServiceListener;
-import io.bitsquare.p2p.Utils;
+import io.bitsquare.p2p.*;
 import io.bitsquare.p2p.messaging.*;
-import io.bitsquare.p2p.seed.SeedNode;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -140,7 +136,7 @@ public class NetworkStressTest {
     /**
      * A single seed node that other nodes will contact to request initial data.
      */
-    private SeedNode seedNode;
+    private DummySeedNode seedNode;
     /**
      * The repository of seed nodes used in the test.
      */
@@ -271,12 +267,12 @@ public class NetworkStressTest {
         UserThread.setExecutor(Executors.newSingleThreadExecutor());
 
         // Create and start the seed node.
-        seedNode = new SeedNode(testDataDir.toString());
+        seedNode = new DummySeedNode(testDataDir.toString());
         final NodeAddress seedNodeAddress = newSeedNodeAddress();
         useLocalhost = seedNodeAddress.hostName.equals("localhost");
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
-        seedNode.createAndStartP2PService(seedNodeAddress, SeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhost,
+        seedNode.createAndStartP2PService(seedNodeAddress, DummySeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhost,
                 REGTEST_NETWORK_ID, USE_DETAILED_LOGGING, seedNodes,
                 new SeedServiceListener(localServicesLatch, localServicesFailed));
         print("created seed node");

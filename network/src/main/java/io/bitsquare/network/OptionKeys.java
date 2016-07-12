@@ -9,7 +9,6 @@ public class OptionKeys {
     public static final String SEED_NODES_KEY = "seedNodes";
     public static final String MY_ADDRESS = "myAddress";
     public static final String BAN_LIST = "banList";
-    
-    public static final String SEED_NODES_LIST = "seedNodes";
-    public static final String HELP = "help";
+
+
 }

@@ -1,10 +1,10 @@
 package io.bitsquare.p2p.routing;
 
+import io.bitsquare.p2p.DummySeedNode;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
-import io.bitsquare.p2p.seed.SeedNode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -31,7 +31,7 @@ public class PeerManagerTest {
     private CountDownLatch latch;
     private Set<NodeAddress> seedNodes;
     private int sleepTime;
-    private SeedNode seedNode1, seedNode2, seedNode3;
+    private DummySeedNode seedNode1, seedNode2, seedNode3;
 
     @Before
     public void setup() throws InterruptedException {
@@ -81,7 +81,7 @@ public class PeerManagerTest {
         seedNodes = new HashSet<>();
         NodeAddress nodeAddress = new NodeAddress("localhost:8001");
         seedNodes.add(nodeAddress);
-        seedNode1 = new SeedNode("test_dummy_dir");
+        seedNode1 = new DummySeedNode("test_dummy_dir");
         latch = new CountDownLatch(2);
         seedNode1.createAndStartP2PService(nodeAddress, MAX_CONNECTIONS, useLocalhost, 2, true,
                 seedNodes, new P2PServiceListener() {
@@ -142,7 +142,7 @@ public class PeerManagerTest {
 
         latch = new CountDownLatch(6);
 
-        seedNode1 = new SeedNode("test_dummy_dir");
+        seedNode1 = new DummySeedNode("test_dummy_dir");
         seedNode1.createAndStartP2PService(nodeAddress1, MAX_CONNECTIONS, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
@@ -187,7 +187,7 @@ public class PeerManagerTest {
 
         Thread.sleep(500);
 
-        seedNode2 = new SeedNode("test_dummy_dir");
+        seedNode2 = new DummySeedNode("test_dummy_dir");
         seedNode2.createAndStartP2PService(nodeAddress2, MAX_CONNECTIONS, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
@@ -239,12 +239,12 @@ public class PeerManagerTest {
         log.debug("### start");
         LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
-        SeedNode seedNode1 = getAndStartSeedNode(8001);
+        DummySeedNode seedNode1 = getAndStartSeedNode(8001);
         log.debug("### seedNode1");
         Thread.sleep(100);
         log.debug("### seedNode1 100");
         Thread.sleep(1000);
-        SeedNode seedNode2 = getAndStartSeedNode(8002);
+        DummySeedNode seedNode2 = getAndStartSeedNode(8002);
 
         // authentication: 
         // node2 -> node1 RequestAuthenticationMessage
@@ -428,8 +428,8 @@ public class PeerManagerTest {
         shutDownLatch.await();*/
     }
 
-    private SeedNode getAndStartSeedNode(int port) throws InterruptedException {
-        SeedNode seedNode = new SeedNode("test_dummy_dir");
+    private DummySeedNode getAndStartSeedNode(int port) throws InterruptedException {
+        DummySeedNode seedNode = new DummySeedNode("test_dummy_dir");
 
         latch = new CountDownLatch(1);
         seedNode.createAndStartP2PService(new NodeAddress("localhost", port), MAX_CONNECTIONS, useLocalhost, 2, true, seedNodes, new P2PServiceListener() {
