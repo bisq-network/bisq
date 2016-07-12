@@ -17,6 +17,7 @@ import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.network.OptionKeys;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
+import io.bitsquare.p2p.peers.BanList;
 import io.bitsquare.p2p.peers.BroadcastHandler;
 import io.bitsquare.p2p.peers.Broadcaster;
 import io.bitsquare.p2p.peers.PeerManager;
@@ -107,6 +108,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       @Named(OptionKeys.MAX_CONNECTIONS) int maxConnections,
                       @Named(Storage.DIR_KEY) File storageDir,
                       @Named(OptionKeys.SEED_NODES_KEY) String seedNodes,
+                      @Named(OptionKeys.MY_ADDRESS) String myAddress,
+                      @Named(OptionKeys.BAN_LIST) String banList,
                       Clock clock,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
@@ -119,6 +122,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 networkId,
                 storageDir,
                 seedNodes,
+                myAddress,
+                banList,
                 clock,
                 encryptionService,
                 keyRing
@@ -133,6 +138,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       int networkId,
                       File storageDir,
                       String seedNodes,
+                      String myAddress,
+                      String banList,
                       Clock clock,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
@@ -145,13 +152,28 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         optionalEncryptionService = Optional.ofNullable(encryptionService);
         optionalKeyRing = Optional.ofNullable(keyRing);
 
-        init(useLocalhost, networkId, storageDir, seedNodes);
+        init(useLocalhost,
+                networkId,
+                storageDir,
+                seedNodes,
+                myAddress,
+                banList);
     }
 
-    private void init(boolean useLocalhost, int networkId, File storageDir, String seedNodes) {
+    private void init(boolean useLocalhost,
+                      int networkId,
+                      File storageDir,
+                      String seedNodes,
+                      String myAddress,
+                      String banList) {
         if (!useLocalhost)
             FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key");
 
+        if (banList != null && !banList.isEmpty())
+            BanList.setList(Arrays.asList(banList.replace(" ", "").split(",")).stream().map(NodeAddress::new).collect(Collectors.toList()));
+        if (myAddress != null && !myAddress.isEmpty())
+            seedNodesRepository.setNodeAddressToExclude(new NodeAddress(myAddress));
+      
         networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
