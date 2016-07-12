@@ -44,10 +44,10 @@
         <module>jtorctl</module>
         <module>jtorproxy</module>
         <module>network</module>
-        <module>seednode</module>
-        <module>headless</module>
-        <module>monitor</module>
         <module>gui</module>
+        <module>headless</module>
+        <module>bootstrap</module>
+        <module>monitor</module>
         <module>jdkfix</module>
     </modules>
 
