@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.Log;
+import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.FeePolicy;
@@ -33,8 +34,10 @@ import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.overlays.notifications.NotificationCenter;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.SelectDepositTxWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.BuyerTrade;
 import io.bitsquare.trade.SellerTrade;
@@ -70,6 +73,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private final User user;
     private final KeyRing keyRing;
     public final DisputeManager disputeManager;
+    private P2PService p2PService;
     public final Navigation navigation;
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
@@ -90,7 +94,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, TradeWalletService tradeWalletService,
-                                  User user, KeyRing keyRing, DisputeManager disputeManager, Preferences preferences,
+                                  User user, KeyRing keyRing, DisputeManager disputeManager, Preferences preferences, P2PService p2PService,
                                   Navigation navigation, WalletPasswordWindow walletPasswordWindow, NotificationCenter notificationCenter) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
@@ -99,6 +103,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.keyRing = keyRing;
         this.disputeManager = disputeManager;
         this.preferences = preferences;
+        this.p2PService = p2PService;
         this.navigation = navigation;
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
@@ -352,6 +357,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 log.debug("payoutTx is null at doOpenDispute");
             }
 
+            final Arbitrator acceptedArbitratorByAddress = user.getAcceptedArbitratorByAddress(trade.getArbitratorNodeAddress());
+            checkNotNull(acceptedArbitratorByAddress);
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
@@ -368,13 +375,19 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getContractAsJson(),
                     trade.getOffererContractSignature(),
                     trade.getTakerContractSignature(),
-                    user.getAcceptedArbitratorByAddress(trade.getArbitratorNodeAddress()).getPubKeyRing(),
+                    acceptedArbitratorByAddress.getPubKeyRing(),
                     isSupportTicket
             );
 
             trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
-            disputeManager.sendOpenNewDisputeMessage(dispute);
-            navigation.navigateTo(MainView.class, DisputesView.class);
+            if (p2PService.isBootstrapped()) {
+                disputeManager.sendOpenNewDisputeMessage(dispute,
+                        () -> navigation.navigateTo(MainView.class, DisputesView.class),
+                        errorMessage -> new Popup().warning(errorMessage).show());
+            } else {
+                new Popup().information("You need to wait until you are fully connected to the network.\n" +
+                        "That might take up to about 2 minutes at startup.").show();
+            }
         } else {
             log.warn("trade is null at doOpenDispute");
         }
