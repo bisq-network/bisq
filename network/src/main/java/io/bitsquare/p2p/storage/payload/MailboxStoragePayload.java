@@ -4,6 +4,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bitsquare.p2p.peers.BroadcastHandler;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public final class MailboxStoragePayload implements StoragePayload {
      * senderStoragePublicKey has to be equal to the ownerPubKey of the ProtectedData
      *
      * @see ProtectedStorageEntry#ownerPubKey
-     * @see io.bitsquare.p2p.storage.P2PDataStorage#add(ProtectedStorageEntry, NodeAddress)
+     * @see io.bitsquare.p2p.storage.P2PDataStorage#add(ProtectedStorageEntry, NodeAddress, BroadcastHandler.Listener, boolean)
      */
     public transient PublicKey senderPubKeyForAddOperation;
     private final byte[] senderPubKeyForAddOperationBytes;
@@ -48,7 +49,7 @@ public final class MailboxStoragePayload implements StoragePayload {
      * senderStoragePublicKey has to be equal to the ownerPubKey of the ProtectedData
      *
      * @see ProtectedStorageEntry#ownerPubKey
-     * @see io.bitsquare.p2p.storage.P2PDataStorage#remove(ProtectedStorageEntry, NodeAddress)
+     * @see io.bitsquare.p2p.storage.P2PDataStorage#remove(ProtectedStorageEntry, NodeAddress, boolean)
      */
     public transient PublicKey receiverPubKeyForRemoveOperation;
     private final byte[] receiverPubKeyForRemoveOperationBytes;
