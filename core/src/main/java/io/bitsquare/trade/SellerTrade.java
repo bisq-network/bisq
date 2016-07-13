@@ -57,15 +57,6 @@ public abstract class SellerTrade extends Trade {
     }
 
     @Override
-    public void reSendConfirmation() {
-        if (state == State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG) {
-            log.info("reSendConfirmation onFiatPaymentReceived");
-            onFiatPaymentReceived(() -> log.debug("onFiatPaymentReceived succeeded"),
-                    log::warn);
-        }
-    }
-
-    @Override
     public Coin getPayoutAmount() {
         return FeePolicy.getSecurityDeposit();
     }
