@@ -94,6 +94,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
+        result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("MKR", "Maker", true));
         result.add(new CryptoCurrency("DGD", "DigixDAO Tokens", true));
         result.add(new CryptoCurrency("DAO", "DAO", true));
