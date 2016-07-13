@@ -528,6 +528,8 @@ public class MainViewModel implements ViewModel {
         privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
         displayAlertIfPresent(alertManager.alertMessageProperty().get());
 
+        p2PService.onAllServicesInitialized();
+
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();

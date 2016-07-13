@@ -65,6 +65,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final int maxConnections;
     private final File torDir;
     private Clock clock;
+    //TODO optional can be removed as seednode are created with those objects now
     private final Optional<EncryptionService> optionalEncryptionService;
     private final Optional<KeyRing> optionalKeyRing;
 
@@ -173,7 +174,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             BanList.setList(Arrays.asList(banList.replace(" ", "").split(",")).stream().map(NodeAddress::new).collect(Collectors.toList()));
         if (myAddress != null && !myAddress.isEmpty())
             seedNodesRepository.setNodeAddressToExclude(new NodeAddress(myAddress));
-      
+
         networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
@@ -219,6 +220,24 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             addP2PServiceListener(listener);
 
         networkNode.start(useBridges, this);
+    }
+
+    public void onAllServicesInitialized() {
+        if (networkNode.getNodeAddress() != null) {
+            p2PDataStorage.getMap().values().stream().forEach(protectedStorageEntry -> {
+                if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+                    processProtectedMailboxStorageEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+            });
+        } else {
+            networkNode.nodeAddressProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue != null) {
+                    p2PDataStorage.getMap().values().stream().forEach(protectedStorageEntry -> {
+                        if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+                            processProtectedMailboxStorageEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+                    });
+                }
+            });
+        }
     }
 
     public void shutDown(Runnable shutDownCompleteHandler) {
@@ -510,8 +529,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void processProtectedMailboxStorageEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
-        // Seed nodes don't have set the encryptionService
-        if (optionalEncryptionService.isPresent()) {
+        final NodeAddress nodeAddress = networkNode.getNodeAddress();
+        // Seed nodes don't receive mailbox messages
+        if (optionalEncryptionService.isPresent() && nodeAddress != null && !seedNodesRepository.isSeedNode(nodeAddress)) {
             Log.traceCall();
             MailboxStoragePayload mailboxStoragePayload = protectedMailboxStorageEntry.getMailboxStoragePayload();
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = mailboxStoragePayload.prefixedSealedAndSignedMessage;
