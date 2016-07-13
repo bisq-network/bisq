@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main;
 
 import com.google.inject.Inject;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bitsquare.alert.Alert;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.app.BitsquareApp;
@@ -51,6 +52,7 @@ import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.CloseConnectionReason;
@@ -222,8 +224,8 @@ public class MainViewModel implements ViewModel {
                 showStartupTimeoutPopup();
         }, 4, TimeUnit.MINUTES);
 
-        walletInitialized = initBitcoinWallet();
         p2pNetWorkReady = initP2PNetwork();
+        walletInitialized = initBitcoinWallet();
 
         // need to store it to not get garbage collected
         allServicesDone = EasyBind.combine(walletInitialized, p2pNetWorkReady, (a, b) -> a && b);
@@ -335,6 +337,7 @@ public class MainViewModel implements ViewModel {
             public void onTorNodeReady() {
                 bootstrapState.set("Tor node created");
                 p2PNetworkIconId.set("image-connection-tor");
+                initWalletService();
             }
 
             @Override
@@ -395,6 +398,11 @@ public class MainViewModel implements ViewModel {
     }
 
     private BooleanProperty initBitcoinWallet() {
+        final BooleanProperty walletInitialized = new SimpleBooleanProperty();
+        return walletInitialized;
+    }
+    
+    private void initWalletService() {
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletService.downloadPercentageProperty(), walletService.numPeersProperty(), walletServiceException,
                 (downloadPercentage, numPeers, exception) -> {
@@ -434,30 +442,36 @@ public class MainViewModel implements ViewModel {
         btcInfoBinding.subscribe((observable, oldValue, newValue) -> {
             btcInfo.set(newValue);
         });
-
-        final BooleanProperty walletInitialized = new SimpleBooleanProperty();
+        
+        NodeAddress nodeAddressProxy = null;
+        Socks5Proxy proxy = p2PService.getNetworkNode().getSocksProxy();
+        if( proxy != null ) {
+            nodeAddressProxy = new NodeAddress(proxy.getInetAddress().getHostName(), proxy.getPort());
+//            nodeAddressProxy = new NodeAddress("localhost", 9050);
+        }
+        
         walletService.initialize(null,
-                () -> {
-                    numBtcPeers = walletService.numPeersProperty().get();
+            nodeAddressProxy,
+            () -> {
+                numBtcPeers = walletService.numPeersProperty().get();
 
-                    if (walletService.getWallet().isEncrypted()) {
-                        if (p2pNetWorkReady.get())
-                            splashP2PNetworkProgress.set(0);
+                if (walletService.getWallet().isEncrypted()) {
+                    if (p2pNetWorkReady.get())
+                        splashP2PNetworkProgress.set(0);
 
-                        walletPasswordWindow
-                                .onAesKey(aesKey -> {
-                                    tradeWalletService.setAesKey(aesKey);
-                                    walletService.setAesKey(aesKey);
-                                    walletInitialized.set(true);
-                                })
-                                .hideCloseButton()
-                                .show();
-                    } else {
-                        walletInitialized.set(true);
-                    }
-                },
-                walletServiceException::set);
-        return walletInitialized;
+                    walletPasswordWindow
+                            .onAesKey(aesKey -> {
+                                tradeWalletService.setAesKey(aesKey);
+                                walletService.setAesKey(aesKey);
+                                walletInitialized.set(true);
+                            })
+                            .hideCloseButton()
+                            .show();
+                } else {
+                    walletInitialized.set(true);
+                }
+            },
+            walletServiceException::set);
     }
 
     private void onAllServicesInitialized() {

@@ -80,8 +80,7 @@ public class LocalhostNetworkNode extends NetworkNode {
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
         return new Socket(peerNodeAddress.hostName, peerNodeAddress.port);
     }
-
-
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Tor delay simulation
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -30,6 +30,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.FileUtil;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
@@ -52,6 +53,8 @@ import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.*;
@@ -88,7 +91,8 @@ public class WalletService {
     private final UserAgent userAgent;
     private final boolean useTor;
 
-    private WalletAppKit walletAppKit;
+    private WalletAppKitTorProxy walletAppKit;
+    private NodeAddress nodeAddressProxy;
     private Wallet wallet;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
@@ -128,7 +132,7 @@ public class WalletService {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void initialize(@Nullable DeterministicSeed seed, NodeAddress nodeAddressProxy, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
@@ -143,8 +147,15 @@ public class WalletService {
 
         backupWallet();
 
+        // store for later use.
+        log.error( nodeAddressProxy.toString() );        
+        this.nodeAddressProxy = nodeAddressProxy;
+        InetSocketAddress addr = new InetSocketAddress(nodeAddressProxy.hostName, nodeAddressProxy.port);        
+        Proxy proxy = new Proxy(Proxy.Type.SOCKS, addr);
+        log.error( nodeAddressProxy.toString() );        
+
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKit(params, walletDir, "Bitsquare") {
+        walletAppKit = new WalletAppKitTorProxy(params, proxy, walletDir, "Bitsquare") {
             @Override
             protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
@@ -250,6 +261,8 @@ public class WalletService {
         // from jtorproxy. To get supported it via nio / netty will be harder
         if (useTor && params.getId().equals(NetworkParameters.ID_MAINNET))
             walletAppKit.useTor();
+            
+        
 
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
@@ -317,7 +330,7 @@ public class WalletService {
                 Context.propagate(ctx);
                 walletAppKit.stopAsync();
                 walletAppKit.awaitTerminated();
-                initialize(seed, resultHandler, exceptionHandler);
+                initialize(seed, nodeAddressProxy, resultHandler, exceptionHandler);
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error("Executing task failed. " + t.getMessage());

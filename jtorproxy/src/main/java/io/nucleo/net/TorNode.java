@@ -33,6 +33,10 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
         log.info("TorSocks running on port " + proxyPort);
         this.proxy = setupSocksProxy(proxyPort);
     }
+    
+    public Socks5Proxy getSocksProxy() {
+        return proxy;
+    }
 
     private Socks5Proxy setupSocksProxy(int proxyPort) throws UnknownHostException {
         Socks5Proxy proxy = new Socks5Proxy(PROXY_LOCALHOST, proxyPort);

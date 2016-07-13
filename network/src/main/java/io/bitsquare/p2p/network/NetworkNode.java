@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.network;
 
 import com.google.common.util.concurrent.*;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
@@ -213,6 +214,12 @@ public abstract class NetworkNode implements MessageListener {
         }
     }
 
+    @Nullable
+    public Socks5Proxy getSocksProxy() {
+        return null;
+    }
+    
+    
     public SettableFuture<Connection> sendMessage(Connection connection, Message message) {
         Log.traceCall("\n\tmessage=" + StringUtils.abbreviate(message.toString(), 100) + "\n\tconnection=" + connection);
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
