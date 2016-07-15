@@ -223,6 +223,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void onAllServicesInitialized() {
+        Log.traceCall();
         if (networkNode.getNodeAddress() != null) {
             p2PDataStorage.getMap().values().stream().forEach(protectedStorageEntry -> {
                 if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
@@ -529,6 +530,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void processProtectedMailboxStorageEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
+        Log.traceCall();
         final NodeAddress nodeAddress = networkNode.getNodeAddress();
         // Seed nodes don't receive mailbox messages
         if (optionalEncryptionService.isPresent() && nodeAddress != null && !seedNodesRepository.isSeedNode(nodeAddress)) {

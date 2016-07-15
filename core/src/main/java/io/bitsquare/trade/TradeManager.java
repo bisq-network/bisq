@@ -158,6 +158,7 @@ public class TradeManager {
     }
 
     public void onAllServicesInitialized() {
+        Log.traceCall();
         if (p2PService.isBootstrapped())
             initPendingTrades();
         else
