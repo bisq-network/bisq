@@ -51,7 +51,6 @@ public class SellerStep3View extends TradeStepView {
     private Label statusLabel;
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
-    private boolean disputeOpened;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,9 +102,8 @@ public class SellerStep3View extends TradeStepView {
                             .show();
                 }
 
-            } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT && !disputeOpened) {
+            } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT && confirmButton.isDisabled()) {
                 showStatusInfo();
-                statusLabel.setText("Sending confirmation...");
             } else if (state == Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG) {
                 hideStatusInfo();
             }
@@ -236,7 +234,6 @@ public class SellerStep3View extends TradeStepView {
 
     @Override
     protected void applyOnDisputeOpened() {
-        disputeOpened = true;
         confirmButton.setDisable(true);
     }
 
@@ -284,6 +281,7 @@ public class SellerStep3View extends TradeStepView {
 
     private void confirmPaymentReceived() {
         confirmButton.setDisable(true);
+        showStatusInfo();
 
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed. 
@@ -301,6 +299,7 @@ public class SellerStep3View extends TradeStepView {
 
     private void showStatusInfo() {
         busyAnimation.play();
+        statusLabel.setText("Sending confirmation...");
     }
 
     private void hideStatusInfo() {

@@ -96,9 +96,8 @@ public class BuyerStep2View extends TradeStepView {
                                 .attention(message)
                                 .show();
                     }
-                } else if (state == Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED) {
+                } else if (state == Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED && confirmButton.isDisabled()) {
                     showStatusInfo();
-                    statusLabel.setText("Sending confirmation...");
                 } else if (state == Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG) {
                     hideStatusInfo();
                 }
@@ -245,6 +244,7 @@ public class BuyerStep2View extends TradeStepView {
 
     private void confirmPaymentStarted() {
         confirmButton.setDisable(true);
+        showStatusInfo();
         model.dataModel.onPaymentStarted(() -> {
             // In case the first send failed we got the support button displayed. 
             // If it succeeds at a second try we remove the support button again.
@@ -261,6 +261,7 @@ public class BuyerStep2View extends TradeStepView {
 
     private void showStatusInfo() {
         busyAnimation.play();
+        statusLabel.setText("Sending confirmation...");
     }
 
     private void hideStatusInfo() {
