@@ -44,8 +44,7 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
     private TableView<MarketStatisticItem> tableView;
     private SortedList<MarketStatisticItem> sortedList;
     private ListChangeListener<MarketStatisticItem> itemListChangeListener;
-    private TableColumn<MarketStatisticItem, MarketStatisticItem> totalAmountColumn;
-    private TableColumn<MarketStatisticItem, MarketStatisticItem> numberOfOffersColumn;
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> totalAmountColumn, numberOfOffersColumn, numberOfBuyOffersColumn, numberOfSellOffersColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,6 +78,10 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
         tableView.getColumns().add(currencyColumn);
         numberOfOffersColumn = getNumberOfOffersColumn();
         tableView.getColumns().add(numberOfOffersColumn);
+        numberOfBuyOffersColumn = getNumberOfBuyOffersColumn();
+        tableView.getColumns().add(numberOfBuyOffersColumn);
+        numberOfSellOffersColumn = getNumberOfSellOffersColumn();
+        tableView.getColumns().add(numberOfSellOffersColumn);
         totalAmountColumn = getTotalAmountColumn();
         tableView.getColumns().add(totalAmountColumn);
         TableColumn<MarketStatisticItem, MarketStatisticItem> spreadColumn = getSpreadColumn();
@@ -112,6 +115,8 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
 
     private void updateHeaders() {
         numberOfOffersColumn.setText("Total offers (" + sortedList.stream().mapToInt(item -> item.numberOfOffers).sum() + ")");
+        numberOfBuyOffersColumn.setText("Bid offers (" + sortedList.stream().mapToInt(item -> item.numberOfBuyOffers).sum() + ")");
+        numberOfSellOffersColumn.setText("Ask offers (" + sortedList.stream().mapToInt(item -> item.numberOfSellOffers).sum() + ")");
         totalAmountColumn.setText("Total amount (" + formatter.formatCoinWithCode(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
     }
 
@@ -167,6 +172,62 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
                                     setText(String.valueOf(item.numberOfOffers));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> getNumberOfBuyOffersColumn() {
+        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Buy offers") {
+            {
+                setMinWidth(100);
+            }
+        };
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
+                        MarketStatisticItem>>() {
+                    @Override
+                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
+                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
+                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
+                            @Override
+                            public void updateItem(final MarketStatisticItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(String.valueOf(item.numberOfBuyOffers));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> getNumberOfSellOffersColumn() {
+        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Sell offers") {
+            {
+                setMinWidth(100);
+            }
+        };
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
+                        MarketStatisticItem>>() {
+                    @Override
+                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
+                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
+                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
+                            @Override
+                            public void updateItem(final MarketStatisticItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(String.valueOf(item.numberOfSellOffers));
                                 else
                                     setText("");
                             }
