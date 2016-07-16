@@ -70,7 +70,7 @@ public class Connection implements MessageListener {
     //TODO decrease limits again after testing
     static final int MSG_THROTTLE_PER_SEC = 200;              // With MAX_MSG_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
     static final int MSG_THROTTLE_PER_10_SEC = 1000;          // With MAX_MSG_SIZE of 200kb results in bandwidth of 20MB/sec or 2.5 mbit/sec
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(90);
+    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;

@@ -40,6 +40,7 @@ import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
 import io.bitsquare.trade.closed.ClosedTradableManager;
+import io.bitsquare.trade.exceptions.MarketPriceNotAvailableException;
 import io.bitsquare.trade.exceptions.TradePriceOutOfToleranceException;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.availability.AvailabilityResult;
@@ -375,6 +376,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             } catch (TradePriceOutOfToleranceException e) {
                                 log.warn("Trade price check failed because takers price is outside out tolerance.");
                                 availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                            } catch (MarketPriceNotAvailableException e) {
+                                log.warn(e.getMessage());
+                                availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
                             } catch (Throwable e) {
                                 log.warn("Trade price check failed. " + e.getMessage());
                                 availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
