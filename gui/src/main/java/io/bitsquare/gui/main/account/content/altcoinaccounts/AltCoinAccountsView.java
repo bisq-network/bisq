@@ -48,6 +48,8 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 
 import javax.inject.Inject;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -162,6 +164,11 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     "arbitrator in case of a dispute.\n\n" +
                     "There is no payment ID required, just the normal public address.\n\n" +
                     "If you are not sure about that process visit the Monero forum (https://forum.getmonero.org) to find more information.")
+                    .closeButtonText("I understand")
+                    .show();
+        } else if (code.equals("ETHC") && new Date().before(new Date(2016 - 1900, Calendar.JULY, 21))) {
+            new Popup().information("You cannot use EtherClassic before the hard fork gets activated.\n" +
+                    "It is planned for July, 20 2016, but please check on their project web page for detailed information.")
                     .closeButtonText("I understand")
                     .show();
         }
