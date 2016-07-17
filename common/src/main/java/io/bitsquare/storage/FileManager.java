@@ -67,17 +67,9 @@ public class FileManager<T> {
             saveNowInternal(serializable);
             return null;
         };
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    FileManager.this.shutDown();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            UserThread.execute(FileManager.this::shutDown);
+        }, "FileManager.ShutDownHook"));
     }
 
 
