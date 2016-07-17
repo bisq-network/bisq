@@ -1,5 +1,8 @@
-package io.bitsquare.p2p.network;
+package io.bitsquare.p2p.network.connection;
 
+
+import io.bitsquare.p2p.network.connection.CloseConnectionReason;
+import io.bitsquare.p2p.network.connection.Connection;
 
 public interface ConnectionListener {
     void onConnection(Connection connection);

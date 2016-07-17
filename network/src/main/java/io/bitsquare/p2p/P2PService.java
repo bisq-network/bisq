@@ -17,6 +17,10 @@ import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.network.OptionKeys;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
+import io.bitsquare.p2p.network.connection.CloseConnectionReason;
+import io.bitsquare.p2p.network.connection.Connection;
+import io.bitsquare.p2p.network.connection.ConnectionListener;
+import io.bitsquare.p2p.network.connection.MessageListener;
 import io.bitsquare.p2p.peers.BanList;
 import io.bitsquare.p2p.peers.BroadcastHandler;
 import io.bitsquare.p2p.peers.Broadcaster;
@@ -430,7 +434,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 try {
                     PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = (PrefixedSealedAndSignedMessage) message;
                     if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
-                        // We set connectionType to that connection to avoid that is get closed when 
+                        // We set connectionType to that connection to avoid that is get closed when
                         // we get too many connection attempts.
                         connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
@@ -666,7 +670,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                         @Override
                         public void onBroadcastFailed(String errorMessage) {
-                            // TODO investigate why not sending sendMailboxMessageListener.onFault. Related probably 
+                            // TODO investigate why not sending sendMailboxMessageListener.onFault. Related probably
                             // to the logic from BroadcastHandler.sendToPeer
                         }
                     };

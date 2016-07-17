@@ -6,6 +6,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.network.connection.*;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

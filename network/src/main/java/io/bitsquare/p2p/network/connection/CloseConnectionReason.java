@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.network;
+package io.bitsquare.p2p.network.connection;
 
 public enum CloseConnectionReason {
     // First block are from different exceptions

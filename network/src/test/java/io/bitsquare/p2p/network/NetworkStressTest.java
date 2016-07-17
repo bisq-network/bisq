@@ -11,6 +11,7 @@ import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.*;
 import io.bitsquare.p2p.messaging.*;
+import io.bitsquare.p2p.network.connection.Connection;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
