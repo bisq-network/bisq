@@ -268,7 +268,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(restoreSeedWordsTextArea.getText()), null, "", date);
         walletService.restoreSeedWords(seed,    
                 () -> UserThread.execute(() -> {
-                    log.debug("Wallet restored with seed words");
+                    log.info("Wallet restored with seed words");
 
                     new Popup()
                             .feedback("Wallet restored successfully with the new seed words.\n\n" +
