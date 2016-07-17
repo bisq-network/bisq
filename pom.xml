@@ -187,6 +187,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <version>1.25</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <version>4.1.1.RELEASE</version>
