@@ -494,7 +494,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     private boolean checkIfStoredDataPubKeyMatchesNewDataPubKey(PublicKey ownerPubKey, ByteArray hashOfData) {
         ProtectedStorageEntry storedData = map.get(hashOfData);
-        boolean result = storedData.ownerPubKey.equals(ownerPubKey);
+        boolean result = storedData.ownerPubKey != null && storedData.ownerPubKey.equals(ownerPubKey);
         if (!result)
             log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
 
