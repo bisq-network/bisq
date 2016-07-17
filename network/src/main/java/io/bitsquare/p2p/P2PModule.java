@@ -56,5 +56,7 @@ public class P2PModule extends AppModule {
         Integer networkId = env.getProperty(OptionKeys.NETWORK_ID, int.class, 1);
         bind(int.class).annotatedWith(Names.named(OptionKeys.NETWORK_ID)).toInstance(networkId);
         bindConstant().annotatedWith(named(OptionKeys.SEED_NODES_KEY)).to(env.getRequiredProperty(OptionKeys.SEED_NODES_KEY));
+        bindConstant().annotatedWith(named(OptionKeys.MY_ADDRESS)).to(env.getRequiredProperty(OptionKeys.MY_ADDRESS));
+        bindConstant().annotatedWith(named(OptionKeys.BAN_LIST)).to(env.getRequiredProperty(OptionKeys.BAN_LIST));
     }
 }

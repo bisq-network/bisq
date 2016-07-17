@@ -1,4 +1,4 @@
-package io.bitsquare.p2p.seed;
+package io.bitsquare.p2p;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
@@ -8,10 +8,8 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.network.OptionKeys;
-import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.peers.BanList;
+import io.bitsquare.p2p.seed.SeedNodesRepository;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +24,13 @@ import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class SeedNode {
-    private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
+// Previously used seednode class, replaced now by bootstrap module. We keep it here as it was used in tests...
+public class DummySeedNode {
+    private static final Logger log = LoggerFactory.getLogger(DummySeedNode.class);
     public static final int MAX_CONNECTIONS_LIMIT = 1000;
     public static final int MAX_CONNECTIONS_DEFAULT = 50;
-
+    public static final String SEED_NODES_LIST = "seedNodes";
+    public static final String HELP = "help";
     private NodeAddress mySeedNodeAddress = new NodeAddress("localhost:8001");
     private int maxConnections = MAX_CONNECTIONS_DEFAULT;  // we keep default a higher connection size for seed nodes
     private boolean useLocalhost = false;
@@ -40,7 +40,7 @@ public class SeedNode {
     private final String defaultUserDataDir;
     private Level logLevel = Level.WARN;
 
-    public SeedNode(String defaultUserDataDir) {
+    public DummySeedNode(String defaultUserDataDir) {
         Log.traceCall("defaultUserDataDir=" + defaultUserDataDir);
         this.defaultUserDataDir = defaultUserDataDir;
     }
@@ -103,8 +103,8 @@ public class SeedNode {
                     arg = arg.substring(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY.length() + 1);
                     logLevel = Level.toLevel(arg.toUpperCase());
                     log.info("From processArgs: logLevel=" + logLevel);
-                } else if (arg.startsWith(OptionKeys.SEED_NODES_LIST)) {
-                    arg = arg.substring(OptionKeys.SEED_NODES_LIST.length() + 1);
+                } else if (arg.startsWith(SEED_NODES_LIST)) {
+                    arg = arg.substring(SEED_NODES_LIST.length() + 1);
                     checkArgument(arg.contains(":") && arg.split(":").length > 1 && arg.split(":")[1].length() > 3,
                             "Wrong program argument " + arg);
                     List<String> list = Arrays.asList(arg.split(","));
@@ -127,7 +127,7 @@ public class SeedNode {
                         BanList.add(new NodeAddress(e));
                     });
                     log.info("From processArgs: ignoreList=" + list);
-                } else if (arg.startsWith(OptionKeys.HELP)) {
+                } else if (arg.startsWith(HELP)) {
                     log.info(USAGE);
                 } else {
                     log.error("Invalid argument. " + arg + "\n" + USAGE);
@@ -186,7 +186,7 @@ public class SeedNode {
 
         seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
         seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, maxConnections,
-                torDir, useLocalhost, networkId, storageDir, null, new Clock(), null, null);
+                torDir, useLocalhost, networkId, storageDir, null, null, null, new Clock(), null, null);
         seedNodeP2PService.start(false, listener);
     }
 

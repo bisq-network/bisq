@@ -22,6 +22,7 @@ import io.bitsquare.btc.pricefeed.MarketPrice;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -49,6 +50,8 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import java.util.Calendar;
+import java.util.Date;
 
 import static com.google.common.math.LongMath.checkedPow;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -127,6 +130,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private PriceFeed.Type priceFeedType;
     private boolean inputIsMarketBasedPrice;
     private ChangeListener<Boolean> useMarketBasedPriceListener;
+    private ChangeListener<String> currencyCodeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -186,6 +190,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             directionLabel = BSResources.get("shared.sellBitcoin");
             amountDescription = BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.sell"));
         }
+
+        //TODO remove after AUGUST, 30
+        applyCurrencyCode(dataModel.getTradeCurrency().getCode());
     }
 
     @Override
@@ -336,6 +343,34 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
        /* feeFromFundingTxListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
         };*/
+
+
+        currencyCodeListener = (observable, oldValue, newValue) -> applyCurrencyCode(newValue);
+    }
+
+    //TODO remove after AUGUST, 30
+    private void applyCurrencyCode(String newValue) {
+        String key = "ETH-ETHC-Warning";
+        if (preferences.showAgain(key) && new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
+            if (newValue.equals("ETH")) {
+                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
+                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.")
+                        .closeButtonText("I understand")
+                        .onAction(() -> Utilities.openWebPage("https://www.ethereum.org/"))
+                        .actionButtonText("Open Ethereum web page")
+                        .dontShowAgainId(key, preferences)
+                        .show();
+            } else if (newValue.equals("ETHC")) {
+                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
+                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.\n\n" +
+                        "Please note, that the price is denominated as ETHC/BTC not BTC/ETHC!")
+                        .closeButtonText("I understand")
+                        .onAction(() -> Utilities.openWebPage("https://ethereumclassic.github.io/"))
+                        .actionButtonText("Open Ethereum Classic web page")
+                        .dontShowAgainId(key, preferences)
+                        .show();
+            }
+        }
     }
 
     private void addListeners() {
@@ -356,6 +391,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         // dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
+
+        //TODO remove after AUGUST, 30
+        dataModel.tradeCurrencyCode.addListener(currencyCodeListener);
     }
 
     private void removeListeners() {
@@ -377,6 +415,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         if (offer != null && errorMessageListener != null)
             offer.errorMessageProperty().removeListener(errorMessageListener);
+
+        //TODO remove after AUGUST, 30
+        dataModel.tradeCurrencyCode.removeListener(currencyCodeListener);
     }
 
 

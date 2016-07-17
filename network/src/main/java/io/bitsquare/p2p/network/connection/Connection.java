@@ -45,7 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Connection is created by the server thread or by sendMessage from NetworkNode.
  * All handlers are called on User thread.
  */
-@EqualsAndHashCode(of = "iuid")
+@EqualsAndHashCode(of = "uid")
 public class Connection implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
 
@@ -141,9 +141,9 @@ public class Connection implements MessageListener {
             socket.setSoTimeout(SOCKET_TIMEOUT);
             // Need to access first the ObjectOutputStream otherwise the ObjectInputStream would block
             // See: https://stackoverflow.com/questions/5658089/java-creating-a-new-objectinputstream-blocks/5658109#5658109
-            // When you construct an ObjectInputStream, in the constructor the class attempts to read a header that 
+            // When you construct an ObjectInputStream, in the constructor the class attempts to read a header that
             // the associated ObjectOutputStream on the other end of the connection has written.
-            // It will not return until that header has been read. 
+            // It will not return until that header has been read.
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 

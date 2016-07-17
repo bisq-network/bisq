@@ -21,6 +21,7 @@ import io.bitsquare.p2p.network.connection.CloseConnectionReason;
 import io.bitsquare.p2p.network.connection.Connection;
 import io.bitsquare.p2p.network.connection.ConnectionListener;
 import io.bitsquare.p2p.network.connection.MessageListener;
+import io.bitsquare.p2p.peers.BanList;
 import io.bitsquare.p2p.peers.BroadcastHandler;
 import io.bitsquare.p2p.peers.Broadcaster;
 import io.bitsquare.p2p.peers.PeerManager;
@@ -68,6 +69,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final int maxConnections;
     private final File torDir;
     private Clock clock;
+    //TODO optional can be removed as seednode are created with those objects now
     private final Optional<EncryptionService> optionalEncryptionService;
     private final Optional<KeyRing> optionalKeyRing;
 
@@ -111,6 +113,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       @Named(OptionKeys.MAX_CONNECTIONS) int maxConnections,
                       @Named(Storage.DIR_KEY) File storageDir,
                       @Named(OptionKeys.SEED_NODES_KEY) String seedNodes,
+                      @Named(OptionKeys.MY_ADDRESS) String myAddress,
+                      @Named(OptionKeys.BAN_LIST) String banList,
                       Clock clock,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
@@ -123,6 +127,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 networkId,
                 storageDir,
                 seedNodes,
+                myAddress,
+                banList,
                 clock,
                 encryptionService,
                 keyRing
@@ -137,6 +143,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       int networkId,
                       File storageDir,
                       String seedNodes,
+                      String myAddress,
+                      String banList,
                       Clock clock,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
@@ -149,12 +157,27 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         optionalEncryptionService = Optional.ofNullable(encryptionService);
         optionalKeyRing = Optional.ofNullable(keyRing);
 
-        init(useLocalhost, networkId, storageDir, seedNodes);
+        init(useLocalhost,
+                networkId,
+                storageDir,
+                seedNodes,
+                myAddress,
+                banList);
     }
 
-    private void init(boolean useLocalhost, int networkId, File storageDir, String seedNodes) {
+    private void init(boolean useLocalhost,
+                      int networkId,
+                      File storageDir,
+                      String seedNodes,
+                      String myAddress,
+                      String banList) {
         if (!useLocalhost)
             FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key");
+
+        if (banList != null && !banList.isEmpty())
+            BanList.setList(Arrays.asList(banList.replace(" ", "").split(",")).stream().map(NodeAddress::new).collect(Collectors.toList()));
+        if (myAddress != null && !myAddress.isEmpty())
+            seedNodesRepository.setNodeAddressToExclude(new NodeAddress(myAddress));
 
         networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
         networkNode.addConnectionListener(this);
@@ -201,6 +224,25 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             addP2PServiceListener(listener);
 
         networkNode.start(useBridges, this);
+    }
+
+    public void onAllServicesInitialized() {
+        Log.traceCall();
+        if (networkNode.getNodeAddress() != null) {
+            p2PDataStorage.getMap().values().stream().forEach(protectedStorageEntry -> {
+                if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+                    processProtectedMailboxStorageEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+            });
+        } else {
+            networkNode.nodeAddressProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue != null) {
+                    p2PDataStorage.getMap().values().stream().forEach(protectedStorageEntry -> {
+                        if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+                            processProtectedMailboxStorageEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+                    });
+                }
+            });
+        }
     }
 
     public void shutDown(Runnable shutDownCompleteHandler) {
@@ -392,7 +434,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 try {
                     PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = (PrefixedSealedAndSignedMessage) message;
                     if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
-                        // We set connectionType to that connection to avoid that is get closed when 
+                        // We set connectionType to that connection to avoid that is get closed when
                         // we get too many connection attempts.
                         connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
@@ -492,8 +534,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void processProtectedMailboxStorageEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
-        // Seed nodes don't have set the encryptionService
-        if (optionalEncryptionService.isPresent()) {
+        Log.traceCall();
+        final NodeAddress nodeAddress = networkNode.getNodeAddress();
+        // Seed nodes don't receive mailbox messages
+        if (optionalEncryptionService.isPresent() && nodeAddress != null && !seedNodesRepository.isSeedNode(nodeAddress)) {
             Log.traceCall();
             MailboxStoragePayload mailboxStoragePayload = protectedMailboxStorageEntry.getMailboxStoragePayload();
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = mailboxStoragePayload.prefixedSealedAndSignedMessage;
@@ -626,7 +670,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                         @Override
                         public void onBroadcastFailed(String errorMessage) {
-                            // TODO investigate why not sending sendMailboxMessageListener.onFault. Related probably 
+                            // TODO investigate why not sending sendMailboxMessageListener.onFault. Related probably
                             // to the logic from BroadcastHandler.sendToPeer
                         }
                     };

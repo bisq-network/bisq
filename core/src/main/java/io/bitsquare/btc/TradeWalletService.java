@@ -519,15 +519,15 @@ public class TradeWalletService {
     /**
      * Seller signs payout transaction, buyer has not signed yet.
      *
-     * @param depositTx          Deposit transaction
-     * @param buyerPayoutAmount  Payout amount for buyer
-     * @param sellerPayoutAmount Payout amount for seller
+     * @param depositTx                Deposit transaction
+     * @param buyerPayoutAmount        Payout amount for buyer
+     * @param sellerPayoutAmount       Payout amount for seller
      * @param buyerPayoutAddressString Address for buyer
      * @param sellerPayoutAddressEntry AddressEntry for seller
-     * @param lockTime           Lock time
-     * @param buyerPubKey        The public key of the buyer.
-     * @param sellerPubKey       The public key of the seller.
-     * @param arbitratorPubKey   The public key of the arbitrator.
+     * @param lockTime                 Lock time
+     * @param buyerPubKey              The public key of the buyer.
+     * @param sellerPubKey             The public key of the seller.
+     * @param arbitratorPubKey         The public key of the arbitrator.
      * @return DER encoded canonical signature
      * @throws AddressFormatException
      * @throws TransactionVerificationException
@@ -567,7 +567,10 @@ public class TradeWalletService {
         // MS output from prev. tx is index 0
         Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
         DeterministicKey keyPair = multiSigAddressEntry.getKeyPair();
-        checkNotNull(keyPair);
+        checkNotNull(keyPair, "multiSigAddressEntry.getKeyPair() must not be null");
+        if (keyPair.isEncrypted())
+            checkNotNull(aesKey);
+
         ECKey.ECDSASignature sellerSignature = keyPair.sign(sigHash, aesKey).toCanonicalised();
 
         verifyTransaction(preparedPayoutTx);
@@ -580,16 +583,16 @@ public class TradeWalletService {
     /**
      * Buyer creates and signs payout transaction and adds signature of seller to complete the transaction
      *
-     * @param depositTx           Deposit transaction
-     * @param sellerSignature     DER encoded canonical signature of seller
-     * @param buyerPayoutAmount   Payout amount for buyer
-     * @param sellerPayoutAmount  Payout amount for seller
-     * @param buyerPayoutAddressEntry   AddressEntry for buyer
-     * @param sellerAddressString Address for seller
-     * @param lockTime            Lock time
-     * @param buyerPubKey         The public key of the buyer.
-     * @param sellerPubKey        The public key of the seller.
-     * @param arbitratorPubKey    The public key of the arbitrator.
+     * @param depositTx               Deposit transaction
+     * @param sellerSignature         DER encoded canonical signature of seller
+     * @param buyerPayoutAmount       Payout amount for buyer
+     * @param sellerPayoutAmount      Payout amount for seller
+     * @param buyerPayoutAddressEntry AddressEntry for buyer
+     * @param sellerAddressString     Address for seller
+     * @param lockTime                Lock time
+     * @param buyerPubKey             The public key of the buyer.
+     * @param sellerPubKey            The public key of the seller.
+     * @param arbitratorPubKey        The public key of the arbitrator.
      * @return The payout transaction
      * @throws AddressFormatException
      * @throws TransactionVerificationException
@@ -631,8 +634,12 @@ public class TradeWalletService {
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         // MS output from prev. tx is index 0
         Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
-        checkNotNull(multiSigAddressEntry.getKeyPair(), "multiSigAddressEntry.getKeyPair() must not be null");
-        ECKey.ECDSASignature buyerSignature = multiSigAddressEntry.getKeyPair().sign(sigHash, aesKey).toCanonicalised();
+        final DeterministicKey keyPair = multiSigAddressEntry.getKeyPair();
+        checkNotNull(keyPair, "multiSigAddressEntry.getKeyPair() must not be null");
+        if (keyPair.isEncrypted())
+            checkNotNull(aesKey);
+
+        ECKey.ECDSASignature buyerSignature = keyPair.sign(sigHash, aesKey).toCanonicalised();
 
         TransactionSignature sellerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(sellerSignature), Transaction.SigHash.ALL, false);
         TransactionSignature buyerTxSig = new TransactionSignature(buyerSignature, Transaction.SigHash.ALL, false);
@@ -643,7 +650,7 @@ public class TradeWalletService {
         input.setScriptSig(inputScript);
 
         printTxWithInputs("payoutTx", payoutTx);
-        
+
         verifyTransaction(payoutTx);
         checkWalletConsistency();
         checkScriptSig(payoutTx, input, 0);
@@ -714,10 +721,12 @@ public class TradeWalletService {
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
-        if (arbitratorAddressEntry.getKeyPair() == null)
-            throw new RuntimeException("Unexpected null value: arbitratorAddressEntry.getKeyPair() must not be null");
+        final DeterministicKey keyPair = arbitratorAddressEntry.getKeyPair();
+        checkNotNull(keyPair, "arbitratorAddressEntry.getKeyPair() must not be null");
+        if (keyPair.isEncrypted())
+            checkNotNull(aesKey);
 
-        ECKey.ECDSASignature arbitratorSignature = arbitratorAddressEntry.getKeyPair().sign(sigHash, aesKey).toCanonicalised();
+        ECKey.ECDSASignature arbitratorSignature = keyPair.sign(sigHash, aesKey).toCanonicalised();
 
         verifyTransaction(preparedPayoutTx);
 
@@ -729,18 +738,18 @@ public class TradeWalletService {
     /**
      * A trader who got the signed tx from the arbitrator finalizes the payout tx
      *
-     * @param depositTxSerialized     Serialized deposit tx
-     * @param arbitratorSignature     DER encoded canonical signature of arbitrator
-     * @param buyerPayoutAmount       Payout amount of the buyer
-     * @param sellerPayoutAmount      Payout amount of the seller
-     * @param arbitratorPayoutAmount  Payout amount for arbitrator
-     * @param buyerAddressString      The address of the buyer.
-     * @param sellerAddressString     The address of the seller.
-     * @param arbitratorAddressString The address of the arbitrator.
-     * @param tradersMultiSigAddressEntry     The addressEntry of the trader who calls that method
-     * @param buyerPubKey             The public key of the buyer.
-     * @param sellerPubKey            The public key of the seller.
-     * @param arbitratorPubKey        The public key of the arbitrator.
+     * @param depositTxSerialized         Serialized deposit tx
+     * @param arbitratorSignature         DER encoded canonical signature of arbitrator
+     * @param buyerPayoutAmount           Payout amount of the buyer
+     * @param sellerPayoutAmount          Payout amount of the seller
+     * @param arbitratorPayoutAmount      Payout amount for arbitrator
+     * @param buyerAddressString          The address of the buyer.
+     * @param sellerAddressString         The address of the seller.
+     * @param arbitratorAddressString     The address of the arbitrator.
+     * @param tradersMultiSigAddressEntry The addressEntry of the trader who calls that method
+     * @param buyerPubKey                 The public key of the buyer.
+     * @param sellerPubKey                The public key of the seller.
+     * @param arbitratorPubKey            The public key of the arbitrator.
      * @return The completed payout tx
      * @throws AddressFormatException
      * @throws TransactionVerificationException
@@ -791,7 +800,9 @@ public class TradeWalletService {
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
         DeterministicKey keyPair = tradersMultiSigAddressEntry.getKeyPair();
-        checkNotNull(keyPair);
+        checkNotNull(keyPair, "tradersMultiSigAddressEntry.getKeyPair() must not be null");
+        if (keyPair.isEncrypted())
+            checkNotNull(aesKey);
         ECKey.ECDSASignature tradersSignature = keyPair.sign(sigHash, aesKey).toCanonicalised();
 
         TransactionSignature tradersTxSig = new TransactionSignature(tradersSignature, Transaction.SigHash.ALL, false);
@@ -994,6 +1005,8 @@ public class TradeWalletService {
         checkNotNull(wallet);
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
         checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" + input.getOutpoint().toString());
+        if (sigKey.isEncrypted())
+            checkNotNull(aesKey);
         Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
         TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);

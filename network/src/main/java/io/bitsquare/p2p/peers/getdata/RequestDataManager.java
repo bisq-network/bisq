@@ -110,7 +110,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     public void requestUpdateData() {
         Log.traceCall();
-        checkArgument(nodeAddressOfPreliminaryDataRequest.isPresent(), "seedNodeOfPreliminaryDataRequest must be present");
+        checkArgument(nodeAddressOfPreliminaryDataRequest.isPresent(), "nodeAddressOfPreliminaryDataRequest must be present");
         dataUpdateRequested = true;
         List<NodeAddress> remainingNodeAddresses = new ArrayList<>(seedNodeAddresses);
         if (!remainingNodeAddresses.isEmpty()) {

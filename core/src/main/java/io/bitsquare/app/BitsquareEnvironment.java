@@ -83,6 +83,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String logLevel;
     private BitcoinNetwork bitcoinNetwork;
     private final String seedNodes, ignoreDevMsg;
+    private final String myAddress, banList;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -137,6 +138,13 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
         seedNodes = commandLineProperties.containsProperty(OptionKeys.SEED_NODES_KEY) ?
                 (String) commandLineProperties.getProperty(OptionKeys.SEED_NODES_KEY) :
+                "";
+
+        myAddress = commandLineProperties.containsProperty(OptionKeys.MY_ADDRESS) ?
+                (String) commandLineProperties.getProperty(OptionKeys.MY_ADDRESS) :
+                "";
+        banList = commandLineProperties.containsProperty(OptionKeys.BAN_LIST) ?
+                (String) commandLineProperties.getProperty(OptionKeys.BAN_LIST) :
                 "";
 
         ignoreDevMsg = commandLineProperties.containsProperty(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY) ?
@@ -201,6 +209,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY, logLevel);
 
                 setProperty(OptionKeys.SEED_NODES_KEY, seedNodes);
+                setProperty(OptionKeys.MY_ADDRESS, myAddress);
+                setProperty(OptionKeys.BAN_LIST, banList);
                 setProperty(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
 
                 setProperty(APP_NAME_KEY, appName);

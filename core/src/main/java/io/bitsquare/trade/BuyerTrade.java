@@ -58,15 +58,6 @@ public abstract class BuyerTrade extends Trade {
     }
 
     @Override
-    public void reSendConfirmation() {
-        if (state == Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG) {
-            log.info("reSendConfirmation onFiatPaymentStarted");
-            onFiatPaymentStarted(() -> log.debug("onFiatPaymentStarted succeeded"),
-                    log::warn);
-        }
-    }
-
-    @Override
     public Coin getPayoutAmount() {
         checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
 

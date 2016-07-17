@@ -26,6 +26,7 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
@@ -158,6 +159,7 @@ public class TradeManager {
     }
 
     public void onAllServicesInitialized() {
+        Log.traceCall();
         if (p2PService.isBootstrapped())
             initPendingTrades();
         else
@@ -262,8 +264,9 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void checkOfferAvailability(Offer offer,
-                                       ResultHandler resultHandler) {
-        offer.checkOfferAvailability(getOfferAvailabilityModel(offer), resultHandler);
+                                       ResultHandler resultHandler,
+                                       ErrorMessageHandler errorMessageHandler) {
+        offer.checkOfferAvailability(getOfferAvailabilityModel(offer), resultHandler, errorMessageHandler);
     }
 
     // When closing take offer view, we are not interested in the onCheckOfferAvailability result anymore, so remove from the map
@@ -278,13 +281,15 @@ public class TradeManager {
                             Offer offer,
                             String paymentAccountId,
                             boolean useSavingsWallet,
-                            TradeResultHandler tradeResultHandler) {
+                            TradeResultHandler tradeResultHandler,
+                            ErrorMessageHandler errorMessageHandler) {
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE)
                         createTrade(amount, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
-                });
+                },
+                errorMessage -> errorMessageHandler.handleErrorMessage(errorMessage));
     }
 
     private void createTrade(Coin amount,

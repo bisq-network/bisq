@@ -473,8 +473,8 @@ public class MainViewModel implements ViewModel {
 
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {
-                                    tradeWalletService.setAesKey(aesKey);
                                     walletService.setAesKey(aesKey);
+                                    tradeWalletService.setAesKey(aesKey);
                                     walletInitialized.set(true);
                                 })
                                 .hideCloseButton()
@@ -527,6 +527,8 @@ public class MainViewModel implements ViewModel {
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue));
         privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
         displayAlertIfPresent(alertManager.alertMessageProperty().get());
+
+        p2PService.onAllServicesInitialized();
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();

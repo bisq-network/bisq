@@ -359,7 +359,7 @@ public class BitsquareApp extends Application {
                 log.info("App shutdown complete");
                 System.exit(0);
             });
-        }, 100, TimeUnit.MILLISECONDS);
+        }, 200, TimeUnit.MILLISECONDS);
     }
 
     private void gracefulShutDown(ResultHandler resultHandler) {

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.monitor;
+package io.bitsquare.seednode;
 
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
@@ -29,16 +29,16 @@ import java.util.Scanner;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
 
-public class MonitorMain extends BitsquareExecutable {
-    private static final Logger log = LoggerFactory.getLogger(MonitorMain.class);
-    private Monitor monitor;
+public class SeedNodeMain extends BitsquareExecutable {
+    private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
+    private SeedNode seedNode;
     private boolean isStopped;
 
     public static void main(String[] args) throws Exception {
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
 
-        BitsquareEnvironment.setDefaultAppName("Bitsquare_monitor");
+        BitsquareEnvironment.setDefaultAppName("Bitsquare_bootstrap");
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
         parser.accepts(USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
@@ -63,15 +63,15 @@ public class MonitorMain extends BitsquareExecutable {
 
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
-        Thread.currentThread().setContextClassLoader(MonitorMain.class.getClassLoader());
+        Thread.currentThread().setContextClassLoader(SeedNodeMain.class.getClassLoader());
 
-        new MonitorMain().execute(args);
+        new SeedNodeMain().execute(args);
     }
 
     @Override
     protected void doExecute(OptionSet options) {
-        Monitor.setEnvironment(new BitsquareEnvironment(options));
-        monitor = new Monitor();
+        SeedNode.setEnvironment(new BitsquareEnvironment(options));
+        seedNode = new SeedNode();
 
         while (!isStopped) {
             try {
@@ -79,7 +79,7 @@ public class MonitorMain extends BitsquareExecutable {
                 while (scanner.hasNextLine()) {
                     String inputString = scanner.nextLine();
                     if (inputString.equals("q")) {
-                        monitor.shutDown();
+                        seedNode.shutDown();
                         isStopped = true;
                     }
                 }

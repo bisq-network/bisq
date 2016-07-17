@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.offer.takeoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -44,6 +45,8 @@ import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -136,6 +139,29 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         updateButtonDisableState();
 
         updateSpinnerInfo();
+
+        //TODO remove after AUGUST, 30
+        String key = "ETH-ETHC-Warning";
+        if (dataModel.getPreferences().showAgain(key) && new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
+            if (dataModel.getCurrencyCode().equals("ETH")) {
+                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
+                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.")
+                        .closeButtonText("I understand")
+                        .onAction(() -> Utilities.openWebPage("https://www.ethereum.org/"))
+                        .actionButtonText("Open Ethereum web page")
+                        .dontShowAgainId(key, dataModel.getPreferences())
+                        .show();
+            } else if (dataModel.getCurrencyCode().equals("ETHC")) {
+                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
+                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.\n\n" +
+                        "Please note, that the price is denominated as ETHC/BTC not BTC/ETHC!")
+                        .closeButtonText("I understand")
+                        .onAction(() -> Utilities.openWebPage("https://ethereumclassic.github.io/"))
+                        .actionButtonText("Open Ethereum Classic web page")
+                        .dontShowAgainId(key, dataModel.getPreferences())
+                        .show();
+            }
+        }
     }
 
     @Override
