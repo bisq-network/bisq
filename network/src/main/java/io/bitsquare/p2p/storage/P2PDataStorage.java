@@ -214,7 +214,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
         printData("before add");
         if (result) {
-            final boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.sequenceNumber, hashOfPayload, false);
+            final boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.sequenceNumber, hashOfPayload);
             if (!containsKey || hasSequenceNrIncreased) {
                 // At startup we don't have the item so we store it. At updates of the seq nr we store as well.
                 map.put(hashOfPayload, protectedStorageEntry);
@@ -255,7 +255,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             } else {
                 PublicKey ownerPubKey = storedData.getStoragePayload().getOwnerPubKey();
                 final boolean checkSignature = checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature);
-                final boolean hasSequenceNrIncreased = hasSequenceNrIncreased(sequenceNumber, hashOfPayload, true);
+                final boolean hasSequenceNrIncreased = hasSequenceNrIncreased(sequenceNumber, hashOfPayload);
                 final boolean checkIfStoredDataPubKeyMatchesNewDataPubKey = checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload);
                 boolean allValid = checkSignature &&
                         hasSequenceNrIncreased &&
@@ -414,31 +414,24 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
     }
 
-    private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData, boolean calledFromRefreshTTL) {
+    private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData) {
         if (sequenceNumberMap.containsKey(hashOfData)) {
             int storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
             if (newSequenceNumber > storedSequenceNumber) {
                 return true;
             } else if (newSequenceNumber == storedSequenceNumber) {
+                String msg;
                 if (newSequenceNumber == 0) {
-                    String msg = "Sequence number is equal to the stored one and both are 0." +
+                    msg = "Sequence number is equal to the stored one and both are 0." +
                             "That is expected for messages which never got updated (mailbox msg).";
-                    if (calledFromRefreshTTL)
-                        log.warn(msg);
-                    else
-                        log.debug(msg);
-                    return false;
                 } else {
-                    String msg = "Sequence number is equal to the stored one. sequenceNumber = "
+                    msg = "Sequence number is equal to the stored one. sequenceNumber = "
                             + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber;
-                    if (calledFromRefreshTTL)
-                        log.warn(msg);
-                    else
-                        log.debug(msg);
-                    return false;
                 }
+                log.debug(msg);
+                return false;
             } else {
-                log.warn("Sequence number is invalid. sequenceNumber = "
+                log.debug("Sequence number is invalid. sequenceNumber = "
                         + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
                         "That can happen if the data owner gets an old delayed data storage message.");
                 return false;

@@ -120,7 +120,7 @@ public class BroadcastHandler implements PeerManager.Listener {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                 String errorMessage = "Timeout: Broadcast did not complete after " + timeoutDelay + " sec.";
 
-                log.warn(errorMessage + "\n\t" +
+                log.debug(errorMessage + "\n\t" +
                         "numOfPeers=" + numOfPeers + "\n\t" +
                         "numOfCompletedBroadcasts=" + numOfCompletedBroadcasts + "\n\t" +
                         "numOfCompletedBroadcasts=" + numOfCompletedBroadcasts + "\n\t" +
