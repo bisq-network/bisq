@@ -127,7 +127,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                         "numOfFailedBroadcasts=" + numOfFailedBroadcasts + "\n\t" +
                         "broadcastQueue.size()=" + broadcastQueue.size() + "\n\t" +
                         "broadcastQueue=" + broadcastQueue);
-                onFault(errorMessage);
+                onFault(errorMessage, false);
             }, timeoutDelay);
 
             log.info("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeersSet.size());
