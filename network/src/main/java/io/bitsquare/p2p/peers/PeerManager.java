@@ -337,7 +337,8 @@ public class PeerManager implements ConnectionListener {
 
     @Nullable
     private Peer removeReportedPeer(NodeAddress nodeAddress) {
-        Optional<Peer> reportedPeerOptional = reportedPeers.stream()
+        List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
+        Optional<Peer> reportedPeerOptional = reportedPeersClone.stream()
                 .filter(e -> e.nodeAddress.equals(nodeAddress)).findAny();
         if (reportedPeerOptional.isPresent()) {
             Peer reportedPeer = reportedPeerOptional.get();
@@ -350,7 +351,8 @@ public class PeerManager implements ConnectionListener {
 
     private void removeTooOldReportedPeers() {
         Log.traceCall();
-        Set<Peer> reportedPeersToRemove = reportedPeers.stream()
+        List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
+        Set<Peer> reportedPeersToRemove = reportedPeersClone.stream()
                 .filter(reportedPeer -> new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         reportedPeersToRemove.forEach(this::removeReportedPeer);
