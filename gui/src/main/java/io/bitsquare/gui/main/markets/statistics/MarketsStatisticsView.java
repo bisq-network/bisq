@@ -242,7 +242,7 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
     private TableColumn<MarketStatisticItem, MarketStatisticItem> getTotalAmountColumn() {
         TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Total amount") {
             {
-                setMinWidth(130);
+                setMinWidth(150);
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
