@@ -19,6 +19,7 @@ package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.btc.BtcOptionKeys;
 import io.bitsquare.btc.RegTestHost;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.network.NetworkOptionKeys;
@@ -89,6 +90,11 @@ public abstract class BitsquareExecutable {
                 "(Global alert, Version update alert, Filters for offers, nodes or payment account data)", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
+
+        parser.accepts(BtcOptionKeys.BTC_SEED_NODES, description("Custom seed nodes used for BitcoinJ.", ""))
+                .withRequiredArg();
+        parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over our native Tor instance.", ""))
+                .withRequiredArg();
 
         // use a fixed port as arbitrator use that for his ID
         parser.accepts(NetworkOptionKeys.PORT_KEY, description("Port to listen on", 9999))

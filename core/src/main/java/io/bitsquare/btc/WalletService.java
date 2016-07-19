@@ -85,6 +85,7 @@ public class WalletService {
     private final RegTestHost regTestHost;
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
+    private final String seedNodes;
     private final NetworkParameters params;
     private final File walletDir;
     private final UserAgent userAgent;
@@ -105,14 +106,30 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(RegTestHost regTestHost, TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
-                         @Named(DIR_KEY) File appDir, Preferences preferences) {
+    public WalletService(RegTestHost regTestHost,
+                         TradeWalletService tradeWalletService,
+                         AddressEntryList addressEntryList,
+                         UserAgent userAgent,
+                         @Named(DIR_KEY) File appDir,
+                         Preferences preferences,
+                         @Named(BtcOptionKeys.BTC_SEED_NODES) String seedNodes,
+                         @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
+        this.seedNodes = seedNodes;
         this.params = preferences.getBitcoinNetwork().getParameters();
         this.walletDir = new File(appDir, "bitcoin");
         this.userAgent = userAgent;
+
+        // We support a checkbox in the settings to set the use tor flag.
+        // If we get the options set we override that setting. 
+        if (useTorFlagFromOptions != null && !useTorFlagFromOptions.isEmpty()) {
+            if (useTorFlagFromOptions.equals("false"))
+                preferences.setUseTorForBitcoinJ(false);
+            else if (useTorFlagFromOptions.equals("true"))
+                preferences.setUseTorForBitcoinJ(true);
+        }
         useTor = preferences.getUseTorForBitcoinJ();
 
         storage = new Storage<>(walletDir);
@@ -247,9 +264,11 @@ public class WalletService {
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
+        // Pass custom seed nodes if set in options
+        if (seedNodes != null && !seedNodes.isEmpty()) {
+            //TODO Check how to pass seed nodes to the wallet kit. Probably via walletAppKit.setPeerNodes
+        }
 
-        // TODO Get bitcoinj running over our tor proxy. BlockingClientManager need to be used to use the socket  
-        // from jtorproxy. To get supported it via nio / netty will be harder
         if (useTor && params.getId().equals(NetworkParameters.ID_MAINNET))
             walletAppKit.useTor();
 

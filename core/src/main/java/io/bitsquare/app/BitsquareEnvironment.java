@@ -20,6 +20,7 @@ package io.bitsquare.app;
 import ch.qos.logback.classic.Level;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.btc.BtcOptionKeys;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.CommonOptionKeys;
@@ -83,8 +84,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String btcNetworkDir;
     private final String logLevel;
     private BitcoinNetwork bitcoinNetwork;
-    private final String seedNodes, ignoreDevMsg;
-    private final String myAddress, banList;
+    private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, myAddress, banList;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -152,6 +152,15 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(CommonOptionKeys.IGNORE_DEV_MSG_KEY) :
                 "";
 
+        btcSeedNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_SEED_NODES) ?
+                (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_SEED_NODES) :
+                "";
+
+        useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
+                (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
+                "";
+
+
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
@@ -213,6 +222,9 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);
                 setProperty(NetworkOptionKeys.BAN_LIST, banList);
                 setProperty(CommonOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
+
+                setProperty(BtcOptionKeys.BTC_SEED_NODES, btcSeedNodes);
+                setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
 
                 setProperty(APP_NAME_KEY, appName);
                 setProperty(USER_DATA_DIR_KEY, userDataDir);

@@ -17,11 +17,14 @@
 
 package io.bitsquare.gui.main.settings.network;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.Clock;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Statistic;
@@ -41,6 +44,7 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -61,8 +65,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     TextArea bitcoinPeersTextArea, bridgesTextArea;
     @FXML
     Label bitcoinPeersLabel, p2PPeersLabel, bridgesLabel;
-    /* @FXML
-     CheckBox useTorCheckBox;*/
+    @FXML
+    CheckBox useTorCheckBox;
     @FXML
     TableView<P2pNetworkListItem> tableView;
     @FXML
@@ -124,7 +128,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void activate() {
-      /*  useTorCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
+        useTorCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
         useTorCheckBox.setOnAction(event -> {
             boolean selected = useTorCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
@@ -139,7 +143,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                         .onClose(() -> useTorCheckBox.setSelected(!selected))
                         .show();
             }
-        });*/
+        });
         bitcoinPeersSubscription = EasyBind.subscribe(walletService.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
 
         nodeAddressSubscription = EasyBind.subscribe(p2PService.getNetworkNode().nodeAddressProperty(),
@@ -166,7 +170,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void deactivate() {
-        //useTorCheckBox.setOnAction(null);
+        useTorCheckBox.setOnAction(null);
 
         if (nodeAddressSubscription != null)
             nodeAddressSubscription.unsubscribe();

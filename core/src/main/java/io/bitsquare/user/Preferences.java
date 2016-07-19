@@ -111,8 +111,7 @@ public final class Preferences implements Persistable {
     private boolean autoSelectArbitrators = true;
     private final Map<String, Boolean> dontShowAgainMap;
     private boolean tacAccepted;
-    // Don't remove as we don't want to break old serialized data
-    private boolean useTorForBitcoinJ = false;
+    private boolean useTorForBitcoinJ = true;
     private boolean showOwnOffersInOfferBook = true;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
@@ -185,8 +184,7 @@ public final class Preferences implements Persistable {
             defaultLocale = preferredLocale;
             preferredTradeCurrency = persisted.getPreferredTradeCurrency();
             defaultTradeCurrency = preferredTradeCurrency;
-            // useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
-            useTorForBitcoinJ = false;
+            useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
             useStickyMarketPrice = persisted.getUseStickyMarketPrice();
             usePercentageBasedPrice = persisted.getUsePercentageBasedPrice();
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
@@ -372,10 +370,10 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
-   /* public void setUseTorForBitcoinJ(boolean useTorForBitcoinJ) {
+    public void setUseTorForBitcoinJ(boolean useTorForBitcoinJ) {
         this.useTorForBitcoinJ = useTorForBitcoinJ;
         storage.queueUpForSave();
-    }*/
+    }
 
     public void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook) {
         this.showOwnOffersInOfferBook = showOwnOffersInOfferBook;
