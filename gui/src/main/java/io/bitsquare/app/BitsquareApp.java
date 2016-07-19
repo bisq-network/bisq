@@ -346,20 +346,21 @@ public class BitsquareApp extends Application {
 
     @Override
     public void stop() {
-        shutDownRequested = true;
-
-        new Popup().headLine("Shut down in progress")
-                .backgroundInfo("Shutting down application can take a few seconds.\n" +
-                        "Please don't interrupt that process.")
-                .hideCloseButton()
-                .useAnimation(false)
-                .show();
-        UserThread.runAfter(() -> {
-            gracefulShutDown(() -> {
-                log.info("App shutdown complete");
-                System.exit(0);
-            });
-        }, 200, TimeUnit.MILLISECONDS);
+        if (!shutDownRequested) {
+            new Popup().headLine("Shut down in progress")
+                    .backgroundInfo("Shutting down application can take a few seconds.\n" +
+                            "Please don't interrupt that process.")
+                    .hideCloseButton()
+                    .useAnimation(false)
+                    .show();
+            UserThread.runAfter(() -> {
+                gracefulShutDown(() -> {
+                    log.info("App shutdown complete");
+                    System.exit(0);
+                });
+            }, 200, TimeUnit.MILLISECONDS);
+            shutDownRequested = true;
+        }
     }
 
     private void gracefulShutDown(ResultHandler resultHandler) {
