@@ -20,7 +20,8 @@ package io.bitsquare.app;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.RegTestHost;
-import io.bitsquare.network.OptionKeys;
+import io.bitsquare.common.CommonOptionKeys;
+import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
 import joptsimple.OptionException;
@@ -74,29 +75,29 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
-        parser.accepts(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY, description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", LOG_LEVEL_DEFAULT))
+        parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY, description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", LOG_LEVEL_DEFAULT))
                 .withRequiredArg();
 
-        parser.accepts(OptionKeys.SEED_NODES_KEY, description("Override hard coded seed nodes as comma separated list: E.g. rxdkppp3vicnbgqt.onion:8002, mfla72c4igh5ta2t.onion:8002", ""))
+        parser.accepts(NetworkOptionKeys.SEED_NODES_KEY, description("Override hard coded seed nodes as comma separated list: E.g. rxdkppp3vicnbgqt.onion:8002, mfla72c4igh5ta2t.onion:8002", ""))
                 .withRequiredArg();
-        parser.accepts(OptionKeys.MY_ADDRESS, description("My own onion address (used for botstrap nodes to exclude itself)", ""))
+        parser.accepts(NetworkOptionKeys.MY_ADDRESS, description("My own onion address (used for botstrap nodes to exclude itself)", ""))
                 .withRequiredArg();
-        parser.accepts(OptionKeys.BAN_LIST, description("Nodes to exclude from network connections.", ""))
+        parser.accepts(NetworkOptionKeys.BAN_LIST, description("Nodes to exclude from network connections.", ""))
                 .withRequiredArg();
 
-        parser.accepts(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY, description("If set to true all signed messages from Bitsquare developers are ignored " +
+        parser.accepts(CommonOptionKeys.IGNORE_DEV_MSG_KEY, description("If set to true all signed messages from Bitsquare developers are ignored " +
                 "(Global alert, Version update alert, Filters for offers, nodes or payment account data)", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
 
         // use a fixed port as arbitrator use that for his ID
-        parser.accepts(OptionKeys.PORT_KEY, description("Port to listen on", 9999))
+        parser.accepts(NetworkOptionKeys.PORT_KEY, description("Port to listen on", 9999))
                 .withRequiredArg()
                 .ofType(int.class);
-        parser.accepts(OptionKeys.USE_LOCALHOST, description("Use localhost network for development", false))
+        parser.accepts(NetworkOptionKeys.USE_LOCALHOST, description("Use localhost network for development", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
-        parser.accepts(OptionKeys.MAX_CONNECTIONS, description("Max. connections a peer will try to keep", P2PService.MAX_CONNECTIONS_DEFAULT))
+        parser.accepts(NetworkOptionKeys.MAX_CONNECTIONS, description("Max. connections a peer will try to keep", P2PService.MAX_CONNECTIONS_DEFAULT))
                 .withRequiredArg()
                 .ofType(int.class);
         parser.accepts(BitcoinNetwork.KEY, description("Bitcoin network", BitcoinNetwork.DEFAULT))

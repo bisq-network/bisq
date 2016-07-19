@@ -22,9 +22,10 @@ import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.network.OptionKeys;
+import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
 import joptsimple.OptionSet;
@@ -132,23 +133,23 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(APP_DATA_DIR_KEY) :
                 appDataDir(userDataDir, appName);
 
-        logLevel = commandLineProperties.containsProperty(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY) ?
-                (String) commandLineProperties.getProperty(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY) :
+        logLevel = commandLineProperties.containsProperty(CommonOptionKeys.LOG_LEVEL_KEY) ?
+                (String) commandLineProperties.getProperty(CommonOptionKeys.LOG_LEVEL_KEY) :
                 LOG_LEVEL_DEFAULT;
 
-        seedNodes = commandLineProperties.containsProperty(OptionKeys.SEED_NODES_KEY) ?
-                (String) commandLineProperties.getProperty(OptionKeys.SEED_NODES_KEY) :
+        seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
                 "";
 
-        myAddress = commandLineProperties.containsProperty(OptionKeys.MY_ADDRESS) ?
-                (String) commandLineProperties.getProperty(OptionKeys.MY_ADDRESS) :
+        myAddress = commandLineProperties.containsProperty(NetworkOptionKeys.MY_ADDRESS) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.MY_ADDRESS) :
                 "";
-        banList = commandLineProperties.containsProperty(OptionKeys.BAN_LIST) ?
-                (String) commandLineProperties.getProperty(OptionKeys.BAN_LIST) :
+        banList = commandLineProperties.containsProperty(NetworkOptionKeys.BAN_LIST) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
                 "";
 
-        ignoreDevMsg = commandLineProperties.containsProperty(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY) ?
-                (String) commandLineProperties.getProperty(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY) :
+        ignoreDevMsg = commandLineProperties.containsProperty(CommonOptionKeys.IGNORE_DEV_MSG_KEY) ?
+                (String) commandLineProperties.getProperty(CommonOptionKeys.IGNORE_DEV_MSG_KEY) :
                 "";
 
         MutablePropertySources propertySources = this.getPropertySources();
@@ -206,12 +207,12 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
             {
                 setProperty(APP_DATA_DIR_KEY, appDataDir);
-                setProperty(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY, logLevel);
+                setProperty(CommonOptionKeys.LOG_LEVEL_KEY, logLevel);
 
-                setProperty(OptionKeys.SEED_NODES_KEY, seedNodes);
-                setProperty(OptionKeys.MY_ADDRESS, myAddress);
-                setProperty(OptionKeys.BAN_LIST, banList);
-                setProperty(io.bitsquare.common.OptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
+                setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
+                setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);
+                setProperty(NetworkOptionKeys.BAN_LIST, banList);
+                setProperty(CommonOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
 
                 setProperty(APP_NAME_KEY, appName);
                 setProperty(USER_DATA_DIR_KEY, userDataDir);
@@ -223,9 +224,9 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
                 setProperty(Storage.DIR_KEY, Paths.get(btcNetworkDir, "db").toString());
                 setProperty(KeyStorage.DIR_KEY, Paths.get(btcNetworkDir, "keys").toString());
-                setProperty(OptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
+                setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
 
-                setProperty(OptionKeys.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
+                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
             }
         });
     }

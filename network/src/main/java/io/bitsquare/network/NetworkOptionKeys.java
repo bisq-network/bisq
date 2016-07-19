@@ -1,6 +1,6 @@
 package io.bitsquare.network;
 
-public class OptionKeys {
+public class NetworkOptionKeys {
     public static final String TOR_DIR = "torDir";
     public static final String USE_LOCALHOST = "useLocalhost";
     public static final String MAX_CONNECTIONS = "maxConnections";

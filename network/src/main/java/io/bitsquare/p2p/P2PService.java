@@ -14,7 +14,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
-import io.bitsquare.network.OptionKeys;
+import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.BanList;
@@ -102,15 +102,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // Called also from SeedNodeP2PService
     @Inject
     public P2PService(SeedNodesRepository seedNodesRepository,
-                      @Named(OptionKeys.PORT_KEY) int port,
-                      @Named(OptionKeys.TOR_DIR) File torDir,
-                      @Named(OptionKeys.USE_LOCALHOST) boolean useLocalhost,
-                      @Named(OptionKeys.NETWORK_ID) int networkId,
-                      @Named(OptionKeys.MAX_CONNECTIONS) int maxConnections,
+                      @Named(NetworkOptionKeys.PORT_KEY) int port,
+                      @Named(NetworkOptionKeys.TOR_DIR) File torDir,
+                      @Named(NetworkOptionKeys.USE_LOCALHOST) boolean useLocalhost,
+                      @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
+                      @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections,
                       @Named(Storage.DIR_KEY) File storageDir,
-                      @Named(OptionKeys.SEED_NODES_KEY) String seedNodes,
-                      @Named(OptionKeys.MY_ADDRESS) String myAddress,
-                      @Named(OptionKeys.BAN_LIST) String banList,
+                      @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes,
+                      @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
+                      @Named(NetworkOptionKeys.BAN_LIST) String banList,
                       Clock clock,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
