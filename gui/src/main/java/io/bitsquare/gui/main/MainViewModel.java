@@ -85,6 +85,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.security.Security;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -443,15 +445,24 @@ public class MainViewModel implements ViewModel {
             btcInfo.set(newValue);
         });
         
-        NodeAddress nodeAddressProxy = null;
-        Socks5Proxy proxy = p2PService.getNetworkNode().getSocksProxy();
-        if( proxy != null ) {
-            nodeAddressProxy = new NodeAddress(proxy.getInetAddress().getHostName(), proxy.getPort());
-//            nodeAddressProxy = new NodeAddress("localhost", 9050);
+        // Use p2p service 
+        Socks5Proxy socks5Proxy = p2PService.getNetworkNode().getSocksProxy();
+        Proxy proxy = proxy = new Proxy ( Proxy.Type.SOCKS,
+                                          new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
+                                                                socks5Proxy.getPort() ) );
+
+/**
+ * Uncomment this to wire up user specified proxy via program args or config file.
+ * Could be Tor, i2p, ssh, vpn, etc.
+        if( preferences.getBitcoinProxyHost() != null &&
+            preferences.getBitcoinProxyPort() != null ) {
+            proxy = new Proxy( Proxy.Type.SOCKS, new InetSocketAddress(preferences.getBitcoinProxyHost(),
+                                                                       preferences.getBitcoinProxyPort() );
         }
-        
+*/
+
         walletService.initialize(null,
-            nodeAddressProxy,
+            proxy,
             () -> {
                 numBtcPeers = walletService.numPeersProperty().get();
 

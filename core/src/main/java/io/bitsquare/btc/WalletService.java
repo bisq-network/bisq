@@ -91,8 +91,7 @@ public class WalletService {
     private final UserAgent userAgent;
     private final boolean useTor;
 
-    private WalletAppKitTorProxy walletAppKit;
-    private NodeAddress nodeAddressProxy;
+    private WalletAppKitBitSquare walletAppKit;
     private Wallet wallet;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
@@ -132,7 +131,7 @@ public class WalletService {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(@Nullable DeterministicSeed seed, NodeAddress nodeAddressProxy, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void initialize(@Nullable DeterministicSeed seed, Proxy proxy, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
@@ -147,15 +146,8 @@ public class WalletService {
 
         backupWallet();
 
-        // store for later use.
-        log.error( nodeAddressProxy.toString() );        
-        this.nodeAddressProxy = nodeAddressProxy;
-        InetSocketAddress addr = new InetSocketAddress(nodeAddressProxy.hostName, nodeAddressProxy.port);        
-        Proxy proxy = new Proxy(Proxy.Type.SOCKS, addr);
-        log.error( nodeAddressProxy.toString() );        
-
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKitTorProxy(params, proxy, walletDir, "Bitsquare") {
+        walletAppKit = new WalletAppKitBitSquare(params, proxy, walletDir, "Bitsquare") {
             @Override
             protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
@@ -330,7 +322,7 @@ public class WalletService {
                 Context.propagate(ctx);
                 walletAppKit.stopAsync();
                 walletAppKit.awaitTerminated();
-                initialize(seed, nodeAddressProxy, resultHandler, exceptionHandler);
+                initialize(seed, walletAppKit.getProxy(), resultHandler, exceptionHandler);
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error("Executing task failed. " + t.getMessage());
