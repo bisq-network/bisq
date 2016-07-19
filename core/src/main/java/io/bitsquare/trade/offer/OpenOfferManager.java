@@ -160,7 +160,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         if (offerBookService.isBootstrapped()) {
             openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
             if (completeHandler != null)
-                UserThread.runAfter(completeHandler::run, size * 200 + 500, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(completeHandler::run, size * 500 + 500, TimeUnit.MILLISECONDS);
         } else {
             if (completeHandler != null)
                 completeHandler.run();
@@ -174,7 +174,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }, errorMessage -> {
         }));
         if (completeHandler != null)
-            UserThread.runAfter(completeHandler::run, size * 200 + 500, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(completeHandler::run, size * 500 + 500, TimeUnit.MILLISECONDS);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
