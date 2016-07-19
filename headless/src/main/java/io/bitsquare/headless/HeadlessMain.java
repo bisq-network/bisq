@@ -17,8 +17,10 @@
 
 package io.bitsquare.headless;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
+import io.bitsquare.common.UserThread;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -26,6 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
 
@@ -35,9 +39,14 @@ public class HeadlessMain extends BitsquareExecutable {
     private boolean isStopped;
 
     public static void main(String[] args) throws Exception {
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("HeadlessMain")
+                .setDaemon(true)
+                .build();
+        UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
+
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
-
         BitsquareEnvironment.setDefaultAppName("Bitsquare_headless");
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
@@ -71,7 +80,7 @@ public class HeadlessMain extends BitsquareExecutable {
     @Override
     protected void doExecute(OptionSet options) {
         Headless.setEnvironment(new BitsquareEnvironment(options));
-        headless = new Headless();
+        UserThread.execute(() -> headless = new Headless());
 
         while (!isStopped) {
             try {
@@ -79,7 +88,7 @@ public class HeadlessMain extends BitsquareExecutable {
                 while (scanner.hasNextLine()) {
                     String inputString = scanner.nextLine();
                     if (inputString.equals("q")) {
-                        headless.shutDown();
+                        UserThread.execute(headless::shutDown);
                         isStopped = true;
                     }
                 }

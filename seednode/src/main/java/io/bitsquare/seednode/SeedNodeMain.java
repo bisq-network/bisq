@@ -17,8 +17,10 @@
 
 package io.bitsquare.seednode;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
+import io.bitsquare.common.UserThread;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -26,6 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
 
@@ -35,10 +39,15 @@ public class SeedNodeMain extends BitsquareExecutable {
     private boolean isStopped;
 
     public static void main(String[] args) throws Exception {
+        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("SeedNodeMain")
+                .setDaemon(true)
+                .build();
+        UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
+
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
-
-        BitsquareEnvironment.setDefaultAppName("Bitsquare_bootstrap");
+        BitsquareEnvironment.setDefaultAppName("Bitsquare_seednode");
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
         parser.accepts(USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
@@ -71,7 +80,7 @@ public class SeedNodeMain extends BitsquareExecutable {
     @Override
     protected void doExecute(OptionSet options) {
         SeedNode.setEnvironment(new BitsquareEnvironment(options));
-        seedNode = new SeedNode();
+        UserThread.execute(() -> seedNode = new SeedNode());
 
         while (!isStopped) {
             try {
@@ -79,7 +88,7 @@ public class SeedNodeMain extends BitsquareExecutable {
                 while (scanner.hasNextLine()) {
                     String inputString = scanner.nextLine();
                     if (inputString.equals("q")) {
-                        seedNode.shutDown();
+                        UserThread.execute(seedNode::shutDown);
                         isStopped = true;
                     }
                 }
