@@ -74,14 +74,20 @@ You will get an error when building Bitsquare package if you don't have these.
 
 ##### 3. Copy the BountyCastle provider jar file
 
-Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2) to $JavaHome/jre/lib/ext/. 
+Copy the BountyCastle provider jar file (bcprov-jdk15on-1.53.jar) from you local maven repository (/home/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar) to $JavaHome/jre/lib/ext/. 
 This prevent a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
 
 ##### 4. Edit the jre\lib\security\java.security file to add BouncyCastleProvider
 
 Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
 E.g.:
-security.provider.11=org.bouncycastle.jce.provider.BouncyCastleProvider
+security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider
+
+##### 5. Copy the jdkfix jar file
+
+Copy the jdkfix jar file (lib/jdkfix-0.4.9.jar) from the Bitsquare src directory to $JavaHome/jre/lib/ext/. 
+Jdkfix.jar include a bugfix of the SortedList class which will be released with the next JDK version. 
+As we need to load that before the default java class we need that hack.
 
 
 Steps
@@ -99,9 +105,9 @@ However, if you're not familiar with git or it is otherwise inconvenient to use,
 ### 2. Install bitcoinj fork 
 Versions later than 0.13.1 has removed support for Java serialisation. 
 In version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details).
-We remove Cartographer/HttpDiscovery support from in our [fork version 0.13.1.4](https://github.com/bitsquare/bitcoinj/tree/FixBloomFilters).
-Beside the Java serialisation issues here are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer. 
-Beside that we fixed a few [flaws with the Bloom Filters](https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj) in BitcoinJ.
+We removed usage of Cartographer/HttpDiscovery and fixed privacy issues with Bloom Filters at our [fork version 0.13.1.4](https://github.com/bitsquare/bitcoinj/tree/FixBloomFilters).
+Beside the Java serialisation issues there are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer. 
+Here is a Github issue with background and open tasks regarding [Bloom Filters](https://github.com/bitsquare/bitsquare/issues/414).
                 
     $ git clone -b FixBloomFilters https://github.com/bitsquare/bitcoinj.git               
     $ cd bitcoinj  

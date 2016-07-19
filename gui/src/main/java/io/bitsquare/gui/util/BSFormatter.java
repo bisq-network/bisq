@@ -217,7 +217,11 @@ public class BSFormatter {
     }
 
     public String formatPriceWithCode(Fiat fiat) {
-        return formatFiatWithCode(fiat) + "/BTC";
+        if (fiat != null) {
+            return formatFiat(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
+        } else {
+            return "N/A";
+        }
     }
 
     private Fiat parseToFiat(String input, String currencyCode) {
@@ -357,6 +361,10 @@ public class BSFormatter {
         return formatToPercent(value) + " %";
     }
 
+    public String formatPercentagePrice(double value) {
+        return formatToPercent(value, 2) + " %";
+    }
+
     public double parsePercentStringToDouble(String percentString) throws NumberFormatException {
         try {
             String input = percentString.replace("%", "");
@@ -435,6 +443,12 @@ public class BSFormatter {
         duration = StringUtils.replaceOnce(duration, " 1 minutes", " 1 minute");
         duration = StringUtils.replaceOnce(duration, " 1 hours", " 1 hour");
         duration = StringUtils.replaceOnce(duration, " 1 days", " 1 day");
+        if (duration.startsWith(", "))
+            duration = duration.replace(" ,", "");
+        else if (duration.startsWith(", "))
+            duration = duration.replace(", ", "");
+        if (duration.equals(""))
+            duration = "Trade period is over";
         return duration.trim();
     }
 
@@ -500,4 +514,7 @@ public class BSFormatter {
             return decimalFormat.format(bytes / mb) + " MB";
     }
 
+    public String getCurrencyPair(String currencyCode) {
+        return currencyCode + "/BTC";
+    }
 }

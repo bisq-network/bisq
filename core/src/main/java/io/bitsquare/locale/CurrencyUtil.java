@@ -72,23 +72,21 @@ public class CurrencyUtil {
     // https://forum.bitsquare.io/t/how-to-add-your-favorite-altcoin/
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
-        result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("DAO", "DAO"));
-        result.add(new CryptoCurrency("LTC", "Litecoin"));
-        result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
+        result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("ETH", "Ether"));
+        result.add(new CryptoCurrency("ETHC", "EtherClassic"));
+        result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("SDC", "ShadowCash"));
+        result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
+        result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("XPM", "Primecoin"));
-        result.add(new CryptoCurrency("FAIR", "FairCoin"));
-        result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
         result.add(new CryptoCurrency("GEMZ", "Gemz"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
-        result.add(new CryptoCurrency("MKR", "Maker"));
         result.add(new CryptoCurrency("BLK", "Blackcoin"));
         result.add(new CryptoCurrency("FCT", "Factom"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
@@ -96,6 +94,11 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
+        result.add(new CryptoCurrency("FAIR", "FairCoin"));
+        result.add(new CryptoCurrency("FLO", "FlorinCoin"));
+        result.add(new CryptoCurrency("MKR", "Maker", true));
+        result.add(new CryptoCurrency("DGD", "DigixDAO Tokens", true));
+        result.add(new CryptoCurrency("DAO", "DAO", true));
         result.add(new CryptoCurrency("XEM", "NEM"));
         result.add(new CryptoCurrency("ANTI", "Anti"));
         result.add(new CryptoCurrency("VPN", "VPNCoin"));
@@ -123,21 +126,25 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SHIFT", "Shift"));
         result.add(new CryptoCurrency("ERC", "Europecoin"));
         result.add(new CryptoCurrency("POST", "PostCoin"));
+        result.add(new CryptoCurrency("LSK", "Lisk"));
+        result.add(new CryptoCurrency("USDT", "USD Tether"));
+        result.add(new CryptoCurrency("EURT", "EUR Tether"));
+        result.add(new CryptoCurrency("JPYT", "JPY Tether"));
+        result.add(new CryptoCurrency("WDC", "Worldcoin"));
         return result;
-    }
+    } 
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
-        result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("DAO", "DAO"));
-        result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
+        result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("ETH", "Ether"));
+        result.add(new CryptoCurrency("ETHC", "EtherClassic"));
+        result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
-        result.add(new CryptoCurrency("SC", "Siacoin"));
-        result.add(new CryptoCurrency("FAIR", "FairCoin"));
+        result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
@@ -183,7 +190,11 @@ public class CurrencyUtil {
     }
 
     public static boolean isFiatCurrency(String currencyCode) {
-        return !isCryptoCurrency(currencyCode) && Currency.getInstance(currencyCode) != null;
+        try {
+            return currencyCode != null && !currencyCode.isEmpty() && !isCryptoCurrency(currencyCode) && Currency.getInstance(currencyCode) != null;
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     public static Optional<FiatCurrency> getFiatCurrency(String currencyCode) {
@@ -197,6 +208,20 @@ public class CurrencyUtil {
 
     public static Optional<CryptoCurrency> getCryptoCurrency(String currencyCode) {
         return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
+    }
+
+    public static Optional<TradeCurrency> getTradeCurrency(String currencyCode) {
+        Optional<FiatCurrency> fiatCurrencyOptional = getFiatCurrency(currencyCode);
+        if (isFiatCurrency(currencyCode) && fiatCurrencyOptional.isPresent()) {
+            return Optional.of(fiatCurrencyOptional.get());
+        } else {
+            Optional<CryptoCurrency> cryptoCurrencyOptional = getCryptoCurrency(currencyCode);
+            if (isCryptoCurrency(currencyCode) && cryptoCurrencyOptional.isPresent()) {
+                return Optional.of(cryptoCurrencyOptional.get());
+            } else {
+                return Optional.empty();
+            }
+        }
     }
 
     public static FiatCurrency getCurrencyByCountryCode(String countryCode) {

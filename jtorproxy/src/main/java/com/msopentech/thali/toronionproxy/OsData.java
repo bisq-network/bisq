@@ -96,8 +96,9 @@ public class OsData {
                 return OsType.Linux64;
             }
 
+            // armv8 is 64 bit, armv7l is 32 bit
             if (unameOutput.contains("arm"))
-                return unameOutput.contains("64") ? OsType.Linux64 : OsType.Linux32;
+                return unameOutput.contains("64") || unameOutput.contains("v8") ? OsType.Linux64 : OsType.Linux32;
 
             throw new RuntimeException("Could not understand uname output, not sure what bitness");
         } catch (IOException e) {

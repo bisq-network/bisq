@@ -158,7 +158,7 @@ class MenuItem extends ToggleButton {
         setText(title);
         setId("account-settings-item-background-active");
         setPrefHeight(40);
-        setPrefWidth(220);
+        setPrefWidth(240);
         setAlignment(Pos.CENTER_LEFT);
 
         Label icon = new Label();

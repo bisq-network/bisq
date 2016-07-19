@@ -19,9 +19,11 @@ package io.bitsquare.gui.main.account.content.altcoinaccounts;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.payment.CryptoCurrencyAccount;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.TradeManager;
@@ -31,7 +33,9 @@ import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
+import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,15 +45,19 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     private Preferences preferences;
     private final OpenOfferManager openOfferManager;
     private final TradeManager tradeManager;
+    private Stage stage;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
+    private final String accountsFileName = "AltcoinPaymentAccounts";
 
     @Inject
-    public AltCoinAccountsDataModel(User user, Preferences preferences, OpenOfferManager openOfferManager, TradeManager tradeManager) {
+    public AltCoinAccountsDataModel(User user, Preferences preferences, OpenOfferManager openOfferManager,
+                                    TradeManager tradeManager, Stage stage) {
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
+        this.stage = stage;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
@@ -95,7 +103,6 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
         }
     }
 
-
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
         boolean isPaymentAccountUsed = openOfferManager.getOpenOffers().stream()
                 .filter(o -> o.getOffer().getOffererPaymentAccountId().equals(paymentAccount.getId()))
@@ -115,5 +122,14 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
         user.setCurrentPaymentAccount(paymentAccount);
     }
 
+    public void exportAccounts() {
+        ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
+                .filter(paymentAccount -> paymentAccount instanceof CryptoCurrencyAccount)
+                .collect(Collectors.toList()));
+        GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage);
+    }
 
+    public void importAccounts() {
+        GUIUtil.importAccounts(user, accountsFileName, preferences, stage);
+    }
 }

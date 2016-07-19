@@ -18,7 +18,10 @@
 package io.bitsquare.alert;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import io.bitsquare.common.OptionKeys;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bitsquare.user.User;
@@ -38,7 +41,7 @@ import static org.bitcoinj.core.Utils.HEX;
 public class AlertManager {
     private static final Logger log = LoggerFactory.getLogger(AlertManager.class);
 
-    private final AlertService alertService;
+    private P2PService p2PService;
     private final KeyRing keyRing;
     private final User user;
     private final ObjectProperty<Alert> alertMessageProperty = new SimpleObjectProperty<>();
@@ -53,30 +56,32 @@ public class AlertManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AlertManager(AlertService alertService, KeyRing keyRing, User user) {
-        this.alertService = alertService;
+    public AlertManager(P2PService p2PService, KeyRing keyRing, User user, @Named(OptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+        this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
 
-        alertService.addHashSetChangedListener(new HashMapChangedListener() {
-            @Override
-            public void onAdded(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Alert) {
-                    Alert alert = (Alert) data.getStoragePayload();
-                    if (verifySignature(alert))
-                        alertMessageProperty.set(alert);
+        if (!ignoreDevMsg) {
+            p2PService.addHashSetChangedListener(new HashMapChangedListener() {
+                @Override
+                public void onAdded(ProtectedStorageEntry data) {
+                    if (data.getStoragePayload() instanceof Alert) {
+                        Alert alert = (Alert) data.getStoragePayload();
+                        if (verifySignature(alert))
+                            alertMessageProperty.set(alert);
+                    }
                 }
-            }
 
-            @Override
-            public void onRemoved(ProtectedStorageEntry data) {
-                if (data.getStoragePayload() instanceof Alert) {
-                    Alert alert = (Alert) data.getStoragePayload();
-                    if (verifySignature(alert))
-                        alertMessageProperty.set(null);
+                @Override
+                public void onRemoved(ProtectedStorageEntry data) {
+                    if (data.getStoragePayload() instanceof Alert) {
+                        Alert alert = (Alert) data.getStoragePayload();
+                        if (verifySignature(alert))
+                            alertMessageProperty.set(null);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
 
@@ -97,15 +102,21 @@ public class AlertManager {
         if (isKeyValid) {
             signAndAddSignatureToAlertMessage(alert);
             user.setDevelopersAlert(alert);
-            alertService.addAlertMessage(alert, null, null);
+            boolean result = p2PService.addData(alert, true);
+            if (result) {
+                log.trace("Add alertMessage to network was successful. AlertMessage = " + alert);
+            }
+
         }
         return isKeyValid;
     }
 
     public boolean removeAlertMessageIfKeyIsValid(String privKeyString) {
-        Alert developersAlert = user.getDevelopersAlert();
-        if (isKeyValid(privKeyString) && developersAlert != null) {
-            alertService.removeAlertMessage(developersAlert, null, null);
+        Alert alert = user.getDevelopersAlert();
+        if (isKeyValid(privKeyString) && alert != null) {
+            if (p2PService.removeData(alert, true))
+                log.trace("Remove alertMessage from network was successful. AlertMessage = " + alert);
+
             user.setDevelopersAlert(null);
             return true;
         } else {
@@ -125,7 +136,7 @@ public class AlertManager {
     private void signAndAddSignatureToAlertMessage(Alert alert) {
         String alertMessageAsHex = Utils.HEX.encode(alert.message.getBytes());
         String signatureAsBase64 = alertSigningKey.signMessage(alertMessageAsHex);
-        alert.setSigAndStoragePubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
+        alert.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 
     private boolean verifySignature(Alert alert) {

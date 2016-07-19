@@ -29,6 +29,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.TradeSubView;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.user.Preferences;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
@@ -51,7 +52,6 @@ public abstract class TradeStepView extends AnchorPane {
     protected final Preferences preferences;
     protected final GridPane gridPane;
 
-    private Subscription errorMessageSubscription;
     private Subscription disputeStateSubscription;
     private Subscription tradePeriodStateSubscription;
     protected int gridRow = 0;
@@ -62,6 +62,7 @@ public abstract class TradeStepView extends AnchorPane {
     protected TradeSubView.NotificationGroup notificationGroup;
     private Subscription txIdSubscription;
     private Clock.Listener clockListener;
+    private ChangeListener<String> errorMessageListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +83,11 @@ public abstract class TradeStepView extends AnchorPane {
         AnchorPane.setBottomAnchor(this, 0d);
 
         addContent();
+
+        errorMessageListener = (observable, oldValue, newValue) -> {
+            if (newValue != null)
+                showSupportFields();
+        };
     }
 
     public void activate() {
@@ -91,23 +97,16 @@ public abstract class TradeStepView extends AnchorPane {
 
             txIdSubscription = EasyBind.subscribe(model.dataModel.txId, id -> txIdTextField.setup(id));
         }
-
-        errorMessageSubscription = EasyBind.subscribe(trade.errorMessageProperty(), newValue -> {
-            if (newValue != null) {
-                showSupportFields();
-            }
-        });
+        trade.errorMessageProperty().addListener(errorMessageListener);
 
         disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), newValue -> {
-            if (newValue != null) {
+            if (newValue != null)
                 updateDisputeState(newValue);
-            }
         });
 
         tradePeriodStateSubscription = EasyBind.subscribe(trade.getTradePeriodStateProperty(), newValue -> {
-            if (newValue != null) {
+            if (newValue != null)
                 updateTradePeriodState(newValue);
-            }
         });
 
         clockListener = new Clock.Listener() {
@@ -135,8 +134,8 @@ public abstract class TradeStepView extends AnchorPane {
         if (txIdTextField != null)
             txIdTextField.cleanup();
 
-        if (errorMessageSubscription != null)
-            errorMessageSubscription.unsubscribe();
+        if (errorMessageListener != null)
+            trade.errorMessageProperty().removeListener(errorMessageListener);
 
         if (disputeStateSubscription != null)
             disputeStateSubscription.unsubscribe();
@@ -163,6 +162,8 @@ public abstract class TradeStepView extends AnchorPane {
     protected void addTradeInfoBlock() {
         tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, "Trade information");
         txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).second;
+        if (model.dataModel.txId.get() != null)
+            txIdTextField.setup(model.dataModel.txId.get());
 
         PaymentMethodForm.addAllowedPeriod(gridPane, ++gridRow, model.dataModel.getSellersPaymentAccountContractData(),
                 model.getDateForOpenDispute());
@@ -288,8 +289,8 @@ public abstract class TradeStepView extends AnchorPane {
         }
         new Popup().warning(trade.errorMessageProperty().getValue()
                 + "\n\nPlease report the problem to your arbitrator.\n\n" +
-                "He will forward teh information to the developers to investigate the problem.\n" +
-                "After the problem has be analyzed you will get back all the funds if they are locked.\n" +
+                "He will forward the information to the developers to investigate the problem.\n" +
+                "After the problem has be analyzed you will get back all the funds if funds was locked.\n" +
                 "There will be no arbitration fee charged in case of a software bug.")
                 .show();
 

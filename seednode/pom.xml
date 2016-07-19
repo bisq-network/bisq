@@ -5,7 +5,7 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.bitsquare</groupId>
-        <version>0.4.8.1</version>
+        <version>0.4.9</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -42,7 +42,7 @@
                     <transformers>
                         <transformer
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bitsquare.p2p.seed.SeedNodeMain</mainClass>
+                            <mainClass>io.bitsquare.seednode.SeedNodeMain</mainClass>
                         </transformer>
                     </transformers>
                     <filters>

@@ -27,8 +27,12 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
+import io.bitsquare.common.Timer;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.Message;
@@ -37,8 +41,10 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Contract;
+import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import javafx.collections.FXCollections;
@@ -52,10 +58,11 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DisputeManager {
     private static final Logger log = LoggerFactory.getLogger(DisputeManager.class);
@@ -63,6 +70,7 @@ public class DisputeManager {
     private final TradeWalletService tradeWalletService;
     private final WalletService walletService;
     private final TradeManager tradeManager;
+    private ClosedTradableManager closedTradableManager;
     private final OpenOfferManager openOfferManager;
     private final P2PService p2PService;
     private final KeyRing keyRing;
@@ -72,6 +80,9 @@ public class DisputeManager {
     private final String disputeInfo;
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    private final Map<String, Dispute> openDisputes;
+    private final Map<String, Dispute> closedDisputes;
+    private Map<String, Timer> delayMsgMap = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,20 +94,25 @@ public class DisputeManager {
                           TradeWalletService tradeWalletService,
                           WalletService walletService,
                           TradeManager tradeManager,
+                          ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
-                          @Named("storage.dir") File storageDir) {
+                          @Named(Storage.DIR_KEY) File storageDir) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
         this.tradeManager = tradeManager;
+        this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
         this.keyRing = keyRing;
 
         disputeStorage = new Storage<>(storageDir);
         disputes = new DisputeList<>(disputeStorage);
         disputesObservableList = FXCollections.observableArrayList(disputes);
-        disputes.stream().forEach(e -> e.setStorage(getDisputeStorage()));
+
+        openDisputes = new HashMap<>();
+        closedDisputes = new HashMap<>();
+        disputes.stream().forEach(dispute -> dispute.setStorage(getDisputeStorage()));
 
         disputeInfo = "Please note the basic rules for the dispute process:\n" +
                 "1. You need to respond to the arbitrators requests in between 2 days.\n" +
@@ -134,6 +150,25 @@ public class DisputeManager {
                     applyMessages();
                 }
             });
+
+        cleanupDisputes();
+    }
+
+    public void cleanupDisputes() {
+        disputes.stream().forEach(dispute -> {
+            dispute.setStorage(getDisputeStorage());
+            if (dispute.isClosed())
+                closedDisputes.put(dispute.getTradeId(), dispute);
+            else
+                openDisputes.put(dispute.getTradeId(), dispute);
+        });
+        openDisputes.entrySet().stream().forEach(stringDisputeEntry -> {
+            if (closedDisputes.containsKey(stringDisputeEntry.getKey())) {
+                final Dispute dispute = stringDisputeEntry.getValue();
+                dispute.setIsClosed(true);
+                tradeManager.closeDisputedTrade(dispute.getTradeId());
+            }
+        });
     }
 
     private void applyMessages() {
@@ -170,43 +205,55 @@ public class DisputeManager {
             log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
     }
 
-    public void sendOpenNewDisputeMessage(Dispute dispute) {
+    public void sendOpenNewDisputeMessage(Dispute dispute, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         if (!disputes.contains(dispute)) {
-            DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
-                    keyRing.getPubKeyRing().hashCode(),
-                    true,
-                    "System message: " + (dispute.isSupportTicket() ?
-                            "You opened a request for support."
-                            : "You opened a request for a dispute.\n\n" + disputeInfo),
-                    p2PService.getAddress());
-            disputeCommunicationMessage.setIsSystemMessage(true);
-            dispute.addDisputeMessage(disputeCommunicationMessage);
-            disputes.add(dispute);
-            disputesObservableList.add(dispute);
+            final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
+            if (!storedDisputeOptional.isPresent()) {
+                DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
+                        keyRing.getPubKeyRing().hashCode(),
+                        true,
+                        "System message: " + (dispute.isSupportTicket() ?
+                                "You opened a request for support."
+                                : "You opened a request for a dispute.\n\n" + disputeInfo),
+                        p2PService.getAddress());
+                disputeCommunicationMessage.setIsSystemMessage(true);
+                dispute.addDisputeMessage(disputeCommunicationMessage);
+                disputes.add(dispute);
+                disputesObservableList.add(dispute);
 
-            p2PService.sendEncryptedMailboxMessage(dispute.getContract().arbitratorNodeAddress,
-                    dispute.getArbitratorPubKeyRing(),
-                    new OpenNewDisputeMessage(dispute, p2PService.getAddress()),
-                    new SendMailboxMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            disputeCommunicationMessage.setArrived(true);
+                p2PService.sendEncryptedMailboxMessage(dispute.getContract().arbitratorNodeAddress,
+                        dispute.getArbitratorPubKeyRing(),
+                        new OpenNewDisputeMessage(dispute, p2PService.getAddress()),
+                        new SendMailboxMessageListener() {
+                            @Override
+                            public void onArrived() {
+                                disputeCommunicationMessage.setArrived(true);
+                                resultHandler.handleResult();
+                            }
+
+                            @Override
+                            public void onStoredInMailbox() {
+                                disputeCommunicationMessage.setStoredInMailbox(true);
+                                resultHandler.handleResult();
+                            }
+
+                            @Override
+                            public void onFault(String errorMessage) {
+                                log.error("sendEncryptedMessage failed");
+                                errorMessageHandler.handleErrorMessage("Sending dispute message failed: " + errorMessage);
+                            }
                         }
-
-                        @Override
-                        public void onStoredInMailbox() {
-                            disputeCommunicationMessage.setStoredInMailbox(true);
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            log.error("sendEncryptedMessage failed");
-                        }
-                    }
-            );
-
+                );
+            } else {
+                final String msg = "We got a dispute already open for that trade and trading peer.\n" +
+                        "TradeId = " + dispute.getTradeId();
+                log.warn(msg);
+                errorMessageHandler.handleErrorMessage(msg);
+            }
         } else {
-            log.warn("We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId());
+            final String msg = "We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId();
+            log.warn(msg);
+            errorMessageHandler.handleErrorMessage(msg);
         }
     }
 
@@ -234,43 +281,49 @@ public class DisputeManager {
                 disputeFromOpener.getArbitratorPubKeyRing(),
                 disputeFromOpener.isSupportTicket()
         );
-        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
-                keyRing.getPubKeyRing().hashCode(),
-                true,
-                "System message: " + (dispute.isSupportTicket() ?
-                        "Your trading peer has requested support due technical problems. Please wait for further instructions."
-                        : "Your trading peer has requested a dispute.\n\n" + disputeInfo),
-                p2PService.getAddress());
-        disputeCommunicationMessage.setIsSystemMessage(true);
-        dispute.addDisputeMessage(disputeCommunicationMessage);
-        disputes.add(dispute);
-        disputesObservableList.add(dispute);
+        final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
+        if (!storedDisputeOptional.isPresent()) {
+            DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
+                    keyRing.getPubKeyRing().hashCode(),
+                    true,
+                    "System message: " + (dispute.isSupportTicket() ?
+                            "Your trading peer has requested support due technical problems. Please wait for further instructions."
+                            : "Your trading peer has requested a dispute.\n\n" + disputeInfo),
+                    p2PService.getAddress());
+            disputeCommunicationMessage.setIsSystemMessage(true);
+            dispute.addDisputeMessage(disputeCommunicationMessage);
+            disputes.add(dispute);
+            disputesObservableList.add(dispute);
 
-        // we mirrored dispute already!
-        Contract contract = dispute.getContract();
-        PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerPubKeyRing() : contract.getSellerPubKeyRing();
-        NodeAddress peerNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
-        log.trace("sendPeerOpenedDisputeMessage to peerAddress " + peerNodeAddress);
-        p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
-                peersPubKeyRing,
-                new PeerOpenedDisputeMessage(dispute, p2PService.getAddress()),
-                new SendMailboxMessageListener() {
-                    @Override
-                    public void onArrived() {
-                        disputeCommunicationMessage.setArrived(true);
-                    }
+            // we mirrored dispute already!
+            Contract contract = dispute.getContract();
+            PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerPubKeyRing() : contract.getSellerPubKeyRing();
+            NodeAddress peerNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
+            log.trace("sendPeerOpenedDisputeMessage to peerAddress " + peerNodeAddress);
+            p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
+                    peersPubKeyRing,
+                    new PeerOpenedDisputeMessage(dispute, p2PService.getAddress()),
+                    new SendMailboxMessageListener() {
+                        @Override
+                        public void onArrived() {
+                            disputeCommunicationMessage.setArrived(true);
+                        }
 
-                    @Override
-                    public void onStoredInMailbox() {
-                        disputeCommunicationMessage.setStoredInMailbox(true);
-                    }
+                        @Override
+                        public void onStoredInMailbox() {
+                            disputeCommunicationMessage.setStoredInMailbox(true);
+                        }
 
-                    @Override
-                    public void onFault(String errorMessage) {
-                        log.error("sendEncryptedMessage failed");
+                        @Override
+                        public void onFault(String errorMessage) {
+                            log.error("sendEncryptedMessage failed");
+                        }
                     }
-                }
-        );
+            );
+        } else {
+            log.warn("We got a dispute already open for that trade and trading peer.\n" +
+                    "TradeId = " + dispute.getTradeId());
+        }
     }
 
     // traders send msg to the arbitrator or arbitrator to 1 trader (trader to trader is not allowed)
@@ -401,10 +454,16 @@ public class DisputeManager {
         Dispute dispute = openNewDisputeMessage.dispute;
         if (isArbitrator(dispute)) {
             if (!disputes.contains(dispute)) {
-                dispute.setStorage(getDisputeStorage());
-                disputes.add(dispute);
-                disputesObservableList.add(dispute);
-                sendPeerOpenedDisputeMessage(dispute);
+                final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
+                if (!storedDisputeOptional.isPresent()) {
+                    dispute.setStorage(getDisputeStorage());
+                    disputes.add(dispute);
+                    disputesObservableList.add(dispute);
+                    sendPeerOpenedDisputeMessage(dispute);
+                } else {
+                    log.warn("We got a dispute already open for that trade and trading peer.\n" +
+                            "TradeId = " + dispute.getTradeId());
+                }
             } else {
                 log.warn("We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId());
             }
@@ -417,14 +476,20 @@ public class DisputeManager {
     private void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         Dispute dispute = peerOpenedDisputeMessage.dispute;
         if (!isArbitrator(dispute)) {
-            Optional<Trade> tradeOptional = tradeManager.getTradeById(dispute.getTradeId());
-            if (tradeOptional.isPresent())
-                tradeOptional.get().setDisputeState(Trade.DisputeState.DISPUTE_STARTED_BY_PEER);
-
             if (!disputes.contains(dispute)) {
-                dispute.setStorage(getDisputeStorage());
-                disputes.add(dispute);
-                disputesObservableList.add(dispute);
+                final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
+                if (!storedDisputeOptional.isPresent()) {
+                    Optional<Trade> tradeOptional = tradeManager.getTradeById(dispute.getTradeId());
+                    if (tradeOptional.isPresent())
+                        tradeOptional.get().setDisputeState(Trade.DisputeState.DISPUTE_STARTED_BY_PEER);
+
+                    dispute.setStorage(getDisputeStorage());
+                    disputes.add(dispute);
+                    disputesObservableList.add(dispute);
+                } else {
+                    log.warn("We got a dispute already open for that trade and trading peer.\n" +
+                            "TradeId = " + dispute.getTradeId());
+                }
             } else {
                 log.warn("We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId());
             }
@@ -435,16 +500,26 @@ public class DisputeManager {
 
     // a trader can receive a msg from the arbitrator or the arbitrator form a trader. Trader to trader is not allowed.
     private void onDisputeDirectMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
-        Log.traceCall("disputeDirectMessage " + disputeCommunicationMessage);
-        Optional<Dispute> disputeOptional = findDispute(disputeCommunicationMessage.getTradeId(), disputeCommunicationMessage.getTraderId());
+        Log.traceCall("disputeCommunicationMessage " + disputeCommunicationMessage);
+        final String tradeId = disputeCommunicationMessage.getTradeId();
+        Optional<Dispute> disputeOptional = findDispute(tradeId, disputeCommunicationMessage.getTraderId());
+        final String uid = disputeCommunicationMessage.getUID();
         if (disputeOptional.isPresent()) {
+            cleanupRetryMap(uid);
+
             Dispute dispute = disputeOptional.get();
             if (!dispute.getDisputeCommunicationMessagesAsObservableList().contains(disputeCommunicationMessage))
                 dispute.addDisputeMessage(disputeCommunicationMessage);
             else
-                log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeCommunicationMessage.getTradeId());
+                log.warn("We got a disputeCommunicationMessage what we have already stored. TradeId = " + tradeId);
         } else {
-            log.warn("We got a dispute mail msg but we don't have a matching dispute. TradeId = " + disputeCommunicationMessage.getTradeId());
+            log.debug("We got a disputeCommunicationMessage but we don't have a matching dispute. TradeId = " + tradeId);
+            if (!delayMsgMap.containsKey(uid)) {
+                Timer timer = UserThread.runAfter(() -> onDisputeDirectMessage(disputeCommunicationMessage), 1);
+                delayMsgMap.put(uid, timer);
+            } else {
+                log.warn("We got a disputeCommunicationMessage after we already repeated to apply the message after a delay. That should never happen. TradeId = " + tradeId);
+            }
         }
     }
 
@@ -452,8 +527,12 @@ public class DisputeManager {
     private void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
         DisputeResult disputeResult = disputeResultMessage.disputeResult;
         if (!isArbitrator(disputeResult)) {
-            Optional<Dispute> disputeOptional = findDispute(disputeResult.tradeId, disputeResult.traderId);
+            final String tradeId = disputeResult.tradeId;
+            Optional<Dispute> disputeOptional = findDispute(tradeId, disputeResult.traderId);
+            final String uid = disputeResultMessage.getUID();
             if (disputeOptional.isPresent()) {
+                cleanupRetryMap(uid);
+
                 Dispute dispute = disputeOptional.get();
 
                 DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
@@ -478,64 +557,93 @@ public class DisputeManager {
                             || (!isBuyer && disputeResult.getWinner() == DisputeResult.Winner.SELLER)
                             || (isBuyer && disputeResult.getWinner() == DisputeResult.Winner.STALE_MATE)) {
 
-                        if (dispute.getDepositTxSerialized() != null) {
-                            try {
-                                log.debug("do payout Transaction ");
 
-                                Transaction signedDisputedPayoutTx = tradeWalletService.traderSignAndFinalizeDisputedPayoutTx(
-                                        dispute.getDepositTxSerialized(),
-                                        disputeResult.getArbitratorSignature(),
-                                        disputeResult.getBuyerPayoutAmount(),
-                                        disputeResult.getSellerPayoutAmount(),
-                                        disputeResult.getArbitratorPayoutAmount(),
-                                        contract.getBuyerPayoutAddressString(),
-                                        contract.getSellerPayoutAddressString(),
-                                        disputeResult.getArbitratorAddressAsString(),
-                                        walletService.getOrCreateAddressEntry(dispute.getTradeId(), AddressEntry.Context.MULTI_SIG),
-                                        contract.getBuyerBtcPubKey(),
-                                        contract.getSellerBtcPubKey(),
-                                        disputeResult.getArbitratorPubKey()
-                                );
-                                Transaction committedDisputedPayoutTx = tradeWalletService.addTransactionToWallet(signedDisputedPayoutTx);
-                                log.debug("broadcast committedDisputedPayoutTx");
-                                tradeWalletService.broadcastTx(committedDisputedPayoutTx, new FutureCallback<Transaction>() {
-                                    @Override
-                                    public void onSuccess(Transaction transaction) {
-                                        log.debug("BroadcastTx succeeded. Transaction:" + transaction);
+                        final Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
+                        Transaction payoutTx = null;
+                        if (tradeOptional.isPresent()) {
+                            payoutTx = tradeOptional.get().getPayoutTx();
+                        } else {
+                            final Optional<Tradable> tradableOptional = closedTradableManager.getTradableById(tradeId);
+                            if (tradableOptional.isPresent() && tradableOptional.get() instanceof Trade) {
+                                payoutTx = ((Trade) tradableOptional.get()).getPayoutTx();
+                            }
+                        }
 
-                                        // after successful publish we send peer the tx
+                        if (payoutTx == null) {
+                            if (dispute.getDepositTxSerialized() != null) {
+                                try {
+                                    log.debug("do payout Transaction ");
 
-                                        dispute.setDisputePayoutTxId(transaction.getHashAsString());
-                                        sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
-                                    }
+                                    Transaction signedDisputedPayoutTx = tradeWalletService.traderSignAndFinalizeDisputedPayoutTx(
+                                            dispute.getDepositTxSerialized(),
+                                            disputeResult.getArbitratorSignature(),
+                                            disputeResult.getBuyerPayoutAmount(),
+                                            disputeResult.getSellerPayoutAmount(),
+                                            disputeResult.getArbitratorPayoutAmount(),
+                                            contract.getBuyerPayoutAddressString(),
+                                            contract.getSellerPayoutAddressString(),
+                                            disputeResult.getArbitratorAddressAsString(),
+                                            walletService.getOrCreateAddressEntry(dispute.getTradeId(), AddressEntry.Context.MULTI_SIG),
+                                            contract.getBuyerBtcPubKey(),
+                                            contract.getSellerBtcPubKey(),
+                                            disputeResult.getArbitratorPubKey()
+                                    );
+                                    Transaction committedDisputedPayoutTx = tradeWalletService.addTransactionToWallet(signedDisputedPayoutTx);
+                                    log.debug("broadcast committedDisputedPayoutTx");
+                                    tradeWalletService.broadcastTx(committedDisputedPayoutTx, new FutureCallback<Transaction>() {
+                                        @Override
+                                        public void onSuccess(Transaction transaction) {
+                                            log.debug("BroadcastTx succeeded. Transaction:" + transaction);
 
-                                    @Override
-                                    public void onFailure(@NotNull Throwable t) {
-                                        // TODO error handling
-                                        log.error(t.getMessage());
-                                    }
-                                });
-                            } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
-                                e.printStackTrace();
+                                            // after successful publish we send peer the tx
+
+                                            dispute.setDisputePayoutTxId(transaction.getHashAsString());
+                                            sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
+
+                                            // set state after payout as we call swapTradeEntryToAvailableEntry 
+                                            if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())
+                                                tradeManager.closeDisputedTrade(dispute.getTradeId());
+                                            else {
+                                                Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
+                                                if (openOfferOptional.isPresent())
+                                                    openOfferManager.closeOpenOffer(openOfferOptional.get().getOffer());
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onFailure(@NotNull Throwable t) {
+                                            log.error(t.getMessage());
+                                        }
+                                    });
+                                } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
+                                    e.printStackTrace();
+                                    log.error("Error at traderSignAndFinalizeDisputedPayoutTx " + e.getMessage());
+                                }
+                            } else {
+                                log.warn("DepositTx is null. TradeId = " + tradeId);
                             }
                         } else {
-                            log.warn("DepositTx is null. TradeId = " + disputeResult.tradeId);
+                            log.warn("We got already a payout tx. That might be the case if the other peer did not get the " +
+                                    "payout tx and opened a dispute. TradeId = " + tradeId);
+                            dispute.setDisputePayoutTxId(payoutTx.getHashAsString());
+                            sendPeerPublishedPayoutTxMessage(payoutTx, dispute, contract);
                         }
                     }
                 } else {
-                    log.warn("We got a dispute msg what we have already stored. TradeId = " + disputeResult.tradeId);
-                }
-
-                // set state after payout as we call swapTradeEntryToAvailableEntry 
-                if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())
-                    tradeManager.closeDisputedTrade(dispute.getTradeId());
-                else {
-                    Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
-                    if (openOfferOptional.isPresent())
-                        openOfferManager.closeOpenOffer(openOfferOptional.get().getOffer());
+                    log.warn("We got a dispute msg what we have already stored. TradeId = " + tradeId);
                 }
             } else {
-                log.warn("We got a dispute result msg but we don't have a matching dispute. TradeId = " + disputeResult.tradeId);
+                log.debug("We got a dispute result msg but we don't have a matching dispute. " +
+                        "That might happen when we get the disputeResultMessage before the dispute was created. " +
+                        "We try again after 1 sec. to apply the disputeResultMessage. TradeId = " + tradeId);
+                if (!delayMsgMap.containsKey(uid)) {
+                    // We delay2 sec. to be sure the comm. msg gets added first
+                    Timer timer = UserThread.runAfter(() -> onDisputeResultMessage(disputeResultMessage), 2);
+                    delayMsgMap.put(uid, timer);
+                } else {
+                    log.warn("We got a dispute result msg after we already repeated to apply the message after a delay. " +
+                            "That should never happen. TradeId = " + tradeId);
+                }
             }
         } else {
             log.error("Arbitrator received disputeResultMessage. That must never happen.");
@@ -544,8 +652,26 @@ public class DisputeManager {
 
     // losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
     private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
-        Transaction transaction = tradeWalletService.addTransactionToWallet(peerPublishedPayoutTxMessage.transaction);
-        findOwnDispute(peerPublishedPayoutTxMessage.tradeId).ifPresent(dispute -> dispute.setDisputePayoutTxId(transaction.getHashAsString()));
+        final String uid = peerPublishedPayoutTxMessage.getUID();
+        final String tradeId = peerPublishedPayoutTxMessage.tradeId;
+        Optional<Dispute> disputeOptional = findOwnDispute(tradeId);
+        if (disputeOptional.isPresent()) {
+            cleanupRetryMap(uid);
+
+            Transaction transaction = tradeWalletService.addTransactionToWallet(peerPublishedPayoutTxMessage.transaction);
+            disputeOptional.get().setDisputePayoutTxId(transaction.getHashAsString());
+            tradeManager.closeDisputedTrade(tradeId);
+        } else {
+            log.debug("We got a peerPublishedPayoutTxMessage but we don't have a matching dispute. TradeId = " + tradeId);
+            if (!delayMsgMap.containsKey(uid)) {
+                // We delay 3 sec. to be sure the close msg gets added first
+                Timer timer = UserThread.runAfter(() -> onDisputedPayoutTxMessage(peerPublishedPayoutTxMessage), 3);
+                delayMsgMap.put(uid, timer);
+            } else {
+                log.warn("We got a peerPublishedPayoutTxMessage after we already repeated to apply the message after a delay. " +
+                        "That should never happen. TradeId = " + tradeId);
+            }
+        }
     }
 
 
@@ -583,11 +709,19 @@ public class DisputeManager {
     }
 
     public Optional<Dispute> findOwnDispute(String tradeId) {
-        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
+        return getDisputeStream(tradeId).findAny();
     }
 
-    public List<Dispute> findDisputesByTradeId(String tradeId) {
-        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId)).collect(Collectors.toList());
+    private Stream<Dispute> getDisputeStream(String tradeId) {
+        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId));
+    }
+
+    private void cleanupRetryMap(String uid) {
+        if (delayMsgMap.containsKey(uid)) {
+            Timer timer = delayMsgMap.remove(uid);
+            if (timer != null)
+                timer.stop();
+        }
     }
 
 }

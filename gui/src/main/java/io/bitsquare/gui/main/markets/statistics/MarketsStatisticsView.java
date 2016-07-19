@@ -23,7 +23,8 @@ import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import io.bitsquare.gui.util.SortedList;
+import javafx.collections.ListChangeListener;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -32,6 +33,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
@@ -41,6 +43,8 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
     private final int gridRow = 0;
     private TableView<MarketStatisticItem> tableView;
     private SortedList<MarketStatisticItem> sortedList;
+    private ListChangeListener<MarketStatisticItem> itemListChangeListener;
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> totalAmountColumn, numberOfOffersColumn, numberOfBuyOffersColumn, numberOfSellOffersColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -72,9 +76,13 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
 
         TableColumn<MarketStatisticItem, MarketStatisticItem> currencyColumn = getCurrencyColumn();
         tableView.getColumns().add(currencyColumn);
-        TableColumn<MarketStatisticItem, MarketStatisticItem> numberOfOffersColumn = getNumberOfOffersColumn();
+        numberOfOffersColumn = getNumberOfOffersColumn();
         tableView.getColumns().add(numberOfOffersColumn);
-        TableColumn<MarketStatisticItem, MarketStatisticItem> totalAmountColumn = getTotalAmountColumn();
+        numberOfBuyOffersColumn = getNumberOfBuyOffersColumn();
+        tableView.getColumns().add(numberOfBuyOffersColumn);
+        numberOfSellOffersColumn = getNumberOfSellOffersColumn();
+        tableView.getColumns().add(numberOfSellOffersColumn);
+        totalAmountColumn = getTotalAmountColumn();
         tableView.getColumns().add(totalAmountColumn);
         TableColumn<MarketStatisticItem, MarketStatisticItem> spreadColumn = getSpreadColumn();
         tableView.getColumns().add(spreadColumn);
@@ -82,11 +90,14 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
 
         currencyColumn.setComparator((o1, o2) -> CurrencyUtil.getNameByCode(o1.currencyCode).compareTo(CurrencyUtil.getNameByCode(o2.currencyCode)));
         numberOfOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfOffers).compareTo(o2.numberOfOffers));
+        numberOfBuyOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfBuyOffers).compareTo(o2.numberOfBuyOffers));
+        numberOfSellOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfSellOffers).compareTo(o2.numberOfSellOffers));
         totalAmountColumn.setComparator((o1, o2) -> o1.totalAmount.compareTo(o2.totalAmount));
         spreadColumn.setComparator((o1, o2) -> o1.spread != null && o2.spread != null ? formatter.formatFiatWithCode(o1.spread).compareTo(formatter.formatFiatWithCode(o2.spread)) : 0);
 
         numberOfOffersColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(numberOfOffersColumn);
+        itemListChangeListener = c -> updateHeaders();
     }
 
     @Override
@@ -94,11 +105,21 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
         sortedList = new SortedList<>(model.marketStatisticItems);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+        sortedList.addListener(itemListChangeListener);
+        updateHeaders();
     }
 
     @Override
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
+        sortedList.removeListener(itemListChangeListener);
+    }
+
+    private void updateHeaders() {
+        numberOfOffersColumn.setText("Total offers (" + sortedList.stream().mapToInt(item -> item.numberOfOffers).sum() + ")");
+        numberOfBuyOffersColumn.setText("Bid offers (" + sortedList.stream().mapToInt(item -> item.numberOfBuyOffers).sum() + ")");
+        numberOfSellOffersColumn.setText("Ask offers (" + sortedList.stream().mapToInt(item -> item.numberOfSellOffers).sum() + ")");
+        totalAmountColumn.setText("Total amount (" + formatter.formatCoinWithCode(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
     }
 
 
@@ -162,10 +183,66 @@ public class MarketsStatisticsView extends ActivatableViewAndModel<GridPane, Mar
         return column;
     }
 
-    private TableColumn<MarketStatisticItem, MarketStatisticItem> getTotalAmountColumn() {
-        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Total amount (BTC)") {
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> getNumberOfBuyOffersColumn() {
+        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Buy offers") {
             {
-                setMinWidth(130);
+                setMinWidth(100);
+            }
+        };
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
+                        MarketStatisticItem>>() {
+                    @Override
+                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
+                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
+                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
+                            @Override
+                            public void updateItem(final MarketStatisticItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(String.valueOf(item.numberOfBuyOffers));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> getNumberOfSellOffersColumn() {
+        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Sell offers") {
+            {
+                setMinWidth(100);
+            }
+        };
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<MarketStatisticItem, MarketStatisticItem>, TableCell<MarketStatisticItem,
+                        MarketStatisticItem>>() {
+                    @Override
+                    public TableCell<MarketStatisticItem, MarketStatisticItem> call(
+                            TableColumn<MarketStatisticItem, MarketStatisticItem> column) {
+                        return new TableCell<MarketStatisticItem, MarketStatisticItem>() {
+                            @Override
+                            public void updateItem(final MarketStatisticItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(String.valueOf(item.numberOfSellOffers));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<MarketStatisticItem, MarketStatisticItem> getTotalAmountColumn() {
+        TableColumn<MarketStatisticItem, MarketStatisticItem> column = new TableColumn<MarketStatisticItem, MarketStatisticItem>("Total amount") {
+            {
+                setMinWidth(150);
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));

@@ -25,10 +25,12 @@ public final class OfferAvailabilityRequest extends OfferMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final PubKeyRing pubKeyRing;
+    public final long takersTradePrice;
 
-    public OfferAvailabilityRequest(String offerId, PubKeyRing pubKeyRing) {
+    public OfferAvailabilityRequest(String offerId, PubKeyRing pubKeyRing, long takersTradePrice) {
         super(offerId);
         this.pubKeyRing = pubKeyRing;
+        this.takersTradePrice = takersTradePrice;
     }
 
     public PubKeyRing getPubKeyRing() {

@@ -60,7 +60,7 @@ public final class SpecificBanksAccountContractData extends BankAccountContractD
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return getPaymentDetailsForTradePopup() + "\n" +
-                "Accepted banks: " + Joiner.on(", ").join(acceptedBanks) + "\n";
+        return super.getPaymentDetailsForTradePopup() + "\n" +
+                "Accepted banks: " + Joiner.on(", ").join(acceptedBanks);
     }
 }

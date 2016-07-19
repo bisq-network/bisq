@@ -23,7 +23,8 @@ public enum CloseConnectionReason {
     UNKNOWN_PEER_ADDRESS(true, true),
 
     // illegal requests
-    RULE_VIOLATION(true, true);
+    RULE_VIOLATION(true, false),
+    PEER_BANNED(true, false);
 
     public final boolean sendCloseMessage;
     public boolean isIntended;
@@ -31,5 +32,13 @@ public enum CloseConnectionReason {
     CloseConnectionReason(boolean sendCloseMessage, boolean isIntended) {
         this.sendCloseMessage = sendCloseMessage;
         this.isIntended = isIntended;
+    }
+
+    @Override
+    public String toString() {
+        return "CloseConnectionReason{" +
+                "sendCloseMessage=" + sendCloseMessage +
+                ", isIntended=" + isIntended +
+                "} " + super.toString();
     }
 }

@@ -18,12 +18,13 @@
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.filter.PaymentAccountFilter;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.exceptions.TradePriceOutOfToleranceException;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +46,18 @@ public class ProcessPayDepositRequest extends TradeTask {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
             PayDepositRequest payDepositRequest = (PayDepositRequest) processModel.getTradeMessage();
-            checkTradeId(processModel.getId(), payDepositRequest);
             checkNotNull(payDepositRequest);
+            checkTradeId(processModel.getId(), payDepositRequest);
+
+            PaymentAccountContractData paymentAccountContractData = checkNotNull(payDepositRequest.takerPaymentAccountContractData);
+            final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
+            if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountContractData, appliedPaymentAccountFilter)) {
+                failed("Other trader is banned by his payment account data.\n" +
+                        "paymentAccountContractData=" + paymentAccountContractData.getPaymentDetails() + "\n" +
+                        "banFilter=" + appliedPaymentAccountFilter[0].toString());
+                return;
+            }
+            processModel.tradingPeer.setPaymentAccountContractData(paymentAccountContractData);
 
             processModel.tradingPeer.setRawTransactionInputs(checkNotNull(payDepositRequest.rawTransactionInputs));
             checkArgument(payDepositRequest.rawTransactionInputs.size() > 0);
@@ -59,40 +70,28 @@ public class ProcessPayDepositRequest extends TradeTask {
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(payDepositRequest.takerPayoutAddressString));
             processModel.tradingPeer.setPubKeyRing(checkNotNull(payDepositRequest.takerPubKeyRing));
 
-            PaymentAccountContractData paymentAccountContractData = checkNotNull(payDepositRequest.takerPaymentAccountContractData);
-            processModel.tradingPeer.setPaymentAccountContractData(paymentAccountContractData);
-
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(payDepositRequest.takerAccountId));
             trade.setTakeOfferFeeTxId(nonEmptyStringOf(payDepositRequest.takeOfferFeeTxId));
             processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.acceptedArbitratorNodeAddresses));
-            if (payDepositRequest.acceptedArbitratorNodeAddresses.size() < 1)
-                failed("acceptedArbitratorNames size must be at least 1");
+            if (payDepositRequest.acceptedArbitratorNodeAddresses.isEmpty())
+                failed("acceptedArbitratorNames must not be empty");
             trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.arbitratorNodeAddress));
 
-            long takersTradePrice = payDepositRequest.tradePrice;
-            checkArgument(takersTradePrice > 0);
-            Fiat tradePriceAsFiat = Fiat.valueOf(trade.getOffer().getCurrencyCode(), takersTradePrice);
-            Fiat offerPriceAsFiat = trade.getOffer().getPrice();
-            checkArgument(offerPriceAsFiat != null, "offerPriceAsFiat must not be null");
-            double factor = (double) takersTradePrice / (double) offerPriceAsFiat.value;
-            // We allow max. 2 % difference between own offer price calculation and takers calculation.
-            // Market price might be different at offerers and takers side so we need a bit of tolerance.
-            // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations 
-            // from one provider.
-            if (Math.abs(1 - factor) > 0.02) {
-                String msg = "Takers tradePrice is outside our market price tolerance.\n" +
-                        "tradePriceAsFiat=" + tradePriceAsFiat.toFriendlyString() + "\n" +
-                        "offerPriceAsFiat=" + offerPriceAsFiat.toFriendlyString();
-                log.warn(msg);
-                failed(msg);
+            try {
+                long takersTradePrice = payDepositRequest.tradePrice;
+                trade.getOffer().checkTradePriceTolerance(takersTradePrice);
+                trade.setTradePrice(takersTradePrice);
+            } catch (TradePriceOutOfToleranceException e) {
+                failed(e.getMessage());
+            } catch (Throwable e2) {
+                failed(e2);
             }
-            trade.setTradePrice(takersTradePrice);
-
 
             checkArgument(payDepositRequest.tradeAmount > 0);
             trade.setTradeAmount(Coin.valueOf(payDepositRequest.tradeAmount));
 
-            // update to the latest peer address of our peer if the payDepositRequest is correct
+            // check and update to the latest peer address of our peer if the payDepositRequest is correct
+            checkArgument(payDepositRequest.getSenderNodeAddress().equals(processModel.getTempTradingPeerNodeAddress()));
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             removeMailboxMessageAfterProcessing();

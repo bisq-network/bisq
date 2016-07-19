@@ -55,7 +55,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         // If we are after the timeLock state we need to setup the listener again
         //TODO not sure if that is not called already from the checkPayoutTxTimeLock at tradeProtocol
         Trade.State tradeState = trade.getState();
-        if (tradeState.getPhase() == Trade.Phase.PAYOUT_PAID && tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
+        Trade.Phase phase = tradeState.getPhase();
+        if (trade.getPayoutTx() != null && (phase == Trade.Phase.FIAT_RECEIVED || phase == Trade.Phase.PAYOUT_PAID) &&
+                tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
                         handleTaskRunnerSuccess("SetupPayoutTxLockTimeReachedListener");

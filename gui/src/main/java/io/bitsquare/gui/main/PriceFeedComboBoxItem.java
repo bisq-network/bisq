@@ -10,6 +10,7 @@ public class PriceFeedComboBoxItem {
 
     public final String currencyCode;
     public final StringProperty displayStringProperty = new SimpleStringProperty();
+    private boolean isPriceAvailable;
 
     public PriceFeedComboBoxItem(String currencyCode) {
         this.currencyCode = currencyCode;
@@ -17,5 +18,13 @@ public class PriceFeedComboBoxItem {
 
     public void setDisplayString(String displayString) {
         this.displayStringProperty.set(displayString);
+    }
+
+    public void setIsPriceAvailable(boolean isPriceAvailable) {
+        this.isPriceAvailable = isPriceAvailable;
+    }
+
+    public boolean isPriceAvailable() {
+        return isPriceAvailable;
     }
 }

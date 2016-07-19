@@ -32,7 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // Run in UserThread
 public abstract class NetworkNode implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
-    private static final int CREATE_SOCKET_TIMEOUT_MILLIS = 5000;
+    private static final int CREATE_SOCKET_TIMEOUT_MILLIS = 10000;
 
     final int servicePort;
 
@@ -63,7 +63,7 @@ public abstract class NetworkNode implements MessageListener {
 
     // Calls this (and other registered) setup listener's ``onTorNodeReady()`` and ``onHiddenServicePublished``
     // when the events happen.
-    abstract public void start(@Nullable SetupListener setupListener);
+    abstract public void start(boolean useBridges, @Nullable SetupListener setupListener);
 
     public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress, Message message) {
         Log.traceCall("peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + StringUtils.abbreviate(message.toString(), 100));

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SeedNodesRepository {
     private static final Logger log = LoggerFactory.getLogger(SeedNodesRepository.class);
@@ -34,10 +35,10 @@ public class SeedNodesRepository {
             new NodeAddress("b66vnevaljo6xt5a.onion:8000"),*/
 
             // v0.4.2
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("TBD.onion:8000") : new NodeAddress("uadzuib66jupaept.onion:8000"),
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("TBD.onion:8000") : new NodeAddress("hbma455xxbqhcuqh.onion:8000"),
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("TBD.onion:8000") : new NodeAddress("wgthuiqn3aoiovbm.onion:8000"),
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("TBD.onion:8000") : new NodeAddress("2zxtnprnx5wqr7a3.onion:8000"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("uadzuib66jupaept.onion:8000"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("hbma455xxbqhcuqh.onion:8000"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("wgthuiqn3aoiovbm.onion:8000"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("2zxtnprnx5wqr7a3.onion:8000"),
 
             // testnet
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),
@@ -93,6 +94,11 @@ public class SeedNodesRepository {
 
     public void setLocalhostSeedNodeAddresses(Set<NodeAddress> localhostSeedNodeAddresses) {
         this.localhostSeedNodeAddresses = localhostSeedNodeAddresses;
+    }
+
+    public boolean isSeedNode(NodeAddress nodeAddress) {
+        return Stream.concat(localhostSeedNodeAddresses.stream(), torSeedNodeAddresses.stream())
+                .filter(e -> e.equals(nodeAddress)).findAny().isPresent();
     }
 
     public void setNodeAddressToExclude(NodeAddress nodeAddress) {

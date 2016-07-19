@@ -98,6 +98,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
+    // Price is always otherCurrency/BTC, for altcoins we only invert at the display level. 
+    // If we would change the price representation in the domain we would not be backward compatible
     final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
@@ -107,7 +109,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     PaymentAccount paymentAccount;
-    private boolean isTabSelected;
+    boolean isTabSelected;
     private Notification walletFundedNotification;
     boolean useSavingsWallet;
     Coin totalAvailableBalance;

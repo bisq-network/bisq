@@ -22,7 +22,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.user.Preferences;
 import javafx.scene.control.Label;
@@ -50,7 +50,7 @@ public class TxIdTextField extends AnchorPane {
 
     private final TextField textField;
     private final Tooltip progressIndicatorTooltip;
-    private final ConfidenceProgressIndicator progressIndicator;
+    private final TxConfidenceIndicator txConfidenceIndicator;
     private final Label copyIcon;
     private final Label blockExplorerIcon;
     private TxConfidenceListener txConfidenceListener;
@@ -61,16 +61,16 @@ public class TxIdTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TxIdTextField() {
-        progressIndicator = new ConfidenceProgressIndicator();
-        progressIndicator.setFocusTraversable(false);
-        progressIndicator.setPrefSize(24, 24);
-        progressIndicator.setId("funds-confidence");
-        progressIndicator.setLayoutY(1);
-        progressIndicator.setProgress(0);
-        progressIndicator.setVisible(false);
-        AnchorPane.setRightAnchor(progressIndicator, 0.0);
+        txConfidenceIndicator = new TxConfidenceIndicator();
+        txConfidenceIndicator.setFocusTraversable(false);
+        txConfidenceIndicator.setPrefSize(24, 24);
+        txConfidenceIndicator.setId("funds-confidence");
+        txConfidenceIndicator.setLayoutY(1);
+        txConfidenceIndicator.setProgress(0);
+        txConfidenceIndicator.setVisible(false);
+        AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);
         progressIndicatorTooltip = new Tooltip("-");
-        Tooltip.install(progressIndicator, progressIndicatorTooltip);
+        Tooltip.install(txConfidenceIndicator, progressIndicatorTooltip);
 
         copyIcon = new Label();
         copyIcon.setLayoutY(3);
@@ -96,7 +96,7 @@ public class TxIdTextField extends AnchorPane {
         AnchorPane.setRightAnchor(textField, 80.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
-        getChildren().addAll(textField, copyIcon, blockExplorerIcon, progressIndicator);
+        getChildren().addAll(textField, copyIcon, blockExplorerIcon, txConfidenceIndicator);
     }
 
     public void setup(String txID) {
@@ -148,26 +148,26 @@ public class TxIdTextField extends AnchorPane {
             switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
                     progressIndicatorTooltip.setText("Unknown transaction status");
-                    progressIndicator.setProgress(0);
+                    txConfidenceIndicator.setProgress(0);
                     break;
                 case PENDING:
                     progressIndicatorTooltip.setText(
                             "Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 " + "confirmations");
-                    progressIndicator.setProgress(-1.0);
+                    txConfidenceIndicator.setProgress(-1.0);
                     break;
                 case BUILDING:
                     progressIndicatorTooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                    progressIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
+                    txConfidenceIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
                     break;
                 case DEAD:
                     progressIndicatorTooltip.setText("Transaction is invalid.");
-                    progressIndicator.setProgress(0);
+                    txConfidenceIndicator.setProgress(0);
                     break;
             }
 
-            if (progressIndicator.getProgress() != 0) {
-                progressIndicator.setVisible(true);
-                AnchorPane.setRightAnchor(progressIndicator, 0.0);
+            if (txConfidenceIndicator.getProgress() != 0) {
+                txConfidenceIndicator.setVisible(true);
+                AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);
             }
         }
     }

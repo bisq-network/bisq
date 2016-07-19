@@ -17,15 +17,18 @@
 
 package io.bitsquare.app;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.OptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.common.UITimer;
 import io.bitsquare.gui.common.view.CachingViewLoader;
@@ -37,6 +40,7 @@ import io.bitsquare.gui.main.MainViewModel;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.EmptyWalletWindow;
+import io.bitsquare.gui.main.overlays.windows.FilterWindow;
 import io.bitsquare.gui.main.overlays.windows.SendAlertMessageWindow;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.P2PService;
@@ -54,9 +58,11 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.controlsfx.dialog.Dialogs;
@@ -69,6 +75,7 @@ import java.nio.file.Paths;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 
@@ -94,14 +101,15 @@ public class BitsquareApp extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws IOException {
-        String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
+    public void start(Stage stage) throws IOException {
+        BitsquareApp.primaryStage = stage;
 
+        String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Version.printVersion();
         Utilities.printSysInfo();
-        Log.setLevel(!DevFlags.IS_RELEASE_VERSION);
+        Log.setLevel(Level.toLevel(env.getRequiredProperty(OptionKeys.LOG_LEVEL_KEY)));
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
@@ -114,7 +122,9 @@ public class BitsquareApp extends Application {
                 log.error(throwable.getMessage());
             } else {
                 log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
-                log.error("Uncaught Exception throwableMessage= " + throwable.getMessage());
+                log.error("throwableMessage= " + throwable.getMessage());
+                log.error("throwableClass= " + throwable.getClass());
+                log.error("Stack trace:\n" + ExceptionUtils.getStackTrace(throwable));
                 throwable.printStackTrace();
                 UserThread.execute(() -> showErrorPopup(throwable, false));
             }
@@ -125,8 +135,6 @@ public class BitsquareApp extends Application {
         if (Utilities.isRestrictedCryptography())
             Utilities.removeCryptographyRestrictions();
         Security.addProvider(new BouncyCastleProvider());
-
-        BitsquareApp.primaryStage = primaryStage;
 
         shutDownHandler = this::stop;
 
@@ -158,13 +166,18 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            scene = new Scene(mainView.getRoot(), 1190, 740);
+            scene = new Scene(mainView.getRoot(), 1200, 740);
+
+            Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
+            Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 13);
+            Font.loadFont(getClass().getResource("/fonts/VerdanaItalic.ttf").toExternalForm(), 13);
+            Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 13);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css");
 
             // configure the system tray
-            SystemTray systemTray = SystemTray.create(primaryStage, shutDownHandler);
+            SystemTray.create(primaryStage, shutDownHandler);
 
             primaryStage.setOnCloseRequest(event -> {
                 event.consume();
@@ -179,6 +192,8 @@ public class BitsquareApp extends Application {
                     showEmptyWalletPopup();
                 } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showSendAlertMessagePopup();
+                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                    showFilterPopup();
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                     showFPSWindow();
                 else if (DevFlags.DEV_MODE) {
@@ -190,7 +205,7 @@ public class BitsquareApp extends Application {
             // configure the primary stage
             primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
             primaryStage.setScene(scene);
-            primaryStage.setMinWidth(1170);
+            primaryStage.setMinWidth(1190);
             primaryStage.setMinHeight(620);
 
             // on windows the title icon is also used as task bar icon in a larger size
@@ -233,6 +248,14 @@ public class BitsquareApp extends Application {
                 .show();
     }
 
+    private void showFilterPopup() {
+        FilterManager filterManager = injector.getInstance(FilterManager.class);
+        new FilterWindow(filterManager)
+                .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
+                .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
+                .show();
+    }
+
     private void showEmptyWalletPopup() {
         injector.getInstance(EmptyWalletWindow.class).show();
     }
@@ -240,7 +263,11 @@ public class BitsquareApp extends Application {
     private void showErrorPopup(Throwable throwable, boolean doShutDown) {
         if (!shutDownRequested) {
             if (scene == null) {
+                log.warn("Scene not available yet, we create a new scene. The bug might be caused by a guice circular dependency.");
                 scene = new Scene(new StackPane(), 1000, 650);
+                scene.getStylesheets().setAll(
+                        "/io/bitsquare/gui/bitsquare.css",
+                        "/io/bitsquare/gui/images.css");
                 primaryStage.setScene(scene);
                 primaryStage.show();
             }
@@ -319,21 +346,25 @@ public class BitsquareApp extends Application {
 
     @Override
     public void stop() {
-        shutDownRequested = true;
-        gracefulShutDown(() -> {
-            log.info("App shutdown complete");
-            System.exit(0);
-        });
+        if (!shutDownRequested) {
+            new Popup().headLine("Shut down in progress")
+                    .backgroundInfo("Shutting down application can take a few seconds.\n" +
+                            "Please don't interrupt that process.")
+                    .hideCloseButton()
+                    .useAnimation(false)
+                    .show();
+            UserThread.runAfter(() -> {
+                gracefulShutDown(() -> {
+                    log.info("App shutdown complete");
+                    System.exit(0);
+                });
+            }, 200, TimeUnit.MILLISECONDS);
+            shutDownRequested = true;
+        }
     }
 
     private void gracefulShutDown(ResultHandler resultHandler) {
         log.debug("gracefulShutDown");
-        new Popup().headLine("Shut down in progress")
-                .backgroundInfo("Shutting down application can take a few seconds.\n" +
-                        "Please don't interrupt that process.")
-                .hideCloseButton()
-                .useAnimation(false)
-                .show();
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
@@ -348,8 +379,8 @@ public class BitsquareApp extends Application {
                         injector.getInstance(WalletService.class).shutDown();
                     });
                 });
-                // we wait max 5 sec.
-                UserThread.runAfter(resultHandler::handleResult, 5);
+                // we wait max 20 sec.
+                UserThread.runAfter(resultHandler::handleResult, 20);
             } else {
                 UserThread.runAfter(resultHandler::handleResult, 1);
             }

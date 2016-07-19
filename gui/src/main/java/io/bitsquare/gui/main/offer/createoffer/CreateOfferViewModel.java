@@ -22,6 +22,7 @@ import io.bitsquare.btc.pricefeed.MarketPrice;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -49,6 +50,8 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import java.util.Calendar;
+import java.util.Date;
 
 import static com.google.common.math.LongMath.checkedPow;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -70,8 +73,17 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty minAmount = new SimpleStringProperty();
+
+    // Price in the viewModel is always dependent on fiat/altcoin: Fiat Fiat/BTC, for altcoins we use inverted price.
+    // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
+    // If we would change the price representation in the domain we would not be backward compatible
     final StringProperty price = new SimpleStringProperty();
+
+    // Positive % value means always a better price form the offerers perspective: 
+    // Buyer (with fiat): lower price as market
+    // Buyer (with altcoin): higher (display) price as market (display price is inverted)
     final StringProperty priceAsPercentage = new SimpleStringProperty();
+
     final StringProperty volume = new SimpleStringProperty();
     final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
     final StringProperty volumePromptLabel = new SimpleStringProperty();
@@ -80,7 +92,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    final StringProperty spinnerInfoText = new SimpleStringProperty("");
+    final StringProperty waitingForFundsText = new SimpleStringProperty("");
 
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
@@ -91,7 +103,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
-    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty();
+    final BooleanProperty isWaitingForFunds = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new
@@ -118,6 +130,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private PriceFeed.Type priceFeedType;
     private boolean inputIsMarketBasedPrice;
     private ChangeListener<Boolean> useMarketBasedPriceListener;
+    private ChangeListener<String> currencyCodeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -152,7 +165,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (DevFlags.DEV_MODE) {
             amount.set("0.0001");
             minAmount.set(amount.get());
-            price.set("400");
+            price.set("0.02");
             volume.set("0.04");
 
             setAmountToModel();
@@ -177,6 +190,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             directionLabel = BSResources.get("shared.sellBitcoin");
             amountDescription = BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.sell"));
         }
+
+        //TODO remove after AUGUST, 30
+        applyCurrencyCode(dataModel.getTradeCurrency().getCode());
     }
 
     @Override
@@ -327,6 +343,34 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
        /* feeFromFundingTxListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
         };*/
+
+
+        currencyCodeListener = (observable, oldValue, newValue) -> applyCurrencyCode(newValue);
+    }
+
+    //TODO remove after AUGUST, 30
+    private void applyCurrencyCode(String newValue) {
+        String key = "ETH-ETHC-Warning";
+        if (preferences.showAgain(key) && new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
+            if (newValue.equals("ETH")) {
+                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
+                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.")
+                        .closeButtonText("I understand")
+                        .onAction(() -> Utilities.openWebPage("https://www.ethereum.org/"))
+                        .actionButtonText("Open Ethereum web page")
+                        .dontShowAgainId(key, preferences)
+                        .show();
+            } else if (newValue.equals("ETHC")) {
+                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
+                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.\n\n" +
+                        "Please note, that the price is denominated as ETHC/BTC not BTC/ETHC!")
+                        .closeButtonText("I understand")
+                        .onAction(() -> Utilities.openWebPage("https://ethereumclassic.github.io/"))
+                        .actionButtonText("Open Ethereum Classic web page")
+                        .dontShowAgainId(key, preferences)
+                        .show();
+            }
+        }
     }
 
     private void addListeners() {
@@ -347,6 +391,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         // dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
+
+        //TODO remove after AUGUST, 30
+        dataModel.tradeCurrencyCode.addListener(currencyCodeListener);
     }
 
     private void removeListeners() {
@@ -368,6 +415,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         if (offer != null && errorMessageListener != null)
             offer.errorMessageProperty().removeListener(errorMessageListener);
+
+        //TODO remove after AUGUST, 30
+        dataModel.tradeCurrencyCode.removeListener(currencyCodeListener);
     }
 
 
@@ -730,19 +780,19 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (!showPayFundsScreenDisplayed.get() ||
                 errorMessage.get() != null ||
                 showTransactionPublishedScreen.get()) {
-            spinnerInfoText.set("");
+            waitingForFundsText.set("");
         } else if (dataModel.isWalletFunded.get()) {
-            spinnerInfoText.set("");
+            waitingForFundsText.set("");
            /* if (dataModel.isFeeFromFundingTxSufficient.get()) {
                 spinnerInfoText.set("");
             } else {
                 spinnerInfoText.set("Check if funding tx miner fee is sufficient...");
             }*/
         } else {
-            spinnerInfoText.set("Waiting for funds...");
+            waitingForFundsText.set("Waiting for funds...");
         }
 
-        isSpinnerVisible.set(!spinnerInfoText.get().isEmpty());
+        isWaitingForFunds.set(!waitingForFundsText.get().isEmpty());
     }
 
     private void updateButtonDisableState() {

@@ -17,23 +17,29 @@
 
 package io.bitsquare.gui.main.portfolio.closedtrades;
 
+import com.googlecode.jcsv.writer.CSVEntryConverter;
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.components.PeerInfoIcon;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import io.bitsquare.gui.util.SortedList;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -48,17 +54,24 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     @FXML
     TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
+    @FXML
+    Button exportButton;
     private final BSFormatter formatter;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
+    private PrivateNotificationManager privateNotificationManager;
+    private Stage stage;
     private SortedList<ClosedTradableListItem> sortedList;
 
     @Inject
-    public ClosedTradesView(ClosedTradesViewModel model, BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
+    public ClosedTradesView(ClosedTradesViewModel model, BSFormatter formatter, OfferDetailsWindow offerDetailsWindow,
+                            TradeDetailsWindow tradeDetailsWindow, PrivateNotificationManager privateNotificationManager, Stage stage) {
         super(model);
         this.formatter = formatter;
         this.offerDetailsWindow = offerDetailsWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
+        this.privateNotificationManager = privateNotificationManager;
+        this.stage = stage;
     }
 
     @Override
@@ -75,9 +88,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         setStateColumnCellFactory();
         setAvatarColumnCellFactory();
 
-       /* , , ,
-                , , , , avatarColumn;
-        */
         tradeIdColumn.setComparator((o1, o2) -> o1.getTradable().getId().compareTo(o2.getTradable().getId()));
         dateColumn.setComparator((o1, o2) -> o1.getTradable().getDate().compareTo(o2.getTradable().getDate()));
         directionColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getDirection().compareTo(o2.getTradable().getOffer().getDirection()));
@@ -121,6 +131,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
+        exportButton.setText("Export to csv");
     }
 
     @Override
@@ -128,11 +139,37 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         sortedList = new SortedList<>(model.getList());
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        exportButton.setOnAction(event -> {
+            final ObservableList<TableColumn<ClosedTradableListItem, ?>> tableColumns = tableView.getColumns();
+            CSVEntryConverter<ClosedTradableListItem> headerConverter = transactionsListItem -> {
+                String[] columns = new String[7];
+                for (int i = 0; i < columns.length; i++)
+                    columns[i] = tableColumns.get(i).getText();
+
+                return columns;
+            };
+            CSVEntryConverter<ClosedTradableListItem> contentConverter = item -> {
+                String[] columns = new String[7];
+                columns[0] = model.getTradeId(item);
+                columns[1] = model.getDate(item);
+                columns[2] = model.getAmount(item);
+                columns[3] = model.getPrice(item);
+                columns[4] = model.getVolume(item);
+                columns[5] = model.getDirectionLabel(item);
+                columns[6] = model.getState(item);
+                return columns;
+            };
+
+            GUIUtil.exportCSV("tradeHistory.csv", headerConverter, contentConverter,
+                    new ClosedTradableListItem(null), sortedList, stage);
+        });
     }
 
     @Override
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
+        exportButton.setOnAction(null);
     }
 
 
@@ -222,18 +259,20 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         avatarColumn.setCellFactory(
                 new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
                         ClosedTradableListItem>>() {
-
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
                         return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+
                             @Override
                             public void updateItem(final ClosedTradableListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
 
                                 if (newItem != null && !empty && newItem.getTradable() instanceof Trade) {
 
+                                    int numPastTrades = model.getNumPastTrades(newItem.getTradable());
                                     String hostName = ((Trade) newItem.getTradable()).getTradingPeerNodeAddress().hostName;
-                                    Node identIcon = ImageUtil.getIdentIcon(hostName, "Trading peers onion address: " + hostName, true);
+                                    Node identIcon = new PeerInfoIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades, privateNotificationManager, newItem.getTradable().getOffer());
+                                    setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)
                                         setGraphic(identIcon);
                                 } else {

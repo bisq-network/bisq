@@ -22,7 +22,7 @@ import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.trade.offer.Offer;
-import io.bitsquare.trade.protocol.availability.messages.OfferMessage;
+import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class OfferAvailabilityModel implements Model {
     public final P2PService p2PService;
 
     private NodeAddress peerNodeAddress;
-    private OfferMessage message;
+    private OfferAvailabilityResponse message;
 
     public OfferAvailabilityModel(Offer offer,
                                   PubKeyRing pubKeyRing,
@@ -52,12 +52,16 @@ public class OfferAvailabilityModel implements Model {
         this.peerNodeAddress = peerNodeAddress;
     }
 
-    public void setMessage(OfferMessage message) {
+    public void setMessage(OfferAvailabilityResponse message) {
         this.message = message;
     }
 
-    public OfferMessage getMessage() {
+    public OfferAvailabilityResponse getMessage() {
         return message;
+    }
+
+    public long getTakersTradePrice() {
+        return offer.getPrice() != null ? offer.getPrice().value : 0;
     }
 
     @Override

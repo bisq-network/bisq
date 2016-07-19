@@ -26,9 +26,11 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
@@ -80,6 +82,7 @@ public class TradeManager {
     private final FailedTradesManager failedTradesManager;
     private final ArbitratorManager arbitratorManager;
     private final P2PService p2PService;
+    private FilterManager filterManager;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
@@ -101,7 +104,8 @@ public class TradeManager {
                         ArbitratorManager arbitratorManager,
                         P2PService p2PService,
                         PriceFeed priceFeed,
-                        @Named("storage.dir") File storageDir) {
+                        FilterManager filterManager,
+                        @Named(Storage.DIR_KEY) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
         this.walletService = walletService;
@@ -111,6 +115,7 @@ public class TradeManager {
         this.failedTradesManager = failedTradesManager;
         this.arbitratorManager = arbitratorManager;
         this.p2PService = p2PService;
+        this.filterManager = filterManager;
 
         tradableListStorage = new Storage<>(storageDir);
         trades = new TradableList<>(tradableListStorage, "PendingTrades");
@@ -154,6 +159,7 @@ public class TradeManager {
     }
 
     public void onAllServicesInitialized() {
+        Log.traceCall();
         if (p2PService.isBootstrapped())
             initPendingTrades();
         else
@@ -179,7 +185,8 @@ public class TradeManager {
         List<Trade> toRemove = new ArrayList<>();
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
-            if (trade.isDepositFeePaid()) {
+
+            if (trade.isDepositPaid() || (trade.isTakerFeePaid() && trade.errorMessageProperty().get() == null)) {
                 initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
                 trade.updateDepositTxFromWallet();
             } else if (trade.isTakerFeePaid()) {
@@ -237,6 +244,7 @@ public class TradeManager {
                 this,
                 openOfferManager,
                 user,
+                filterManager,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
@@ -256,8 +264,9 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void checkOfferAvailability(Offer offer,
-                                       ResultHandler resultHandler) {
-        offer.checkOfferAvailability(getOfferAvailabilityModel(offer), resultHandler);
+                                       ResultHandler resultHandler,
+                                       ErrorMessageHandler errorMessageHandler) {
+        offer.checkOfferAvailability(getOfferAvailabilityModel(offer), resultHandler, errorMessageHandler);
     }
 
     // When closing take offer view, we are not interested in the onCheckOfferAvailability result anymore, so remove from the map
@@ -272,13 +281,15 @@ public class TradeManager {
                             Offer offer,
                             String paymentAccountId,
                             boolean useSavingsWallet,
-                            TradeResultHandler tradeResultHandler) {
+                            TradeResultHandler tradeResultHandler,
+                            ErrorMessageHandler errorMessageHandler) {
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE)
                         createTrade(amount, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
-                });
+                },
+                errorMessage -> errorMessageHandler.handleErrorMessage(errorMessage));
     }
 
     private void createTrade(Coin amount,
@@ -367,11 +378,8 @@ public class TradeManager {
 
     public void removeTrade(Trade trade) {
         trades.remove(trade);
-
-        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.OFFER_FUNDING);
-        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
-        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-        walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+        if (!openOfferManager.findOpenOffer(trade.getId()).isPresent())
+            walletService.swapAnyTradeEntryContextToAvailableEntry(trade.getId());
     }
 
 

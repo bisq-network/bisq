@@ -32,6 +32,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.Tab;
@@ -39,6 +40,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
 
 import java.util.List;
+import java.util.Optional;
 
 public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
@@ -53,6 +55,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final PriceFeed priceFeed;
+    private Preferences preferences;
     private final Offer.Direction direction;
     private Tab takeOfferTab, createOfferTab, offerBookTab;
     private TradeCurrency tradeCurrency;
@@ -60,10 +63,11 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private ChangeListener<Tab> tabChangeListener;
     private ListChangeListener<Tab> tabListChangeListener;
 
-    protected OfferView(ViewLoader viewLoader, Navigation navigation, PriceFeed priceFeed) {
+    protected OfferView(ViewLoader viewLoader, Navigation navigation, PriceFeed priceFeed, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.priceFeed = priceFeed;
+        this.preferences = preferences;
         this.direction = (this instanceof BuyOfferView) ? Offer.Direction.BUY : Offer.Direction.SELL;
     }
 
@@ -104,11 +108,19 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                     onTakeOfferViewRemoved();
             }
         };
+
+        Optional<TradeCurrency> tradeCurrencyOptional = (this instanceof SellOfferView) ?
+                CurrencyUtil.getTradeCurrency(preferences.getSellScreenCurrencyCode()) :
+                CurrencyUtil.getTradeCurrency(preferences.getBuyScreenCurrencyCode());
+        if (tradeCurrencyOptional.isPresent())
+            tradeCurrency = tradeCurrencyOptional.get();
+        else {
+            tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+        }
     }
 
     @Override
     protected void activate() {
-        tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         root.getTabs().addListener(tabListChangeListener);
         navigation.addListener(navigationListener);
@@ -165,7 +177,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 }
             };
             offerBookView.setOfferActionHandler(offerActionHandler);
-
             offerBookView.setDirection(direction);
         } else if (viewClass == CreateOfferView.class && createOfferView == null) {
             view = viewLoader.load(viewClass);

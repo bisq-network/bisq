@@ -29,6 +29,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
@@ -51,6 +52,8 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Holds all data which are relevant to the trade, but not those which are only needed in the trade process as shared data between tasks. Those data are
@@ -169,6 +172,7 @@ public abstract class Trade implements Tradable, Model {
     transient private StringProperty errorMessageProperty;
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Fiat> tradeVolumeProperty;
+    transient private Set<DecryptedMsgWithPubKey> mailboxMessageSet = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -209,6 +213,7 @@ public abstract class Trade implements Tradable, Model {
             initStateProperties();
             initAmountProperty();
             errorMessageProperty = new SimpleStringProperty(errorMessage);
+            mailboxMessageSet = new HashSet<>();
         } catch (Throwable t) {
             log.warn("Cannot be deserialized." + t.getMessage());
         }
@@ -221,6 +226,7 @@ public abstract class Trade implements Tradable, Model {
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      User user,
+                     FilterManager filterManager,
                      KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
@@ -233,21 +239,19 @@ public abstract class Trade implements Tradable, Model {
                 tradeWalletService,
                 arbitratorManager,
                 user,
+                filterManager,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
 
         createProtocol();
 
-        log.trace("decryptedMsgWithPubKey = " + decryptedMsgWithPubKey);
-        if (decryptedMsgWithPubKey != null) {
+        log.trace("init: decryptedMsgWithPubKey = " + decryptedMsgWithPubKey);
+        if (decryptedMsgWithPubKey != null && !mailboxMessageSet.contains(decryptedMsgWithPubKey)) {
+            mailboxMessageSet.add(decryptedMsgWithPubKey);
             tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
         }
-
-        reSendConfirmation();
     }
-
-    public abstract void reSendConfirmation();
 
     protected void initStateProperties() {
         stateProperty = new SimpleObjectProperty<>(state);
@@ -289,8 +293,13 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void setMailboxMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
-        log.trace("setMailboxMessage " + decryptedMsgWithPubKey);
+        log.trace("setMailboxMessage decryptedMsgWithPubKey=" + decryptedMsgWithPubKey);
         this.decryptedMsgWithPubKey = decryptedMsgWithPubKey;
+
+        if (tradeProtocol != null && decryptedMsgWithPubKey != null && !mailboxMessageSet.contains(decryptedMsgWithPubKey)) {
+            mailboxMessageSet.add(decryptedMsgWithPubKey);
+            tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
+        }
     }
 
     public DecryptedMsgWithPubKey getMailboxMessage() {
@@ -309,7 +318,6 @@ public abstract class Trade implements Tradable, Model {
     public void setState(State state) {
         this.state = state;
         stateProperty.set(state);
-        persist();
         persist();
     }
 
@@ -338,7 +346,7 @@ public abstract class Trade implements Tradable, Model {
         return state.getPhase() != null && state.getPhase().ordinal() >= Phase.TAKER_FEE_PAID.ordinal();
     }
 
-    public boolean isDepositFeePaid() {
+    public boolean isDepositPaid() {
         return state.getPhase() != null && state.getPhase().ordinal() >= Phase.DEPOSIT_PAID.ordinal();
     }
 

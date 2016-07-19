@@ -23,8 +23,10 @@ import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.persistance.Persistable;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.*;
 import io.bitsquare.storage.Storage;
+import io.nucleo.net.bridge.BridgeProvider;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -39,8 +41,10 @@ import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class Preferences implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -53,6 +57,7 @@ public final class Preferences implements Persistable {
 
     // Deactivate mBit for now as most screens are not supporting it yet
     private static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
+
     transient static final private ArrayList<BlockChainExplorer> blockChainExplorersTestNet = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
             new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/testnet/tx/", "https://blockexplorer.com/testnet/address/"),
@@ -61,8 +66,9 @@ public final class Preferences implements Persistable {
     ));
 
     transient static final private ArrayList<BlockChainExplorer> blockChainExplorersMainNet = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/BTC/tx/", "https://www.blocktrail.com/BTC/address/"),
             new BlockChainExplorer("Tradeblock.com", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
+            new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/BTC/tx/", "https://www.blocktrail.com/BTC/address/"),
+            new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
             new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/tx/", "https://blockexplorer.com/address/"),
             new BlockChainExplorer("Blockr.io", "https://btc.blockr.io/tx/info/", "https://btc.blockr.io/address/info/"),
@@ -113,8 +119,16 @@ public final class Preferences implements Persistable {
     private long nonTradeTxFeePerKB = FeePolicy.getNonTradeFeePerKb().value;
     private double maxPriceDistanceInPercent;
     private boolean useInvertedMarketPrice;
+    private String marketScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
+    private Map<String, String> peerTagMap = new HashMap<>();
+    @Nullable
+    private List<String> bridgeAddresses;
+    private List<String> ignoreTradersList = new ArrayList<>();
+    private String defaultPath;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -135,6 +149,12 @@ public final class Preferences implements Persistable {
         INSTANCE = this;
         this.storage = storage;
         this.bitsquareEnvironment = bitsquareEnvironment;
+
+        if (Utilities.isWindows())
+            defaultPath = System.getenv("USERPROFILE");
+        else
+            defaultPath = System.getProperty("user.home");
+
 
         Preferences persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
@@ -171,15 +191,28 @@ public final class Preferences implements Persistable {
             usePercentageBasedPrice = persisted.getUsePercentageBasedPrice();
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
             maxPriceDistanceInPercent = persisted.getMaxPriceDistanceInPercent();
-            // Backward compatible to version 0.3.6. Can be removed after a while
-            if (maxPriceDistanceInPercent == 0d)
-                maxPriceDistanceInPercent = 0.2;
+            bridgeAddresses = persisted.getBridgeAddresses();
+            if (bridgeAddresses != null && !bridgeAddresses.isEmpty())
+                BridgeProvider.setBridges(bridgeAddresses);
 
             try {
                 setNonTradeTxFeePerKB(persisted.getNonTradeTxFeePerKB());
             } catch (Exception e) {
                 // leave default value
             }
+
+            if (persisted.getPeerTagMap() != null)
+                peerTagMap = persisted.getPeerTagMap();
+
+            marketScreenCurrencyCode = persisted.getMarketScreenCurrencyCode();
+            buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
+            sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
+
+            if (persisted.getIgnoreTradersList() != null)
+                ignoreTradersList = persisted.getIgnoreTradersList();
+
+            if (persisted.getDefaultPath() != null)
+                defaultPath = persisted.getDefaultPath();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
             fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
@@ -193,11 +226,10 @@ public final class Preferences implements Persistable {
             dontShowAgainMap = new HashMap<>();
             preferredLocale = getDefaultLocale();
             preferredTradeCurrency = getDefaultTradeCurrency();
-            maxPriceDistanceInPercent = 0.2;
+            maxPriceDistanceInPercent = 0.1;
 
             storage.queueUpForSave();
         }
-
 
         this.bitcoinNetwork = bitsquareEnvironment.getBitcoinNetwork();
 
@@ -380,6 +412,51 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setTagForPeer(String hostName, String tag) {
+        peerTagMap.put(hostName, tag);
+        storage.queueUpForSave();
+    }
+
+    public void setBridgeAddresses(@Nullable List<String> bridgeAddresses) {
+        this.bridgeAddresses = bridgeAddresses;
+        storage.queueUpForSave();
+    }
+
+    public void setBridgeAddressesAsString(@Nullable String bridgeAddressesAsString) {
+        if (bridgeAddressesAsString != null && !bridgeAddressesAsString.isEmpty()) {
+            List<String> list = Arrays.asList(bridgeAddressesAsString.split("\\n"));
+            list = list.stream().map(e -> "bridge " + e).collect(Collectors.toList());
+            setBridgeAddresses(list);
+        } else {
+            setBridgeAddresses(null);
+        }
+    }
+
+    public void setMarketScreenCurrencyCode(String marketScreenCurrencyCode) {
+        this.marketScreenCurrencyCode = marketScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
+    public void setBuyScreenCurrencyCode(String buyScreenCurrencyCode) {
+        this.buyScreenCurrencyCode = buyScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
+    public void setSellScreenCurrencyCode(String sellScreenCurrencyCode) {
+        this.sellScreenCurrencyCode = sellScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
+    public void setIgnoreTradersList(List<String> ignoreTradersList) {
+        this.ignoreTradersList = ignoreTradersList;
+        storage.queueUpForSave();
+    }
+
+    public void setDefaultPath(String defaultPath) {
+        this.defaultPath = defaultPath;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -400,7 +477,6 @@ public final class Preferences implements Persistable {
     public BooleanProperty useAnimationsProperty() {
         return useAnimationsProperty;
     }
-
 
     public static boolean useAnimations() {
         return staticUseAnimations;
@@ -505,7 +581,34 @@ public final class Preferences implements Persistable {
         return usePercentageBasedPrice;
     }
 
+    public Map<String, String> getPeerTagMap() {
+        return peerTagMap;
+    }
 
+    @Nullable
+    public List<String> getBridgeAddresses() {
+        return bridgeAddresses;
+    }
+
+    public String getMarketScreenCurrencyCode() {
+        return marketScreenCurrencyCode;
+    }
+
+    public String getBuyScreenCurrencyCode() {
+        return buyScreenCurrencyCode;
+    }
+
+    public String getSellScreenCurrencyCode() {
+        return sellScreenCurrencyCode;
+    }
+
+    public List<String> getIgnoreTradersList() {
+        return ignoreTradersList;
+    }
+
+    public String getDefaultPath() {
+        return defaultPath;
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -43,7 +43,6 @@ public class WalletAppKitBitSquare extends WalletAppKit {
     }
     
     protected PeerGroup createPeerGroup() throws TimeoutException {
-        // discovery = new IrcDiscovery("#bitcoin");
         int CONNECT_TIMEOUT_MSEC = 60 * 1000;
         ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
         BlockingClientManager mgr = new BlockingClientManager(proxySocketFactory);
@@ -52,8 +51,7 @@ public class WalletAppKitBitSquare extends WalletAppKit {
         mgr.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
         result.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
         
-        // We can't use TorDiscovery cuz we don't have a torClient object.
-        // result.addPeerDiscovery(new TorDiscovery(params, torClient));
+        // result.addPeerDiscovery(new OnionSeedPeers(params));
         return result;
     }    
 }

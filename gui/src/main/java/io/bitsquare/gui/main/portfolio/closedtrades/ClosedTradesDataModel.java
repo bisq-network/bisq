@@ -29,8 +29,8 @@ import javafx.collections.ObservableList;
 import java.util.stream.Collectors;
 
 class ClosedTradesDataModel extends ActivatableDataModel {
-    private final ClosedTradableManager closedTradableManager;
 
+    final ClosedTradableManager closedTradableManager;
     private final ObservableList<ClosedTradableListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Tradable> tradesListChangeListener;
 

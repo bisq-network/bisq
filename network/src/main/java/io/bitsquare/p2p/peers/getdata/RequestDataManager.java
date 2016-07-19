@@ -74,6 +74,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         this.listener = listener;
 
         networkNode.addMessageListener(this);
+        networkNode.addConnectionListener(this);
         peerManager.addListener(this);
     }
 
@@ -82,6 +83,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         stopped = true;
         stopRetryTimer();
         networkNode.removeMessageListener(this);
+        networkNode.removeConnectionListener(this);
         peerManager.removeListener(this);
         closeAllHandlers();
     }
@@ -104,7 +106,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     public void requestUpdateData() {
         Log.traceCall();
-        checkArgument(nodeAddressOfPreliminaryDataRequest.isPresent(), "seedNodeOfPreliminaryDataRequest must be present");
+        checkArgument(nodeAddressOfPreliminaryDataRequest.isPresent(), "nodeAddressOfPreliminaryDataRequest must be present");
         dataUpdateRequested = true;
         List<NodeAddress> remainingNodeAddresses = new ArrayList<>(seedNodeAddresses);
         if (!remainingNodeAddresses.isEmpty()) {
@@ -133,6 +135,12 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
         closeHandler(connection);
+
+        if (peerManager.isNodeBanned(closeConnectionReason, connection)) {
+            final NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+            seedNodeAddresses.remove(nodeAddress);
+            handlerMap.remove(nodeAddress);
+        }
     }
 
     @Override

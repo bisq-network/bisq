@@ -23,6 +23,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.MainView;
@@ -47,7 +48,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import io.bitsquare.gui.util.SortedList;
+import javafx.collections.transformation.SortedList;
 import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,10 +69,11 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final OpenOfferManager openOfferManager;
     private final User user;
     private final OfferBook offerBook;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final P2PService p2PService;
     final PriceFeed priceFeed;
     private ClosedTradableManager closedTradableManager;
+    private FilterManager filterManager;
     private Navigation navigation;
     final BSFormatter formatter;
 
@@ -92,7 +94,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     private CryptoCurrency showAllCurrenciesItem = new CryptoCurrency(SHOW_ALL_FLAG, SHOW_ALL_FLAG);
 
     private final ObservableList<OfferBookListItem> offerBookListItems;
-    private final ListChangeListener<OfferBookListItem> listChangeListener;
     private boolean isTabSelected;
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
     boolean showAllPaymentMethods = true;
@@ -105,7 +106,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     @Inject
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
                               Preferences preferences, P2PService p2PService, PriceFeed priceFeed,
-                              ClosedTradableManager closedTradableManager,
+                              ClosedTradableManager closedTradableManager, FilterManager filterManager,
                               Navigation navigation, BSFormatter formatter) {
         super();
 
@@ -116,17 +117,14 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.p2PService = p2PService;
         this.priceFeed = priceFeed;
         this.closedTradableManager = closedTradableManager;
+        this.filterManager = filterManager;
         this.navigation = navigation;
         this.formatter = formatter;
 
         offerBookListItems = offerBook.getOfferBookListItems();
-        listChangeListener = c -> filterList();
 
         this.filteredItems = new FilteredList<>(offerBookListItems);
         this.sortedItems = new SortedList<>(filteredItems);
-
-        selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
-        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
         tradeCurrencyListChangeListener = c -> fillAllTradeCurrencies();
     }
@@ -135,10 +133,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     protected void activate() {
         fillAllTradeCurrencies();
         btcCode.bind(preferences.btcDenominationProperty());
-        offerBookListItems.addListener(listChangeListener);
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
-        filterList();
+        applyFilterPredicate();
         setMarketPriceFeedCurrency();
     }
 
@@ -146,7 +143,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     @Override
     protected void deactivate() {
         btcCode.unbind();
-        offerBookListItems.removeListener(listChangeListener);
         preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
     }
 
@@ -171,8 +167,18 @@ class OfferBookViewModel extends ActivatableViewModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void setDirection(Offer.Direction direction) {
+    void initWithDirection(Offer.Direction direction) {
         this.direction = direction;
+
+        String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        if (code != null && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
+            showAllTradeCurrenciesProperty.set(false);
+            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
+        } else {
+            showAllTradeCurrenciesProperty.set(true);
+            selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+        }
+        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
     }
 
     void onTabSelected(boolean isSelected) {
@@ -199,7 +205,12 @@ class OfferBookViewModel extends ActivatableViewModel {
 
             setMarketPriceFeedCurrency();
 
-            filterList();
+            applyFilterPredicate();
+
+            if (direction == Offer.Direction.BUY)
+                preferences.setBuyScreenCurrencyCode(code);
+            else
+                preferences.setSellScreenCurrencyCode(code);
         }
     }
 
@@ -208,7 +219,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (!showAllPaymentMethods)
             this.selectedPaymentMethod = paymentMethod;
 
-        filterList();
+        applyFilterPredicate();
     }
 
     void onRemoveOpenOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
@@ -265,7 +276,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (price != null) {
             String postFix = "";
             if (offer.getUseMarketBasedPrice()) {
-                postFix = " (" + formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin()) + ")";
+                postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
             }
             if (showAllTradeCurrenciesProperty.get())
                 return formatter.formatPriceWithCode(price) + postFix;
@@ -425,7 +436,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Filters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void filterList() {
+    private void applyFilterPredicate() {
         filteredItems.setPredicate(offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
             boolean directionResult = offer.getDirection() != direction;
@@ -448,7 +459,27 @@ class OfferBookViewModel extends ActivatableViewModel {
         return false;
     }
 
-    public boolean hasSameProtocolVersion(Offer offer) {
+    boolean isIgnored(Offer offer) {
+        return preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent();
+    }
+
+    boolean isOfferBanned(Offer offer) {
+        return filterManager.getFilter() != null &&
+                filterManager.getFilter().bannedOfferIds.stream()
+                        .filter(e -> e.equals(offer.getId()))
+                        .findAny()
+                        .isPresent();
+    }
+
+    boolean isNodeBanned(Offer offer) {
+        return filterManager.getFilter() != null &&
+                filterManager.getFilter().bannedNodeAddress.stream()
+                        .filter(e -> e.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix()))
+                        .findAny()
+                        .isPresent();
+    }
+
+    boolean hasSameProtocolVersion(Offer offer) {
         return offer.getProtocolVersion() == Version.TRADE_PROTOCOL_VERSION;
     }
 
@@ -460,10 +491,13 @@ class OfferBookViewModel extends ActivatableViewModel {
         return id.equals(EDIT_FLAG);
     }
 
-    public int getNumPastTrades(Offer offer) {
+    int getNumPastTrades(Offer offer) {
         return closedTradableManager.getClosedTrades().stream()
-                .filter(e -> e instanceof Trade && ((Trade) e).getTradingPeerNodeAddress() != null &&
-                        ((Trade) e).getTradingPeerNodeAddress().hostName.equals(offer.getOffererNodeAddress().hostName))
+                .filter(e -> {
+                    final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;
+                    return tradingPeerNodeAddress != null &&
+                            tradingPeerNodeAddress.hostName.equals(offer.getOffererNodeAddress().hostName);
+                })
                 .collect(Collectors.toSet())
                 .size();
     }

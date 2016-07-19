@@ -3,7 +3,6 @@ package io.bitsquare.p2p;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.crypto.EncryptionService;
-import io.bitsquare.p2p.seed.SeedNode;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +17,7 @@ public class TestUtils {
 
     public static int sleepTime;
     public static String test_dummy_dir = "test_dummy_dir";
-    
+
     public static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         long ts = System.currentTimeMillis();
         final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA");
@@ -64,25 +63,25 @@ public class TestUtils {
         return result;
     }
 
-    public static SeedNode getAndStartSeedNode(int port, boolean useLocalhost, Set<NodeAddress> seedNodes) throws InterruptedException {
-        SeedNode seedNode;
+    public static DummySeedNode getAndStartSeedNode(int port, boolean useLocalhost, Set<NodeAddress> seedNodes) throws InterruptedException {
+        DummySeedNode seedNode;
 
         if (useLocalhost) {
             seedNodes.add(new NodeAddress("localhost:8001"));
             seedNodes.add(new NodeAddress("localhost:8002"));
             seedNodes.add(new NodeAddress("localhost:8003"));
             sleepTime = 100;
-            seedNode = new SeedNode(test_dummy_dir);
+            seedNode = new DummySeedNode(test_dummy_dir);
         } else {
             seedNodes.add(new NodeAddress("3omjuxn7z73pxoee.onion:8001"));
             seedNodes.add(new NodeAddress("j24fxqyghjetgpdx.onion:8002"));
             seedNodes.add(new NodeAddress("45367tl6unwec6kw.onion:8003"));
             sleepTime = 10000;
-            seedNode = new SeedNode(test_dummy_dir);
+            seedNode = new DummySeedNode(test_dummy_dir);
         }
 
         CountDownLatch latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(new NodeAddress("localhost", port), SeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhost, 2, true,
+        seedNode.createAndStartP2PService(new NodeAddress("localhost", port), DummySeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhost, 2, true,
                 seedNodes, new P2PServiceListener() {
                     @Override
                     public void onRequestingDataCompleted() {
@@ -112,6 +111,14 @@ public class TestUtils {
                     @Override
                     public void onSetupFailed(Throwable throwable) {
                     }
+
+                    @Override
+                    public void onUseDefaultBridges() {
+                    }
+
+                    @Override
+                    public void onRequestCustomBridges(Runnable resultHandler) {
+                    }
                 });
         latch.await();
         Thread.sleep(sleepTime);
@@ -131,8 +138,8 @@ public class TestUtils {
         }
 
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost,
-                2, new File("dummy"), new Clock(), encryptionService, keyRing);
-        p2PService.start(new P2PServiceListener() {
+                2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), null, null, null, new Clock(), encryptionService, keyRing);
+        p2PService.start(false, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
             }
@@ -160,7 +167,14 @@ public class TestUtils {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();

@@ -196,10 +196,10 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                     });
 
             int size = handlerMap.size();
-            log.info("maintenanceHandlerMap size=" + size);
+            log.info("handlerMap size=" + size);
             if (size > peerManager.getMaxConnections())
                 log.warn("Seems we didn't clean up out map correctly.\n" +
-                        "maintenanceHandlerMap size={}, peerManager.getMaxConnections()={}", size, peerManager.getMaxConnections());
+                        "handlerMap size={}, peerManager.getMaxConnections()={}", size, peerManager.getMaxConnections());
         } else {
             log.warn("We have stopped already. We ignore that keepAlive call.");
         }

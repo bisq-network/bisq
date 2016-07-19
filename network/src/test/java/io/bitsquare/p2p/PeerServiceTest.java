@@ -1,8 +1,6 @@
 package io.bitsquare.p2p;
 
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
-import io.bitsquare.p2p.peers.PeerManager;
-import io.bitsquare.p2p.seed.SeedNode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,9 +26,9 @@ public class PeerServiceTest {
     final boolean useLocalhost = true;
     private CountDownLatch latch;
     private int sleepTime;
-    private SeedNode seedNode1, seedNode2, seedNode3;
+    private DummySeedNode seedNode1, seedNode2, seedNode3;
     private Set<NodeAddress> seedNodeAddresses = new HashSet<>();
-    private List<SeedNode> seedNodes = new ArrayList<>();
+    private List<DummySeedNode> seedNodes = new ArrayList<>();
     private String test_dummy_dir = "test_dummy_dir";
     ;
 
@@ -82,44 +80,45 @@ public class PeerServiceTest {
             int port = 8000 + i;
             NodeAddress nodeAddress = new NodeAddress("localhost:" + port);
             seedNodeAddresses.add(nodeAddress);
-            SeedNode seedNode = new SeedNode(test_dummy_dir);
+            DummySeedNode seedNode = new DummySeedNode(test_dummy_dir);
             seedNodes.add(seedNode);
             seedNode.createAndStartP2PService(true);
 
-            seedNode.getSeedNodeP2PService().start(new P2PServiceListener() {
+            seedNode.getSeedNodeP2PService().start(false, new P2PServiceListener() {
                 @Override
                 public void onRequestingDataCompleted() {
-
                 }
 
                 @Override
                 public void onNoSeedNodeAvailable() {
-
                 }
 
                 @Override
                 public void onNoPeersAvailable() {
-
                 }
 
                 @Override
                 public void onBootstrapComplete() {
-
                 }
 
                 @Override
                 public void onTorNodeReady() {
-
                 }
 
                 @Override
                 public void onHiddenServicePublished() {
-
                 }
 
                 @Override
                 public void onSetupFailed(Throwable throwable) {
+                }
 
+                @Override
+                public void onUseDefaultBridges() {
+                }
+
+                @Override
+                public void onRequestCustomBridges(Runnable resultHandler) {
                 }
             });
         }
@@ -180,7 +179,7 @@ public class PeerServiceTest {
 
         latch = new CountDownLatch(6);
 
-        seedNode1 = new SeedNode("test_dummy_dir");
+        seedNode1 = new DummySeedNode("test_dummy_dir");
         seedNode1.createAndStartP2PService(nodeAddress1, MAX_CONNECTIONS, useLocalhost, 2, true, seedNodeAddresses, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
@@ -211,14 +210,21 @@ public class PeerServiceTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         P2PService p2PService1 = seedNode1.getSeedNodeP2PService();
 
         Thread.sleep(500);
 
-        seedNode2 = new SeedNode("test_dummy_dir");
+        seedNode2 = new DummySeedNode("test_dummy_dir");
         seedNode2.createAndStartP2PService(nodeAddress2, MAX_CONNECTIONS, useLocalhost, 2, true, seedNodeAddresses, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
@@ -249,7 +255,14 @@ public class PeerServiceTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         P2PService p2PService2 = seedNode2.getSeedNodeP2PService();
@@ -263,12 +276,12 @@ public class PeerServiceTest {
         log.debug("### start");
         LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);
-        SeedNode seedNode1 = getAndStartSeedNode(8001);
+        DummySeedNode seedNode1 = getAndStartSeedNode(8001);
         log.debug("### seedNode1");
         Thread.sleep(100);
         log.debug("### seedNode1 100");
         Thread.sleep(1000);
-        SeedNode seedNode2 = getAndStartSeedNode(8002);
+        DummySeedNode seedNode2 = getAndStartSeedNode(8002);
 
         // authentication: 
         // node2 -> node1 RequestAuthenticationMessage
@@ -452,8 +465,8 @@ public class PeerServiceTest {
         shutDownLatch.await();*/
     }
 
-    private SeedNode getAndStartSeedNode(int port) throws InterruptedException {
-        SeedNode seedNode = new SeedNode("test_dummy_dir");
+    private DummySeedNode getAndStartSeedNode(int port) throws InterruptedException {
+        DummySeedNode seedNode = new DummySeedNode("test_dummy_dir");
 
         latch = new CountDownLatch(1);
         seedNode.createAndStartP2PService(new NodeAddress("localhost", port), MAX_CONNECTIONS, useLocalhost, 2, true, seedNodeAddresses, new P2PServiceListener() {
@@ -480,12 +493,18 @@ public class PeerServiceTest {
 
             @Override
             public void onHiddenServicePublished() {
-
             }
 
             @Override
             public void onSetupFailed(Throwable throwable) {
+            }
 
+            @Override
+            public void onUseDefaultBridges() {
+            }
+
+            @Override
+            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();

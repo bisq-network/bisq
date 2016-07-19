@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.offer.takeoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -44,6 +45,8 @@ import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -78,7 +81,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final BooleanProperty isOfferAvailable = new SimpleBooleanProperty();
     final BooleanProperty isTakeOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
-    final BooleanProperty isSpinnerVisible = new SimpleBooleanProperty();
+    final BooleanProperty isWaitingForFunds = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty takeOfferCompleted = new SimpleBooleanProperty();
@@ -136,6 +139,29 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         updateButtonDisableState();
 
         updateSpinnerInfo();
+
+        //TODO remove after AUGUST, 30
+        String key = "ETH-ETHC-Warning";
+        if (dataModel.getPreferences().showAgain(key) && new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
+            if (dataModel.getCurrencyCode().equals("ETH")) {
+                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
+                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.")
+                        .closeButtonText("I understand")
+                        .onAction(() -> Utilities.openWebPage("https://www.ethereum.org/"))
+                        .actionButtonText("Open Ethereum web page")
+                        .dontShowAgainId(key, dataModel.getPreferences())
+                        .show();
+            } else if (dataModel.getCurrencyCode().equals("ETHC")) {
+                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
+                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.\n\n" +
+                        "Please note, that the price is denominated as ETHC/BTC not BTC/ETHC!")
+                        .closeButtonText("I understand")
+                        .onAction(() -> Utilities.openWebPage("https://ethereumclassic.github.io/"))
+                        .actionButtonText("Open Ethereum Classic web page")
+                        .dontShowAgainId(key, dataModel.getPreferences())
+                        .show();
+            }
+        }
     }
 
     @Override
@@ -164,7 +190,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         amountRange = formatter.formatCoin(offer.getMinAmount()) + " - " + formatter.formatCoin(offer.getAmount());
         price = formatter.formatFiat(dataModel.tradePrice);
-        marketPriceMargin = formatter.formatToPercentWithSymbol(offer.getMarketPriceMargin());
+        marketPriceMargin = formatter.formatPercentagePrice(offer.getMarketPriceMargin());
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");
@@ -324,7 +350,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             String appendMsg = "";
             switch (trade.getState().getPhase()) {
                 case PREPARATION:
-                    appendMsg = "\n\nThere have no funds left your wallet yet.\n" +
+                    appendMsg = "\n\nNo funds have left your wallet yet.\n" +
                             "Please try to restart you application and check your network connection to see if you can resolve the issue.";
                     break;
                 case TAKER_FEE_PAID:
@@ -476,7 +502,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             spinnerInfoText.set("Waiting for funds...");
         }
 
-        isSpinnerVisible.set(!spinnerInfoText.get().isEmpty());
+        isWaitingForFunds.set(!spinnerInfoText.get().isEmpty());
     }
 
     private void addListeners() {

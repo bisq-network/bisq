@@ -155,6 +155,9 @@ public class PeerManager implements ConnectionListener {
 
     @Override
     public void onConnection(Connection connection) {
+        Log.logIfStressTests("onConnection to peer " +
+                (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown") +
+                " / Nr. of connections: " + networkNode.getAllConnections().size());
         if (isSeedNode(connection))
             connection.setPeerType(Connection.PeerType.SEED_NODE);
 
@@ -169,6 +172,10 @@ public class PeerManager implements ConnectionListener {
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+        Log.logIfStressTests("onDisconnect of peer " +
+                (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown") +
+                " / Nr. of connections: " + networkNode.getAllConnections().size() +
+                " / closeConnectionReason: " + closeConnectionReason);
         handleConnectionFault(connection);
 
         lostAllConnections = networkNode.getAllConnections().isEmpty();
@@ -176,6 +183,18 @@ public class PeerManager implements ConnectionListener {
             stopped = true;
             listeners.stream().forEach(Listener::onAllConnectionsLost);
         }
+
+        if (connection.getPeersNodeAddressOptional().isPresent() && isNodeBanned(closeConnectionReason, connection)) {
+            final NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+            seedNodeAddresses.remove(nodeAddress);
+            removePersistedPeer(nodeAddress);
+            removeReportedPeer(nodeAddress);
+        }
+    }
+
+    public boolean isNodeBanned(CloseConnectionReason closeConnectionReason, Connection connection) {
+        return closeConnectionReason == CloseConnectionReason.PEER_BANNED &&
+                connection.getPeersNodeAddressOptional().isPresent();
     }
 
     @Override
@@ -199,7 +218,7 @@ public class PeerManager implements ConnectionListener {
                     removeTooOldPersistedPeers();
                     checkMaxConnections(maxConnections);
                 } else {
-                    log.warn("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
+                    log.debug("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
                 }
             }, CHECK_MAX_CONN_DELAY_SEC);
 
@@ -211,6 +230,7 @@ public class PeerManager implements ConnectionListener {
         Set<Connection> allConnections = networkNode.getAllConnections();
         int size = allConnections.size();
         log.info("We have {} connections open. Our limit is {}", size, limit);
+
         if (size > limit) {
             log.info("We have too many connections open.\n\t" +
                     "Lets try first to remove the inbound connections of type PEER.");
@@ -317,7 +337,8 @@ public class PeerManager implements ConnectionListener {
 
     @Nullable
     private Peer removeReportedPeer(NodeAddress nodeAddress) {
-        Optional<Peer> reportedPeerOptional = reportedPeers.stream()
+        List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
+        Optional<Peer> reportedPeerOptional = reportedPeersClone.stream()
                 .filter(e -> e.nodeAddress.equals(nodeAddress)).findAny();
         if (reportedPeerOptional.isPresent()) {
             Peer reportedPeer = reportedPeerOptional.get();
@@ -330,7 +351,8 @@ public class PeerManager implements ConnectionListener {
 
     private void removeTooOldReportedPeers() {
         Log.traceCall();
-        Set<Peer> reportedPeersToRemove = reportedPeers.stream()
+        List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
+        Set<Peer> reportedPeersToRemove = reportedPeersClone.stream()
                 .filter(reportedPeer -> new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         reportedPeersToRemove.forEach(this::removeReportedPeer);
@@ -386,9 +408,10 @@ public class PeerManager implements ConnectionListener {
             if (printReportedPeersDetails) {
                 StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                         "Collected reported peers:");
-                reportedPeers.stream().forEach(e -> result.append("\n").append(e));
+                List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
+                reportedPeersClone.stream().forEach(e -> result.append("\n").append(e));
                 result.append("\n------------------------------------------------------------\n");
-                log.info(result.toString());
+                log.debug(result.toString());
             }
             log.info("Number of collected reported peers: {}", reportedPeers.size());
         }
@@ -397,8 +420,9 @@ public class PeerManager implements ConnectionListener {
     private void printNewReportedPeers(HashSet<Peer> reportedPeers) {
         if (printReportedPeersDetails) {
             StringBuilder result = new StringBuilder("We received new reportedPeers:");
-            reportedPeers.stream().forEach(e -> result.append("\n\t").append(e));
-            log.info(result.toString());
+            List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
+            reportedPeersClone.stream().forEach(e -> result.append("\n\t").append(e));
+            log.debug(result.toString());
         }
         log.info("Number of new arrived reported peers: {}", reportedPeers.size());
     }

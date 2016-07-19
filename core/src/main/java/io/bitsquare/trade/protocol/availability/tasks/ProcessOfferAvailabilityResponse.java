@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.availability.tasks;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.protocol.availability.AvailabilityResult;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.messages.OfferAvailabilityResponse;
 import org.slf4j.Logger;
@@ -36,13 +37,16 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
     protected void run() {
         try {
             runInterceptHook();
-            OfferAvailabilityResponse offerAvailabilityResponse = (OfferAvailabilityResponse) model.getMessage();
+            OfferAvailabilityResponse offerAvailabilityResponse = model.getMessage();
 
             if (model.offer.getState() != Offer.State.REMOVED) {
-                if (offerAvailabilityResponse.isAvailable)
+                // TODO: isAvailable is kept for backward compatibility. Can be removed once everyone is on v0.4.9
+                if (offerAvailabilityResponse.isAvailable || offerAvailabilityResponse.availabilityResult == AvailabilityResult.AVAILABLE) {
                     model.offer.setState(Offer.State.AVAILABLE);
-                else
+                } else {
                     model.offer.setState(Offer.State.NOT_AVAILABLE);
+                    failed("Take offer attempt rejected because of: " + offerAvailabilityResponse.availabilityResult);
+                }
             }
 
             complete();

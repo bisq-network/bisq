@@ -13,6 +13,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
+import io.bitsquare.p2p.peers.BanList;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
@@ -64,11 +65,11 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Leaving some constants package-private for tests to know limits.
-    static final int MAX_MSG_SIZE = 500 * 1024;                       // 500 kb
-    static final int MAX_MSG_SIZE_GET_DATA = 2 * 1024 * 1024;         // 2 MB
+    static final int MAX_MSG_SIZE = 200 * 1024;                       // 200 kb
+    static final int MAX_MSG_SIZE_GET_DATA = 6 * 1024 * 1024;         // 6 MB (425 offers resulted in about 660 kb, mailbox msg will add more to it) offer has usually 2 kb, mailbox 3kb.
     //TODO decrease limits again after testing
-    static final int MSG_THROTTLE_PER_SEC = 70;              // With MAX_MSG_SIZE of 500kb results in bandwidth of 35 mbit/sec
-    static final int MSG_THROTTLE_PER_10_SEC = 500;          // With MAX_MSG_SIZE of 100kb results in bandwidth of 50 mbit/sec for 10 sec
+    static final int MSG_THROTTLE_PER_SEC = 200;              // With MAX_MSG_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
+    static final int MSG_THROTTLE_PER_10_SEC = 1000;          // With MAX_MSG_SIZE of 200kb results in bandwidth of 20MB/sec or 2.5 mbit/sec
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
 
     public static int getMaxMsgSize() {
@@ -168,6 +169,7 @@ public class Connection implements MessageListener {
     public void sendMessage(Message message) {
         if (!stopped) {
             try {
+                log.info("sendMessage message=" + getTruncatedMessage(message));
                 Log.traceCall();
                 // Throttle outbound messages
                 long now = System.currentTimeMillis();
@@ -189,7 +191,7 @@ public class Connection implements MessageListener {
                                     "Sending direct message to peer" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100), size);
+                            peersNodeAddress, uid, getTruncatedMessage(message), size);
                 } else if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                     setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
@@ -197,12 +199,12 @@ public class Connection implements MessageListener {
                                     "Sending direct message to peer" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100), size);
+                            peersNodeAddress, uid, getTruncatedMessage(message), size);
                 } else {
                     log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100), size);
+                            peersNodeAddress, uid, getTruncatedMessage(message), size);
                 }
 
                 if (!stopped) {
@@ -327,6 +329,11 @@ public class Connection implements MessageListener {
         }
 
         peersNodeAddressProperty.set(peerNodeAddress);
+
+        if (BanList.contains(peerNodeAddress)) {
+            log.warn("We detected a connection to a banned peer. We will close that connection. (setPeersNodeAddress)");
+            sharedModel.reportInvalidRequest(RuleViolation.PEER_BANNED);
+        }
     }
 
 
@@ -444,6 +451,10 @@ public class Connection implements MessageListener {
         }
     }
 
+    private String getTruncatedMessage(Message message) {
+        return StringUtils.abbreviate(message.toString(), 100).replace("\n", "");
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -525,7 +536,13 @@ public class Connection implements MessageListener {
                         "corruptRequests={}\n\t" +
                         "connection={}", numRuleViolations, ruleViolation, ruleViolations.toString(), connection);
                 this.ruleViolation = ruleViolation;
-                shutDown(CloseConnectionReason.RULE_VIOLATION);
+                if (ruleViolation == RuleViolation.PEER_BANNED) {
+                    log.warn("We detected a connection to a banned peer. We will close that connection. (reportInvalidRequest)");
+                    shutDown(CloseConnectionReason.PEER_BANNED);
+                } else {
+                    shutDown(CloseConnectionReason.RULE_VIOLATION);
+                }
+
                 return true;
             } else {
                 return false;
@@ -677,6 +694,10 @@ public class Connection implements MessageListener {
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                     connection,
                                     size);
+                            try {
+                                log.error("rawInputObject.className=" + rawInputObject.getClass().getName());
+                            } catch (Throwable ignore) {
+                            }
                         }
 
                         // We want to track the size of each object even if it is invalid data
@@ -696,7 +717,7 @@ public class Connection implements MessageListener {
                             exceeds = size > MAX_MSG_SIZE_GET_DATA;
                         else
                             exceeds = size > MAX_MSG_SIZE;
-                        
+
                         if (exceeds)
                             log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, message);
 
@@ -745,7 +766,12 @@ public class Connection implements MessageListener {
                             log.info("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", ((CloseConnectionMessage) message).reason, connection);
                             stop();
-                            sharedModel.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
+                            if (CloseConnectionReason.PEER_BANNED.name().equals(((CloseConnectionMessage) message).reason)) {
+                                log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
+                                sharedModel.shutDown(CloseConnectionReason.PEER_BANNED);
+                            } else {
+                                sharedModel.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
+                            }
                         } else if (!stopped) {
                             // We don't want to get the activity ts updated by ping/pong msg
                             if (!(message instanceof KeepAliveMessage))
@@ -766,6 +792,10 @@ public class Connection implements MessageListener {
                             // 4. DirectMessage (implements SendersNodeAddressMessage)
                             if (message instanceof SendersNodeAddressMessage) {
                                 NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) message).getSenderNodeAddress();
+                                // We must not shut down a banned peer at that moment as it would trigger a connection termination 
+                                // and we could not send the CloseConnectionMessage.
+                                // We shut down a banned peer at the next step at setPeersNodeAddress().
+
                                 Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
                                 if (peersNodeAddressOptional.isPresent()) {
                                     // If we have already the peers address we check again if it matches our stored one
@@ -793,7 +823,8 @@ public class Connection implements MessageListener {
                     } catch (Throwable t) {
                         t.printStackTrace();
                         stop();
-                        sharedModel.handleConnectionException(new Exception(t));
+                        if (sharedModel != null)
+                            sharedModel.handleConnectionException(new Exception(t));
                     }
                 }
             } catch (Throwable t) {
