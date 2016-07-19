@@ -481,11 +481,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     protectedStorageEntry.ownerPubKey.equals(protectedStorageEntry.getStoragePayload().getOwnerPubKey());
         }
 
-        if (!result)
-            log.error("PublicKey of payload data and ProtectedData are not matching. protectedStorageEntry=" +
-                    (protectedStorageEntry != null ? protectedStorageEntry.toString() : "null") +
-                    "protectedStorageEntry.getStoragePayload().getOwnerPubKey()=" +
-                    (protectedStorageEntry.getStoragePayload() != null ? protectedStorageEntry.getStoragePayload().getOwnerPubKey().toString() : "null"));
+        if (!result) {
+            String res1 = "null";
+            String res2 = "null";
+            if (protectedStorageEntry != null) {
+                res1 = protectedStorageEntry.toString();
+                if (protectedStorageEntry.getStoragePayload() != null && protectedStorageEntry.getStoragePayload().getOwnerPubKey() != null)
+                    res2 = protectedStorageEntry.getStoragePayload().getOwnerPubKey().toString();
+            }
+
+            log.error("PublicKey of payload data and ProtectedData are not matching. protectedStorageEntry=" + res1 +
+                    "protectedStorageEntry.getStoragePayload().getOwnerPubKey()=" + res2);
+        }
         return result;
     }
 

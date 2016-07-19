@@ -8,6 +8,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
@@ -42,7 +43,7 @@ public class SeedNode {
         log.info("Log files under: " + logPath);
         Version.printVersion();
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(env.getRequiredProperty(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY)));
+        Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
