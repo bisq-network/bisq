@@ -552,7 +552,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\tid='" + id + '\'' +
                 "\n\tdirection=" + direction +
                 "\n\tcurrencyCode='" + currencyCode + '\'' +
-                "\n\tdate=" + date +
+                "\n\tdate=" + new Date(date) +
+                "\n\tdateAsTime=" + date +
                 "\n\tfiatPrice=" + fiatPrice +
                 "\n\tmarketPriceMargin=" + marketPriceMargin +
                 "\n\tuseMarketBasedPrice=" + useMarketBasedPrice +

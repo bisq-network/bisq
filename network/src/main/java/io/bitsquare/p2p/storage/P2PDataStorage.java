@@ -97,7 +97,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                         ByteArray hashOfPayload = entry.getKey();
                         ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
                         toRemoveSet.add(protectedStorageEntry);
-                        log.info("We found an expired data entry. We remove the protectedData:\n\t" + protectedStorageEntry);
+                        log.info("We found an expired data entry. We remove the protectedData:\n\t" + StringUtils.abbreviate(protectedStorageEntry.toString().replace("\n", ""), 100));
                         map.remove(hashOfPayload);
                     });
 
@@ -212,7 +212,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (containsKey)
             result &= checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.ownerPubKey, hashOfPayload);
 
-        printData("before add");
+        // printData("before add");
         if (result) {
             final boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.sequenceNumber, hashOfPayload);
             if (!containsKey || hasSequenceNrIncreased) {
@@ -261,9 +261,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                         hasSequenceNrIncreased &&
                         checkIfStoredDataPubKeyMatchesNewDataPubKey;
 
-                printData("before refreshTTL");
+                // printData("before refreshTTL");
                 if (allValid) {
-                    log.info("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
+                    log.debug("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
                     storedData.refreshTTL();
                     storedData.updateSequenceNumber(sequenceNumber);
                     storedData.updateSignature(signature);
@@ -293,7 +293,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 && checkSignature(protectedStorageEntry)
                 && checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.ownerPubKey, hashOfPayload);
 
-        printData("before remove");
+        // printData("before remove");
         if (result) {
             doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
             printData("after remove");
@@ -320,7 +320,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 && checkSignature(protectedMailboxStorageEntry)
                 && checkIfStoredMailboxDataMatchesNewMailboxData(protectedMailboxStorageEntry.receiversPubKey, hashOfData);
 
-        printData("before removeMailboxData");
+        // printData("before removeMailboxData");
         if (result) {
             doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfData);
             printData("after removeMailboxData");
@@ -560,7 +560,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     .append(StringUtils.abbreviate(storagePayload.toString(), 100).replace("\n", ""));
         });
         sb.append("\n------------------------------------------------------------\n");
-        log.info(sb.toString());
+        log.debug(sb.toString());
         log.info("Data set " + info + " operation: size=" + map.values().size());
     }
 

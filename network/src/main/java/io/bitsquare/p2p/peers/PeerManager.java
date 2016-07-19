@@ -411,7 +411,7 @@ public class PeerManager implements ConnectionListener {
                 List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
                 reportedPeersClone.stream().forEach(e -> result.append("\n").append(e));
                 result.append("\n------------------------------------------------------------\n");
-                log.info(result.toString());
+                log.debug(result.toString());
             }
             log.info("Number of collected reported peers: {}", reportedPeers.size());
         }
@@ -422,7 +422,7 @@ public class PeerManager implements ConnectionListener {
             StringBuilder result = new StringBuilder("We received new reportedPeers:");
             List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
             reportedPeersClone.stream().forEach(e -> result.append("\n\t").append(e));
-            log.info(result.toString());
+            log.debug(result.toString());
         }
         log.info("Number of new arrived reported peers: {}", reportedPeers.size());
     }
