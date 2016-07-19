@@ -379,8 +379,8 @@ public class BitsquareApp extends Application {
                         injector.getInstance(WalletService.class).shutDown();
                     });
                 });
-                // we wait max 5 sec.
-                UserThread.runAfter(resultHandler::handleResult, 5);
+                // we wait max 20 sec.
+                UserThread.runAfter(resultHandler::handleResult, 20);
             } else {
                 UserThread.runAfter(resultHandler::handleResult, 1);
             }
