@@ -267,9 +267,35 @@ public class WalletService {
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
+        // only for test/debug.
+        log.error( "seedNodes: " + seedNodes.toString() );
+        
         // Pass custom seed nodes if set in options
         if (seedNodes != null && !seedNodes.isEmpty()) {
-            //TODO Check how to pass seed nodes to the wallet kit. Probably via walletAppKit.setPeerNodes
+            
+            // todo: this parsing should be more robust,
+            // give validation error if needed.
+            // also: it seems the peer nodes can be overridden in the case
+            // of regtest mode below.  is that wanted?
+            String[] nodes = seedNodes.split(",");
+            List<PeerAddress> peerAddressList = new ArrayList<PeerAddress>();
+            for(String node : nodes) {
+                String[] parts = node.split(":");
+                if( parts.length == 2 ) {
+                    // note: this will cause a DNS request if hostname used.
+                    // fixme: DNS request should be routed over Tor.
+                    // fixme: .onion hostnames will fail!
+                    InetSocketAddress addr = new InetSocketAddress(parts[0], Integer.parseInt(parts[1]) );
+                    peerAddressList.add( new PeerAddress( addr ));
+                }
+            }
+            if(peerAddressList.size() > 0) {
+                PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
+                walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
+                
+                // only for test/debug.
+                log.error( "seedNodes parsed: " + peerAddressListFixed.toString() );
+            }
         }
 
         // We do not call walletAppKit.useTor() anymore because that would turn
