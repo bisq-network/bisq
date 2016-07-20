@@ -352,7 +352,9 @@ public class MainViewModel implements ViewModel {
             public void onTorNodeReady() {
                 bootstrapState.set("Tor node created");
                 p2PNetworkIconId.set("image-connection-tor");
-                initWalletService();
+                if( preferences.getUseTorForBitcoinJ() ) {
+                    initWalletService();
+                }
             }
 
             @Override
@@ -428,6 +430,13 @@ public class MainViewModel implements ViewModel {
 
     private BooleanProperty initBitcoinWallet() {
         final BooleanProperty walletInitialized = new SimpleBooleanProperty();
+
+        // We only init wallet service here if not using Tor for bitcoinj.        
+        // When using Tor, wallet init must be deferred until Tor is ready.
+        if( !preferences.getUseTorForBitcoinJ() ) {
+            initWalletService();
+        }
+
         return walletInitialized;
     }
     
@@ -472,11 +481,15 @@ public class MainViewModel implements ViewModel {
             btcInfo.set(newValue);
         });
         
-        // Use p2p service 
-        Socks5Proxy socks5Proxy = p2PService.getNetworkNode().getSocksProxy();
-        Proxy proxy = proxy = new Proxy ( Proxy.Type.SOCKS,
-                                          new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
-                                                                socks5Proxy.getPort() ) );
+        Proxy proxy = null;
+        
+        if( preferences.getUseTorForBitcoinJ() ) {
+            // Use p2p service 
+            Socks5Proxy socks5Proxy = p2PService.getNetworkNode().getSocksProxy();
+            proxy = new Proxy ( Proxy.Type.SOCKS,
+                                new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
+                                                      socks5Proxy.getPort() ) );
+        }
 
 /**
  * Uncomment this to wire up user specified proxy via program args or config file.

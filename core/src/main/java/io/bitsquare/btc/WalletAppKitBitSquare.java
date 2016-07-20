@@ -43,7 +43,14 @@ public class WalletAppKitBitSquare extends WalletAppKit {
     }
     
     protected PeerGroup createPeerGroup() throws TimeoutException {
-        int CONNECT_TIMEOUT_MSEC = 60 * 1000;
+        
+        // no proxy case.
+        if(proxy == null) {
+            return super.createPeerGroup();
+        }
+        
+        // proxy case.
+        int CONNECT_TIMEOUT_MSEC = 60 * 1000;  // same value used in bitcoinj.
         ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
         BlockingClientManager mgr = new BlockingClientManager(proxySocketFactory);
         PeerGroup result = new PeerGroup(params, vChain, mgr);
@@ -51,7 +58,6 @@ public class WalletAppKitBitSquare extends WalletAppKit {
         mgr.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
         result.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
         
-        // result.addPeerDiscovery(new OnionSeedPeers(params));
         return result;
     }    
 }

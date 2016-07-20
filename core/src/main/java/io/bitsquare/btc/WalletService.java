@@ -272,10 +272,11 @@ public class WalletService {
             //TODO Check how to pass seed nodes to the wallet kit. Probably via walletAppKit.setPeerNodes
         }
 
-        if (useTor && params.getId().equals(NetworkParameters.ID_MAINNET))
-            walletAppKit.useTor();
-            
-        
+        // We do not call walletAppKit.useTor() anymore because that would turn
+        // on orchid Tor, which we do not want.  Instead, we create a Tor proxy
+        // later.
+        // if (useTor && params.getId().equals(NetworkParameters.ID_MAINNET))
+        //    walletAppKit.useTor();
 
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
