@@ -24,7 +24,7 @@ import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.OptionKeys;
+import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
@@ -109,7 +109,7 @@ public class BitsquareApp extends Application {
         log.info("Log files under: " + logPath);
         Version.printVersion();
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(env.getRequiredProperty(OptionKeys.LOG_LEVEL_KEY)));
+        Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
@@ -346,20 +346,21 @@ public class BitsquareApp extends Application {
 
     @Override
     public void stop() {
-        shutDownRequested = true;
-
-        new Popup().headLine("Shut down in progress")
-                .backgroundInfo("Shutting down application can take a few seconds.\n" +
-                        "Please don't interrupt that process.")
-                .hideCloseButton()
-                .useAnimation(false)
-                .show();
-        UserThread.runAfter(() -> {
-            gracefulShutDown(() -> {
-                log.info("App shutdown complete");
-                System.exit(0);
-            });
-        }, 200, TimeUnit.MILLISECONDS);
+        if (!shutDownRequested) {
+            new Popup().headLine("Shut down in progress")
+                    .backgroundInfo("Shutting down application can take a few seconds.\n" +
+                            "Please don't interrupt that process.")
+                    .hideCloseButton()
+                    .useAnimation(false)
+                    .show();
+            UserThread.runAfter(() -> {
+                gracefulShutDown(() -> {
+                    log.info("App shutdown complete");
+                    System.exit(0);
+                });
+            }, 200, TimeUnit.MILLISECONDS);
+            shutDownRequested = true;
+        }
     }
 
     private void gracefulShutDown(ResultHandler resultHandler) {
@@ -378,8 +379,8 @@ public class BitsquareApp extends Application {
                         injector.getInstance(WalletService.class).shutDown();
                     });
                 });
-                // we wait max 5 sec.
-                UserThread.runAfter(resultHandler::handleResult, 5);
+                // we wait max 20 sec.
+                UserThread.runAfter(resultHandler::handleResult, 20);
             } else {
                 UserThread.runAfter(resultHandler::handleResult, 1);
             }

@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
@@ -95,9 +96,14 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
-        checkArgument(peerNodeAddress.hostName.endsWith(".onion"), "PeerAddress is not an onion address");
+        // FIXME: disabling temporarily.
+        // checkArgument(peerNodeAddress.hostName.endsWith(".onion"), "PeerAddress is not an onion address");
 
         return torNetworkNode.connectToHiddenService(peerNodeAddress.hostName, peerNodeAddress.port);
+    }
+    
+    public Socks5Proxy getSocksProxy() {
+        return torNetworkNode != null ? torNetworkNode.getSocksProxy() : null;
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {

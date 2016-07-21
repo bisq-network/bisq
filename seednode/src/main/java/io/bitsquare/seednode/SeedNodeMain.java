@@ -27,7 +27,6 @@ import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
@@ -36,7 +35,6 @@ import static io.bitsquare.app.BitsquareEnvironment.*;
 public class SeedNodeMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
     private SeedNode seedNode;
-    private boolean isStopped;
 
     public static void main(String[] args) throws Exception {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
@@ -82,17 +80,12 @@ public class SeedNodeMain extends BitsquareExecutable {
         SeedNode.setEnvironment(new BitsquareEnvironment(options));
         UserThread.execute(() -> seedNode = new SeedNode());
 
-        while (!isStopped) {
+        while (true) {
             try {
-                Scanner scanner = new Scanner(System.in);
-                while (scanner.hasNextLine()) {
-                    String inputString = scanner.nextLine();
-                    if (inputString.equals("q")) {
-                        UserThread.execute(seedNode::shutDown);
-                        isStopped = true;
-                    }
-                }
-            } catch (Throwable ignore) {
+                Thread.sleep(Long.MAX_VALUE);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
             }
         }
     }

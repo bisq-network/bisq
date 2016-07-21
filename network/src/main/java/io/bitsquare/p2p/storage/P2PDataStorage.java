@@ -446,7 +446,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             boolean result = Sig.verify(ownerPubKey, hashOfDataAndSeqNr, signature);
             if (!result)
                 log.error("Signature verification failed at checkSignature. " +
-                        "That should not happen. Consider it might be an attempt of fraud.");
+                        "That should not happen. ownerPubKey=" + ownerPubKey +
+                        ", hashOfDataAndSeqNr=" + Arrays.toString(hashOfDataAndSeqNr) + ", signature=" + Arrays.toString(signature));
 
             return result;
         } catch (CryptoException e) {
@@ -480,8 +481,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     protectedStorageEntry.ownerPubKey.equals(protectedStorageEntry.getStoragePayload().getOwnerPubKey());
         }
 
-        if (!result)
-            log.error("PublicKey of payload data and ProtectedData are not matching. Consider it might be an attempt of fraud");
+        if (!result) {
+            String res1 = "null";
+            String res2 = "null";
+            if (protectedStorageEntry != null) {
+                res1 = protectedStorageEntry.toString();
+                if (protectedStorageEntry.getStoragePayload() != null && protectedStorageEntry.getStoragePayload().getOwnerPubKey() != null)
+                    res2 = protectedStorageEntry.getStoragePayload().getOwnerPubKey().toString();
+            }
+
+            log.error("PublicKey of payload data and ProtectedData are not matching. protectedStorageEntry=" + res1 +
+                    "protectedStorageEntry.getStoragePayload().getOwnerPubKey()=" + res2);
+        }
         return result;
     }
 
@@ -489,7 +500,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         ProtectedStorageEntry storedData = map.get(hashOfData);
         boolean result = storedData.ownerPubKey != null && storedData.ownerPubKey.equals(ownerPubKey);
         if (!result)
-            log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
+            log.error("New data entry does not match our stored data. storedData.ownerPubKey=" +
+                    (storedData.ownerPubKey != null ? storedData.ownerPubKey.toString() : "null") +
+                    ", ownerPubKey=" + ownerPubKey);
 
         return result;
     }
@@ -502,7 +515,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             boolean result = entry.receiversPubKey.equals(receiversPubKey)
                     && getHashAsByteArray(entry.getStoragePayload()).equals(hashOfData);
             if (!result)
-                log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
+                log.error("New data entry does not match our stored data. entry.receiversPubKey=" + entry.receiversPubKey
+                        + ", receiversPubKey=" + receiversPubKey);
 
             return result;
         } else {
