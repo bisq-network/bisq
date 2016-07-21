@@ -89,8 +89,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.security.Security;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -481,14 +479,11 @@ public class MainViewModel implements ViewModel {
             btcInfo.set(newValue);
         });
         
-        Proxy proxy = null;
+        Socks5Proxy proxy = null;
         
         if( preferences.getUseTorForBitcoinJ() ) {
             // Use p2p service 
-            Socks5Proxy socks5Proxy = p2PService.getNetworkNode().getSocksProxy();
-            proxy = new Proxy ( Proxy.Type.SOCKS,
-                                new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
-                                                      socks5Proxy.getPort() ) );
+            proxy = p2PService.getNetworkNode().getSocksProxy();
         }
 
 /**
@@ -496,8 +491,8 @@ public class MainViewModel implements ViewModel {
  * Could be Tor, i2p, ssh, vpn, etc.
         if( preferences.getBitcoinProxyHost() != null &&
             preferences.getBitcoinProxyPort() != null ) {
-            proxy = new Proxy( Proxy.Type.SOCKS, new InetSocketAddress(preferences.getBitcoinProxyHost(),
-                                                                       preferences.getBitcoinProxyPort() );
+            proxy = new Socks5Proxy( preferences.getBitcoinProxyHost(),
+                                     preferences.getBitcoinProxyPort() );
         }
 */
 

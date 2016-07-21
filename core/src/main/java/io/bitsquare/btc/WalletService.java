@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Service;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
@@ -56,7 +57,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.*;
@@ -150,7 +150,7 @@ public class WalletService {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(@Nullable DeterministicSeed seed, Proxy proxy, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void initialize(@Nullable DeterministicSeed seed, Socks5Proxy proxy, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
@@ -267,8 +267,7 @@ public class WalletService {
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
-        // only for test/debug.
-        log.error( "seedNodes: " + seedNodes.toString() );
+        log.debug( "seedNodes: " + seedNodes.toString() );
         
         // Pass custom seed nodes if set in options
         if (seedNodes != null && !seedNodes.isEmpty()) {
@@ -283,18 +282,29 @@ public class WalletService {
                 String[] parts = node.split(":");
                 if( parts.length == 2 ) {
                     // note: this will cause a DNS request if hostname used.
-                    // fixme: DNS request should be routed over Tor.
-                    // fixme: .onion hostnames will fail!
-                    InetSocketAddress addr = new InetSocketAddress(parts[0], Integer.parseInt(parts[1]) );
-                    peerAddressList.add( new PeerAddress( addr ));
+                    // note: DNS requests are routed over socks5 proxy, if used.
+                    // fixme: .onion hostnames will fail! see comments in SeedPeersSocks5Dns
+                    InetSocketAddress addr;
+                    if( proxy != null ) {
+                        InetSocketAddress unresolved = InetSocketAddress.createUnresolved(parts[0], Integer.parseInt(parts[1]));
+                        // proxy remote DNS request happens here.
+                        addr = SeedPeersSocks5Dns.lookup( proxy, unresolved );
+                    }
+                    else {
+                        // DNS request happens here. if it fails, addr.isUnresolved() == true.
+                        addr = new InetSocketAddress( parts[0], Integer.parseInt(parts[1]) );
+                    }
+                    // note: isUnresolved check should be removed once we fix PeerAddress
+                    if( addr != null && !addr.isUnresolved() ) {
+                        peerAddressList.add( new PeerAddress( addr.getAddress(), addr.getPort() ));
+                    }
                 }
             }
             if(peerAddressList.size() > 0) {
                 PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
-                walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
+                log.debug( "seedNodes parsed: " + peerAddressListFixed.toString() );
                 
-                // only for test/debug.
-                log.error( "seedNodes parsed: " + peerAddressListFixed.toString() );
+                walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
             }
         }
 
