@@ -124,7 +124,7 @@ public class SeedNode {
         });
     }
 
-    private void gracefulShutDown(ResultHandler resultHandler) {
+    public void gracefulShutDown(ResultHandler resultHandler) {
         log.debug("gracefulShutDown");
         try {
             if (injector != null) {
