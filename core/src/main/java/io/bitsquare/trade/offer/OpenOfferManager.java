@@ -503,10 +503,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers);
                             for (int i = 0; i < size; i++) {
                                 // we delay to avoid reaching throttle limits
-                                // roughly 1 offer per second
+                                // roughly 2 offer2 per second
                                 final int n = i;
-                                final long minDelay = i * 500 + 1;
-                                final long maxDelay = minDelay * 2 + 500;
+                                final long minDelay = i * 250 + 1;
+                                final long maxDelay = minDelay * 2;
                                 UserThread.runAfterRandomDelay(() -> {
                                     OpenOffer openOffer = openOffersList.get(n);
                                     // we need to check if in the meantime the offer has been removed
