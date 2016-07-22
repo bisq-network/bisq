@@ -29,6 +29,7 @@ import io.bitsquare.trade.protocol.trade.messages.*;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
 import io.bitsquare.trade.protocol.trade.tasks.seller.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
+import io.bitsquare.trade.protocol.trade.tasks.shared.PublishTradeStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,7 +134,8 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                 () -> handleTaskRunnerSuccess("DepositTxPublishedMessage"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(ProcessDepositTxPublishedMessage.class);
+        taskRunner.addTasks(ProcessDepositTxPublishedMessage.class,
+                PublishTradeStatistics.class);
         taskRunner.run();
     }
 
