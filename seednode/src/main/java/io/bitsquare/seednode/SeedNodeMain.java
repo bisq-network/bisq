@@ -21,12 +21,15 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Profiler;
+import io.bitsquare.common.util.RestartUtil;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
@@ -34,7 +37,10 @@ import static io.bitsquare.app.BitsquareEnvironment.*;
 
 public class SeedNodeMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
+    private static final long MAX_MEMORY_MB = 800;
+    private static final long CHECK_MEMORY_PERIOD_SEC = 60;
     private SeedNode seedNode;
+    private volatile boolean stopped;
 
     public static void main(String[] args) throws Exception {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
@@ -77,8 +83,30 @@ public class SeedNodeMain extends BitsquareExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        SeedNode.setEnvironment(new BitsquareEnvironment(options));
+        final BitsquareEnvironment environment = new BitsquareEnvironment(options);
+        SeedNode.setEnvironment(environment);
         UserThread.execute(() -> seedNode = new SeedNode());
+
+        UserThread.runPeriodically(() -> {
+            Profiler.printSystemLoad(log);
+            if (!stopped && Profiler.getUsedMemoryInMB() > MAX_MEMORY_MB) {
+                stopped = true;
+                seedNode.gracefulShutDown(() -> {
+                    try {
+                        final String[] tokens = environment.getAppDataDir().split("_");
+                        String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
+                        RestartUtil.restartApplication(logPath);
+                    } catch (IOException e) {
+                        log.error(e.toString());
+                        e.printStackTrace();
+                    } finally {
+                        log.warn("Shutdown complete");
+                        System.exit(0);
+                    }
+                });
+
+            }
+        }, CHECK_MEMORY_PERIOD_SEC);
 
         while (true) {
             try {

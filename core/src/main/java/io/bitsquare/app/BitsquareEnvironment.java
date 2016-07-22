@@ -80,6 +80,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     private final String appName;
     private final String userDataDir;
+
     private final String appDataDir;
     private final String btcNetworkDir;
     private final String logLevel;
@@ -118,6 +119,10 @@ public class BitsquareEnvironment extends StandardEnvironment {
         } catch (Exception e2) {
             e2.printStackTrace();
         }
+    }
+
+    public String getAppDataDir() {
+        return appDataDir;
     }
 
     protected BitsquareEnvironment(PropertySource commandLineProperties) {
