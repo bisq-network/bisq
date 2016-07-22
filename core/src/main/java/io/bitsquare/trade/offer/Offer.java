@@ -24,12 +24,14 @@ import io.bitsquare.btc.pricefeed.MarketPrice;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.trade.exceptions.MarketPriceNotAvailableException;
 import io.bitsquare.trade.exceptions.TradePriceOutOfToleranceException;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
@@ -272,7 +274,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     // Availability
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void checkOfferAvailability(OfferAvailabilityModel model, ResultHandler resultHandler) {
+    public void checkOfferAvailability(OfferAvailabilityModel model, ResultHandler resultHandler,
+                                       ErrorMessageHandler errorMessageHandler) {
         availabilityProtocol = new OfferAvailabilityProtocol(model,
                 () -> {
                     cancelAvailabilityRequest();
@@ -282,6 +285,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                     if (availabilityProtocol != null)
                         availabilityProtocol.cancel();
                     log.error(errorMessage);
+                    errorMessageHandler.handleErrorMessage(errorMessage);
                 });
         availabilityProtocol.sendOfferAvailabilityRequest();
     }
@@ -382,11 +386,14 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         }
     }
 
-    public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException, IllegalArgumentException {
+    public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException, MarketPriceNotAvailableException, IllegalArgumentException {
         checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
         Fiat tradePriceAsFiat = Fiat.valueOf(getCurrencyCode(), takersTradePrice);
         Fiat offerPriceAsFiat = getPrice();
-        checkArgument(offerPriceAsFiat != null, "offerPriceAsFiat must not be null");
+
+        if (offerPriceAsFiat == null)
+            throw new MarketPriceNotAvailableException("Market price required for calculating trade price is not available.");
+        
         double factor = (double) takersTradePrice / (double) offerPriceAsFiat.value;
         // We allow max. 2 % difference between own offer price calculation and takers calculation.
         // Market price might be different at offerers and takers side so we need a bit of tolerance.
@@ -545,7 +552,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\tid='" + id + '\'' +
                 "\n\tdirection=" + direction +
                 "\n\tcurrencyCode='" + currencyCode + '\'' +
-                "\n\tdate=" + date +
+                "\n\tdate=" + new Date(date) +
+                "\n\tdateAsTime=" + date +
                 "\n\tfiatPrice=" + fiatPrice +
                 "\n\tmarketPriceMargin=" + marketPriceMargin +
                 "\n\tuseMarketBasedPrice=" + useMarketBasedPrice +

@@ -109,7 +109,7 @@ class MarketsStatisticViewModel extends ActivatableViewModel {
                 spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
 
             Coin totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
-            marketStatisticItems.add(new MarketStatisticItem(currencyCode, offers.size(), spread, totalAmount));
+            marketStatisticItems.add(new MarketStatisticItem(currencyCode, buyOffers.size(), sellOffers.size(), offers.size(), spread, totalAmount));
         }
     }
 }

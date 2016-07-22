@@ -29,6 +29,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -140,8 +141,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
             priceFeed.setCurrencyCode(offer.getCurrencyCode());
 
-        tradeManager.checkOfferAvailability(offer, () -> {
-        });
+        tradeManager.checkOfferAvailability(offer,
+                () -> {
+                },
+                errorMessage -> new Popup().warning(errorMessage).show());
     }
 
     @Override
@@ -234,7 +237,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 offer,
                 paymentAccount.getId(),
                 useSavingsWallet,
-                tradeResultHandler
+                tradeResultHandler,
+                errorMessage -> {
+                    log.warn(errorMessage);
+                    new Popup<>().warning(errorMessage).show();
+                }
         );
     }
 

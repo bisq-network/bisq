@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Service;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
@@ -30,11 +31,14 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.FileUtil;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.*;
 import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -52,6 +56,7 @@ import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.*;
@@ -83,12 +88,13 @@ public class WalletService {
     private final RegTestHost regTestHost;
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
+    private final String seedNodes;
     private final NetworkParameters params;
     private final File walletDir;
     private final UserAgent userAgent;
     private final boolean useTor;
 
-    private WalletAppKit walletAppKit;
+    private WalletAppKitBitSquare walletAppKit;
     private Wallet wallet;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
@@ -103,14 +109,30 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(RegTestHost regTestHost, TradeWalletService tradeWalletService, AddressEntryList addressEntryList, UserAgent userAgent,
-                         @Named(DIR_KEY) File appDir, Preferences preferences) {
+    public WalletService(RegTestHost regTestHost,
+                         TradeWalletService tradeWalletService,
+                         AddressEntryList addressEntryList,
+                         UserAgent userAgent,
+                         @Named(DIR_KEY) File appDir,
+                         Preferences preferences,
+                         @Named(BtcOptionKeys.BTC_SEED_NODES) String seedNodes,
+                         @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
+        this.seedNodes = seedNodes;
         this.params = preferences.getBitcoinNetwork().getParameters();
         this.walletDir = new File(appDir, "bitcoin");
         this.userAgent = userAgent;
+
+        // We support a checkbox in the settings to set the use tor flag.
+        // If we get the options set we override that setting. 
+        if (useTorFlagFromOptions != null && !useTorFlagFromOptions.isEmpty()) {
+            if (useTorFlagFromOptions.equals("false"))
+                preferences.setUseTorForBitcoinJ(false);
+            else if (useTorFlagFromOptions.equals("true"))
+                preferences.setUseTorForBitcoinJ(true);
+        }
         useTor = preferences.getUseTorForBitcoinJ();
 
         storage = new Storage<>(walletDir);
@@ -128,7 +150,7 @@ public class WalletService {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void initialize(@Nullable DeterministicSeed seed, Socks5Proxy proxy, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
@@ -144,7 +166,7 @@ public class WalletService {
         backupWallet();
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKit(params, walletDir, "Bitsquare") {
+        walletAppKit = new WalletAppKitBitSquare(params, proxy, walletDir, "Bitsquare") {
             @Override
             protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
@@ -245,11 +267,52 @@ public class WalletService {
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
+        log.debug( "seedNodes: " + seedNodes.toString() );
+        
+        // Pass custom seed nodes if set in options
+        if (seedNodes != null && !seedNodes.isEmpty()) {
+            
+            // todo: this parsing should be more robust,
+            // give validation error if needed.
+            // also: it seems the peer nodes can be overridden in the case
+            // of regtest mode below.  is that wanted?
+            String[] nodes = seedNodes.split(",");
+            List<PeerAddress> peerAddressList = new ArrayList<PeerAddress>();
+            for(String node : nodes) {
+                String[] parts = node.split(":");
+                if( parts.length == 2 ) {
+                    // note: this will cause a DNS request if hostname used.
+                    // note: DNS requests are routed over socks5 proxy, if used.
+                    // fixme: .onion hostnames will fail! see comments in SeedPeersSocks5Dns
+                    InetSocketAddress addr;
+                    if( proxy != null ) {
+                        InetSocketAddress unresolved = InetSocketAddress.createUnresolved(parts[0], Integer.parseInt(parts[1]));
+                        // proxy remote DNS request happens here.
+                        addr = SeedPeersSocks5Dns.lookup( proxy, unresolved );
+                    }
+                    else {
+                        // DNS request happens here. if it fails, addr.isUnresolved() == true.
+                        addr = new InetSocketAddress( parts[0], Integer.parseInt(parts[1]) );
+                    }
+                    // note: isUnresolved check should be removed once we fix PeerAddress
+                    if( addr != null && !addr.isUnresolved() ) {
+                        peerAddressList.add( new PeerAddress( addr.getAddress(), addr.getPort() ));
+                    }
+                }
+            }
+            if(peerAddressList.size() > 0) {
+                PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
+                log.debug( "seedNodes parsed: " + peerAddressListFixed.toString() );
+                
+                walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
+            }
+        }
 
-        // TODO Get bitcoinj running over our tor proxy. BlockingClientManager need to be used to use the socket  
-        // from jtorproxy. To get supported it via nio / netty will be harder
-        if (useTor && params.getId().equals(NetworkParameters.ID_MAINNET))
-            walletAppKit.useTor();
+        // We do not call walletAppKit.useTor() anymore because that would turn
+        // on orchid Tor, which we do not want.  Instead, we create a Tor proxy
+        // later.
+        // if (useTor && params.getId().equals(NetworkParameters.ID_MAINNET))
+        //    walletAppKit.useTor();
 
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
@@ -317,7 +380,7 @@ public class WalletService {
                 Context.propagate(ctx);
                 walletAppKit.stopAsync();
                 walletAppKit.awaitTerminated();
-                initialize(seed, resultHandler, exceptionHandler);
+                initialize(seed, walletAppKit.getProxy(), resultHandler, exceptionHandler);
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error("Executing task failed. " + t.getMessage());
@@ -340,6 +403,36 @@ public class WalletService {
 
     public void setAesKey(KeyParameter aesKey) {
         this.aesKey = aesKey;
+    }
+
+    public void decryptWallet(@NotNull KeyParameter key) {
+        wallet.decrypt(key);
+        addressEntryList.stream().forEach(e -> {
+
+            final DeterministicKey keyPair = e.getKeyPair();
+            if (keyPair != null && keyPair.isEncrypted())
+                e.setDeterministicKey(keyPair.decrypt(key));
+        });
+
+        setAesKey(null);
+        addressEntryList.queueUpForSave();
+    }
+
+    public void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
+        if (this.aesKey != null) {
+            log.warn("encryptWallet called but we have a aesKey already set. " +
+                    "We decryptWallet with the old key before we apply the new key.");
+            decryptWallet(this.aesKey);
+        }
+
+        wallet.encrypt(keyCrypterScrypt, key);
+        addressEntryList.stream().forEach(e -> {
+            final DeterministicKey keyPair = e.getKeyPair();
+            if (keyPair != null && keyPair.isEncrypted())
+                e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
+        });
+        setAesKey(key);
+        addressEntryList.queueUpForSave();
     }
 
 
@@ -736,7 +829,7 @@ public class WalletService {
         }
         return fee;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Withdrawal Fee calculation

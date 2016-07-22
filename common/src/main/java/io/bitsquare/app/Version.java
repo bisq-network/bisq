@@ -39,7 +39,7 @@ public class Version {
     // VERSION = 0.3.5 -> LOCAL_DB_VERSION = 2
     // VERSION = 0.4.0 -> LOCAL_DB_VERSION = 3
     // VERSION = 0.4.2 -> LOCAL_DB_VERSION = 4
-    public static final int LOCAL_DB_VERSION = 4;
+    public static final int LOCAL_DB_VERSION = 4; 
 
     // The version nr. of the current protocol. The offer holds that version. 
     // A taker will check the version of the offers to see if his version is compatible.

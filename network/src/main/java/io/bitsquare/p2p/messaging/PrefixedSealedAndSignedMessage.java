@@ -44,8 +44,9 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
 
     @Override
     public String toString() {
-        return "SealedAndSignedMessage{" +
-                "messageVersion=" + messageVersion +
+        return "PrefixedSealedAndSignedMessage{" +
+                "uid=" + uid +
+                ", messageVersion=" + messageVersion +
                 ", sealedAndSigned=" + sealedAndSigned +
                 ", receiverAddressMaskHash.hashCode()=" + Arrays.toString(addressPrefixHash).hashCode() +
                 '}';

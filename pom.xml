@@ -44,8 +44,10 @@
         <module>jtorctl</module>
         <module>jtorproxy</module>
         <module>network</module>
-        <module>seednode</module>
         <module>gui</module>
+        <module>headless</module>
+        <module>seednode</module>
+        <module>monitor</module>
         <module>jdkfix</module>
     </modules>
 

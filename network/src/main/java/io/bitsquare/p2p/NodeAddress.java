@@ -37,6 +37,11 @@ public final class NodeAddress implements Persistable, Payload {
         return addressPrefixHash;
     }
 
+    public String getHostNameWithoutPostFix() {
+        return hostName.replace(".onion", "");
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

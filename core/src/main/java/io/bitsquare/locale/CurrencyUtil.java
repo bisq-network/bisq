@@ -75,6 +75,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
+        result.add(new CryptoCurrency("ETHC", "EtherClassic"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
@@ -94,6 +95,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
+        result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("MKR", "Maker", true));
         result.add(new CryptoCurrency("DGD", "DigixDAO Tokens", true));
         result.add(new CryptoCurrency("DAO", "DAO", true));
@@ -128,14 +130,16 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("USDT", "USD Tether"));
         result.add(new CryptoCurrency("EURT", "EUR Tether"));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
+        result.add(new CryptoCurrency("WDC", "Worldcoin"));
         return result;
-    }
+    } 
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
+        result.add(new CryptoCurrency("ETHC", "EtherClassic"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));

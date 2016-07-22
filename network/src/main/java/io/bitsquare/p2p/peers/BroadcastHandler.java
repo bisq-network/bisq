@@ -120,14 +120,14 @@ public class BroadcastHandler implements PeerManager.Listener {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                 String errorMessage = "Timeout: Broadcast did not complete after " + timeoutDelay + " sec.";
 
-                log.warn(errorMessage + "\n\t" +
+                log.debug(errorMessage + "\n\t" +
                         "numOfPeers=" + numOfPeers + "\n\t" +
                         "numOfCompletedBroadcasts=" + numOfCompletedBroadcasts + "\n\t" +
                         "numOfCompletedBroadcasts=" + numOfCompletedBroadcasts + "\n\t" +
                         "numOfFailedBroadcasts=" + numOfFailedBroadcasts + "\n\t" +
                         "broadcastQueue.size()=" + broadcastQueue.size() + "\n\t" +
                         "broadcastQueue=" + broadcastQueue);
-                onFault(errorMessage);
+                onFault(errorMessage, false);
             }, timeoutDelay);
 
             log.info("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeersSet.size());
@@ -196,10 +196,10 @@ public class BroadcastHandler implements PeerManager.Listener {
                     }
                 });
             } else {
-                onFault("Connection stopped already");
+                onFault("Connection stopped already", false);
             }
         } else {
-            onFault("stopped at sendToPeer: " + errorMessage);
+            onFault("stopped at sendToPeer: " + errorMessage, false);
         }
     }
 
@@ -210,7 +210,7 @@ public class BroadcastHandler implements PeerManager.Listener {
 
     @Override
     public void onAllConnectionsLost() {
-        onFault("All connections lost");
+        onFault("All connections lost", false);
     }
 
     @Override

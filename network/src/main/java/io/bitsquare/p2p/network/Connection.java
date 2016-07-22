@@ -70,7 +70,7 @@ public class Connection implements MessageListener {
     //TODO decrease limits again after testing
     static final int MSG_THROTTLE_PER_SEC = 200;              // With MAX_MSG_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
     static final int MSG_THROTTLE_PER_10_SEC = 1000;          // With MAX_MSG_SIZE of 200kb results in bandwidth of 20MB/sec or 2.5 mbit/sec
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(90);
+    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
 
     public static int getMaxMsgSize() {
         return MAX_MSG_SIZE;
@@ -169,6 +169,7 @@ public class Connection implements MessageListener {
     public void sendMessage(Message message) {
         if (!stopped) {
             try {
+                log.info("sendMessage message=" + getTruncatedMessage(message));
                 Log.traceCall();
                 // Throttle outbound messages
                 long now = System.currentTimeMillis();
@@ -190,7 +191,7 @@ public class Connection implements MessageListener {
                                     "Sending direct message to peer" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100), size);
+                            peersNodeAddress, uid, getTruncatedMessage(message), size);
                 } else if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                     setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
@@ -198,12 +199,12 @@ public class Connection implements MessageListener {
                                     "Sending direct message to peer" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100), size);
+                            peersNodeAddress, uid, getTruncatedMessage(message), size);
                 } else {
                     log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, StringUtils.abbreviate(message.toString(), 100), size);
+                            peersNodeAddress, uid, getTruncatedMessage(message), size);
                 }
 
                 if (!stopped) {
@@ -450,6 +451,10 @@ public class Connection implements MessageListener {
         }
     }
 
+    private String getTruncatedMessage(Message message) {
+        return StringUtils.abbreviate(message.toString(), 100).replace("\n", "");
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -689,6 +694,10 @@ public class Connection implements MessageListener {
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                     connection,
                                     size);
+                            try {
+                                log.error("rawInputObject.className=" + rawInputObject.getClass().getName());
+                            } catch (Throwable ignore) {
+                            }
                         }
 
                         // We want to track the size of each object even if it is invalid data

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SeedNodesRepository {
     private static final Logger log = LoggerFactory.getLogger(SeedNodesRepository.class);
@@ -93,6 +94,11 @@ public class SeedNodesRepository {
 
     public void setLocalhostSeedNodeAddresses(Set<NodeAddress> localhostSeedNodeAddresses) {
         this.localhostSeedNodeAddresses = localhostSeedNodeAddresses;
+    }
+
+    public boolean isSeedNode(NodeAddress nodeAddress) {
+        return Stream.concat(localhostSeedNodeAddresses.stream(), torSeedNodeAddresses.stream())
+                .filter(e -> e.equals(nodeAddress)).findAny().isPresent();
     }
 
     public void setNodeAddressToExclude(NodeAddress nodeAddress) {

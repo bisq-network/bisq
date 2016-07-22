@@ -17,11 +17,25 @@
 
 package io.bitsquare.app;
 
+import io.bitsquare.BitsquareException;
+import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.btc.BtcOptionKeys;
+import io.bitsquare.btc.RegTestHost;
+import io.bitsquare.common.CommonOptionKeys;
+import io.bitsquare.network.NetworkOptionKeys;
+import io.bitsquare.p2p.P2PService;
+import io.bitsquare.util.joptsimple.EnumValueConverter;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static io.bitsquare.app.BitsquareEnvironment.*;
 import static java.lang.String.format;
 import static java.lang.String.join;
 
@@ -55,7 +69,53 @@ public abstract class BitsquareExecutable {
         this.doExecute(options);
     }
 
-    protected abstract void customizeOptionParsing(OptionParser parser);
+    protected void customizeOptionParsing(OptionParser parser) {
+        parser.accepts(USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
+                .withRequiredArg();
+        parser.accepts(APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
+                .withRequiredArg();
+        parser.accepts(APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
+                .withRequiredArg();
+        parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY, description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", LOG_LEVEL_DEFAULT))
+                .withRequiredArg();
+
+        parser.accepts(NetworkOptionKeys.SEED_NODES_KEY, description("Override hard coded seed nodes as comma separated list: E.g. rxdkppp3vicnbgqt.onion:8002, mfla72c4igh5ta2t.onion:8002", ""))
+                .withRequiredArg();
+        parser.accepts(NetworkOptionKeys.MY_ADDRESS, description("My own onion address (used for botstrap nodes to exclude itself)", ""))
+                .withRequiredArg();
+        parser.accepts(NetworkOptionKeys.BAN_LIST, description("Nodes to exclude from network connections.", ""))
+                .withRequiredArg();
+
+        parser.accepts(CommonOptionKeys.IGNORE_DEV_MSG_KEY, description("If set to true all signed messages from Bitsquare developers are ignored " +
+                "(Global alert, Version update alert, Filters for offers, nodes or payment account data)", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
+
+        parser.accepts(BtcOptionKeys.BTC_SEED_NODES, description("Custom seed nodes used for BitcoinJ.", ""))
+                .withRequiredArg();
+        parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over our native Tor instance.", ""))
+                .withRequiredArg();
+
+        // use a fixed port as arbitrator use that for his ID
+        parser.accepts(NetworkOptionKeys.PORT_KEY, description("Port to listen on", 9999))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(NetworkOptionKeys.USE_LOCALHOST, description("Use localhost network for development", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
+        parser.accepts(NetworkOptionKeys.MAX_CONNECTIONS, description("Max. connections a peer will try to keep", P2PService.MAX_CONNECTIONS_DEFAULT))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(BitcoinNetwork.KEY, description("Bitcoin network", BitcoinNetwork.DEFAULT))
+                .withRequiredArg()
+                .ofType(BitcoinNetwork.class)
+                .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class));
+
+        parser.accepts(RegTestHost.KEY, description("", RegTestHost.DEFAULT))
+                .withRequiredArg()
+                .ofType(RegTestHost.class)
+                .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
+    }
 
     protected static String description(String descText, Object defaultValue) {
         String description = "";
@@ -67,4 +127,20 @@ public abstract class BitsquareExecutable {
     }
 
     protected abstract void doExecute(OptionSet options);
+
+
+    public static void initAppDir(String appDir) {
+        Path dir = Paths.get(appDir);
+        if (Files.exists(dir)) {
+            if (!Files.isWritable(dir))
+                throw new BitsquareException("Application data directory '%s' is not writeable", dir);
+            else
+                return;
+        }
+        try {
+            Files.createDirectory(dir);
+        } catch (IOException ex) {
+            throw new BitsquareException(ex, "Application data directory '%s' could not be created", dir);
+        }
+    }
 }

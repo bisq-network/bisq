@@ -102,9 +102,8 @@ public class SellerStep3View extends TradeStepView {
                             .show();
                 }
 
-            } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT) {
+            } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT && confirmButton.isDisabled()) {
                 showStatusInfo();
-                statusLabel.setText("Sending confirmation...");
             } else if (state == Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG) {
                 hideStatusInfo();
             }
@@ -249,19 +248,21 @@ public class SellerStep3View extends TradeStepView {
             Preferences preferences = model.dataModel.preferences;
             String key = "confirmPaymentReceived";
             if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+                PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
                 String message = "Have you received the " + CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()) +
-                        " payment from your trading partner?\n\n" +
-                        "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"\n\n";
+                        " payment from your trading partner?\n\n";
+                if (!(paymentAccountContractData instanceof CryptoCurrencyAccountContractData)) {
+                    message += "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"\n\n";
 
-                Optional<String> optionalHolderName = getOptionalHolderName();
-                if (optionalHolderName.isPresent()) {
-                    message = message +
-                            "Please also verify that the senders name in your bank statement matches that one from the trade contract:\n" +
-                            "Senders name: " + optionalHolderName.get() + "\n\n" +
-                            "If the name is not the same as the one displayed here, please don't confirm but open a " +
-                            "dispute by entering \"cmd + o\" or \"ctrl + o\".\n\n";
+                    Optional<String> optionalHolderName = getOptionalHolderName();
+                    if (optionalHolderName.isPresent()) {
+                        message += "Please also verify that the senders name in your bank statement matches that one from the trade contract:\n" +
+                                "Senders name: " + optionalHolderName.get() + "\n\n" +
+                                "If the name is not the same as the one displayed here, please don't confirm but open a " +
+                                "dispute by entering \"cmd + o\" or \"ctrl + o\".\n\n";
+                    }
                 }
-                message = message + "Please note, that as soon you have confirmed the receipt, the locked trade amount will be released " +
+                message += "Please note, that as soon you have confirmed the receipt, the locked trade amount will be released " +
                         "to the bitcoin buyer and the security deposit will be refunded.";
                 new Popup()
                         .headLine("Confirm that you have received the payment")
@@ -282,6 +283,7 @@ public class SellerStep3View extends TradeStepView {
 
     private void confirmPaymentReceived() {
         confirmButton.setDisable(true);
+        showStatusInfo();
 
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed. 
@@ -299,6 +301,7 @@ public class SellerStep3View extends TradeStepView {
 
     private void showStatusInfo() {
         busyAnimation.play();
+        statusLabel.setText("Sending confirmation...");
     }
 
     private void hideStatusInfo() {

@@ -40,6 +40,7 @@ import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
 import io.bitsquare.trade.closed.ClosedTradableManager;
+import io.bitsquare.trade.exceptions.MarketPriceNotAvailableException;
 import io.bitsquare.trade.exceptions.TradePriceOutOfToleranceException;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.availability.AvailabilityResult;
@@ -118,8 +119,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         openOffers.forEach(e -> e.getOffer().setPriceFeed(priceFeed));
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread(OpenOfferManager.this::shutDown,
-                "OpenOfferManager.ShutDownHook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            UserThread.execute(OpenOfferManager.this::shutDown);
+        }, "OpenOfferManager.ShutDownHook"));
     }
 
     public void onAllServicesInitialized() {
@@ -153,22 +155,26 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         log.info("remove all open offers at shutDown");
         // we remove own offers from offerbook when we go offline
         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
-        closeAllOpenOffers(completeHandler);
-    }
 
-    public void closeAllOpenOffers(@Nullable Runnable completeHandler) {
-        openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
-        if (completeHandler != null)
-            UserThread.runAfter(completeHandler::run, openOffers.size() * 100 + 200, TimeUnit.MILLISECONDS);
+        final int size = openOffers.size();
+        if (offerBookService.isBootstrapped()) {
+            openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
+            if (completeHandler != null)
+                UserThread.runAfter(completeHandler::run, size * 200 + 500, TimeUnit.MILLISECONDS);
+        } else {
+            if (completeHandler != null)
+                completeHandler.run();
+        }
     }
 
     public void removeAllOpenOffers(@Nullable Runnable completeHandler) {
+        final int size = openOffers.size();
         List<OpenOffer> openOffersList = new ArrayList<>(openOffers);
         openOffersList.forEach(openOffer -> removeOpenOffer(openOffer, () -> {
         }, errorMessage -> {
         }));
         if (completeHandler != null)
-            UserThread.runAfter(completeHandler::run, openOffers.size() * 100 + 200, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(completeHandler::run, size * 200 + 500, TimeUnit.MILLISECONDS);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -357,7 +363,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             AvailabilityResult availabilityResult;
             if (openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
                 final Offer offer = openOfferOptional.get().getOffer();
-                if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().hostName)).findAny().isPresent()) {
+                if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent()) {
                     availabilityResult = AvailabilityResult.AVAILABLE;
                     List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                     if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
@@ -371,6 +377,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             } catch (TradePriceOutOfToleranceException e) {
                                 log.warn("Trade price check failed because takers price is outside out tolerance.");
                                 availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                            } catch (MarketPriceNotAvailableException e) {
+                                log.warn(e.getMessage());
+                                availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
                             } catch (Throwable e) {
                                 log.warn("Trade price check failed. " + e.getMessage());
                                 availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
@@ -494,10 +503,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers);
                             for (int i = 0; i < size; i++) {
                                 // we delay to avoid reaching throttle limits
-                                // roughly 1 offer per second
+                                // roughly 2 offer2 per second
                                 final int n = i;
-                                final long minDelay = i * 500 + 1;
-                                final long maxDelay = minDelay * 2 + 500;
+                                final long minDelay = i * 250 + 1;
+                                final long maxDelay = minDelay * 2;
                                 UserThread.runAfterRandomDelay(() -> {
                                     OpenOffer openOffer = openOffersList.get(n);
                                     // we need to check if in the meantime the offer has been removed
@@ -516,9 +525,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void refreshOffer(OpenOffer openOffer) {
-        offerBookService.refreshOffer(openOffer.getOffer(),
+        offerBookService.refreshTTL(openOffer.getOffer(),
                 () -> log.debug("Successful refreshed TTL for offer"),
-                errorMessage -> log.error("Refresh TTL for offer failed. " + errorMessage));
+                errorMessage -> log.warn(errorMessage));
     }
 
     private void restart() {
