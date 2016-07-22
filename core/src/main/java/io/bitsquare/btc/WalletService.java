@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Service;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import io.bitsquare.app.Log;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
@@ -31,7 +32,6 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.FileUtil;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
@@ -39,7 +39,6 @@ import javafx.beans.property.*;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
@@ -151,6 +150,7 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initialize(@Nullable DeterministicSeed seed, Socks5Proxy proxy, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+        Log.traceCall();
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
@@ -302,7 +302,7 @@ public class WalletService {
             }
             if(peerAddressList.size() > 0) {
                 PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
-                log.debug( "seedNodes parsed: " + peerAddressListFixed.toString() );
+                log.debug("seedNodes parsed: " + Arrays.toString(peerAddressListFixed));
                 
                 walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
             }

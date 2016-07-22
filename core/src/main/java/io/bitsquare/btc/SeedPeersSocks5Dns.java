@@ -17,20 +17,17 @@ package io.bitsquare.btc;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
-
-import org.bitcoinj.net.*;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.net.discovery.PeerDiscovery;
 import org.bitcoinj.net.discovery.PeerDiscoveryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.bitcoinj.core.NetworkParameters;
 import javax.annotation.Nullable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -42,8 +39,8 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
     private InetSocketAddress[] seedAddrs;
     private InetSocketAddress[] seedAddrsIP;
     private int pnseedIndex;
-    
-    private InetSocketAddress[] seedAddrsResolved;
+
+    private final InetSocketAddress[] seedAddrsResolved;
     
     private static final Logger log = LoggerFactory.getLogger(SeedPeersSocks5Dns.class);
 
@@ -106,7 +103,7 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
         if( seedAddrsResolved[pnseedIndex] == null ) {
             seedAddrsResolved[pnseedIndex] = lookup( proxy, seedAddrs[pnseedIndex] );
         }
-        log.error("SeedPeersSocks5Dns::nextPeer: " + seedAddrsResolved[pnseedIndex] );
+        log.error("SeedPeersSocks5Dns::nextPeer: " + seedAddrsResolved[pnseedIndex]);
         
         return seedAddrsResolved[pnseedIndex++];
     }
@@ -138,6 +135,7 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
     /**
      * Resolves a hostname via remote DNS over socks5 proxy.
      */
+    @Nullable
     public static InetSocketAddress lookup( Socks5Proxy proxy, InetSocketAddress addr ) {
         if( !addr.isUnresolved() ) {
             return addr;
@@ -156,7 +154,7 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
                 log.error("Connected to " + addr.getHostString() + ".  But did not resolve to address." );
             }
         } catch (Exception e) {
-            log.error("Error resolving " + addr.getHostString() + ". Exception:\n" + e.toString() );
+            log.warn("Error resolving " + addr.getHostString() + ". Exception:\n" + e.toString());
         }
         return null;
     }

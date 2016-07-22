@@ -56,7 +56,6 @@ import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
-import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.CloseConnectionReason;
@@ -166,7 +165,7 @@ public class MainViewModel implements ViewModel {
     private Subscription priceFeedAllLoadedSubscription;
     private Popup startupTimeoutPopup;
     private BooleanProperty p2pNetWorkReady;
-    private BooleanProperty walletInitialized;
+    private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -237,7 +236,7 @@ public class MainViewModel implements ViewModel {
         }, 4, TimeUnit.MINUTES);
 
         p2pNetWorkReady = initP2PNetwork();
-        walletInitialized = initBitcoinWallet();
+        initBitcoinWallet();
 
         // need to store it to not get garbage collected
         allServicesDone = EasyBind.combine(walletInitialized, p2pNetWorkReady, (a, b) -> a && b);
@@ -285,6 +284,7 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private BooleanProperty initP2PNetwork() {
+        Log.traceCall();
         StringProperty bootstrapState = new SimpleStringProperty();
         StringProperty bootstrapWarning = new SimpleStringProperty();
         BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
@@ -350,9 +350,8 @@ public class MainViewModel implements ViewModel {
             public void onTorNodeReady() {
                 bootstrapState.set("Tor node created");
                 p2PNetworkIconId.set("image-connection-tor");
-                if( preferences.getUseTorForBitcoinJ() ) {
+                if (preferences.getUseTorForBitcoinJ()) 
                     initWalletService();
-                }
             }
 
             @Override
@@ -426,19 +425,17 @@ public class MainViewModel implements ViewModel {
         return p2pNetworkInitialized;
     }
 
-    private BooleanProperty initBitcoinWallet() {
-        final BooleanProperty walletInitialized = new SimpleBooleanProperty();
+    private void initBitcoinWallet() {
+        Log.traceCall();
 
         // We only init wallet service here if not using Tor for bitcoinj.        
         // When using Tor, wallet init must be deferred until Tor is ready.
-        if( !preferences.getUseTorForBitcoinJ() ) {
+        if (!preferences.getUseTorForBitcoinJ()) 
             initWalletService();
-        }
-
-        return walletInitialized;
     }
     
     private void initWalletService() {
+        Log.traceCall();
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletService.downloadPercentageProperty(), walletService.numPeersProperty(), walletServiceException,
                 (downloadPercentage, numPeers, exception) -> {
@@ -482,7 +479,8 @@ public class MainViewModel implements ViewModel {
         Socks5Proxy proxy = null;
         
         if( preferences.getUseTorForBitcoinJ() ) {
-            // Use p2p service 
+            // Use proxy created by p2p service 
+            // TODO Move creation and setup of NetworkNode out of P2PService
             proxy = p2PService.getNetworkNode().getSocksProxy();
         }
 
