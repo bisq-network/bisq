@@ -23,6 +23,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private static final Logger log = LoggerFactory.getLogger(RequestDataManager.class);
 
     private static final long RETRY_DELAY_SEC = 10;
+    private static final long CLEANUP_TIMER = 120;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +217,16 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                     getDataRequestHandlers.put(uid, getDataRequestHandler);
                     getDataRequestHandler.handle((GetDataRequest) message, connection);
                 } else {
-                    log.warn("We have already a GetDataRequestHandler for that connection started");
+                    log.warn("We have already a GetDataRequestHandler for that connection started. " +
+                            "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
+
+                    UserThread.runAfter(() -> {
+                        if (getDataRequestHandlers.containsKey(uid)) {
+                            GetDataRequestHandler handler = getDataRequestHandlers.get(uid);
+                            handler.stop();
+                            getDataRequestHandlers.remove(uid);
+                        }
+                    }, CLEANUP_TIMER);
                 }
             } else {
                 log.warn("We have stopped already. We ignore that onMessage call.");
@@ -293,7 +303,16 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 handlerMap.put(nodeAddress, requestDataHandler);
                 requestDataHandler.requestData(nodeAddress);
             } else {
-                log.warn("We have started already a requestDataHandshake to peer. nodeAddress=" + nodeAddress);
+                log.warn("We have started already a requestDataHandshake to peer. nodeAddress=" + nodeAddress + "\n" +
+                        "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
+
+                UserThread.runAfter(() -> {
+                    if (handlerMap.containsKey(nodeAddress)) {
+                        RequestDataHandler handler = handlerMap.get(nodeAddress);
+                        handler.stop();
+                        handlerMap.remove(nodeAddress);
+                    }
+                }, CLEANUP_TIMER);
             }
         } else {
             log.warn("We have stopped already. We ignore that requestData call.");
