@@ -3,19 +3,10 @@ package io.bitsquare.p2p.peers.peerexchange.messages;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-
 abstract class PeerExchangeMessage implements Message {
+    //TODO add serialVersionUID also in superclasses as changes would break compatibility
+    // That object is sent over the wire, so we need to take care of version compatibility.
     private final int messageVersion = Version.getP2PMessageVersion();
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
 
     @Override
     public int getMessageVersion() {

@@ -20,22 +20,13 @@ package io.bitsquare.arbitration.messages;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.UUID;
 
 public abstract class DisputeMessage implements MailboxMessage {
-    private final int messageVersion = Version.getP2PMessageVersion();
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
-
+    //TODO add serialVersionUID also in superclasses as changes would break compatibility
     private final String uid = UUID.randomUUID().toString();
+
+    private final int messageVersion = Version.getP2PMessageVersion();
 
     @Override
     public int getMessageVersion() {
