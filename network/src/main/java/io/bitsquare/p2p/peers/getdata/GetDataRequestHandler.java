@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
@@ -15,7 +16,6 @@ import io.bitsquare.p2p.storage.P2PDataStorage;
 import io.bitsquare.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,11 +91,11 @@ public class GetDataRequestHandler {
                         log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
                                 "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
                                 "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
-                                "storagePayload is: " + StringUtils.abbreviate(storagePayload.toString(), 200).replace("\n", ""));
+                                "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
                 } else {
-                    log.debug("We do not send the message to the peer because he uses an old version which does not support the required capability for that message type.\n" +
+                    log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
                             "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                            "storagePayload is: " + StringUtils.abbreviate(storagePayload.toString(), 200).replace("\n", ""));
+                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
                 }
             } else {
                 doAdd = true;

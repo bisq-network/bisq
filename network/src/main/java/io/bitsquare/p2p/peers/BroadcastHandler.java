@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
@@ -13,7 +14,6 @@ import io.bitsquare.p2p.storage.messages.AddDataMessage;
 import io.bitsquare.p2p.storage.messages.BroadcastMessage;
 import io.bitsquare.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -101,7 +101,7 @@ public class BroadcastHandler implements PeerManager.Listener {
         this.listener = listener;
 
         Log.traceCall("Sender=" + sender + "\n\t" +
-                "Message=" + StringUtils.abbreviate(message.toString(), 100));
+                "Message=" + Utilities.toTruncatedString(message));
         Set<Connection> connectedPeersSet = networkNode.getConfirmedConnections()
                 .stream()
                 .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
@@ -144,13 +144,13 @@ public class BroadcastHandler implements PeerManager.Listener {
             }
         } else {
             onFault("Message not broadcasted because we have no available peers yet.\n\t" +
-                    "message = " + StringUtils.abbreviate(message.toString(), 100), false);
+                    "message = " + Utilities.toTruncatedString(message), false);
         }
     }
 
     private void sendToPeer(Connection connection, BroadcastMessage message) {
         String errorMessage = "Message not broadcasted because we have stopped the handler already.\n\t" +
-                "message = " + StringUtils.abbreviate(message.toString(), 100);
+                "message = " + Utilities.toTruncatedString(message);
         if (!stopped) {
             if (!connection.isStopped()) {
                 if (!isCapabilityRequired(message) || isCapabilitySupported(connection, message)) {
@@ -214,17 +214,24 @@ public class BroadcastHandler implements PeerManager.Listener {
             if (storagePayload instanceof CapabilityRequiringPayload) {
                 final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
                 final List<Integer> supportedCapabilities = connection.getSupportedCapabilities();
-                for (int messageCapability : requiredCapabilities) {
-                    for (int connectionCapability : supportedCapabilities) {
-                        if (messageCapability == connectionCapability)
-                            return true;
+                if (supportedCapabilities != null) {
+                    for (int messageCapability : requiredCapabilities) {
+                        for (int connectionCapability : supportedCapabilities) {
+                            if (messageCapability == connectionCapability)
+                                return true;
+                        }
                     }
+                    log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
+                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
+                            "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
+                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
+                    return false;
+                } else {
+                    log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
+                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
+                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
+                    return false;
                 }
-                log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
-                        "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                        "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
-                        "storagePayload is: " + StringUtils.abbreviate(storagePayload.toString(), 200).replace("\n", ""));
-                return false;
             } else {
                 return true;
             }

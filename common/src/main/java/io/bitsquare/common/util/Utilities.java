@@ -25,6 +25,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -464,5 +465,13 @@ public class Utilities {
     public static boolean isRestrictedCryptography() {
         // This simply matches the Oracle JRE, but not OpenJDK.
         return "Java(TM) SE Runtime Environment".equals(System.getProperty("java.runtime.name"));
+    }
+
+    public static String toTruncatedString(Object message, int maxLenght) {
+        return StringUtils.abbreviate(message.toString(), maxLenght).replace("\n", "");
+    }
+
+    public static String toTruncatedString(Object message) {
+        return toTruncatedString(message, 100);
     }
 }
