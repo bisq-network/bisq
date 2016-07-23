@@ -2,7 +2,7 @@ package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
-import io.bitsquare.p2p.storage.payload.CapabilityAwarePayload;
+import io.bitsquare.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.trade.offer.Offer;
 import org.bitcoinj.core.Coin;
@@ -15,7 +15,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public final class TradeStatistics implements StoragePayload, CapabilityAwarePayload {
+public final class TradeStatistics implements StoragePayload, CapabilityRequiringPayload {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 
