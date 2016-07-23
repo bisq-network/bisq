@@ -5,6 +5,8 @@ import io.bitsquare.common.crypto.SealedAndSigned;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -15,6 +17,15 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final int messageVersion = Version.getP2PMessageVersion();
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+
+    @Override
+    @Nullable
+    public ArrayList<Integer> getSupportedCapabilities() {
+        return supportedCapabilities;
+    }
+
     private final NodeAddress senderNodeAddress;
     public final SealedAndSigned sealedAndSigned;
     public final byte[] addressPrefixHash;

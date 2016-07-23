@@ -20,7 +20,9 @@ package io.bitsquare.trade.protocol.availability.messages;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.messaging.DirectMessage;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.ArrayList;
 
 @Immutable
 public abstract class OfferMessage implements DirectMessage {
@@ -28,6 +30,15 @@ public abstract class OfferMessage implements DirectMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final int messageVersion = Version.getP2PMessageVersion();
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+
+    @Override
+    @Nullable
+    public ArrayList<Integer> getSupportedCapabilities() {
+        return supportedCapabilities;
+    }
+
     public final String offerId;
 
     OfferMessage(String offerId) {

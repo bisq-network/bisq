@@ -6,6 +6,8 @@ import io.bitsquare.p2p.messaging.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class PrivateNotificationMessage implements MailboxMessage {
@@ -16,6 +18,14 @@ public class PrivateNotificationMessage implements MailboxMessage {
     public PrivateNotification privateNotification;
     private final String uid = UUID.randomUUID().toString();
     private final int messageVersion = Version.getP2PMessageVersion();
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+
+    @Override
+    @Nullable
+    public ArrayList<Integer> getSupportedCapabilities() {
+        return supportedCapabilities;
+    }
 
     public PrivateNotificationMessage(PrivateNotification privateNotification, NodeAddress myNodeAddress) {
         this.myNodeAddress = myNodeAddress;
