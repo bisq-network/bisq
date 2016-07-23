@@ -387,6 +387,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         hashMapChangedListeners.add(hashMapChangedListener);
     }
 
+    public void removeHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {
+        hashMapChangedListeners.remove(hashMapChangedListener);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
