@@ -25,6 +25,7 @@ import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bitsquare.storage.Storage;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -263,7 +264,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
                 // printData("before refreshTTL");
                 if (allValid) {
-                    log.debug("refreshDate called for storedData:\n\t" + Utilities.toTruncatedString(storedData));
+                    log.debug("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
                     storedData.refreshTTL();
                     storedData.updateSequenceNumber(sequenceNumber);
                     storedData.updateSignature(signature);

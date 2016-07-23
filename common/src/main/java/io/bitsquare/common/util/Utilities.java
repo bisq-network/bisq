@@ -472,6 +472,6 @@ public class Utilities {
     }
 
     public static String toTruncatedString(Object message) {
-        return toTruncatedString(message, 100);
+        return toTruncatedString(message, 200);
     }
 }
