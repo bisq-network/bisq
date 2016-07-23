@@ -70,21 +70,20 @@ public class GetDataRequestHandler {
     public void handle(GetDataRequest getDataRequest, final Connection connection) {
         Log.traceCall(getDataRequest + "\n\tconnection=" + connection);
 
-        getDataRequest.getSupportedCapabilities();
-
-        final HashSet<ProtectedStorageEntry> dataSet = new HashSet<>(dataStorage.getMap().values());
         final HashSet<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
-        for (ProtectedStorageEntry protectedStorageEntry : dataSet) {
+        for (ProtectedStorageEntry protectedStorageEntry : dataStorage.getMap().values()) {
             final StoragePayload storagePayload = protectedStorageEntry.getStoragePayload();
             boolean doAdd = false;
             if (storagePayload instanceof CapabilityRequiringPayload) {
                 final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
-                final List<Integer> supportedCapabilities = getDataRequest.getSupportedCapabilities();
+                final List<Integer> supportedCapabilities = connection.getSupportedCapabilities();
                 if (supportedCapabilities != null) {
                     for (int messageCapability : requiredCapabilities) {
                         for (int connectionCapability : supportedCapabilities) {
-                            if (messageCapability == connectionCapability)
+                            if (messageCapability == connectionCapability) {
                                 doAdd = true;
+                                break;
+                            }
                         }
                     }
                     if (!doAdd)

@@ -19,8 +19,12 @@ package io.bitsquare.trade.protocol.availability.messages;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 
-public final class OfferAvailabilityRequest extends OfferMessage {
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+
+public final class OfferAvailabilityRequest extends OfferMessage implements SupportedCapabilitiesMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -31,6 +35,15 @@ public final class OfferAvailabilityRequest extends OfferMessage {
         super(offerId);
         this.pubKeyRing = pubKeyRing;
         this.takersTradePrice = takersTradePrice;
+    }
+
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+
+    @Override
+    @Nullable
+    public ArrayList<Integer> getSupportedCapabilities() {
+        return supportedCapabilities;
     }
 
     public PubKeyRing getPubKeyRing() {

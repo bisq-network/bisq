@@ -12,6 +12,7 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.BanList;
@@ -277,6 +278,10 @@ public class Connection implements MessageListener {
 
     public boolean isCapabilityRequired(Message message) {
         return message instanceof AddDataMessage && (((AddDataMessage) message).protectedStorageEntry).getStoragePayload() instanceof CapabilityRequiringPayload;
+    }
+
+    public List<Integer> getSupportedCapabilities() {
+        return sharedModel.getSupportedCapabilities();
     }
 
     public void addMessageListener(MessageListener messageListener) {
@@ -813,8 +818,8 @@ public class Connection implements MessageListener {
                             return;
                         }
 
-                        if (sharedModel.getSupportedCapabilities() == null && message.getSupportedCapabilities() != null)
-                            sharedModel.setSupportedCapabilities(message.getSupportedCapabilities());
+                        if (sharedModel.getSupportedCapabilities() == null && message instanceof SupportedCapabilitiesMessage)
+                            sharedModel.setSupportedCapabilities(((SupportedCapabilitiesMessage) message).getSupportedCapabilities());
 
                         if (message instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down
