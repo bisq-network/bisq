@@ -9,7 +9,10 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
+import io.bitsquare.p2p.storage.messages.AddDataMessage;
 import io.bitsquare.p2p.storage.messages.BroadcastMessage;
+import io.bitsquare.p2p.storage.payload.CapabilityRequiringPayload;
+import io.bitsquare.p2p.storage.payload.StoragePayload;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -150,51 +153,53 @@ public class BroadcastHandler implements PeerManager.Listener {
                 "message = " + StringUtils.abbreviate(message.toString(), 100);
         if (!stopped) {
             if (!connection.isStopped()) {
-                NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
-                log.trace("Broadcast message to " + nodeAddress + ".");
-                broadcastQueue.add(nodeAddress.getFullAddress());
-                SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
-                Futures.addCallback(future, new FutureCallback<Connection>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
-                        numOfCompletedBroadcasts++;
-                        broadcastQueue.remove(nodeAddress.getFullAddress());
-                        if (!stopped) {
-                            log.trace("Broadcast to " + nodeAddress + " succeeded.");
+                if (!isCapabilityRequired(message) || isCapabilitySupported(connection, message)) {
+                    NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+                    log.trace("Broadcast message to " + nodeAddress + ".");
+                    broadcastQueue.add(nodeAddress.getFullAddress());
+                    SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
+                    Futures.addCallback(future, new FutureCallback<Connection>() {
+                        @Override
+                        public void onSuccess(Connection connection) {
+                            numOfCompletedBroadcasts++;
+                            broadcastQueue.remove(nodeAddress.getFullAddress());
+                            if (!stopped) {
+                                log.trace("Broadcast to " + nodeAddress + " succeeded.");
 
-                            if (listener != null)
-                                listener.onBroadcasted(message, numOfCompletedBroadcasts);
-
-                            if (listener != null && numOfCompletedBroadcasts == 1)
-                                listener.onBroadcastedToFirstPeer(message);
-
-                            if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numOfPeers) {
                                 if (listener != null)
-                                    listener.onBroadcastCompleted(message, numOfCompletedBroadcasts, numOfFailedBroadcasts);
+                                    listener.onBroadcasted(message, numOfCompletedBroadcasts);
 
-                                cleanup();
-                                resultHandler.onCompleted(BroadcastHandler.this);
+                                if (listener != null && numOfCompletedBroadcasts == 1)
+                                    listener.onBroadcastedToFirstPeer(message);
+
+                                if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numOfPeers) {
+                                    if (listener != null)
+                                        listener.onBroadcastCompleted(message, numOfCompletedBroadcasts, numOfFailedBroadcasts);
+
+                                    cleanup();
+                                    resultHandler.onCompleted(BroadcastHandler.this);
+                                }
+                            } else {
+                                // TODO investigate why that is called very often at seed nodes
+                                onFault("stopped at onSuccess: " + errorMessage, false);
                             }
-                        } else {
-                            // TODO investigate why that is called very often at seed nodes
-                            onFault("stopped at onSuccess: " + errorMessage, false);
                         }
-                    }
 
-                    @Override
-                    public void onFailure(@NotNull Throwable throwable) {
-                        numOfFailedBroadcasts++;
-                        broadcastQueue.remove(nodeAddress.getFullAddress());
-                        if (!stopped) {
-                            log.info("Broadcast to " + nodeAddress + " failed.\n\t" +
-                                    "ErrorMessage=" + throwable.getMessage());
-                            if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numOfPeers)
+                        @Override
+                        public void onFailure(@NotNull Throwable throwable) {
+                            numOfFailedBroadcasts++;
+                            broadcastQueue.remove(nodeAddress.getFullAddress());
+                            if (!stopped) {
+                                log.info("Broadcast to " + nodeAddress + " failed.\n\t" +
+                                        "ErrorMessage=" + throwable.getMessage());
+                                if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numOfPeers)
+                                    onFault("stopped at onFailure: " + errorMessage);
+                            } else {
                                 onFault("stopped at onFailure: " + errorMessage);
-                        } else {
-                            onFault("stopped at onFailure: " + errorMessage);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             } else {
                 onFault("Connection stopped already", false);
             }
@@ -203,6 +208,34 @@ public class BroadcastHandler implements PeerManager.Listener {
         }
     }
 
+    private boolean isCapabilitySupported(Connection connection, BroadcastMessage message) {
+        if (message instanceof AddDataMessage) {
+            final StoragePayload storagePayload = (((AddDataMessage) message).protectedStorageEntry).getStoragePayload();
+            if (storagePayload instanceof CapabilityRequiringPayload) {
+                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
+                final List<Integer> supportedCapabilities = connection.getSupportedCapabilities();
+                for (int messageCapability : requiredCapabilities) {
+                    for (int connectionCapability : supportedCapabilities) {
+                        if (messageCapability == connectionCapability)
+                            return true;
+                    }
+                }
+                log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
+                        "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
+                        "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
+                        "storagePayload is: " + StringUtils.abbreviate(storagePayload.toString(), 200).replace("\n", ""));
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    private boolean isCapabilityRequired(BroadcastMessage message) {
+        return message instanceof AddDataMessage && (((AddDataMessage) message).protectedStorageEntry).getStoragePayload() instanceof CapabilityRequiringPayload;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PeerManager.Listener implementation
