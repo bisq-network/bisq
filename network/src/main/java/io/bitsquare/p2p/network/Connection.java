@@ -106,7 +106,8 @@ public class Connection implements MessageListener {
     private final List<Tuple2<Long, Serializable>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private volatile long lastSendTimeStamp = 0;
-    ;
+    private List<Integer> supportedCapabilities = new ArrayList<>();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -251,6 +252,14 @@ public class Connection implements MessageListener {
     @SuppressWarnings("unused")
     public boolean reportIllegalRequest(RuleViolation ruleViolation) {
         return sharedModel.reportInvalidRequest(ruleViolation);
+    }
+
+    public List<Integer> getSupportedCapabilities() {
+        return supportedCapabilities;
+    }
+
+    public void setSupportedCapabilities(List<Integer> supportedCapabilities) {
+        this.supportedCapabilities = supportedCapabilities;
     }
 
     private boolean violatesThrottleLimit(Serializable serializable) {
