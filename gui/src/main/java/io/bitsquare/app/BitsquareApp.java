@@ -174,7 +174,8 @@ public class BitsquareApp extends Application {
             Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 13);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
-                    "/io/bitsquare/gui/images.css");
+                    "/io/bitsquare/gui/images.css",
+                    "/io/bitsquare/gui/components/candlestick/CandleStickChart.css");
 
             // configure the system tray
             SystemTray.create(primaryStage, shutDownHandler);
