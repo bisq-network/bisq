@@ -33,18 +33,19 @@ public class PublishTradeStatistics extends TradeTask {
 
     @Override
     protected void run() {
-        runInterceptHook();
-
-
-        TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
-                trade.getTradePrice(),
-                trade.getTradeAmount(),
-                trade.getDate(),
-                trade.getDepositTx().getHashAsString(),
-                trade.getContractHash(),
-                processModel.getPubKeyRing());
-        processModel.getP2PService().addData(tradeStatistics, true);
-
-
+        try {
+            runInterceptHook();
+            TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
+                    trade.getTradePrice(),
+                    trade.getTradeAmount(),
+                    trade.getDate(),
+                    (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
+                    trade.getContractHash(),
+                    processModel.getPubKeyRing());
+            processModel.getP2PService().addData(tradeStatistics, true);
+            complete();
+        } catch (Throwable t) {
+            failed(t);
+        }
     }
 }
