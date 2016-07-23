@@ -94,13 +94,18 @@ public class Version {
         TRADE_STATISTICS
     }
 
+    public static void setCapabilities(ArrayList<Integer> capabilities) {
+        Version.capabilities = capabilities;
+    }
+
+    private static ArrayList<Integer> capabilities = new ArrayList<>(Arrays.asList(
+            Capability.TRADE_STATISTICS.ordinal()
+    ));
+
     /**
      * @return The Capabilities as ordinal integer the client supports.
      */
     public static ArrayList<Integer> getCapabilities() {
-        return new ArrayList<>(Arrays.asList(
-                Capability.SEED_NODE.ordinal(),
-                Capability.TRADE_STATISTICS.ordinal()
-        ));
+        return capabilities;
     }
 }
