@@ -12,11 +12,16 @@ import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.storage.P2PDataStorage;
+import io.bitsquare.p2p.storage.payload.CapabilityRequiringPayload;
+import io.bitsquare.p2p.storage.payload.StoragePayload;
+import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class GetDataRequestHandler {
@@ -64,8 +69,42 @@ public class GetDataRequestHandler {
 
     public void handle(GetDataRequest getDataRequest, final Connection connection) {
         Log.traceCall(getDataRequest + "\n\tconnection=" + connection);
-        GetDataResponse getDataResponse = new GetDataResponse(new HashSet<>(dataStorage.getMap().values()),
-                getDataRequest.getNonce());
+
+        getDataRequest.getSupportedCapabilities();
+
+        final HashSet<ProtectedStorageEntry> dataSet = new HashSet<>(dataStorage.getMap().values());
+        final HashSet<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
+        for (ProtectedStorageEntry protectedStorageEntry : dataSet) {
+            final StoragePayload storagePayload = protectedStorageEntry.getStoragePayload();
+            boolean doAdd = false;
+            if (storagePayload instanceof CapabilityRequiringPayload) {
+                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
+                final List<Integer> supportedCapabilities = getDataRequest.getSupportedCapabilities();
+                if (supportedCapabilities != null) {
+                    for (int messageCapability : requiredCapabilities) {
+                        for (int connectionCapability : supportedCapabilities) {
+                            if (messageCapability == connectionCapability)
+                                doAdd = true;
+                        }
+                    }
+                    if (!doAdd)
+                        log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
+                                "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
+                                "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
+                                "storagePayload is: " + StringUtils.abbreviate(storagePayload.toString(), 200).replace("\n", ""));
+                } else {
+                    log.debug("We do not send the message to the peer because he uses an old version which does not support the required capability for that message type.\n" +
+                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
+                            "storagePayload is: " + StringUtils.abbreviate(storagePayload.toString(), 200).replace("\n", ""));
+                }
+            } else {
+                doAdd = true;
+            }
+            if (doAdd)
+                filteredDataSet.add(protectedStorageEntry);
+        }
+
+        GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet, getDataRequest.getNonce());
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions

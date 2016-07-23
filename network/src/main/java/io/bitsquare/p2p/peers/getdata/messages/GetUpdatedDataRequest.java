@@ -4,6 +4,9 @@ import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, GetDataRequest {
@@ -11,6 +14,15 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final int messageVersion = Version.getP2PMessageVersion();
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+
+    @Override
+    @Nullable
+    public ArrayList<Integer> getSupportedCapabilities() {
+        return supportedCapabilities;
+    }
+
     private final NodeAddress senderNodeAddress;
     private final int nonce;
 
