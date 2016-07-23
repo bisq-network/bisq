@@ -20,7 +20,8 @@ package io.bitsquare.gui.main.markets.trades;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
-import io.bitsquare.gui.components.candlestick.CandleStickExtraValues;
+import io.bitsquare.gui.main.markets.trades.candlestick.CandleData;
+import io.bitsquare.gui.main.markets.trades.candlestick.CandleStickExtraValues;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
@@ -61,7 +62,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ObservableList<XYChart.Data<Number, Number>> items = FXCollections.observableArrayList();
     private P2PService p2PService;
     final ObservableList<TradeStatistics> tradeStatistics = FXCollections.observableArrayList();
-    TickUnit tickUnit = TickUnit.HOUR;
+    TickUnit tickUnit = TickUnit.MINUTE;
     int upperBound = 30;
 
     ///////////////////////////////////////////////////////////////////////////////////////////

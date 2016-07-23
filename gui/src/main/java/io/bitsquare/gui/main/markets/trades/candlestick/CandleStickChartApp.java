@@ -29,7 +29,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.bitsquare.gui.components.candlestick;
+package io.bitsquare.gui.main.markets.trades.candlestick;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -108,7 +108,7 @@ public class CandleStickChartApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         final Scene scene = new Scene(createContent());
-        scene.getStylesheets().add("/io/bitsquare/gui/components/candlestick/CandleStickChart.css");
+        scene.getStylesheets().add("/io/bitsquare/gui/CandleStickChart.css");
         primaryStage.setScene(scene);
 
         primaryStage.show();

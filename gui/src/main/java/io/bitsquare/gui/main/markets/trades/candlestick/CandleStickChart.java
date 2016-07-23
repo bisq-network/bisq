@@ -29,7 +29,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.bitsquare.gui.components.candlestick;
+package io.bitsquare.gui.main.markets.trades.candlestick;
 
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
@@ -42,6 +42,8 @@ import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -55,7 +57,9 @@ import java.util.List;
  * extra value property using a CandleStickExtraValues object.
  */
 public class CandleStickChart extends XYChart<Number, Number> {
+    private static final Logger log = LoggerFactory.getLogger(CandleStickChart.class);
     private StringConverter<Number> toolTipStringConverter;
+    private Path seriesPath;
 
     // -------------- CONSTRUCTORS ----------------------------------------------
 
@@ -160,17 +164,18 @@ public class CandleStickChart extends XYChart<Number, Number> {
 
     @Override
     protected void dataItemRemoved(XYChart.Data<Number, Number> item, XYChart.Series<Number, Number> series) {
-        final Node candle = item.getNode();
+        seriesPath.getElements().clear();
+        final Node node = item.getNode();
         if (shouldAnimate()) {
             // fade out old candle
-            FadeTransition ft = new FadeTransition(Duration.millis(500), candle);
+            FadeTransition ft = new FadeTransition(Duration.millis(500), node);
             ft.setToValue(0);
             ft.setOnFinished((ActionEvent actionEvent) -> {
-                getPlotChildren().remove(candle);
+                getPlotChildren().remove(node);
             });
             ft.play();
         } else {
-            getPlotChildren().remove(candle);
+            getPlotChildren().remove(node);
         }
     }
 
@@ -192,7 +197,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
             }
         }
         // create series path
-        Path seriesPath = new Path();
+        seriesPath = new Path();
         seriesPath.getStyleClass().setAll("candlestick-average-line", "series" + seriesIndex);
         series.setNode(seriesPath);
         getPlotChildren().add(seriesPath);
@@ -214,6 +219,11 @@ public class CandleStickChart extends XYChart<Number, Number> {
             } else {
                 getPlotChildren().remove(candle);
             }
+        }
+
+        if (series.getNode() instanceof Path) {
+            Path seriesPath = (Path) series.getNode();
+            seriesPath.getElements().clear();
         }
     }
 

@@ -1,4 +1,4 @@
-package io.bitsquare.gui.main.markets.trades;
+package io.bitsquare.gui.main.markets.trades.candlestick;
 
 public class CandleData {
     public final long tick; // Is the time tick in the chosen time interval

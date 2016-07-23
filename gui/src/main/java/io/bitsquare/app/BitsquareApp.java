@@ -175,7 +175,7 @@ public class BitsquareApp extends Application {
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css",
-                    "/io/bitsquare/gui/components/candlestick/CandleStickChart.css");
+                    "/io/bitsquare/gui/CandleStickChart.css");
 
             // configure the system tray
             SystemTray.create(primaryStage, shutDownHandler);

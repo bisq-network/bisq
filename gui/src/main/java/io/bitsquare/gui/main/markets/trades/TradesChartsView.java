@@ -18,10 +18,9 @@
 package io.bitsquare.gui.main.markets.trades;
 
 import io.bitsquare.common.UserThread;
-import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.candlestick.CandleStickChart;
+import io.bitsquare.gui.main.markets.trades.candlestick.CandleStickChart;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.FiatCurrency;
@@ -58,7 +57,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private NumberAxis xAxis, yAxis;
     XYChart.Series<Number, Number> series;
     private final ListChangeListener<XYChart.Data<Number, Number>> itemsChangeListener;
-    private final Navigation navigation;
     private final BSFormatter formatter;
     private TableView<TradeStatistics> tableView;
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -73,9 +71,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradesChartsView(TradesChartsViewModel model, Navigation navigation, BSFormatter formatter) {
+    public TradesChartsView(TradesChartsViewModel model, BSFormatter formatter) {
         super(model);
-        this.navigation = navigation;
         this.formatter = formatter;
 
         itemsChangeListener = c -> updateChartData();
@@ -153,6 +150,89 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         currencyComboBox.setOnAction(null);
     }
 
+
+    private void createChart() {
+        xAxis = new NumberAxis(0, model.upperBound + 1, 1);
+        xAxis.setTickUnit(1);
+        //  final double lowerBound = (double) model.getTimeInterval(0, model.tickUnit);
+        //xAxis.setLowerBound(lowerBound);
+        //final long minWith = (long) root.getWidth() / 20;
+        //final double upperBound = (double) minWith;
+        // xAxis.setUpperBound(upperBound);
+        xAxis.setMinorTickCount(0);
+        xAxis.setForceZeroInRange(false);
+        //xAxis.setAutoRanging(true);
+        xAxis.setLabel("Date/Time");
+        xAxis.setTickLabelFormatter(getXAxisStringConverter());
+
+        yAxis = new NumberAxis();
+        yAxis.setForceZeroInRange(false);
+        yAxis.setAutoRanging(true);
+        yAxis.setLabel(priceColumnLabel.get());
+        yAxis.setTickLabelFormatter(getStringConverter());
+
+        series = new XYChart.Series<>();
+        candleStickChart = new CandleStickChart(xAxis, yAxis);
+        candleStickChart.setData(FXCollections.observableArrayList(series));
+        candleStickChart.setAnimated(true);
+        candleStickChart.setId("charts");
+        candleStickChart.setMinHeight(300);
+        candleStickChart.setPadding(new Insets(0, 30, 10, 0));
+        candleStickChart.setToolTipStringConverter(getStringConverter());
+    }
+
+    @NotNull
+    private StringConverter<Number> getXAxisStringConverter() {
+        return new StringConverter<Number>() {
+            @Override
+            public String toString(Number object) {
+                // comes as double
+                long index = new Double((double) object).longValue();
+                final long now = model.getTickFromTime(new Date().getTime(), model.tickUnit);
+                final long tick = now - (model.upperBound - index);
+                final long time = model.getTimeFromTick(tick, model.tickUnit);
+                if (model.tickUnit.ordinal() <= TradesChartsViewModel.TickUnit.DAY.ordinal())
+                    return index % 7 == 0 ? formatter.formatDate(new Date(time)) : "";
+                else
+                    return index % 4 == 0 ? formatter.formatTime(new Date(time)) : "";
+            }
+
+            @Override
+            public Number fromString(String string) {
+                return null;
+            }
+        };
+    }
+
+    private void updateChartData() {
+        series.getData().clear();
+        candleStickChart.getData().clear();
+
+        series = new XYChart.Series<>();
+        candleStickChart.setData(FXCollections.observableArrayList(series));
+        series.getData().addAll(model.getItems());
+        xAxis.setTickLabelFormatter(getXAxisStringConverter());
+
+        // xAxis.setLowerBound((double) model.getTimeInterval(0, model.tickUnit));
+        //xAxis.setUpperBound((double) model.getTimeInterval((long) root.getWidth() / 20, model.tickUnit));
+
+    }
+
+    @NotNull
+    private StringConverter<Number> getStringConverter() {
+        return new StringConverter<Number>() {
+            @Override
+            public String toString(Number object) {
+                // comes as double
+                return formatter.formatFiat(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
+            }
+
+            @Override
+            public Number fromString(String string) {
+                return null;
+            }
+        };
+    }
 
     private VBox getTableBox() {
         tableView = new TableView<>();
@@ -296,83 +376,4 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         return vBox;
     }
 
-
-    private void createChart() {
-        xAxis = new NumberAxis(0, model.upperBound + 1, 1);
-        xAxis.setTickUnit(1);
-        //  final double lowerBound = (double) model.getTimeInterval(0, model.tickUnit);
-        //xAxis.setLowerBound(lowerBound);
-        //final long minWith = (long) root.getWidth() / 20;
-        //final double upperBound = (double) minWith;
-        // xAxis.setUpperBound(upperBound);
-        xAxis.setMinorTickCount(0);
-        xAxis.setForceZeroInRange(false);
-        //xAxis.setAutoRanging(true);
-        xAxis.setLabel("Date/Time");
-        xAxis.setTickLabelFormatter(new StringConverter<Number>() {
-            @Override
-            public String toString(Number object) {
-                // comes as double
-                long index = new Double((double) object).longValue();
-                // int pos = model.upperBound - index;
-                // model.getTickFromTime(new Date().getTime(), model.tickUnit);
-
-                //final long time1 = model.getTickFromTime(e.tradeDateAsTime, model.tickUnit);
-                final long now = model.getTickFromTime(new Date().getTime(), model.tickUnit);
-                // long index11 = model.upperBound - (now - time);
-
-                final long tick = now - (model.upperBound - index);
-                final long time = model.getTimeFromTick(tick, model.tickUnit);
-                if (model.tickUnit.ordinal() <= TradesChartsViewModel.TickUnit.DAY.ordinal())
-                    return index % 7 == 0 ? formatter.formatDate(new Date(time)) : "";
-                else
-                    return index % 4 == 0 ? formatter.formatTime(new Date(time)) : "";
-            }
-
-            @Override
-            public Number fromString(String string) {
-                return null;
-            }
-        });
-
-        yAxis = new NumberAxis();
-        yAxis.setForceZeroInRange(false);
-        yAxis.setAutoRanging(true);
-        yAxis.setLabel(priceColumnLabel.get());
-        yAxis.setTickLabelFormatter(getStringConverter());
-        series = new XYChart.Series<>();
-
-        candleStickChart = new CandleStickChart(xAxis, yAxis);
-        candleStickChart.setData(FXCollections.observableArrayList(series));
-        //candleStickChart.setAnimated(false);
-        candleStickChart.setId("charts");
-        candleStickChart.setMinHeight(300);
-        candleStickChart.setPadding(new Insets(0, 30, 10, 0));
-        candleStickChart.setToolTipStringConverter(getStringConverter());
-    }
-
-    @NotNull
-    private StringConverter<Number> getStringConverter() {
-        return new StringConverter<Number>() {
-            @Override
-            public String toString(Number object) {
-                // comes as double
-                return formatter.formatFiat(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
-            }
-
-            @Override
-            public Number fromString(String string) {
-                return null;
-            }
-        };
-    }
-
-    private void updateChartData() {
-        series.getData().clear();
-        series.getData().addAll(model.getItems());
-
-        // xAxis.setLowerBound((double) model.getTimeInterval(0, model.tickUnit));
-        //xAxis.setUpperBound((double) model.getTimeInterval((long) root.getWidth() / 20, model.tickUnit));
-
-    }
 }

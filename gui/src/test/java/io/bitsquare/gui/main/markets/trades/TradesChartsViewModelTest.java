@@ -1,5 +1,6 @@
 package io.bitsquare.gui.main.markets.trades;
 
+import io.bitsquare.gui.main.markets.trades.candlestick.CandleData;
 import io.bitsquare.trade.TradeStatistics;
 import io.bitsquare.trade.offer.Offer;
 import org.bitcoinj.core.Coin;
