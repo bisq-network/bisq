@@ -8,6 +8,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
@@ -22,7 +23,6 @@ import io.bitsquare.p2p.storage.messages.RefreshTTLMessage;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +106,6 @@ public class Connection implements MessageListener {
     private final List<Tuple2<Long, Serializable>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private volatile long lastSendTimeStamp = 0;
-    private List<Integer> supportedCapabilities = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +169,7 @@ public class Connection implements MessageListener {
     public void sendMessage(Message message) {
         if (!stopped) {
             try {
-                log.info("sendMessage message=" + getTruncatedMessage(message));
+                log.info("sendMessage message=" + Utilities.toTruncatedString(message));
                 Log.traceCall();
                 // Throttle outbound messages
                 long now = System.currentTimeMillis();
@@ -192,7 +191,7 @@ public class Connection implements MessageListener {
                                     "Sending direct message to peer" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, getTruncatedMessage(message), size);
+                            peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
                 } else if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                     setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
@@ -200,12 +199,12 @@ public class Connection implements MessageListener {
                                     "Sending direct message to peer" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, getTruncatedMessage(message), size);
+                            peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
                 } else {
                     log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                     "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                     "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, getTruncatedMessage(message), size);
+                            peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
                 }
 
                 if (!stopped) {
@@ -255,11 +254,7 @@ public class Connection implements MessageListener {
     }
 
     public List<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
-
-    public void setSupportedCapabilities(List<Integer> supportedCapabilities) {
-        this.supportedCapabilities = supportedCapabilities;
+        return sharedModel.getSupportedCapabilities();
     }
 
     private boolean violatesThrottleLimit(Serializable serializable) {
@@ -460,10 +455,6 @@ public class Connection implements MessageListener {
         }
     }
 
-    private String getTruncatedMessage(Message message) {
-        return StringUtils.abbreviate(message.toString(), 100).replace("\n", "");
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -521,6 +512,8 @@ public class Connection implements MessageListener {
         private volatile boolean stopped;
         private CloseConnectionReason closeConnectionReason;
         private RuleViolation ruleViolation;
+        private List<Integer> supportedCapabilities;
+
 
         public SharedModel(Connection connection, Socket socket) {
             this.connection = connection;
@@ -556,6 +549,14 @@ public class Connection implements MessageListener {
             } else {
                 return false;
             }
+        }
+
+        public List<Integer> getSupportedCapabilities() {
+            return supportedCapabilities;
+        }
+
+        public void setSupportedCapabilities(List<Integer> supportedCapabilities) {
+            this.supportedCapabilities = supportedCapabilities;
         }
 
         public void handleConnectionException(Throwable e) {
@@ -684,7 +685,7 @@ public class Connection implements MessageListener {
                                             "Received object (truncated)={} / size={}"
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                     connection,
-                                    StringUtils.abbreviate(rawInputObject.toString(), 100),
+                                    Utilities.toTruncatedString(rawInputObject),
                                     size);
                         } else if (rawInputObject instanceof Message) {
                             // We want to log all incoming messages (except Pong and RefreshTTLMessage) 
@@ -694,7 +695,7 @@ public class Connection implements MessageListener {
                                             "Received object (truncated)={} / size={}"
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                     connection,
-                                    StringUtils.abbreviate(rawInputObject.toString(), 100),
+                                    Utilities.toTruncatedString(rawInputObject),
                                     size);
                         } else {
                             log.error("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
@@ -769,6 +770,9 @@ public class Connection implements MessageListener {
                             // We return anyway here independent of the return value of reportInvalidRequest
                             return;
                         }
+
+                        if (sharedModel.getSupportedCapabilities() == null && message.getSupportedCapabilities() != null)
+                            sharedModel.setSupportedCapabilities(message.getSupportedCapabilities());
 
                         if (message instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down
