@@ -31,7 +31,6 @@ import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
-import io.bitsquare.trade.protocol.trade.tasks.shared.PublishTradeStatistics;
 import io.bitsquare.trade.protocol.trade.tasks.taker.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,8 +132,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 VerifyOffererAccount.class,
                 VerifyAndSignContract.class,
                 SignAndPublishDepositTxAsSeller.class,
-                SendDepositTxPublishedMessage.class,
-                PublishTradeStatistics.class
+                SendDepositTxPublishedMessage.class
         );
         taskRunner.run();
     }

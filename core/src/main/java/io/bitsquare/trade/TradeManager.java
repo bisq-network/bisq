@@ -194,13 +194,42 @@ public class TradeManager {
             } else {
                 toRemove.add(trade);
             }
+
+            // Only offerer publishes statistic data of trades
+            if (isMyOffer(trade.getOffer())) {
+                TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
+                        trade.getTradePrice(),
+                        trade.getTradeAmount(),
+                        trade.getDate(),
+                        (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
+                        trade.getContractHash(),
+                        keyRing.getPubKeyRing());
+                p2PService.addData(tradeStatistics, true);
+            }
         }
-        for (Trade trade : toAdd) {
+        for (Trade trade : toAdd)
             addTradeToFailedTrades(trade);
-        }
-        for (Trade trade : toRemove) {
+
+        for (Trade trade : toRemove)
             removePreparedTrade(trade);
+
+        for (Tradable tradable : closedTradableManager.getClosedTrades()) {
+            if (tradable instanceof Trade) {
+                Trade trade = (Trade) tradable;
+                // Only offerer publishes statistic data of trades
+                if (isMyOffer(trade.getOffer())) {
+                    TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
+                            trade.getTradePrice(),
+                            trade.getTradeAmount(),
+                            trade.getDate(),
+                            (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
+                            trade.getContractHash(),
+                            keyRing.getPubKeyRing());
+                    p2PService.addData(tradeStatistics, true);
+                }
+            }
         }
+
         pendingTradesInitialized.set(true);
     }
 
