@@ -29,7 +29,6 @@ public abstract class OfferMessage implements DirectMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final int messageVersion = Version.getP2PMessageVersion();
-
     public final String offerId;
 
     OfferMessage(String offerId) {

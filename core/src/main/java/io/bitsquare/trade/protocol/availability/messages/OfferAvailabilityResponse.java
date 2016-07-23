@@ -20,20 +20,9 @@ package io.bitsquare.trade.protocol.availability.messages;
 import io.bitsquare.app.Version;
 import io.bitsquare.trade.protocol.availability.AvailabilityResult;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-
 public final class OfferAvailabilityResponse extends OfferMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
 
     public final AvailabilityResult availabilityResult;
 

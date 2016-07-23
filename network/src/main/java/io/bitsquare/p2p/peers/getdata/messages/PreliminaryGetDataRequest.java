@@ -3,23 +3,11 @@ package io.bitsquare.p2p.peers.getdata.messages;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.network.messages.AnonymousMessage;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-
 public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDataRequest {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final int messageVersion = Version.getP2PMessageVersion();
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
-
     private final int nonce;
 
     public PreliminaryGetDataRequest(int nonce) {

@@ -5,7 +5,6 @@ import io.bitsquare.p2p.Message;
 
 abstract class PeerExchangeMessage implements Message {
     //TODO add serialVersionUID also in superclasses as changes would break compatibility
-    // That object is sent over the wire, so we need to take care of version compatibility.
     private final int messageVersion = Version.getP2PMessageVersion();
 
     @Override

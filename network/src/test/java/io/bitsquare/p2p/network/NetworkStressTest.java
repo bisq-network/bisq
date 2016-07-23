@@ -24,7 +24,6 @@ import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
@@ -828,14 +827,6 @@ public class NetworkStressTest {
 final class StressTestDirectMessage implements DirectMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
 
     private String data;
 
@@ -856,14 +847,6 @@ final class StressTestDirectMessage implements DirectMessage {
 final class StressTestMailboxMessage implements MailboxMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
 
     private final String uid = UUID.randomUUID().toString();
     private NodeAddress senderNodeAddress;

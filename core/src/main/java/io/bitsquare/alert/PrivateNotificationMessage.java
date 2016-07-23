@@ -6,28 +6,16 @@ import io.bitsquare.p2p.messaging.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.UUID;
 
-public final class PrivateNotificationMessage implements MailboxMessage {
+public class PrivateNotificationMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    private final int messageVersion = Version.getP2PMessageVersion();
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
-
-
     private static final Logger log = LoggerFactory.getLogger(PrivateNotificationMessage.class);
     private NodeAddress myNodeAddress;
     public PrivateNotification privateNotification;
     private final String uid = UUID.randomUUID().toString();
+    private final int messageVersion = Version.getP2PMessageVersion();
 
     public PrivateNotificationMessage(PrivateNotification privateNotification, NodeAddress myNodeAddress) {
         this.myNodeAddress = myNodeAddress;

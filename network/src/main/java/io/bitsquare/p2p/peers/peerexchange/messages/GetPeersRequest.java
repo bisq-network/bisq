@@ -5,8 +5,6 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.peerexchange.Peer;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.HashSet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -14,14 +12,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class GetPeersRequest extends PeerExchangeMessage implements SendersNodeAddressMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
 
     private final NodeAddress senderNodeAddress;
     public final int nonce;

@@ -17,6 +17,7 @@
 
 package io.bitsquare.crypto;
 
+
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.p2p.NodeAddress;
@@ -32,14 +33,12 @@ import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -86,15 +85,6 @@ public class EncryptionServiceTests {
 final class TestMessage implements MailboxMessage {
     public String data = "test";
     private final int messageVersion = Version.getP2PMessageVersion();
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
-
     private String uid;
 
     public TestMessage(String data) {

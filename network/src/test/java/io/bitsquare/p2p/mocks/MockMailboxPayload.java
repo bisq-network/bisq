@@ -5,21 +5,10 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.storage.payload.ExpirablePayload;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.UUID;
 
 public final class MockMailboxPayload implements MailboxMessage, ExpirablePayload {
     private final int messageVersion = Version.getP2PMessageVersion();
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
-
     public final String msg;
     public final NodeAddress senderNodeAddress;
     public long ttl;
