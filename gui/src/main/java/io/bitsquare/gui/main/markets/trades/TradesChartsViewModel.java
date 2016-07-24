@@ -59,7 +59,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private final Preferences preferences;
     final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>();
     private final HashMapChangedListener mapChangedListener;
-    ObservableList<XYChart.Data<Number, Number>> items = FXCollections.observableArrayList();
+    ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<String, Number>> volumeItems = FXCollections.observableArrayList();
 
     private P2PService p2PService;
@@ -132,7 +132,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
     }
 
     private void updateChartData() {
-        items.clear();
         final Stream<TradeStatistics> tradeStatisticsStream = tradeStatistics.stream()
                 .filter(e -> e.offer.getCurrencyCode().equals(getCurrencyCode()));
 
@@ -158,12 +157,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
-        items.addAll(candleDataList.stream()
+        priceItems.setAll(candleDataList.stream()
                 .map(e -> new XYChart.Data<Number, Number>(e.tick, e.open, new CandleStickExtraValues(e.close, e.high, e.low, e.average)))
                 .collect(Collectors.toList()));
 
-        volumeItems.addAll(candleDataList.stream()
-                .map(e -> new XYChart.Data<String, Number>("", e.volume, new CandleStickExtraValues(e.close, e.high, e.low, e.average)))
+        volumeItems.setAll(candleDataList.stream()
+                .map(e -> new XYChart.Data<String, Number>(String.valueOf(e.tick), e.open, new CandleStickExtraValues(e.close, e.high, e.low, e.average)))
                 .collect(Collectors.toList()));
     }
 
