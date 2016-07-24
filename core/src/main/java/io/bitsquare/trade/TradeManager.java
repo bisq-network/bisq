@@ -64,8 +64,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
@@ -196,7 +198,7 @@ public class TradeManager {
             }
 
             // Only offerer publishes statistic data of trades
-            if (isMyOffer(trade.getOffer())) {
+            if (isMyOffer(trade.getOffer()) && isTradeDateValidForStatistics(trade)) {
                 TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
                         trade.getTradePrice(),
                         trade.getTradeAmount(),
@@ -217,7 +219,7 @@ public class TradeManager {
             if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
                 // Only offerer publishes statistic data of trades
-                if (isMyOffer(trade.getOffer())) {
+                if (isMyOffer(trade.getOffer()) && isTradeDateValidForStatistics(trade)) {
                     TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
                             trade.getTradePrice(),
                             trade.getTradeAmount(),
@@ -231,6 +233,10 @@ public class TradeManager {
         }
 
         pendingTradesInitialized.set(true);
+    }
+
+    private boolean isTradeDateValidForStatistics(Trade trade) {
+        return (new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(20);
     }
 
     private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
