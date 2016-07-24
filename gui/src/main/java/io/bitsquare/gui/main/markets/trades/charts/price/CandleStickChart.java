@@ -29,14 +29,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.bitsquare.gui.main.markets.trades.candlestick;
+package io.bitsquare.gui.main.markets.trades.charts.price;
 
+import io.bitsquare.gui.main.markets.trades.charts.CandleData;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.chart.Axis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
@@ -53,10 +57,11 @@ import java.util.List;
  * The Data Y value is used for the opening price and then the close, high and low values are stored in the Data's
  * extra value property using a CandleStickExtraValues object.
  */
-public class VolumeChart extends XYChart<Number, Number> {
+public class CandleStickChart extends XYChart<Number, Number> {
     private static final Logger log = LoggerFactory.getLogger(CandleStickChart.class);
 
-    private StringConverter<Number> toolTipStringConverter;
+    private StringConverter<Number> priceStringConverter;
+    private Path seriesPath;
 
     // -------------- CONSTRUCTORS ----------------------------------------------
 
@@ -66,14 +71,14 @@ public class VolumeChart extends XYChart<Number, Number> {
      * @param xAxis The x axis to use
      * @param yAxis The y axis to use
      */
-    public VolumeChart(Axis<Number> xAxis, Axis<Number> yAxis) {
+    public CandleStickChart(Axis<Number> xAxis, Axis<Number> yAxis) {
         super(xAxis, yAxis);
     }
 
     // -------------- METHODS ------------------------------------------------------------------------------------------
 
-    public final void setToolTipStringConverter(StringConverter<Number> toolTipStringConverter) {
-        this.toolTipStringConverter = toolTipStringConverter;
+    public final void setToolTipStringConverter(StringConverter<Number> priceStringConverter) {
+        this.priceStringConverter = priceStringConverter;
     }
 
     /**
@@ -85,32 +90,47 @@ public class VolumeChart extends XYChart<Number, Number> {
         if (getData() == null) {
             return;
         }
-        // update volumeBar positions
+        // update candle positions
         for (int seriesIndex = 0; seriesIndex < getData().size(); seriesIndex++) {
             XYChart.Series<Number, Number> series = getData().get(seriesIndex);
             Iterator<XYChart.Data<Number, Number>> iter = getDisplayedDataIterator(series);
+            Path seriesPath = null;
+            if (series.getNode() instanceof Path) {
+                seriesPath = (Path) series.getNode();
+                seriesPath.getElements().clear();
+            }
             while (iter.hasNext()) {
                 XYChart.Data<Number, Number> item = iter.next();
                 double x = getXAxis().getDisplayPosition(getCurrentDisplayedXValue(item));
                 double y = getYAxis().getDisplayPosition(getCurrentDisplayedYValue(item));
                 Node itemNode = item.getNode();
-                CandleStickExtraValues extra = (CandleStickExtraValues) item.getExtraValue();
-                if (itemNode instanceof VolumeBar && extra != null) {
-                    VolumeBar volumeBar = (VolumeBar) itemNode;
+                CandleData candleData = (CandleData) item.getExtraValue();
+                if (itemNode instanceof Candle && candleData != null) {
+                    Candle candle = (Candle) itemNode;
+
+                    double close = getYAxis().getDisplayPosition(candleData.close);
+                    double high = getYAxis().getDisplayPosition(candleData.high);
+                    double low = getYAxis().getDisplayPosition(candleData.low);
+                    // calculate candle width
                     double candleWidth = -1;
                     if (getXAxis() instanceof NumberAxis) {
                         NumberAxis xa = (NumberAxis) getXAxis();
                         candleWidth = xa.getDisplayPosition(xa.getTickUnit()) * 0.90; // use 90% width between ticks
                     }
+                    // update candle
+                    candle.update(close - y, high - y, low - y, candleWidth);
+                    candle.updateTooltip(item.getYValue().doubleValue(), candleData.close, candleData.high, candleData.low);
 
-                    // 97 is visible chart data height if chart height is 140. 
-                    // So we subtract 43 form the height to get the height for the bar to the bottom.
-                    // Did not find a way how to request the chart data height
-                    final double height = getHeight() - 43;
-                    double upperYPos = Math.min(height - 5, y); // We want min 5px height to allow tooltips
-                    volumeBar.update(height - upperYPos, candleWidth, extra.getVolume());
-                    volumeBar.setLayoutX(x);
-                    volumeBar.setLayoutY(upperYPos);
+                    // position the candle
+                    candle.setLayoutX(x);
+                    candle.setLayoutY(y);
+                }
+                if (seriesPath != null && candleData != null) {
+                    if (seriesPath.getElements().isEmpty()) {
+                        seriesPath.getElements().add(new MoveTo(x, getYAxis().getDisplayPosition(candleData.average)));
+                    } else {
+                        seriesPath.getElements().add(new LineTo(x, getYAxis().getDisplayPosition(candleData.average)));
+                    }
                 }
             }
         }
@@ -122,27 +142,31 @@ public class VolumeChart extends XYChart<Number, Number> {
 
     @Override
     protected void dataItemAdded(XYChart.Series<Number, Number> series, int itemIndex, XYChart.Data<Number, Number> item) {
-        Node volumeBar = createCandle(getData().indexOf(series), item, itemIndex);
-        if (getPlotChildren().contains(volumeBar))
-            getPlotChildren().remove(volumeBar);
+        Node candle = createCandle(getData().indexOf(series), item, itemIndex);
+        if (getPlotChildren().contains(candle))
+            getPlotChildren().remove(candle);
 
         if (shouldAnimate()) {
-            volumeBar.setOpacity(0);
-            getPlotChildren().add(volumeBar);
-            // fade in new volumeBar
-            FadeTransition ft = new FadeTransition(Duration.millis(500), volumeBar);
+            candle.setOpacity(0);
+            getPlotChildren().add(candle);
+            // fade in new candle
+            FadeTransition ft = new FadeTransition(Duration.millis(500), candle);
             ft.setToValue(1);
             ft.play();
         } else {
-            getPlotChildren().add(volumeBar);
+            getPlotChildren().add(candle);
         }
+        // always draw average line on top
+        if (seriesPath != null)
+            seriesPath.toFront();
     }
 
     @Override
     protected void dataItemRemoved(XYChart.Data<Number, Number> item, XYChart.Series<Number, Number> series) {
+        seriesPath.getElements().clear();
         final Node node = item.getNode();
         if (shouldAnimate()) {
-            // fade out old volumeBar
+            // fade out old candle
             FadeTransition ft = new FadeTransition(Duration.millis(500), node);
             ft.setToValue(0);
             ft.setOnFinished((ActionEvent actionEvent) -> {
@@ -159,57 +183,67 @@ public class VolumeChart extends XYChart<Number, Number> {
         // handle any data already in series
         for (int j = 0; j < series.getData().size(); j++) {
             XYChart.Data item = series.getData().get(j);
-            Node volumeBar = createCandle(seriesIndex, item, j);
+            Node candle = createCandle(seriesIndex, item, j);
             if (shouldAnimate()) {
-                volumeBar.setOpacity(0);
-                getPlotChildren().add(volumeBar);
-                // fade in new volumeBar
-                FadeTransition ft = new FadeTransition(Duration.millis(500), volumeBar);
+                candle.setOpacity(0);
+                getPlotChildren().add(candle);
+                // fade in new candle
+                FadeTransition ft = new FadeTransition(Duration.millis(500), candle);
                 ft.setToValue(1);
                 ft.play();
             } else {
-                getPlotChildren().add(volumeBar);
+                getPlotChildren().add(candle);
             }
         }
+        // create series path
+        seriesPath = new Path();
+        seriesPath.getStyleClass().setAll("candlestick-average-line", "series" + seriesIndex);
+        series.setNode(seriesPath);
+        getPlotChildren().add(seriesPath);
     }
 
     @Override
     protected void seriesRemoved(XYChart.Series<Number, Number> series) {
-        // remove all volumeBar nodes
+        // remove all candle nodes
         for (XYChart.Data<Number, Number> d : series.getData()) {
-            final Node volumeBar = d.getNode();
+            final Node candle = d.getNode();
             if (shouldAnimate()) {
-                // fade out old volumeBar
-                FadeTransition ft = new FadeTransition(Duration.millis(500), volumeBar);
+                // fade out old candle
+                FadeTransition ft = new FadeTransition(Duration.millis(500), candle);
                 ft.setToValue(0);
                 ft.setOnFinished((ActionEvent actionEvent) -> {
-                    getPlotChildren().remove(volumeBar);
+                    getPlotChildren().remove(candle);
                 });
                 ft.play();
             } else {
-                getPlotChildren().remove(volumeBar);
+                getPlotChildren().remove(candle);
             }
+        }
+
+        if (series.getNode() instanceof Path) {
+            Path seriesPath = (Path) series.getNode();
+            seriesPath.getElements().clear();
         }
     }
 
     /**
-     * Create a new VolumeBar node to represent a single data item
+     * Create a new Candle node to represent a single data item
      *
      * @param seriesIndex The index of the series the data item is in
      * @param item        The data item to create node for
      * @param itemIndex   The index of the data item in the series
-     * @return New volumeBar node to represent the give data item
+     * @return New candle node to represent the give data item
      */
     private Node createCandle(int seriesIndex, final XYChart.Data item, int itemIndex) {
-        Node volumeBar = item.getNode();
-        // check if volumeBar has already been created
-        if (volumeBar instanceof VolumeBar) {
-            ((VolumeBar) volumeBar).setSeriesAndDataStyleClasses("series" + seriesIndex, "data" + itemIndex);
+        Node candle = item.getNode();
+        // check if candle has already been created
+        if (candle instanceof Candle) {
+            ((Candle) candle).setSeriesAndDataStyleClasses("series" + seriesIndex, "data" + itemIndex);
         } else {
-            volumeBar = new VolumeBar("series" + seriesIndex, "data" + itemIndex, toolTipStringConverter);
-            item.setNode(volumeBar);
+            candle = new Candle("series" + seriesIndex, "data" + itemIndex, priceStringConverter);
+            item.setNode(candle);
         }
-        return volumeBar;
+        return candle;
     }
 
     /**
@@ -219,7 +253,7 @@ public class VolumeChart extends XYChart<Number, Number> {
      */
     @Override
     protected void updateAxisRange() {
-        // For volumeBar stick chart we need to override this method as we need to let the axis know that they need to be able
+        // For candle stick chart we need to override this method as we need to let the axis know that they need to be able
         // to cover the whole area occupied by the high to low range not just its center data value
         final Axis<Number> xa = getXAxis();
         final Axis<Number> ya = getYAxis();
@@ -228,16 +262,24 @@ public class VolumeChart extends XYChart<Number, Number> {
         if (xa.isAutoRanging()) {
             xData = new ArrayList<>();
         }
-        if (ya.isAutoRanging())
+        if (ya.isAutoRanging()) {
             yData = new ArrayList<>();
+        }
         if (xData != null || yData != null) {
             for (XYChart.Series<Number, Number> series : getData()) {
                 for (XYChart.Data<Number, Number> data : series.getData()) {
                     if (xData != null) {
                         xData.add(data.getXValue());
                     }
-                    if (yData != null)
-                        yData.add(data.getYValue());
+                    if (yData != null) {
+                        if (data.getExtraValue() instanceof CandleData) {
+                            CandleData candleData = (CandleData) data.getExtraValue();
+                            yData.add(candleData.high);
+                            yData.add(candleData.low);
+                        } else {
+                            yData.add(data.getYValue());
+                        }
+                    }
                 }
             }
             if (xData != null) {

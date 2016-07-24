@@ -29,7 +29,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.bitsquare.gui.main.markets.trades.candlestick;
+package io.bitsquare.gui.main.markets.trades.charts.price;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -39,11 +39,11 @@ import javafx.util.StringConverter;
  * The content for Candle tool tips
  */
 public class TooltipContent extends GridPane {
-    private Label openValue = new Label();
-    private Label closeValue = new Label();
-    private Label highValue = new Label();
-    private Label lowValue = new Label();
-    private StringConverter<Number> priceStringConverter;
+    private final StringConverter<Number> priceStringConverter;
+    private final Label openValue = new Label();
+    private final Label closeValue = new Label();
+    private final Label highValue = new Label();
+    private final Label lowValue = new Label();
 
     TooltipContent(StringConverter<Number> priceStringConverter) {
         this.priceStringConverter = priceStringConverter;
@@ -51,7 +51,6 @@ public class TooltipContent extends GridPane {
         Label close = new Label("Close:");
         Label high = new Label("High:");
         Label low = new Label("Low:");
-        Label volume = new Label("Volume:");
        /* open.getStyleClass().add("candlestick-tooltip-label");
         close.getStyleClass().add("candlestick-tooltip-label");
         high.getStyleClass().add("candlestick-tooltip-label");
@@ -68,12 +67,9 @@ public class TooltipContent extends GridPane {
     }
 
     public void update(double open, double close, double high, double low) {
-        if (priceStringConverter != null) {
-            openValue.setText(priceStringConverter.toString(open));
-            closeValue.setText(priceStringConverter.toString(close));
-            highValue.setText(priceStringConverter.toString(high));
-            lowValue.setText(priceStringConverter.toString(low));
-
-        }
+        openValue.setText(priceStringConverter.toString(open));
+        closeValue.setText(priceStringConverter.toString(close));
+        highValue.setText(priceStringConverter.toString(high));
+        lowValue.setText(priceStringConverter.toString(low));
     }
 }

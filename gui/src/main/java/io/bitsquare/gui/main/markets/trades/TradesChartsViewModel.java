@@ -20,8 +20,7 @@ package io.bitsquare.gui.main.markets.trades;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
-import io.bitsquare.gui.main.markets.trades.candlestick.CandleData;
-import io.bitsquare.gui.main.markets.trades.candlestick.CandleStickExtraValues;
+import io.bitsquare.gui.main.markets.trades.charts.CandleData;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
@@ -199,11 +198,11 @@ class TradesChartsViewModel extends ActivatableViewModel {
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
         priceItems.setAll(candleDataList.stream()
-                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.open, new CandleStickExtraValues(e.close, e.high, e.low, e.average, e.accumulatedAmount)))
+                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.open, e))
                 .collect(Collectors.toList()));
 
         volumeItems.setAll(candleDataList.stream()
-                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.accumulatedAmount, new CandleStickExtraValues(e.close, e.high, e.low, e.average, e.accumulatedAmount)))
+                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.accumulatedAmount, e))
                 .collect(Collectors.toList()));
     }
 

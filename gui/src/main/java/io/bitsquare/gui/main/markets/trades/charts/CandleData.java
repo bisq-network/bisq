@@ -1,4 +1,4 @@
-package io.bitsquare.gui.main.markets.trades.candlestick;
+package io.bitsquare.gui.main.markets.trades.charts;
 
 public class CandleData {
     public final long tick; // Is the time tick in the chosen time interval
@@ -11,6 +11,7 @@ public class CandleData {
     public final long accumulatedVolume;
     public final boolean isBullish;
 
+    //  public CandleStickExtraValues(double close, double high, double low, double average, double volume) {
     public CandleData(long tick, long open, long close, long high, long low, long average, long accumulatedAmount, long accumulatedVolume, boolean isBullish) {
         this.tick = tick;
         this.open = open;

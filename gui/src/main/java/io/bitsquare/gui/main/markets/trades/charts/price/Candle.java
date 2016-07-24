@@ -29,7 +29,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.bitsquare.gui.main.markets.trades.candlestick;
+package io.bitsquare.gui.main.markets.trades.charts.price;
 
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
@@ -45,21 +45,25 @@ import org.slf4j.LoggerFactory;
 public class Candle extends Group {
     private static final Logger log = LoggerFactory.getLogger(Candle.class);
 
-    private final TooltipContent tooltipContent;
-    private Line highLowLine = new Line();
-    private Region bar = new Region();
     private String seriesStyleClass;
     private String dataStyleClass;
+    private final TooltipContent tooltipContent;
+    private final Line highLowLine = new Line();
+    private final Region bar = new Region();
+
     private boolean openAboveClose = true;
     private Tooltip tooltip = new Tooltip();
     private double closeOffset;
 
     Candle(String seriesStyleClass, String dataStyleClass, StringConverter<Number> priceStringConverter) {
-        setAutoSizeChildren(false);
-        getChildren().addAll(highLowLine, bar);
         this.seriesStyleClass = seriesStyleClass;
         this.dataStyleClass = dataStyleClass;
+
+        setAutoSizeChildren(false);
+        getChildren().addAll(highLowLine, bar);
+        getStyleClass().setAll("candlestick-candle", seriesStyleClass, dataStyleClass);
         updateStyleClasses();
+
         tooltipContent = new TooltipContent(priceStringConverter);
         tooltip.setGraphic(tooltipContent);
         Tooltip.install(this, tooltip);
@@ -68,6 +72,7 @@ public class Candle extends Group {
     public void setSeriesAndDataStyleClasses(String seriesStyleClass, String dataStyleClass) {
         this.seriesStyleClass = seriesStyleClass;
         this.dataStyleClass = dataStyleClass;
+        getStyleClass().setAll("candlestick-candle", seriesStyleClass, dataStyleClass);
         updateStyleClasses();
     }
 
@@ -77,9 +82,6 @@ public class Candle extends Group {
         updateStyleClasses();
         highLowLine.setStartY(highOffset);
         highLowLine.setEndY(lowOffset);
-        if (candleWidth == -1) {
-            candleWidth = bar.prefWidth(-1);
-        }
         if (openAboveClose) {
             bar.resizeRelocate(-candleWidth / 2, 0, candleWidth, Math.max(5, closeOffset));
         } else {
@@ -92,8 +94,6 @@ public class Candle extends Group {
     }
 
     private void updateStyleClasses() {
-        getStyleClass().setAll("candlestick-candle", seriesStyleClass, dataStyleClass);
-
         String style = openAboveClose ? "open-above-close" : "close-above-open";
         if (closeOffset == 0)
             style = "empty";

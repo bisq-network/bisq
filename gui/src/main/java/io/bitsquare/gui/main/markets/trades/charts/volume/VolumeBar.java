@@ -29,48 +29,52 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.bitsquare.gui.main.markets.trades.candlestick;
+package io.bitsquare.gui.main.markets.trades.charts.volume;
+
+import javafx.scene.Group;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.Region;
+import javafx.util.StringConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Data extra values for storing close, high and low.
+ * Candle node used for drawing a candle
  */
-public class CandleStickExtraValues {
-    private double close;
-    private double high;
-    private double low;
-    private double average;
-    private double volume;
+public class VolumeBar extends Group {
+    private static final Logger log = LoggerFactory.getLogger(VolumeBar.class);
 
-    public CandleStickExtraValues(double close, double high, double low, double average, double volume) {
-        this.close = close;
-        this.high = high;
-        this.low = low;
-        this.average = average;
-        this.volume = volume;
+    private String seriesStyleClass;
+    private String dataStyleClass;
+    private final StringConverter<Number> volumeStringConverter;
+
+    private final Region bar = new Region();
+    private final Tooltip tooltip;
+
+    VolumeBar(String seriesStyleClass, String dataStyleClass, StringConverter<Number> volumeStringConverter) {
+        this.seriesStyleClass = seriesStyleClass;
+        this.dataStyleClass = dataStyleClass;
+        this.volumeStringConverter = volumeStringConverter;
+
+        setAutoSizeChildren(false);
+        getChildren().add(bar);
+        updateStyleClasses();
+        tooltip = new Tooltip();
+        Tooltip.install(this, tooltip);
     }
 
-    public double getClose() {
-        return close;
+    public void setSeriesAndDataStyleClasses(String seriesStyleClass, String dataStyleClass) {
+        this.seriesStyleClass = seriesStyleClass;
+        this.dataStyleClass = dataStyleClass;
+        updateStyleClasses();
     }
 
-    public double getHigh() {
-        return high;
+    public void update(double height, double candleWidth, double volume) {
+        bar.resizeRelocate(-candleWidth / 2, 0, candleWidth, height);
+        tooltip.setText("Accumulated volume: " + volumeStringConverter.toString(volume));
     }
 
-    public double getLow() {
-        return low;
-    }
-
-    public double getVolume() {
-        return volume;
-    }
-
-    public double getAverage() {
-        return average;
-    }
-
-    @Override
-    public String toString() {
-        return "CandleStickExtraValues{" + "close=" + close + ", high=" + high + ", low=" + low + ", average=" + average + ", volume=" + volume + '}';
+    private void updateStyleClasses() {
+        bar.getStyleClass().setAll("volume-bar", seriesStyleClass, dataStyleClass, "bg");
     }
 }
