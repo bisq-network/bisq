@@ -122,7 +122,7 @@ public final class Preferences implements Persistable {
     private String tradeStatisticsScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
-    private int tradeStatisticsTickUnit = 0;
+    private int tradeStatisticsTickUnitIndex = 0;
 
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
@@ -209,7 +209,7 @@ public final class Preferences implements Persistable {
             buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
             sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
             tradeStatisticsScreenCurrencyCode = persisted.getTradeStatisticsScreenCurrencyCode();
-            tradeStatisticsTickUnit = persisted.getTradeStatisticsTickUnit();
+            tradeStatisticsTickUnitIndex = persisted.getTradeStatisticsTickUnitIndex();
 
             if (persisted.getIgnoreTradersList() != null)
                 ignoreTradersList = persisted.getIgnoreTradersList();
@@ -465,8 +465,8 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
-    public void setTradeStatisticsTickUnit(int tradeStatisticsTickUnit) {
-        this.tradeStatisticsTickUnit = tradeStatisticsTickUnit;
+    public void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex) {
+        this.tradeStatisticsTickUnitIndex = tradeStatisticsTickUnitIndex;
         storage.queueUpForSave();
     }
 
@@ -627,8 +627,8 @@ public final class Preferences implements Persistable {
         return tradeStatisticsScreenCurrencyCode;
     }
 
-    public int getTradeStatisticsTickUnit() {
-        return tradeStatisticsTickUnit;
+    public int getTradeStatisticsTickUnitIndex() {
+        return tradeStatisticsTickUnitIndex;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

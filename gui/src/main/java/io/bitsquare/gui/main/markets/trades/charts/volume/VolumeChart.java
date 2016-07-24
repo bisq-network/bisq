@@ -110,7 +110,7 @@ public class VolumeChart extends XYChart<Number, Number> {
                     // Did not find a way how to request the chart data height
                     final double height = getHeight() - 43;
                     double upperYPos = Math.min(height - 5, y); // We want min 5px height to allow tooltips
-                    volumeBar.update(height - upperYPos, candleWidth, candleData.accumulatedVolume);
+                    volumeBar.update(height - upperYPos, candleWidth, candleData.accumulatedAmount);
                     volumeBar.setLayoutX(x);
                     volumeBar.setLayoutY(upperYPos);
                 }

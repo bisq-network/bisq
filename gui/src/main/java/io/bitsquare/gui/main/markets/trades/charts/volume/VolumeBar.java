@@ -69,9 +69,9 @@ public class VolumeBar extends Group {
         updateStyleClasses();
     }
 
-    public void update(double height, double candleWidth, double volume) {
+    public void update(double height, double candleWidth, double accumulatedAmount) {
         bar.resizeRelocate(-candleWidth / 2, 0, candleWidth, height);
-        tooltip.setText("Accumulated volume: " + volumeStringConverter.toString(volume));
+        tooltip.setText("Volume: " + volumeStringConverter.toString(accumulatedAmount));
     }
 
     private void updateStyleClasses() {

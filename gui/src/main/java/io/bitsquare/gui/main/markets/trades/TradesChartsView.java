@@ -55,7 +55,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
@@ -65,24 +64,22 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private TableView<TradeStatistics> tableView;
     private ComboBox<TradeCurrency> currencyComboBox;
-    private Subscription tradeCurrencySubscriber;
+    private VolumeChart volumeChart;
+    private CandleStickChart priceChart;
+    private NumberAxis priceAxisX, priceAxisY, volumeAxisY, volumeAxisX;
+    private XYChart.Series<Number, Number> priceSeries;
+    private XYChart.Series<Number, Number> volumeSeries;
+    private ChangeListener<Number> priceAxisYWidthListener;
+    private ChangeListener<Number> volumeAxisYWidthListener;
+    private double priceAxisYWidth;
+    private double volumeAxisYWidth;
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
-    private final StringProperty volumeColumnLabel = new SimpleStringProperty();
     private ChangeListener<Toggle> toggleChangeListener;
     private ToggleGroup toggleGroup;
 
-    private NumberAxis timeAxisX, priceAxisY, volumeAxisY;
-    private XYChart.Series<Number, Number> priceSeries;
-    private XYChart.Series<Number, Number> volumeSeries;
-    private VolumeChart volumeChart;
-    private CandleStickChart priceChart;
-
     private final ListChangeListener<XYChart.Data<Number, Number>> itemsChangeListener;
-    private double priceAxisYWidth;
-    private double volumeAxisYWidth;
-    private ChangeListener<Number> priceAxisYWidthListener;
-    private ChangeListener<Number> volumeAxisYWidthListener;
-    private NumberAxis volumeAxisX;
+    private Subscription tradeCurrencySubscriber;
+
     private SortedList<TradeStatistics> sortedList;
 
 
@@ -95,26 +92,21 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         super(model);
         this.formatter = formatter;
 
-        itemsChangeListener = c -> UserThread.runAfter(() -> updateChartData(), 20, TimeUnit.MILLISECONDS);
+        // Need to render on next frame as otherwise there are issues in the chart rendering
+        itemsChangeListener = c -> UserThread.execute(this::updateChartData);
     }
 
     @Override
     public void initialize() {
-        HBox currencyHBox = createCurrencyComboBox();
-        // HBox toggleBarHBox = createToggleBar();
-
-        createChart();
-        createTableBox();
-
-     /*   StackPane stackPane = new StackPane();
-        stackPane.getChildren().addAll(volumeChart, priceChart);*/
-
-        root.getChildren().addAll(currencyHBox, priceChart, volumeChart, tableView);
+        HBox toolBox = getToolBox();
+        createCharts();
+        createTable();
+        root.getChildren().addAll(toolBox, priceChart, volumeChart, tableView);
 
         toggleChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 model.setTickUnit((TradesChartsViewModel.TickUnit) newValue.getUserData());
-                timeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
+                priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
             }
         };
         priceAxisYWidthListener = (observable, oldValue, newValue) -> {
@@ -127,7 +119,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         };
     }
 
-
     @Override
     protected void activate() {
         currencyComboBox.setItems(model.getTradeCurrencies());
@@ -136,7 +127,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
 
         toggleGroup.getToggles().get(model.tickUnit.ordinal()).setSelected(true);
-       
+
         model.priceItems.addListener(itemsChangeListener);
         toggleGroup.selectedToggleProperty().addListener(toggleChangeListener);
         priceAxisY.widthProperty().addListener(priceAxisYWidthListener);
@@ -150,19 +141,16 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     priceSeries.setName(tradeCurrencyName);
                     final String currencyPair = formatter.getCurrencyPair(code);
                     priceColumnLabel.set("Price (" + currencyPair + ")");
-                    priceAxisY.setLabel(priceColumnLabel.get());
-
-                    volumeSeries.setName(tradeCurrencyName);
-                    volumeColumnLabel.set("Volume (BTC)");
-                    volumeAxisY.setLabel(volumeColumnLabel.get());
                 });
 
         sortedList = new SortedList<>(model.tradeStatisticsByCurrency);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
+        priceChart.setAnimated(model.preferences.getUseAnimations());
+        volumeChart.setAnimated(model.preferences.getUseAnimations());
         updateChartData();
-        timeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
+        priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
     }
 
     @Override
@@ -173,6 +161,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
         tradeCurrencySubscriber.unsubscribe();
         currencyComboBox.setOnAction(null);
+        priceAxisY.labelProperty().unbind();
         priceSeries.getData().clear();
         priceChart.getData().clear();
 
@@ -184,19 +173,19 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     // Chart
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createChart() {
-        timeAxisX = new NumberAxis(0, model.upperBound + 1, 1);
-        timeAxisX.setTickUnit(1);
-        timeAxisX.setMinorTickCount(0);
-        timeAxisX.setForceZeroInRange(false);
-        timeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
-
+    private void createCharts() {
         priceSeries = new XYChart.Series<>();
+
+        priceAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
+        priceAxisX.setTickUnit(1);
+        priceAxisX.setMinorTickCount(0);
+        priceAxisX.setForceZeroInRange(false);
+        priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
         priceAxisY = new NumberAxis();
         priceAxisY.setForceZeroInRange(false);
         priceAxisY.setAutoRanging(true);
-        priceAxisY.setLabel(priceColumnLabel.get());
+        priceAxisY.labelProperty().bind(priceColumnLabel);
         priceAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
@@ -209,12 +198,14 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
 
-        priceChart = new CandleStickChart(timeAxisX, priceAxisY);
+        priceChart = new CandleStickChart(priceAxisX, priceAxisY);
+        priceChart.setMinHeight(250);
+        priceChart.setLegendVisible(false);
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
         priceChart.setToolTipStringConverter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
-                return formatter.formatFiatWithCode(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
+                return formatter.formatFiatWithCode(Fiat.valueOf(model.getCurrencyCode(), (long) object));
             }
 
             @Override
@@ -222,16 +213,20 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
-        priceChart.setAnimated(true);
-        priceChart.setMinHeight(250);
-        priceChart.setLegendVisible(false);
+
 
         volumeSeries = new XYChart.Series<>();
+
+        volumeAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
+        volumeAxisX.setTickUnit(1);
+        volumeAxisX.setMinorTickCount(0);
+        volumeAxisX.setForceZeroInRange(false);
+        volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
         volumeAxisY = new NumberAxis();
         volumeAxisY.setForceZeroInRange(true);
         volumeAxisY.setAutoRanging(true);
-        volumeAxisY.setLabel("Volume");
+        volumeAxisY.setLabel("Volume (BTC)");
         volumeAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
@@ -244,14 +239,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
 
-        volumeAxisX = new NumberAxis(0, model.upperBound + 1, 1);
-        volumeAxisX.setTickUnit(1);
-        volumeAxisX.setMinorTickCount(0);
-        volumeAxisX.setForceZeroInRange(false);
-        volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
-
         volumeChart = new VolumeChart(volumeAxisX, volumeAxisY);
         volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
+        volumeChart.setMinHeight(140);
+        volumeChart.setLegendVisible(false);
         volumeChart.setToolTipStringConverter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
@@ -263,18 +254,13 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
-        volumeChart.setAnimated(true);
-        volumeChart.setMinHeight(140);
-        volumeChart.setLegendVisible(false);
     }
 
     private void updateChartData() {
-        volumeSeries.getData().clear();
-        volumeSeries = new XYChart.Series<>();
         volumeSeries.getData().setAll(model.volumeItems);
-        volumeChart.getData().clear();
-        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
 
+        // At price chart we need to set the priceSeries new otherwise the lines are not rendered correctly 
+        // TODO should be fixed in candle chart
         priceSeries.getData().clear();
         priceSeries = new XYChart.Series<>();
         priceSeries.getData().setAll(model.priceItems);
@@ -299,11 +285,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         return new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
-                // comes as double
                 long index = new Double((double) object).longValue();
-                final long now = model.getTickFromTime(new Date().getTime(), model.tickUnit);
-                final long tick = now - (model.upperBound - index);
-                final long time = model.getTimeFromTick(tick, model.tickUnit);
+                long time = model.getTimeFromTickIndex(index);
                 if (model.tickUnit.ordinal() <= TradesChartsViewModel.TickUnit.DAY.ordinal())
                     return index % 4 == 0 ? formatter.formatDate(new Date(time)) : "";
                 else
@@ -322,9 +305,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     // CurrencyComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private HBox createCurrencyComboBox() {
+    private HBox getToolBox() {
         Label currencyLabel = new Label("Currency:");
-        currencyLabel.setPadding(new Insets(0, 3, 0, 0));
+        currencyLabel.setPadding(new Insets(0, 4, 0, 0));
 
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
@@ -350,19 +333,19 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Label label = new Label("Interval:");
-        label.setPadding(new Insets(0, 3, 0, 0));
-        
+        label.setPadding(new Insets(0, 4, 0, 0));
+
         toggleGroup = new ToggleGroup();
         ToggleButton month = getToggleButton("Month", TradesChartsViewModel.TickUnit.MONTH, toggleGroup, "toggle-left");
         ToggleButton week = getToggleButton("Week", TradesChartsViewModel.TickUnit.WEEK, toggleGroup, "toggle-center");
         ToggleButton day = getToggleButton("Day", TradesChartsViewModel.TickUnit.DAY, toggleGroup, "toggle-center");
         ToggleButton hour = getToggleButton("Hour", TradesChartsViewModel.TickUnit.HOUR, toggleGroup, "toggle-center");
-        ToggleButton minute10 = getToggleButton("10 Minute", TradesChartsViewModel.TickUnit.MINUTE_10, toggleGroup, "toggle-center");
+        ToggleButton minute10 = getToggleButton("10 Minutes", TradesChartsViewModel.TickUnit.MINUTE_10, toggleGroup, "toggle-center");
         ToggleButton minute = getToggleButton("Minute", TradesChartsViewModel.TickUnit.MINUTE, toggleGroup, "toggle-right");
 
         HBox hBox = new HBox();
         hBox.setSpacing(0);
-        hBox.setPadding(new Insets(5, 20, -10, 8));
+        hBox.setPadding(new Insets(5, 9, -10, 10));
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(currencyLabel, currencyComboBox, spacer, label, month, week, day, hour, minute10, minute);
         return hBox;
@@ -370,7 +353,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private ToggleButton getToggleButton(String label, TradesChartsViewModel.TickUnit tickUnit, ToggleGroup toggleGroup, String style) {
         ToggleButton toggleButton = new ToggleButton(label);
-        toggleButton.setPadding(new Insets(0, 3, 0, 3));
+        toggleButton.setPadding(new Insets(0, 5, 0, 5));
         toggleButton.setUserData(tickUnit);
         toggleButton.setToggleGroup(toggleGroup);
         toggleButton.setId(style);
@@ -382,7 +365,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     // Table
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createTableBox() {
+    private void createTable() {
         tableView = new TableView<>();
         tableView.setMinHeight(120);
 
@@ -410,7 +393,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         dateColumn.setComparator((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
         tableView.getColumns().add(dateColumn);
 
-
         // amount
         TableColumn<TradeStatistics, TradeStatistics> amountColumn = new TableColumn<>("Amount in BTC");
         amountColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
@@ -434,7 +416,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 });
         amountColumn.setComparator((o1, o2) -> o1.getTradeAmount().compareTo(o2.getTradeAmount()));
         tableView.getColumns().add(amountColumn);
-
 
         // price
         TableColumn<TradeStatistics, TradeStatistics> priceColumn = new TableColumn<>();
@@ -461,11 +442,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceColumn.setComparator((o1, o2) -> o1.getTradePrice().compareTo(o2.getTradePrice()));
         tableView.getColumns().add(priceColumn);
 
-
         // volume
         TableColumn<TradeStatistics, TradeStatistics> volumeColumn = new TableColumn<>();
         volumeColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
-        volumeColumn.textProperty().bind(volumeColumnLabel);
+        volumeColumn.setText("Volume (BTC)");
         volumeColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
                         TradeStatistics>>() {
@@ -484,9 +464,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
-        volumeColumn.setComparator((o1, o2) -> o1.getTradeVolume().compareTo(o2.getTradeVolume()));
+        volumeColumn.setComparator((o1, o2) -> {
+            final Fiat tradeVolume1 = o1.getTradeVolume();
+            final Fiat tradeVolume2 = o2.getTradeVolume();
+            return tradeVolume1 != null && tradeVolume2 != null ? tradeVolume1.compareTo(tradeVolume2) : 0;
+        });
         tableView.getColumns().add(volumeColumn);
-
 
         // direction
         TableColumn<TradeStatistics, TradeStatistics> directionColumn = new TableColumn<>("Trade type");
@@ -513,11 +496,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(directionColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label("Currently there is no data available");
+        Label placeholder = new Label("There is no data available");
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
     }
-
 }

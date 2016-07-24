@@ -31,6 +31,8 @@
  */
 package io.bitsquare.gui.main.markets.trades.charts.price;
 
+import io.bitsquare.gui.main.markets.trades.charts.CandleData;
+import io.bitsquare.gui.util.Layout;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
@@ -44,13 +46,19 @@ public class TooltipContent extends GridPane {
     private final Label closeValue = new Label();
     private final Label highValue = new Label();
     private final Label lowValue = new Label();
+    private final Label averageValue = new Label();
 
     TooltipContent(StringConverter<Number> priceStringConverter) {
         this.priceStringConverter = priceStringConverter;
+
+        setHgap(Layout.GRID_GAP);
+        setVgap(2);
+        
         Label open = new Label("Open:");
         Label close = new Label("Close:");
         Label high = new Label("High:");
         Label low = new Label("Low:");
+        Label average = new Label("Average:");
        /* open.getStyleClass().add("candlestick-tooltip-label");
         close.getStyleClass().add("candlestick-tooltip-label");
         high.getStyleClass().add("candlestick-tooltip-label");
@@ -63,13 +71,16 @@ public class TooltipContent extends GridPane {
         setConstraints(highValue, 1, 2);
         setConstraints(low, 0, 3);
         setConstraints(lowValue, 1, 3);
-        getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue);
+        setConstraints(average, 0, 4);
+        setConstraints(averageValue, 1, 4);
+        getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue, average, averageValue);
     }
 
-    public void update(double open, double close, double high, double low) {
-        openValue.setText(priceStringConverter.toString(open));
-        closeValue.setText(priceStringConverter.toString(close));
-        highValue.setText(priceStringConverter.toString(high));
-        lowValue.setText(priceStringConverter.toString(low));
+    public void update(CandleData candleData) {
+        openValue.setText(priceStringConverter.toString(candleData.open));
+        closeValue.setText(priceStringConverter.toString(candleData.close));
+        highValue.setText(priceStringConverter.toString(candleData.high));
+        lowValue.setText(priceStringConverter.toString(candleData.low));
+        averageValue.setText(priceStringConverter.toString(candleData.average));
     }
 }

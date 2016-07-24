@@ -31,6 +31,7 @@
  */
 package io.bitsquare.gui.main.markets.trades.charts.price;
 
+import io.bitsquare.gui.main.markets.trades.charts.CandleData;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
@@ -89,8 +90,8 @@ public class Candle extends Group {
         }
     }
 
-    public void updateTooltip(double open, double close, double high, double low) {
-        tooltipContent.update(open, close, high, low);
+    public void updateTooltip(CandleData candleData) {
+        tooltipContent.update(candleData);
     }
 
     private void updateStyleClasses() {

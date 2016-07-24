@@ -45,6 +45,10 @@ import java.util.stream.Collectors;
 class TradesChartsViewModel extends ActivatableViewModel {
     private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModel.class);
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enum
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public enum TickUnit {
         MONTH,
         WEEK,
@@ -54,7 +58,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         MINUTE
     }
 
-    private final Preferences preferences;
+    final Preferences preferences;
     private P2PService p2PService;
 
     private final HashMapChangedListener mapChangedListener;
@@ -65,8 +69,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
 
-    TickUnit tickUnit;
-    int upperBound = 30;
+    TickUnit tickUnit = TickUnit.MONTH;
+    int maxTicks = 30;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +105,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
             tradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
         }
 
-        tickUnit = TickUnit.values()[preferences.getTradeStatisticsTickUnit()];
+        tickUnit = TickUnit.values()[preferences.getTradeStatisticsTickUnitIndex()];
     }
 
     @VisibleForTesting
@@ -113,8 +117,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
-        p2PService.addHashSetChangedListener(mapChangedListener);
         p2PService.getDataMap().entrySet().stream().forEach(e -> addItem(e.getValue().getStoragePayload(), false));
+        p2PService.addHashSetChangedListener(mapChangedListener);
         updateChartData();
     }
 
@@ -136,7 +140,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     public void setTickUnit(TickUnit tickUnit) {
         this.tickUnit = tickUnit;
-        preferences.setTradeStatisticsTickUnit(tickUnit.ordinal());
+        preferences.setTradeStatisticsTickUnitIndex(tickUnit.ordinal());
         updateChartData();
     }
 
@@ -161,6 +165,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void addItem(StoragePayload storagePayload, boolean doUpdate) {
         if (storagePayload instanceof TradeStatistics && !allTradeStatistics.contains(storagePayload)) {
             allTradeStatistics.add((TradeStatistics) storagePayload);
@@ -168,7 +173,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 updateChartData();
         }
     }
-
 
     private void updateChartData() {
         tradeStatisticsByCurrency.setAll(allTradeStatistics.stream()
@@ -181,7 +185,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
             Set<TradeStatistics> set;
             final long time = getTickFromTime(e.tradeDateAsTime, tickUnit);
             final long now = getTickFromTime(new Date().getTime(), tickUnit);
-            long index = upperBound - (now - time);
+            long index = maxTicks - (now - time);
             if (itemsPerInterval.containsKey(index)) {
                 set = itemsPerInterval.get(index);
             } else {
@@ -206,6 +210,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList()));
     }
 
+    @VisibleForTesting
     CandleData getCandleData(long tick, Set<TradeStatistics> set) {
         long open = 0;
         long close = 0;
@@ -231,7 +236,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
         boolean isBullish = close > open;
         return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume, isBullish);
-
     }
 
     long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {
@@ -272,4 +276,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
     }
 
+    long getTimeFromTickIndex(long index) {
+        long now = getTickFromTime(new Date().getTime(), tickUnit);
+        long tick = now - (maxTicks - index);
+        return getTimeFromTick(tick, tickUnit);
+    }
 }
