@@ -352,18 +352,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private void applyCurrencyCode(String newValue) {
         String key = "ETH-ETHC-Warning";
         if (preferences.showAgain(key) && new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
-            if (newValue.equals("ETH")) {
-                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
-                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.")
-                        .closeButtonText("I understand")
-                        .onAction(() -> Utilities.openWebPage("https://www.ethereum.org/"))
-                        .actionButtonText("Open Ethereum web page")
-                        .dontShowAgainId(key, preferences)
-                        .show();
-            } else if (newValue.equals("ETHC")) {
-                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
+            if (newValue.equals("ETHC")) {
+                new Popup().information("The EHT/ETC fork situation carries considerable risks.\n" +
                         "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.\n\n" +
-                        "Please note, that the price is denominated as ETHC/BTC not BTC/ETHC!")
+                        "Please note, that the price is denominated as ETC/BTC not BTC/ETC!")
                         .closeButtonText("I understand")
                         .onAction(() -> Utilities.openWebPage("https://ethereumclassic.github.io/"))
                         .actionButtonText("Open Ethereum Classic web page")
