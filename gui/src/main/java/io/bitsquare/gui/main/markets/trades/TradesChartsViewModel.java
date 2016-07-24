@@ -52,17 +52,19 @@ class TradesChartsViewModel extends ActivatableViewModel {
         WEEK,
         DAY,
         HOUR,
-        MINUTE,
-        SECOND
+        MINUTE_10,
+        MINUTE
     }
 
     private final Preferences preferences;
     final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>();
     private final HashMapChangedListener mapChangedListener;
     ObservableList<XYChart.Data<Number, Number>> items = FXCollections.observableArrayList();
+    ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
+
     private P2PService p2PService;
     final ObservableList<TradeStatistics> tradeStatistics = FXCollections.observableArrayList();
-    TickUnit tickUnit = TickUnit.MINUTE;
+    TickUnit tickUnit = TickUnit.MINUTE_10;
     int upperBound = 30;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +126,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
         p2PService.removeHashMapChangedListener(mapChangedListener);
     }
 
+    public void setTickUnit(TickUnit tickUnit) {
+        this.tickUnit = tickUnit;
+        updateChartData();
+    }
 
     private void updateChartData() {
         items.clear();
@@ -154,6 +160,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
         items.addAll(candleDataList.stream()
                 .map(e -> new XYChart.Data<Number, Number>(e.tick, e.open, new CandleStickExtraValues(e.close, e.high, e.low, e.average)))
+                .collect(Collectors.toList()));
+
+        volumeItems.addAll(candleDataList.stream()
+                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.volume, new CandleStickExtraValues(e.close, e.high, e.low, e.average)))
                 .collect(Collectors.toList()));
     }
 
@@ -187,16 +197,18 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {
         switch (tickUnit) {
+            case MONTH:
+                return TimeUnit.MILLISECONDS.toDays(tradeDateAsTime) / 31;
             case WEEK:
-                return TimeUnit.MILLISECONDS.toDays(tradeDateAsTime) * 7;
+                return TimeUnit.MILLISECONDS.toDays(tradeDateAsTime) / 7;
             case DAY:
                 return TimeUnit.MILLISECONDS.toDays(tradeDateAsTime);
             case HOUR:
                 return TimeUnit.MILLISECONDS.toHours(tradeDateAsTime);
+            case MINUTE_10:
+                return TimeUnit.MILLISECONDS.toMinutes(tradeDateAsTime) / 10;
             case MINUTE:
                 return TimeUnit.MILLISECONDS.toMinutes(tradeDateAsTime);
-            case SECOND:
-                return TimeUnit.MILLISECONDS.toSeconds(tradeDateAsTime);
             default:
                 return tradeDateAsTime;
         }
@@ -204,16 +216,18 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     long getTimeFromTick(long tick, TickUnit tickUnit) {
         switch (tickUnit) {
+            case MONTH:
+                return TimeUnit.DAYS.toMillis(tick) * 31;
             case WEEK:
                 return TimeUnit.DAYS.toMillis(tick) * 7;
             case DAY:
                 return TimeUnit.DAYS.toMillis(tick);
             case HOUR:
                 return TimeUnit.HOURS.toMillis(tick);
+            case MINUTE_10:
+                return TimeUnit.MINUTES.toMillis(tick) * 10;
             case MINUTE:
                 return TimeUnit.MINUTES.toMillis(tick);
-            case SECOND:
-                return TimeUnit.SECONDS.toMillis(tick);
             default:
                 return tick;
         }
@@ -234,10 +248,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public List<XYChart.Data<Number, Number>> getItems() {
-        return items;
-    }
 
     public String getCurrencyCode() {
         return tradeCurrency.get().getCode();

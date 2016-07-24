@@ -38,7 +38,7 @@
 }
 
 .candlestick-average-line {
-    -fx-stroke: #106ece;
+    -fx-stroke: #00b2ff;
     -fx-stroke-width: 2px;
 }
 
@@ -53,7 +53,7 @@
 
 .candlestick-bar {
     -fx-padding: 5;
-    -demo-bar-fill: red;
+    -demo-bar-fill: #e81a00;
     -fx-background-color: linear-gradient(derive(-demo-bar-fill, -30%), derive(-demo-bar-fill, -40%)),
     linear-gradient(derive(-demo-bar-fill, 100%), derive(-demo-bar-fill, 10%)),
     linear-gradient(derive(-demo-bar-fill, 30%), derive(-demo-bar-fill, -10%));
@@ -61,9 +61,35 @@
 }
 
 .candlestick-bar.close-above-open {
-    -demo-bar-fill: #95ce1b;
+    -demo-bar-fill: #1bff06;
 }
 
 .candlestick-bar.open-above-close {
-    -demo-bar-fill: #ce2700;
+    -demo-bar-fill: #e81a00;
+}
+
+.candlestick-bar.empty {
+    -demo-bar-fill: #cccccc;
+}
+
+.chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.default-color0.chart-series-line {
+    -fx-stroke: blue;
+}
+
+.default-color0.chart-line-symbol {
+    -fx-background-color: blue, white;
+}
+
+.chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.chart-alternative-row-fill {
+    -fx-fill: transparent;
+    -fx-stroke: transparent;
+    -fx-stroke-width: 0;
 }

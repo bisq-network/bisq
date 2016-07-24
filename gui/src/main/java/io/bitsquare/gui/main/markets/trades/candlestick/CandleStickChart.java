@@ -58,6 +58,7 @@ import java.util.List;
  */
 public class CandleStickChart extends XYChart<Number, Number> {
     private static final Logger log = LoggerFactory.getLogger(CandleStickChart.class);
+
     private StringConverter<Number> toolTipStringConverter;
     private Path seriesPath;
 
@@ -71,11 +72,6 @@ public class CandleStickChart extends XYChart<Number, Number> {
      */
     public CandleStickChart(Axis<Number> xAxis, Axis<Number> yAxis) {
         super(xAxis, yAxis);
-        getStylesheets().add(
-                CandleStickChart.class.getResource("CandleStickChart.css").toExternalForm());
-        setAnimated(false);
-        xAxis.setAnimated(false);
-        yAxis.setAnimated(false);
     }
 
     // -------------- METHODS ------------------------------------------------------------------------------------------
@@ -146,6 +142,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
     @Override
     protected void dataItemAdded(XYChart.Series<Number, Number> series, int itemIndex, XYChart.Data<Number, Number> item) {
         Node candle = createCandle(getData().indexOf(series), item, itemIndex);
+
         if (shouldAnimate()) {
             candle.setOpacity(0);
             getPlotChildren().add(candle);
@@ -157,9 +154,8 @@ public class CandleStickChart extends XYChart<Number, Number> {
             getPlotChildren().add(candle);
         }
         // always draw average line on top
-        if (series.getNode() != null) {
-            series.getNode().toFront();
-        }
+        if (seriesPath != null)
+            seriesPath.toFront();
     }
 
     @Override
