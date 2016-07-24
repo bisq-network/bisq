@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 class TradesChartsViewModel extends ActivatableViewModel {
     private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModel.class);
@@ -57,15 +56,19 @@ class TradesChartsViewModel extends ActivatableViewModel {
     }
 
     private final Preferences preferences;
-    final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>();
+    private P2PService p2PService;
+
     private final HashMapChangedListener mapChangedListener;
+    final ObjectProperty<TradeCurrency> tradeCurrencyProperty = new SimpleObjectProperty<>();
+
+    private final Set<TradeStatistics> allTradeStatistics = new HashSet<>();
+    final ObservableList<TradeStatistics> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
 
-    private P2PService p2PService;
-    final ObservableList<TradeStatistics> tradeStatistics = FXCollections.observableArrayList();
-    TickUnit tickUnit = TickUnit.MINUTE_10;
+    TickUnit tickUnit;
     int upperBound = 30;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -85,19 +88,21 @@ class TradesChartsViewModel extends ActivatableViewModel {
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
                 final StoragePayload storagePayload = data.getStoragePayload();
-                if (storagePayload instanceof TradeStatistics && tradeStatistics.contains(storagePayload)) {
-                    tradeStatistics.remove(storagePayload);
+                if (storagePayload instanceof TradeStatistics && allTradeStatistics.contains(storagePayload)) {
+                    allTradeStatistics.remove(storagePayload);
                     updateChartData();
                 }
             }
         };
 
-        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getMarketScreenCurrencyCode());
+        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getTradeStatisticsScreenCurrencyCode());
         if (tradeCurrencyOptional.isPresent())
-            tradeCurrency.set(tradeCurrencyOptional.get());
+            tradeCurrencyProperty.set(tradeCurrencyOptional.get());
         else {
-            tradeCurrency.set(CurrencyUtil.getDefaultTradeCurrency());
+            tradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
         }
+
+        tickUnit = TickUnit.values()[preferences.getTradeStatisticsTickUnit()];
     }
 
     @VisibleForTesting
@@ -106,13 +111,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
         preferences = null;
     }
 
-    private void addItem(StoragePayload storagePayload, boolean doUpdate) {
-        if (storagePayload instanceof TradeStatistics && !tradeStatistics.contains(storagePayload)) {
-            tradeStatistics.add((TradeStatistics) storagePayload);
-            if (doUpdate)
-                updateChartData();
-        }
-    }
 
     @Override
     protected void activate() {
@@ -126,18 +124,61 @@ class TradesChartsViewModel extends ActivatableViewModel {
         p2PService.removeHashMapChangedListener(mapChangedListener);
     }
 
-    public void setTickUnit(TickUnit tickUnit) {
-        this.tickUnit = tickUnit;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
+        this.tradeCurrencyProperty.set(tradeCurrency);
+        preferences.setTradeStatisticsScreenCurrencyCode(tradeCurrency.getCode());
         updateChartData();
     }
 
+    public void setTickUnit(TickUnit tickUnit) {
+        this.tickUnit = tickUnit;
+        preferences.setTradeStatisticsTickUnit(tickUnit.ordinal());
+        updateChartData();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getCurrencyCode() {
+        return tradeCurrencyProperty.get().getCode();
+    }
+
+    public ObservableList<TradeCurrency> getTradeCurrencies() {
+        return preferences.getTradeCurrenciesAsObservable();
+    }
+
+    public TradeCurrency getTradeCurrency() {
+        return tradeCurrencyProperty.get();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    private void addItem(StoragePayload storagePayload, boolean doUpdate) {
+        if (storagePayload instanceof TradeStatistics && !allTradeStatistics.contains(storagePayload)) {
+            allTradeStatistics.add((TradeStatistics) storagePayload);
+            if (doUpdate)
+                updateChartData();
+        }
+    }
+
+
     private void updateChartData() {
-        final Stream<TradeStatistics> tradeStatisticsStream = tradeStatistics.stream()
-                .filter(e -> e.offer.getCurrencyCode().equals(getCurrencyCode()));
+        tradeStatisticsByCurrency.setAll(allTradeStatistics.stream()
+                .filter(e -> e.offer.getCurrencyCode().equals(getCurrencyCode()))
+                .collect(Collectors.toList()));
 
         // Get all entries for the defined time interval
         Map<Long, Set<TradeStatistics>> itemsPerInterval = new HashMap<>();
-        tradeStatisticsStream.forEach(e -> {
+        tradeStatisticsByCurrency.stream().forEach(e -> {
             Set<TradeStatistics> set;
             final long time = getTickFromTime(e.tradeDateAsTime, tickUnit);
             final long now = getTickFromTime(new Date().getTime(), tickUnit);
@@ -158,11 +199,11 @@ class TradesChartsViewModel extends ActivatableViewModel {
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
         priceItems.setAll(candleDataList.stream()
-                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.open, new CandleStickExtraValues(e.close, e.high, e.low, e.average)))
+                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.open, new CandleStickExtraValues(e.close, e.high, e.low, e.average, e.accumulatedAmount)))
                 .collect(Collectors.toList()));
 
         volumeItems.setAll(candleDataList.stream()
-                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.accumulatedAmount))
+                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.accumulatedAmount, new CandleStickExtraValues(e.close, e.high, e.low, e.average, e.accumulatedAmount)))
                 .collect(Collectors.toList()));
     }
 
@@ -232,31 +273,4 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI actions
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
-        this.tradeCurrency.set(tradeCurrency);
-        updateChartData();
-
-        //preferences.setMarketScreenCurrencyCode(tradeCurrency.getCode());
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getCurrencyCode() {
-        return tradeCurrency.get().getCode();
-    }
-
-    public ObservableList<TradeCurrency> getTradeCurrencies() {
-        return preferences.getTradeCurrenciesAsObservable();
-    }
-
-    public TradeCurrency getTradeCurrency() {
-        return tradeCurrency.get();
-    }
 }

@@ -31,7 +31,6 @@
  */
 package io.bitsquare.gui.main.markets.trades.candlestick;
 
-import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
@@ -44,15 +43,15 @@ public class TooltipContent extends GridPane {
     private Label closeValue = new Label();
     private Label highValue = new Label();
     private Label lowValue = new Label();
-    private BSFormatter formatter;
-    private StringConverter<Number> toolTipStringConverter;
+    private StringConverter<Number> priceStringConverter;
 
-    TooltipContent(StringConverter<Number> toolTipStringConverter) {
-        this.toolTipStringConverter = toolTipStringConverter;
+    TooltipContent(StringConverter<Number> priceStringConverter) {
+        this.priceStringConverter = priceStringConverter;
         Label open = new Label("Open:");
         Label close = new Label("Close:");
         Label high = new Label("High:");
         Label low = new Label("Low:");
+        Label volume = new Label("Volume:");
        /* open.getStyleClass().add("candlestick-tooltip-label");
         close.getStyleClass().add("candlestick-tooltip-label");
         high.getStyleClass().add("candlestick-tooltip-label");
@@ -69,11 +68,12 @@ public class TooltipContent extends GridPane {
     }
 
     public void update(double open, double close, double high, double low) {
-        if (toolTipStringConverter != null) {
-            openValue.setText(toolTipStringConverter.toString(open));
-            closeValue.setText(toolTipStringConverter.toString(close));
-            highValue.setText(toolTipStringConverter.toString(high));
-            lowValue.setText(toolTipStringConverter.toString(low));
+        if (priceStringConverter != null) {
+            openValue.setText(priceStringConverter.toString(open));
+            closeValue.setText(priceStringConverter.toString(close));
+            highValue.setText(priceStringConverter.toString(high));
+            lowValue.setText(priceStringConverter.toString(low));
+
         }
     }
 }

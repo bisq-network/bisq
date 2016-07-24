@@ -94,18 +94,23 @@ public class VolumeChart extends XYChart<Number, Number> {
                 double x = getXAxis().getDisplayPosition(getCurrentDisplayedXValue(item));
                 double y = getYAxis().getDisplayPosition(getCurrentDisplayedYValue(item));
                 Node itemNode = item.getNode();
-                if (itemNode instanceof VolumeBar) {
+                CandleStickExtraValues extra = (CandleStickExtraValues) item.getExtraValue();
+                if (itemNode instanceof VolumeBar && extra != null) {
                     VolumeBar volumeBar = (VolumeBar) itemNode;
                     double candleWidth = -1;
                     if (getXAxis() instanceof NumberAxis) {
                         NumberAxis xa = (NumberAxis) getXAxis();
                         candleWidth = xa.getDisplayPosition(xa.getTickUnit()) * 0.90; // use 90% width between ticks
                     }
-                    volumeBar.update(y, candleWidth);
 
-                    // position the volumeBar
+                    // 97 is visible chart data height if chart height is 140. 
+                    // So we subtract 43 form the height to get the height for the bar to the bottom.
+                    // Did not find a way how to request the chart data height
+                    final double height = getHeight() - 43;
+                    double upperYPos = Math.min(height - 5, y); // We want min 5px height to allow tooltips
+                    volumeBar.update(height - upperYPos, candleWidth, extra.getVolume());
                     volumeBar.setLayoutX(x);
-                    volumeBar.setLayoutY(y);
+                    volumeBar.setLayoutY(upperYPos);
                 }
             }
         }
@@ -221,11 +226,10 @@ public class VolumeChart extends XYChart<Number, Number> {
         List<Number> xData = null;
         List<Number> yData = null;
         if (xa.isAutoRanging()) {
-            xData = new ArrayList<Number>();
+            xData = new ArrayList<>();
         }
-        if (ya.isAutoRanging()) {
-            yData = new ArrayList<Number>();
-        }
+        if (ya.isAutoRanging())
+            yData = new ArrayList<>();
         if (xData != null || yData != null) {
             for (XYChart.Series<Number, Number> series : getData()) {
                 for (XYChart.Data<Number, Number> data : series.getData()) {

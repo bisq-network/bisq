@@ -54,15 +54,15 @@ public class Candle extends Group {
     private Tooltip tooltip = new Tooltip();
     private double closeOffset;
 
-    Candle(String seriesStyleClass, String dataStyleClass, StringConverter<Number> toolTipStringConverter) {
+    Candle(String seriesStyleClass, String dataStyleClass, StringConverter<Number> priceStringConverter) {
         setAutoSizeChildren(false);
         getChildren().addAll(highLowLine, bar);
         this.seriesStyleClass = seriesStyleClass;
         this.dataStyleClass = dataStyleClass;
         updateStyleClasses();
-        tooltipContent = new TooltipContent(toolTipStringConverter);
+        tooltipContent = new TooltipContent(priceStringConverter);
         tooltip.setGraphic(tooltipContent);
-        Tooltip.install(bar, tooltip);
+        Tooltip.install(this, tooltip);
     }
 
     public void setSeriesAndDataStyleClasses(String seriesStyleClass, String dataStyleClass) {

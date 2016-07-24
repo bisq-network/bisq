@@ -119,8 +119,11 @@ public final class Preferences implements Persistable {
     private double maxPriceDistanceInPercent;
     private boolean useInvertedMarketPrice;
     private String marketScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private String tradeStatisticsScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private int tradeStatisticsTickUnit = 0;
+
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
@@ -205,6 +208,8 @@ public final class Preferences implements Persistable {
             marketScreenCurrencyCode = persisted.getMarketScreenCurrencyCode();
             buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
             sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
+            tradeStatisticsScreenCurrencyCode = persisted.getTradeStatisticsScreenCurrencyCode();
+            tradeStatisticsTickUnit = persisted.getTradeStatisticsTickUnit();
 
             if (persisted.getIgnoreTradersList() != null)
                 ignoreTradersList = persisted.getIgnoreTradersList();
@@ -455,6 +460,16 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setTradeStatisticsScreenCurrencyCode(String tradeStatisticsScreenCurrencyCode) {
+        this.tradeStatisticsScreenCurrencyCode = tradeStatisticsScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
+    public void setTradeStatisticsTickUnit(int tradeStatisticsTickUnit) {
+        this.tradeStatisticsTickUnit = tradeStatisticsTickUnit;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -607,6 +622,15 @@ public final class Preferences implements Persistable {
     public String getDefaultPath() {
         return defaultPath;
     }
+
+    public String getTradeStatisticsScreenCurrencyCode() {
+        return tradeStatisticsScreenCurrencyCode;
+    }
+
+    public int getTradeStatisticsTickUnit() {
+        return tradeStatisticsTickUnit;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -636,4 +660,5 @@ public final class Preferences implements Persistable {
         this.blockChainExplorerMainNet = blockChainExplorerMainNet;
         storage.queueUpForSave(2000);
     }
+
 }

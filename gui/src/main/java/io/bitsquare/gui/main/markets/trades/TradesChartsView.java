@@ -33,14 +33,15 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.Side;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -77,6 +78,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private CandleStickChart priceChart;
 
     private final ListChangeListener<XYChart.Data<Number, Number>> itemsChangeListener;
+    private double priceAxisYWidth;
+    private double volumeAxisYWidth;
+    private ChangeListener<Number> priceAxisYWidthListener;
+    private ChangeListener<Number> volumeAxisYWidthListener;
+    private NumberAxis volumeAxisX;
+    private SortedList<TradeStatistics> sortedList;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,20 +101,29 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     @Override
     public void initialize() {
         HBox currencyHBox = createCurrencyComboBox();
-        HBox toggleBarHBox = createToggleBar();
+        // HBox toggleBarHBox = createToggleBar();
+
         createChart();
-        final VBox tableVBox = getTableBox();
+        createTableBox();
 
-        StackPane stackPane = new StackPane();
-        stackPane.getChildren().addAll(priceChart, volumeChart);
+     /*   StackPane stackPane = new StackPane();
+        stackPane.getChildren().addAll(volumeChart, priceChart);*/
 
-        root.getChildren().addAll(currencyHBox, toggleBarHBox, stackPane, tableVBox);
+        root.getChildren().addAll(currencyHBox, priceChart, volumeChart, tableView);
 
         toggleChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 model.setTickUnit((TradesChartsViewModel.TickUnit) newValue.getUserData());
                 timeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
             }
+        };
+        priceAxisYWidthListener = (observable, oldValue, newValue) -> {
+            priceAxisYWidth = (double) newValue;
+            layoutChart();
+        };
+        volumeAxisYWidthListener = (observable, oldValue, newValue) -> {
+            volumeAxisYWidth = (double) newValue;
+            layoutChart();
         };
     }
 
@@ -119,8 +135,14 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
         currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
 
+        toggleGroup.getToggles().get(model.tickUnit.ordinal()).setSelected(true);
+       
         model.priceItems.addListener(itemsChangeListener);
-        tradeCurrencySubscriber = EasyBind.subscribe(model.tradeCurrency,
+        toggleGroup.selectedToggleProperty().addListener(toggleChangeListener);
+        priceAxisY.widthProperty().addListener(priceAxisYWidthListener);
+        volumeAxisY.widthProperty().addListener(volumeAxisYWidthListener);
+
+        tradeCurrencySubscriber = EasyBind.subscribe(model.tradeCurrencyProperty,
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
                     String tradeCurrencyName = tradeCurrency.getName();
@@ -135,8 +157,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     volumeAxisY.setLabel(volumeColumnLabel.get());
                 });
 
-        tableView.setItems(model.tradeStatistics);
-        toggleGroup.selectedToggleProperty().addListener(toggleChangeListener);
+        sortedList = new SortedList<>(model.tradeStatisticsByCurrency);
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
+
         updateChartData();
         timeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
     }
@@ -144,11 +168,15 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     @Override
     protected void deactivate() {
         model.priceItems.removeListener(itemsChangeListener);
+        toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
+        priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
+        volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
         tradeCurrencySubscriber.unsubscribe();
         currencyComboBox.setOnAction(null);
-        toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
         priceSeries.getData().clear();
         priceChart.getData().clear();
+
+        sortedList.comparatorProperty().unbind();
     }
 
 
@@ -161,29 +189,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         timeAxisX.setTickUnit(1);
         timeAxisX.setMinorTickCount(0);
         timeAxisX.setForceZeroInRange(false);
-        timeAxisX.setLabel("Date/Time");
         timeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
-
-        volumeSeries = new XYChart.Series<>();
-
-        volumeAxisY = new NumberAxis();
-        volumeAxisY.setForceZeroInRange(false);
-        volumeAxisY.setAutoRanging(true);
-        volumeAxisY.setLabel("Volume");
-        volumeAxisY.setTickLabelFormatter(getVolumeStringConverter());
-        volumeAxisY.setSide(Side.RIGHT);
-
-        NumberAxis volumeAxisX = new NumberAxis(0, model.upperBound + 1, 1);
-        volumeAxisX.setTickLabelsVisible(false);
-        volumeAxisX.setTickMarkVisible(false);
-        volumeAxisX.lookup(".axis-minor-tick-mark").setOpacity(0);
-
-        volumeChart = new VolumeChart(volumeAxisX, volumeAxisY);
-        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
-        volumeChart.setAnimated(false);
-        volumeChart.setMinHeight(300);
-        volumeChart.setPadding(new Insets(0, 0, 40, 69));
-        volumeChart.setLegendVisible(false);
 
         priceSeries = new XYChart.Series<>();
 
@@ -191,35 +197,101 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisY.setForceZeroInRange(false);
         priceAxisY.setAutoRanging(true);
         priceAxisY.setLabel(priceColumnLabel.get());
-        priceAxisY.setTickLabelFormatter(getPriceStringConverter());
+        priceAxisY.setTickLabelFormatter(new StringConverter<Number>() {
+            @Override
+            public String toString(Number object) {
+                return formatter.formatFiat(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
+            }
+
+            @Override
+            public Number fromString(String string) {
+                return null;
+            }
+        });
 
         priceChart = new CandleStickChart(timeAxisX, priceAxisY);
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
-        priceChart.setToolTipStringConverter(getPriceStringConverter());
-        priceChart.setLegendVisible(false);
+        priceChart.setToolTipStringConverter(new StringConverter<Number>() {
+            @Override
+            public String toString(Number object) {
+                return formatter.formatFiatWithCode(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
+            }
+
+            @Override
+            public Number fromString(String string) {
+                return null;
+            }
+        });
         priceChart.setAnimated(true);
-        priceChart.setMinHeight(300);
-        priceChart.setPadding(new Insets(0, 69, 0, 0));
-        priceChart.setAlternativeRowFillVisible(false);
-        priceChart.setAlternativeColumnFillVisible(false);
-        priceChart.setHorizontalGridLinesVisible(false);
-        priceChart.setVerticalGridLinesVisible(false);
-        priceChart.getXAxis().setVisible(false);
-        priceChart.getYAxis().setVisible(false);
+        priceChart.setMinHeight(250);
+        priceChart.setLegendVisible(false);
+
+        volumeSeries = new XYChart.Series<>();
+
+        volumeAxisY = new NumberAxis();
+        volumeAxisY.setForceZeroInRange(true);
+        volumeAxisY.setAutoRanging(true);
+        volumeAxisY.setLabel("Volume");
+        volumeAxisY.setTickLabelFormatter(new StringConverter<Number>() {
+            @Override
+            public String toString(Number object) {
+                return formatter.formatCoin(Coin.valueOf(new Double((double) object).longValue()));
+            }
+
+            @Override
+            public Number fromString(String string) {
+                return null;
+            }
+        });
+
+        volumeAxisX = new NumberAxis(0, model.upperBound + 1, 1);
+        volumeAxisX.setTickUnit(1);
+        volumeAxisX.setMinorTickCount(0);
+        volumeAxisX.setForceZeroInRange(false);
+        volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
+
+        volumeChart = new VolumeChart(volumeAxisX, volumeAxisY);
+        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
+        volumeChart.setToolTipStringConverter(new StringConverter<Number>() {
+            @Override
+            public String toString(Number object) {
+                return formatter.formatCoinWithCode(Coin.valueOf(new Double((double) object).longValue()));
+            }
+
+            @Override
+            public Number fromString(String string) {
+                return null;
+            }
+        });
+        volumeChart.setAnimated(true);
+        volumeChart.setMinHeight(140);
+        volumeChart.setLegendVisible(false);
     }
 
     private void updateChartData() {
-        priceSeries.getData().clear();
-        priceSeries = new XYChart.Series<>();
-        priceSeries.getData().setAll(model.priceItems);
-        priceChart.getData().clear();
-        priceChart.setData(FXCollections.observableArrayList(priceSeries));
-
         volumeSeries.getData().clear();
         volumeSeries = new XYChart.Series<>();
         volumeSeries.getData().setAll(model.volumeItems);
         volumeChart.getData().clear();
         volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
+
+        priceSeries.getData().clear();
+        priceSeries = new XYChart.Series<>();
+        priceSeries.getData().setAll(model.priceItems);
+        priceChart.getData().clear();
+        priceChart.setData(FXCollections.observableArrayList(priceSeries));
+    }
+
+    private void layoutChart() {
+        UserThread.execute(() -> {
+            if (volumeAxisYWidth > priceAxisYWidth) {
+                priceChart.setPadding(new Insets(0, 0, 0, volumeAxisYWidth - priceAxisYWidth));
+                volumeChart.setPadding(new Insets(0, 0, 0, 0));
+            } else if (volumeAxisYWidth < priceAxisYWidth) {
+                priceChart.setPadding(new Insets(0, 0, 0, 0));
+                volumeChart.setPadding(new Insets(0, 0, 0, priceAxisYWidth - volumeAxisYWidth));
+            }
+        });
     }
 
     @NotNull
@@ -245,44 +317,15 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         };
     }
 
-    @NotNull
-    private StringConverter<Number> getPriceStringConverter() {
-        return new StringConverter<Number>() {
-            @Override
-            public String toString(Number object) {
-                // comes as double
-                return formatter.formatFiat(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
-            }
-
-            @Override
-            public Number fromString(String string) {
-                return null;
-            }
-        };
-    }
-
-    @NotNull
-    private StringConverter<Number> getVolumeStringConverter() {
-        return new StringConverter<Number>() {
-            @Override
-            public String toString(Number object) {
-                // comes as double
-                return formatter.formatCoin(Coin.valueOf(new Double((double) object).longValue()));
-            }
-
-            @Override
-            public Number fromString(String string) {
-                return null;
-            }
-        };
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // CurrencyComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private HBox createCurrencyComboBox() {
+        Label currencyLabel = new Label("Currency:");
+        currencyLabel.setPadding(new Insets(0, 3, 0, 0));
+
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
@@ -303,30 +346,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
 
-
-        Label currencyLabel = new Label("Currency:");
-        HBox currencyHBox = new HBox();
-        currencyHBox.setSpacing(5);
-        currencyHBox.setPadding(new Insets(10, -20, 0, 20));
-        currencyHBox.setAlignment(Pos.CENTER_LEFT);
-        currencyHBox.getChildren().addAll(currencyLabel, currencyComboBox);
-        return currencyHBox;
-
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ToggleBar
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private HBox createToggleBar() {
-        HBox hBox = new HBox();
-        hBox.setSpacing(0);
-        hBox.setPadding(new Insets(0, 0, -26, 85));
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Label label = new Label("Interval:");
-        label.setPadding(new Insets(5, 5, 0, 0));
-
+        label.setPadding(new Insets(0, 3, 0, 0));
+        
         toggleGroup = new ToggleGroup();
         ToggleButton month = getToggleButton("Month", TradesChartsViewModel.TickUnit.MONTH, toggleGroup, "toggle-left");
         ToggleButton week = getToggleButton("Week", TradesChartsViewModel.TickUnit.WEEK, toggleGroup, "toggle-center");
@@ -334,8 +359,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         ToggleButton hour = getToggleButton("Hour", TradesChartsViewModel.TickUnit.HOUR, toggleGroup, "toggle-center");
         ToggleButton minute10 = getToggleButton("10 Minute", TradesChartsViewModel.TickUnit.MINUTE_10, toggleGroup, "toggle-center");
         ToggleButton minute = getToggleButton("Minute", TradesChartsViewModel.TickUnit.MINUTE, toggleGroup, "toggle-right");
-        minute10.setSelected(true);
-        hBox.getChildren().addAll(label, month, week, day, hour, minute10, minute);
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(0);
+        hBox.setPadding(new Insets(5, 20, -10, 8));
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.getChildren().addAll(currencyLabel, currencyComboBox, spacer, label, month, week, day, hour, minute10, minute);
         return hBox;
     }
 
@@ -353,8 +382,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     // Table
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private VBox getTableBox() {
+    private void createTableBox() {
         tableView = new TableView<>();
+        tableView.setMinHeight(120);
 
         // date
         TableColumn<TradeStatistics, TradeStatistics> dateColumn = new TableColumn<>("Date/Time");
@@ -377,6 +407,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
+        dateColumn.setComparator((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
         tableView.getColumns().add(dateColumn);
 
 
@@ -401,6 +432,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
+        amountColumn.setComparator((o1, o2) -> o1.getTradeAmount().compareTo(o2.getTradeAmount()));
         tableView.getColumns().add(amountColumn);
 
 
@@ -426,6 +458,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
+        priceColumn.setComparator((o1, o2) -> o1.getTradePrice().compareTo(o2.getTradePrice()));
         tableView.getColumns().add(priceColumn);
 
 
@@ -451,6 +484,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
+        volumeColumn.setComparator((o1, o2) -> o1.getTradeVolume().compareTo(o2.getTradeVolume()));
         tableView.getColumns().add(volumeColumn);
 
 
@@ -475,24 +509,15 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
+        directionColumn.setComparator((o1, o2) -> o1.offer.getDirection().compareTo(o2.offer.getDirection()));
         tableView.getColumns().add(directionColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new Label("Currently there is no data available");
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
-
-        Label titleLabel = new Label("Trades");
-        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
-        UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
-
-        VBox vBox = new VBox();
-        vBox.setSpacing(10);
-        vBox.setFillWidth(true);
-        vBox.setMinHeight(190);
-        vBox.getChildren().addAll(titleLabel, tableView);
-
-        return vBox;
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(dateColumn);
     }
 
 }

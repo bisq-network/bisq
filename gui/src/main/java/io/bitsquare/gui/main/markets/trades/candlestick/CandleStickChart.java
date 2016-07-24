@@ -59,7 +59,7 @@ import java.util.List;
 public class CandleStickChart extends XYChart<Number, Number> {
     private static final Logger log = LoggerFactory.getLogger(CandleStickChart.class);
 
-    private StringConverter<Number> toolTipStringConverter;
+    private StringConverter<Number> priceStringConverter;
     private Path seriesPath;
 
     // -------------- CONSTRUCTORS ----------------------------------------------
@@ -76,8 +76,8 @@ public class CandleStickChart extends XYChart<Number, Number> {
 
     // -------------- METHODS ------------------------------------------------------------------------------------------
 
-    public final void setToolTipStringConverter(StringConverter<Number> toolTipStringConverter) {
-        this.toolTipStringConverter = toolTipStringConverter;
+    public final void setToolTipStringConverter(StringConverter<Number> priceStringConverter) {
+        this.priceStringConverter = priceStringConverter;
     }
 
     /**
@@ -144,7 +144,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
         Node candle = createCandle(getData().indexOf(series), item, itemIndex);
         if (getPlotChildren().contains(candle))
             getPlotChildren().remove(candle);
-        
+
         if (shouldAnimate()) {
             candle.setOpacity(0);
             getPlotChildren().add(candle);
@@ -239,7 +239,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
         if (candle instanceof Candle) {
             ((Candle) candle).setSeriesAndDataStyleClasses("series" + seriesIndex, "data" + itemIndex);
         } else {
-            candle = new Candle("series" + seriesIndex, "data" + itemIndex, toolTipStringConverter);
+            candle = new Candle("series" + seriesIndex, "data" + itemIndex, priceStringConverter);
             item.setNode(candle);
         }
         return candle;

@@ -39,12 +39,14 @@ public class CandleStickExtraValues {
     private double high;
     private double low;
     private double average;
+    private double volume;
 
-    public CandleStickExtraValues(double close, double high, double low, double average) {
+    public CandleStickExtraValues(double close, double high, double low, double average, double volume) {
         this.close = close;
         this.high = high;
         this.low = low;
         this.average = average;
+        this.volume = volume;
     }
 
     public double getClose() {
@@ -59,12 +61,16 @@ public class CandleStickExtraValues {
         return low;
     }
 
+    public double getVolume() {
+        return volume;
+    }
+
     public double getAverage() {
         return average;
     }
 
     @Override
     public String toString() {
-        return "CandleStickExtraValues{" + "close=" + close + ", high=" + high + ", low=" + low + ", average=" + average + '}';
+        return "CandleStickExtraValues{" + "close=" + close + ", high=" + high + ", low=" + low + ", average=" + average + ", volume=" + volume + '}';
     }
 }
