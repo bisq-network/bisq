@@ -30,6 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /* ====== CANDLE STICK CHART =========================================================== */
+
 .candlestick-tooltip-label {
     -fx-font-size: 0.75em;
     -fx-font-weight: bold;
@@ -72,6 +73,7 @@
     -demo-bar-fill: #cccccc;
 }
 
+
 .chart-plot-background {
     -fx-background-color: transparent;
 }
@@ -81,15 +83,26 @@
 }
 
 .default-color0.chart-line-symbol {
-    -fx-background-color: blue, white;
+    -fx-background-color: red, green;
 }
 
-.chart-plot-background {
-    -fx-background-color: transparent;
-}
 
 .chart-alternative-row-fill {
     -fx-fill: transparent;
     -fx-stroke: transparent;
     -fx-stroke-width: 0;
 }
+
+.chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 20px;
+}
+
+.chart-legend-item-symbol {
+    -fx-background-radius: 0;
+}
+ 

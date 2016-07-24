@@ -142,7 +142,9 @@ public class CandleStickChart extends XYChart<Number, Number> {
     @Override
     protected void dataItemAdded(XYChart.Series<Number, Number> series, int itemIndex, XYChart.Data<Number, Number> item) {
         Node candle = createCandle(getData().indexOf(series), item, itemIndex);
-
+        if (getPlotChildren().contains(candle))
+            getPlotChildren().remove(candle);
+        
         if (shouldAnimate()) {
             candle.setOpacity(0);
             getPlotChildren().add(candle);

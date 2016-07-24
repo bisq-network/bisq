@@ -60,7 +60,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>();
     private final HashMapChangedListener mapChangedListener;
     ObservableList<XYChart.Data<Number, Number>> items = FXCollections.observableArrayList();
-    ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
+    ObservableList<XYChart.Data<String, Number>> volumeItems = FXCollections.observableArrayList();
 
     private P2PService p2PService;
     final ObservableList<TradeStatistics> tradeStatistics = FXCollections.observableArrayList();
@@ -163,7 +163,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList()));
 
         volumeItems.addAll(candleDataList.stream()
-                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.volume, new CandleStickExtraValues(e.close, e.high, e.low, e.average)))
+                .map(e -> new XYChart.Data<String, Number>("", e.volume, new CandleStickExtraValues(e.close, e.high, e.low, e.average)))
                 .collect(Collectors.toList()));
     }
 

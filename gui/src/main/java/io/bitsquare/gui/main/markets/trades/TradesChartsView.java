@@ -35,11 +35,13 @@ import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
-import javafx.scene.chart.LineChart;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -68,12 +70,15 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private ToggleGroup toggleGroup;
 
     private NumberAxis timeAxisX, priceAxisY, volumeAxisY;
+    private CategoryAxis volumeAxisX;
     private XYChart.Series<Number, Number> priceSeries;
-    private XYChart.Series<Number, Number> volumeSeries;
-    private LineChart<Number, Number> volumeChart;
+    private XYChart.Series<String, Number> volumeSeries;
+    private BarChart<String, Number> volumeChart;
     private CandleStickChart priceChart;
+    // private LineChart<Number, Number> priceChart;
+
     private final ListChangeListener<XYChart.Data<Number, Number>> itemsChangeListener;
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -94,10 +99,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         createChart();
         final VBox tableVBox = getTableBox();
 
-      /*  StackPane stackPane = new StackPane();
-        stackPane.getChildren().addAll(priceChart, volumeChart);*/
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().addAll(volumeChart, priceChart);
 
-        root.getChildren().addAll(currencyHBox, toggleBarHBox, priceChart, tableVBox);
+        root.getChildren().addAll(currencyHBox, toggleBarHBox, stackPane, tableVBox);
 
         toggleChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
@@ -145,6 +150,27 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createChart() {
+        volumeSeries = new XYChart.Series<>();
+
+        volumeAxisX = new CategoryAxis();
+        volumeAxisX.setLabel("");
+        volumeAxisX.setCategories(FXCollections.observableArrayList());
+
+        volumeAxisY = new NumberAxis();
+        volumeAxisY.setForceZeroInRange(false);
+        volumeAxisY.setAutoRanging(true);
+        volumeAxisY.setLabel("Volume");
+        volumeAxisY.setTickLabelFormatter(getVolumeStringConverter());
+        volumeAxisY.setSide(Side.RIGHT);
+
+        volumeChart = new BarChart<>(volumeAxisX, volumeAxisY);
+        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
+        volumeChart.setAnimated(false);
+        volumeChart.setMinHeight(300);
+        volumeChart.setPadding(new Insets(0, 0, -10, 75));
+        volumeChart.setLegendVisible(false);
+
+
         priceSeries = new XYChart.Series<>();
 
         timeAxisX = new NumberAxis(0, model.upperBound + 1, 1);
@@ -162,35 +188,25 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         priceChart = new CandleStickChart(timeAxisX, priceAxisY);
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
-        priceChart.setAnimated(true);
-        priceChart.setId("charts");
-        priceChart.setMinHeight(300);
-        priceChart.setPadding(new Insets(0, 30, 10, 0));
         priceChart.setToolTipStringConverter(getPriceStringConverter());
-
-        volumeSeries = new XYChart.Series<>();
-
-        volumeAxisY = new NumberAxis();
-        volumeAxisY.setForceZeroInRange(false);
-        volumeAxisY.setAutoRanging(true);
-        volumeAxisY.setLabel(volumeColumnLabel.get());
-        volumeAxisY.setTickLabelFormatter(getVolumeStringConverter());
-        volumeAxisY.setSide(Side.RIGHT);
-
-        volumeChart = new LineChart<>(timeAxisX, volumeAxisY);
-        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
-        volumeChart.setAnimated(true);
-        volumeChart.setId("charts");
-        volumeChart.setMinHeight(300);
-        volumeChart.setPadding(new Insets(0, 30, 10, 0));
+        priceChart.setLegendVisible(false);
+        priceChart.setAnimated(true);
+        priceChart.setMinHeight(300);
+        priceChart.setPadding(new Insets(0, 75, -10, 0));
+        priceChart.setAlternativeRowFillVisible(false);
+        priceChart.setAlternativeColumnFillVisible(false);
+        priceChart.setHorizontalGridLinesVisible(false);
+        priceChart.setVerticalGridLinesVisible(false);
+        priceChart.getXAxis().setVisible(false);
+        priceChart.getYAxis().setVisible(false);
     }
 
     private void updateChartData() {
-        priceSeries.getData().clear();
+        /*priceSeries.getData().clear();
         priceChart.getData().clear();
         priceSeries = new XYChart.Series<>();
         priceSeries.getData().addAll(model.items);
-        priceChart.setData(FXCollections.observableArrayList(priceSeries));
+        priceChart.setData(FXCollections.observableArrayList(priceSeries));*/
 
         volumeSeries.getData().clear();
         volumeChart.getData().clear();
