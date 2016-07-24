@@ -39,7 +39,6 @@ import javafx.beans.property.*;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.net.discovery.SeedPeers;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
