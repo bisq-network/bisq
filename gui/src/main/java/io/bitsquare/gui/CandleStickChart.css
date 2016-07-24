@@ -73,18 +73,29 @@
     -demo-bar-fill: #cccccc;
 }
 
-
-.chart-plot-background {
-    -fx-background-color: transparent;
+.volume-bar {
+    -fx-padding: 5;
+    -demo-bar-fill: #91b1cc;
+    -fx-background-color: #91b1cc;
+    -fx-background-insets: 0, 1, 2;
 }
 
-.default-color0.chart-series-line {
+.volume-bar.bg {
+    -demo-bar-fill: #91b1cc;
+}
+
+.volume-bar {
+    -fx-effect: dropshadow(two-pass-box, rgba(0, 0, 0, 0.4), 10, 0.0, 2, 4);
+}
+
+/*.default-color0.chart-series-line {
     -fx-stroke: blue;
 }
 
 .default-color0.chart-line-symbol {
     -fx-background-color: red, green;
-}
+}*/
+
 
 
 .chart-alternative-row-fill {
@@ -97,6 +108,7 @@
     -fx-background-color: transparent;
 }
 
+/*
 .chart-legend {
     -fx-background-color: transparent;
     -fx-padding: 20px;
@@ -105,4 +117,4 @@
 .chart-legend-item-symbol {
     -fx-background-radius: 0;
 }
- 
+ */

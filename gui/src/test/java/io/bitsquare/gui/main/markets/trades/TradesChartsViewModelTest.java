@@ -62,8 +62,8 @@ public class TradesChartsViewModelTest {
         assertEquals(high, candleData.high);
         assertEquals(low, candleData.low);
         assertEquals(average, candleData.average);
-        assertEquals(amount, candleData.amount);
-        assertEquals(volume, candleData.volume);
+        assertEquals(amount, candleData.accumulatedAmount);
+        assertEquals(volume, candleData.accumulatedVolume);
         assertEquals(isBullish, candleData.isBullish);
     }
 }

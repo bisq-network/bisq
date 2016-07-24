@@ -60,7 +60,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>();
     private final HashMapChangedListener mapChangedListener;
     ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
-    ObservableList<XYChart.Data<String, Number>> volumeItems = FXCollections.observableArrayList();
+    ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
 
     private P2PService p2PService;
     final ObservableList<TradeStatistics> tradeStatistics = FXCollections.observableArrayList();
@@ -162,7 +162,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList()));
 
         volumeItems.setAll(candleDataList.stream()
-                .map(e -> new XYChart.Data<String, Number>(String.valueOf(e.tick), e.open, new CandleStickExtraValues(e.close, e.high, e.low, e.average)))
+                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.accumulatedAmount))
                 .collect(Collectors.toList()));
     }
 
@@ -171,17 +171,17 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long close = 0;
         long high = 0;
         long low = 0;
-        long volume = 0;
-        long amount = 0;
+        long accumulatedVolume = 0;
+        long accumulatedAmount = 0;
 
         for (TradeStatistics item : set) {
             final long tradePriceAsLong = item.tradePriceAsLong;
             low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
             high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
-            volume += item.getTradeVolume().value;
-            amount += item.tradeAmountAsLong;
+            accumulatedVolume += item.getTradeVolume().value;
+            accumulatedAmount += item.tradeAmountAsLong;
         }
-        long averagePrice = Math.round(volume * Coin.COIN.value / amount);
+        long averagePrice = Math.round(accumulatedVolume * Coin.COIN.value / accumulatedAmount);
 
         List<TradeStatistics> list = new ArrayList<>(set);
         list.sort((o1, o2) -> (o1.tradeDateAsTime < o2.tradeDateAsTime ? -1 : (o1.tradeDateAsTime == o2.tradeDateAsTime ? 0 : 1)));
@@ -190,7 +190,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
             close = list.get(list.size() - 1).tradePriceAsLong;
         }
         boolean isBullish = close > open;
-        return new CandleData(tick, open, close, high, low, averagePrice, amount, volume, isBullish);
+        return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume, isBullish);
 
     }
 

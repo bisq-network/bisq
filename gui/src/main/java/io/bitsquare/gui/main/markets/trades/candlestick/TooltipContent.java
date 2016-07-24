@@ -69,9 +69,11 @@ public class TooltipContent extends GridPane {
     }
 
     public void update(double open, double close, double high, double low) {
-        openValue.setText(toolTipStringConverter.toString(open));
-        closeValue.setText(toolTipStringConverter.toString(close));
-        highValue.setText(toolTipStringConverter.toString(high));
-        lowValue.setText(toolTipStringConverter.toString(low));
+        if (toolTipStringConverter != null) {
+            openValue.setText(toolTipStringConverter.toString(open));
+            closeValue.setText(toolTipStringConverter.toString(close));
+            highValue.setText(toolTipStringConverter.toString(high));
+            lowValue.setText(toolTipStringConverter.toString(low));
+        }
     }
 }

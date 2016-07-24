@@ -21,7 +21,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.markets.trades.candlestick.CandleStickChart;
-import io.bitsquare.gui.main.markets.trades.candlestick.MyBarChart;
+import io.bitsquare.gui.main.markets.trades.candlestick.VolumeChart;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.FiatCurrency;
@@ -36,7 +36,6 @@ import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
-import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
@@ -45,6 +44,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
@@ -70,10 +71,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private ToggleGroup toggleGroup;
 
     private NumberAxis timeAxisX, priceAxisY, volumeAxisY;
-    private CategoryAxis volumeAxisX;
     private XYChart.Series<Number, Number> priceSeries;
-    private XYChart.Series<String, Number> volumeSeries;
-    private MyBarChart<String, Number> volumeChart;
+    private XYChart.Series<Number, Number> volumeSeries;
+    private VolumeChart volumeChart;
     private CandleStickChart priceChart;
 
     private final ListChangeListener<XYChart.Data<Number, Number>> itemsChangeListener;
@@ -88,7 +88,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         super(model);
         this.formatter = formatter;
 
-        itemsChangeListener = c -> updateChartData();
+        itemsChangeListener = c -> UserThread.runAfter(() -> updateChartData(), 20, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         final VBox tableVBox = getTableBox();
 
         StackPane stackPane = new StackPane();
-        stackPane.getChildren().addAll(volumeChart, priceChart);
+        stackPane.getChildren().addAll(priceChart, volumeChart);
 
         root.getChildren().addAll(currencyHBox, toggleBarHBox, stackPane, tableVBox);
 
@@ -157,9 +157,14 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createChart() {
-        volumeSeries = new XYChart.Series<>();
+        timeAxisX = new NumberAxis(0, model.upperBound + 1, 1);
+        timeAxisX.setTickUnit(1);
+        timeAxisX.setMinorTickCount(0);
+        timeAxisX.setForceZeroInRange(false);
+        timeAxisX.setLabel("Date/Time");
+        timeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
-        volumeAxisX = new CategoryAxis();
+        volumeSeries = new XYChart.Series<>();
 
         volumeAxisY = new NumberAxis();
         volumeAxisY.setForceZeroInRange(false);
@@ -168,22 +173,19 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisY.setTickLabelFormatter(getVolumeStringConverter());
         volumeAxisY.setSide(Side.RIGHT);
 
-        volumeChart = new MyBarChart<>(volumeAxisX, volumeAxisY);
+        NumberAxis volumeAxisX = new NumberAxis(0, model.upperBound + 1, 1);
+        volumeAxisX.setTickLabelsVisible(false);
+        volumeAxisX.setTickMarkVisible(false);
+        volumeAxisX.lookup(".axis-minor-tick-mark").setOpacity(0);
+
+        volumeChart = new VolumeChart(volumeAxisX, volumeAxisY);
         volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
-        volumeChart.setAnimated(true);
+        volumeChart.setAnimated(false);
         volumeChart.setMinHeight(300);
-        volumeChart.setPadding(new Insets(0, 0, -10, 75));
+        volumeChart.setPadding(new Insets(0, 0, 40, 69));
         volumeChart.setLegendVisible(false);
 
-
         priceSeries = new XYChart.Series<>();
-
-        timeAxisX = new NumberAxis(0, model.upperBound + 1, 1);
-        timeAxisX.setTickUnit(1);
-        timeAxisX.setMinorTickCount(0);
-        timeAxisX.setForceZeroInRange(false);
-        timeAxisX.setLabel("Date/Time");
-        timeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
         priceAxisY = new NumberAxis();
         priceAxisY.setForceZeroInRange(false);
@@ -197,7 +199,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChart.setLegendVisible(false);
         priceChart.setAnimated(true);
         priceChart.setMinHeight(300);
-        priceChart.setPadding(new Insets(0, 75, -10, 0));
+        priceChart.setPadding(new Insets(0, 69, 0, 0));
         priceChart.setAlternativeRowFillVisible(false);
         priceChart.setAlternativeColumnFillVisible(false);
         priceChart.setHorizontalGridLinesVisible(false);
@@ -213,7 +215,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChart.getData().clear();
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
 
+        volumeSeries.getData().clear();
+        volumeSeries = new XYChart.Series<>();
         volumeSeries.getData().setAll(model.volumeItems);
+        volumeChart.getData().clear();
+        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
     }
 
     @NotNull
@@ -261,7 +267,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             @Override
             public String toString(Number object) {
                 // comes as double
-                return formatter.formatFiat(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
+                return formatter.formatCoin(Coin.valueOf(new Double((double) object).longValue()));
             }
 
             @Override

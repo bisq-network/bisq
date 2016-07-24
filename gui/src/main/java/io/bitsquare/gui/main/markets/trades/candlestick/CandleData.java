@@ -7,19 +7,19 @@ public class CandleData {
     public final long high;
     public final long low;
     public final long average;
-    public final long amount;
-    public final long volume;
+    public final long accumulatedAmount;
+    public final long accumulatedVolume;
     public final boolean isBullish;
 
-    public CandleData(long tick, long open, long close, long high, long low, long average, long amount, long volume, boolean isBullish) {
+    public CandleData(long tick, long open, long close, long high, long low, long average, long accumulatedAmount, long accumulatedVolume, boolean isBullish) {
         this.tick = tick;
         this.open = open;
         this.close = close;
         this.high = high;
         this.low = low;
         this.average = average;
-        this.amount = amount;
-        this.volume = volume;
+        this.accumulatedAmount = accumulatedAmount;
+        this.accumulatedVolume = accumulatedVolume;
         this.isBullish = isBullish;
     }
 }
