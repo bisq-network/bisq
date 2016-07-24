@@ -64,11 +64,6 @@ public class WalletAppKitBitSquare extends WalletAppKit {
         mgr.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
         peerGroup.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
 
-        // This enables remote DNS lookup of peers over socks5 proxy.
-        // It is slower, but more private.
-        // This could be turned into a user option.
-        this.setDiscovery( new SeedPeersSocks5Dns(socks5Proxy, params) );
-        
         return peerGroup;
     }    
 }
