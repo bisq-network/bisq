@@ -22,6 +22,7 @@ import io.bitsquare.app.AppModule;
 import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
+import io.bitsquare.trade.statistics.TradeStatisticsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;

@@ -1,4 +1,4 @@
-package io.bitsquare.trade;
+package io.bitsquare.trade.statistics;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

@@ -70,7 +70,7 @@ public class Connection implements MessageListener {
 
     // Leaving some constants package-private for tests to know limits.
     static final int MAX_MSG_SIZE = 200 * 1024;                       // 200 kb
-    static final int MAX_MSG_SIZE_GET_DATA = 6 * 1024 * 1024;         // 6 MB (425 offers resulted in about 660 kb, mailbox msg will add more to it) offer has usually 2 kb, mailbox 3kb.
+    static final int MAX_MSG_SIZE_GET_DATA = 10 * 1024 * 1024;         // 10 MB (425 offers resulted in about 660 kb, mailbox msg will add more to it) offer has usually 2 kb, mailbox 3kb.
     //TODO decrease limits again after testing
     static final int MSG_THROTTLE_PER_SEC = 200;              // With MAX_MSG_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
     static final int MSG_THROTTLE_PER_10_SEC = 1000;          // With MAX_MSG_SIZE of 200kb results in bandwidth of 20MB/sec or 2.5 mbit/sec

@@ -1,8 +1,8 @@
 package io.bitsquare.gui.main.markets.trades;
 
 import io.bitsquare.gui.main.markets.trades.charts.CandleData;
-import io.bitsquare.trade.TradeStatistics;
 import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.statistics.TradeStatistics;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.junit.Test;

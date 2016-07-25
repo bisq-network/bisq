@@ -26,7 +26,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
-import io.bitsquare.trade.TradeStatistics;
+import io.bitsquare.trade.statistics.TradeStatistics;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

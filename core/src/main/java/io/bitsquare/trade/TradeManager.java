@@ -47,6 +47,8 @@ import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.trade.statistics.TradeStatistics;
+import io.bitsquare.trade.statistics.TradeStatisticsManager;
 import io.bitsquare.user.User;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

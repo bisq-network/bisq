@@ -1,4 +1,4 @@
-package io.bitsquare.trade;
+package io.bitsquare.trade.statistics;
 
 import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;

@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.TradeStatistics;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
+import io.bitsquare.trade.statistics.TradeStatistics;
 
 public class PublishTradeStatistics extends TradeTask {
     public PublishTradeStatistics(TaskRunner taskHandler, Trade trade) {
