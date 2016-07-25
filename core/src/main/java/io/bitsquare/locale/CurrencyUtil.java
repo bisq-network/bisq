@@ -132,7 +132,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
         result.add(new CryptoCurrency("DAO", "DAO", true));
         return result;
-    } 
+    }
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
@@ -190,6 +190,9 @@ public class CurrencyUtil {
     }
 
     public static boolean isFiatCurrency(String currencyCode) {
+        //TODO remove after ETHC is not used anymore
+        currencyCode = map_ETHC_to_ETC(currencyCode);
+
         try {
             return currencyCode != null && !currencyCode.isEmpty() && !isCryptoCurrency(currencyCode) && Currency.getInstance(currencyCode) != null;
         } catch (Throwable t) {
@@ -198,19 +201,31 @@ public class CurrencyUtil {
     }
 
     public static Optional<FiatCurrency> getFiatCurrency(String currencyCode) {
-        return allSortedFiatCurrencies.stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
+        //TODO remove after ETHC is not used anymore
+        final String finalCurrencyCode = map_ETHC_to_ETC(currencyCode);
+
+        return allSortedFiatCurrencies.stream().filter(e -> e.getCode().equals(finalCurrencyCode)).findAny();
     }
 
     @SuppressWarnings("WeakerAccess")
     public static boolean isCryptoCurrency(String currencyCode) {
+        //TODO remove after ETHC is not used anymore
+        currencyCode = map_ETHC_to_ETC(currencyCode);
+
         return getCryptoCurrency(currencyCode).isPresent();
     }
 
     public static Optional<CryptoCurrency> getCryptoCurrency(String currencyCode) {
-        return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
+        //TODO remove after ETHC is not used anymore
+        final String finalCurrencyCode = map_ETHC_to_ETC(currencyCode);
+
+        return getAllSortedCryptoCurrencies().stream().filter(e -> e.getCode().equals(finalCurrencyCode)).findAny();
     }
 
     public static Optional<TradeCurrency> getTradeCurrency(String currencyCode) {
+        //TODO remove after ETHC is not used anymore
+        currencyCode = map_ETHC_to_ETC(currencyCode);
+
         Optional<FiatCurrency> fiatCurrencyOptional = getFiatCurrency(currencyCode);
         if (isFiatCurrency(currencyCode) && fiatCurrencyOptional.isPresent()) {
             return Optional.of(fiatCurrencyOptional.get());
@@ -230,6 +245,9 @@ public class CurrencyUtil {
 
 
     public static String getNameByCode(String currencyCode) {
+        //TODO remove after ETHC is not used anymore
+        currencyCode = map_ETHC_to_ETC(currencyCode);
+
         if (isCryptoCurrency(currencyCode))
             return getCryptoCurrency(currencyCode).get().getName();
         else
@@ -239,6 +257,14 @@ public class CurrencyUtil {
                 log.debug("No currency name available " + t.getMessage());
                 return "N/A (" + currencyCode + ")";
             }
+    }
+
+    public static String map_ETHC_to_ETC(String currencyCode) {
+        //TODO remove after ETHC is not used anymore
+        if (currencyCode.equals("ETHC"))
+            return "ETC";
+        else
+            return currencyCode;
     }
 
     public static TradeCurrency getDefaultTradeCurrency() {
