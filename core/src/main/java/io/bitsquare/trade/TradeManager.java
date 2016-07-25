@@ -217,9 +217,8 @@ public class TradeManager {
                 tradesForStatistics.add((Trade) tradable);
         }
 
-        publishTradeStatistics(tradesForStatistics);
-        // We run it again after 2 min. when we are better connected
-        UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics), 120);
+        // We run it after 1 min. when we are better connected
+        UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics), 60);
 
         pendingTradesInitialized.set(true);
     }
