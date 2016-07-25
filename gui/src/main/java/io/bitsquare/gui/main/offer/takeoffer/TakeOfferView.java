@@ -523,7 +523,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
             if (newValue && DevFlags.DEV_MODE) {
                 close();
-                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
             } else if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
                 String key = "takeOfferSuccessInfo";
                 if (preferences.showAgain(key)) {
