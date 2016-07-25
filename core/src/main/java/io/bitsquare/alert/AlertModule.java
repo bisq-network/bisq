@@ -19,9 +19,12 @@ package io.bitsquare.alert;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
+import io.bitsquare.app.CoreOptionKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+
+import static com.google.inject.name.Names.named;
 
 public class AlertModule extends AppModule {
     private static final Logger log = LoggerFactory.getLogger(AlertModule.class);
@@ -34,5 +37,6 @@ public class AlertModule extends AppModule {
     protected final void configure() {
         bind(AlertManager.class).in(Singleton.class);
         bind(PrivateNotificationManager.class).in(Singleton.class);
+        bindConstant().annotatedWith(named(CoreOptionKeys.IGNORE_DEV_MSG_KEY)).to(env.getRequiredProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY));
     }
 }

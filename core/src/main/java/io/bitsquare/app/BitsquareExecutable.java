@@ -86,8 +86,12 @@ public abstract class BitsquareExecutable {
         parser.accepts(NetworkOptionKeys.BAN_LIST, description("Nodes to exclude from network connections.", ""))
                 .withRequiredArg();
 
-        parser.accepts(CommonOptionKeys.IGNORE_DEV_MSG_KEY, description("If set to true all signed messages from Bitsquare developers are ignored " +
+        parser.accepts(CoreOptionKeys.IGNORE_DEV_MSG_KEY, description("If set to true all signed messages from Bitsquare developers are ignored " +
                 "(Global alert, Version update alert, Filters for offers, nodes or payment account data)", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
+
+        parser.accepts(CoreOptionKeys.DUMP_STATISTICS, description("If set to true the trade statistics are stored as json file in the data dir.", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
 

@@ -84,7 +84,8 @@ public class TradeManager {
     private final FailedTradesManager failedTradesManager;
     private final ArbitratorManager arbitratorManager;
     private final P2PService p2PService;
-    private FilterManager filterManager;
+    private final FilterManager filterManager;
+    private final TradeStatisticsManager tradeStatisticsManager;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
@@ -107,6 +108,7 @@ public class TradeManager {
                         P2PService p2PService,
                         PriceFeed priceFeed,
                         FilterManager filterManager,
+                        TradeStatisticsManager tradeStatisticsManager,
                         @Named(Storage.DIR_KEY) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
@@ -118,6 +120,7 @@ public class TradeManager {
         this.arbitratorManager = arbitratorManager;
         this.p2PService = p2PService;
         this.filterManager = filterManager;
+        this.tradeStatisticsManager = tradeStatisticsManager;
 
         tradableListStorage = new Storage<>(storageDir);
         trades = new TradableList<>(tradableListStorage, "PendingTrades");
@@ -197,17 +200,7 @@ public class TradeManager {
                 toRemove.add(trade);
             }
 
-            // Only offerer publishes statistic data of trades
-            if (isMyOffer(trade.getOffer()) && isTradeDateValidForStatistics(trade)) {
-                TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
-                        trade.getTradePrice(),
-                        trade.getTradeAmount(),
-                        trade.getDate(),
-                        (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                        trade.getContractHash(),
-                        keyRing.getPubKeyRing());
-                p2PService.addData(tradeStatistics, true);
-            }
+            addTradeStatistics(trade);
         }
         for (Trade trade : toAdd)
             addTradeToFailedTrades(trade);
@@ -218,25 +211,24 @@ public class TradeManager {
         for (Tradable tradable : closedTradableManager.getClosedTrades()) {
             if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
-                // Only offerer publishes statistic data of trades
-                if (isMyOffer(trade.getOffer()) && isTradeDateValidForStatistics(trade)) {
-                    TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
-                            trade.getTradePrice(),
-                            trade.getTradeAmount(),
-                            trade.getDate(),
-                            (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                            trade.getContractHash(),
-                            keyRing.getPubKeyRing());
-                    p2PService.addData(tradeStatistics, true);
-                }
+                addTradeStatistics(trade);
             }
         }
 
         pendingTradesInitialized.set(true);
     }
 
-    private boolean isTradeDateValidForStatistics(Trade trade) {
-        return (new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(20);
+    private void addTradeStatistics(Trade trade) {
+        TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
+                trade.getTradePrice(),
+                trade.getTradeAmount(),
+                trade.getDate(),
+                (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
+                keyRing.getPubKeyRing());
+        tradeStatisticsManager.add(tradeStatistics);
+        // Only offerer publishes statistic data of trades, only trades from last 20 days
+        if (isMyOffer(trade.getOffer()) && (new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(20))
+            p2PService.addData(tradeStatistics, true);
     }
 
     private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {

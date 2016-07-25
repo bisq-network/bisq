@@ -23,16 +23,14 @@ import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.markets.trades.charts.CandleData;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
-import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.storage.HashMapChangedListener;
-import io.bitsquare.p2p.storage.payload.StoragePayload;
-import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bitsquare.trade.TradeStatistics;
+import io.bitsquare.trade.TradeStatisticsManager;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.SetChangeListener;
 import javafx.scene.chart.XYChart;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -58,13 +56,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
         MINUTE
     }
 
+    private final TradeStatisticsManager tradeStatisticsManager;
     final Preferences preferences;
-    private P2PService p2PService;
 
-    private final HashMapChangedListener mapChangedListener;
+    private final SetChangeListener<TradeStatistics> setChangeListener;
     final ObjectProperty<TradeCurrency> tradeCurrencyProperty = new SimpleObjectProperty<>();
 
-    private final Set<TradeStatistics> allTradeStatistics = new HashSet<>();
     final ObservableList<TradeStatistics> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
@@ -78,25 +75,11 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradesChartsViewModel(P2PService p2PService, Preferences preferences) {
-        this.p2PService = p2PService;
+    public TradesChartsViewModel(TradeStatisticsManager tradeStatisticsManager, Preferences preferences) {
+        this.tradeStatisticsManager = tradeStatisticsManager;
         this.preferences = preferences;
 
-        mapChangedListener = new HashMapChangedListener() {
-            @Override
-            public void onAdded(ProtectedStorageEntry data) {
-                addItem(data.getStoragePayload(), true);
-            }
-
-            @Override
-            public void onRemoved(ProtectedStorageEntry data) {
-                final StoragePayload storagePayload = data.getStoragePayload();
-                if (storagePayload instanceof TradeStatistics && allTradeStatistics.contains(storagePayload)) {
-                    allTradeStatistics.remove(storagePayload);
-                    updateChartData();
-                }
-            }
-        };
+        setChangeListener = change -> updateChartData();
 
         Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getTradeStatisticsScreenCurrencyCode());
         if (tradeCurrencyOptional.isPresent())
@@ -110,21 +93,21 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     @VisibleForTesting
     TradesChartsViewModel() {
-        mapChangedListener = null;
+        setChangeListener = null;
         preferences = null;
+        tradeStatisticsManager = null;
     }
 
 
     @Override
     protected void activate() {
-        p2PService.getDataMap().entrySet().stream().forEach(e -> addItem(e.getValue().getStoragePayload(), false));
-        p2PService.addHashSetChangedListener(mapChangedListener);
+        tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(setChangeListener);
         updateChartData();
     }
 
     @Override
     protected void deactivate() {
-        p2PService.removeHashMapChangedListener(mapChangedListener);
+        tradeStatisticsManager.getObservableTradeStatisticsSet().removeListener(setChangeListener);
     }
 
 
@@ -166,24 +149,17 @@ class TradesChartsViewModel extends ActivatableViewModel {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void addItem(StoragePayload storagePayload, boolean doUpdate) {
-        if (storagePayload instanceof TradeStatistics && !allTradeStatistics.contains(storagePayload)) {
-            allTradeStatistics.add((TradeStatistics) storagePayload);
-            if (doUpdate)
-                updateChartData();
-        }
-    }
 
     private void updateChartData() {
-        tradeStatisticsByCurrency.setAll(allTradeStatistics.stream()
-                .filter(e -> e.offer.getCurrencyCode().equals(getCurrencyCode()))
+        tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(e -> e.currency.equals(getCurrencyCode()))
                 .collect(Collectors.toList()));
 
         // Get all entries for the defined time interval
         Map<Long, Set<TradeStatistics>> itemsPerInterval = new HashMap<>();
         tradeStatisticsByCurrency.stream().forEach(e -> {
             Set<TradeStatistics> set;
-            final long time = getTickFromTime(e.tradeDateAsTime, tickUnit);
+            final long time = getTickFromTime(e.tradeDate, tickUnit);
             final long now = getTickFromTime(new Date().getTime(), tickUnit);
             long index = maxTicks - (now - time);
             if (itemsPerInterval.containsKey(index)) {
@@ -220,19 +196,19 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long accumulatedAmount = 0;
 
         for (TradeStatistics item : set) {
-            final long tradePriceAsLong = item.tradePriceAsLong;
+            final long tradePriceAsLong = item.tradePrice;
             low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
             high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
-            accumulatedVolume += item.getTradeVolume().value;
-            accumulatedAmount += item.tradeAmountAsLong;
+            accumulatedVolume += (item.getTradeVolume() != null) ? item.getTradeVolume().value : 0;
+            accumulatedAmount += item.tradeAmount;
         }
         long averagePrice = Math.round(accumulatedVolume * Coin.COIN.value / accumulatedAmount);
 
         List<TradeStatistics> list = new ArrayList<>(set);
-        list.sort((o1, o2) -> (o1.tradeDateAsTime < o2.tradeDateAsTime ? -1 : (o1.tradeDateAsTime == o2.tradeDateAsTime ? 0 : 1)));
+        list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? -1 : (o1.tradeDate == o2.tradeDate ? 0 : 1)));
         if (list.size() > 0) {
-            open = list.get(0).tradePriceAsLong;
-            close = list.get(list.size() - 1).tradePriceAsLong;
+            open = list.get(0).tradePrice;
+            close = list.get(list.size() - 1).tradePrice;
         }
         boolean isBullish = close > open;
         return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume, isBullish);

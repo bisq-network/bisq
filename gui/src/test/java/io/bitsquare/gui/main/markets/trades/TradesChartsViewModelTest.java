@@ -51,10 +51,10 @@ public class TradesChartsViewModelTest {
                 null,
                 null,
                 null);
-        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "520"), Coin.parseCoin("1"), new Date(now.getTime()), null, null, null));
-        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "500"), Coin.parseCoin("1"), new Date(now.getTime() + 100), null, null, null));
-        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "600"), Coin.parseCoin("1"), new Date(now.getTime() + 200), null, null, null));
-        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "580"), Coin.parseCoin("1"), new Date(now.getTime() + 300), null, null, null));
+        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "520"), Coin.parseCoin("1"), new Date(now.getTime()), null, null));
+        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "500"), Coin.parseCoin("1"), new Date(now.getTime() + 100), null, null));
+        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "600"), Coin.parseCoin("1"), new Date(now.getTime() + 200), null, null));
+        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "580"), Coin.parseCoin("1"), new Date(now.getTime() + 300), null, null));
 
         CandleData candleData = model.getCandleData(model.getTickFromTime(now.getTime(), TradesChartsViewModel.TickUnit.DAY), set);
         assertEquals(open, candleData.open);

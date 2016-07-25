@@ -485,14 +485,14 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.getDirection(item.offer.getDirection()));
+                                    setText(formatter.getDirection(item.direction));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        directionColumn.setComparator((o1, o2) -> o1.offer.getDirection().compareTo(o2.offer.getDirection()));
+        directionColumn.setComparator((o1, o2) -> o1.direction.compareTo(o2.direction));
         tableView.getColumns().add(directionColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

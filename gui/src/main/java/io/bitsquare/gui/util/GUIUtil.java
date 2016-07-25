@@ -99,7 +99,7 @@ public class GUIUtil {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDefaultPath(directory);
                 Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
-                ArrayList<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersisted(fileName);
+                ArrayList<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
                     persisted.stream().forEach(paymentAccount -> {

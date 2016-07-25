@@ -40,7 +40,6 @@ public class PublishTradeStatistics extends TradeTask {
                     trade.getTradeAmount(),
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    trade.getContractHash(),
                     processModel.getPubKeyRing());
             processModel.getP2PService().addData(tradeStatistics, true);
             complete();

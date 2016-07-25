@@ -144,6 +144,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     transient private OfferAvailabilityProtocol availabilityProtocol;
     @JsonExclude
     transient private StringProperty errorMessageProperty = new SimpleStringProperty();
+    @JsonExclude
     transient private PriceFeed priceFeed;
 
 

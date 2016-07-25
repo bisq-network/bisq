@@ -135,7 +135,7 @@ public class WalletService {
         useTor = preferences.getUseTorForBitcoinJ();
 
         storage = new Storage<>(walletDir);
-        Long persisted = storage.initAndGetPersisted("BloomFilterNonce");
+        Long persisted = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
         if (persisted != null) {
             bloomFilterTweak = persisted;
         } else {
