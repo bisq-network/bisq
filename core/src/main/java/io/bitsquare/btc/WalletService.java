@@ -39,6 +39,7 @@ import javafx.beans.property.*;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.net.discovery.SeedPeers;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
@@ -268,6 +269,7 @@ public class WalletService {
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
         log.debug( "seedNodes: " + seedNodes.toString() );
+        boolean setPeerNodes = false;
         
         // Pass custom seed nodes if set in options
         if (seedNodes != null && !seedNodes.isEmpty()) {
@@ -280,6 +282,10 @@ public class WalletService {
             List<PeerAddress> peerAddressList = new ArrayList<PeerAddress>();
             for(String node : nodes) {
                 String[] parts = node.split(":");
+                if( parts.length == 1) {
+                    // port not specified.  Use default port for network.
+                    parts = new String[] { parts[0], Integer.toString(params.getPort()) };
+                }
                 if( parts.length == 2 ) {
                     // note: this will cause a DNS request if hostname used.
                     // note: DNS requests are routed over socks5 proxy, if used.
@@ -305,6 +311,7 @@ public class WalletService {
                 log.debug("seedNodes parsed: " + Arrays.toString(peerAddressListFixed));
                 
                 walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
+                setPeerNodes = true;
             }
         }
 
@@ -320,6 +327,7 @@ public class WalletService {
             if (regTestHost == RegTestHost.REG_TEST_SERVER) {
                 try {
                     walletAppKit.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
+                    setPeerNodes = true;
                 } catch (UnknownHostException e) {
                     throw new RuntimeException(e);
                 }
@@ -339,6 +347,22 @@ public class WalletService {
             }
         } else if (params == TestNet3Params.get()) {
             walletAppKit.setCheckpoints(getClass().getResourceAsStream("/wallet/checkpoints.testnet"));
+        }
+
+        // If operating over a proxy and we haven't set any peer nodes, then
+        // we want to use SeedPeers for discovery instead of the default DnsDiscovery.
+        // This is only because we do not yet have a Dns discovery class that works
+        // reliably over proxy/tor.
+        //
+        // todo: There should be a user pref called "Use Local DNS for Proxy/Tor"
+        // that disables this.  In that case, the default DnsDiscovery class will
+        // be used which should work, but is less private.  The aim here is to
+        // be private by default when using proxy/tor.  However, the seedpeers
+        // could become outdated, so it is important that the user be able to
+        // disable it, but should be made aware of the reduced privacy.
+        if( proxy != null && !setPeerNodes ) {
+            // SeedPeersSocks5Dns should replace SeedPeers once working reliably.
+            walletAppKit.setDiscovery( new SeedPeers( params) );
         }
 
         walletAppKit.setDownloadListener(downloadListener)
