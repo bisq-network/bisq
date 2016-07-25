@@ -76,6 +76,9 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
+        result.add(new CryptoCurrency("STEEM", "STEEM"));
+        result.add(new CryptoCurrency("FLO", "FlorinCoin"));
+        result.add(new CryptoCurrency("XEM", "NEM"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
@@ -90,16 +93,12 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BLK", "Blackcoin"));
         result.add(new CryptoCurrency("FCT", "Factom"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
-        result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
-        result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("MKR", "Maker", true));
         result.add(new CryptoCurrency("DGD", "DigixDAO Tokens", true));
-        result.add(new CryptoCurrency("DAO", "DAO", true));
-        result.add(new CryptoCurrency("XEM", "NEM"));
         result.add(new CryptoCurrency("ANTI", "Anti"));
         result.add(new CryptoCurrency("VPN", "VPNCoin"));
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
@@ -131,6 +130,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("EURT", "EUR Tether"));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
+        result.add(new CryptoCurrency("DAO", "DAO", true));
         return result;
     } 
 
@@ -140,14 +140,14 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
+        result.add(new CryptoCurrency("STEEM", "STEEM"));
+        result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
-        result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
-        result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
         return result;
     }
@@ -236,7 +236,7 @@ public class CurrencyUtil {
             try {
                 return Currency.getInstance(currencyCode).getDisplayName(Preferences.getDefaultLocale());
             } catch (Throwable t) {
-                log.warn("No currency name available " + t.getMessage());
+                log.debug("No currency name available " + t.getMessage());
                 return "N/A (" + currencyCode + ")";
             }
     }

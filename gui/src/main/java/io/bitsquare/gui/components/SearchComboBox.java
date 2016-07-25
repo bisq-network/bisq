@@ -30,7 +30,7 @@ public class SearchComboBox<T> extends ComboBox<T> {
                     findAny().isPresent()) {
                 UserThread.execute(() -> {
                     filteredList.setPredicate(item -> newValue.isEmpty() ||
-                            getConverter().toString(item).toLowerCase().startsWith(newValue.toLowerCase()));
+                            getConverter().toString(item).toLowerCase().contains(newValue.toLowerCase()));
                     hide();
                     setVisibleRowCount(Math.min(20, filteredList.size()));
                     show();

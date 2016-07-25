@@ -262,7 +262,7 @@ public class Connection implements MessageListener {
                             "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
                     return false;
                 } else {
-                    log.warn("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
+                    log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
                             "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
                             "connection: " + this.toString() + "\n" +
                             "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
