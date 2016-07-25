@@ -37,8 +37,8 @@ import static io.bitsquare.app.BitsquareEnvironment.*;
 
 public class SeedNodeMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
-    private static final long MAX_MEMORY_MB = 800;
-    private static final long CHECK_MEMORY_PERIOD_SEC = 60;
+    private static final long MAX_MEMORY_MB = 600;
+    private static final long CHECK_MEMORY_PERIOD_SEC = 10 * 60;
     private SeedNode seedNode;
     private volatile boolean stopped;
 
@@ -89,31 +89,38 @@ public class SeedNodeMain extends BitsquareExecutable {
 
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad(log);
-            if (!stopped && Profiler.getUsedMemoryInMB() > MAX_MEMORY_MB) {
-                stopped = true;
-                seedNode.gracefulShutDown(() -> {
-                    try {
-                        final String[] tokens = environment.getAppDataDir().split("_");
-                        String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
-                        RestartUtil.restartApplication(logPath);
-                    } catch (IOException e) {
-                        log.error(e.toString());
-                        e.printStackTrace();
-                    } finally {
-                        log.warn("Shutdown complete");
-                        System.exit(0);
-                    }
-                });
+            long usedMemoryInMB = Profiler.getUsedMemoryInMB();
+            if (!stopped) {
+                if (usedMemoryInMB > (MAX_MEMORY_MB - 100)) {
+                    log.warn("We are over our memory warn limit and call the GC");
+                    System.gc();
+                    usedMemoryInMB = Profiler.getUsedMemoryInMB();
+                    Profiler.printSystemLoad(log);
+                }
 
+                if (usedMemoryInMB > MAX_MEMORY_MB) {
+                    stopped = true;
+                    seedNode.gracefulShutDown(() -> {
+                        try {
+                            final String[] tokens = environment.getAppDataDir().split("_");
+                            String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
+                            RestartUtil.restartApplication(logPath);
+                        } catch (IOException e) {
+                            log.error(e.toString());
+                            e.printStackTrace();
+                        } finally {
+                            log.warn("Shutdown complete");
+                            System.exit(0);
+                        }
+                    });
+                }
             }
         }, CHECK_MEMORY_PERIOD_SEC);
 
         while (true) {
             try {
                 Thread.sleep(Long.MAX_VALUE);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
+            } catch (InterruptedException ignore) {
             }
         }
     }
