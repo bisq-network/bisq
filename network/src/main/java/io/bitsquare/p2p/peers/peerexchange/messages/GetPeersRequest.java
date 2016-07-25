@@ -19,6 +19,8 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
     private final NodeAddress senderNodeAddress;
     public final int nonce;
     public final HashSet<Peer> reportedPeers;
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<Peer> reportedPeers) {
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetPeersRequest");
@@ -26,9 +28,6 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
         this.nonce = nonce;
         this.reportedPeers = reportedPeers;
     }
-
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     @Override
     @Nullable
@@ -47,6 +46,7 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
                 "senderNodeAddress=" + senderNodeAddress +
                 ", nonce=" + nonce +
                 ", reportedPeers.size()=" + reportedPeers.size() +
+                ", supportedCapabilities=" + supportedCapabilities +
                 "} " + super.toString();
     }
 }

@@ -20,10 +20,10 @@ import java.util.stream.Collectors;
 
 public class TradeStatisticsManager {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsManager.class);
+
     private final Storage<HashSet<TradeStatistics>> storage;
     private Storage<String> jsonStorage;
     private boolean dumpStatistics;
-
     private ObservableSet<TradeStatistics> observableTradeStatisticsSet = FXCollections.observableSet();
     private HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
 
@@ -38,7 +38,7 @@ public class TradeStatisticsManager {
 
         HashSet<TradeStatistics> persisted = storage.initAndGetPersistedWithFileName("TradeStatistics");
         if (persisted != null)
-            persisted.stream().forEach(e -> add(e));
+            persisted.stream().forEach(this::add);
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override

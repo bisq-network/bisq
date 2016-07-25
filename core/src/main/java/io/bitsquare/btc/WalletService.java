@@ -268,18 +268,16 @@ public class WalletService {
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
-        log.debug("seedNodes: " + seedNodes.toString());
-        boolean setPeerNodes = false;
+        log.debug("seedNodes: " + seedNodes);
+        boolean usePeerNodes = false;
 
         // Pass custom seed nodes if set in options
-        if (seedNodes != null && !seedNodes.isEmpty()) {
+        if (!seedNodes.isEmpty()) {
 
-            // todo: this parsing should be more robust,
+            // TODO: this parsing should be more robust,
             // give validation error if needed.
-            // also: it seems the peer nodes can be overridden in the case
-            // of regtest mode below.  is that wanted?
-            String[] nodes = seedNodes.split(",");
-            List<PeerAddress> peerAddressList = new ArrayList<PeerAddress>();
+            String[] nodes = seedNodes.replace(", ", ",").split(",");
+            List<PeerAddress> peerAddressList = new ArrayList<>();
             for (String node : nodes) {
                 String[] parts = node.split(":");
                 if (parts.length == 1) {
@@ -300,9 +298,8 @@ public class WalletService {
                         addr = new InetSocketAddress(parts[0], Integer.parseInt(parts[1]));
                     }
                     // note: isUnresolved check should be removed once we fix PeerAddress
-                    if (addr != null && !addr.isUnresolved()) {
+                    if (addr != null && !addr.isUnresolved())
                         peerAddressList.add(new PeerAddress(addr.getAddress(), addr.getPort()));
-                    }
                 }
             }
             if (peerAddressList.size() > 0) {
@@ -310,15 +307,9 @@ public class WalletService {
                 log.debug("seedNodes parsed: " + Arrays.toString(peerAddressListFixed));
 
                 walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
-                setPeerNodes = true;
+                usePeerNodes = true;
             }
         }
-
-        // We do not call walletAppKit.useTor() anymore because that would turn
-        // on orchid Tor, which we do not want.  Instead, we create a Tor proxy
-        // later.
-        // if (useTor && params.getId().equals(NetworkParameters.ID_MAINNET))
-        //    walletAppKit.useTor();
 
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
@@ -326,7 +317,7 @@ public class WalletService {
             if (regTestHost == RegTestHost.REG_TEST_SERVER) {
                 try {
                     walletAppKit.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
-                    setPeerNodes = true;
+                    usePeerNodes = true;
                 } catch (UnknownHostException e) {
                     throw new RuntimeException(e);
                 }
@@ -359,8 +350,9 @@ public class WalletService {
         // be private by default when using proxy/tor.  However, the seedpeers
         // could become outdated, so it is important that the user be able to
         // disable it, but should be made aware of the reduced privacy.
-        if (proxy != null && !setPeerNodes) {
+        if (proxy != null && !usePeerNodes) {
             // SeedPeersSocks5Dns should replace SeedPeers once working reliably.
+            // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
             walletAppKit.setDiscovery(new SeedPeers(params));
         }
 
@@ -779,7 +771,8 @@ public class WalletService {
                     // in some cases getFee did not calculate correctly and we still get an InsufficientMoneyException
                     log.warn("We still have a missing fee " + (e.missing != null ? e.missing.toFriendlyString() : ""));
 
-                    amount = (amount.subtract(e.missing));
+                    if (e != null)
+                        amount = amount.subtract(e.missing);
                     newTransaction.clearOutputs();
                     newTransaction.addOutput(amount, toAddress);
 
@@ -1017,7 +1010,8 @@ public class WalletService {
         if (!addressEntry.isPresent())
             throw new AddressEntryException("WithdrawFromAddress is not found in our wallet.");
 
-        checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must nto be null");
+        checkNotNull(addressEntry.get(), "addressEntry.get() must not be null");
+        checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must not be null");
         sendRequest.coinSelector = new TradeWalletCoinSelector(params, addressEntry.get().getAddress());
         sendRequest.changeAddress = addressEntry.get().getAddress();
         sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();

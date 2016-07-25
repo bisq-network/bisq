@@ -39,7 +39,6 @@ public abstract class TradeMessage implements DirectMessage {
         TradeMessage that = (TradeMessage) o;
 
         return !(tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null);
-
     }
 
     @Override

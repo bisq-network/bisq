@@ -25,6 +25,8 @@ import io.bitsquare.trade.protocol.availability.AvailabilityResult;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 
+// We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection 
+// to the trading peer
 public final class OfferAvailabilityResponse extends OfferMessage implements SupportedCapabilitiesMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -33,15 +35,14 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
 
     // TODO keep for backward compatibility. Can be removed once everyone is on v0.4.9
     public boolean isAvailable;
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
         super(offerId);
         this.availabilityResult = availabilityResult;
         isAvailable = availabilityResult == AvailabilityResult.AVAILABLE;
     }
-
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     @Override
     @Nullable

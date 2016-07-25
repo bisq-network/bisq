@@ -96,8 +96,7 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
-        // FIXME: disabling temporarily.
-        // checkArgument(peerNodeAddress.hostName.endsWith(".onion"), "PeerAddress is not an onion address");
+        checkArgument(peerNodeAddress.hostName.endsWith(".onion"), "PeerAddress is not an onion address");
 
         return torNetworkNode.connectToHiddenService(peerNodeAddress.hostName, peerNodeAddress.port);
     }

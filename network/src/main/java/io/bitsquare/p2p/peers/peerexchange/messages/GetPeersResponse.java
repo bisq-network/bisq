@@ -15,13 +15,13 @@ public final class GetPeersResponse extends PeerExchangeMessage implements Suppo
     public final int requestNonce;
     public final HashSet<Peer> reportedPeers;
 
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
     public GetPeersResponse(int requestNonce, HashSet<Peer> reportedPeers) {
         this.requestNonce = requestNonce;
         this.reportedPeers = reportedPeers;
     }
 
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     @Override
     @Nullable
@@ -34,6 +34,7 @@ public final class GetPeersResponse extends PeerExchangeMessage implements Suppo
         return "GetPeersResponse{" +
                 "requestNonce=" + requestNonce +
                 ", reportedPeers.size()=" + reportedPeers.size() +
+                ", supportedCapabilities=" + supportedCapabilities +
                 "} " + super.toString();
     }
 }

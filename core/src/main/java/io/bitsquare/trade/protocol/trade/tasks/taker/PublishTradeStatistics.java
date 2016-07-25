@@ -37,7 +37,7 @@ public class PublishTradeStatistics extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            // taker only publishes if the offerer uses an old version
+            // Taker only publishes if the offerer uses an old version
             processModel.getP2PService().getNetworkNode().getConfirmedConnections()
                     .stream()
                     .filter(c -> c.getPeersNodeAddressOptional().isPresent() && c.getPeersNodeAddressOptional().get().equals(trade.getTradingPeerNodeAddress()))
@@ -64,10 +64,10 @@ public class PublishTradeStatistics extends TradeTask {
                             }
                         }
                         if (!matches) {
-                            log.error("We publish tradeStatistics because the offerer does use an old version.");
+                            log.warn("We publish tradeStatistics because the offerer uses an old version.");
                             processModel.getP2PService().addData(tradeStatistics, true);
                         } else {
-                            log.error("We do not publish tradeStatistics because the offerer support the capabilities.");
+                            log.trace("We do not publish tradeStatistics because the offerer support the capabilities.");
                         }
                     });
             complete();

@@ -80,7 +80,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     private final String appName;
     private final String userDataDir;
-
     private final String appDataDir;
     private final String btcNetworkDir;
     private final String logLevel;

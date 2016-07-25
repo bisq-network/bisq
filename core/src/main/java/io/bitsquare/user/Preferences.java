@@ -111,8 +111,7 @@ public final class Preferences implements Persistable {
     private boolean autoSelectArbitrators = true;
     private final Map<String, Boolean> dontShowAgainMap;
     private boolean tacAccepted;
-    //TODO we set it to false for now as it is not ready yet
-    private boolean useTorForBitcoinJ = false;
+    private boolean useTorForBitcoinJ = true;
     private boolean showOwnOffersInOfferBook = true;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
@@ -262,8 +261,8 @@ public final class Preferences implements Persistable {
             storage.queueUpForSave();
         });
 
-        fiatCurrenciesAsObservable.addListener((ListChangeListener<FiatCurrency>) this::updateTradeCurrencies);
-        cryptoCurrenciesAsObservable.addListener((ListChangeListener<CryptoCurrency>) this::updateTradeCurrencies);
+        fiatCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
+        cryptoCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
         tradeCurrenciesAsObservable.addAll(fiatCurrencies);
         tradeCurrenciesAsObservable.addAll(cryptoCurrencies);
     }
@@ -661,5 +660,4 @@ public final class Preferences implements Persistable {
         this.blockChainExplorerMainNet = blockChainExplorerMainNet;
         storage.queueUpForSave(2000);
     }
-
 }

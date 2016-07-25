@@ -42,7 +42,6 @@ public class VolumeChart extends XYChart<Number, Number> {
         super(xAxis, yAxis);
     }
 
-
     public final void setToolTipStringConverter(StringConverter<Number> toolTipStringConverter) {
         this.toolTipStringConverter = toolTipStringConverter;
     }
@@ -109,9 +108,7 @@ public class VolumeChart extends XYChart<Number, Number> {
         if (shouldAnimate()) {
             FadeTransition ft = new FadeTransition(Duration.millis(500), node);
             ft.setToValue(0);
-            ft.setOnFinished((ActionEvent actionEvent) -> {
-                getPlotChildren().remove(node);
-            });
+            ft.setOnFinished((ActionEvent actionEvent) -> getPlotChildren().remove(node));
             ft.play();
         } else {
             getPlotChildren().remove(node);
@@ -142,9 +139,7 @@ public class VolumeChart extends XYChart<Number, Number> {
             if (shouldAnimate()) {
                 FadeTransition ft = new FadeTransition(Duration.millis(500), volumeBar);
                 ft.setToValue(0);
-                ft.setOnFinished((ActionEvent actionEvent) -> {
-                    getPlotChildren().remove(volumeBar);
-                });
+                ft.setOnFinished((ActionEvent actionEvent) -> getPlotChildren().remove(volumeBar));
                 ft.play();
             } else {
                 getPlotChildren().remove(volumeBar);

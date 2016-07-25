@@ -24,21 +24,22 @@ import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 
+// We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection 
+// to the trading peer
 public final class OfferAvailabilityRequest extends OfferMessage implements SupportedCapabilitiesMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final PubKeyRing pubKeyRing;
     public final long takersTradePrice;
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     public OfferAvailabilityRequest(String offerId, PubKeyRing pubKeyRing, long takersTradePrice) {
         super(offerId);
         this.pubKeyRing = pubKeyRing;
         this.takersTradePrice = takersTradePrice;
     }
-
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     @Override
     @Nullable

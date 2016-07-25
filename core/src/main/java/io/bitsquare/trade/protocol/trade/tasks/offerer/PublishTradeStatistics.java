@@ -21,12 +21,8 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeStatistics;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PublishTradeStatistics extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(PublishTradeStatistics.class);
-
     public PublishTradeStatistics(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -35,7 +31,7 @@ public class PublishTradeStatistics extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            // Offerer publishes directly
+            // Offerer is responsible for publishing. Only in case the offerer uses an old verison the taker publishes.
             TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
                     trade.getTradePrice(),
                     trade.getTradeAmount(),

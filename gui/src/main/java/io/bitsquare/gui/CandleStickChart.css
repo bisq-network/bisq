@@ -88,16 +88,6 @@
     -fx-effect: dropshadow(two-pass-box, rgba(0, 0, 0, 0.4), 10, 0.0, 2, 4);
 }
 
-/*.default-color0.chart-series-line {
-    -fx-stroke: blue;
-}
-
-.default-color0.chart-line-symbol {
-    -fx-background-color: red, green;
-}*/
-
-
-
 .chart-alternative-row-fill {
     -fx-fill: transparent;
     -fx-stroke: transparent;
@@ -107,14 +97,3 @@
 .chart-plot-background {
     -fx-background-color: transparent;
 }
-
-/*
-.chart-legend {
-    -fx-background-color: transparent;
-    -fx-padding: 20px;
-}
-
-.chart-legend-item-symbol {
-    -fx-background-radius: 0;
-}
- */

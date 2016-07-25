@@ -209,10 +209,8 @@ public class TradeManager {
             removePreparedTrade(trade);
 
         for (Tradable tradable : closedTradableManager.getClosedTrades()) {
-            if (tradable instanceof Trade) {
-                Trade trade = (Trade) tradable;
-                addTradeStatistics(trade);
-            }
+            if (tradable instanceof Trade)
+                addTradeStatistics((Trade) tradable);
         }
 
         pendingTradesInitialized.set(true);
@@ -316,7 +314,7 @@ public class TradeManager {
                     if (offer.getState() == Offer.State.AVAILABLE)
                         createTrade(amount, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
                 },
-                errorMessage -> errorMessageHandler.handleErrorMessage(errorMessage));
+                errorMessageHandler::handleErrorMessage);
     }
 
     private void createTrade(Coin amount,

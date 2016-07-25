@@ -119,7 +119,7 @@ public class SeedNode {
             }
         });
 
-        // Wee want to persist trade statistics so we need to instantiate the tradeStatisticsManager
+        // We want to persist trade statistics so we need to instantiate the tradeStatisticsManager
         tradeStatisticsManager = injector.getInstance(TradeStatisticsManager.class);
     }
 

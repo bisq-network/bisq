@@ -13,13 +13,12 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
 
     private final int messageVersion = Version.getP2PMessageVersion();
     private final int nonce;
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     public PreliminaryGetDataRequest(int nonce) {
         this.nonce = nonce;
     }
-
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     @Override
     @Nullable
@@ -42,6 +41,7 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
         return "PreliminaryGetDataRequest{" +
                 "messageVersion=" + messageVersion +
                 ", nonce=" + nonce +
+                ", supportedCapabilities=" + supportedCapabilities +
                 '}';
     }
 }

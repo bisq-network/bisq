@@ -90,7 +90,6 @@ public class Version {
     // We don't use the Enum in any serialized data, as changes in the enum would break backwards compatibility. We use the ordinal integer instead.
     // Sequence in the enum must not be changed (append only).
     public enum Capability {
-        SEED_NODE,
         TRADE_STATISTICS
     }
 

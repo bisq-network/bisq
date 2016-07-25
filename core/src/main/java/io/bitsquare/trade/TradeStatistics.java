@@ -22,7 +22,7 @@ public final class TradeStatistics implements StoragePayload, CapabilityRequirin
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
-    public static final long TTL = TimeUnit.DAYS.toMillis(10);
+    public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     public final String currency;
     public final Offer.Direction direction;

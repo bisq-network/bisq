@@ -159,7 +159,6 @@ public class BSFormatter {
      * @param input
      * @return
      */
-
     public Coin parseToCoinWith4Decimals(String input) {
         try {
             return Coin.valueOf(new BigDecimal(parseToCoin(cleanInput(input)).value).setScale(-scale - 1,
@@ -301,7 +300,7 @@ public class BSFormatter {
     }
 
     public String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
-        return nodeAddresses.stream().map(e -> e.getFullAddress()).collect(Collectors.joining(", "));
+        return nodeAddresses.stream().map(NodeAddress::getFullAddress).collect(Collectors.joining(", "));
     }
 
     public String languageCodesToString(List<String> languageLocales) {
@@ -452,7 +451,7 @@ public class BSFormatter {
         duration = StringUtils.replaceOnce(duration, " 1 minutes", " 1 minute");
         duration = StringUtils.replaceOnce(duration, " 1 hours", " 1 hour");
         duration = StringUtils.replaceOnce(duration, " 1 days", " 1 day");
-        if (duration.startsWith(", "))
+        if (duration.startsWith(" ,"))
             duration = duration.replace(" ,", "");
         else if (duration.startsWith(", "))
             duration = duration.replace(", ", "");

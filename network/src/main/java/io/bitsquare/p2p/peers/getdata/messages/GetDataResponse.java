@@ -15,14 +15,13 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage {
 
     public final HashSet<ProtectedStorageEntry> dataSet;
     public final int requestNonce;
+    @Nullable
+    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     public GetDataResponse(HashSet<ProtectedStorageEntry> dataSet, int requestNonce) {
         this.dataSet = dataSet;
         this.requestNonce = requestNonce;
     }
-
-    @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
 
     @Override
     @Nullable
@@ -41,6 +40,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage {
                 "messageVersion=" + messageVersion +
                 ", dataSet.size()=" + dataSet.size() +
                 ", requestNonce=" + requestNonce +
+                ", supportedCapabilities=" + supportedCapabilities +
                 '}';
     }
 }
