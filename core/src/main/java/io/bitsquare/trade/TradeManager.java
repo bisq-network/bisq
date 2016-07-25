@@ -66,10 +66,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -223,6 +220,7 @@ public class TradeManager {
     }
 
     private void publishTradeStatistics(List<Trade> trades) {
+        Set<TradeStatistics> tradeStatisticsSet = new HashSet<>();
         for (int i = 0; i < trades.size(); i++) {
             Trade trade = trades.get(i);
             TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
@@ -231,7 +229,7 @@ public class TradeManager {
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
                     keyRing.getPubKeyRing());
-            tradeStatisticsManager.add(tradeStatistics);
+            tradeStatisticsSet.add(tradeStatistics);
 
             // Only trades from last 30 days
             if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(30)) {
@@ -243,6 +241,8 @@ public class TradeManager {
                 UserThread.runAfterRandomDelay(() -> p2PService.addData(tradeStatistics, true), minDelay, maxDelay, TimeUnit.SECONDS);
             }
         }
+
+        tradeStatisticsManager.addSet(tradeStatisticsSet);
     }
 
     private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {

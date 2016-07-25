@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TradeStatisticsManager {
@@ -64,19 +65,7 @@ public class TradeStatisticsManager {
                 observableTradeStatisticsSet.add(tradeStatistics);
                 storage.queueUpForSave(tradeStatisticsSet, 2000);
 
-                if (dumpStatistics) {
-                    // We store the statistics as json so it is easy for further processing (e.g. for web based services)
-                    // TODO This is just a quick solution for storing to one file. 
-                    // 1 statistic entry has 500 bytes as json.
-                    // Need a more scalable solution later when we get more volume.
-                    // The flag will only be activated by dedicated nodes, so it should not be too critical for the moment, but needs to
-                    // get improved. Maybe a LevelDB like DB...? Could be impl. in a headless version only.
-                    List<TradeStatistics> list = tradeStatisticsSet.stream().collect(Collectors.toList());
-                    list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? 1 : (o1.tradeDate == o2.tradeDate ? 0 : -1)));
-                    TradeStatistics[] array = new TradeStatistics[tradeStatisticsSet.size()];
-                    list.toArray(array);
-                    jsonStorage.queueUpForSave(Utilities.objectToJson(array), 5_000);
-                }
+                dump();
             } else {
                 log.error("We have already an item with the same offer ID. That might happen if both the offerer and the taker published the tradeStatistics");
             }
@@ -86,4 +75,29 @@ public class TradeStatisticsManager {
     public ObservableSet<TradeStatistics> getObservableTradeStatisticsSet() {
         return observableTradeStatisticsSet;
     }
+
+    public void addSet(Set<TradeStatistics> set) {
+        tradeStatisticsSet.addAll(set);
+        observableTradeStatisticsSet.addAll(set);
+        storage.queueUpForSave(tradeStatisticsSet, 2000);
+
+        dump();
+    }
+
+    private void dump() {
+        if (dumpStatistics) {
+            // We store the statistics as json so it is easy for further processing (e.g. for web based services)
+            // TODO This is just a quick solution for storing to one file. 
+            // 1 statistic entry has 500 bytes as json.
+            // Need a more scalable solution later when we get more volume.
+            // The flag will only be activated by dedicated nodes, so it should not be too critical for the moment, but needs to
+            // get improved. Maybe a LevelDB like DB...? Could be impl. in a headless version only.
+            List<TradeStatistics> list = tradeStatisticsSet.stream().collect(Collectors.toList());
+            list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? 1 : (o1.tradeDate == o2.tradeDate ? 0 : -1)));
+            TradeStatistics[] array = new TradeStatistics[tradeStatisticsSet.size()];
+            list.toArray(array);
+            jsonStorage.queueUpForSave(Utilities.objectToJson(array), 5_000);
+        }
+    }
+
 }
