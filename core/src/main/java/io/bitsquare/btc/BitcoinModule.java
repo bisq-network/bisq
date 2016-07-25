@@ -50,6 +50,7 @@ public class BitcoinModule extends AppModule {
 
         bindConstant().annotatedWith(named(BtcOptionKeys.BTC_SEED_NODES)).to(env.getRequiredProperty(BtcOptionKeys.BTC_SEED_NODES));
         bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(env.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
+        bindConstant().annotatedWith(named(BtcOptionKeys.BTC_PROXY_ADDRESS)).to(env.getRequiredProperty(BtcOptionKeys.BTC_PROXY_ADDRESS));
 
         bind(AddressEntryList.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);

@@ -79,7 +79,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String btcNetworkDir;
     private final String logLevel;
     private BitcoinNetwork bitcoinNetwork;
-    private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, myAddress, banList, dumpStatistics;
+    private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, myAddress, banList, dumpStatistics, btcProxyAddress;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -161,6 +161,10 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
                 "";
 
+        btcProxyAddress = commandLineProperties.containsProperty(BtcOptionKeys.BTC_PROXY_ADDRESS) ?
+                (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_PROXY_ADDRESS) :
+                "";
+
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
@@ -231,6 +235,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
                 setProperty(BtcOptionKeys.BTC_SEED_NODES, btcSeedNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
+                setProperty(BtcOptionKeys.BTC_PROXY_ADDRESS, btcProxyAddress);
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);

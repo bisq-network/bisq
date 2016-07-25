@@ -89,6 +89,7 @@ public class WalletService {
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
     private final String seedNodes;
+    private String btcProxyAddress;
     private final NetworkParameters params;
     private final File walletDir;
     private final UserAgent userAgent;
@@ -116,11 +117,13 @@ public class WalletService {
                          @Named(DIR_KEY) File appDir,
                          Preferences preferences,
                          @Named(BtcOptionKeys.BTC_SEED_NODES) String seedNodes,
-                         @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
+                         @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions,
+                         @Named(BtcOptionKeys.BTC_PROXY_ADDRESS) String btcProxyAddress) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.seedNodes = seedNodes;
+        this.btcProxyAddress = btcProxyAddress;
         this.params = preferences.getBitcoinNetwork().getParameters();
         this.walletDir = new File(appDir, "bitcoin");
         this.userAgent = userAgent;
@@ -166,6 +169,19 @@ public class WalletService {
 
         backupWallet();
 
+        // If btcProxyAddress program argument is set we use that and override the proxy passed in the method
+        if (!btcProxyAddress.isEmpty()) {
+            String[] tokens = btcProxyAddress.split(":");
+            if (tokens.length == 2) {
+                try {
+                    proxy = new Socks5Proxy(tokens[0], Integer.valueOf(tokens[1]));
+                } catch (UnknownHostException e) {
+                    log.error(e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+        
         // If seed is non-null it means we are restoring from backup.
         walletAppKit = new WalletAppKitBitSquare(params, proxy, walletDir, "Bitsquare") {
             @Override

@@ -484,16 +484,6 @@ public class MainViewModel implements ViewModel {
             proxy = p2PService.getNetworkNode().getSocksProxy();
         }
 
-/**
- * Uncomment this to wire up user specified proxy via program args or config file.
- * Could be Tor, i2p, ssh, vpn, etc.
-        if( preferences.getBitcoinProxyHost() != null &&
-            preferences.getBitcoinProxyPort() != null ) {
-            proxy = new Socks5Proxy( preferences.getBitcoinProxyHost(),
-                                     preferences.getBitcoinProxyPort() );
-        }
-*/
-
         walletService.initialize(null,
                 proxy,
                 () -> {

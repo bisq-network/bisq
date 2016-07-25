@@ -99,6 +99,8 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over our native Tor instance.", ""))
                 .withRequiredArg();
+        parser.accepts(BtcOptionKeys.BTC_PROXY_ADDRESS, description("A proxy address to be used for BitcoinJ. [host:port]", ""))
+                .withRequiredArg();
 
         // use a fixed port as arbitrator use that for his ID
         parser.accepts(NetworkOptionKeys.PORT_KEY, description("Port to listen on", 9999))
