@@ -6,7 +6,7 @@ mkdir -p gui/deploy
 set -e
 
 # Edit version
-version=0.4.9
+version=0.4.9.1
 
 jarFile="/media/sf_vm_shared_ubuntu14_32bit/Bitsquare-$version.jar"
 jdkfixFile="/media/sf_vm_shared_ubuntu14_32bit/jdkfix-$version.jar"
