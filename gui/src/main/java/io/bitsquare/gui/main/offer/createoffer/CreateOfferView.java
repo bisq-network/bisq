@@ -208,8 +208,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
             balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
-            if (DevFlags.STRESS_TEST_MODE)
-                UserThread.runAfter(this::onShowPayFundsScreen, 200, TimeUnit.MILLISECONDS);
+            // if (DevFlags.STRESS_TEST_MODE)
+            //     UserThread.runAfter(this::onShowPayFundsScreen, 200, TimeUnit.MILLISECONDS);
         }
     }
 

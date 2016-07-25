@@ -38,7 +38,7 @@ public class TradeStatisticsManager {
 
         HashSet<TradeStatistics> persisted = storage.initAndGetPersistedWithFileName("TradeStatistics");
         if (persisted != null)
-            observableTradeStatisticsSet = FXCollections.observableSet(persisted);
+            persisted.stream().forEach(e -> add(e));
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -57,23 +57,28 @@ public class TradeStatisticsManager {
     }
 
     public void add(TradeStatistics tradeStatistics) {
-        if (!observableTradeStatisticsSet.contains(tradeStatistics)) {
-            observableTradeStatisticsSet.add(tradeStatistics);
-            tradeStatisticsSet.add(tradeStatistics);
-            storage.queueUpForSave(tradeStatisticsSet, 2000);
+        if (!tradeStatisticsSet.contains(tradeStatistics)) {
+            boolean itemAlreadyAdded = tradeStatisticsSet.stream().filter(e -> (e.offerId.equals(tradeStatistics.offerId))).findAny().isPresent();
+            if (!itemAlreadyAdded) {
+                tradeStatisticsSet.add(tradeStatistics);
+                observableTradeStatisticsSet.add(tradeStatistics);
+                storage.queueUpForSave(tradeStatisticsSet, 2000);
 
-            if (dumpStatistics) {
-                // We store the statistics as json so it is easy for further processing (e.g. for web based services)
-                // TODO This is just a quick solution for storing to one file. 
-                // 1 statistic entry has 500 bytes as json.
-                // Need a more scalable solution later when we get more volume.
-                // The flag will only be activated by dedicated nodes, so it should not be too critical for the moment, but needs to
-                // get improved. Maybe a LevelDB like DB...? Could be impl. in a headless version only.
-                List<TradeStatistics> list = tradeStatisticsSet.stream().collect(Collectors.toList());
-                list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? 1 : (o1.tradeDate == o2.tradeDate ? 0 : -1)));
-                TradeStatistics[] array = new TradeStatistics[tradeStatisticsSet.size()];
-                list.toArray(array);
-                jsonStorage.queueUpForSave(Utilities.objectToJson(array), 5_000);
+                if (dumpStatistics) {
+                    // We store the statistics as json so it is easy for further processing (e.g. for web based services)
+                    // TODO This is just a quick solution for storing to one file. 
+                    // 1 statistic entry has 500 bytes as json.
+                    // Need a more scalable solution later when we get more volume.
+                    // The flag will only be activated by dedicated nodes, so it should not be too critical for the moment, but needs to
+                    // get improved. Maybe a LevelDB like DB...? Could be impl. in a headless version only.
+                    List<TradeStatistics> list = tradeStatisticsSet.stream().collect(Collectors.toList());
+                    list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? 1 : (o1.tradeDate == o2.tradeDate ? 0 : -1)));
+                    TradeStatistics[] array = new TradeStatistics[tradeStatisticsSet.size()];
+                    list.toArray(array);
+                    jsonStorage.queueUpForSave(Utilities.objectToJson(array), 5_000);
+                }
+            } else {
+                log.error("We have already an item with the same offer ID. That might happen if both the offerer and the taker published the tradeStatistics");
             }
         }
     }

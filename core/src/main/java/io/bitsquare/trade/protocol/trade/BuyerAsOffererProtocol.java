@@ -31,7 +31,6 @@ import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.buyer.*;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
-import io.bitsquare.trade.protocol.trade.tasks.shared.PublishTradeStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

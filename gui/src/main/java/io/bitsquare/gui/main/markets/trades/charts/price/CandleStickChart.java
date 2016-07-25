@@ -190,23 +190,29 @@ public class CandleStickChart extends XYChart<Number, Number> {
         for (int j = 0; j < series.getData().size(); j++) {
             XYChart.Data item = series.getData().get(j);
             Node candle = createCandle(seriesIndex, item, j);
-            getPlotChildren().add(candle);
-            if (shouldAnimate()) {
-                candle.setOpacity(0);
-                FadeTransition ft = new FadeTransition(Duration.millis(500), candle);
-                ft.setToValue(1);
-                ft.play();
+
+            if (!getPlotChildren().contains(candle)) {
+                getPlotChildren().add(candle);
+                if (shouldAnimate()) {
+                    candle.setOpacity(0);
+                    FadeTransition ft = new FadeTransition(Duration.millis(500), candle);
+                    ft.setToValue(1);
+                    ft.play();
+                }
             }
         }
         Path seriesPath = new Path();
         seriesPath.getStyleClass().setAll("candlestick-average-line", "series" + seriesIndex);
         series.setNode(seriesPath);
-        getPlotChildren().add(seriesPath);
-        if (shouldAnimate()) {
-            seriesPath.setOpacity(0);
-            FadeTransition ft = new FadeTransition(Duration.millis(500), seriesPath);
-            ft.setToValue(1);
-            ft.play();
+
+        if (!getPlotChildren().contains(seriesPath)) {
+            getPlotChildren().add(seriesPath);
+            if (shouldAnimate()) {
+                seriesPath.setOpacity(0);
+                FadeTransition ft = new FadeTransition(Duration.millis(500), seriesPath);
+                ft.setToValue(1);
+                ft.play();
+            }
         }
     }
 

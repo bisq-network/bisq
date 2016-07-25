@@ -35,9 +35,12 @@ public class SeedNodesRepository {
             new NodeAddress("b66vnevaljo6xt5a.onion:8000"),*/
 
             // v0.4.2
+            // ...128
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("uadzuib66jupaept.onion:8000"),
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("hbma455xxbqhcuqh.onion:8000"),
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("wgthuiqn3aoiovbm.onion:8000"),
+
+            // ...188
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("hbma455xxbqhcuqh.onion:8000"),
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("2zxtnprnx5wqr7a3.onion:8000"),
 
             // testnet
@@ -50,9 +53,9 @@ public class SeedNodesRepository {
             // 3. Shut down the seed node
             // 4. Rename the directory with your local onion address    
             // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
-            new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
-            new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
-            new NodeAddress("mfla72c4igh5ta2t.onion:8002")
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("mfla72c4igh5ta2t.onion:8002")
     );
 
     // Addresses are used if the last digit of their port match the network id:

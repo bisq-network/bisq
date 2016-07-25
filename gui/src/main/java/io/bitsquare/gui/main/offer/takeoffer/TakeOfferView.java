@@ -268,7 +268,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     // called form parent as the view does not get notified when the tab is closed
     public void onClose() {
         Coin balance = model.dataModel.balance.get();
-        if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get()) {
+        if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevFlags.DEV_MODE) {
             model.dataModel.swapTradeToSavings();
             new Popup().information("You had already funded that offer.\n" +
                     "Your funds have been moved to your local Bitsquare wallet and are available for " +
@@ -523,7 +523,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
             if (newValue && DevFlags.DEV_MODE) {
                 close();
-                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
             } else if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
                 String key = "takeOfferSuccessInfo";
                 if (preferences.showAgain(key)) {

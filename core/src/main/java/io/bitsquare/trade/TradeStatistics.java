@@ -10,12 +10,14 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
+import javax.annotation.concurrent.Immutable;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Immutable
 public final class TradeStatistics implements StoragePayload, CapabilityRequiringPayload {
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -86,9 +88,72 @@ public final class TradeStatistics implements StoragePayload, CapabilityRequirin
     }
 
     public Fiat getTradeVolume() {
-        if (getTradeAmount() != null && getTradePrice() != null)
-            return new ExchangeRate(getTradePrice()).coinToFiat(getTradeAmount());
-        else
-            return null;
+        return new ExchangeRate(getTradePrice()).coinToFiat(getTradeAmount());
+    }
+
+    // We don't include the pubKeyRing as both traders might publish it if the offerer uses an old 
+    // version and update later (taker publishes first, then later offerer)
+    // We also don't include the trade date as that is set locally and different for offerer and taker
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TradeStatistics)) return false;
+
+        TradeStatistics that = (TradeStatistics) o;
+
+        if (tradePrice != that.tradePrice) return false;
+        if (tradeAmount != that.tradeAmount) return false;
+        if (offerDate != that.offerDate) return false;
+        if (useMarketBasedPrice != that.useMarketBasedPrice) return false;
+        if (Double.compare(that.marketPriceMargin, marketPriceMargin) != 0) return false;
+        if (offerAmount != that.offerAmount) return false;
+        if (offerMinAmount != that.offerMinAmount) return false;
+        if (currency != null ? !currency.equals(that.currency) : that.currency != null) return false;
+        if (direction != that.direction) return false;
+        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
+            return false;
+        if (offerId != null ? !offerId.equals(that.offerId) : that.offerId != null) return false;
+        return !(depositTxId != null ? !depositTxId.equals(that.depositTxId) : that.depositTxId != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = currency != null ? currency.hashCode() : 0;
+        result = 31 * result + (direction != null ? direction.hashCode() : 0);
+        result = 31 * result + (int) (tradePrice ^ (tradePrice >>> 32));
+        result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
+        result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
+        result = 31 * result + (int) (offerDate ^ (offerDate >>> 32));
+        result = 31 * result + (useMarketBasedPrice ? 1 : 0);
+        temp = Double.doubleToLongBits(marketPriceMargin);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (int) (offerAmount ^ (offerAmount >>> 32));
+        result = 31 * result + (int) (offerMinAmount ^ (offerMinAmount >>> 32));
+        result = 31 * result + (offerId != null ? offerId.hashCode() : 0);
+        result = 31 * result + (depositTxId != null ? depositTxId.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "TradeStatistics{" +
+                "currency='" + currency + '\'' +
+                ", direction=" + direction +
+                ", tradePrice=" + tradePrice +
+                ", tradeAmount=" + tradeAmount +
+                ", tradeDate=" + tradeDate +
+                ", paymentMethod='" + paymentMethod + '\'' +
+                ", offerDate=" + offerDate +
+                ", useMarketBasedPrice=" + useMarketBasedPrice +
+                ", marketPriceMargin=" + marketPriceMargin +
+                ", offerAmount=" + offerAmount +
+                ", offerMinAmount=" + offerMinAmount +
+                ", offerId='" + offerId + '\'' +
+                ", depositTxId='" + depositTxId + '\'' +
+                ", pubKeyRing=" + pubKeyRing +
+                '}';
     }
 }
