@@ -7,5 +7,5 @@ public class DevFlags {
     private static final Logger log = LoggerFactory.getLogger(DevFlags.class);
 
     public static final boolean STRESS_TEST_MODE = false;
-    public static final boolean DEV_MODE = STRESS_TEST_MODE || true;
+    public static final boolean DEV_MODE = STRESS_TEST_MODE || false;
 }
