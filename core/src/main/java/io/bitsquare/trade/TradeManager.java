@@ -25,6 +25,7 @@ import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.FaultHandler;
@@ -190,20 +191,21 @@ public class TradeManager {
 
         List<Trade> toAdd = new ArrayList<>();
         List<Trade> toRemove = new ArrayList<>();
+        List<Trade> tradesForStatistics = new ArrayList<>();
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
 
             if (trade.isDepositPaid() || (trade.isTakerFeePaid() && trade.errorMessageProperty().get() == null)) {
                 initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
                 trade.updateDepositTxFromWallet();
+                tradesForStatistics.add(trade);
             } else if (trade.isTakerFeePaid()) {
                 toAdd.add(trade);
             } else {
                 toRemove.add(trade);
             }
-
-            addTradeStatistics(trade);
         }
+
         for (Trade trade : toAdd)
             addTradeToFailedTrades(trade);
 
@@ -212,23 +214,34 @@ public class TradeManager {
 
         for (Tradable tradable : closedTradableManager.getClosedTrades()) {
             if (tradable instanceof Trade)
-                addTradeStatistics((Trade) tradable);
+                tradesForStatistics.add((Trade) tradable);
         }
+
+        publishTradeStatistics(tradesForStatistics);
 
         pendingTradesInitialized.set(true);
     }
 
-    private void addTradeStatistics(Trade trade) {
-        TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
-                trade.getTradePrice(),
-                trade.getTradeAmount(),
-                trade.getDate(),
-                (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                keyRing.getPubKeyRing());
-        tradeStatisticsManager.add(tradeStatistics);
-        // Only offerer publishes statistic data of trades, only trades from last 20 days
-        if (isMyOffer(trade.getOffer()) && (new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(20))
-            p2PService.addData(tradeStatistics, true);
+    private void publishTradeStatistics(List<Trade> trades) {
+        for (int i = 0; i < trades.size(); i++) {
+            Trade trade = trades.get(i);
+            TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
+                    trade.getTradePrice(),
+                    trade.getTradeAmount(),
+                    trade.getDate(),
+                    (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
+                    keyRing.getPubKeyRing());
+            tradeStatisticsManager.add(tradeStatistics);
+
+            // Only trades from last 30 days
+            if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(30)) {
+                final long minDelay = i * 2000 + 1;
+                final long maxDelay = minDelay * 4;
+                // we delay to avoid flooding the network to intense
+                // roughly 1 item per 2-8 seconds
+                UserThread.runAfterRandomDelay(() -> p2PService.addData(tradeStatistics, true), minDelay, maxDelay, TimeUnit.MILLISECONDS);
+            }
+        }
     }
 
     private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
