@@ -77,7 +77,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
+import static io.bitsquare.app.CoreOptionKeys.APP_NAME_KEY;
 
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
@@ -104,7 +104,7 @@ public class BitsquareApp extends Application {
     public void start(Stage stage) throws IOException {
         BitsquareApp.primaryStage = stage;
 
-        String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
+        String logPath = Paths.get(env.getProperty(CoreOptionKeys.APP_DATA_DIR_KEY), "bitsquare").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Version.printVersion();

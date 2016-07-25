@@ -53,11 +53,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private static final Logger log = LoggerFactory.getLogger(BitsquareEnvironment.class);
 
     private static final String BITCOIN_NETWORK_PROP = "bitcoinNetwork.properties";
-    public static final String USER_DATA_DIR_KEY = "userDataDir";
-
-    public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
-
-    public static final String APP_NAME_KEY = "appName";
 
     public static void setDefaultAppName(String defaultAppName) {
         DEFAULT_APP_NAME = defaultAppName;
@@ -65,7 +60,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     public static String DEFAULT_APP_NAME = "Bitsquare";
 
-    public static final String APP_DATA_DIR_KEY = "appDataDir";
+    public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
     public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
 
     public static final String LOG_LEVEL_DEFAULT = (DevFlags.STRESS_TEST_MODE || DevFlags.DEV_MODE) ? Level.TRACE.levelStr : Level.WARN.levelStr;
@@ -125,21 +120,27 @@ public class BitsquareEnvironment extends StandardEnvironment {
     }
 
     protected BitsquareEnvironment(PropertySource commandLineProperties) {
-        userDataDir = commandLineProperties.containsProperty(USER_DATA_DIR_KEY) ?
-                (String) commandLineProperties.getProperty(USER_DATA_DIR_KEY) :
-                DEFAULT_USER_DATA_DIR;
-
-        appName = commandLineProperties.containsProperty(APP_NAME_KEY) ?
-                (String) commandLineProperties.getProperty(APP_NAME_KEY) :
-                DEFAULT_APP_NAME;
-
-        appDataDir = commandLineProperties.containsProperty(APP_DATA_DIR_KEY) ?
-                (String) commandLineProperties.getProperty(APP_DATA_DIR_KEY) :
-                appDataDir(userDataDir, appName);
-
         logLevel = commandLineProperties.containsProperty(CommonOptionKeys.LOG_LEVEL_KEY) ?
                 (String) commandLineProperties.getProperty(CommonOptionKeys.LOG_LEVEL_KEY) :
                 LOG_LEVEL_DEFAULT;
+
+        userDataDir = commandLineProperties.containsProperty(CoreOptionKeys.USER_DATA_DIR_KEY) ?
+                (String) commandLineProperties.getProperty(CoreOptionKeys.USER_DATA_DIR_KEY) :
+                DEFAULT_USER_DATA_DIR;
+
+        appName = commandLineProperties.containsProperty(CoreOptionKeys.APP_NAME_KEY) ?
+                (String) commandLineProperties.getProperty(CoreOptionKeys.APP_NAME_KEY) :
+                DEFAULT_APP_NAME;
+
+        appDataDir = commandLineProperties.containsProperty(CoreOptionKeys.APP_DATA_DIR_KEY) ?
+                (String) commandLineProperties.getProperty(CoreOptionKeys.APP_DATA_DIR_KEY) :
+                appDataDir(userDataDir, appName);
+        ignoreDevMsg = commandLineProperties.containsProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY) ?
+                (String) commandLineProperties.getProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY) :
+                "";
+        dumpStatistics = commandLineProperties.containsProperty(CoreOptionKeys.DUMP_STATISTICS) ?
+                (String) commandLineProperties.getProperty(CoreOptionKeys.DUMP_STATISTICS) :
+                "";
 
         seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
@@ -152,10 +153,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
                 "";
 
-        ignoreDevMsg = commandLineProperties.containsProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY) ?
-                (String) commandLineProperties.getProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY) :
-                "";
-
         btcSeedNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_SEED_NODES) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_SEED_NODES) :
                 "";
@@ -163,11 +160,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
         useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
                 "";
-
-        dumpStatistics = commandLineProperties.containsProperty(CoreOptionKeys.DUMP_STATISTICS) ?
-                (String) commandLineProperties.getProperty(CoreOptionKeys.DUMP_STATISTICS) :
-                "";
-
 
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
@@ -223,31 +215,28 @@ public class BitsquareEnvironment extends StandardEnvironment {
             private static final long serialVersionUID = -8478089705207326165L;
 
             {
-                setProperty(APP_DATA_DIR_KEY, appDataDir);
                 setProperty(CommonOptionKeys.LOG_LEVEL_KEY, logLevel);
+
+                setProperty(CoreOptionKeys.APP_DATA_DIR_KEY, appDataDir);
+                setProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
+                setProperty(CoreOptionKeys.DUMP_STATISTICS, dumpStatistics);
+                setProperty(CoreOptionKeys.APP_NAME_KEY, appName);
+                setProperty(CoreOptionKeys.USER_DATA_DIR_KEY, userDataDir);
 
                 setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
                 setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);
                 setProperty(NetworkOptionKeys.BAN_LIST, banList);
-                setProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
-                setProperty(CoreOptionKeys.DUMP_STATISTICS, dumpStatistics);
+                setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
+                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
 
                 setProperty(BtcOptionKeys.BTC_SEED_NODES, btcSeedNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
 
-                setProperty(APP_NAME_KEY, appName);
-                setProperty(USER_DATA_DIR_KEY, userDataDir);
-
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);
-
                 setProperty(WalletService.DIR_KEY, btcNetworkDir);
-
                 setProperty(Storage.DIR_KEY, Paths.get(btcNetworkDir, "db").toString());
                 setProperty(KeyStorage.DIR_KEY, Paths.get(btcNetworkDir, "keys").toString());
-                setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
-
-                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
             }
         });
     }

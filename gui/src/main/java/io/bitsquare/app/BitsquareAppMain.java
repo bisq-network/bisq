@@ -23,7 +23,8 @@ import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.app.BitsquareEnvironment.*;
+import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_APP_NAME;
+import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class BitsquareAppMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);
@@ -33,9 +34,9 @@ public class BitsquareAppMain extends BitsquareExecutable {
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
-        parser.accepts(USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
+        parser.accepts(CoreOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
-        parser.accepts(APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
+        parser.accepts(CoreOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
                 .withRequiredArg();
 
         OptionSet options;
@@ -51,7 +52,7 @@ public class BitsquareAppMain extends BitsquareExecutable {
         BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
 
         // need to call that before BitsquareAppMain().execute(args)
-        BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY));
+        BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(CoreOptionKeys.APP_DATA_DIR_KEY));
 
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:

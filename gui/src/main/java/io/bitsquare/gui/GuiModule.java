@@ -20,7 +20,7 @@ package io.bitsquare.gui;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import io.bitsquare.app.AppModule;
-import io.bitsquare.app.BitsquareEnvironment;
+import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.gui.common.fxml.FxmlViewLoader;
 import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.ViewFactory;
@@ -69,6 +69,6 @@ public class GuiModule extends AppModule {
 
         bind(Stage.class).toInstance(primaryStage);
 
-        bindConstant().annotatedWith(Names.named(MainView.TITLE_KEY)).to(env.getRequiredProperty(BitsquareEnvironment.APP_NAME_KEY));
+        bindConstant().annotatedWith(Names.named(MainView.TITLE_KEY)).to(env.getRequiredProperty(CoreOptionKeys.APP_NAME_KEY));
     }
 }

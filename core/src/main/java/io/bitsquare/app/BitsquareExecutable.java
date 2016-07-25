@@ -70,11 +70,11 @@ public abstract class BitsquareExecutable {
     }
 
     protected void customizeOptionParsing(OptionParser parser) {
-        parser.accepts(USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
+        parser.accepts(CoreOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
-        parser.accepts(APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
+        parser.accepts(CoreOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
                 .withRequiredArg();
-        parser.accepts(APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
+        parser.accepts(CoreOptionKeys.APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY, description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", LOG_LEVEL_DEFAULT))
                 .withRequiredArg();
