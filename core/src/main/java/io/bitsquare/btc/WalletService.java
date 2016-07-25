@@ -268,48 +268,47 @@ public class WalletService {
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
-        log.debug( "seedNodes: " + seedNodes.toString() );
+        log.debug("seedNodes: " + seedNodes.toString());
         boolean setPeerNodes = false;
-        
+
         // Pass custom seed nodes if set in options
         if (seedNodes != null && !seedNodes.isEmpty()) {
-            
+
             // todo: this parsing should be more robust,
             // give validation error if needed.
             // also: it seems the peer nodes can be overridden in the case
             // of regtest mode below.  is that wanted?
             String[] nodes = seedNodes.split(",");
             List<PeerAddress> peerAddressList = new ArrayList<PeerAddress>();
-            for(String node : nodes) {
+            for (String node : nodes) {
                 String[] parts = node.split(":");
-                if( parts.length == 1) {
+                if (parts.length == 1) {
                     // port not specified.  Use default port for network.
-                    parts = new String[] { parts[0], Integer.toString(params.getPort()) };
+                    parts = new String[]{parts[0], Integer.toString(params.getPort())};
                 }
-                if( parts.length == 2 ) {
+                if (parts.length == 2) {
                     // note: this will cause a DNS request if hostname used.
                     // note: DNS requests are routed over socks5 proxy, if used.
                     // fixme: .onion hostnames will fail! see comments in SeedPeersSocks5Dns
                     InetSocketAddress addr;
-                    if( proxy != null ) {
+                    if (proxy != null) {
                         InetSocketAddress unresolved = InetSocketAddress.createUnresolved(parts[0], Integer.parseInt(parts[1]));
                         // proxy remote DNS request happens here.
-                        addr = SeedPeersSocks5Dns.lookup( proxy, unresolved );
-                    }
-                    else {
+                        addr = SeedPeersSocks5Dns.lookup(proxy, unresolved);
+                    } else {
                         // DNS request happens here. if it fails, addr.isUnresolved() == true.
-                        addr = new InetSocketAddress( parts[0], Integer.parseInt(parts[1]) );
+                        addr = new InetSocketAddress(parts[0], Integer.parseInt(parts[1]));
                     }
                     // note: isUnresolved check should be removed once we fix PeerAddress
-                    if( addr != null && !addr.isUnresolved() ) {
-                        peerAddressList.add( new PeerAddress( addr.getAddress(), addr.getPort() ));
+                    if (addr != null && !addr.isUnresolved()) {
+                        peerAddressList.add(new PeerAddress(addr.getAddress(), addr.getPort()));
                     }
                 }
             }
-            if(peerAddressList.size() > 0) {
+            if (peerAddressList.size() > 0) {
                 PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
                 log.debug("seedNodes parsed: " + Arrays.toString(peerAddressListFixed));
-                
+
                 walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
                 setPeerNodes = true;
             }
@@ -360,9 +359,9 @@ public class WalletService {
         // be private by default when using proxy/tor.  However, the seedpeers
         // could become outdated, so it is important that the user be able to
         // disable it, but should be made aware of the reduced privacy.
-        if( proxy != null && !setPeerNodes ) {
+        if (proxy != null && !setPeerNodes) {
             // SeedPeersSocks5Dns should replace SeedPeers once working reliably.
-            walletAppKit.setDiscovery( new SeedPeers( params) );
+            walletAppKit.setDiscovery(new SeedPeers(params));
         }
 
         walletAppKit.setDownloadListener(downloadListener)
