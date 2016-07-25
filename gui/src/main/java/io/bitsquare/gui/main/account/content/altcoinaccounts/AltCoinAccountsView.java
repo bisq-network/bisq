@@ -167,7 +167,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     "If you are not sure about that process visit the Monero forum (https://forum.getmonero.org) to find more information.")
                     .closeButtonText("I understand")
                     .show();
-        } else if (code.equals("ETHC")) {
+        } else if (code.equals("ETC")) {
             //TODO remove after AUGUST, 30
             if (new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
                 new Popup().information("The EHT/ETC fork situation carries considerable risks.\n" +

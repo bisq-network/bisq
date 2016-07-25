@@ -337,9 +337,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         priceAsFiatListener = (ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue));
         volumeAsFiatListener = (ov, oldValue, newValue) -> volume.set(formatter.formatFiat(newValue));
 
-        isWalletFundedListener = (ov, oldValue, newValue) -> {
-            updateButtonDisableState();
-        };
+        isWalletFundedListener = (ov, oldValue, newValue) -> updateButtonDisableState();
        /* feeFromFundingTxListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
         };*/
@@ -350,9 +348,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     //TODO remove after AUGUST, 30
     private void applyCurrencyCode(String newValue) {
-        String key = "ETH-ETHC-Warning";
+        String key = "ETH-ETC-Warning";
         if (preferences.showAgain(key) && new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
-            if (newValue.equals("ETHC")) {
+            if (newValue.equals("ETC")) {
                 new Popup().information("The EHT/ETC fork situation carries considerable risks.\n" +
                         "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.\n\n" +
                         "Please note, that the price is denominated as ETC/BTC not BTC/ETC!")

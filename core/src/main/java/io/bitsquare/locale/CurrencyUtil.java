@@ -75,7 +75,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("ETHC", "EtherClassic"));
+        result.add(new CryptoCurrency("ETC", "EtherClassic"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
@@ -139,7 +139,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("ETHC", "EtherClassic"));
+        result.add(new CryptoCurrency("ETC", "EtherClassic"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));

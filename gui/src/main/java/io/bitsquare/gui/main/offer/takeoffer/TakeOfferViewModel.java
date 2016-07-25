@@ -141,9 +141,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         updateSpinnerInfo();
 
         //TODO remove after AUGUST, 30
-        String key = "ETH-ETHC-Warning";
+        String key = "ETH-ETC-Warning";
         if (dataModel.getPreferences().showAgain(key) && new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
-            if (dataModel.getCurrencyCode().equals("ETHC")) {
+            if (dataModel.getCurrencyCode().equals("ETC")) {
                 new Popup().information("The EHT/ETC fork situation carries considerable risks.\n" +
                         "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.\n\n" +
                         "Please note, that the price is denominated as ETC/BTC not BTC/ETC!")
