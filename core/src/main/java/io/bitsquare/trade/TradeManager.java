@@ -217,8 +217,7 @@ public class TradeManager {
                 tradesForStatistics.add((Trade) tradable);
         }
 
-        // We run it after 1 min. when we are better connected
-        UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics), 60);
+        publishTradeStatistics(tradesForStatistics);
 
         pendingTradesInitialized.set(true);
     }
@@ -236,11 +235,12 @@ public class TradeManager {
 
             // Only trades from last 30 days
             if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(30)) {
-                final long minDelay = i * 2000 + 1;
-                final long maxDelay = minDelay * 4;
-                // we delay to avoid flooding the network to intense
-                // roughly 1 item per 2-8 seconds
-                UserThread.runAfterRandomDelay(() -> p2PService.addData(tradeStatistics, true), minDelay, maxDelay, TimeUnit.MILLISECONDS);
+                long offset = 40;
+                final long minDelay = i * 3 + offset;
+                final long maxDelay = i * 6 + offset + 1;
+                // We start after 40 sec. to have better connection and use a delay to avoid flooding the network to intensely
+                // roughly 1 item per 3-6 seconds
+                UserThread.runAfterRandomDelay(() -> p2PService.addData(tradeStatistics, true), minDelay, maxDelay, TimeUnit.SECONDS);
             }
         }
     }
