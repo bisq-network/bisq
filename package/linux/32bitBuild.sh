@@ -5,13 +5,8 @@ mkdir -p gui/deploy
 
 set -e
 
-# Edit versions
-<<<<<<< Temporary merge branch 1
-fullVersion=0.4.9
-=======
-fullVersion=0.4.8.1
->>>>>>> Temporary merge branch 2
-jarFile="/home/bitsquare/Desktop/sf_vm_shared_ubuntu14_32bit/Bitsquare-$fullVersion.jar"
+# Edit version
+version=0.4.9
 
 jarFile="/media/sf_vm_shared_ubuntu14_32bit/Bitsquare-$version.jar"
 jdkfixFile="/media/sf_vm_shared_ubuntu14_32bit/jdkfix-$version.jar"
