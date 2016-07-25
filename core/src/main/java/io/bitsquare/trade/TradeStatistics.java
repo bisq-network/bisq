@@ -33,6 +33,7 @@ public final class TradeStatistics implements StoragePayload, CapabilityRequirin
     public final double marketPriceMargin;
     public final long offerAmount;
     public final long offerMinAmount;
+    public final String offerId;
     public final String depositTxId;
     @JsonExclude
     public final PubKeyRing pubKeyRing;
@@ -46,6 +47,8 @@ public final class TradeStatistics implements StoragePayload, CapabilityRequirin
         this.marketPriceMargin = offer.getMarketPriceMargin();
         this.offerAmount = offer.getAmount().value;
         this.offerMinAmount = offer.getMinAmount().value;
+        this.offerId = offer.getId();
+
         this.tradePrice = tradePrice.longValue();
         this.tradeAmount = tradeAmount.value;
         this.tradeDate = tradeDate.getTime();
