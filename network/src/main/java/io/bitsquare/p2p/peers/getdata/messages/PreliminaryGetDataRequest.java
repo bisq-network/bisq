@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.peers.getdata.messages;
 
+import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.AnonymousMessage;
@@ -14,7 +15,7 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
     private final int messageVersion = Version.getP2PMessageVersion();
     private final int nonce;
     @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+    private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public PreliminaryGetDataRequest(int nonce) {
         this.nonce = nonce;

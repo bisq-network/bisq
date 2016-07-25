@@ -57,7 +57,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private Timer removeExpiredEntriesTimer;
     private HashMap<ByteArray, MapValue> sequenceNumberMap = new HashMap<>();
-    private final Storage<HashMap> storage;
+    private final Storage<HashMap<ByteArray, MapValue>> storage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +72,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
         storage = new Storage<>(storageDir);
 
-        HashMap<ByteArray, MapValue> persisted = storage.initAndGetPersistedWithFileName("SequenceNumberMap");
+        HashMap<ByteArray, MapValue> persisted = storage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName("SequenceNumberMap");
         if (persisted != null)
             sequenceNumberMap = getPurgedSequenceNumberMap(persisted);
     }

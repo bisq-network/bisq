@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.peers.getdata.messages;
 
+import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
@@ -16,7 +17,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage {
     public final HashSet<ProtectedStorageEntry> dataSet;
     public final int requestNonce;
     @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+    private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public GetDataResponse(HashSet<ProtectedStorageEntry> dataSet, int requestNonce) {
         this.dataSet = dataSet;

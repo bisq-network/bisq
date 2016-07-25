@@ -1,5 +1,6 @@
 package io.bitsquare.trade;
 
+import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.JsonExclude;
@@ -71,7 +72,7 @@ public final class TradeStatistics implements StoragePayload, CapabilityRequirin
     @Override
     public List<Integer> getRequiredCapabilities() {
         return Arrays.asList(
-                Version.Capability.TRADE_STATISTICS.ordinal()
+                Capabilities.Capability.TRADE_STATISTICS.ordinal()
         );
     }
 

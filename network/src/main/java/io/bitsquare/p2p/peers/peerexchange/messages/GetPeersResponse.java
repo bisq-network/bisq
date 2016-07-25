@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.peers.peerexchange.messages;
 
+import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.peers.peerexchange.Peer;
@@ -16,7 +17,7 @@ public final class GetPeersResponse extends PeerExchangeMessage implements Suppo
     public final HashSet<Peer> reportedPeers;
 
     @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+    private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
     public GetPeersResponse(int requestNonce, HashSet<Peer> reportedPeers) {
         this.requestNonce = requestNonce;
         this.reportedPeers = reportedPeers;

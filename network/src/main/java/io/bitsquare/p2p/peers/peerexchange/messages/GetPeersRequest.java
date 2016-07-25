@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.peers.peerexchange.messages;
 
+import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
@@ -20,7 +21,7 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
     public final int nonce;
     public final HashSet<Peer> reportedPeers;
     @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+    private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<Peer> reportedPeers) {
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetPeersRequest");

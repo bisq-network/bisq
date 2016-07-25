@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.availability.messages;
 
 
+import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.trade.protocol.availability.AvailabilityResult;
@@ -36,7 +37,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     // TODO keep for backward compatibility. Can be removed once everyone is on v0.4.9
     public boolean isAvailable;
     @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+    private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
         super(offerId);

@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.availability.messages;
 
+import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
@@ -33,7 +34,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     private final PubKeyRing pubKeyRing;
     public final long takersTradePrice;
     @Nullable
-    private ArrayList<Integer> supportedCapabilities = Version.getCapabilities();
+    private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public OfferAvailabilityRequest(String offerId, PubKeyRing pubKeyRing, long takersTradePrice) {
         super(offerId);

@@ -25,7 +25,7 @@ public class BitcoinAveragePriceProvider implements PriceProvider {
     @Override
     public Map<String, MarketPrice> getAllPrices() throws IOException, HttpException {
         Map<String, MarketPrice> marketPriceMap = new HashMap<>();
-        LinkedTreeMap<String, Object> treeMap = new Gson().fromJson(httpClient.requestWithGET("all"), LinkedTreeMap.class);
+        LinkedTreeMap<String, Object> treeMap = new Gson().<LinkedTreeMap<String, Object>>fromJson(httpClient.requestWithGET("all"), LinkedTreeMap.class);
         Map<String, String> temp = new HashMap<>();
         treeMap.entrySet().stream().forEach(e -> {
             Object value = e.getValue();
