@@ -10,6 +10,7 @@ import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
@@ -71,7 +72,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
         storage = new Storage<>(storageDir);
 
-        HashMap<ByteArray, MapValue> persisted = storage.initAndGetPersisted("SequenceNumberMap");
+        HashMap<ByteArray, MapValue> persisted = storage.initAndGetPersistedWithFileName("SequenceNumberMap");
         if (persisted != null)
             sequenceNumberMap = getPurgedSequenceNumberMap(persisted);
     }
@@ -97,7 +98,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                         ByteArray hashOfPayload = entry.getKey();
                         ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
                         toRemoveSet.add(protectedStorageEntry);
-                        log.info("We found an expired data entry. We remove the protectedData:\n\t" + StringUtils.abbreviate(protectedStorageEntry.toString().replace("\n", ""), 100));
+                        log.info("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
                         map.remove(hashOfPayload);
                     });
 
@@ -118,7 +119,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof BroadcastMessage) {
-            Log.traceCall(StringUtils.abbreviate(message.toString(), 100) + "\n\tconnection=" + connection);
+            Log.traceCall(Utilities.toTruncatedString(message) + "\n\tconnection=" + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (message instanceof AddDataMessage) {
                     add(((AddDataMessage) message).protectedStorageEntry, peersNodeAddress, null, false);
@@ -387,6 +388,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         hashMapChangedListeners.add(hashMapChangedListener);
     }
 
+    public void removeHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {
+        hashMapChangedListeners.remove(hashMapChangedListener);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -571,7 +576,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     .append(" / ")
                     .append(mapValue != null ? mapValue.timeStamp : "null")
                     .append("; Payload=")
-                    .append(StringUtils.abbreviate(storagePayload.toString(), 100).replace("\n", ""));
+                    .append(Utilities.toTruncatedString(storagePayload));
         });
         sb.append("\n------------------------------------------------------------\n");
         log.debug(sb.toString());

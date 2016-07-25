@@ -4,6 +4,7 @@ import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
 
 public abstract class KeepAliveMessage implements Message {
+    //TODO add serialVersionUID also in superclasses as changes would break compatibility
     @Override
     public int getMessageVersion() {
         return Version.getP2PMessageVersion();

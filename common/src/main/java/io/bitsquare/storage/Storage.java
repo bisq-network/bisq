@@ -77,7 +77,7 @@ public class Storage<T extends Serializable> {
     }
 
     @Nullable
-    public T initAndGetPersisted(String fileName) {
+    public T initAndGetPersistedWithFileName(String fileName) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
         fileManager = new FileManager<>(dir, storageFile, 300);

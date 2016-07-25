@@ -8,9 +8,11 @@ import io.bitsquare.app.Version;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.BanList;
@@ -18,11 +20,13 @@ import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.p2p.peers.keepalive.messages.Pong;
+import io.bitsquare.p2p.storage.messages.AddDataMessage;
 import io.bitsquare.p2p.storage.messages.RefreshTTLMessage;
+import io.bitsquare.p2p.storage.payload.CapabilityRequiringPayload;
+import io.bitsquare.p2p.storage.payload.StoragePayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +110,7 @@ public class Connection implements MessageListener {
     private final List<Tuple2<Long, Serializable>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private volatile long lastSendTimeStamp = 0;
-    ;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -168,71 +172,116 @@ public class Connection implements MessageListener {
     // Called form various threads
     public void sendMessage(Message message) {
         if (!stopped) {
-            try {
-                log.info("sendMessage message=" + getTruncatedMessage(message));
-                Log.traceCall();
-                // Throttle outbound messages
-                long now = System.currentTimeMillis();
-                long elapsed = now - lastSendTimeStamp;
-                if (elapsed < 20) {
-                    log.info("We got 2 sendMessage requests in less than 20 ms. We set the thread to sleep " +
-                                    "for 50 ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}",
-                            lastSendTimeStamp, now, elapsed);
-                    Thread.sleep(50);
+            if (!isCapabilityRequired(message) || isCapabilitySupported(message)) {
+                try {
+                    log.info("sendMessage message=" + Utilities.toTruncatedString(message));
+                    Log.traceCall();
+
+                    // Throttle outbound messages
+                    long now = System.currentTimeMillis();
+                    long elapsed = now - lastSendTimeStamp;
+                    if (elapsed < 20) {
+                        log.info("We got 2 sendMessage requests in less than 20 ms. We set the thread to sleep " +
+                                        "for 50 ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}",
+                                lastSendTimeStamp, now, elapsed);
+                        Thread.sleep(50);
+                    }
+
+                    lastSendTimeStamp = now;
+                    String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
+                    int size = ByteArrayUtils.objectToByteArray(message).length;
+
+                    if (message instanceof Ping || message instanceof RefreshTTLMessage) {
+                        // pings and offer refresh msg we dont want to log in production
+                        log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                                        "Sending direct message to peer" +
+                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
+                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                                peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
+                    } else if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
+                        setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
+
+                        log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                                        "Sending direct message to peer" +
+                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
+                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                                peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
+                    } else {
+                        log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
+                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                                peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
+                    }
+
+                    if (!stopped) {
+                        objectOutputStreamLock.lock();
+                        objectOutputStream.writeObject(message);
+                        objectOutputStream.flush();
+
+                        statistic.addSentBytes(size);
+                        statistic.addSentMessage(message);
+
+                        // We don't want to get the activity ts updated by ping/pong msg
+                        if (!(message instanceof KeepAliveMessage))
+                            statistic.updateLastActivityTimestamp();
+                    }
+                } catch (IOException e) {
+                    // an exception lead to a shutdown
+                    sharedModel.handleConnectionException(e);
+                } catch (Throwable t) {
+                    log.error(t.getMessage());
+                    t.printStackTrace();
+                    sharedModel.handleConnectionException(t);
+                } finally {
+                    if (objectOutputStreamLock.isLocked())
+                        objectOutputStreamLock.unlock();
                 }
-
-                lastSendTimeStamp = now;
-                String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
-                int size = ByteArrayUtils.objectToByteArray(message).length;
-
-                if (message instanceof Ping || message instanceof RefreshTTLMessage) {
-                    // pings and offer refresh msg we dont want to log in production
-                    log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                    "Sending direct message to peer" +
-                                    "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                    "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, getTruncatedMessage(message), size);
-                } else if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
-                    setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
-
-                    log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                    "Sending direct message to peer" +
-                                    "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                    "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, getTruncatedMessage(message), size);
-                } else {
-                    log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                    "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                    "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                            peersNodeAddress, uid, getTruncatedMessage(message), size);
-                }
-
-                if (!stopped) {
-                    objectOutputStreamLock.lock();
-                    objectOutputStream.writeObject(message);
-                    objectOutputStream.flush();
-
-                    statistic.addSentBytes(size);
-                    statistic.addSentMessage(message);
-
-                    // We don't want to get the activity ts updated by ping/pong msg
-                    if (!(message instanceof KeepAliveMessage))
-                        statistic.updateLastActivityTimestamp();
-                }
-            } catch (IOException e) {
-                // an exception lead to a shutdown
-                sharedModel.handleConnectionException(e);
-            } catch (Throwable t) {
-                log.error(t.getMessage());
-                t.printStackTrace();
-                sharedModel.handleConnectionException(t);
-            } finally {
-                if (objectOutputStreamLock.isLocked())
-                    objectOutputStreamLock.unlock();
             }
         } else {
             log.debug("called sendMessage but was already stopped");
         }
+    }
+
+    public boolean isCapabilitySupported(Message message) {
+        if (message instanceof AddDataMessage) {
+            final StoragePayload storagePayload = (((AddDataMessage) message).protectedStorageEntry).getStoragePayload();
+            if (storagePayload instanceof CapabilityRequiringPayload) {
+                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
+                final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
+                if (supportedCapabilities != null) {
+                    for (int messageCapability : requiredCapabilities) {
+                        for (int connectionCapability : supportedCapabilities) {
+                            if (messageCapability == connectionCapability)
+                                return true;
+                        }
+                    }
+                    log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
+                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
+                            "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
+                            "connection: " + this.toString() + "\n" +
+                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
+                    return false;
+                } else {
+                    log.warn("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
+                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
+                            "connection: " + this.toString() + "\n" +
+                            "storagePayload is: " + Utilities.toTruncatedString(storagePayload));
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    public boolean isCapabilityRequired(Message message) {
+        return message instanceof AddDataMessage && (((AddDataMessage) message).protectedStorageEntry).getStoragePayload() instanceof CapabilityRequiringPayload;
+    }
+
+    public List<Integer> getSupportedCapabilities() {
+        return sharedModel.getSupportedCapabilities();
     }
 
     public void addMessageListener(MessageListener messageListener) {
@@ -451,10 +500,6 @@ public class Connection implements MessageListener {
         }
     }
 
-    private String getTruncatedMessage(Message message) {
-        return StringUtils.abbreviate(message.toString(), 100).replace("\n", "");
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -512,6 +557,9 @@ public class Connection implements MessageListener {
         private volatile boolean stopped;
         private CloseConnectionReason closeConnectionReason;
         private RuleViolation ruleViolation;
+        @Nullable
+        private List<Integer> supportedCapabilities;
+
 
         public SharedModel(Connection connection, Socket socket) {
             this.connection = connection;
@@ -547,6 +595,15 @@ public class Connection implements MessageListener {
             } else {
                 return false;
             }
+        }
+
+        @Nullable
+        public List<Integer> getSupportedCapabilities() {
+            return supportedCapabilities;
+        }
+
+        public void setSupportedCapabilities(List<Integer> supportedCapabilities) {
+            this.supportedCapabilities = supportedCapabilities;
         }
 
         public void handleConnectionException(Throwable e) {
@@ -675,7 +732,7 @@ public class Connection implements MessageListener {
                                             "Received object (truncated)={} / size={}"
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                     connection,
-                                    StringUtils.abbreviate(rawInputObject.toString(), 100),
+                                    Utilities.toTruncatedString(rawInputObject),
                                     size);
                         } else if (rawInputObject instanceof Message) {
                             // We want to log all incoming messages (except Pong and RefreshTTLMessage) 
@@ -685,7 +742,7 @@ public class Connection implements MessageListener {
                                             "Received object (truncated)={} / size={}"
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                     connection,
-                                    StringUtils.abbreviate(rawInputObject.toString(), 100),
+                                    Utilities.toTruncatedString(rawInputObject),
                                     size);
                         } else {
                             log.error("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
@@ -760,6 +817,9 @@ public class Connection implements MessageListener {
                             // We return anyway here independent of the return value of reportInvalidRequest
                             return;
                         }
+
+                        if (sharedModel.getSupportedCapabilities() == null && message instanceof SupportedCapabilitiesMessage)
+                            sharedModel.setSupportedCapabilities(((SupportedCapabilitiesMessage) message).getSupportedCapabilities());
 
                         if (message instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down

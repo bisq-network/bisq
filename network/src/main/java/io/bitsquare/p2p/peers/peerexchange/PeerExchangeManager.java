@@ -311,7 +311,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 requestWithAvailablePeers();
             }, RETRY_DELAY_AFTER_ALL_CON_LOST_SEC);
         } else {
-            log.warn("retryTimer already started");
+            log.debug("retryTimer already started");
         }
     }
 

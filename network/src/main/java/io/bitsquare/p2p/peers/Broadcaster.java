@@ -1,10 +1,10 @@
 package io.bitsquare.p2p.peers;
 
 import io.bitsquare.app.Log;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.storage.messages.BroadcastMessage;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender,
                           @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
         Log.traceCall("Sender=" + sender + "\n\t" +
-                "Message=" + StringUtils.abbreviate(message.toString(), 100));
+                "Message=" + Utilities.toTruncatedString(message));
 
         BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager);
         broadcastHandler.broadcast(message, sender, this, listener, isDataOwner);

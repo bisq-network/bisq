@@ -128,6 +128,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void activate() {
+        // TODO we deactive atm as its not ready now
+        useTorCheckBox.setDisable(true);
         useTorCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
         useTorCheckBox.setOnAction(event -> {
             boolean selected = useTorCheckBox.isSelected();

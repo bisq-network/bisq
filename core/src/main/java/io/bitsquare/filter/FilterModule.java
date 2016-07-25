@@ -19,7 +19,7 @@ package io.bitsquare.filter;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
-import io.bitsquare.common.CommonOptionKeys;
+import io.bitsquare.app.CoreOptionKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -36,6 +36,6 @@ public class FilterModule extends AppModule {
     @Override
     protected final void configure() {
         bind(FilterManager.class).in(Singleton.class);
-        bindConstant().annotatedWith(named(CommonOptionKeys.IGNORE_DEV_MSG_KEY)).to(env.getRequiredProperty(CommonOptionKeys.IGNORE_DEV_MSG_KEY));
+        bindConstant().annotatedWith(named(CoreOptionKeys.IGNORE_DEV_MSG_KEY)).to(env.getRequiredProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY));
     }
 }

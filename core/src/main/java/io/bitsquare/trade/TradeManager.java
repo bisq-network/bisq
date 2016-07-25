@@ -64,8 +64,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
@@ -82,7 +84,8 @@ public class TradeManager {
     private final FailedTradesManager failedTradesManager;
     private final ArbitratorManager arbitratorManager;
     private final P2PService p2PService;
-    private FilterManager filterManager;
+    private final FilterManager filterManager;
+    private final TradeStatisticsManager tradeStatisticsManager;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
@@ -105,6 +108,7 @@ public class TradeManager {
                         P2PService p2PService,
                         PriceFeed priceFeed,
                         FilterManager filterManager,
+                        TradeStatisticsManager tradeStatisticsManager,
                         @Named(Storage.DIR_KEY) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
@@ -116,6 +120,7 @@ public class TradeManager {
         this.arbitratorManager = arbitratorManager;
         this.p2PService = p2PService;
         this.filterManager = filterManager;
+        this.tradeStatisticsManager = tradeStatisticsManager;
 
         tradableListStorage = new Storage<>(storageDir);
         trades = new TradableList<>(tradableListStorage, "PendingTrades");
@@ -194,14 +199,36 @@ public class TradeManager {
             } else {
                 toRemove.add(trade);
             }
+
+            addTradeStatistics(trade);
         }
-        for (Trade trade : toAdd) {
+        for (Trade trade : toAdd)
             addTradeToFailedTrades(trade);
-        }
-        for (Trade trade : toRemove) {
+
+        for (Trade trade : toRemove)
             removePreparedTrade(trade);
+
+        for (Tradable tradable : closedTradableManager.getClosedTrades()) {
+            if (tradable instanceof Trade) {
+                Trade trade = (Trade) tradable;
+                addTradeStatistics(trade);
+            }
         }
+
         pendingTradesInitialized.set(true);
+    }
+
+    private void addTradeStatistics(Trade trade) {
+        TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
+                trade.getTradePrice(),
+                trade.getTradeAmount(),
+                trade.getDate(),
+                (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
+                keyRing.getPubKeyRing());
+        tradeStatisticsManager.add(tradeStatistics);
+        // Only offerer publishes statistic data of trades, only trades from last 20 days
+        if (isMyOffer(trade.getOffer()) && (new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(20))
+            p2PService.addData(tradeStatistics, true);
     }
 
     private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {

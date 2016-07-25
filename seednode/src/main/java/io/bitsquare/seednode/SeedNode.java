@@ -14,6 +14,7 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.trade.TradeStatisticsManager;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
@@ -30,6 +31,7 @@ public class SeedNode {
     private static Environment env;
     private final Injector injector;
     private final SeedNodeModule seedNodeModule;
+    private final TradeStatisticsManager tradeStatisticsManager;
 
     private P2PService p2pService;
 
@@ -116,6 +118,9 @@ public class SeedNode {
 
             }
         });
+
+        // Wee want to persist trade statistics so we need to instantiate the tradeStatisticsManager
+        tradeStatisticsManager = injector.getInstance(TradeStatisticsManager.class);
     }
 
     public void shutDown() {

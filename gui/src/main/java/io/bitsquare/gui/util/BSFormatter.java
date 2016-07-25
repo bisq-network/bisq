@@ -318,6 +318,15 @@ public class BSFormatter {
         }
     }
 
+    public String formatTime(Date date) {
+        if (date != null) {
+            DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
+            return timeFormatter.format(date);
+        } else {
+            return "";
+        }
+    }
+
     public String formatDate(Date date) {
         if (date != null) {
             DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);

@@ -111,7 +111,8 @@ public final class Preferences implements Persistable {
     private boolean autoSelectArbitrators = true;
     private final Map<String, Boolean> dontShowAgainMap;
     private boolean tacAccepted;
-    private boolean useTorForBitcoinJ = true;
+    //TODO we set it to false for now as it is not ready yet
+    private boolean useTorForBitcoinJ = false;
     private boolean showOwnOffersInOfferBook = true;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
@@ -119,8 +120,11 @@ public final class Preferences implements Persistable {
     private double maxPriceDistanceInPercent;
     private boolean useInvertedMarketPrice;
     private String marketScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private String tradeStatisticsScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private int tradeStatisticsTickUnitIndex = 0;
+
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
@@ -205,6 +209,8 @@ public final class Preferences implements Persistable {
             marketScreenCurrencyCode = persisted.getMarketScreenCurrencyCode();
             buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
             sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
+            tradeStatisticsScreenCurrencyCode = persisted.getTradeStatisticsScreenCurrencyCode();
+            tradeStatisticsTickUnitIndex = persisted.getTradeStatisticsTickUnitIndex();
 
             if (persisted.getIgnoreTradersList() != null)
                 ignoreTradersList = persisted.getIgnoreTradersList();
@@ -455,6 +461,16 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setTradeStatisticsScreenCurrencyCode(String tradeStatisticsScreenCurrencyCode) {
+        this.tradeStatisticsScreenCurrencyCode = tradeStatisticsScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
+    public void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex) {
+        this.tradeStatisticsTickUnitIndex = tradeStatisticsTickUnitIndex;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -607,6 +623,15 @@ public final class Preferences implements Persistable {
     public String getDefaultPath() {
         return defaultPath;
     }
+
+    public String getTradeStatisticsScreenCurrencyCode() {
+        return tradeStatisticsScreenCurrencyCode;
+    }
+
+    public int getTradeStatisticsTickUnitIndex() {
+        return tradeStatisticsTickUnitIndex;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -636,4 +661,5 @@ public final class Preferences implements Persistable {
         this.blockChainExplorerMainNet = blockChainExplorerMainNet;
         storage.queueUpForSave(2000);
     }
+
 }

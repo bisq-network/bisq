@@ -306,7 +306,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
 
         requestDataManager.requestPreliminaryData();
-        keepAliveManager.restart();
+        keepAliveManager.start();
         p2pServiceListeners.stream().forEach(SetupListener::onTorNodeReady);
     }
 
@@ -808,6 +808,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {
         p2PDataStorage.addHashMapChangedListener(hashMapChangedListener);
+    }
+
+    public void removeHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {
+        p2PDataStorage.removeHashMapChangedListener(hashMapChangedListener);
     }
 
 

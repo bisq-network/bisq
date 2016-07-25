@@ -19,7 +19,7 @@ package io.bitsquare.filter;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.bitsquare.common.CommonOptionKeys;
+import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
@@ -59,7 +59,7 @@ public class FilterManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FilterManager(P2PService p2PService, KeyRing keyRing, User user, @Named(CommonOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+    public FilterManager(P2PService p2PService, KeyRing keyRing, User user, @Named(CoreOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;

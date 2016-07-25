@@ -85,7 +85,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String btcNetworkDir;
     private final String logLevel;
     private BitcoinNetwork bitcoinNetwork;
-    private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, myAddress, banList;
+    private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, myAddress, banList, dumpStatistics;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -153,8 +153,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
                 "";
 
-        ignoreDevMsg = commandLineProperties.containsProperty(CommonOptionKeys.IGNORE_DEV_MSG_KEY) ?
-                (String) commandLineProperties.getProperty(CommonOptionKeys.IGNORE_DEV_MSG_KEY) :
+        ignoreDevMsg = commandLineProperties.containsProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY) ?
+                (String) commandLineProperties.getProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY) :
                 "";
 
         btcSeedNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_SEED_NODES) ?
@@ -163,6 +163,10 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
         useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
+                "";
+
+        dumpStatistics = commandLineProperties.containsProperty(CoreOptionKeys.DUMP_STATISTICS) ?
+                (String) commandLineProperties.getProperty(CoreOptionKeys.DUMP_STATISTICS) :
                 "";
 
 
@@ -226,7 +230,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
                 setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);
                 setProperty(NetworkOptionKeys.BAN_LIST, banList);
-                setProperty(CommonOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
+                setProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
+                setProperty(CoreOptionKeys.DUMP_STATISTICS, dumpStatistics);
 
                 setProperty(BtcOptionKeys.BTC_SEED_NODES, btcSeedNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);

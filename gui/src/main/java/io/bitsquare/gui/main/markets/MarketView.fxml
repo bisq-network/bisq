@@ -27,4 +27,5 @@
 
     <Tab fx:id="chartsTab" text="Offer book" closable="false"/>
     <Tab fx:id="statisticsTab" text="Spreads" closable="false"/>
+    <Tab fx:id="tradesTab" text="Trades" closable="false"/>
 </TabPane>
