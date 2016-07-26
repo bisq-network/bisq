@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TradeStatisticsManager {
@@ -45,9 +44,8 @@ public class TradeStatisticsManager {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
                 final StoragePayload storagePayload = data.getStoragePayload();
-                if (storagePayload instanceof TradeStatistics) {
+                if (storagePayload instanceof TradeStatistics) 
                     add((TradeStatistics) storagePayload);
-                }
             }
 
             @Override
@@ -74,14 +72,6 @@ public class TradeStatisticsManager {
 
     public ObservableSet<TradeStatistics> getObservableTradeStatisticsSet() {
         return observableTradeStatisticsSet;
-    }
-
-    public void addSet(Set<TradeStatistics> set) {
-        tradeStatisticsSet.addAll(set);
-        observableTradeStatisticsSet.addAll(set);
-        storage.queueUpForSave(tradeStatisticsSet, 2000);
-
-        dump();
     }
 
     private void dump() {

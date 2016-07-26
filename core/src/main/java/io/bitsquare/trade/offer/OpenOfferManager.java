@@ -269,7 +269,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         startPeriodicRepublishOffersTimer();
                         startPeriodicRefreshOffersTimer();
                     } else {
-                        log.warn("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
+                        log.debug("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
                     }
                 }
         );
@@ -415,7 +415,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 log.info("Exception at handleRequestIsOfferAvailableMessage " + t.getMessage());
             }
         } else {
-            log.warn("We have stopped already. We ignore that handleOfferAvailabilityRequest call.");
+            log.debug("We have stopped already. We ignore that handleOfferAvailabilityRequest call.");
         }
     }
 
@@ -442,7 +442,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
             }
         } else {
-            log.warn("We have stopped already. We ignore that republishOffers call.");
+            log.debug("We have stopped already. We ignore that republishOffers call.");
         }
     }
 
@@ -455,7 +455,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         if (periodicRefreshOffersTimer == null)
                             startPeriodicRefreshOffersTimer();
                     } else {
-                        log.warn("We have stopped already. We ignore that offerBookService.republishOffers.onSuccess call.");
+                        log.debug("We have stopped already. We ignore that offerBookService.republishOffers.onSuccess call.");
                     }
                 },
                 errorMessage -> {
@@ -465,7 +465,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
                                 RETRY_REPUBLISH_DELAY_SEC);
                     } else {
-                        log.warn("We have stopped already. We ignore that offerBookService.republishOffers.onFault call.");
+                        log.debug("We have stopped already. We ignore that offerBookService.republishOffers.onFault call.");
                     }
                 });
         openOffer.setStorage(openOffersStorage);
@@ -479,7 +479,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         if (!stopped) {
                             republishOffers();
                         } else {
-                            log.warn("We have stopped already. We ignore that periodicRepublishOffersTimer.run call.");
+                            log.debug("We have stopped already. We ignore that periodicRepublishOffersTimer.run call.");
                         }
                     },
                     REPUBLISH_INTERVAL_MS,
@@ -514,7 +514,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                 }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
                             }
                         } else {
-                            log.warn("We have stopped already. We ignore that periodicRefreshOffersTimer.run call.");
+                            log.debug("We have stopped already. We ignore that periodicRefreshOffersTimer.run call.");
                         }
                     },
                     REFRESH_INTERVAL_MS,
