@@ -33,7 +33,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 import javafx.scene.chart.XYChart;
-import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,7 +211,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
             accumulatedVolume += (item.getTradeVolume() != null) ? item.getTradeVolume().value : 0;
             accumulatedAmount += item.tradeAmount;
         }
-        long averagePrice = Math.round(accumulatedVolume * Coin.COIN.value / accumulatedAmount);
+        // 100000000 -> Coin.COIN.value;
+        long averagePrice = (100000000 / accumulatedAmount) * accumulatedVolume;
 
         List<TradeStatistics> list = new ArrayList<>(set);
         list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? -1 : (o1.tradeDate == o2.tradeDate ? 0 : 1)));

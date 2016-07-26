@@ -389,7 +389,7 @@ public class BSFormatter {
         if (places < 0) throw new IllegalArgumentException();
         long factor = (long) Math.pow(10, places);
         value = value * factor;
-        long tmp = Math.round(value);
+        long tmp = new Double(value).longValue();
         return (double) tmp / factor;
     }
 
