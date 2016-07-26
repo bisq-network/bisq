@@ -233,11 +233,10 @@ public class TradeManager {
 
             // Only trades from last 30 days
             if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(30)) {
-                long offset = 40;
-                final long minDelay = i * 3 + offset;
-                final long maxDelay = i * 6 + offset + 1;
-                // We start after 40 sec. to have better connection and use a delay to avoid flooding the network to intensely
-                // roughly 1 item per 3-6 seconds
+                final long minDelay = i + 30;
+                final long maxDelay = i + 32;
+                // We start after 30 sec. to have better connection and use a delay to avoid flooding the network to intensely
+                // roughly 1 item per 1-2 seconds
                 UserThread.runAfterRandomDelay(() -> p2PService.addData(tradeStatistics, true), minDelay, maxDelay, TimeUnit.SECONDS);
             }
         }
