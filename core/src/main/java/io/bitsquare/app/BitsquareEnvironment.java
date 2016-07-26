@@ -78,7 +78,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String btcNetworkDir;
     private final String logLevel;
     private BitcoinNetwork bitcoinNetwork;
-    private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, myAddress, banList, dumpStatistics, socks5ProxyAddress;
+    private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, useTorForHttp,
+            myAddress, banList, dumpStatistics, socks5ProxyAddress;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -154,6 +155,9 @@ public class BitsquareEnvironment extends StandardEnvironment {
         socks5ProxyAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS) :
                 "";
+        useTorForHttp = commandLineProperties.containsProperty(NetworkOptionKeys.USE_TOR_FOR_HTTP) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.USE_TOR_FOR_HTTP) :
+                "";
 
         btcSeedNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_SEED_NODES) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_SEED_NODES) :
@@ -225,6 +229,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS, socks5ProxyAddress);
+                setProperty(NetworkOptionKeys.USE_TOR_FOR_HTTP, useTorForHttp);
 
                 setProperty(CoreOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);

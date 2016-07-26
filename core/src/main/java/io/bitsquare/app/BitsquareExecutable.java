@@ -91,7 +91,9 @@ public abstract class BitsquareExecutable {
                 .ofType(int.class);
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS, description("A proxy address to be used for BitcoinJ. [host:port]", ""))
                 .withRequiredArg();
-
+        parser.accepts(NetworkOptionKeys.USE_TOR_FOR_HTTP, description("If set to true all http traffic (expect Poloniex) is routed over tor (socks 5 proxy)", ""))
+                .withRequiredArg();
+        
         parser.accepts(CoreOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(CoreOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
@@ -116,7 +118,7 @@ public abstract class BitsquareExecutable {
                 .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
         parser.accepts(BtcOptionKeys.BTC_SEED_NODES, description("Custom seed nodes used for BitcoinJ.", ""))
                 .withRequiredArg();
-        parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over our native Tor instance.", ""))
+        parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over tor (socks 5 proxy).", ""))
                 .withRequiredArg();
     }
 

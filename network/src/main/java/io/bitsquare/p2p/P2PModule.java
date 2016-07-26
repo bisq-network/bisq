@@ -41,7 +41,7 @@ public class P2PModule extends AppModule {
         bind(SeedNodesRepository.class).in(Singleton.class);
         bind(P2PService.class).in(Singleton.class);
         bind(Socks5ProxyProvider.class).in(Singleton.class);
-        
+
         Boolean useLocalhost = env.getProperty(NetworkOptionKeys.USE_LOCALHOST, boolean.class, false);
         bind(boolean.class).annotatedWith(Names.named(NetworkOptionKeys.USE_LOCALHOST)).toInstance(useLocalhost);
 
@@ -61,5 +61,6 @@ public class P2PModule extends AppModule {
         bindConstant().annotatedWith(named(NetworkOptionKeys.MY_ADDRESS)).to(env.getRequiredProperty(NetworkOptionKeys.MY_ADDRESS));
         bindConstant().annotatedWith(named(NetworkOptionKeys.BAN_LIST)).to(env.getRequiredProperty(NetworkOptionKeys.BAN_LIST));
         bindConstant().annotatedWith(named(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS)).to(env.getRequiredProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS));
+        bindConstant().annotatedWith(named(NetworkOptionKeys.USE_TOR_FOR_HTTP)).to(env.getRequiredProperty(NetworkOptionKeys.USE_TOR_FOR_HTTP));
     }
 }
