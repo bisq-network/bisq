@@ -45,6 +45,7 @@ import io.bitsquare.gui.main.overlays.windows.SendAlertMessageWindow;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -370,6 +371,7 @@ public class BitsquareApp extends Application {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(MainViewModel.class).shutDown();
+                injector.getInstance(TradeManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         injector.getInstance(WalletService.class).shutDownDone.addListener((ov, o, n) -> {

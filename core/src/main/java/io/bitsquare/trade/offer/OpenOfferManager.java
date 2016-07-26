@@ -72,7 +72,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = 10;
     private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 10;
-    private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 12 : 12);
+    private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 14 : 14);
     private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 4 : 4);
 
     private final KeyRing keyRing;
@@ -432,9 +432,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             stopPeriodicRefreshOffersTimer();
             for (int i = 0; i < size; i++) {
                 // we delay to avoid reaching throttle limits
-                // roughly 1 offer per second
-                final long minDelay = i * 500 + 1;
-                final long maxDelay = minDelay * 2 + 500;
+
+                long delay = 500;
+                final long minDelay = (i + 1) * delay;
+                final long maxDelay = (i + 2) * delay;
                 final OpenOffer openOffer = openOffersList.get(i);
                 UserThread.runAfterRandomDelay(() -> {
                     if (openOffers.contains(openOffer))
@@ -503,11 +504,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             for (int i = 0; i < size; i++) {
                                 // we delay to avoid reaching throttle limits
                                 // roughly 4 offers per second
-                                final int n = i;
-                                final long minDelay = i * 120 + 1;
-                                final long maxDelay = minDelay * 2;
+
+                                long delay = 150;
+                                final long minDelay = (i + 1) * delay;
+                                final long maxDelay = (i + 2) * delay;
+                                final OpenOffer openOffer = openOffersList.get(i);
                                 UserThread.runAfterRandomDelay(() -> {
-                                    OpenOffer openOffer = openOffersList.get(n);
                                     // we need to check if in the meantime the offer has been removed
                                     if (openOffers.contains(openOffer))
                                         refreshOffer(openOffer);

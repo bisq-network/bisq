@@ -66,10 +66,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -77,6 +74,8 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
+
+    private static final long REPUBLISH_STATISTICS_INTERVAL_MIN = TimeUnit.HOURS.toMillis(1);
 
     private final User user;
     private final KeyRing keyRing;
@@ -93,6 +92,8 @@ public class TradeManager {
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
+    private boolean stopped;
+    private List<Trade> tradesForStatistics;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -166,6 +167,11 @@ public class TradeManager {
         });
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void onAllServicesInitialized() {
         Log.traceCall();
         if (p2PService.isBootstrapped())
@@ -181,17 +187,16 @@ public class TradeManager {
             });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public void shutDown() {
+        stopped = true;
+    }
 
     private void initPendingTrades() {
         Log.traceCall();
 
         List<Trade> toAdd = new ArrayList<>();
         List<Trade> toRemove = new ArrayList<>();
-        List<Trade> tradesForStatistics = new ArrayList<>();
+        tradesForStatistics = new ArrayList<>();
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
 
@@ -217,7 +222,17 @@ public class TradeManager {
                 tradesForStatistics.add((Trade) tradable);
         }
 
-        publishTradeStatistics(tradesForStatistics);
+        // We start later to have better connectivity to the network
+        UserThread.runPeriodically(() -> publishTradeStatistics(tradesForStatistics),
+                30, TimeUnit.SECONDS);
+
+        //TODO can be removed at next release
+        // For the first 2 weeks of the release we re publish the trades to get faster good distribution
+        // otherwise the trades would only be published again at restart and if a client dont do that the stats might be missing
+        // for a longer time as initially there are not many peer upgraded and supporting flooding of the stats data.
+        if (new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 8)))
+            UserThread.runPeriodically(() -> publishTradeStatistics(tradesForStatistics),
+                    REPUBLISH_STATISTICS_INTERVAL_MIN, TimeUnit.MILLISECONDS);
 
         pendingTradesInitialized.set(true);
     }
@@ -235,11 +250,13 @@ public class TradeManager {
 
             // Only trades from last 30 days
             if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(30)) {
-                final long minDelay = i + 30;
-                final long maxDelay = i + 32;
-                // We start after 30 sec. to have better connection and use a delay to avoid flooding the network to intensely
-                // roughly 1 item per 1-2 seconds
-                UserThread.runAfterRandomDelay(() -> p2PService.addData(tradeStatistics, true), minDelay, maxDelay, TimeUnit.SECONDS);
+                long delay = 3000;
+                final long minDelay = (i + 1) * delay;
+                final long maxDelay = (i + 2) * delay;
+                UserThread.runAfterRandomDelay(() -> {
+                    if (!stopped)
+                        p2PService.addData(tradeStatistics, true);
+                }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
             }
         }
     }

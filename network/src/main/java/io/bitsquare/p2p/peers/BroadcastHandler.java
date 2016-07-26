@@ -107,11 +107,11 @@ public class BroadcastHandler implements PeerManager.Listener {
             List<Connection> connectedPeersList = new ArrayList<>(connectedPeersSet);
             Collections.shuffle(connectedPeersList);
             numOfPeers = connectedPeersList.size();
-            int factor = 1;
+            int delay = 50;
             if (!isDataOwner) {
                 // for not data owner (relay nodes) we send to max. 7 nodes and use a longer delay
                 numOfPeers = Math.min(7, connectedPeersList.size());
-                factor = 2;
+                delay = 100;
             }
 
             long timeoutDelay = TIMEOUT_PER_PEER_SEC * numOfPeers;
@@ -130,8 +130,9 @@ public class BroadcastHandler implements PeerManager.Listener {
             for (int i = 0; i < numOfPeers; i++) {
                 if (stopped)
                     break;  // do not continue sending after a timeout or a cancellation
-                final long minDelay = i * 30 * factor + 1;
-                final long maxDelay = minDelay * 2 + 30 * factor;
+
+                final long minDelay = (i + 1) * delay;
+                final long maxDelay = (i + 2) * delay;
                 final Connection connection = connectedPeersList.get(i);
                 UserThread.runAfterRandomDelay(() -> sendToPeer(connection, message), minDelay, maxDelay, TimeUnit.MILLISECONDS);
             }

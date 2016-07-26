@@ -50,9 +50,6 @@ public class HttpClient {
     public String requestWithGET(String param) throws IOException, HttpException {
         checkNotNull(baseUrl, "baseUrl must be set before calling requestWithGET");
         Socks5Proxy socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
-        if (useSocks5Proxy && socks5Proxy == null)
-            log.error("socks5Proxy is null. That might be the case if you use localhost dev environment so no internal proxy was created and you " +
-                    "has tor enabled but no proxy is defined in the program arguments.");
         return useSocks5Proxy && socks5Proxy != null ? requestWithGETProxy(param, socks5Proxy) : requestWithGETNoProxy(param);
     }
 
