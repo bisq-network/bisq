@@ -83,7 +83,7 @@ public class BankUtil {
             case "HK":
                 return "Bank code:";
             default:
-                return "Bank nr. (e.g. BIC or SWIFT) (optional):";
+                return "Bank ID (e.g. BIC or SWIFT) (optional):";
         }
 
     }

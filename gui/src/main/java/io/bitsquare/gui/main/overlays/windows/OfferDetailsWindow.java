@@ -202,21 +202,17 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         final boolean isSpecificBanks = paymentMethod.equals(PaymentMethod.SPECIFIC_BANKS);
         final boolean isNationalBanks = paymentMethod.equals(PaymentMethod.NATIONAL_BANK);
         if (offer.isMyOffer(keyRing) && offererPaymentAccountId != null && paymentAccount != null) {
-            final String accountName = paymentAccount.getAccountName();
-            if (isNationalBanks || isSpecificBanks)
-                addLabelTextField(gridPane, ++rowIndex, "Payment account (Bank nr.):", accountName + " (" + bankId + ")");
-            else
-                addLabelTextField(gridPane, ++rowIndex, "Payment account:", accountName);
+            addLabelTextField(gridPane, ++rowIndex, "Payment account:", paymentAccount.getAccountName());
         } else {
             final String method = BSResources.get(paymentMethod.getId());
             if (isNationalBanks || isSpecificBanks)
-                addLabelTextField(gridPane, ++rowIndex, "Payment method (Bank nr.):", method + " (" + bankId + ")");
+                addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank ID):", method + " (" + bankId + ")");
             else
                 addLabelTextField(gridPane, ++rowIndex, "Payment method:", method);
         }
         if (showAcceptedBanks) {
             if (paymentMethod.equals(PaymentMethod.SAME_BANK)) {
-                addLabelTextField(gridPane, ++rowIndex, "Bank name:", acceptedBanks.get(0));
+                addLabelTextField(gridPane, ++rowIndex, "Bank ID (e.g. BIC or SWIFT):", acceptedBanks.get(0));
             } else if (isSpecificBanks) {
                 String value = Joiner.on(", ").join(acceptedBanks);
                 Tooltip tooltip = new Tooltip("Accepted banks: " + value);
