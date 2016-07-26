@@ -24,7 +24,7 @@ public class PeerManager implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
 
-    private static final long CHECK_MAX_CONN_DELAY_SEC = 5;
+    private static final long CHECK_MAX_CONN_DELAY_SEC = 10;
     // Use a long delay as the bootstrapping peer might need a while until it knows its onion address
     private static final long REMOVE_ANONYMOUS_PEER_SEC = 120;
 
@@ -221,7 +221,6 @@ public class PeerManager implements ConnectionListener {
                     log.debug("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
                 }
             }, CHECK_MAX_CONN_DELAY_SEC);
-
         }
     }
 
