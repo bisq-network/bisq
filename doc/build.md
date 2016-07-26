@@ -131,18 +131,18 @@ Please note that testnet is the default bitcoin network.
     
 ### 5. Development mode
   
-Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Guide-for-testing-Bitsquare)
+Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Testing-Bitsquare-with-Testnet)
 and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-Bitsquare-with-regtest-%28advanced%29)
 
 Here are example program arguments for using regtest with localhost environment (not via Tor):  
     
-    $ java -jar seednode/target/SeedNode.jar localhost:2002 2 50 true   
+    $ java -jar seednode/target/SeedNode.jar --useLocalhost=true --nodePort=2002 --bitcoinNetwork=regtest   
    
-    $ java -jar gui/target/shaded.jar --useLocalhost=true --node.port=2222 --devTest=true --app.name=Bitsquare-Local-Regtest-Arbitrator  
+    $ java -jar gui/target/shaded.jar --useLocalhost=true --nodePort=2222 --devTest=true --appName=Bitsquare-Local-Regtest-Arbitrator  
     
-    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest --node.port=3332 --useLocalhost=true --devTest=true --app.name=Bitsquare-Local-Regtest-Alice  
+    $ java -jar gui/target/shaded.jar --bitcoinNetwork=regtest --nodePort=3332 --useLocalhost=true --devTest=true --appName=Bitsquare-Local-Regtest-Alice  
    
-    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest --node.port=4442 --useLocalhost=true --devTest=true --app.name=Bitsquare-Local-Regtest-Bob   
+    $ java -jar gui/target/shaded.jar --bitcoinNetwork=regtest --nodePort=4442 --useLocalhost=true --devTest=true --appName=Bitsquare-Local-Regtest-Bob   
   
   
 ### 6. Running local seed node with Tor
@@ -150,7 +150,7 @@ Here are example program arguments for using regtest with localhost environment 
 If you want to run locally a seed node via Tor you need to add your seed node's hidden service address to the SeedNodesRepository.java class.
 You can find the hidden service address after you started once a seed node. Start it with a placeholder address like: 
    
-    $ java -jar seednode/target/SeedNode.jar xxxxxxx.onion:8002 2 50 
+    $ java -jar seednode/target/SeedNode.jar --bitcoinNetwork=REGTEST --myAddress=xxxxxxx.onion:8002 --appName=Bitsquare_seed_node_xxxxxxx.onion_8002 --nodePort=8002
     
 Once the hidden service is published (check console output) quit the seed node and copy the hidden service address from the console output. 
 Alternatively you can navigate to the application directory and open Bitsquare_seed_node_xxxxxxx.onion_8002/tor/hiddenservice/hostname.
@@ -160,13 +160,13 @@ Instructions are also at the SeedNodesRepository class.
               
 Here are example program arguments for using regtest and using the Tor network:  
     
-    $ java -jar seednode/target/SeedNode.jar rxdkppp3vicnbgqt.onion:8002 2 50  
+    $ java -jar seednode/target/SeedNode.jar --bitcoinNetwork=REGTEST --myAddress=rxdkppp3vicnbgqt.onion:8002 --appName=Bitsquare_seed_node_rxdkppp3vicnbgqt.onion_8002 --nodePort=8002  
    
-    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest node.port=2222 --devTest=true --app.name=Bitsquare-Tor-Regtest-Arbitrator  
+    $ java -jar gui/target/shaded.jar --bitcoinNetwork=regtest nodePort=2222 --devTest=true --appName=Bitsquare-Tor-Regtest-Arbitrator  
     
-    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest node.port=3332 --devTest=true --app.name=Bitsquare-Tor-Regtest-Alice  
+    $ java -jar gui/target/shaded.jar --bitcoinNetwork=regtest nodePort=3332 --devTest=true --appName=Bitsquare-Tor-Regtest-Alice  
    
-    $ java -jar gui/target/shaded.jar --bitcoin.network=regtest node.port=4442 --devTest=true --app.name=Bitsquare-Tor-Regtest-Bob   
+    $ java -jar gui/target/shaded.jar --bitcoinNetwork=regtest nodePort=4442 --devTest=true --appName=Bitsquare-Tor-Regtest-Bob   
    
 Problems?
 ---------
