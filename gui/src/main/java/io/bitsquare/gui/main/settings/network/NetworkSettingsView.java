@@ -150,9 +150,9 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             final boolean selected = useTorForHttpCheckBox.isSelected();
             String key = "noTorForPoloniexWarning";
             if (selected && preferences.showAgain(key))
-                new Popup().information("Http requests to Poloniex cannot be routed via Tor because they use Cloudflare " +
+                new Popup().information("Http requests to Poloniex (used to get altcoin market price feed) cannot be routed via Tor because they use Cloudflare " +
                         "and they require a Captcha.\n\n" +
-                        "If you provide program arguments for connection to a local socks 5 proxy we will use Tor " +
+                        "If you provide program arguments for connection to a local socks 5 proxy Tor will be used " +
                         "also for Poloniex but you " +
                         "have to make sure to use a non-Tor proxy (I2P, VPN,...) as otherwise you would get the " +
                         "same problems with Cloudflare.\n\n" +
@@ -162,6 +162,20 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
             preferences.setUseTorForHttpRequests(selected);
         });
+        // only display once at startup
+        String key = "initalNoTorForPoloniexWarning";
+        if (preferences.getUseTorForHttpRequests() && preferences.showAgain(key))
+            new Popup().information("Tor is by default used for Http requests.\n\n" +
+                    "Though http requests to Poloniex (used to get altcoin market price feed) cannot be routed via Tor because they use Cloudflare " +
+                    "and they require a Captcha.\n\n" +
+                    "If you provide program arguments for connection to a local socks 5 proxy Tor will be used " +
+                    "also for Poloniex but you " +
+                    "have to make sure to use a non-Tor proxy (I2P, VPN,...) as otherwise you would get the " +
+                    "same problems with Cloudflare.\n\n" +
+                    "All other http traffic will be using Tor.")
+                    .onClose(() -> preferences.dontShowAgain(key, true))
+                    .show();
+
 
         bitcoinPeersSubscription = EasyBind.subscribe(walletService.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
 
