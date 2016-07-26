@@ -52,7 +52,10 @@ public class RestartUtil {
 
             try {
                 final String command = "nohup " + cmd.toString() + " >/dev/null 2>" + logPath + " &";
-                log.warn("Executing cmd for restart:\n" + command);
+                log.warn("\n\n############################################################\n" +
+                                "Executing cmd for restart: {}" +
+                                "\n############################################################\n\n",
+                        command);
                 Runtime.getRuntime().exec(command);
             } catch (IOException e) {
                 e.printStackTrace();

@@ -94,7 +94,10 @@ public class SeedNodeMain extends BitsquareExecutable {
             long usedMemoryInMB = Profiler.getUsedMemoryInMB();
             if (!stopped) {
                 if (usedMemoryInMB > (MAX_MEMORY_MB - 100)) {
-                    log.warn("We are over our memory warn limit and call the GC");
+                    log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                                    "We are over our memory warn limit and call the GC. usedMemoryInMB: {}" +
+                                    "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
+                            usedMemoryInMB);
                     System.gc();
                     usedMemoryInMB = Profiler.getUsedMemoryInMB();
                     Profiler.printSystemLoad(log);
