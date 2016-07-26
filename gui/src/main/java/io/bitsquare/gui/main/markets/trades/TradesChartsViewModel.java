@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.markets.trades;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import io.bitsquare.btc.pricefeed.PriceFeed;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.markets.trades.charts.CandleData;
 import io.bitsquare.locale.CurrencyUtil;
@@ -58,6 +59,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private final TradeStatisticsManager tradeStatisticsManager;
     final Preferences preferences;
+    private PriceFeed priceFeed;
 
     private final SetChangeListener<TradeStatistics> setChangeListener;
     final ObjectProperty<TradeCurrency> tradeCurrencyProperty = new SimpleObjectProperty<>();
@@ -75,9 +77,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradesChartsViewModel(TradeStatisticsManager tradeStatisticsManager, Preferences preferences) {
+    public TradesChartsViewModel(TradeStatisticsManager tradeStatisticsManager, Preferences preferences, PriceFeed priceFeed) {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.preferences = preferences;
+        this.priceFeed = priceFeed;
 
         setChangeListener = change -> updateChartData();
 
@@ -103,6 +106,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
     protected void activate() {
         tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(setChangeListener);
         updateChartData();
+
+        if (!preferences.getUseStickyMarketPrice())
+            priceFeed.setCurrencyCode(tradeCurrencyProperty.get().getCode());
     }
 
     @Override
@@ -119,6 +125,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
         this.tradeCurrencyProperty.set(tradeCurrency);
         preferences.setTradeStatisticsScreenCurrencyCode(tradeCurrency.getCode());
         updateChartData();
+
+        if (!preferences.getUseStickyMarketPrice())
+            priceFeed.setCurrencyCode(tradeCurrency.getCode());
+
     }
 
     public void setTickUnit(TickUnit tickUnit) {
