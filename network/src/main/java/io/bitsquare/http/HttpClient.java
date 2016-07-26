@@ -42,8 +42,7 @@ public class HttpClient {
     }
 
     public String requestWithGET(String param) throws IOException, HttpException {
-        return requestWithGETProxy(param);
-//        return proxy != null ? requestWithGETProxy(param) : requestWithGETNoProxy(param);
+        return proxy != null ? requestWithGETProxy(param) : requestWithGETNoProxy(param);
     }
 
     /**
@@ -76,7 +75,6 @@ public class HttpClient {
      * Make an HTTP Get request routed over socks5 proxy.
      */
     private String requestWithGETProxy(String param) throws IOException, HttpException {
-        
         // This code is adapted from:
         //  http://stackoverflow.com/a/25203021/5616248
         
@@ -88,22 +86,22 @@ public class HttpClient {
                 
         // Use FakeDNSResolver if not resolving DNS locally.
         // This prevents a local DNS lookup (which would be ignored anyway)
-        PoolingHttpClientConnectionManager cm = proxy.resolveAddrLocally() ?
+        PoolingHttpClientConnectionManager cm = proxy != null && proxy.resolveAddrLocally() ?
                                                     new PoolingHttpClientConnectionManager(reg) :
                                                     new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
         CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(cm).build();
         try {
-            // InetSocketAddress socksaddr = new InetSocketAddress(proxy.getInetAddress(), proxy.getPort());
+            InetSocketAddress socksaddr = new InetSocketAddress(proxy.getInetAddress(), proxy.getPort());
             
-            // remove me: Use this to test with system-wide Tor proxy.
-            InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", 9050);
+            // remove me: Use this to test with system-wide Tor proxy, or change port for another proxy.
+            // InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", 9050);
             
             HttpClientContext context = HttpClientContext.create();
             context.setAttribute("socks.address", socksaddr);
     
             HttpGet request = new HttpGet(baseUrl + param);
     
-            log.error( "Executing request " + request + " proxy: " + socksaddr);
+            log.info( "Executing request " + request + " proxy: " + socksaddr);
             CloseableHttpResponse response = httpclient.execute(request, context);
             try {
                 InputStream stream = response.getEntity().getContent();

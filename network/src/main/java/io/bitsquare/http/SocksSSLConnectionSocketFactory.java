@@ -20,7 +20,7 @@ class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
         // Only allow connection's to site's with valid certs.
         super(sslContext, STRICT_HOSTNAME_VERIFIER);
         
-        // Or to allow insecure (eg self-signed certs)
+        // Or to allow "insecure" (eg self-signed certs)
         // super(sslContext, ALLOW_ALL_HOSTNAME_VERIFIER);
     }
 
