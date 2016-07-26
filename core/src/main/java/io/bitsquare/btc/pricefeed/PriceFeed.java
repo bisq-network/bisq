@@ -51,8 +51,8 @@ public class PriceFeed {
     private static final long PERIOD_ALL_CRYPTO_SEC = new Random().nextInt(5) + 180;
 
     private final Map<String, MarketPrice> cache = new HashMap<>();
-    private final PriceProvider fiatPriceProvider = new BitcoinAveragePriceProvider();
-    private final PriceProvider cryptoCurrenciesPriceProvider = new PoloniexPriceProvider();
+    private final PriceProvider fiatPriceProvider;
+    private final PriceProvider cryptoCurrenciesPriceProvider;
     private Consumer<Double> priceConsumer;
     private FaultHandler faultHandler;
     private Type type;
@@ -72,7 +72,9 @@ public class PriceFeed {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PriceFeed() {
+    public PriceFeed(BitcoinAveragePriceProvider fiatPriceProvider, PoloniexPriceProvider cryptoCurrenciesPriceProvider) {
+        this.fiatPriceProvider = fiatPriceProvider;
+        this.cryptoCurrenciesPriceProvider = cryptoCurrenciesPriceProvider;
     }
 
 

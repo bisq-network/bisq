@@ -66,7 +66,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     Label bitcoinPeersLabel, p2PPeersLabel, bridgesLabel;
     @FXML
-    CheckBox useTorCheckBox;
+    CheckBox useTorForBtcJCheckBox, useTorForHttpCheckBox;
     @FXML
     TableView<P2pNetworkListItem> tableView;
     @FXML
@@ -98,7 +98,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         bitcoinPeersTextArea.setPrefRowCount(10);
 
-        tableView.setMinHeight(300);
+        tableView.setMinHeight(230);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No connections are available"));
         tableView.getSortOrder().add(creationDateColumn);
@@ -128,9 +128,9 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void activate() {
-        useTorCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
-        useTorCheckBox.setOnAction(event -> {
-            boolean selected = useTorCheckBox.isSelected();
+        useTorForBtcJCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
+        useTorForBtcJCheckBox.setOnAction(event -> {
+            boolean selected = useTorForBtcJCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
                 new Popup().information("You need to restart the application to apply that change.\n" +
                         "Do you want to do that now?")
@@ -140,10 +140,13 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                             UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
                         })
                         .closeButtonText("Cancel")
-                        .onClose(() -> useTorCheckBox.setSelected(!selected))
+                        .onClose(() -> useTorForBtcJCheckBox.setSelected(!selected))
                         .show();
             }
         });
+        useTorForHttpCheckBox.setSelected(preferences.getUseTorForHttpRequests());
+        useTorForHttpCheckBox.setOnAction(event -> preferences.setUseTorForHttpRequests(useTorForHttpCheckBox.isSelected()));
+
         bitcoinPeersSubscription = EasyBind.subscribe(walletService.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
 
         nodeAddressSubscription = EasyBind.subscribe(p2PService.getNetworkNode().nodeAddressProperty(),
@@ -170,7 +173,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void deactivate() {
-        useTorCheckBox.setOnAction(null);
+        useTorForBtcJCheckBox.setOnAction(null);
+        useTorForHttpCheckBox.setOnAction(null);
 
         if (nodeAddressSubscription != null)
             nodeAddressSubscription.unsubscribe();

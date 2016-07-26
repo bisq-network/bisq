@@ -84,15 +84,11 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     @Override
     public void onConnection(Connection connection) {
         Log.traceCall();
-        final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
-        log.warn("++ Connection created: peer = " + (addressOptional.isPresent() ? addressOptional.get().hostName : "unknown address"));
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.traceCall();
-        final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
-        log.warn("-- Connection closed: peer = " + (addressOptional.isPresent() ? addressOptional.get().hostName : "unknown address"));
         closeHandler(connection);
 
         if (retryTimer == null) {
@@ -104,7 +100,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
         }
 
         if (peerManager.isNodeBanned(closeConnectionReason, connection))
-            seedNodeAddresses.remove(addressOptional.get());
+            seedNodeAddresses.remove(connection.getPeersNodeAddressOptional().get());
     }
 
     @Override

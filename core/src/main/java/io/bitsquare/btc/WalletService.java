@@ -32,6 +32,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.network.Socks5ProxyProvider;
 import io.bitsquare.storage.FileUtil;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
@@ -74,8 +75,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class WalletService {
     private static final Logger log = LoggerFactory.getLogger(WalletService.class);
 
-    public static final String DIR_KEY = "walletDir";
-    public static final String PREFIX_KEY = "walletPrefix";
     private static final long STARTUP_TIMEOUT_SEC = 60;
 
     private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
@@ -88,8 +87,9 @@ public class WalletService {
     private final RegTestHost regTestHost;
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
+    private final Preferences preferences;
+    private final Socks5ProxyProvider socks5ProxyProvider;
     private final String seedNodes;
-    private String btcProxyAddress;
     private final NetworkParameters params;
     private final File walletDir;
     private final UserAgent userAgent;
@@ -114,16 +114,17 @@ public class WalletService {
                          TradeWalletService tradeWalletService,
                          AddressEntryList addressEntryList,
                          UserAgent userAgent,
-                         @Named(DIR_KEY) File appDir,
                          Preferences preferences,
+                         Socks5ProxyProvider socks5ProxyProvider,
+                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
                          @Named(BtcOptionKeys.BTC_SEED_NODES) String seedNodes,
-                         @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions,
-                         @Named(BtcOptionKeys.BTC_PROXY_ADDRESS) String btcProxyAddress) {
+                         @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
+        this.preferences = preferences;
+        this.socks5ProxyProvider = socks5ProxyProvider;
         this.seedNodes = seedNodes;
-        this.btcProxyAddress = btcProxyAddress;
         this.params = preferences.getBitcoinNetwork().getParameters();
         this.walletDir = new File(appDir, "bitcoin");
         this.userAgent = userAgent;
@@ -153,7 +154,7 @@ public class WalletService {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(@Nullable DeterministicSeed seed, Socks5Proxy proxy, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void initialize(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         Log.traceCall();
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
@@ -166,24 +167,12 @@ public class WalletService {
                 exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " +
                         STARTUP_TIMEOUT_SEC + " seconds.")), STARTUP_TIMEOUT_SEC);
 
-
         backupWallet();
 
-        // If btcProxyAddress program argument is set we use that and override the proxy passed in the method
-        if (!btcProxyAddress.isEmpty()) {
-            String[] tokens = btcProxyAddress.split(":");
-            if (tokens.length == 2) {
-                try {
-                    proxy = new Socks5Proxy(tokens[0], Integer.valueOf(tokens[1]));
-                } catch (UnknownHostException e) {
-                    log.error(e.getMessage());
-                    e.printStackTrace();
-                }
-            }
-        }
+        final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
         
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKitBitSquare(params, proxy, walletDir, "Bitsquare") {
+        walletAppKit = new WalletAppKitBitSquare(params, socks5Proxy, walletDir, "Bitsquare") {
             @Override
             protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
@@ -305,10 +294,10 @@ public class WalletService {
                     // note: DNS requests are routed over socks5 proxy, if used.
                     // fixme: .onion hostnames will fail! see comments in SeedPeersSocks5Dns
                     InetSocketAddress addr;
-                    if (proxy != null) {
+                    if (socks5Proxy != null) {
                         InetSocketAddress unresolved = InetSocketAddress.createUnresolved(parts[0], Integer.parseInt(parts[1]));
                         // proxy remote DNS request happens here.
-                        addr = SeedPeersSocks5Dns.lookup(proxy, unresolved);
+                        addr = SeedPeersSocks5Dns.lookup(socks5Proxy, unresolved);
                     } else {
                         // DNS request happens here. if it fails, addr.isUnresolved() == true.
                         addr = new InetSocketAddress(parts[0], Integer.parseInt(parts[1]));
@@ -366,7 +355,7 @@ public class WalletService {
         // be private by default when using proxy/tor.  However, the seedpeers
         // could become outdated, so it is important that the user be able to
         // disable it, but should be made aware of the reduced privacy.
-        if (proxy != null && !usePeerNodes) {
+        if (socks5Proxy != null && !usePeerNodes) {
             // SeedPeersSocks5Dns should replace SeedPeers once working reliably.
             // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
             walletAppKit.setDiscovery(new SeedPeers(params));
@@ -411,7 +400,7 @@ public class WalletService {
                 Context.propagate(ctx);
                 walletAppKit.stopAsync();
                 walletAppKit.awaitTerminated();
-                initialize(seed, walletAppKit.getProxy(), resultHandler, exceptionHandler);
+                initialize(seed, resultHandler, exceptionHandler);
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error("Executing task failed. " + t.getMessage());

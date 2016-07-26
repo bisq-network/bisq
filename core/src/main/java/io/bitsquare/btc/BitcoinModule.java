@@ -20,7 +20,12 @@ package io.bitsquare.btc;
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
 import io.bitsquare.btc.blockchain.BlockchainService;
+import io.bitsquare.btc.blockchain.providers.BlockTrailProvider;
+import io.bitsquare.btc.blockchain.providers.BlockrIOProvider;
+import io.bitsquare.btc.blockchain.providers.TradeBlockProvider;
 import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.providers.BitcoinAveragePriceProvider;
+import io.bitsquare.btc.pricefeed.providers.PoloniexPriceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -38,25 +43,31 @@ public class BitcoinModule extends AppModule {
 
     @Override
     protected void configure() {
-        bind(RegTestHost.class).toInstance(env.getProperty(RegTestHost.KEY, RegTestHost.class, RegTestHost.DEFAULT));
+        bind(RegTestHost.class).toInstance(env.getProperty(BtcOptionKeys.REG_TEST_HOST, RegTestHost.class, RegTestHost.DEFAULT));
         bind(FeePolicy.class).in(Singleton.class);
 
         bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(env.getRequiredProperty(UserAgent.NAME_KEY));
         bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(env.getRequiredProperty(UserAgent.VERSION_KEY));
         bind(UserAgent.class).in(Singleton.class);
 
-        File walletDir = new File(env.getRequiredProperty(WalletService.DIR_KEY));
-        bind(File.class).annotatedWith(named(WalletService.DIR_KEY)).toInstance(walletDir);
+        File walletDir = new File(env.getRequiredProperty(BtcOptionKeys.WALLET_DIR));
+        bind(File.class).annotatedWith(named(BtcOptionKeys.WALLET_DIR)).toInstance(walletDir);
 
         bindConstant().annotatedWith(named(BtcOptionKeys.BTC_SEED_NODES)).to(env.getRequiredProperty(BtcOptionKeys.BTC_SEED_NODES));
         bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(env.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
-        bindConstant().annotatedWith(named(BtcOptionKeys.BTC_PROXY_ADDRESS)).to(env.getRequiredProperty(BtcOptionKeys.BTC_PROXY_ADDRESS));
 
         bind(AddressEntryList.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);
         bind(WalletService.class).in(Singleton.class);
         bind(BlockchainService.class).in(Singleton.class);
+        
         bind(PriceFeed.class).in(Singleton.class);
+        bind(BitcoinAveragePriceProvider.class).in(Singleton.class);
+        bind(PoloniexPriceProvider.class).in(Singleton.class);
+
+        bind(BlockrIOProvider.class).in(Singleton.class);
+        bind(BlockTrailProvider.class).in(Singleton.class);
+        bind(TradeBlockProvider.class).in(Singleton.class);
     }
 }
 

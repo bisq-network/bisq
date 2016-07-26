@@ -15,6 +15,7 @@ import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.network.NetworkOptionKeys;
+import io.bitsquare.network.Socks5ProxyProvider;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.BanList;
@@ -93,6 +94,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private Subscription networkReadySubscription;
     private boolean isBootstrapped;
     private KeepAliveManager keepAliveManager;
+    private Socks5ProxyProvider socks5ProxyProvider;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -112,6 +114,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
                       @Named(NetworkOptionKeys.BAN_LIST) String banList,
                       Clock clock,
+                      Socks5ProxyProvider socks5ProxyProvider,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
         this(
@@ -126,6 +129,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 myAddress,
                 banList,
                 clock,
+                socks5ProxyProvider,
                 encryptionService,
                 keyRing
         );
@@ -142,6 +146,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       String myAddress,
                       String banList,
                       Clock clock,
+                      Socks5ProxyProvider socks5ProxyProvider,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
         this.seedNodesRepository = seedNodesRepository;
@@ -149,7 +154,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.maxConnections = maxConnections;
         this.torDir = torDir;
         this.clock = clock;
-
+        this.socks5ProxyProvider = socks5ProxyProvider;
+        
         optionalEncryptionService = Optional.ofNullable(encryptionService);
         optionalKeyRing = Optional.ofNullable(keyRing);
 
@@ -305,6 +311,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onTorNodeReady() {
         Log.traceCall();
 
+        socks5ProxyProvider.setInternalSocks5Proxy(networkNode.getSocksProxy());
+        
         requestDataManager.requestPreliminaryData();
         keepAliveManager.start();
         p2pServiceListeners.stream().forEach(SetupListener::onTorNodeReady);

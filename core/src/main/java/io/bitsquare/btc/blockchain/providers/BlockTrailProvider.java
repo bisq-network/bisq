@@ -5,19 +5,20 @@ import com.google.gson.JsonParser;
 import io.bitsquare.app.Log;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
+import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.IOException;
 
-public class BlockTrailProvider implements FeeProvider {
+public class BlockTrailProvider extends FeeProvider {
     private static final Logger log = LoggerFactory.getLogger(BlockTrailProvider.class);
 
-    private final HttpClient httpClient;
-
-    public BlockTrailProvider() {
-        httpClient = new HttpClient("https://www.blocktrail.com/BTC/json/blockchain/tx/");
+    @Inject
+    public BlockTrailProvider(HttpClient httpClient, Preferences preferences) {
+        super(httpClient, preferences, "https://www.blocktrail.com/BTC/json/blockchain/tx/");
     }
 
     @Override

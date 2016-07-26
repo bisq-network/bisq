@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main;
 
 import com.google.inject.Inject;
-import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bitsquare.alert.Alert;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.alert.PrivateNotification;
@@ -350,6 +349,7 @@ public class MainViewModel implements ViewModel {
             public void onTorNodeReady() {
                 bootstrapState.set("Tor node created");
                 p2PNetworkIconId.set("image-connection-tor");
+
                 if (preferences.getUseTorForBitcoinJ()) 
                     initWalletService();
             }
@@ -475,17 +475,8 @@ public class MainViewModel implements ViewModel {
         btcInfoBinding.subscribe((observable, oldValue, newValue) -> {
             btcInfo.set(newValue);
         });
-        
-        Socks5Proxy proxy = null;
-        
-        if( preferences.getUseTorForBitcoinJ() ) {
-            // Use proxy created by p2p service 
-            // TODO Move creation and setup of NetworkNode out of P2PService
-            proxy = p2PService.getNetworkNode().getSocksProxy();
-        }
 
         walletService.initialize(null,
-                proxy,
                 () -> {
                     numBtcPeers = walletService.numPeersProperty().get();
 

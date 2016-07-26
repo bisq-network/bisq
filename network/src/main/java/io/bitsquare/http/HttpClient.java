@@ -1,14 +1,7 @@
 package io.bitsquare.http;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.URL;
+import io.bitsquare.network.Socks5ProxyProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -19,30 +12,48 @@ import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.URL;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
 
 public class HttpClient {
-
     private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
-    
-    private final String baseUrl;
-    private final Socks5Proxy proxy;
 
-    public HttpClient(String baseUrl) {
-        this.baseUrl = baseUrl;
-        this.proxy = null;
+    private final Socks5ProxyProvider socks5ProxyProvider;
+    private String baseUrl;
+    private boolean useSocks5Proxy;
+
+    @Inject
+    public HttpClient(Socks5ProxyProvider socks5ProxyProvider) {
+        this.socks5ProxyProvider = socks5ProxyProvider;
     }
-    
-    public HttpClient(Socks5Proxy proxy, String baseUrl) {
+
+    public void setBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
-        this.proxy = proxy;
+    }
+
+    public void setUseSocks5Proxy(boolean useSocks5Proxy) {
+        this.useSocks5Proxy = useSocks5Proxy;
     }
 
     public String requestWithGET(String param) throws IOException, HttpException {
-        return proxy != null ? requestWithGETProxy(param) : requestWithGETNoProxy(param);
+        checkNotNull(baseUrl, "baseUrl must be set before calling requestWithGET");
+        Socks5Proxy socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
+        if (useSocks5Proxy && socks5Proxy == null)
+            log.error("socks5Proxy is null. That might be the case if you use localhost dev environment so no internal proxy was created and you " +
+                    "has tor enabled but no proxy is defined in the program arguments.");
+        return useSocks5Proxy && socks5Proxy != null ? requestWithGETProxy(param, socks5Proxy) : requestWithGETNoProxy(param);
     }
 
     /**
@@ -51,7 +62,7 @@ public class HttpClient {
     private String requestWithGETNoProxy(String param) throws IOException, HttpException {
         HttpURLConnection connection = null;
         try {
-            log.info( "Executing HTTP request " + baseUrl + param + " proxy: none.");
+            log.debug("Executing HTTP request " + baseUrl + param + " proxy: none.");
             URL url = new URL(baseUrl + param);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -65,43 +76,48 @@ public class HttpClient {
                 connection.getErrorStream().close();
                 throw new HttpException(error);
             }
+        } catch (Throwable t) {
+            log.error(t.getMessage());
+            t.printStackTrace();
+            return "";
         } finally {
             if (connection != null)
                 connection.getInputStream().close();
         }
     }
-    
+
     /**
      * Make an HTTP Get request routed over socks5 proxy.
      */
-    private String requestWithGETProxy(String param) throws IOException, HttpException {
+    private String requestWithGETProxy(String param, Socks5Proxy socks5Proxy) throws IOException, HttpException {
+        log.debug("requestWithGETProxy param=" + param);
         // This code is adapted from:
         //  http://stackoverflow.com/a/25203021/5616248
-        
+
         // Register our own SocketFactories to override createSocket() and connectSocket().
         // connectSocket does NOT resolve hostname before passing it to proxy.
-        Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory> create()
+        Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", new SocksConnectionSocketFactory())
                 .register("https", new SocksSSLConnectionSocketFactory(SSLContexts.createSystemDefault())).build();
-                
+
         // Use FakeDNSResolver if not resolving DNS locally.
         // This prevents a local DNS lookup (which would be ignored anyway)
-        PoolingHttpClientConnectionManager cm = proxy != null && proxy.resolveAddrLocally() ?
-                                                    new PoolingHttpClientConnectionManager(reg) :
-                                                    new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
+        PoolingHttpClientConnectionManager cm = socks5Proxy.resolveAddrLocally() ?
+                new PoolingHttpClientConnectionManager(reg) :
+                new PoolingHttpClientConnectionManager(reg, new FakeDnsResolver());
         CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(cm).build();
         try {
-            InetSocketAddress socksaddr = new InetSocketAddress(proxy.getInetAddress(), proxy.getPort());
-            
+            InetSocketAddress socksaddr = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
+
             // remove me: Use this to test with system-wide Tor proxy, or change port for another proxy.
             // InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", 9050);
-            
+
             HttpClientContext context = HttpClientContext.create();
             context.setAttribute("socks.address", socksaddr);
-    
+
             HttpGet request = new HttpGet(baseUrl + param);
-    
-            log.info( "Executing request " + request + " proxy: " + socksaddr);
+
+            log.debug("Executing request " + request + " proxy: " + socksaddr);
             CloseableHttpResponse response = httpclient.execute(request, context);
             try {
                 InputStream stream = response.getEntity().getContent();
@@ -110,6 +126,10 @@ public class HttpClient {
             } finally {
                 response.close();
             }
+        } catch (Throwable t) {
+            log.error(t.getMessage());
+            t.printStackTrace();
+            return "";
         } finally {
             httpclient.close();
         }
@@ -128,7 +148,9 @@ public class HttpClient {
     @Override
     public String toString() {
         return "HttpClient{" +
-                "baseUrl='" + baseUrl + '\'' +
+                "socks5ProxyProvider=" + socks5ProxyProvider +
+                ", baseUrl='" + baseUrl + '\'' +
+                ", useSocks5Proxy=" + useSocks5Proxy +
                 '}';
     }
 }

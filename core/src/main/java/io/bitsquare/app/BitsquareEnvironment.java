@@ -22,7 +22,6 @@ import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.BtcOptionKeys;
 import io.bitsquare.btc.UserAgent;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.util.Utilities;
@@ -79,7 +78,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String btcNetworkDir;
     private final String logLevel;
     private BitcoinNetwork bitcoinNetwork;
-    private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, myAddress, banList, dumpStatistics, btcProxyAddress;
+    private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, myAddress, banList, dumpStatistics, socks5ProxyAddress;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -103,7 +102,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
                     log.warn("propertiesObject not instance of Properties");
                 }
             }
-            properties.setProperty(BitcoinNetwork.KEY, bitcoinNetwork.name());
+            properties.setProperty(BtcOptionKeys.BTC_NETWORK, bitcoinNetwork.name());
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
                 properties.store(fileOutputStream, null);
@@ -152,6 +151,9 @@ public class BitsquareEnvironment extends StandardEnvironment {
         banList = commandLineProperties.containsProperty(NetworkOptionKeys.BAN_LIST) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
                 "";
+        socks5ProxyAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS) :
+                "";
 
         btcSeedNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_SEED_NODES) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_SEED_NODES) :
@@ -161,10 +163,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
                 "";
 
-        btcProxyAddress = commandLineProperties.containsProperty(BtcOptionKeys.BTC_PROXY_ADDRESS) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_PROXY_ADDRESS) :
-                "";
-
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
@@ -172,7 +170,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
             propertySources.addLast(homeDirProperties());
             propertySources.addLast(classpathProperties());
 
-            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BitcoinNetwork.KEY, BitcoinNetwork.DEFAULT.name()).toUpperCase());
+            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK, BitcoinNetwork.DEFAULT.name()).toUpperCase());
             btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())
@@ -221,25 +219,25 @@ public class BitsquareEnvironment extends StandardEnvironment {
             {
                 setProperty(CommonOptionKeys.LOG_LEVEL_KEY, logLevel);
 
+                setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
+                setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);
+                setProperty(NetworkOptionKeys.BAN_LIST, banList);
+                setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
+                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
+                setProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS, socks5ProxyAddress);
+
                 setProperty(CoreOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
                 setProperty(CoreOptionKeys.DUMP_STATISTICS, dumpStatistics);
                 setProperty(CoreOptionKeys.APP_NAME_KEY, appName);
                 setProperty(CoreOptionKeys.USER_DATA_DIR_KEY, userDataDir);
 
-                setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
-                setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);
-                setProperty(NetworkOptionKeys.BAN_LIST, banList);
-                setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
-                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
-
                 setProperty(BtcOptionKeys.BTC_SEED_NODES, btcSeedNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
-                setProperty(BtcOptionKeys.BTC_PROXY_ADDRESS, btcProxyAddress);
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);
-                setProperty(WalletService.DIR_KEY, btcNetworkDir);
+                setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);
                 setProperty(Storage.DIR_KEY, Paths.get(btcNetworkDir, "db").toString());
                 setProperty(KeyStorage.DIR_KEY, Paths.get(btcNetworkDir, "keys").toString());
             }

@@ -21,6 +21,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import io.bitsquare.app.AppModule;
 import io.bitsquare.network.NetworkOptionKeys;
+import io.bitsquare.network.Socks5ProxyProvider;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import org.springframework.core.env.Environment;
 
@@ -39,7 +40,8 @@ public class P2PModule extends AppModule {
     protected void configure() {
         bind(SeedNodesRepository.class).in(Singleton.class);
         bind(P2PService.class).in(Singleton.class);
-
+        bind(Socks5ProxyProvider.class).in(Singleton.class);
+        
         Boolean useLocalhost = env.getProperty(NetworkOptionKeys.USE_LOCALHOST, boolean.class, false);
         bind(boolean.class).annotatedWith(Names.named(NetworkOptionKeys.USE_LOCALHOST)).toInstance(useLocalhost);
 
@@ -58,5 +60,6 @@ public class P2PModule extends AppModule {
         bindConstant().annotatedWith(named(NetworkOptionKeys.SEED_NODES_KEY)).to(env.getRequiredProperty(NetworkOptionKeys.SEED_NODES_KEY));
         bindConstant().annotatedWith(named(NetworkOptionKeys.MY_ADDRESS)).to(env.getRequiredProperty(NetworkOptionKeys.MY_ADDRESS));
         bindConstant().annotatedWith(named(NetworkOptionKeys.BAN_LIST)).to(env.getRequiredProperty(NetworkOptionKeys.BAN_LIST));
+        bindConstant().annotatedWith(named(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS)).to(env.getRequiredProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS));
     }
 }

@@ -70,12 +70,6 @@ public abstract class BitsquareExecutable {
     }
 
     protected void customizeOptionParsing(OptionParser parser) {
-        parser.accepts(CoreOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
-                .withRequiredArg();
-        parser.accepts(CoreOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
-                .withRequiredArg();
-        parser.accepts(CoreOptionKeys.APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
-                .withRequiredArg();
         parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY, description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", LOG_LEVEL_DEFAULT))
                 .withRequiredArg();
 
@@ -85,23 +79,6 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(NetworkOptionKeys.BAN_LIST, description("Nodes to exclude from network connections.", ""))
                 .withRequiredArg();
-
-        parser.accepts(CoreOptionKeys.IGNORE_DEV_MSG_KEY, description("If set to true all signed messages from Bitsquare developers are ignored " +
-                "(Global alert, Version update alert, Filters for offers, nodes or payment account data)", false))
-                .withRequiredArg()
-                .ofType(boolean.class);
-
-        parser.accepts(CoreOptionKeys.DUMP_STATISTICS, description("If set to true the trade statistics are stored as json file in the data dir.", false))
-                .withRequiredArg()
-                .ofType(boolean.class);
-
-        parser.accepts(BtcOptionKeys.BTC_SEED_NODES, description("Custom seed nodes used for BitcoinJ.", ""))
-                .withRequiredArg();
-        parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over our native Tor instance.", ""))
-                .withRequiredArg();
-        parser.accepts(BtcOptionKeys.BTC_PROXY_ADDRESS, description("A proxy address to be used for BitcoinJ. [host:port]", ""))
-                .withRequiredArg();
-
         // use a fixed port as arbitrator use that for his ID
         parser.accepts(NetworkOptionKeys.PORT_KEY, description("Port to listen on", 9999))
                 .withRequiredArg()
@@ -112,15 +89,35 @@ public abstract class BitsquareExecutable {
         parser.accepts(NetworkOptionKeys.MAX_CONNECTIONS, description("Max. connections a peer will try to keep", P2PService.MAX_CONNECTIONS_DEFAULT))
                 .withRequiredArg()
                 .ofType(int.class);
-        parser.accepts(BitcoinNetwork.KEY, description("Bitcoin network", BitcoinNetwork.DEFAULT))
+        parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS, description("A proxy address to be used for BitcoinJ. [host:port]", ""))
+                .withRequiredArg();
+
+        parser.accepts(CoreOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
+                .withRequiredArg();
+        parser.accepts(CoreOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
+                .withRequiredArg();
+        parser.accepts(CoreOptionKeys.APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
+                .withRequiredArg();
+        parser.accepts(CoreOptionKeys.IGNORE_DEV_MSG_KEY, description("If set to true all signed messages from Bitsquare developers are ignored " +
+                "(Global alert, Version update alert, Filters for offers, nodes or payment account data)", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
+        parser.accepts(CoreOptionKeys.DUMP_STATISTICS, description("If set to true the trade statistics are stored as json file in the data dir.", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
+
+        parser.accepts(BtcOptionKeys.BTC_NETWORK, description("Bitcoin network", BitcoinNetwork.DEFAULT))
                 .withRequiredArg()
                 .ofType(BitcoinNetwork.class)
                 .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class));
-
-        parser.accepts(RegTestHost.KEY, description("", RegTestHost.DEFAULT))
+        parser.accepts(BtcOptionKeys.REG_TEST_HOST, description("", RegTestHost.DEFAULT))
                 .withRequiredArg()
                 .ofType(RegTestHost.class)
                 .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
+        parser.accepts(BtcOptionKeys.BTC_SEED_NODES, description("Custom seed nodes used for BitcoinJ.", ""))
+                .withRequiredArg();
+        parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over our native Tor instance.", ""))
+                .withRequiredArg();
     }
 
     protected static String description(String descText, Object defaultValue) {

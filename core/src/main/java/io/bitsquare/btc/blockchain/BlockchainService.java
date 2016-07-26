@@ -20,10 +20,11 @@ import java.util.Arrays;
 public class BlockchainService {
     private static final Logger log = LoggerFactory.getLogger(BlockchainService.class);
 
-    private final ArrayList<FeeProvider> feeProviders = new ArrayList<>(Arrays.asList(new BlockrIOProvider(), new BlockTrailProvider(), new TradeBlockProvider()));
+    private final ArrayList<FeeProvider> feeProviders;
 
     @Inject
-    public BlockchainService() {
+    public BlockchainService(BlockrIOProvider blockrIOProvider, BlockTrailProvider blockTrailProvider, TradeBlockProvider tradeBlockProvider) {
+        feeProviders = new ArrayList<>(Arrays.asList(blockrIOProvider, blockTrailProvider, tradeBlockProvider));
     }
 
     public SettableFuture<Coin> requestFee(String transactionId) {

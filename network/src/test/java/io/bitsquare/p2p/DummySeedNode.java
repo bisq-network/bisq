@@ -187,7 +187,7 @@ public class DummySeedNode {
 
         seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
         seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, maxConnections,
-                torDir, useLocalhost, networkId, storageDir, null, null, null, new Clock(), null, null);
+                torDir, useLocalhost, networkId, storageDir, null, null, null, new Clock(), null, null, null);
         seedNodeP2PService.start(false, listener);
     }
 
