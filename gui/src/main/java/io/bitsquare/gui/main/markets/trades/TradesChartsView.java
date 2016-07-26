@@ -107,6 +107,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             if (newValue != null) {
                 model.setTickUnit((TradesChartsViewModel.TickUnit) newValue.getUserData());
                 priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
+                volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
             }
         };
         priceAxisYWidthListener = (observable, oldValue, newValue) -> {
@@ -151,6 +152,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeChart.setAnimated(model.preferences.getUseAnimations());
         updateChartData();
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
+        volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
     }
 
     @Override
