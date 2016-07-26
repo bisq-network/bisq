@@ -128,7 +128,7 @@ If you want to build the binaryies check out the build scripts under the package
 Development mode
 -----------------
   
-Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Guide-for-testing-Bitsquare)
+Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Testing-Bitsquare-with-Mainnet)
 and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-Bitsquare-with-regtest-%28advanced%29)
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):  
