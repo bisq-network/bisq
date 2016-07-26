@@ -132,7 +132,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         useTorForBtcJCheckBox.setOnAction(event -> {
             boolean selected = useTorForBtcJCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
-                new Popup().information("You need to restart the application to apply that change.\n" +
+                new Popup().information("Tor support for the Bitcoin network is experimental at the current state.\n\n" +
+                        "You need to restart the application to apply that change.\n" +
                         "Do you want to do that now?")
                         .actionButtonText("Apply and shut down")
                         .onAction(() -> {
@@ -145,7 +146,22 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             }
         });
         useTorForHttpCheckBox.setSelected(preferences.getUseTorForHttpRequests());
-        useTorForHttpCheckBox.setOnAction(event -> preferences.setUseTorForHttpRequests(useTorForHttpCheckBox.isSelected()));
+        useTorForHttpCheckBox.setOnAction(event -> {
+            final boolean selected = useTorForHttpCheckBox.isSelected();
+            String key = "noTorForPoloniexWarning";
+            if (selected && preferences.showAgain(key))
+                new Popup().information("Http requests to Poloniex cannot be routed via Tor because they use Cloudflare " +
+                        "and they require a Captcha.\n\n" +
+                        "If you provide program arguments for connection to a local socks 5 proxy we will use Tor " +
+                        "also for Poloniex but you " +
+                        "have to make sure to use a non-Tor proxy (I2P, VPN,...) as otherwise you would get the " +
+                        "same problems with Cloudflare.\n\n" +
+                        "All other http traffic will be using Tor.")
+                        .dontShowAgainId(key, preferences)
+                        .show();
+
+            preferences.setUseTorForHttpRequests(selected);
+        });
 
         bitcoinPeersSubscription = EasyBind.subscribe(walletService.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
 
