@@ -76,11 +76,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
     private ChangeListener<Toggle> toggleChangeListener;
     private ToggleGroup toggleGroup;
-
     private final ListChangeListener<XYChart.Data<Number, Number>> itemsChangeListener;
     private Subscription tradeCurrencySubscriber;
-
     private SortedList<TradeStatistics> sortedList;
+    private Label nrOfTradeStatisticsLabel;
+    private ListChangeListener<TradeStatistics> tradeStatisticsByCurrencyListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +101,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         HBox toolBox = getToolBox();
         createCharts();
         createTable();
-        root.getChildren().addAll(toolBox, priceChart, volumeChart, tableView);
+        nrOfTradeStatisticsLabel = new Label("");
+        nrOfTradeStatisticsLabel.setId("num-offers");
+        nrOfTradeStatisticsLabel.setPadding(new Insets(-5, 0, -10, 5));
+        root.getChildren().addAll(toolBox, priceChart, volumeChart, tableView, nrOfTradeStatisticsLabel);
 
         toggleChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -118,6 +121,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             volumeAxisYWidth = (double) newValue;
             layoutChart();
         };
+        tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText("Nr. of trades: " + model.tradeStatisticsByCurrency.size());
     }
 
     @Override
@@ -153,6 +157,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         updateChartData();
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
+
+        model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
+        nrOfTradeStatisticsLabel.setText("Nr. of trades: " + model.tradeStatisticsByCurrency.size());
     }
 
     @Override
@@ -161,12 +168,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
         priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
+        model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
         tradeCurrencySubscriber.unsubscribe();
         currencyComboBox.setOnAction(null);
         priceAxisY.labelProperty().unbind();
         priceSeries.getData().clear();
         priceChart.getData().clear();
-
         sortedList.comparatorProperty().unbind();
     }
 
