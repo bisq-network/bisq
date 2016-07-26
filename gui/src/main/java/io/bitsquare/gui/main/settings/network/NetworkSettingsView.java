@@ -145,10 +145,11 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                         .show();
             }
         });
+        String key = "noTorForPoloniexWarning";
         useTorForHttpCheckBox.setSelected(preferences.getUseTorForHttpRequests());
         useTorForHttpCheckBox.setOnAction(event -> {
             final boolean selected = useTorForHttpCheckBox.isSelected();
-            String key = "noTorForPoloniexWarning";
+
             if (selected && preferences.showAgain(key))
                 new Popup().information("Http requests to Poloniex (used to get altcoin market price feed) cannot be routed via Tor because they use Cloudflare " +
                         "and they require a Captcha.\n\n" +
@@ -163,8 +164,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             preferences.setUseTorForHttpRequests(selected);
         });
         // only display once at startup
-        String key = "initalNoTorForPoloniexWarning";
-        if (preferences.getUseTorForHttpRequests() && preferences.showAgain(key))
+        String key2 = "initalNoTorForPoloniexWarning";
+        if (preferences.getUseTorForHttpRequests() && preferences.showAgain(key2) && preferences.showAgain(key2))
             new Popup().information("Tor is by default used for Http requests.\n\n" +
                     "Though http requests to Poloniex (used to get altcoin market price feed) cannot be routed via Tor because they use Cloudflare " +
                     "and they require a Captcha.\n\n" +
@@ -173,7 +174,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                     "have to make sure to use a non-Tor proxy (I2P, VPN,...) as otherwise you would get the " +
                     "same problems with Cloudflare.\n\n" +
                     "All other http traffic will be using Tor.")
-                    .onClose(() -> preferences.dontShowAgain(key, true))
+                    .onClose(() -> preferences.dontShowAgain(key2, true))
                     .show();
 
 

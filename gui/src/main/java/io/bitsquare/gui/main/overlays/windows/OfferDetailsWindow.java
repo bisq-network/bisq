@@ -34,6 +34,7 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
@@ -194,15 +195,29 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                 addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price));
             }
         }
-        if (offer.isMyOffer(keyRing) && user.getPaymentAccount(offer.getOffererPaymentAccountId()) != null)
-            addLabelTextField(gridPane, ++rowIndex, "Payment account:", user.getPaymentAccount(offer.getOffererPaymentAccountId()).getAccountName());
-        else
-            addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
-
+        final PaymentMethod paymentMethod = offer.getPaymentMethod();
+        final String offererPaymentAccountId = offer.getOffererPaymentAccountId();
+        final PaymentAccount paymentAccount = user.getPaymentAccount(offererPaymentAccountId);
+        final String bankId = offer.getBankId();
+        final boolean isSpecificBanks = paymentMethod.equals(PaymentMethod.SPECIFIC_BANKS);
+        final boolean isNationalBanks = paymentMethod.equals(PaymentMethod.NATIONAL_BANK);
+        if (offer.isMyOffer(keyRing) && offererPaymentAccountId != null && paymentAccount != null) {
+            final String accountName = paymentAccount.getAccountName();
+            if (isNationalBanks || isSpecificBanks)
+                addLabelTextField(gridPane, ++rowIndex, "Payment account (Bank nr.):", accountName + " (" + bankId + ")");
+            else
+                addLabelTextField(gridPane, ++rowIndex, "Payment account:", accountName);
+        } else {
+            final String method = BSResources.get(paymentMethod.getId());
+            if (isNationalBanks || isSpecificBanks)
+                addLabelTextField(gridPane, ++rowIndex, "Payment method (Bank nr.):", method + " (" + bankId + ")");
+            else
+                addLabelTextField(gridPane, ++rowIndex, "Payment method:", method);
+        }
         if (showAcceptedBanks) {
-            if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK)) {
+            if (paymentMethod.equals(PaymentMethod.SAME_BANK)) {
                 addLabelTextField(gridPane, ++rowIndex, "Bank name:", acceptedBanks.get(0));
-            } else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
+            } else if (isSpecificBanks) {
                 String value = Joiner.on(", ").join(acceptedBanks);
                 Tooltip tooltip = new Tooltip("Accepted banks: " + value);
                 TextField acceptedBanksTextField = addLabelTextField(gridPane, ++rowIndex, "Accepted banks:", value).second;
