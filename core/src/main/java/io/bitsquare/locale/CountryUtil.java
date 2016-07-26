@@ -20,11 +20,14 @@ package io.bitsquare.locale;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import io.bitsquare.user.Preferences;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class CountryUtil {
+    private static final Logger log = LoggerFactory.getLogger(CountryUtil.class);
 
     public static List<Country> getAllSepaEuroCountries() {
         List<Country> list = new ArrayList<>();
@@ -147,7 +150,8 @@ public class CountryUtil {
 
         allLocales = new ArrayList<>();
         allLocales.addAll(allLocalesAsSet);
-        allLocales.add(new Locale("", "MD", ""));
+        allLocales.add(new Locale("", "MD", "")); // Moldava
+        allLocales.add(new Locale("", "KH", "")); // Cambodia
         allLocales.sort((locale1, locale2) -> locale1.getDisplayCountry().compareTo(locale2.getDisplayCountry()));
         return allLocales;
     }
@@ -160,7 +164,7 @@ public class CountryUtil {
     private static final String[] countryCodes = new String[]{"AE", "AL", "AR", "AT", "AU", "BA", "BE", "BG", "BH",
             "BO", "BR", "BY", "CA", "CH", "CL", "CN", "CO", "CR", "CS", "CU", "CY", "CZ", "DE", "DK", "DO", "DZ",
             "EC", "EE", "EG", "ES", "FI", "FR", "GB", "GR", "GT", "HK", "HN", "HR", "HU", "ID", "IE", "IL", "IN",
-            "IQ", "IS", "IT", "JO", "JP", "KR", "KW", "LB", "LT", "LU", "LV", "LY", "MA", "MD", "ME", "MK", "MT", "MX",
+            "IQ", "IS", "IT", "JO", "JP", "KH", "KR", "KW", "LB", "LT", "LU", "LV", "LY", "MA", "MD", "ME", "MK", "MT", "MX",
             "MY", "NI", "NL", "NO", "NZ", "OM", "PA", "PE", "PH", "PL", "PR", "PT", "PY", "QA", "RO", "RS", "RU",
             "SA", "SD", "SE", "SG", "SI", "SK", "SV", "SY", "TH", "TN", "TR", "TW", "UA", "US", "UY", "VE", "VN",
             "YE", "ZA"};
@@ -169,7 +173,7 @@ public class CountryUtil {
     private static final String[] regionCodes = new String[]{"AS", "EU", "SA", "EU", "OC", "EU", "EU", "EU", "AS",
             "SA", "SA", "EU", "NA", "EU", "SA", "AS", "SA", "NA", "EU", "NA", "EU", "EU", "EU", "EU", "NA", "AF",
             "SA", "EU", "AF", "EU", "EU", "EU", "EU", "EU", "NA", "AS", "NA", "EU", "EU", "AS", "EU", "AS", "AS",
-            "AS", "EU", "EU", "AS", "AS", "AS", "AS", "AS", "EU", "EU", "EU", "AF", "AF", "EU", "EU", "EU", "EU", "NA",
+            "AS", "EU", "EU", "AS", "AS", "AS", "AS", "AS", "AS", "EU", "EU", "EU", "AF", "AF", "EU", "EU", "EU", "EU", "NA",
             "AS", "NA", "EU", "EU", "OC", "AS", "NA", "SA", "AS", "EU", "NA", "EU", "SA", "AS", "EU", "EU", "EU",
             "AS", "AF", "EU", "AS", "EU", "EU", "NA", "AS", "AS", "AF", "AS", "AS", "EU", "NA", "SA", "SA", "AS",
             "AS", "AF"};
