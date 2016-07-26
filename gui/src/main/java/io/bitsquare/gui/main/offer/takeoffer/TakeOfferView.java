@@ -192,8 +192,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
-        if (DevFlags.DEV_MODE)
-            UserThread.runAfter(() -> onShowPayFundsScreen(), 200, TimeUnit.MILLISECONDS);
+       /* if (DevFlags.DEV_MODE)
+            UserThread.runAfter(() -> onShowPayFundsScreen(), 200, TimeUnit.MILLISECONDS);*/
     }
 
     @Override

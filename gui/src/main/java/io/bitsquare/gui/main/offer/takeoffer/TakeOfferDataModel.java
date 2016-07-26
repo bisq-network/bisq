@@ -32,8 +32,8 @@ import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.PaymentAccountUtil;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.handlers.TradeResultHandler;
@@ -41,14 +41,12 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -271,17 +269,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
-        ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList(new ArrayList<>());
-        for (PaymentAccount paymentAccount : user.getPaymentAccounts()) {
-            if (paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod())) {
-                for (TradeCurrency tradeCurrency : paymentAccount.getTradeCurrencies()) {
-                    if (tradeCurrency.getCode().equals(offer.getCurrencyCode())) {
-                        paymentAccounts.add(paymentAccount);
-                    }
-                }
-            }
-        }
-        return paymentAccounts;
+        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, user.getPaymentAccounts());
     }
 
     boolean hasAcceptedArbitrators() {

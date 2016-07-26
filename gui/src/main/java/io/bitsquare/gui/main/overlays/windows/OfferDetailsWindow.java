@@ -32,6 +32,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.BankUtil;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.payment.PaymentAccount;
@@ -205,10 +206,14 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addLabelTextField(gridPane, ++rowIndex, "Payment account:", paymentAccount.getAccountName());
         } else {
             final String method = BSResources.get(paymentMethod.getId());
-            if (isNationalBanks || isSpecificBanks)
-                addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank ID):", method + " (" + bankId + ")");
-            else
+            if (isNationalBanks || isSpecificBanks) {
+                if (BankUtil.isBankIdRequired(offer.getCountryCode()))
+                    addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank ID):", method + " (" + bankId + ")");
+                else if (BankUtil.isBankNameRequired(offer.getCountryCode()))
+                    addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank name):", method + " (" + bankId + ")");
+            } else {
                 addLabelTextField(gridPane, ++rowIndex, "Payment method:", method);
+            }
         }
         if (showAcceptedBanks) {
             if (paymentMethod.equals(PaymentMethod.SAME_BANK)) {
