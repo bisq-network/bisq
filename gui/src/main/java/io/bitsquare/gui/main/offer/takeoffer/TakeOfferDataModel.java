@@ -26,7 +26,7 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
@@ -65,7 +65,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     final WalletService walletService;
     private final User user;
     private final Preferences preferences;
-    private final PriceFeed priceFeed;
+    private final PriceFeedService priceFeedService;
     private final BlockchainService blockchainService;
     private final BSFormatter formatter;
 
@@ -104,14 +104,14 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Inject
     TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
                        WalletService walletService, User user,
-                       Preferences preferences, PriceFeed priceFeed, BlockchainService blockchainService,
+                       Preferences preferences, PriceFeedService priceFeedService, BlockchainService blockchainService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
         this.user = user;
         this.preferences = preferences;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
@@ -139,7 +139,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //     feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
 
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
-            priceFeed.setCurrencyCode(offer.getCurrencyCode());
+            priceFeedService.setCurrencyCode(offer.getCurrencyCode());
 
         tradeManager.checkOfferAvailability(offer,
                 () -> {
@@ -214,13 +214,13 @@ class TakeOfferDataModel extends ActivatableDataModel {
         offer.resetState();
 
         if (!preferences.getUseStickyMarketPrice())
-            priceFeed.setCurrencyCode(offer.getCurrencyCode());
+            priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
-            priceFeed.setCurrencyCode(offer.getCurrencyCode());
+            priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
 

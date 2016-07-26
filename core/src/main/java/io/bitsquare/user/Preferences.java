@@ -25,6 +25,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.*;
+import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.storage.Storage;
 import io.nucleo.net.bridge.BridgeProvider;
 import javafx.beans.Observable;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -148,7 +150,8 @@ public final class Preferences implements Persistable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment) {
+    public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment,
+                       @Named(NetworkOptionKeys.USE_TOR_FOR_HTTP) String useTorForHttpFromOptions) {
         log.debug("Preferences " + this);
         INSTANCE = this;
         this.storage = storage;
@@ -190,7 +193,11 @@ public final class Preferences implements Persistable {
             preferredTradeCurrency = persisted.getPreferredTradeCurrency();
             defaultTradeCurrency = preferredTradeCurrency;
             useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
-            setUseTorForHttpRequests(persisted.useTorForHttpRequests);
+            if (useTorForHttpFromOptions.isEmpty())
+                setUseTorForHttpRequests(persisted.useTorForHttpRequests);
+            else
+                setUseTorForHttpRequests(useTorForHttpFromOptions.toLowerCase().equals("true"));
+
             useStickyMarketPrice = persisted.getUseStickyMarketPrice();
             usePercentageBasedPrice = persisted.getUsePercentageBasedPrice();
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
@@ -648,7 +655,7 @@ public final class Preferences implements Persistable {
     public BooleanProperty useTorForHttpRequestsProperty() {
         return useTorForHttpRequestsProperty;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

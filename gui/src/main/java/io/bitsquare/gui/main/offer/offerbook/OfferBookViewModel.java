@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.offer.offerbook;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.filter.FilterManager;
@@ -71,7 +71,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final OfferBook offerBook;
     final Preferences preferences;
     private final P2PService p2PService;
-    final PriceFeed priceFeed;
+    final PriceFeedService priceFeedService;
     private ClosedTradableManager closedTradableManager;
     private FilterManager filterManager;
     private Navigation navigation;
@@ -105,7 +105,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     @Inject
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
-                              Preferences preferences, P2PService p2PService, PriceFeed priceFeed,
+                              Preferences preferences, P2PService p2PService, PriceFeedService priceFeedService,
                               ClosedTradableManager closedTradableManager, FilterManager filterManager,
                               Navigation navigation, BSFormatter formatter) {
         super();
@@ -115,7 +115,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.p2PService = p2PService;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
         this.closedTradableManager = closedTradableManager;
         this.filterManager = filterManager;
         this.navigation = navigation;
@@ -157,9 +157,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     private void setMarketPriceFeedCurrency() {
         if (!preferences.getUseStickyMarketPrice() && isTabSelected) {
             if (showAllTradeCurrenciesProperty.get())
-                priceFeed.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
+                priceFeedService.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
             else
-                priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+                priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
         }
     }
 

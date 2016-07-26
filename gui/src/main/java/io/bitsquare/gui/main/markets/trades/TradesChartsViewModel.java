@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.markets.trades;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.markets.trades.charts.CandleData;
 import io.bitsquare.locale.CurrencyUtil;
@@ -59,7 +59,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private final TradeStatisticsManager tradeStatisticsManager;
     final Preferences preferences;
-    private PriceFeed priceFeed;
+    private PriceFeedService priceFeedService;
 
     private final SetChangeListener<TradeStatistics> setChangeListener;
     final ObjectProperty<TradeCurrency> tradeCurrencyProperty = new SimpleObjectProperty<>();
@@ -77,10 +77,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradesChartsViewModel(TradeStatisticsManager tradeStatisticsManager, Preferences preferences, PriceFeed priceFeed) {
+    public TradesChartsViewModel(TradeStatisticsManager tradeStatisticsManager, Preferences preferences, PriceFeedService priceFeedService) {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.preferences = preferences;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
 
         setChangeListener = change -> updateChartData();
 
@@ -108,7 +108,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         updateChartData();
 
         if (!preferences.getUseStickyMarketPrice())
-            priceFeed.setCurrencyCode(tradeCurrencyProperty.get().getCode());
+            priceFeedService.setCurrencyCode(tradeCurrencyProperty.get().getCode());
     }
 
     @Override
@@ -127,7 +127,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         updateChartData();
 
         if (!preferences.getUseStickyMarketPrice())
-            priceFeed.setCurrencyCode(tradeCurrency.getCode());
+            priceFeedService.setCurrencyCode(tradeCurrency.getCode());
 
     }
 

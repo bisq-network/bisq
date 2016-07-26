@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.offer.takeoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
@@ -56,7 +56,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final TakeOfferDataModel dataModel;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
-    private PriceFeed priceFeed;
+    private PriceFeedService priceFeedService;
     private final Navigation navigation;
     final BSFormatter formatter;
 
@@ -107,14 +107,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, P2PService p2PService, PriceFeed priceFeed,
+    public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, P2PService p2PService, PriceFeedService priceFeedService,
                               Navigation navigation, BSFormatter formatter) {
         super(dataModel);
         this.dataModel = dataModel;
 
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.formatter = formatter;
 

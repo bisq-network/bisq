@@ -24,8 +24,8 @@ import java.util.Random;
 import java.util.function.Consumer;
 
 // TODO use https://github.com/timmolter/XChange
-public class PriceFeed {
-    private static final Logger log = LoggerFactory.getLogger(PriceFeed.class);
+public class PriceFeedService {
+    private static final Logger log = LoggerFactory.getLogger(PriceFeedService.class);
 
     private static final long MIN_PERIOD_BETWEEN_CALLS = 5000;
 
@@ -72,7 +72,7 @@ public class PriceFeed {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PriceFeed(BitcoinAveragePriceProvider fiatPriceProvider, PoloniexPriceProvider cryptoCurrenciesPriceProvider) {
+    public PriceFeedService(BitcoinAveragePriceProvider fiatPriceProvider, PoloniexPriceProvider cryptoCurrenciesPriceProvider) {
         this.fiatPriceProvider = fiatPriceProvider;
         this.cryptoCurrenciesPriceProvider = cryptoCurrenciesPriceProvider;
     }

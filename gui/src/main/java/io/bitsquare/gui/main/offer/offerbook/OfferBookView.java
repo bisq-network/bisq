@@ -478,7 +478,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getPrice() != null) {
                                         setText(model.getPrice(offerBookListItem));
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }
                                 }
                             };
@@ -490,14 +490,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 if (item != null && !empty) {
                                     if (item.getOffer().getPrice() == null) {
                                         this.offerBookListItem = item;
-                                        model.priceFeed.currenciesUpdateFlagProperty().addListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
                                         setText("N/A");
                                     } else {
                                         setText(model.getPrice(item));
                                     }
                                 } else {
                                     if (listener != null)
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     this.offerBookListItem = null;
                                     setText("");
                                 }
@@ -528,7 +528,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getOfferVolume() != null) {
                                         setText(model.getVolume(offerBookListItem));
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }
                                 }
                             };
@@ -539,14 +539,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 if (item != null && !empty) {
                                     if (item.getOffer().getPrice() == null) {
                                         this.offerBookListItem = item;
-                                        model.priceFeed.currenciesUpdateFlagProperty().addListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
                                         setText("N/A");
                                     } else {
                                         setText(model.getVolume(item));
                                     }
                                 } else {
                                     if (listener != null)
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     this.offerBookListItem = null;
                                     setText("");
                                 }

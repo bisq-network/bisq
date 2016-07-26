@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.offer.createoffer;
 
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.pricefeed.MarketPrice;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
@@ -59,7 +59,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel> implements ViewModel {
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
-    private PriceFeed priceFeed;
+    private PriceFeedService priceFeedService;
     private Preferences preferences;
     private Navigation navigation;
     final BSFormatter formatter;
@@ -127,7 +127,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private ChangeListener<String> errorMessageListener;
     private Offer offer;
     private Timer timeoutTimer;
-    private PriceFeed.Type priceFeedType;
+    private PriceFeedService.Type priceFeedType;
     private boolean inputIsMarketBasedPrice;
     private ChangeListener<Boolean> useMarketBasedPriceListener;
     private ChangeListener<String> currencyCodeListener;
@@ -139,14 +139,14 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Inject
     public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatValidator fiatValidator, BtcValidator btcValidator,
-                                P2PService p2PService, PriceFeed priceFeed, Preferences preferences, Navigation navigation,
+                                P2PService p2PService, PriceFeedService priceFeedService, Preferences preferences, Navigation navigation,
                                 BSFormatter formatter) {
         super(dataModel);
 
         this.fiatValidator = fiatValidator;
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
         this.preferences = preferences;
         this.navigation = navigation;
         this.formatter = formatter;
@@ -257,7 +257,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 dataModel.calculateTotalToPay();
 
                 if (!inputIsMarketBasedPrice) {
-                    MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
+                    MarketPrice marketPrice = priceFeedService.getMarketPrice(dataModel.tradeCurrencyCode.get());
                     if (marketPrice != null) {
                         double marketPriceAsDouble = formatter.roundDouble(marketPrice.getPrice(priceFeedType), 2);
                         try {
@@ -289,7 +289,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             new Popup().warning("You cannot set a percentage of 100% or larger. Please enter a percentage number like \"5.4\" for 5.4%")
                                     .show();
                         } else {
-                            MarketPrice marketPrice = priceFeed.getMarketPrice(dataModel.tradeCurrencyCode.get());
+                            MarketPrice marketPrice = priceFeedService.getMarketPrice(dataModel.tradeCurrencyCode.get());
                             if (marketPrice != null) {
                                 marketPriceMargin = formatter.roundDouble(marketPriceMargin, 4);
                                 dataModel.setMarketPriceMargin(marketPriceMargin);
@@ -420,7 +420,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         if (dataModel.paymentAccount != null)
             btcValidator.setMaxTradeLimitInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimit());
 
-        priceFeedType = direction == Offer.Direction.BUY ? PriceFeed.Type.ASK : PriceFeed.Type.BID;
+        priceFeedType = direction == Offer.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
 
         return result;
     }
@@ -613,7 +613,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isPriceInRange() {
-        MarketPrice marketPrice = priceFeed.getMarketPrice(getTradeCurrency().getCode());
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(getTradeCurrency().getCode());
         if (marketPrice != null) {
             double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
             Fiat priceAsFiat = dataModel.priceAsFiat.get();

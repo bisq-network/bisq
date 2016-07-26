@@ -23,7 +23,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
@@ -102,7 +102,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             TradeWalletService tradeWalletService,
                             OfferBookService offerBookService,
                             ClosedTradableManager closedTradableManager,
-                            PriceFeed priceFeed,
+                            PriceFeedService priceFeedService,
                             Preferences preferences,
                             @Named(Storage.DIR_KEY) File storageDir) {
         this.keyRing = keyRing;
@@ -116,7 +116,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
         openOffersStorage = new Storage<>(storageDir);
         openOffers = new TradableList<>(openOffersStorage, "OpenOffers");
-        openOffers.forEach(e -> e.getOffer().setPriceFeed(priceFeed));
+        openOffers.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
