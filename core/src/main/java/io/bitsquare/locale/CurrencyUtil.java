@@ -131,7 +131,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
         result.add(new CryptoCurrency("DAO", "DAO", true));
-        result.add(new CryptoCurrency("ETHC", "EtherClassic (old ticker deprecated ticker symbol)"));
+        result.add(new CryptoCurrency("ETHC", "EtherClassic (deprecated ticker symbol)"));
         return result;
     }
 
