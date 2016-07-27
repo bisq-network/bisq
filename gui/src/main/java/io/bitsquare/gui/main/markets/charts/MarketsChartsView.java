@@ -203,7 +203,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
                                         setText(formatter.formatFiat(offer.getPrice()));
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }
                                 }
                             };
@@ -214,14 +214,14 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                                 if (offer != null && !empty) {
                                     if (offer.getPrice() == null) {
                                         this.offer = offer;
-                                        model.priceFeed.currenciesUpdateFlagProperty().addListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
                                         setText("N/A");
                                     } else {
                                         setText(formatter.formatFiat(offer.getPrice()));
                                     }
                                 } else {
                                     if (listener != null)
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     this.offer = null;
                                     setText("");
                                 }
@@ -274,7 +274,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
                                         setText(formatter.formatFiat(offer.getOfferVolume()));
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }
                                 }
                             };
@@ -285,14 +285,14 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
                                 if (offer != null && !empty) {
                                     if (offer.getPrice() == null) {
                                         this.offer = offer;
-                                        model.priceFeed.currenciesUpdateFlagProperty().addListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
                                         setText("N/A");
                                     } else {
                                         setText(formatter.formatFiat(offer.getOfferVolume()));
                                     }
                                 } else {
                                     if (listener != null)
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     this.offer = null;
                                     setText("");
                                 }

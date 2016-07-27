@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.markets.charts;
 
 import com.google.common.math.LongMath;
 import com.google.inject.Inject;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
@@ -51,7 +51,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
     private final OfferBook offerBook;
     private final Preferences preferences;
-    final PriceFeed priceFeed;
+    final PriceFeedService priceFeedService;
 
     final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>();
     private final List<XYChart.Data> buyData = new ArrayList<>();
@@ -67,10 +67,10 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MarketsChartsViewModel(OfferBook offerBook, Preferences preferences, PriceFeed priceFeed) {
+    public MarketsChartsViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService) {
         this.offerBook = offerBook;
         this.preferences = preferences;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
 
         Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getMarketScreenCurrencyCode());
         if (tradeCurrencyOptional.isPresent())
@@ -100,7 +100,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
                 if (!isAnyPricePresent()) {
                     offerBook.fillOfferBookListItems();
                     updateChartData();
-                    priceFeed.currenciesUpdateFlagProperty().removeListener(currenciesUpdatedListener);
+                    priceFeedService.currenciesUpdateFlagProperty().removeListener(currenciesUpdatedListener);
                 }
             }
         };
@@ -108,17 +108,17 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
-        priceFeed.setType(PriceFeed.Type.LAST);
+        priceFeedService.setType(PriceFeedService.Type.LAST);
         offerBookListItems.addListener(listChangeListener);
 
         offerBook.fillOfferBookListItems();
         updateChartData();
 
         if (isAnyPricePresent())
-            priceFeed.currenciesUpdateFlagProperty().addListener(currenciesUpdatedListener);
+            priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdatedListener);
 
         if (!preferences.getUseStickyMarketPrice())
-            priceFeed.setCurrencyCode(tradeCurrency.get().getCode());
+            priceFeedService.setCurrencyCode(tradeCurrency.get().getCode());
     }
 
     @Override
@@ -189,7 +189,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
         updateChartData();
 
         if (!preferences.getUseStickyMarketPrice())
-            priceFeed.setCurrencyCode(tradeCurrency.getCode());
+            priceFeedService.setCurrencyCode(tradeCurrency.getCode());
 
         preferences.setMarketScreenCurrencyCode(tradeCurrency.getCode());
     }

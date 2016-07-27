@@ -27,7 +27,7 @@ bg color of non edit textFields: fafafa
     -bs-content-bg-grey: #f4f4f4;
     -bs-very-light-grey: #f8f8f8;
 
-    -fx-accent: #0f87c3;
+    -fx-accent: #0f86c3;
     -bs-blue-soft: derive(-fx-accent, 60%);
     -bs-blue-transparent: #0f87c344;
 
@@ -1070,3 +1070,34 @@ textfield */
     -fx-font-size: 10;
     -fx-text-fill: white;
 }
+
+#toggle-left {
+    -fx-border-radius: 4 0 0 4;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: #aaa;
+    -fx-border-style: solid solid solid solid;
+    -fx-border-insets: 0 -2 0 0;
+    -fx-background-insets: 0 -2 0 0;
+    -fx-background-radius: 4 0 0 4;
+}
+
+#toggle-center {
+    -fx-border-radius: 0 0 0 0;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: #aaa;
+    -fx-border-style: solid solid solid solid;
+    -fx-border-insets: 0 0 0 0;
+    -fx-background-insets: 0 0 0 0;
+    -fx-background-radius: 0 0 0 0;
+}
+
+#toggle-right {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: #aaa;
+    -fx-border-style: solid solid solid solid;
+    -fx-border-insets: 0 0 0 -2;
+    -fx-background-insets: 0 0 0 -2;
+    -fx-background-radius: 0 4 4 0;
+}
+

@@ -24,7 +24,7 @@ public class PeerManager implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
 
-    private static final long CHECK_MAX_CONN_DELAY_SEC = 5;
+    private static final long CHECK_MAX_CONN_DELAY_SEC = 10;
     // Use a long delay as the bootstrapping peer might need a while until it knows its onion address
     private static final long REMOVE_ANONYMOUS_PEER_SEC = 120;
 
@@ -95,7 +95,7 @@ public class PeerManager implements ConnectionListener {
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir);
-        HashSet<Peer> persistedPeers = dbStorage.initAndGetPersisted("PersistedPeers");
+        HashSet<Peer> persistedPeers = dbStorage.initAndGetPersistedWithFileName("PersistedPeers");
         if (persistedPeers != null) {
             log.info("We have persisted reported peers. persistedPeers.size()=" + persistedPeers.size());
             this.persistedPeers.addAll(persistedPeers);
@@ -158,7 +158,14 @@ public class PeerManager implements ConnectionListener {
         Log.logIfStressTests("onConnection to peer " +
                 (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown") +
                 " / Nr. of connections: " + networkNode.getAllConnections().size());
-        if (isSeedNode(connection))
+
+        final boolean seedNode = isSeedNode(connection);
+
+        final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
+        log.warn("++ Connection created: peer = {}{}", (addressOptional.isPresent() ? addressOptional.get().hostName : "unknown address"), seedNode ? " (SeedNode)" : "");
+
+
+        if (seedNode)
             connection.setPeerType(Connection.PeerType.SEED_NODE);
 
         doHouseKeeping();
@@ -176,6 +183,10 @@ public class PeerManager implements ConnectionListener {
                 (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown") +
                 " / Nr. of connections: " + networkNode.getAllConnections().size() +
                 " / closeConnectionReason: " + closeConnectionReason);
+
+        final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
+        log.warn("-- Connection closed: peer = {}{}", (addressOptional.isPresent() ? addressOptional.get().hostName : "unknown address"), isSeedNode(connection) ? " (SeedNode)" : "");
+        
         handleConnectionFault(connection);
 
         lostAllConnections = networkNode.getAllConnections().isEmpty();
@@ -221,7 +232,6 @@ public class PeerManager implements ConnectionListener {
                     log.debug("We have stopped already. We ignore that checkMaxConnectionsTimer.run call.");
                 }
             }, CHECK_MAX_CONN_DELAY_SEC);
-
         }
     }
 

@@ -10,6 +10,7 @@ import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
@@ -56,7 +57,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private Timer removeExpiredEntriesTimer;
     private HashMap<ByteArray, MapValue> sequenceNumberMap = new HashMap<>();
-    private final Storage<HashMap> storage;
+    private final Storage<HashMap<ByteArray, MapValue>> storage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +72,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
         storage = new Storage<>(storageDir);
 
-        HashMap<ByteArray, MapValue> persisted = storage.initAndGetPersisted("SequenceNumberMap");
+        HashMap<ByteArray, MapValue> persisted = storage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName("SequenceNumberMap");
         if (persisted != null)
             sequenceNumberMap = getPurgedSequenceNumberMap(persisted);
     }
@@ -97,7 +98,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                         ByteArray hashOfPayload = entry.getKey();
                         ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
                         toRemoveSet.add(protectedStorageEntry);
-                        log.info("We found an expired data entry. We remove the protectedData:\n\t" + StringUtils.abbreviate(protectedStorageEntry.toString().replace("\n", ""), 100));
+                        log.info("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
                         map.remove(hashOfPayload);
                     });
 
@@ -118,7 +119,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     @Override
     public void onMessage(Message message, Connection connection) {
         if (message instanceof BroadcastMessage) {
-            Log.traceCall(StringUtils.abbreviate(message.toString(), 100) + "\n\tconnection=" + connection);
+            Log.traceCall(Utilities.toTruncatedString(message) + "\n\tconnection=" + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (message instanceof AddDataMessage) {
                     add(((AddDataMessage) message).protectedStorageEntry, peersNodeAddress, null, false);
@@ -200,7 +201,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     public boolean add(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
                        @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
-        Log.traceCall();
+        Log.traceCall("with allowBroadcast=true");
+        return add(protectedStorageEntry, sender, listener, isDataOwner, true);
+    }
+
+    public boolean add(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
+                       @Nullable BroadcastHandler.Listener listener, boolean isDataOwner, boolean allowBroadcast) {
+        Log.traceCall("with allowBroadcast=" + allowBroadcast);
 
         ByteArray hashOfPayload = getHashAsByteArray(protectedStorageEntry.getStoragePayload());
         boolean sequenceNrValid = isSequenceNrValid(protectedStorageEntry.sequenceNumber, hashOfPayload);
@@ -226,9 +233,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
             if (hasSequenceNrIncreased) {
                 sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
-                storage.queueUpForSave(sequenceNumberMap, 100);
+                // We set the delay higher as we might receive a batch of items
+                storage.queueUpForSave(sequenceNumberMap, 2000);
 
-                broadcast(new AddDataMessage(protectedStorageEntry), sender, listener, isDataOwner);
+                if (allowBroadcast)
+                    broadcast(new AddDataMessage(protectedStorageEntry), sender, listener, isDataOwner);
             } else {
                 log.trace("We got that version of the data already, so we don't broadcast it.");
             }
@@ -269,7 +278,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     storedData.updateSignature(signature);
                     printData("after refreshTTL");
                     sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
-                    storage.queueUpForSave(sequenceNumberMap, 100);
+                    storage.queueUpForSave(sequenceNumberMap, 1000);
 
                     broadcast(refreshTTLMessage, sender, null, isDataOwner);
                 }
@@ -298,7 +307,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
             printData("after remove");
             sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
-            storage.queueUpForSave(sequenceNumberMap, 100);
+            storage.queueUpForSave(sequenceNumberMap, 300);
 
             broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
         } else {
@@ -325,7 +334,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfData);
             printData("after removeMailboxData");
             sequenceNumberMap.put(hashOfData, new MapValue(protectedMailboxStorageEntry.sequenceNumber, System.currentTimeMillis()));
-            storage.queueUpForSave(sequenceNumberMap, 100);
+            storage.queueUpForSave(sequenceNumberMap, 300);
 
             broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender, null, isDataOwner);
         } else {
@@ -387,6 +396,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         hashMapChangedListeners.add(hashMapChangedListener);
     }
 
+    public void removeHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {
+        hashMapChangedListeners.remove(hashMapChangedListener);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -446,7 +459,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             boolean result = Sig.verify(ownerPubKey, hashOfDataAndSeqNr, signature);
             if (!result)
                 log.error("Signature verification failed at checkSignature. " +
-                        "That should not happen. Consider it might be an attempt of fraud.");
+                        "That should not happen. ownerPubKey=" + ownerPubKey +
+                        ", hashOfDataAndSeqNr=" + Arrays.toString(hashOfDataAndSeqNr) + ", signature=" + Arrays.toString(signature));
 
             return result;
         } catch (CryptoException e) {
@@ -480,8 +494,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     protectedStorageEntry.ownerPubKey.equals(protectedStorageEntry.getStoragePayload().getOwnerPubKey());
         }
 
-        if (!result)
-            log.error("PublicKey of payload data and ProtectedData are not matching. Consider it might be an attempt of fraud");
+        if (!result) {
+            String res1 = "null";
+            String res2 = "null";
+            if (protectedStorageEntry != null) {
+                res1 = protectedStorageEntry.toString();
+                if (protectedStorageEntry.getStoragePayload() != null && protectedStorageEntry.getStoragePayload().getOwnerPubKey() != null)
+                    res2 = protectedStorageEntry.getStoragePayload().getOwnerPubKey().toString();
+            }
+
+            log.error("PublicKey of payload data and ProtectedData are not matching. protectedStorageEntry=" + res1 +
+                    "protectedStorageEntry.getStoragePayload().getOwnerPubKey()=" + res2);
+        }
         return result;
     }
 
@@ -489,7 +513,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         ProtectedStorageEntry storedData = map.get(hashOfData);
         boolean result = storedData.ownerPubKey != null && storedData.ownerPubKey.equals(ownerPubKey);
         if (!result)
-            log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
+            log.error("New data entry does not match our stored data. storedData.ownerPubKey=" +
+                    (storedData.ownerPubKey != null ? storedData.ownerPubKey.toString() : "null") +
+                    ", ownerPubKey=" + ownerPubKey);
 
         return result;
     }
@@ -502,7 +528,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             boolean result = entry.receiversPubKey.equals(receiversPubKey)
                     && getHashAsByteArray(entry.getStoragePayload()).equals(hashOfData);
             if (!result)
-                log.error("New data entry does not match our stored data. Consider it might be an attempt of fraud");
+                log.error("New data entry does not match our stored data. entry.receiversPubKey=" + entry.receiversPubKey
+                        + ", receiversPubKey=" + receiversPubKey);
 
             return result;
         } else {
@@ -532,36 +559,38 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private void printData(String info) {
-        StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
-        sb.append("Data set " + info + " operation");
-        // We print the items sorted by hash with the payload class name and id
-        List<Tuple2<String, ProtectedStorageEntry>> tempList = map.values().stream()
-                .map(e -> new Tuple2<>(org.bitcoinj.core.Utils.HEX.encode(getHashAsByteArray(e.getStoragePayload()).bytes), e))
-                .collect(Collectors.toList());
-        tempList.sort((o1, o2) -> o1.first.compareTo(o2.first));
-        tempList.stream().forEach(e -> {
-            final ProtectedStorageEntry storageEntry = e.second;
-            final StoragePayload storagePayload = storageEntry.getStoragePayload();
-            final MapValue mapValue = sequenceNumberMap.get(getHashAsByteArray(storagePayload));
-            sb.append("\n")
-                    .append("Hash=")
-                    .append(e.first)
-                    .append("; Class=")
-                    .append(storagePayload.getClass().getSimpleName())
-                    .append("; SequenceNumbers (Object/Stored)=")
-                    .append(storageEntry.sequenceNumber)
-                    .append(" / ")
-                    .append(mapValue != null ? mapValue.sequenceNr : "null")
-                    .append("; TimeStamp (Object/Stored)=")
-                    .append(storageEntry.creationTimeStamp)
-                    .append(" / ")
-                    .append(mapValue != null ? mapValue.timeStamp : "null")
-                    .append("; Payload=")
-                    .append(StringUtils.abbreviate(storagePayload.toString(), 100).replace("\n", ""));
-        });
-        sb.append("\n------------------------------------------------------------\n");
-        log.debug(sb.toString());
-        log.info("Data set " + info + " operation: size=" + map.values().size());
+        if (LoggerFactory.getLogger(Log.class).isInfoEnabled() || LoggerFactory.getLogger(Log.class).isDebugEnabled()) {
+            StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
+            sb.append("Data set ").append(info).append(" operation");
+            // We print the items sorted by hash with the payload class name and id
+            List<Tuple2<String, ProtectedStorageEntry>> tempList = map.values().stream()
+                    .map(e -> new Tuple2<>(org.bitcoinj.core.Utils.HEX.encode(getHashAsByteArray(e.getStoragePayload()).bytes), e))
+                    .collect(Collectors.toList());
+            tempList.sort((o1, o2) -> o1.first.compareTo(o2.first));
+            tempList.stream().forEach(e -> {
+                final ProtectedStorageEntry storageEntry = e.second;
+                final StoragePayload storagePayload = storageEntry.getStoragePayload();
+                final MapValue mapValue = sequenceNumberMap.get(getHashAsByteArray(storagePayload));
+                sb.append("\n")
+                        .append("Hash=")
+                        .append(e.first)
+                        .append("; Class=")
+                        .append(storagePayload.getClass().getSimpleName())
+                        .append("; SequenceNumbers (Object/Stored)=")
+                        .append(storageEntry.sequenceNumber)
+                        .append(" / ")
+                        .append(mapValue != null ? mapValue.sequenceNr : "null")
+                        .append("; TimeStamp (Object/Stored)=")
+                        .append(storageEntry.creationTimeStamp)
+                        .append(" / ")
+                        .append(mapValue != null ? mapValue.timeStamp : "null")
+                        .append("; Payload=")
+                        .append(Utilities.toTruncatedString(storagePayload));
+            });
+            sb.append("\n------------------------------------------------------------\n");
+            log.debug(sb.toString());
+            log.info("Data set " + info + " operation: size=" + map.values().size());
+        }
     }
 
 

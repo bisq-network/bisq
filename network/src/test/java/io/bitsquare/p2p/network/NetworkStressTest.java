@@ -377,7 +377,7 @@ public class NetworkStressTest {
         final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing);
 
         return new P2PService(seedNodesRepository, port, peerTorDir, useLocalhost,
-                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null, new Clock(), peerEncryptionService, peerKeyRing);
+                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null, new Clock(), null, peerEncryptionService, peerKeyRing);
     }
 
     // ## TEST SETUP: P2P service listener classes

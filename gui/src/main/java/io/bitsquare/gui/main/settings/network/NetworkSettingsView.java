@@ -17,11 +17,14 @@
 
 package io.bitsquare.gui.main.settings.network;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.Clock;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Statistic;
@@ -41,6 +44,7 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -61,8 +65,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     TextArea bitcoinPeersTextArea, bridgesTextArea;
     @FXML
     Label bitcoinPeersLabel, p2PPeersLabel, bridgesLabel;
-    /* @FXML
-     CheckBox useTorCheckBox;*/
+    @FXML
+    CheckBox useTorForBtcJCheckBox, useTorForHttpCheckBox;
     @FXML
     TableView<P2pNetworkListItem> tableView;
     @FXML
@@ -94,7 +98,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         bitcoinPeersTextArea.setPrefRowCount(10);
 
-        tableView.setMinHeight(300);
+        tableView.setMinHeight(230);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No connections are available"));
         tableView.getSortOrder().add(creationDateColumn);
@@ -124,11 +128,12 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void activate() {
-      /*  useTorCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
-        useTorCheckBox.setOnAction(event -> {
-            boolean selected = useTorCheckBox.isSelected();
+        useTorForBtcJCheckBox.setSelected(preferences.getUseTorForBitcoinJ());
+        useTorForBtcJCheckBox.setOnAction(event -> {
+            boolean selected = useTorForBtcJCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
-                new Popup().information("You need to restart the application to apply that change.\n" +
+                new Popup().information("Tor support for the Bitcoin network is experimental at the current state.\n\n" +
+                        "You need to restart the application to apply that change.\n" +
                         "Do you want to do that now?")
                         .actionButtonText("Apply and shut down")
                         .onAction(() -> {
@@ -136,10 +141,43 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                             UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
                         })
                         .closeButtonText("Cancel")
-                        .onClose(() -> useTorCheckBox.setSelected(!selected))
+                        .onClose(() -> useTorForBtcJCheckBox.setSelected(!selected))
                         .show();
             }
-        });*/
+        });
+        String key = "noTorForPoloniexWarning";
+        useTorForHttpCheckBox.setSelected(preferences.getUseTorForHttpRequests());
+        useTorForHttpCheckBox.setOnAction(event -> {
+            final boolean selected = useTorForHttpCheckBox.isSelected();
+
+            if (selected && preferences.showAgain(key))
+                new Popup().information("Http requests to Poloniex (used to get altcoin market price feed) cannot be routed via Tor because they use Cloudflare " +
+                        "and they require a Captcha.\n\n" +
+                        "If you provide program arguments for connection to a local socks 5 proxy Tor will be used " +
+                        "also for Poloniex but you " +
+                        "have to make sure to use a non-Tor proxy (I2P, VPN,...) as otherwise you would get the " +
+                        "same problems with Cloudflare.\n\n" +
+                        "All other http traffic will be using Tor.")
+                        .dontShowAgainId(key, preferences)
+                        .show();
+
+            preferences.setUseTorForHttpRequests(selected);
+        });
+        // only display once at startup
+        String key2 = "initalNoTorForPoloniexWarning";
+        if (preferences.getUseTorForHttpRequests() && preferences.showAgain(key2) && preferences.showAgain(key2))
+            new Popup().information("Tor is by default used for Http requests.\n\n" +
+                    "Though http requests to Poloniex (used to get altcoin market price feed) cannot be routed via Tor because they use Cloudflare " +
+                    "and they require a Captcha.\n\n" +
+                    "If you provide program arguments for connection to a local socks 5 proxy Tor will be used " +
+                    "also for Poloniex but you " +
+                    "have to make sure to use a non-Tor proxy (I2P, VPN,...) as otherwise you would get the " +
+                    "same problems with Cloudflare.\n\n" +
+                    "All other http traffic will be using Tor.")
+                    .onClose(() -> preferences.dontShowAgain(key2, true))
+                    .show();
+
+
         bitcoinPeersSubscription = EasyBind.subscribe(walletService.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
 
         nodeAddressSubscription = EasyBind.subscribe(p2PService.getNetworkNode().nodeAddressProperty(),
@@ -166,7 +204,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     @Override
     public void deactivate() {
-        //useTorCheckBox.setOnAction(null);
+        useTorForBtcJCheckBox.setOnAction(null);
+        useTorForHttpCheckBox.setOnAction(null);
 
         if (nodeAddressSubscription != null)
             nodeAddressSubscription.unsubscribe();

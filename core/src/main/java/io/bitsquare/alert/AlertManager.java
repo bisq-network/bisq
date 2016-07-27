@@ -19,7 +19,7 @@ package io.bitsquare.alert;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.bitsquare.common.OptionKeys;
+import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
@@ -56,7 +56,7 @@ public class AlertManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AlertManager(P2PService p2PService, KeyRing keyRing, User user, @Named(OptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+    public AlertManager(P2PService p2PService, KeyRing keyRing, User user, @Named(CoreOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;

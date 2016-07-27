@@ -133,7 +133,8 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                 () -> handleTaskRunnerSuccess("DepositTxPublishedMessage"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(ProcessDepositTxPublishedMessage.class);
+        taskRunner.addTasks(ProcessDepositTxPublishedMessage.class,
+                PublishTradeStatistics.class);
         taskRunner.run();
     }
 

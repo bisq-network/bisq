@@ -1,6 +1,7 @@
 package io.bitsquare.p2p.network;
 
 import com.google.common.util.concurrent.*;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
@@ -9,7 +10,6 @@ import io.bitsquare.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -65,7 +65,7 @@ public abstract class NetworkNode implements MessageListener {
     abstract public void start(boolean useBridges, @Nullable SetupListener setupListener);
 
     public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress, Message message) {
-        Log.traceCall("peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + StringUtils.abbreviate(message.toString(), 100));
+        Log.traceCall("peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + Utilities.toTruncatedString(message));
         checkNotNull(peersNodeAddress, "peerAddress must not be null");
 
         Connection connection = getOutboundConnection(peersNodeAddress);
@@ -213,8 +213,14 @@ public abstract class NetworkNode implements MessageListener {
         }
     }
 
+    @Nullable
+    public Socks5Proxy getSocksProxy() {
+        return null;
+    }
+
+
     public SettableFuture<Connection> sendMessage(Connection connection, Message message) {
-        Log.traceCall("\n\tmessage=" + StringUtils.abbreviate(message.toString(), 100) + "\n\tconnection=" + connection);
+        Log.traceCall("\n\tmessage=" + Utilities.toTruncatedString(message) + "\n\tconnection=" + connection);
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());

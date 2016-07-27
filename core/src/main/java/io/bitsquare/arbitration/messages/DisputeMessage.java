@@ -23,6 +23,7 @@ import io.bitsquare.p2p.messaging.MailboxMessage;
 import java.util.UUID;
 
 public abstract class DisputeMessage implements MailboxMessage {
+    //TODO add serialVersionUID also in superclasses as changes would break compatibility
     private final int messageVersion = Version.getP2PMessageVersion();
     private final String uid = UUID.randomUUID().toString();
 

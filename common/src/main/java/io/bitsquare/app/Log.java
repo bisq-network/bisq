@@ -34,6 +34,10 @@ public class Log {
     private static SizeBasedTriggeringPolicy triggeringPolicy;
     private static Logger logbackLogger;
 
+    public static void setLevel(Level logLevel) {
+        logbackLogger.setLevel(logLevel);
+    }
+
     public static void setup(String fileName) {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
@@ -82,10 +86,6 @@ public class Log {
         errorAppender.addFilter(levelFilter);
         errorAppender.start();
         logbackLogger.addAppender(errorAppender);*/
-    }
-
-    public static void setLevel(Level logLevel) {
-        logbackLogger.setLevel(logLevel);
     }
 
     public static void traceCall() {

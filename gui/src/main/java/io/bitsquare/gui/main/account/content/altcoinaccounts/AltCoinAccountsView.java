@@ -167,37 +167,17 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     "If you are not sure about that process visit the Monero forum (https://forum.getmonero.org) to find more information.")
                     .closeButtonText("I understand")
                     .show();
-        } else if (code.equals("ETHC")) {
-            //TODO remove after JULY, 21
-            if (new Date().before(new Date(2016 - 1900, Calendar.JULY, 21))) {
-                new Popup().information("You cannot use EtherClassic before the hard fork gets activated.\n" +
-                        "It is planned for July, 20 2016, but please check on their project web page for detailed information.\n\n" +
-                        "The EHT/ETHC fork situation carries considerable risks.\n" +
-                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.")
-                        .closeButtonText("I understand")
-                        .onAction(() -> Utilities.openWebPage("https://ethereumclassic.github.io/"))
-                        .actionButtonText("Open Ethereum Classic web page")
-                        .show();
-            } else if (new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
-                //TODO remove after AUGUST, 30
-                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
-                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.")
-                        .closeButtonText("I understand")
-                        .onAction(() -> Utilities.openWebPage("https://ethereumclassic.github.io/"))
-                        .actionButtonText("Open Ethereum Classic web page")
-                        .show();
-            }
-        } else if (code.equals("ETH")) {
+        } else if (code.equals("ETC")) {
             //TODO remove after AUGUST, 30
             if (new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
-                new Popup().information("The EHT/ETHC fork situation carries considerable risks.\n" +
+                new Popup().information("The EHT/ETC fork situation carries considerable risks.\n" +
                         "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.")
                         .closeButtonText("I understand")
-                        .onAction(() -> Utilities.openWebPage("https://www.ethereum.org/"))
-                        .actionButtonText("Open Ethereum web page")
+                        .onAction(() -> Utilities.openWebPage("https://ethereumclassic.github.io/"))
+                        .actionButtonText("Open Ethereum Classic web page")
                         .show();
             }
-        }
+        } 
 
         if (!model.getPaymentAccounts().stream().filter(e -> {
             if (e.getAccountName() != null)

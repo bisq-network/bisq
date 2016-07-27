@@ -5,22 +5,22 @@ import com.google.gson.JsonParser;
 import io.bitsquare.app.Log;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
+import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.IOException;
 
-public class BlockrIOProvider implements FeeProvider {
+public class BlockrIOProvider extends FeeProvider {
     private static final Logger log = LoggerFactory.getLogger(BlockrIOProvider.class);
 
-    private final HttpClient httpClient;
-
-    public BlockrIOProvider() {
-        httpClient = new HttpClient("https://btc.blockr.io/api/v1/tx/info/");
+    @Inject
+    public BlockrIOProvider(HttpClient httpClient, Preferences preferences) {
+        super(httpClient, preferences, "https://btc.blockr.io/api/v1/tx/info/");
     }
 
-    //https://api.bitcoinaverage.com/ticker/global/EUR/
     @Override
     public Coin getFee(String transactionId) throws IOException, HttpException {
         Log.traceCall("transactionId=" + transactionId);

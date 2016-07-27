@@ -5,19 +5,20 @@ import com.google.gson.JsonParser;
 import io.bitsquare.app.Log;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
+import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.IOException;
 
-public class TradeBlockProvider implements FeeProvider {
+public class TradeBlockProvider extends FeeProvider {
     private static final Logger log = LoggerFactory.getLogger(TradeBlockProvider.class);
 
-    private final HttpClient httpClient;
-
-    public TradeBlockProvider() {
-        httpClient = new HttpClient("https://tradeblock.com/api/blockchain/tx/");
+    @Inject
+    public TradeBlockProvider(HttpClient httpClient, Preferences preferences) {
+        super(httpClient, preferences, "https://tradeblock.com/api/blockchain/tx/");
     }
 
     @Override

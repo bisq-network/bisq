@@ -19,11 +19,15 @@ package io.bitsquare.trade;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
+import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
+import io.bitsquare.trade.statistics.TradeStatisticsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+
+import static com.google.inject.name.Names.named;
 
 public class TradeModule extends AppModule {
     private static final Logger log = LoggerFactory.getLogger(TradeModule.class);
@@ -35,7 +39,9 @@ public class TradeModule extends AppModule {
     @Override
     protected void configure() {
         bind(TradeManager.class).in(Singleton.class);
+        bind(TradeStatisticsManager.class).in(Singleton.class);
         bind(ClosedTradableManager.class).in(Singleton.class);
         bind(FailedTradesManager.class).in(Singleton.class);
+        bindConstant().annotatedWith(named(CoreOptionKeys.DUMP_STATISTICS)).to(env.getRequiredProperty(CoreOptionKeys.DUMP_STATISTICS));
     }
 }

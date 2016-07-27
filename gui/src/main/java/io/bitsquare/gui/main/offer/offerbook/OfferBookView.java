@@ -191,7 +191,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
         avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().hostName.compareTo(o2.getOffer().getOwnerNodeAddress().hostName));
 
-        nrOfOffersLabel = new Label("Nr. of offers: -");
+        nrOfOffersLabel = new Label("");
         nrOfOffersLabel.setId("num-offers");
         GridPane.setHalignment(nrOfOffersLabel, HPos.LEFT);
         GridPane.setVgrow(nrOfOffersLabel, Priority.NEVER);
@@ -209,6 +209,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setHalignment(createOfferButton, HPos.RIGHT);
         GridPane.setVgrow(createOfferButton, Priority.NEVER);
         GridPane.setValignment(createOfferButton, VPos.TOP);
+        offerListListener = c -> nrOfOffersLabel.setText("Nr. of offers: " + model.getOfferList().size());
     }
 
     @Override
@@ -254,7 +255,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.setItems(model.getOfferList());
         priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
 
-        offerListListener = c -> nrOfOffersLabel.setText("Nr. of offers: " + model.getOfferList().size());
         model.getOfferList().addListener(offerListListener);
         nrOfOffersLabel.setText("Nr. of offers: " + model.getOfferList().size());
     }
@@ -478,7 +478,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getPrice() != null) {
                                         setText(model.getPrice(offerBookListItem));
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }
                                 }
                             };
@@ -490,14 +490,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 if (item != null && !empty) {
                                     if (item.getOffer().getPrice() == null) {
                                         this.offerBookListItem = item;
-                                        model.priceFeed.currenciesUpdateFlagProperty().addListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
                                         setText("N/A");
                                     } else {
                                         setText(model.getPrice(item));
                                     }
                                 } else {
                                     if (listener != null)
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     this.offerBookListItem = null;
                                     setText("");
                                 }
@@ -528,7 +528,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getOfferVolume() != null) {
                                         setText(model.getVolume(offerBookListItem));
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }
                                 }
                             };
@@ -539,14 +539,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 if (item != null && !empty) {
                                     if (item.getOffer().getPrice() == null) {
                                         this.offerBookListItem = item;
-                                        model.priceFeed.currenciesUpdateFlagProperty().addListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
                                         setText("N/A");
                                     } else {
                                         setText(model.getVolume(item));
                                     }
                                 } else {
                                     if (listener != null)
-                                        model.priceFeed.currenciesUpdateFlagProperty().removeListener(listener);
+                                        model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     this.offerBookListItem = null;
                                     setText("");
                                 }

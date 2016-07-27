@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.offer.offerbook;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.filter.FilterManager;
@@ -33,7 +33,8 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.*;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.payment.*;
+import io.bitsquare.payment.PaymentAccountUtil;
+import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.offer.Offer;
@@ -53,12 +54,8 @@ import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 class OfferBookViewModel extends ActivatableViewModel {
     protected final static Logger log = LoggerFactory.getLogger(OfferBookViewModel.class);
@@ -71,7 +68,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final OfferBook offerBook;
     final Preferences preferences;
     private final P2PService p2PService;
-    final PriceFeed priceFeed;
+    final PriceFeedService priceFeedService;
     private ClosedTradableManager closedTradableManager;
     private FilterManager filterManager;
     private Navigation navigation;
@@ -105,7 +102,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     @Inject
     public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
-                              Preferences preferences, P2PService p2PService, PriceFeed priceFeed,
+                              Preferences preferences, P2PService p2PService, PriceFeedService priceFeedService,
                               ClosedTradableManager closedTradableManager, FilterManager filterManager,
                               Navigation navigation, BSFormatter formatter) {
         super();
@@ -115,7 +112,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.p2PService = p2PService;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
         this.closedTradableManager = closedTradableManager;
         this.filterManager = filterManager;
         this.navigation = navigation;
@@ -157,9 +154,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     private void setMarketPriceFeedCurrency() {
         if (!preferences.getUseStickyMarketPrice() && isTabSelected) {
             if (showAllTradeCurrenciesProperty.get())
-                priceFeed.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
+                priceFeedService.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
             else
-                priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+                priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
         }
     }
 
@@ -358,70 +355,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isAnyPaymentAccountValidForOffer(Offer offer) {
-        return isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
-    }
-
-    static boolean isAnyPaymentAccountValidForOffer(Offer offer, Collection<PaymentAccount> paymentAccounts) {
-        for (PaymentAccount paymentAccount : paymentAccounts) {
-            if (isPaymentAccountValidForOffer(offer, paymentAccount))
-                return true;
-        }
-        return false;
-    }
-
-    //TODO not tested with all combinations yet....
-    static boolean isPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
-        // check if we have  a matching currency
-        Set<String> paymentAccountCurrencyCodes = paymentAccount.getTradeCurrencies().stream().map(TradeCurrency::getCode).collect(Collectors.toSet());
-        boolean matchesCurrencyCode = paymentAccountCurrencyCodes.contains(offer.getCurrencyCode());
-        if (!matchesCurrencyCode)
-            return false;
-
-        // check if we have a matching payment method or if its a bank account payment method which is treated special
-        if (paymentAccount instanceof CountryBasedPaymentAccount) {
-            CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) paymentAccount;
-
-            // check if we have a matching country
-            boolean matchesCountryCodes = offer.getAcceptedCountryCodes() != null && countryBasedPaymentAccount.getCountry() != null &&
-                    offer.getAcceptedCountryCodes().contains(countryBasedPaymentAccount.getCountry().code);
-            if (!matchesCountryCodes)
-                return false;
-
-            if (paymentAccount instanceof SepaAccount || offer.getPaymentMethod().equals(PaymentMethod.SEPA)) {
-                boolean samePaymentMethod = paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
-                return samePaymentMethod;
-            } else if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK) ||
-                    offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
-
-                checkNotNull(offer.getAcceptedBankIds(), "offer.getAcceptedBankIds() must not be null");
-                if (paymentAccount instanceof SpecificBanksAccount) {
-                    // check if we have a matching bank
-                    boolean offerSideMatchesBank = offer.getAcceptedBankIds().contains(((BankAccount) paymentAccount).getBankId());
-                    boolean paymentAccountSideMatchesBank = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks().contains(offer.getBankId());
-                    return offerSideMatchesBank && paymentAccountSideMatchesBank;
-                } else {
-                    // national or same bank
-                    boolean matchesBank = offer.getAcceptedBankIds().contains(((BankAccount) paymentAccount).getBankId());
-                    return matchesBank;
-                }
-            } else {
-                if (paymentAccount instanceof SpecificBanksAccount) {
-                    // check if we have a matching bank
-                    boolean paymentAccountSideMatchesBank = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks().contains(offer.getBankId());
-                    return paymentAccountSideMatchesBank;
-                } else if (paymentAccount instanceof SameBankAccount) {
-                    // check if we have a matching bank
-                    boolean paymentAccountSideMatchesBank = ((SameBankAccount) paymentAccount).getBankId().equals(offer.getBankId());
-                    return paymentAccountSideMatchesBank;
-                } else {
-                    // national
-                    return true;
-                }
-            }
-
-        } else {
-            return paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
-        }
+        return PaymentAccountUtil.isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
     }
 
     public boolean hasPaymentAccountForCurrency() {

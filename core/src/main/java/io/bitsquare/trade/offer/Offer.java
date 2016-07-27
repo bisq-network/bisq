@@ -21,7 +21,7 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.pricefeed.MarketPrice;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
@@ -144,7 +144,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     transient private OfferAvailabilityProtocol availabilityProtocol;
     @JsonExclude
     transient private StringProperty errorMessageProperty = new SimpleStringProperty();
-    transient private PriceFeed priceFeed;
+    @JsonExclude
+    transient private PriceFeedService priceFeedService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +169,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  @Nullable ArrayList<String> acceptedCountryCodes,
                  @Nullable String bankId,
                  @Nullable ArrayList<String> acceptedBankIds,
-                 PriceFeed priceFeed) {
+                 PriceFeedService priceFeedService) {
         this.id = id;
         this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;
@@ -186,7 +187,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.acceptedCountryCodes = acceptedCountryCodes;
         this.bankId = bankId;
         this.acceptedBankIds = acceptedBankIds;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
 
         protocolVersion = Version.TRADE_PROTOCOL_VERSION;
 
@@ -300,8 +301,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setPriceFeed(PriceFeed priceFeed) {
-        this.priceFeed = priceFeed;
+    public void setPriceFeedService(PriceFeedService priceFeedService) {
+        this.priceFeedService = priceFeedService;
     }
 
     public void setState(State state) {
@@ -355,10 +356,10 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     @Nullable
     public Fiat getPrice() {
         if (useMarketBasedPrice) {
-            checkNotNull(priceFeed, "priceFeed must not be null");
-            MarketPrice marketPrice = priceFeed.getMarketPrice(currencyCode);
+            checkNotNull(priceFeedService, "priceFeed must not be null");
+            MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             if (marketPrice != null) {
-                PriceFeed.Type priceFeedType = direction == Direction.BUY ? PriceFeed.Type.ASK : PriceFeed.Type.BID;
+                PriceFeedService.Type priceFeedType = direction == Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
                 double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
                 double factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
                 double targetPrice = marketPriceAsDouble * factor;

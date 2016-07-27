@@ -26,14 +26,14 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.PaymentAccountUtil;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.handlers.TradeResultHandler;
@@ -41,14 +41,12 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -65,7 +63,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     final WalletService walletService;
     private final User user;
     private final Preferences preferences;
-    private final PriceFeed priceFeed;
+    private final PriceFeedService priceFeedService;
     private final BlockchainService blockchainService;
     private final BSFormatter formatter;
 
@@ -104,14 +102,14 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Inject
     TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
                        WalletService walletService, User user,
-                       Preferences preferences, PriceFeed priceFeed, BlockchainService blockchainService,
+                       Preferences preferences, PriceFeedService priceFeedService, BlockchainService blockchainService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
         this.user = user;
         this.preferences = preferences;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
@@ -139,7 +137,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //     feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
 
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
-            priceFeed.setCurrencyCode(offer.getCurrencyCode());
+            priceFeedService.setCurrencyCode(offer.getCurrencyCode());
 
         tradeManager.checkOfferAvailability(offer,
                 () -> {
@@ -214,13 +212,13 @@ class TakeOfferDataModel extends ActivatableDataModel {
         offer.resetState();
 
         if (!preferences.getUseStickyMarketPrice())
-            priceFeed.setCurrencyCode(offer.getCurrencyCode());
+            priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
-            priceFeed.setCurrencyCode(offer.getCurrencyCode());
+            priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
 
@@ -271,17 +269,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
-        ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList(new ArrayList<>());
-        for (PaymentAccount paymentAccount : user.getPaymentAccounts()) {
-            if (paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod())) {
-                for (TradeCurrency tradeCurrency : paymentAccount.getTradeCurrencies()) {
-                    if (tradeCurrency.getCode().equals(offer.getCurrencyCode())) {
-                        paymentAccounts.add(paymentAccount);
-                    }
-                }
-            }
-        }
-        return paymentAccounts;
+        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, user.getPaymentAccounts());
     }
 
     boolean hasAcceptedArbitrators() {

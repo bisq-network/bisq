@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.offer;
 
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.P2PService;
@@ -46,7 +46,7 @@ public class OfferBookService {
     }
 
     private final P2PService p2PService;
-    private PriceFeed priceFeed;
+    private PriceFeedService priceFeedService;
     private final List<OfferBookChangedListener> offerBookChangedListeners = new LinkedList<>();
 
 
@@ -55,9 +55,9 @@ public class OfferBookService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferBookService(P2PService p2PService, PriceFeed priceFeed) {
+    public OfferBookService(P2PService p2PService, PriceFeedService priceFeedService) {
         this.p2PService = p2PService;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -65,7 +65,7 @@ public class OfferBookService {
                 offerBookChangedListeners.stream().forEach(listener -> {
                     if (data.getStoragePayload() instanceof Offer) {
                         Offer offer = (Offer) data.getStoragePayload();
-                        offer.setPriceFeed(priceFeed);
+                        offer.setPriceFeedService(priceFeedService);
                         listener.onAdded(offer);
                     }
                 });
@@ -126,7 +126,7 @@ public class OfferBookService {
                 .filter(data -> data.getStoragePayload() instanceof Offer)
                 .map(data -> {
                     Offer offer = (Offer) data.getStoragePayload();
-                    offer.setPriceFeed(priceFeed);
+                    offer.setPriceFeedService(priceFeedService);
                     return offer;
                 })
                 .collect(Collectors.toList());

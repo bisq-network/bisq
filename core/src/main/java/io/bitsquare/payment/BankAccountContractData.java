@@ -97,7 +97,7 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
 
     @Nullable
     public String getBankId() {
-        return bankId;
+        return BankUtil.isBankIdRequired(countryCode) ? bankId : bankName;
     }
 
     public void setBranchId(String branchId) {

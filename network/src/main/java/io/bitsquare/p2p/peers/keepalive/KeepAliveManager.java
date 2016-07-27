@@ -60,12 +60,8 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void restart() {
-        if (keepAliveTimer == null)
-            keepAliveTimer = UserThread.runPeriodically(() -> {
-                stopped = false;
-                keepAlive();
-            }, INTERVAL_SEC);
+    public void start() {
+        restart();
     }
 
 
@@ -166,6 +162,14 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void restart() {
+        if (keepAliveTimer == null)
+            keepAliveTimer = UserThread.runPeriodically(() -> {
+                stopped = false;
+                keepAlive();
+            }, INTERVAL_SEC);
+    }
+    
     private void keepAlive() {
         if (!stopped) {
             Log.traceCall();

@@ -24,7 +24,8 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.FaultHandler;
@@ -47,6 +48,8 @@ import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.trade.statistics.TradeStatistics;
+import io.bitsquare.trade.statistics.TradeStatisticsManager;
 import io.bitsquare.user.User;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -63,15 +66,16 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
+
+    private static final long REPUBLISH_STATISTICS_INTERVAL_MIN = TimeUnit.HOURS.toMillis(1);
 
     private final User user;
     private final KeyRing keyRing;
@@ -82,11 +86,14 @@ public class TradeManager {
     private final FailedTradesManager failedTradesManager;
     private final ArbitratorManager arbitratorManager;
     private final P2PService p2PService;
-    private FilterManager filterManager;
+    private final FilterManager filterManager;
+    private final TradeStatisticsManager tradeStatisticsManager;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private final TradableList<Trade> trades;
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
+    private boolean stopped;
+    private List<Trade> tradesForStatistics;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,8 +110,9 @@ public class TradeManager {
                         FailedTradesManager failedTradesManager,
                         ArbitratorManager arbitratorManager,
                         P2PService p2PService,
-                        PriceFeed priceFeed,
+                        PriceFeedService priceFeedService,
                         FilterManager filterManager,
+                        TradeStatisticsManager tradeStatisticsManager,
                         @Named(Storage.DIR_KEY) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
@@ -116,10 +124,11 @@ public class TradeManager {
         this.arbitratorManager = arbitratorManager;
         this.p2PService = p2PService;
         this.filterManager = filterManager;
+        this.tradeStatisticsManager = tradeStatisticsManager;
 
         tradableListStorage = new Storage<>(storageDir);
         trades = new TradableList<>(tradableListStorage, "PendingTrades");
-        trades.forEach(e -> e.getOffer().setPriceFeed(priceFeed));
+        trades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
 
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
@@ -158,6 +167,11 @@ public class TradeManager {
         });
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void onAllServicesInitialized() {
         Log.traceCall();
         if (p2PService.isBootstrapped())
@@ -173,35 +187,78 @@ public class TradeManager {
             });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public void shutDown() {
+        stopped = true;
+    }
 
     private void initPendingTrades() {
         Log.traceCall();
 
         List<Trade> toAdd = new ArrayList<>();
         List<Trade> toRemove = new ArrayList<>();
+        tradesForStatistics = new ArrayList<>();
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
 
             if (trade.isDepositPaid() || (trade.isTakerFeePaid() && trade.errorMessageProperty().get() == null)) {
                 initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
                 trade.updateDepositTxFromWallet();
+                tradesForStatistics.add(trade);
             } else if (trade.isTakerFeePaid()) {
                 toAdd.add(trade);
             } else {
                 toRemove.add(trade);
             }
         }
-        for (Trade trade : toAdd) {
+
+        for (Trade trade : toAdd)
             addTradeToFailedTrades(trade);
-        }
-        for (Trade trade : toRemove) {
+
+        for (Trade trade : toRemove)
             removePreparedTrade(trade);
+
+        for (Tradable tradable : closedTradableManager.getClosedTrades()) {
+            if (tradable instanceof Trade)
+                tradesForStatistics.add((Trade) tradable);
         }
+
+        // We start later to have better connectivity to the network
+        UserThread.runPeriodically(() -> publishTradeStatistics(tradesForStatistics),
+                30, TimeUnit.SECONDS);
+
+        //TODO can be removed at next release
+        // For the first 2 weeks of the release we re publish the trades to get faster good distribution
+        // otherwise the trades would only be published again at restart and if a client dont do that the stats might be missing
+        // for a longer time as initially there are not many peer upgraded and supporting flooding of the stats data.
+        if (new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 8)))
+            UserThread.runPeriodically(() -> publishTradeStatistics(tradesForStatistics),
+                    REPUBLISH_STATISTICS_INTERVAL_MIN, TimeUnit.MILLISECONDS);
+
         pendingTradesInitialized.set(true);
+    }
+
+    private void publishTradeStatistics(List<Trade> trades) {
+        for (int i = 0; i < trades.size(); i++) {
+            Trade trade = trades.get(i);
+            TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
+                    trade.getTradePrice(),
+                    trade.getTradeAmount(),
+                    trade.getDate(),
+                    (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
+                    keyRing.getPubKeyRing());
+            tradeStatisticsManager.add(tradeStatistics);
+
+            // Only trades from last 30 days
+            if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(30)) {
+                long delay = 3000;
+                final long minDelay = (i + 1) * delay;
+                final long maxDelay = (i + 2) * delay;
+                UserThread.runAfterRandomDelay(() -> {
+                    if (!stopped)
+                        p2PService.addData(tradeStatistics, true);
+                }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
+            }
+        }
     }
 
     private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
@@ -289,7 +346,7 @@ public class TradeManager {
                     if (offer.getState() == Offer.State.AVAILABLE)
                         createTrade(amount, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
                 },
-                errorMessage -> errorMessageHandler.handleErrorMessage(errorMessage));
+                errorMessageHandler::handleErrorMessage);
     }
 
     private void createTrade(Coin amount,

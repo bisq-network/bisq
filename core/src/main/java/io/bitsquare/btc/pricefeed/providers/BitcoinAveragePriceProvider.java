@@ -7,25 +7,27 @@ import com.google.gson.internal.LinkedTreeMap;
 import io.bitsquare.btc.pricefeed.MarketPrice;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
+import io.bitsquare.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BitcoinAveragePriceProvider implements PriceProvider {
+public class BitcoinAveragePriceProvider extends PriceProvider {
     private static final Logger log = LoggerFactory.getLogger(BitcoinAveragePriceProvider.class);
 
-    private final HttpClient httpClient = new HttpClient("https://api.bitcoinaverage.com/ticker/global/");
-
-    public BitcoinAveragePriceProvider() {
+    @Inject
+    public BitcoinAveragePriceProvider(HttpClient httpClient, Preferences preferences) {
+        super(httpClient, preferences, "https://api.bitcoinaverage.com/ticker/global/", false);
     }
 
     @Override
     public Map<String, MarketPrice> getAllPrices() throws IOException, HttpException {
         Map<String, MarketPrice> marketPriceMap = new HashMap<>();
-        LinkedTreeMap<String, Object> treeMap = new Gson().fromJson(httpClient.requestWithGET("all"), LinkedTreeMap.class);
+        LinkedTreeMap<String, Object> treeMap = new Gson().<LinkedTreeMap<String, Object>>fromJson(httpClient.requestWithGET("all"), LinkedTreeMap.class);
         Map<String, String> temp = new HashMap<>();
         treeMap.entrySet().stream().forEach(e -> {
             Object value = e.getValue();
@@ -56,7 +58,6 @@ public class BitcoinAveragePriceProvider implements PriceProvider {
 
     @Override
     public String toString() {
-        return "BitcoinAveragePriceProvider{" +
-                '}';
+        return "BitcoinAveragePriceProvider";
     }
 }

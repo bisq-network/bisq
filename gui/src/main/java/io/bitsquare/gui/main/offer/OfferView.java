@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.offer;
 
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -54,7 +54,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final PriceFeed priceFeed;
+    private final PriceFeedService priceFeedService;
     private Preferences preferences;
     private final Offer.Direction direction;
     private Tab takeOfferTab, createOfferTab, offerBookTab;
@@ -63,10 +63,10 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private ChangeListener<Tab> tabChangeListener;
     private ListChangeListener<Tab> tabListChangeListener;
 
-    protected OfferView(ViewLoader viewLoader, Navigation navigation, PriceFeed priceFeed, Preferences preferences) {
+    protected OfferView(ViewLoader viewLoader, Navigation navigation, PriceFeedService priceFeedService, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
         this.preferences = preferences;
         this.direction = (this instanceof BuyOfferView) ? Offer.Direction.BUY : Offer.Direction.SELL;
     }
@@ -139,7 +139,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         View view;
         boolean isBuy = direction == Offer.Direction.BUY;
 
-        priceFeed.setType(isBuy ? PriceFeed.Type.ASK : PriceFeed.Type.BID);
+        priceFeedService.setType(isBuy ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
 
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);

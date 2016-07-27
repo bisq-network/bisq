@@ -24,7 +24,7 @@ public class Version {
     private static final Logger log = LoggerFactory.getLogger(Version.class);
 
     // The application versions
-    public static final String VERSION = "0.4.9";
+    public static final String VERSION = "0.4.9.1"; 
 
     // The version nr. for the objects sent over the network. A change will break the serialization of old objects.
     // If objects are used for both network and database the network version is applied.
@@ -39,13 +39,12 @@ public class Version {
     // VERSION = 0.3.5 -> LOCAL_DB_VERSION = 2
     // VERSION = 0.4.0 -> LOCAL_DB_VERSION = 3
     // VERSION = 0.4.2 -> LOCAL_DB_VERSION = 4
-    public static final int LOCAL_DB_VERSION = 4; 
+    public static final int LOCAL_DB_VERSION = 4;
 
     // The version nr. of the current protocol. The offer holds that version. 
     // A taker will check the version of the offers to see if his version is compatible.
     public static final int TRADE_PROTOCOL_VERSION = 1;
     private static int p2pMessageVersion;
-
 
     public static int getP2PMessageVersion() {
         // TODO investigate why a changed NETWORK_PROTOCOL_VERSION for the serialized objects does not trigger 

@@ -23,7 +23,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
@@ -72,7 +72,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = 10;
     private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 10;
-    private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 12 : 12);
+    private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 14 : 14);
     private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 4 : 4);
 
     private final KeyRing keyRing;
@@ -102,7 +102,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             TradeWalletService tradeWalletService,
                             OfferBookService offerBookService,
                             ClosedTradableManager closedTradableManager,
-                            PriceFeed priceFeed,
+                            PriceFeedService priceFeedService,
                             Preferences preferences,
                             @Named(Storage.DIR_KEY) File storageDir) {
         this.keyRing = keyRing;
@@ -116,7 +116,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
         openOffersStorage = new Storage<>(storageDir);
         openOffers = new TradableList<>(openOffersStorage, "OpenOffers");
-        openOffers.forEach(e -> e.getOffer().setPriceFeed(priceFeed));
+        openOffers.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -269,7 +269,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         startPeriodicRepublishOffersTimer();
                         startPeriodicRefreshOffersTimer();
                     } else {
-                        log.warn("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
+                        log.debug("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
                     }
                 }
         );
@@ -415,7 +415,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 log.info("Exception at handleRequestIsOfferAvailableMessage " + t.getMessage());
             }
         } else {
-            log.warn("We have stopped already. We ignore that handleOfferAvailabilityRequest call.");
+            log.debug("We have stopped already. We ignore that handleOfferAvailabilityRequest call.");
         }
     }
 
@@ -432,18 +432,18 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             stopPeriodicRefreshOffersTimer();
             for (int i = 0; i < size; i++) {
                 // we delay to avoid reaching throttle limits
-                // roughly 1 offer per second
-                final int n = i;
-                final long minDelay = i * 500 + 1;
-                final long maxDelay = minDelay * 2 + 500;
+
+                long delay = 500;
+                final long minDelay = (i + 1) * delay;
+                final long maxDelay = (i + 2) * delay;
+                final OpenOffer openOffer = openOffersList.get(i);
                 UserThread.runAfterRandomDelay(() -> {
-                    OpenOffer openOffer = openOffersList.get(n);
                     if (openOffers.contains(openOffer))
                         republishOffer(openOffer);
                 }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
             }
         } else {
-            log.warn("We have stopped already. We ignore that republishOffers call.");
+            log.debug("We have stopped already. We ignore that republishOffers call.");
         }
     }
 
@@ -456,7 +456,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         if (periodicRefreshOffersTimer == null)
                             startPeriodicRefreshOffersTimer();
                     } else {
-                        log.warn("We have stopped already. We ignore that offerBookService.republishOffers.onSuccess call.");
+                        log.debug("We have stopped already. We ignore that offerBookService.republishOffers.onSuccess call.");
                     }
                 },
                 errorMessage -> {
@@ -466,7 +466,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
                                 RETRY_REPUBLISH_DELAY_SEC);
                     } else {
-                        log.warn("We have stopped already. We ignore that offerBookService.republishOffers.onFault call.");
+                        log.debug("We have stopped already. We ignore that offerBookService.republishOffers.onFault call.");
                     }
                 });
         openOffer.setStorage(openOffersStorage);
@@ -480,7 +480,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         if (!stopped) {
                             republishOffers();
                         } else {
-                            log.warn("We have stopped already. We ignore that periodicRepublishOffersTimer.run call.");
+                            log.debug("We have stopped already. We ignore that periodicRepublishOffersTimer.run call.");
                         }
                     },
                     REPUBLISH_INTERVAL_MS,
@@ -503,19 +503,20 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers);
                             for (int i = 0; i < size; i++) {
                                 // we delay to avoid reaching throttle limits
-                                // roughly 1 offer per second
-                                final int n = i;
-                                final long minDelay = i * 500 + 1;
-                                final long maxDelay = minDelay * 2 + 500;
+                                // roughly 4 offers per second
+
+                                long delay = 150;
+                                final long minDelay = (i + 1) * delay;
+                                final long maxDelay = (i + 2) * delay;
+                                final OpenOffer openOffer = openOffersList.get(i);
                                 UserThread.runAfterRandomDelay(() -> {
-                                    OpenOffer openOffer = openOffersList.get(n);
                                     // we need to check if in the meantime the offer has been removed
                                     if (openOffers.contains(openOffer))
                                         refreshOffer(openOffer);
                                 }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
                             }
                         } else {
-                            log.warn("We have stopped already. We ignore that periodicRefreshOffersTimer.run call.");
+                            log.debug("We have stopped already. We ignore that periodicRefreshOffersTimer.run call.");
                         }
                     },
                     REFRESH_INTERVAL_MS,

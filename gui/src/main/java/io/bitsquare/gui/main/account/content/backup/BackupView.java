@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.account.content.backup;
 
 import io.bitsquare.app.BitsquareEnvironment;
+import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -62,7 +63,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         super();
         this.stage = stage;
         this.preferences = preferences;
-        dataDir = new File(environment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY));
+        dataDir = new File(environment.getProperty(CoreOptionKeys.APP_DATA_DIR_KEY));
     }
 
     @Override

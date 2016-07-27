@@ -24,7 +24,7 @@ import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.OptionKeys;
+import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
@@ -45,6 +45,7 @@ import io.bitsquare.gui.main.overlays.windows.SendAlertMessageWindow;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -77,7 +78,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
+import static io.bitsquare.app.CoreOptionKeys.APP_NAME_KEY;
 
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
@@ -104,12 +105,12 @@ public class BitsquareApp extends Application {
     public void start(Stage stage) throws IOException {
         BitsquareApp.primaryStage = stage;
 
-        String logPath = Paths.get(env.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY), "bitsquare").toString();
+        String logPath = Paths.get(env.getProperty(CoreOptionKeys.APP_DATA_DIR_KEY), "bitsquare").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Version.printVersion();
         Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(env.getRequiredProperty(OptionKeys.LOG_LEVEL_KEY)));
+        Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
@@ -174,7 +175,8 @@ public class BitsquareApp extends Application {
             Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 13);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
-                    "/io/bitsquare/gui/images.css");
+                    "/io/bitsquare/gui/images.css",
+                    "/io/bitsquare/gui/CandleStickChart.css");
 
             // configure the system tray
             SystemTray.create(primaryStage, shutDownHandler);
@@ -346,20 +348,21 @@ public class BitsquareApp extends Application {
 
     @Override
     public void stop() {
-        shutDownRequested = true;
-
-        new Popup().headLine("Shut down in progress")
-                .backgroundInfo("Shutting down application can take a few seconds.\n" +
-                        "Please don't interrupt that process.")
-                .hideCloseButton()
-                .useAnimation(false)
-                .show();
-        UserThread.runAfter(() -> {
-            gracefulShutDown(() -> {
-                log.info("App shutdown complete");
-                System.exit(0);
-            });
-        }, 200, TimeUnit.MILLISECONDS);
+        if (!shutDownRequested) {
+            new Popup().headLine("Shut down in progress")
+                    .backgroundInfo("Shutting down application can take a few seconds.\n" +
+                            "Please don't interrupt that process.")
+                    .hideCloseButton()
+                    .useAnimation(false)
+                    .show();
+            UserThread.runAfter(() -> {
+                gracefulShutDown(() -> {
+                    log.info("App shutdown complete");
+                    System.exit(0);
+                });
+            }, 200, TimeUnit.MILLISECONDS);
+            shutDownRequested = true;
+        }
     }
 
     private void gracefulShutDown(ResultHandler resultHandler) {
@@ -368,6 +371,7 @@ public class BitsquareApp extends Application {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(MainViewModel.class).shutDown();
+                injector.getInstance(TradeManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         injector.getInstance(WalletService.class).shutDownDone.addListener((ov, o, n) -> {
@@ -378,8 +382,8 @@ public class BitsquareApp extends Application {
                         injector.getInstance(WalletService.class).shutDown();
                     });
                 });
-                // we wait max 5 sec.
-                UserThread.runAfter(resultHandler::handleResult, 5);
+                // we wait max 20 sec.
+                UserThread.runAfter(resultHandler::handleResult, 20);
             } else {
                 UserThread.runAfter(resultHandler::handleResult, 1);
             }

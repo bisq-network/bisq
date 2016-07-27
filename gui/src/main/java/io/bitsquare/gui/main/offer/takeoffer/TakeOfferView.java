@@ -192,8 +192,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
-        if (DevFlags.DEV_MODE)
-            UserThread.runAfter(() -> onShowPayFundsScreen(), 200, TimeUnit.MILLISECONDS);
+       /* if (DevFlags.DEV_MODE)
+            UserThread.runAfter(() -> onShowPayFundsScreen(), 200, TimeUnit.MILLISECONDS);*/
     }
 
     @Override
@@ -268,7 +268,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     // called form parent as the view does not get notified when the tab is closed
     public void onClose() {
         Coin balance = model.dataModel.balance.get();
-        if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get()) {
+        if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevFlags.DEV_MODE) {
             model.dataModel.swapTradeToSavings();
             new Popup().information("You had already funded that offer.\n" +
                     "Your funds have been moved to your local Bitsquare wallet and are available for " +

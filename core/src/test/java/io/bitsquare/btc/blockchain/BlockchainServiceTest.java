@@ -18,7 +18,7 @@ public class BlockchainServiceTest {
 
     @Test
     public void testGetFee() throws InterruptedException {
-        BlockchainService blockchainService = new BlockchainService();
+        BlockchainService blockchainService = new BlockchainService(null, null, null);
 
         // that tx has 0.001 BTC as fee
         String transactionId = "38d176d0b1079b99fcb59859401d6b1679d2fa18fd8989d2c244b3682e52fce6";

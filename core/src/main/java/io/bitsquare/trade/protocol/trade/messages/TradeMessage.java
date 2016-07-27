@@ -24,6 +24,7 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public abstract class TradeMessage implements DirectMessage {
+    //TODO add serialVersionUID also in superclasses as changes would break compatibility
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -38,7 +39,6 @@ public abstract class TradeMessage implements DirectMessage {
         TradeMessage that = (TradeMessage) o;
 
         return !(tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null);
-
     }
 
     @Override

@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class Clock {
     private static final Logger log = LoggerFactory.getLogger(Clock.class);
 
-    public static final int IDLE_TOLERANCE = 5000;
+    public static final int IDLE_TOLERANCE = 20000;
 
     public interface Listener {
         void onSecondTick();

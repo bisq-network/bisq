@@ -23,6 +23,7 @@ import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.markets.charts.MarketsChartsView;
 import io.bitsquare.gui.main.markets.statistics.MarketsStatisticsView;
+import io.bitsquare.gui.main.markets.trades.TradesChartsView;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
@@ -33,7 +34,7 @@ import javax.inject.Inject;
 @FxmlView
 public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
     @FXML
-    Tab chartsTab, statisticsTab;
+    Tab chartsTab, tradesTab, statisticsTab;
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Navigation.Listener navigationListener;
@@ -55,6 +56,8 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == chartsTab)
                 navigation.navigateTo(MainView.class, MarketView.class, MarketsChartsView.class);
+            else if (newValue == tradesTab)
+                navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
             else if (newValue == statisticsTab)
                 navigation.navigateTo(MainView.class, MarketView.class, MarketsStatisticsView.class);
         };
@@ -67,6 +70,8 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         if (root.getSelectionModel().getSelectedItem() == chartsTab)
             navigation.navigateTo(MainView.class, MarketView.class, MarketsChartsView.class);
+        else if (root.getSelectionModel().getSelectedItem() == tradesTab)
+            navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
         else
             navigation.navigateTo(MainView.class, MarketView.class, MarketsStatisticsView.class);
     }
@@ -82,6 +87,7 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
         View view = viewLoader.load(viewClass);
 
         if (view instanceof MarketsChartsView) tab = chartsTab;
+        else if (view instanceof TradesChartsView) tab = tradesTab;
         else if (view instanceof MarketsStatisticsView) tab = statisticsTab;
         else throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");
 

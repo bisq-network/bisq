@@ -157,9 +157,9 @@ public class RequestDataHandler implements MessageListener {
 
                     final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
                     ((GetDataResponse) message).dataSet.stream().forEach(protectedStorageEntry -> {
-                        dataStorage.add(protectedStorageEntry, sender, null, false);
+                        // We dont broadcast here as we are only connected to the seed node and would be pointless
+                        dataStorage.add(protectedStorageEntry, sender, null, false, false);
                     });
-
                     cleanup();
                     listener.onComplete();
                 } else {

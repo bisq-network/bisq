@@ -18,7 +18,7 @@
 package io.bitsquare.trade.failed;
 
 import com.google.inject.Inject;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
@@ -38,10 +38,10 @@ public class FailedTradesManager {
     private final KeyRing keyRing;
 
     @Inject
-    public FailedTradesManager(KeyRing keyRing, PriceFeed priceFeed, @Named(Storage.DIR_KEY) File storageDir) {
+    public FailedTradesManager(KeyRing keyRing, PriceFeedService priceFeedService, @Named(Storage.DIR_KEY) File storageDir) {
         this.keyRing = keyRing;
         this.failedTrades = new TradableList<>(new Storage<>(storageDir), "FailedTrades");
-        failedTrades.forEach(e -> e.getOffer().setPriceFeed(priceFeed));
+        failedTrades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
     }
 
     public void add(Trade trade) {

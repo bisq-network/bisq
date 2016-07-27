@@ -5,9 +5,10 @@ import com.google.common.annotations.VisibleForTesting;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.Clock;
+import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.network.OptionKeys;
+import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.p2p.peers.BanList;
 import io.bitsquare.p2p.seed.SeedNodesRepository;
 import org.jetbrains.annotations.Nullable;
@@ -77,30 +78,30 @@ public class DummySeedNode {
                 String arg = args[i];
                 if (arg.startsWith("--"))
                     arg = arg.substring(2);
-                if (arg.startsWith(OptionKeys.MY_ADDRESS)) {
-                    arg = arg.substring(OptionKeys.MY_ADDRESS.length() + 1);
+                if (arg.startsWith(NetworkOptionKeys.MY_ADDRESS)) {
+                    arg = arg.substring(NetworkOptionKeys.MY_ADDRESS.length() + 1);
                     checkArgument(arg.contains(":") && arg.split(":").length == 2 && arg.split(":")[1].length() > 3, "Wrong program argument: " + arg);
                     mySeedNodeAddress = new NodeAddress(arg);
                     log.info("From processArgs: mySeedNodeAddress=" + mySeedNodeAddress);
-                } else if (arg.startsWith(OptionKeys.NETWORK_ID)) {
-                    arg = arg.substring(OptionKeys.NETWORK_ID.length() + 1);
+                } else if (arg.startsWith(NetworkOptionKeys.NETWORK_ID)) {
+                    arg = arg.substring(NetworkOptionKeys.NETWORK_ID.length() + 1);
                     networkId = Integer.parseInt(arg);
                     log.info("From processArgs: networkId=" + networkId);
                     checkArgument(networkId > -1 && networkId < 3,
                             "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
                     Version.setBtcNetworkId(networkId);
-                } else if (arg.startsWith(OptionKeys.MAX_CONNECTIONS)) {
-                    arg = arg.substring(OptionKeys.MAX_CONNECTIONS.length() + 1);
+                } else if (arg.startsWith(NetworkOptionKeys.MAX_CONNECTIONS)) {
+                    arg = arg.substring(NetworkOptionKeys.MAX_CONNECTIONS.length() + 1);
                     maxConnections = Integer.parseInt(arg);
                     log.info("From processArgs: maxConnections=" + maxConnections);
                     checkArgument(maxConnections < MAX_CONNECTIONS_LIMIT, "maxConnections seems to be a bit too high...");
-                } else if (arg.startsWith(OptionKeys.USE_LOCALHOST)) {
-                    arg = arg.substring(OptionKeys.USE_LOCALHOST.length() + 1);
+                } else if (arg.startsWith(NetworkOptionKeys.USE_LOCALHOST)) {
+                    arg = arg.substring(NetworkOptionKeys.USE_LOCALHOST.length() + 1);
                     checkArgument(arg.equals("true") || arg.equals("false"));
                     useLocalhost = ("true").equals(arg);
                     log.info("From processArgs: useLocalhost=" + useLocalhost);
-                } else if (arg.startsWith(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY)) {
-                    arg = arg.substring(io.bitsquare.common.OptionKeys.LOG_LEVEL_KEY.length() + 1);
+                } else if (arg.startsWith(CommonOptionKeys.LOG_LEVEL_KEY)) {
+                    arg = arg.substring(CommonOptionKeys.LOG_LEVEL_KEY.length() + 1);
                     logLevel = Level.toLevel(arg.toUpperCase());
                     log.info("From processArgs: logLevel=" + logLevel);
                 } else if (arg.startsWith(SEED_NODES_LIST)) {
@@ -116,8 +117,8 @@ public class DummySeedNode {
                     });
                     log.info("From processArgs: progArgSeedNodes=" + progArgSeedNodes);
                     progArgSeedNodes.remove(mySeedNodeAddress);
-                } else if (arg.startsWith(OptionKeys.BAN_LIST)) {
-                    arg = arg.substring(OptionKeys.BAN_LIST.length() + 1);
+                } else if (arg.startsWith(NetworkOptionKeys.BAN_LIST)) {
+                    arg = arg.substring(NetworkOptionKeys.BAN_LIST.length() + 1);
                     checkArgument(arg.contains(":") && arg.split(":").length > 1 && arg.split(":")[1].length() > 3,
                             "Wrong program argument " + arg);
                     List<String> list = Arrays.asList(arg.split(","));
@@ -186,7 +187,7 @@ public class DummySeedNode {
 
         seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
         seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, maxConnections,
-                torDir, useLocalhost, networkId, storageDir, null, null, null, new Clock(), null, null);
+                torDir, useLocalhost, networkId, storageDir, null, null, null, new Clock(), null, null, null);
         seedNodeP2PService.start(false, listener);
     }
 

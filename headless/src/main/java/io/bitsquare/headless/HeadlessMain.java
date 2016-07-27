@@ -20,6 +20,7 @@ package io.bitsquare.headless;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
+import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.common.UserThread;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -31,7 +32,8 @@ import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import static io.bitsquare.app.BitsquareEnvironment.*;
+import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_APP_NAME;
+import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class HeadlessMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(HeadlessMain.class);
@@ -50,9 +52,9 @@ public class HeadlessMain extends BitsquareExecutable {
         BitsquareEnvironment.setDefaultAppName("Bitsquare_headless");
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
-        parser.accepts(USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
+        parser.accepts(CoreOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
-        parser.accepts(APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
+        parser.accepts(CoreOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
                 .withRequiredArg();
 
         OptionSet options;
@@ -68,7 +70,7 @@ public class HeadlessMain extends BitsquareExecutable {
         BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
 
         // need to call that before BitsquareAppMain().execute(args)
-        BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY));
+        BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(CoreOptionKeys.APP_DATA_DIR_KEY));
 
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:

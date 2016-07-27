@@ -6,18 +6,17 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.storage.messages.BroadcastMessage;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -67,7 +66,6 @@ public class BroadcastHandler implements PeerManager.Listener {
     private Listener listener;
     private int numOfPeers;
     private Timer timeoutTimer;
-    private Set<String> broadcastQueue = new CopyOnWriteArraySet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +96,7 @@ public class BroadcastHandler implements PeerManager.Listener {
         this.listener = listener;
 
         Log.traceCall("Sender=" + sender + "\n\t" +
-                "Message=" + StringUtils.abbreviate(message.toString(), 100));
+                "Message=" + Utilities.toTruncatedString(message));
         Set<Connection> connectedPeersSet = networkNode.getConfirmedConnections()
                 .stream()
                 .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
@@ -109,11 +107,11 @@ public class BroadcastHandler implements PeerManager.Listener {
             List<Connection> connectedPeersList = new ArrayList<>(connectedPeersSet);
             Collections.shuffle(connectedPeersList);
             numOfPeers = connectedPeersList.size();
-            int factor = 1;
+            int delay = 50;
             if (!isDataOwner) {
-                // for not data owner (relay nodes) we send to max. 5 nodes and use a longer delay
-                numOfPeers = Math.min(5, connectedPeersList.size());
-                factor = 2;
+                // for not data owner (relay nodes) we send to max. 7 nodes and use a longer delay
+                numOfPeers = Math.min(7, connectedPeersList.size());
+                delay = 100;
             }
 
             long timeoutDelay = TIMEOUT_PER_PEER_SEC * numOfPeers;
@@ -124,9 +122,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                         "numOfPeers=" + numOfPeers + "\n\t" +
                         "numOfCompletedBroadcasts=" + numOfCompletedBroadcasts + "\n\t" +
                         "numOfCompletedBroadcasts=" + numOfCompletedBroadcasts + "\n\t" +
-                        "numOfFailedBroadcasts=" + numOfFailedBroadcasts + "\n\t" +
-                        "broadcastQueue.size()=" + broadcastQueue.size() + "\n\t" +
-                        "broadcastQueue=" + broadcastQueue);
+                        "numOfFailedBroadcasts=" + numOfFailedBroadcasts);
                 onFault(errorMessage, false);
             }, timeoutDelay);
 
@@ -134,67 +130,67 @@ public class BroadcastHandler implements PeerManager.Listener {
             for (int i = 0; i < numOfPeers; i++) {
                 if (stopped)
                     break;  // do not continue sending after a timeout or a cancellation
-                final long minDelay = i * 30 * factor + 1;
-                final long maxDelay = minDelay * 2 + 30 * factor;
+
+                final long minDelay = (i + 1) * delay;
+                final long maxDelay = (i + 2) * delay;
                 final Connection connection = connectedPeersList.get(i);
                 UserThread.runAfterRandomDelay(() -> sendToPeer(connection, message), minDelay, maxDelay, TimeUnit.MILLISECONDS);
             }
         } else {
             onFault("Message not broadcasted because we have no available peers yet.\n\t" +
-                    "message = " + StringUtils.abbreviate(message.toString(), 100), false);
+                    "message = " + Utilities.toTruncatedString(message), false);
         }
     }
 
     private void sendToPeer(Connection connection, BroadcastMessage message) {
         String errorMessage = "Message not broadcasted because we have stopped the handler already.\n\t" +
-                "message = " + StringUtils.abbreviate(message.toString(), 100);
+                "message = " + Utilities.toTruncatedString(message);
         if (!stopped) {
             if (!connection.isStopped()) {
-                NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
-                log.trace("Broadcast message to " + nodeAddress + ".");
-                broadcastQueue.add(nodeAddress.getFullAddress());
-                SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
-                Futures.addCallback(future, new FutureCallback<Connection>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
-                        numOfCompletedBroadcasts++;
-                        broadcastQueue.remove(nodeAddress.getFullAddress());
-                        if (!stopped) {
-                            log.trace("Broadcast to " + nodeAddress + " succeeded.");
+                if (!connection.isCapabilityRequired(message) || connection.isCapabilitySupported(message)) {
+                    NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
+                    log.trace("Broadcast message to " + nodeAddress + ".");
+                    SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
+                    Futures.addCallback(future, new FutureCallback<Connection>() {
+                        @Override
+                        public void onSuccess(Connection connection) {
+                            numOfCompletedBroadcasts++;
+                            if (!stopped) {
+                                log.trace("Broadcast to " + nodeAddress + " succeeded.");
 
-                            if (listener != null)
-                                listener.onBroadcasted(message, numOfCompletedBroadcasts);
-
-                            if (listener != null && numOfCompletedBroadcasts == 1)
-                                listener.onBroadcastedToFirstPeer(message);
-
-                            if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numOfPeers) {
                                 if (listener != null)
-                                    listener.onBroadcastCompleted(message, numOfCompletedBroadcasts, numOfFailedBroadcasts);
+                                    listener.onBroadcasted(message, numOfCompletedBroadcasts);
 
-                                cleanup();
-                                resultHandler.onCompleted(BroadcastHandler.this);
+                                if (listener != null && numOfCompletedBroadcasts == 1)
+                                    listener.onBroadcastedToFirstPeer(message);
+
+                                if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numOfPeers) {
+                                    if (listener != null)
+                                        listener.onBroadcastCompleted(message, numOfCompletedBroadcasts, numOfFailedBroadcasts);
+
+                                    cleanup();
+                                    resultHandler.onCompleted(BroadcastHandler.this);
+                                }
+                            } else {
+                                // TODO investigate why that is called very often at seed nodes
+                                onFault("stopped at onSuccess: " + errorMessage, false);
                             }
-                        } else {
-                            // TODO investigate why that is called very often at seed nodes
-                            onFault("stopped at onSuccess: " + errorMessage, false);
                         }
-                    }
 
-                    @Override
-                    public void onFailure(@NotNull Throwable throwable) {
-                        numOfFailedBroadcasts++;
-                        broadcastQueue.remove(nodeAddress.getFullAddress());
-                        if (!stopped) {
-                            log.info("Broadcast to " + nodeAddress + " failed.\n\t" +
-                                    "ErrorMessage=" + throwable.getMessage());
-                            if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numOfPeers)
+                        @Override
+                        public void onFailure(@NotNull Throwable throwable) {
+                            numOfFailedBroadcasts++;
+                            if (!stopped) {
+                                log.info("Broadcast to " + nodeAddress + " failed.\n\t" +
+                                        "ErrorMessage=" + throwable.getMessage());
+                                if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numOfPeers)
+                                    onFault("stopped at onFailure: " + errorMessage);
+                            } else {
                                 onFault("stopped at onFailure: " + errorMessage);
-                        } else {
-                            onFault("stopped at onFailure: " + errorMessage);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             } else {
                 onFault("Connection stopped already", false);
             }

@@ -122,7 +122,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 VerifyOffererAccount.class,
                 VerifyAndSignContract.class,
                 SignAndPublishDepositTxAsBuyer.class,
-                SendDepositTxPublishedMessage.class
+                SendDepositTxPublishedMessage.class,
+                PublishTradeStatistics.class
         );
         taskRunner.run();
     }

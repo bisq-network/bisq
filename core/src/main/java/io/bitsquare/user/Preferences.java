@@ -25,6 +25,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.*;
+import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.storage.Storage;
 import io.nucleo.net.bridge.BridgeProvider;
 import javafx.beans.Observable;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -111,8 +113,8 @@ public final class Preferences implements Persistable {
     private boolean autoSelectArbitrators = true;
     private final Map<String, Boolean> dontShowAgainMap;
     private boolean tacAccepted;
-    // Don't remove as we don't want to break old serialized data
     private boolean useTorForBitcoinJ = false;
+    private boolean useTorForHttpRequests = true;
     private boolean showOwnOffersInOfferBook = true;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
@@ -120,8 +122,11 @@ public final class Preferences implements Persistable {
     private double maxPriceDistanceInPercent;
     private boolean useInvertedMarketPrice;
     private String marketScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private String tradeStatisticsScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private int tradeStatisticsTickUnitIndex = 0;
+
     private boolean useStickyMarketPrice = false;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
@@ -134,6 +139,7 @@ public final class Preferences implements Persistable {
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
     transient private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(useAnimations);
     transient private final BooleanProperty useInvertedMarketPriceProperty = new SimpleBooleanProperty(useInvertedMarketPrice);
+    transient private final BooleanProperty useTorForHttpRequestsProperty = new SimpleBooleanProperty(useTorForHttpRequests);
     transient private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
@@ -144,7 +150,8 @@ public final class Preferences implements Persistable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment) {
+    public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment,
+                       @Named(NetworkOptionKeys.USE_TOR_FOR_HTTP) String useTorForHttpFromOptions) {
         log.debug("Preferences " + this);
         INSTANCE = this;
         this.storage = storage;
@@ -185,8 +192,12 @@ public final class Preferences implements Persistable {
             defaultLocale = preferredLocale;
             preferredTradeCurrency = persisted.getPreferredTradeCurrency();
             defaultTradeCurrency = preferredTradeCurrency;
-            // useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
-            useTorForBitcoinJ = false;
+            useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
+            if (useTorForHttpFromOptions.isEmpty())
+                setUseTorForHttpRequests(persisted.useTorForHttpRequests);
+            else
+                setUseTorForHttpRequests(useTorForHttpFromOptions.toLowerCase().equals("true"));
+
             useStickyMarketPrice = persisted.getUseStickyMarketPrice();
             usePercentageBasedPrice = persisted.getUsePercentageBasedPrice();
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
@@ -207,6 +218,8 @@ public final class Preferences implements Persistable {
             marketScreenCurrencyCode = persisted.getMarketScreenCurrencyCode();
             buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
             sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
+            tradeStatisticsScreenCurrencyCode = persisted.getTradeStatisticsScreenCurrencyCode();
+            tradeStatisticsTickUnitIndex = persisted.getTradeStatisticsTickUnitIndex();
 
             if (persisted.getIgnoreTradersList() != null)
                 ignoreTradersList = persisted.getIgnoreTradersList();
@@ -236,16 +249,16 @@ public final class Preferences implements Persistable {
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         btcDenominationProperty.addListener((ov) -> {
             btcDenomination = btcDenominationProperty.get();
-            storage.queueUpForSave(2000);
+            storage.queueUpForSave();
         });
         useAnimationsProperty.addListener((ov) -> {
             useAnimations = useAnimationsProperty.get();
             staticUseAnimations = useAnimations;
-            storage.queueUpForSave(2000);
+            storage.queueUpForSave();
         });
         useInvertedMarketPriceProperty.addListener((ov) -> {
             useInvertedMarketPrice = useInvertedMarketPriceProperty.get();
-            storage.queueUpForSave(2000);
+            storage.queueUpForSave();
         });
         fiatCurrenciesAsObservable.addListener((Observable ov) -> {
             fiatCurrencies.clear();
@@ -257,21 +270,25 @@ public final class Preferences implements Persistable {
             cryptoCurrencies.addAll(cryptoCurrenciesAsObservable);
             storage.queueUpForSave();
         });
+        useTorForHttpRequestsProperty.addListener((ov) -> {
+            useTorForHttpRequests = useTorForHttpRequestsProperty.get();
+            storage.queueUpForSave();
+        });
 
-        fiatCurrenciesAsObservable.addListener((ListChangeListener<FiatCurrency>) this::updateTradeCurrencies);
-        cryptoCurrenciesAsObservable.addListener((ListChangeListener<CryptoCurrency>) this::updateTradeCurrencies);
+        fiatCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
+        cryptoCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
         tradeCurrenciesAsObservable.addAll(fiatCurrencies);
         tradeCurrenciesAsObservable.addAll(cryptoCurrencies);
     }
 
     public void dontShowAgain(String key, boolean dontShowAgain) {
         dontShowAgainMap.put(key, dontShowAgain);
-        storage.queueUpForSave(1000);
+        storage.queueUpForSave();
     }
 
     public void resetDontShowAgainForType() {
         dontShowAgainMap.clear();
-        storage.queueUpForSave(1000);
+        storage.queueUpForSave();
     }
 
 
@@ -288,7 +305,7 @@ public final class Preferences implements Persistable {
     }
 
     public void setUseInvertedMarketPrice(boolean useInvertedMarketPrice) {
-        this.useInvertedMarketPriceProperty.set(useInvertedMarketPrice);
+        useInvertedMarketPriceProperty.set(useInvertedMarketPrice);
     }
 
     public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
@@ -372,10 +389,10 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
-   /* public void setUseTorForBitcoinJ(boolean useTorForBitcoinJ) {
+    public void setUseTorForBitcoinJ(boolean useTorForBitcoinJ) {
         this.useTorForBitcoinJ = useTorForBitcoinJ;
         storage.queueUpForSave();
-    }*/
+    }
 
     public void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook) {
         this.showOwnOffersInOfferBook = showOwnOffersInOfferBook;
@@ -457,6 +474,19 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setTradeStatisticsScreenCurrencyCode(String tradeStatisticsScreenCurrencyCode) {
+        this.tradeStatisticsScreenCurrencyCode = tradeStatisticsScreenCurrencyCode;
+        storage.queueUpForSave();
+    }
+
+    public void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex) {
+        this.tradeStatisticsTickUnitIndex = tradeStatisticsTickUnitIndex;
+        storage.queueUpForSave();
+    }
+
+    public void setUseTorForHttpRequests(boolean useTorForHttpRequests) {
+        useTorForHttpRequestsProperty.set(useTorForHttpRequests);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -609,6 +639,24 @@ public final class Preferences implements Persistable {
     public String getDefaultPath() {
         return defaultPath;
     }
+
+    public String getTradeStatisticsScreenCurrencyCode() {
+        return tradeStatisticsScreenCurrencyCode;
+    }
+
+    public int getTradeStatisticsTickUnitIndex() {
+        return tradeStatisticsTickUnitIndex;
+    }
+
+    public boolean getUseTorForHttpRequests() {
+        return useTorForHttpRequestsProperty.get();
+    }
+
+    public BooleanProperty useTorForHttpRequestsProperty() {
+        return useTorForHttpRequestsProperty;
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////

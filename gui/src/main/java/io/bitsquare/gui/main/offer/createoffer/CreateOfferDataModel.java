@@ -26,7 +26,7 @@ import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.pricefeed.PriceFeed;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
@@ -70,7 +70,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;
-    private final PriceFeed priceFeed;
+    private final PriceFeedService priceFeedService;
     final String shortOfferId;
     private Navigation navigation;
     private final BlockchainService blockchainService;
@@ -122,7 +122,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     @Inject
     CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService, TradeWalletService tradeWalletService,
-                         Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeed priceFeed,
+                         Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService,
                          Navigation navigation, BlockchainService blockchainService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
@@ -131,7 +131,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.user = user;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
-        this.priceFeed = priceFeed;
+        this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.blockchainService = blockchainService;
         this.formatter = formatter;
@@ -187,7 +187,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         paymentAccounts.setAll(user.getPaymentAccounts());
 
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
-            priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+            priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
         updateBalance();
     }
@@ -243,7 +243,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         tradeCurrencyCode.set(this.tradeCurrency.getCode());
 
         if (!preferences.getUseStickyMarketPrice())
-            priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+            priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
         calculateVolume();
         calculateTotalToPay();
@@ -253,7 +253,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
-            priceFeed.setCurrencyCode(tradeCurrencyCode.get());
+            priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -306,7 +306,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 acceptedCountryCodes,
                 bankId,
                 acceptedBanks,
-                priceFeed);
+                priceFeedService);
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
@@ -328,7 +328,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 paymentAccount.setSelectedTradeCurrency(tradeCurrency);
 
             if (!preferences.getUseStickyMarketPrice())
-                priceFeed.setCurrencyCode(code);
+                priceFeedService.setCurrencyCode(code);
 
             Optional<TradeCurrency> tradeCurrencyOptional = preferences.getTradeCurrenciesAsObservable().stream().filter(e -> e.getCode().equals(code)).findAny();
             if (!tradeCurrencyOptional.isPresent()) {

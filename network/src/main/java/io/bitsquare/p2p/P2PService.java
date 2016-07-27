@@ -14,7 +14,8 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
-import io.bitsquare.network.OptionKeys;
+import io.bitsquare.network.NetworkOptionKeys;
+import io.bitsquare.network.Socks5ProxyProvider;
 import io.bitsquare.p2p.messaging.*;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.BanList;
@@ -93,6 +94,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private Subscription networkReadySubscription;
     private boolean isBootstrapped;
     private KeepAliveManager keepAliveManager;
+    private Socks5ProxyProvider socks5ProxyProvider;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,16 +104,17 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // Called also from SeedNodeP2PService
     @Inject
     public P2PService(SeedNodesRepository seedNodesRepository,
-                      @Named(OptionKeys.PORT_KEY) int port,
-                      @Named(OptionKeys.TOR_DIR) File torDir,
-                      @Named(OptionKeys.USE_LOCALHOST) boolean useLocalhost,
-                      @Named(OptionKeys.NETWORK_ID) int networkId,
-                      @Named(OptionKeys.MAX_CONNECTIONS) int maxConnections,
+                      @Named(NetworkOptionKeys.PORT_KEY) int port,
+                      @Named(NetworkOptionKeys.TOR_DIR) File torDir,
+                      @Named(NetworkOptionKeys.USE_LOCALHOST) boolean useLocalhost,
+                      @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
+                      @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections,
                       @Named(Storage.DIR_KEY) File storageDir,
-                      @Named(OptionKeys.SEED_NODES_KEY) String seedNodes,
-                      @Named(OptionKeys.MY_ADDRESS) String myAddress,
-                      @Named(OptionKeys.BAN_LIST) String banList,
+                      @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes,
+                      @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
+                      @Named(NetworkOptionKeys.BAN_LIST) String banList,
                       Clock clock,
+                      Socks5ProxyProvider socks5ProxyProvider,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
         this(
@@ -126,6 +129,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 myAddress,
                 banList,
                 clock,
+                socks5ProxyProvider,
                 encryptionService,
                 keyRing
         );
@@ -142,6 +146,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       String myAddress,
                       String banList,
                       Clock clock,
+                      Socks5ProxyProvider socks5ProxyProvider,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing) {
         this.seedNodesRepository = seedNodesRepository;
@@ -149,7 +154,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.maxConnections = maxConnections;
         this.torDir = torDir;
         this.clock = clock;
-
+        this.socks5ProxyProvider = socks5ProxyProvider;
+        
         optionalEncryptionService = Optional.ofNullable(encryptionService);
         optionalKeyRing = Optional.ofNullable(keyRing);
 
@@ -305,8 +311,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onTorNodeReady() {
         Log.traceCall();
 
+        socks5ProxyProvider.setSocks5ProxyInternal(networkNode.getSocksProxy());
+        
         requestDataManager.requestPreliminaryData();
-        keepAliveManager.restart();
+        keepAliveManager.start();
         p2pServiceListeners.stream().forEach(SetupListener::onTorNodeReady);
     }
 
@@ -808,6 +816,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {
         p2PDataStorage.addHashMapChangedListener(hashMapChangedListener);
+    }
+
+    public void removeHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {
+        p2PDataStorage.removeHashMapChangedListener(hashMapChangedListener);
     }
 
 
