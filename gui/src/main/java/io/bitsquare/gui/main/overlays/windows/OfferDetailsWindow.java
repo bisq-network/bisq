@@ -202,11 +202,12 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         final String bankId = offer.getBankId();
         final boolean isSpecificBanks = paymentMethod.equals(PaymentMethod.SPECIFIC_BANKS);
         final boolean isNationalBanks = paymentMethod.equals(PaymentMethod.NATIONAL_BANK);
+        final boolean isSepa = paymentMethod.equals(PaymentMethod.SEPA);
         if (offer.isMyOffer(keyRing) && offererPaymentAccountId != null && paymentAccount != null) {
             addLabelTextField(gridPane, ++rowIndex, "Payment account:", paymentAccount.getAccountName());
         } else {
             final String method = BSResources.get(paymentMethod.getId());
-            if (isNationalBanks || isSpecificBanks) {
+            if (isNationalBanks || isSpecificBanks || isSepa) {
                 if (BankUtil.isBankIdRequired(offer.getCountryCode()))
                     addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank ID):", method + " (" + bankId + ")");
                 else if (BankUtil.isBankNameRequired(offer.getCountryCode()))
