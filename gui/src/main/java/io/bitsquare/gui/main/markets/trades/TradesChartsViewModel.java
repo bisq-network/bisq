@@ -212,7 +212,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
             accumulatedAmount += item.tradeAmount;
         }
         // 100000000 -> Coin.COIN.value;
-        long averagePrice = (100000000 / accumulatedAmount) * accumulatedVolume;
+        long averagePrice = Math.round((double) accumulatedVolume * 100000000d / (double) accumulatedAmount);
 
         List<TradeStatistics> list = new ArrayList<>(set);
         list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? -1 : (o1.tradeDate == o2.tradeDate ? 0 : 1)));
