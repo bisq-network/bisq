@@ -383,7 +383,7 @@ public class PeerManager implements ConnectionListener {
             persistedPeers.addAll(reportedPeersToAdd);
             purgePersistedPeersIfExceeds();
             if (dbStorage != null)
-                dbStorage.queueUpForSave(persistedPeers, 2000);
+                dbStorage.queueUpForSave(new HashSet<>(persistedPeers), 2000); // We clone it to avoid ConcurrentModificationExceptions at save
 
             printReportedPeers();
         } else {
@@ -447,7 +447,7 @@ public class PeerManager implements ConnectionListener {
             persistedPeers.remove(persistedPeer);
 
             if (dbStorage != null)
-                dbStorage.queueUpForSave(persistedPeers, 2000);
+                dbStorage.queueUpForSave(new HashSet<>(persistedPeers), 2000);
 
             return true;
         } else {

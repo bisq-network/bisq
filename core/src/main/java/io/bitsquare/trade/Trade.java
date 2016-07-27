@@ -316,16 +316,20 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
+        boolean changed = this.state != state;
         this.state = state;
         stateProperty.set(state);
-        persist();
+        if (changed)
+            persist();
     }
 
     public void setDisputeState(DisputeState disputeState) {
         Log.traceCall("disputeState=" + disputeState + "\n\ttrade=" + this);
+        boolean changed = this.disputeState != disputeState;
         this.disputeState = disputeState;
         disputeStateProperty.set(disputeState);
-        persist();
+        if (changed)
+            persist();
     }
 
     public DisputeState getDisputeState() {
@@ -333,9 +337,11 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void setTradePeriodState(TradePeriodState tradePeriodState) {
+        boolean changed = this.tradePeriodState != tradePeriodState;
         this.tradePeriodState = tradePeriodState;
         tradePeriodStateProperty.set(tradePeriodState);
-        persist();
+        if (changed)
+            persist();
     }
 
     public TradePeriodState getTradePeriodState() {
