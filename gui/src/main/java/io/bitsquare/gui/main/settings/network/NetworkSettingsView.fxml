@@ -38,9 +38,9 @@
     <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
               GridPane.vgrow="SOMETIMES" editable="false" focusTraversable="false"/>
 
-    <Label text="Use tor for Bitcoin network:" GridPane.rowIndex="1"/>
+    <Label text="Use Tor for Bitcoin network:" GridPane.rowIndex="1"/>
     <CheckBox fx:id="useTorForBtcJCheckBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-    <Label text="Use tor for Http requests:" GridPane.rowIndex="2"/>
+    <Label text="Use Socks5 proxy for Http requests:" GridPane.rowIndex="2"/>
     <CheckBox fx:id="useTorForHttpCheckBox" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
 

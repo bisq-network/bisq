@@ -9,6 +9,7 @@ import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.network.Socks5ProxyProvider;
 import io.bitsquare.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +25,11 @@ public class PoloniexPriceProvider extends PriceProvider {
     private static final Logger log = LoggerFactory.getLogger(PoloniexPriceProvider.class);
 
     @Inject
-    public PoloniexPriceProvider(HttpClient httpClient, Preferences preferences) {
-        // Poloniex uses Cloudflare which requires a captcha if they get connected form a Tor exit node.
-        // We can't use Tor for Poloniex for that reason and pass the ignoreSocks5Proxy flag set to true.
-        super(httpClient, preferences, "https://poloniex.com/public", true);
+    public PoloniexPriceProvider(HttpClient httpClient, Preferences preferences, Socks5ProxyProvider socks5ProxyProvider) {
+        // Poloniex uses Cloudflare which requires a captcha if they get connected from a Tor exit node.
+        // We can't use Tor for Poloniex for that reason and set the ignoreSocks5Proxy flag to true if no 
+        // custom socks5ProxyHttp is set.
+        super(httpClient, preferences, "https://poloniex.com/public", socks5ProxyProvider.getSocks5ProxyHttp() == null);
     }
 
     @Override

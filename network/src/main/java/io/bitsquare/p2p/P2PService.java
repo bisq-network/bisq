@@ -311,7 +311,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onTorNodeReady() {
         Log.traceCall();
 
-        socks5ProxyProvider.setInternalSocks5Proxy(networkNode.getSocksProxy());
+        socks5ProxyProvider.setSocks5ProxyInternal(networkNode.getSocksProxy());
         
         requestDataManager.requestPreliminaryData();
         keepAliveManager.start();

@@ -89,7 +89,9 @@ public abstract class BitsquareExecutable {
         parser.accepts(NetworkOptionKeys.MAX_CONNECTIONS, description("Max. connections a peer will try to keep", P2PService.MAX_CONNECTIONS_DEFAULT))
                 .withRequiredArg()
                 .ofType(int.class);
-        parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS, description("A proxy address to be used for BitcoinJ. [host:port]", ""))
+        parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, description("A proxy address to be used for Bitcoin network. [host:port]", ""))
+                .withRequiredArg();
+        parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, description("A proxy address to be used for Http requests (should be non-Tor). [host:port]", ""))
                 .withRequiredArg();
         parser.accepts(NetworkOptionKeys.USE_TOR_FOR_HTTP, description("If set to true all http traffic (expect Poloniex) is routed over tor (socks 5 proxy)", ""))
                 .withRequiredArg();

@@ -79,7 +79,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String logLevel;
     private BitcoinNetwork bitcoinNetwork;
     private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, useTorForHttp,
-            myAddress, banList, dumpStatistics, socks5ProxyAddress;
+            myAddress, banList, dumpStatistics, socks5ProxyBtcAddress, socks5ProxyHttpAddress;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -152,8 +152,11 @@ public class BitsquareEnvironment extends StandardEnvironment {
         banList = commandLineProperties.containsProperty(NetworkOptionKeys.BAN_LIST) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
                 "";
-        socks5ProxyAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS) :
+        socks5ProxyBtcAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) :
+                "";
+        socks5ProxyHttpAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
                 "";
         useTorForHttp = commandLineProperties.containsProperty(NetworkOptionKeys.USE_TOR_FOR_HTTP) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.USE_TOR_FOR_HTTP) :
@@ -228,7 +231,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.BAN_LIST, banList);
                 setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
-                setProperty(NetworkOptionKeys.SOCKS_5_PROXY_ADDRESS, socks5ProxyAddress);
+                setProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, socks5ProxyBtcAddress);
+                setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);
                 setProperty(NetworkOptionKeys.USE_TOR_FOR_HTTP, useTorForHttp);
 
                 setProperty(CoreOptionKeys.APP_DATA_DIR_KEY, appDataDir);

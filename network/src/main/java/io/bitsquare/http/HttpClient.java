@@ -32,7 +32,7 @@ public class HttpClient {
 
     private final Socks5ProxyProvider socks5ProxyProvider;
     private String baseUrl;
-    private boolean useSocks5Proxy;
+    private boolean ignoreSocks5Proxy;
 
     @Inject
     public HttpClient(Socks5ProxyProvider socks5ProxyProvider) {
@@ -43,14 +43,29 @@ public class HttpClient {
         this.baseUrl = baseUrl;
     }
 
-    public void setUseSocks5Proxy(boolean useSocks5Proxy) {
-        this.useSocks5Proxy = useSocks5Proxy;
+    public void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy) {
+        this.ignoreSocks5Proxy = ignoreSocks5Proxy;
     }
 
     public String requestWithGET(String param) throws IOException, HttpException {
         checkNotNull(baseUrl, "baseUrl must be set before calling requestWithGET");
-        Socks5Proxy socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
-        return useSocks5Proxy && socks5Proxy != null ? requestWithGETProxy(param, socks5Proxy) : requestWithGETNoProxy(param);
+
+        // We use the custom socks5ProxyHttp. If not set we request socks5ProxyProvider.getSocks5ProxyBtc()
+        // which delivers the btc proxy if set, otherwise the internal proxy.
+        Socks5Proxy socks5Proxy = socks5ProxyProvider.getSocks5ProxyHttp();
+        if (socks5Proxy == null)
+            socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
+
+        if (ignoreSocks5Proxy) {
+            log.info("Use clear net for HttpClient because ignoreSocks5Proxy is set to true");
+            return requestWithGETNoProxy(param);
+        } else if (socks5Proxy == null) {
+            log.info("Use clear net for HttpClient because socks5Proxy is null");
+            return requestWithGETNoProxy(param);
+        } else {
+            log.info("Use socks5Proxy for HttpClient: " + socks5Proxy);
+            return requestWithGETProxy(param, socks5Proxy);
+        }
     }
 
     /**
@@ -147,7 +162,7 @@ public class HttpClient {
         return "HttpClient{" +
                 "socks5ProxyProvider=" + socks5ProxyProvider +
                 ", baseUrl='" + baseUrl + '\'' +
-                ", useSocks5Proxy=" + useSocks5Proxy +
+                ", ignoreSocks5Proxy=" + ignoreSocks5Proxy +
                 '}';
     }
 }

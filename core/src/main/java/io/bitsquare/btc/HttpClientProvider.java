@@ -16,13 +16,13 @@ public abstract class HttpClientProvider implements Serializable {
         this.httpClient = httpClient;
 
         httpClient.setBaseUrl(baseUrl);
+
+        httpClient.setIgnoreSocks5Proxy(ignoreSocks5Proxy || !preferences.getUseTorForHttpRequests());
+        
         if (!ignoreSocks5Proxy) {
-            httpClient.setUseSocks5Proxy(preferences.getUseTorForHttpRequests());
             preferences.useTorForHttpRequestsProperty().addListener((observable, oldValue, newValue) -> {
-                httpClient.setUseSocks5Proxy(newValue);
+                httpClient.setIgnoreSocks5Proxy(!newValue);
             });
-        } else {
-            httpClient.setUseSocks5Proxy(false);
         }
     }
 }
