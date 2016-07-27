@@ -60,10 +60,11 @@ public final class DisputeList<DisputeCase> extends ArrayList<DisputeCase> imple
     @Override
     public boolean add(DisputeCase disputeCase) {
         if (!super.contains(disputeCase)) {
-            boolean result = super.add(disputeCase);
+            boolean changed = super.add(disputeCase);
             getObservableList().add(disputeCase);
-            storage.queueUpForSave();
-            return result;
+            if (changed)
+                storage.queueUpForSave();
+            return changed;
         } else {
             return false;
         }
@@ -71,10 +72,11 @@ public final class DisputeList<DisputeCase> extends ArrayList<DisputeCase> imple
 
     @Override
     public boolean remove(Object disputeCase) {
-        boolean result = super.remove(disputeCase);
+        boolean changed = super.remove(disputeCase);
         getObservableList().remove(disputeCase);
-        storage.queueUpForSave();
-        return result;
+        if (changed)
+            storage.queueUpForSave();
+        return changed;
     }
 
     private ObservableList<DisputeCase> getObservableList() {

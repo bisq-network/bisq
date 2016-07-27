@@ -65,18 +65,20 @@ public final class TradableList<T extends Tradable> extends ArrayList<T> impleme
 
     @Override
     public boolean add(T tradable) {
-        boolean result = super.add(tradable);
+        boolean changed = super.add(tradable);
         getObservableList().add(tradable);
-        storage.queueUpForSave();
-        return result;
+        if (changed)
+            storage.queueUpForSave();
+        return changed;
     }
 
     @Override
     public boolean remove(Object tradable) {
-        boolean result = super.remove(tradable);
+        boolean changed = super.remove(tradable);
         getObservableList().remove(tradable);
-        storage.queueUpForSave();
-        return result;
+        if (changed)
+            storage.queueUpForSave();
+        return changed;
     }
 
     public ObservableList<T> getObservableList() {

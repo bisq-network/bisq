@@ -234,7 +234,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             if (hasSequenceNrIncreased) {
                 sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
                 // We set the delay higher as we might receive a batch of items
-                storage.queueUpForSave(sequenceNumberMap, 2000);
+                storage.queueUpForSave(new HashMap<>(sequenceNumberMap), 2000);
 
                 if (allowBroadcast)
                     broadcast(new AddDataMessage(protectedStorageEntry), sender, listener, isDataOwner);
@@ -278,7 +278,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     storedData.updateSignature(signature);
                     printData("after refreshTTL");
                     sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
-                    storage.queueUpForSave(sequenceNumberMap, 1000);
+                    storage.queueUpForSave(new HashMap<>(sequenceNumberMap), 1000);
 
                     broadcast(refreshTTLMessage, sender, null, isDataOwner);
                 }
@@ -307,7 +307,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
             printData("after remove");
             sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
-            storage.queueUpForSave(sequenceNumberMap, 300);
+            storage.queueUpForSave(new HashMap<>(sequenceNumberMap), 300);
 
             broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
         } else {
@@ -334,7 +334,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfData);
             printData("after removeMailboxData");
             sequenceNumberMap.put(hashOfData, new MapValue(protectedMailboxStorageEntry.sequenceNumber, System.currentTimeMillis()));
-            storage.queueUpForSave(sequenceNumberMap, 300);
+            storage.queueUpForSave(new HashMap<>(sequenceNumberMap), 300);
 
             broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender, null, isDataOwner);
         } else {

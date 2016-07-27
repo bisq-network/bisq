@@ -68,6 +68,7 @@ public final class OpenOffer implements Tradable {
             log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
+
     public Date getDate() {
         return offer.getDate();
     }
@@ -92,8 +93,10 @@ public final class OpenOffer implements Tradable {
 
     public void setState(State state) {
         log.trace("setState" + state);
+        boolean changed = this.state != state;
         this.state = state;
-        storage.queueUpForSave();
+        if (changed)
+            storage.queueUpForSave();
 
         // We keep it reserved for a limited time, if trade preparation fails we revert to available state
         if (this.state == State.RESERVED)

@@ -159,19 +159,26 @@ public final class Dispute implements Payload {
     }
 
     public void setIsClosed(boolean isClosed) {
+        boolean changed = this.isClosed != isClosed;
         this.isClosed = isClosed;
         isClosedProperty.set(isClosed);
-        storage.queueUpForSave();
+        if (changed)
+            storage.queueUpForSave();
     }
 
     public void setDisputeResult(DisputeResult disputeResult) {
+        boolean changed = this.disputeResult == null || !this.disputeResult.equals(disputeResult);
         this.disputeResult = disputeResult;
         disputeResultProperty.set(disputeResult);
-        storage.queueUpForSave();
+        if (changed)
+            storage.queueUpForSave();
     }
 
     public void setDisputePayoutTxId(String disputePayoutTxId) {
+        boolean changed = this.disputePayoutTxId == null || !this.disputePayoutTxId.equals(disputePayoutTxId);
         this.disputePayoutTxId = disputePayoutTxId;
+        if (changed)
+            storage.queueUpForSave();
     }
 
 

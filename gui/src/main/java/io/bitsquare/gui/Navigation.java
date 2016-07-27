@@ -101,7 +101,7 @@ public final class Navigation implements Persistable {
 
         currentPath = newPath;
         previousPath = currentPath;
-        storage.queueUpForSave(2000);
+        storage.queueUpForSave(1000);
         listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
     }
 

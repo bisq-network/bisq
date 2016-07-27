@@ -61,7 +61,7 @@ public class TradeStatisticsManager {
             if (!itemAlreadyAdded) {
                 tradeStatisticsSet.add(tradeStatistics);
                 observableTradeStatisticsSet.add(tradeStatistics);
-                storage.queueUpForSave(tradeStatisticsSet, 2000);
+                storage.queueUpForSave(new HashSet<>(tradeStatisticsSet), 2000);
 
                 dump();
             } else {
@@ -86,7 +86,7 @@ public class TradeStatisticsManager {
             list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? 1 : (o1.tradeDate == o2.tradeDate ? 0 : -1)));
             TradeStatistics[] array = new TradeStatistics[tradeStatisticsSet.size()];
             list.toArray(array);
-            jsonStorage.queueUpForSave(Utilities.objectToJson(array), 5_000);
+            jsonStorage.queueUpForSave(Utilities.objectToJson(array), 5000);
         }
     }
 

@@ -81,7 +81,7 @@ public class GUIUtil {
             String directory = getDirectoryFormChooser(preferences, stage);
             Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
             paymentAccountsStorage.initAndGetPersisted(accounts, fileName);
-            paymentAccountsStorage.queueUpForSave(20);
+            paymentAccountsStorage.queueUpForSave();
             new Popup<>().feedback("Payment accounts saved to path:\n" + Paths.get(directory, fileName).toAbsolutePath()).show();
         } else {
             new Popup<>().warning("You don't have payment accounts set up for exporting.").show();

@@ -486,6 +486,7 @@ public final class Preferences implements Persistable {
 
     public void setUseTorForHttpRequests(boolean useTorForHttpRequests) {
         useTorForHttpRequestsProperty.set(useTorForHttpRequests);
+        storage.queueUpForSave();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -679,11 +680,11 @@ public final class Preferences implements Persistable {
 
     private void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
         this.blockChainExplorerTestNet = blockChainExplorerTestNet;
-        storage.queueUpForSave(2000);
+        storage.queueUpForSave();
     }
 
     private void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
         this.blockChainExplorerMainNet = blockChainExplorerMainNet;
-        storage.queueUpForSave(2000);
+        storage.queueUpForSave();
     }
 }
