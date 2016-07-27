@@ -81,6 +81,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private SortedList<TradeStatistics> sortedList;
     private Label nrOfTradeStatisticsLabel;
     private ListChangeListener<TradeStatistics> tradeStatisticsByCurrencyListener;
+    private TableColumn<TradeStatistics, TradeStatistics> priceColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -137,7 +138,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.selectedToggleProperty().addListener(toggleChangeListener);
         priceAxisY.widthProperty().addListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().addListener(volumeAxisYWidthListener);
+        model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
 
+        priceAxisY.labelProperty().bind(priceColumnLabel);
+        priceColumn.textProperty().bind(priceColumnLabel);
+        
         tradeCurrencySubscriber = EasyBind.subscribe(model.tradeCurrencyProperty,
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
@@ -158,23 +163,28 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
-        model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
         nrOfTradeStatisticsLabel.setText("Nr. of trades: " + model.tradeStatisticsByCurrency.size());
     }
 
     @Override
     protected void deactivate() {
+        currencyComboBox.setOnAction(null);
+        
         model.priceItems.removeListener(itemsChangeListener);
         toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
         priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
         model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
-        tradeCurrencySubscriber.unsubscribe();
-        currencyComboBox.setOnAction(null);
+
         priceAxisY.labelProperty().unbind();
+        priceColumn.textProperty().unbind();
+
+        tradeCurrencySubscriber.unsubscribe();
+
+        sortedList.comparatorProperty().unbind();
+        
         priceSeries.getData().clear();
         priceChart.getData().clear();
-        sortedList.comparatorProperty().unbind();
     }
 
 
@@ -194,7 +204,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisY = new NumberAxis();
         priceAxisY.setForceZeroInRange(false);
         priceAxisY.setAutoRanging(true);
-        priceAxisY.labelProperty().bind(priceColumnLabel);
         priceAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
@@ -427,9 +436,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(amountColumn);
 
         // price
-        TableColumn<TradeStatistics, TradeStatistics> priceColumn = new TableColumn<>();
+        priceColumn = new TableColumn<>();
         priceColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
-        priceColumn.textProperty().bind(priceColumnLabel);
         priceColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
                         TradeStatistics>>() {
