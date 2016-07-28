@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 
 class TradesChartsViewModel extends ActivatableViewModel {
     private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModel.class);
+    private static final int TAB_INDEX = 2;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -69,6 +70,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     TickUnit tickUnit = TickUnit.MONTH;
     int maxTicks = 30;
+    private int selectedTabIndex;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -105,9 +107,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     protected void activate() {
         tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(setChangeListener);
         updateChartData();
-
-        if (!preferences.getUseStickyMarketPrice())
-            priceFeedService.setCurrencyCode(tradeCurrencyProperty.get().getCode());
+        syncPriceFeedCurrency();
     }
 
     @Override
@@ -120,20 +120,24 @@ class TradesChartsViewModel extends ActivatableViewModel {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
+    void onSetTradeCurrency(TradeCurrency tradeCurrency) {
         this.tradeCurrencyProperty.set(tradeCurrency);
         preferences.setTradeStatisticsScreenCurrencyCode(tradeCurrency.getCode());
         updateChartData();
 
         if (!preferences.getUseStickyMarketPrice())
             priceFeedService.setCurrencyCode(tradeCurrency.getCode());
-
     }
 
-    public void setTickUnit(TickUnit tickUnit) {
+    void setTickUnit(TickUnit tickUnit) {
         this.tickUnit = tickUnit;
         preferences.setTradeStatisticsTickUnitIndex(tickUnit.ordinal());
         updateChartData();
+    }
+
+    void setSelectedTabIndex(int selectedTabIndex) {
+        this.selectedTabIndex = selectedTabIndex;
+        syncPriceFeedCurrency();
     }
 
 
@@ -158,6 +162,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void syncPriceFeedCurrency() {
+        if (!preferences.getUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX)
+            priceFeedService.setCurrencyCode(tradeCurrencyProperty.get().getCode());
+    }
 
     private void updateChartData() {
         tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()

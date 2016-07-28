@@ -82,6 +82,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private Label nrOfTradeStatisticsLabel;
     private ListChangeListener<TradeStatistics> tradeStatisticsByCurrencyListener;
     private TableColumn<TradeStatistics, TradeStatistics> priceColumn;
+    private ChangeListener<Number> selectedTabIndexListener;
+    private SingleSelectionModel<Tab> tabPaneSelectionModel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +129,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     protected void activate() {
+        // root.getParent() is null at initialize
+        tabPaneSelectionModel = ((TabPane) root.getParent().getParent()).getSelectionModel();
+        selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
+        model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
+        tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
+
         currencyComboBox.setItems(model.getTradeCurrencies());
         currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
@@ -142,7 +150,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         priceAxisY.labelProperty().bind(priceColumnLabel);
         priceColumn.textProperty().bind(priceColumnLabel);
-        
+
         tradeCurrencySubscriber = EasyBind.subscribe(model.tradeCurrencyProperty,
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
@@ -169,7 +177,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     @Override
     protected void deactivate() {
         currencyComboBox.setOnAction(null);
-        
+
+        tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
         model.priceItems.removeListener(itemsChangeListener);
         toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
         priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
@@ -182,7 +191,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tradeCurrencySubscriber.unsubscribe();
 
         sortedList.comparatorProperty().unbind();
-        
+
         priceSeries.getData().clear();
         priceChart.getData().clear();
     }

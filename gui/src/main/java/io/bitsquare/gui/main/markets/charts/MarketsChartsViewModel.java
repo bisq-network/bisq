@@ -47,13 +47,13 @@ import java.util.stream.Collectors;
 class MarketsChartsViewModel extends ActivatableViewModel {
     private static final Logger log = LoggerFactory.getLogger(MarketsChartsViewModel.class);
 
-    final static String EDIT_FLAG = "EDIT_FLAG";
+    private static final int TAB_INDEX = 0;
 
     private final OfferBook offerBook;
     private final Preferences preferences;
     final PriceFeedService priceFeedService;
 
-    final ObjectProperty<TradeCurrency> tradeCurrency = new SimpleObjectProperty<>();
+    final ObjectProperty<TradeCurrency> tradeCurrencyProperty = new SimpleObjectProperty<>();
     private final List<XYChart.Data> buyData = new ArrayList<>();
     private final List<XYChart.Data> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
@@ -61,6 +61,8 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     private final ObservableList<Offer> top3BuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<Offer> top3SellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
+    private int selectedTabIndex;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -74,9 +76,9 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
         Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getMarketScreenCurrencyCode());
         if (tradeCurrencyOptional.isPresent())
-            tradeCurrency.set(tradeCurrencyOptional.get());
+            tradeCurrencyProperty.set(tradeCurrencyOptional.get());
         else {
-            tradeCurrency.set(CurrencyUtil.getDefaultTradeCurrency());
+            tradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
         }
 
         offerBookListItems = offerBook.getOfferBookListItems();
@@ -87,7 +89,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
                 list.addAll(c.getAddedSubList());
                 if (list.stream()
                         .map(OfferBookListItem::getOffer)
-                        .filter(e -> e.getCurrencyCode().equals(tradeCurrency.get().getCode()))
+                        .filter(e -> e.getCurrencyCode().equals(tradeCurrencyProperty.get().getCode()))
                         .findAny()
                         .isPresent())
                     updateChartData();
@@ -117,13 +119,79 @@ class MarketsChartsViewModel extends ActivatableViewModel {
         if (isAnyPricePresent())
             priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdatedListener);
 
-        if (!preferences.getUseStickyMarketPrice())
-            priceFeedService.setCurrencyCode(tradeCurrency.get().getCode());
+        syncPriceFeedCurrency();
     }
 
     @Override
     protected void deactivate() {
         offerBookListItems.removeListener(listChangeListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
+        this.tradeCurrencyProperty.set(tradeCurrency);
+        updateChartData();
+
+        if (!preferences.getUseStickyMarketPrice())
+            priceFeedService.setCurrencyCode(tradeCurrency.getCode());
+
+        preferences.setMarketScreenCurrencyCode(tradeCurrency.getCode());
+    }
+
+    void setSelectedTabIndex(int selectedTabIndex) {
+        this.selectedTabIndex = selectedTabIndex;
+        syncPriceFeedCurrency();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public List<XYChart.Data> getBuyData() {
+        return buyData;
+    }
+
+    public List<XYChart.Data> getSellData() {
+        return sellData;
+    }
+
+    public String getCurrencyCode() {
+        return tradeCurrencyProperty.get().getCode();
+    }
+
+    public ObservableList<OfferBookListItem> getOfferBookListItems() {
+        return offerBookListItems;
+    }
+
+    public ObservableList<Offer> getTop3BuyOfferList() {
+        return top3BuyOfferList;
+    }
+
+    public ObservableList<Offer> getTop3SellOfferList() {
+        return top3SellOfferList;
+    }
+
+    public ObservableList<TradeCurrency> getTradeCurrencies() {
+        return preferences.getTradeCurrenciesAsObservable();
+    }
+
+    public TradeCurrency getTradeCurrencyProperty() {
+        return tradeCurrencyProperty.get();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void syncPriceFeedCurrency() {
+        if (!preferences.getUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX)
+            priceFeedService.setCurrencyCode(tradeCurrencyProperty.get().getCode());
     }
 
     private boolean isAnyPricePresent() {
@@ -133,7 +201,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     private void updateChartData() {
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
-                .filter(e -> e.getCurrencyCode().equals(tradeCurrency.get().getCode())
+                .filter(e -> e.getCurrencyCode().equals(tradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(Offer.Direction.BUY))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().value : 0;
@@ -148,7 +216,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
 
         List<Offer> allSellOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
-                .filter(e -> e.getCurrencyCode().equals(tradeCurrency.get().getCode())
+                .filter(e -> e.getCurrencyCode().equals(tradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(Offer.Direction.SELL))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().value : 0;
@@ -177,56 +245,5 @@ class MarketsChartsViewModel extends ActivatableViewModel {
                     data.add(new XYChart.Data(price, accumulatedAmount));
             }
         }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI actions
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
-        this.tradeCurrency.set(tradeCurrency);
-        updateChartData();
-
-        if (!preferences.getUseStickyMarketPrice())
-            priceFeedService.setCurrencyCode(tradeCurrency.getCode());
-
-        preferences.setMarketScreenCurrencyCode(tradeCurrency.getCode());
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public List<XYChart.Data> getBuyData() {
-        return buyData;
-    }
-
-    public List<XYChart.Data> getSellData() {
-        return sellData;
-    }
-
-    public String getCurrencyCode() {
-        return tradeCurrency.get().getCode();
-    }
-
-    public ObservableList<OfferBookListItem> getOfferBookListItems() {
-        return offerBookListItems;
-    }
-
-    public ObservableList<Offer> getTop3BuyOfferList() {
-        return top3BuyOfferList;
-    }
-
-    public ObservableList<Offer> getTop3SellOfferList() {
-        return top3SellOfferList;
-    }
-
-    public ObservableList<TradeCurrency> getTradeCurrencies() {
-        return preferences.getTradeCurrenciesAsObservable();
-    }
-
-    public TradeCurrency getTradeCurrency() {
-        return tradeCurrency.get();
     }
 }

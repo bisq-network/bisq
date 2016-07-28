@@ -71,6 +71,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
     private Button buyOfferButton;
     private Button sellOfferButton;
+    private ChangeListener<Number> selectedTabIndexListener;
+    private SingleSelectionModel<Tab> tabPaneSelectionModel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -135,8 +137,15 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
     @Override
     protected void activate() {
+        // root.getParent() is null at initialize
+        tabPaneSelectionModel = ((TabPane) root.getParent().getParent()).getSelectionModel();
+        selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
+
+        model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
+        tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
+
         currencyComboBox.setItems(model.getTradeCurrencies());
-        currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
+        currencyComboBox.getSelectionModel().select(model.getTradeCurrencyProperty());
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
         currencyComboBox.setOnAction(e -> {
             TradeCurrency tradeCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
@@ -145,7 +154,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         });
 
         model.getOfferBookListItems().addListener(changeListener);
-        tradeCurrencySubscriber = EasyBind.subscribe(model.tradeCurrency,
+        tradeCurrencySubscriber = EasyBind.subscribe(model.tradeCurrencyProperty,
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
                     String tradeCurrencyName = tradeCurrency.getName();
@@ -173,6 +182,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     @Override
     protected void deactivate() {
         model.getOfferBookListItems().removeListener(changeListener);
+        tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
         tradeCurrencySubscriber.unsubscribe();
         currencyComboBox.setOnAction(null);
     }

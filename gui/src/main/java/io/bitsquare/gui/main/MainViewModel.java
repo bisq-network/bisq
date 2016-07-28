@@ -846,6 +846,8 @@ public class MainViewModel implements ViewModel {
             else
                 findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
                         .ifPresent(item2 -> selectedPriceFeedComboBoxItemProperty.set(item2));
+
+            priceFeedService.setCurrencyCode(item.currencyCode);
         } else if (item != null) {
             selectedPriceFeedComboBoxItemProperty.set(item);
             priceFeedService.setCurrencyCode(item.currencyCode);
