@@ -199,7 +199,11 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         final PaymentMethod paymentMethod = offer.getPaymentMethod();
         final String offererPaymentAccountId = offer.getOffererPaymentAccountId();
         final PaymentAccount paymentAccount = user.getPaymentAccount(offererPaymentAccountId);
-        final String bankId = offer.getBankId();
+        String bankId = offer.getBankId();
+        if (bankId == null || bankId.equals("null"))
+            bankId = "";
+        else
+            bankId = " (" + bankId + ")";
         final boolean isSpecificBanks = paymentMethod.equals(PaymentMethod.SPECIFIC_BANKS);
         final boolean isNationalBanks = paymentMethod.equals(PaymentMethod.NATIONAL_BANK);
         final boolean isSepa = paymentMethod.equals(PaymentMethod.SEPA);
@@ -209,9 +213,9 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             final String method = BSResources.get(paymentMethod.getId());
             if (isNationalBanks || isSpecificBanks || isSepa) {
                 if (BankUtil.isBankIdRequired(offer.getCountryCode()))
-                    addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank ID):", method + " (" + bankId + ")");
+                    addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank ID):", method + bankId);
                 else if (BankUtil.isBankNameRequired(offer.getCountryCode()))
-                    addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank name):", method + " (" + bankId + ")");
+                    addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank name):", method + bankId);
             } else {
                 addLabelTextField(gridPane, ++rowIndex, "Payment method:", method);
             }
