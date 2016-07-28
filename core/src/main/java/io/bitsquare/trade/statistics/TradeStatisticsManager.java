@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.locale.CurrencyTuple;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
@@ -14,6 +16,7 @@ import javafx.collections.ObservableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,22 +24,44 @@ import java.util.stream.Collectors;
 public class TradeStatisticsManager {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsManager.class);
 
-    private final Storage<HashSet<TradeStatistics>> storage;
-    private Storage<String> jsonStorage;
+    private final Storage<HashSet<TradeStatistics>> statisticsStorage;
+    private Storage<String> fiatCurrencyListJsonStorage;
+    private Storage<String> cryptoCurrencyListJsonStorage;
+    private Storage<String> statisticsJsonStorage;
     private boolean dumpStatistics;
     private ObservableSet<TradeStatistics> observableTradeStatisticsSet = FXCollections.observableSet();
     private HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
 
     @Inject
-    public TradeStatisticsManager(Storage<HashSet<TradeStatistics>> storage, Storage<String> jsonStorage, P2PService p2PService, @Named(CoreOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
-        this.storage = storage;
-        this.jsonStorage = jsonStorage;
+    public TradeStatisticsManager(Storage<HashSet<TradeStatistics>> statisticsStorage,
+                                  Storage<String> fiatCurrencyListJsonStorage,
+                                  Storage<String> cryptoCurrencyListJsonStorage,
+                                  Storage<String> statisticsJsonStorage,
+                                  P2PService p2PService,
+                                  @Named(CoreOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
+        this.statisticsStorage = statisticsStorage;
+        this.fiatCurrencyListJsonStorage = fiatCurrencyListJsonStorage;
+        this.cryptoCurrencyListJsonStorage = cryptoCurrencyListJsonStorage;
+        this.statisticsJsonStorage = statisticsJsonStorage;
         this.dumpStatistics = dumpStatistics;
 
-        if (dumpStatistics)
-            this.jsonStorage.initAndGetPersistedWithFileName("trade_statistics.json");
+        if (dumpStatistics) {
+            this.statisticsJsonStorage.initAndGetPersistedWithFileName("trade_statistics.json");
 
-        HashSet<TradeStatistics> persisted = storage.initAndGetPersistedWithFileName("TradeStatistics");
+            this.fiatCurrencyListJsonStorage.initAndGetPersistedWithFileName("fiat_currency_list.json");
+            ArrayList<CurrencyTuple> fiatCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies().stream()
+                    .map(e -> new CurrencyTuple(e.getCode(), e.getName()))
+                    .collect(Collectors.toList()));
+            fiatCurrencyListJsonStorage.queueUpForSave(Utilities.objectToJson(fiatCurrencyList), 2000);
+
+            this.cryptoCurrencyListJsonStorage.initAndGetPersistedWithFileName("crypto_currency_list.json");
+            ArrayList<CurrencyTuple> cryptoCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedCryptoCurrencies().stream()
+                    .map(e -> new CurrencyTuple(e.getCode(), e.getName()))
+                    .collect(Collectors.toList()));
+            cryptoCurrencyListJsonStorage.queueUpForSave(Utilities.objectToJson(cryptoCurrencyList), 2000);
+        }
+
+        HashSet<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
         if (persisted != null)
             persisted.stream().forEach(this::add);
 
@@ -44,7 +69,7 @@ public class TradeStatisticsManager {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
                 final StoragePayload storagePayload = data.getStoragePayload();
-                if (storagePayload instanceof TradeStatistics) 
+                if (storagePayload instanceof TradeStatistics)
                     add((TradeStatistics) storagePayload);
             }
 
@@ -61,7 +86,7 @@ public class TradeStatisticsManager {
             if (!itemAlreadyAdded) {
                 tradeStatisticsSet.add(tradeStatistics);
                 observableTradeStatisticsSet.add(tradeStatistics);
-                storage.queueUpForSave(new HashSet<>(tradeStatisticsSet), 2000);
+                statisticsStorage.queueUpForSave(new HashSet<>(tradeStatisticsSet), 2000);
 
                 dump();
             } else {
@@ -86,7 +111,7 @@ public class TradeStatisticsManager {
             list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? 1 : (o1.tradeDate == o2.tradeDate ? 0 : -1)));
             TradeStatistics[] array = new TradeStatistics[tradeStatisticsSet.size()];
             list.toArray(array);
-            jsonStorage.queueUpForSave(Utilities.objectToJson(array), 5000);
+            statisticsJsonStorage.queueUpForSave(Utilities.objectToJson(array), 5000);
         }
     }
 
