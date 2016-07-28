@@ -40,7 +40,7 @@ import javafx.util.StringConverter;
 /**
  * The content for Candle tool tips
  */
-public class TooltipContent extends GridPane {
+public class CandleTooltip extends GridPane {
     private final StringConverter<Number> priceStringConverter;
     private final Label openValue = new Label();
     private final Label closeValue = new Label();
@@ -48,7 +48,7 @@ public class TooltipContent extends GridPane {
     private final Label lowValue = new Label();
     private final Label averageValue = new Label();
 
-    TooltipContent(StringConverter<Number> priceStringConverter) {
+    CandleTooltip(StringConverter<Number> priceStringConverter) {
         this.priceStringConverter = priceStringConverter;
 
         setHgap(Layout.GRID_GAP);

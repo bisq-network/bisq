@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.charts;
+package io.bitsquare.gui.main.markets.offerbook;
 
 import com.google.common.math.LongMath;
 import com.google.inject.Inject;
@@ -44,8 +44,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-class MarketsChartsViewModel extends ActivatableViewModel {
-    private static final Logger log = LoggerFactory.getLogger(MarketsChartsViewModel.class);
+class OfferBookChartViewModel extends ActivatableViewModel {
+    private static final Logger log = LoggerFactory.getLogger(OfferBookChartViewModel.class);
 
     private static final int TAB_INDEX = 0;
 
@@ -69,7 +69,7 @@ class MarketsChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MarketsChartsViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService) {
+    public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService) {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;

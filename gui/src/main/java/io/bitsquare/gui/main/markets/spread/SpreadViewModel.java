@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.statistics;
+package io.bitsquare.gui.main.markets.spread;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
@@ -34,12 +34,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-class MarketsStatisticViewModel extends ActivatableViewModel {
+class SpreadViewModel extends ActivatableViewModel {
 
     private final OfferBook offerBook;
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
-    final ObservableList<MarketStatisticItem> marketStatisticItems = FXCollections.observableArrayList();
+    final ObservableList<SpreadItem> spreadItems = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ class MarketsStatisticViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MarketsStatisticViewModel(OfferBook offerBook) {
+    public SpreadViewModel(OfferBook offerBook) {
         this.offerBook = offerBook;
 
         offerBookListItems = offerBook.getOfferBookListItems();
@@ -75,7 +75,7 @@ class MarketsStatisticViewModel extends ActivatableViewModel {
                 offersByCurrencyMap.put(currencyCode, new ArrayList<>());
             offersByCurrencyMap.get(currencyCode).add(offer);
         }
-        marketStatisticItems.clear();
+        spreadItems.clear();
         for (String currencyCode : offersByCurrencyMap.keySet()) {
             List<Offer> offers = offersByCurrencyMap.get(currencyCode);
             List<Offer> buyOffers = offers
@@ -109,7 +109,7 @@ class MarketsStatisticViewModel extends ActivatableViewModel {
                 spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
 
             Coin totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
-            marketStatisticItems.add(new MarketStatisticItem(currencyCode, buyOffers.size(), sellOffers.size(), offers.size(), spread, totalAmount));
+            spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(), offers.size(), spread, totalAmount));
         }
     }
 }

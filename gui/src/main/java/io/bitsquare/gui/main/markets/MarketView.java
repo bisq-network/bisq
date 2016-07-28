@@ -21,8 +21,8 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.markets.charts.MarketsChartsView;
-import io.bitsquare.gui.main.markets.statistics.MarketsStatisticsView;
+import io.bitsquare.gui.main.markets.offerbook.OfferBookChartView;
+import io.bitsquare.gui.main.markets.spread.SpreadView;
 import io.bitsquare.gui.main.markets.trades.TradesChartsView;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -55,11 +55,11 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == chartsTab)
-                navigation.navigateTo(MainView.class, MarketView.class, MarketsChartsView.class);
+                navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
             else if (newValue == tradesTab)
                 navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
             else if (newValue == statisticsTab)
-                navigation.navigateTo(MainView.class, MarketView.class, MarketsStatisticsView.class);
+                navigation.navigateTo(MainView.class, MarketView.class, SpreadView.class);
         };
     }
 
@@ -69,11 +69,11 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == chartsTab)
-            navigation.navigateTo(MainView.class, MarketView.class, MarketsChartsView.class);
+            navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
         else if (root.getSelectionModel().getSelectedItem() == tradesTab)
             navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
         else
-            navigation.navigateTo(MainView.class, MarketView.class, MarketsStatisticsView.class);
+            navigation.navigateTo(MainView.class, MarketView.class, SpreadView.class);
     }
 
     @Override
@@ -86,9 +86,9 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
         final Tab tab;
         View view = viewLoader.load(viewClass);
 
-        if (view instanceof MarketsChartsView) tab = chartsTab;
+        if (view instanceof OfferBookChartView) tab = chartsTab;
         else if (view instanceof TradesChartsView) tab = tradesTab;
-        else if (view instanceof MarketsStatisticsView) tab = statisticsTab;
+        else if (view instanceof SpreadView) tab = statisticsTab;
         else throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");
 
         tab.setContent(view.getRoot());

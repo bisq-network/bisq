@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.charts;
+package io.bitsquare.gui.main.markets.offerbook;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple3;
@@ -54,8 +54,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 
 @FxmlView
-public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChartsViewModel> {
-    private static final Logger log = LoggerFactory.getLogger(MarketsChartsView.class);
+public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
+    private static final Logger log = LoggerFactory.getLogger(OfferBookChartView.class);
 
     private NumberAxis xAxis, yAxis;
     XYChart.Series seriesBuy, seriesSell;
@@ -80,7 +80,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MarketsChartsView(MarketsChartsViewModel model, Navigation navigation, BSFormatter formatter) {
+    public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, BSFormatter formatter) {
         super(model);
         this.navigation = navigation;
         this.formatter = formatter;

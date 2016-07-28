@@ -227,19 +227,24 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 navigation.navigateToPreviousVisitedView();
 
                 if (!persistedFilesCorrupted.isEmpty()) {
-                    // show warning that some files has been corrupted
-                    new Popup().warning("We detected incompatible data base files!\n\n" +
-                            "Those database file(s) are not compatible with our current code base:" +
-                            "\n" + persistedFilesCorrupted.toString() +
-                            "\n\nWe made a backup of the corrupted file(s) and applied the default values to a new " +
-                            "database version." +
-                            "\n\nThe backup is located at:\n[you local app data directory]/db/backup_of_corrupted_data.\n\n" +
-                            "Please check if you have the latest version of Bitsquare installed.\n" +
-                            "You can download it at:\nhttps://github.com/bitsquare/bitsquare/releases\n\n" +
-                            "Please restart the application.")
-                            .closeButtonText("Shut down")
-                            .onClose(BitsquareApp.shutDownHandler::run)
-                            .show();
+                    if (persistedFilesCorrupted.size() > 1 || !persistedFilesCorrupted.get(0).equals("Navigation")) {
+                        // show warning that some files has been corrupted
+                        new Popup().warning("We detected incompatible data base files!\n\n" +
+                                "Those database file(s) are not compatible with our current code base:" +
+                                "\n" + persistedFilesCorrupted.toString() +
+                                "\n\nWe made a backup of the corrupted file(s) and applied the default values to a new " +
+                                "database version." +
+                                "\n\nThe backup is located at:\n[you local app data directory]/db/backup_of_corrupted_data.\n\n" +
+                                "Please check if you have the latest version of Bitsquare installed.\n" +
+                                "You can download it at:\nhttps://github.com/bitsquare/bitsquare/releases\n\n" +
+                                "Please restart the application.")
+                                .closeButtonText("Shut down")
+                                .onClose(BitsquareApp.shutDownHandler::run)
+                                .show();
+                    } else {
+                        log.debug("We detected incompatible data base file for Navigation. That is a minor issue happening with refactoring of UI classes " +
+                                "and we don't display a warning popup to the user.");
+                    }
                 }
 
                 transitions.fadeOutAndRemove(splashScreen, 1500, actionEvent -> disposeSplashScreen());

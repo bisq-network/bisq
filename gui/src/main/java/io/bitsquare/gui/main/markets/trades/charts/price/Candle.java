@@ -48,7 +48,7 @@ public class Candle extends Group {
 
     private String seriesStyleClass;
     private String dataStyleClass;
-    private final TooltipContent tooltipContent;
+    private final CandleTooltip candleTooltip;
     private final Line highLowLine = new Line();
     private final Region bar = new Region();
 
@@ -65,8 +65,8 @@ public class Candle extends Group {
         getStyleClass().setAll("candlestick-candle", seriesStyleClass, dataStyleClass);
         updateStyleClasses();
 
-        tooltipContent = new TooltipContent(priceStringConverter);
-        tooltip.setGraphic(tooltipContent);
+        candleTooltip = new CandleTooltip(priceStringConverter);
+        tooltip.setGraphic(candleTooltip);
         Tooltip.install(this, tooltip);
     }
 
@@ -91,7 +91,7 @@ public class Candle extends Group {
     }
 
     public void updateTooltip(CandleData candleData) {
-        tooltipContent.update(candleData);
+        candleTooltip.update(candleData);
     }
 
     private void updateStyleClasses() {
