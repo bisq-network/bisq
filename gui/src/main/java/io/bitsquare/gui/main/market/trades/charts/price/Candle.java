@@ -29,9 +29,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.bitsquare.gui.main.markets.trades.charts.price;
+package io.bitsquare.gui.main.market.trades.charts.price;
 
-import io.bitsquare.gui.main.markets.trades.charts.CandleData;
+import io.bitsquare.gui.main.market.trades.charts.CandleData;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;

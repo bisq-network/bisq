@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.offerbook;
+package io.bitsquare.gui.main.market.offerbook;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple3;

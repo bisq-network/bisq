@@ -17,15 +17,16 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.layout.AnchorPane?>
-<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.markets.MarketView"
-         AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
-         AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
-         xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="chartsTab" text="Offer book" closable="false"/>
-    <Tab fx:id="statisticsTab" text="Spreads" closable="false"/>
-    <Tab fx:id="tradesTab" text="Trades" closable="false"/>
-</TabPane>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.*?>
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.market.spread.SpreadView"
+          hgap="5.0" vgap="5.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+          xmlns:fx="http://javafx.com/fxml">
+    <padding>
+        <Insets bottom="10.0" left="25.0" top="20.0" right="25"/>
+    </padding>
+
+</GridPane>

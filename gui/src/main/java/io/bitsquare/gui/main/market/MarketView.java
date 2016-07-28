@@ -15,15 +15,15 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets;
+package io.bitsquare.gui.main.market;
 
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.markets.offerbook.OfferBookChartView;
-import io.bitsquare.gui.main.markets.spread.SpreadView;
-import io.bitsquare.gui.main.markets.trades.TradesChartsView;
+import io.bitsquare.gui.main.market.offerbook.OfferBookChartView;
+import io.bitsquare.gui.main.market.spread.SpreadView;
+import io.bitsquare.gui.main.market.trades.TradesChartsView;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;

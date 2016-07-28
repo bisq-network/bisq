@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.trades.charts;
+package io.bitsquare.gui.main.market.trades.charts;
 
 public class CandleData {
     public final long tick; // Is the time tick in the chosen time interval

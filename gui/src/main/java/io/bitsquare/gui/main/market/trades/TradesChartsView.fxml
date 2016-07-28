@@ -20,7 +20,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="root" fx:controller="io.bitsquare.gui.main.markets.trades.TradesChartsView"
+<VBox fx:id="root" fx:controller="io.bitsquare.gui.main.market.trades.TradesChartsView"
       spacing="10.0" fillWidth="true"
       AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
       AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"

@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
-package io.bitsquare.gui.main.markets.trades.charts.volume;
+package io.bitsquare.gui.main.market.trades.charts.volume;
 
-import io.bitsquare.gui.main.markets.trades.charts.CandleData;
-import io.bitsquare.gui.main.markets.trades.charts.price.CandleStickChart;
+import io.bitsquare.gui.main.market.trades.charts.CandleData;
+import io.bitsquare.gui.main.market.trades.charts.price.CandleStickChart;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;

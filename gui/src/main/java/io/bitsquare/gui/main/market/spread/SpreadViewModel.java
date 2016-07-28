@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.spread;
+package io.bitsquare.gui.main.market.spread;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableViewModel;

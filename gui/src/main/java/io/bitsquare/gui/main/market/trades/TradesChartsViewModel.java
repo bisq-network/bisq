@@ -15,13 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.trades;
+package io.bitsquare.gui.main.market.trades;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
-import io.bitsquare.gui.main.markets.trades.charts.CandleData;
+import io.bitsquare.gui.main.market.trades.charts.CandleData;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.statistics.TradeStatistics;

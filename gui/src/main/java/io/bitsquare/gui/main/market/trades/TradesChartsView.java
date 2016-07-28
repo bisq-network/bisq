@@ -15,13 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.trades;
+package io.bitsquare.gui.main.market.trades;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.main.markets.trades.charts.price.CandleStickChart;
-import io.bitsquare.gui.main.markets.trades.charts.volume.VolumeChart;
+import io.bitsquare.gui.main.market.trades.charts.price.CandleStickChart;
+import io.bitsquare.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.FiatCurrency;

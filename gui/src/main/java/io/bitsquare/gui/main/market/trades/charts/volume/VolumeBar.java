@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
-package io.bitsquare.gui.main.markets.trades.charts.volume;
+package io.bitsquare.gui.main.market.trades.charts.volume;
 
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;

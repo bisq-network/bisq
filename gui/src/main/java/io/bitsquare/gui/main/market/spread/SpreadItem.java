@@ -1,4 +1,4 @@
-package io.bitsquare.gui.main.markets.spread;
+package io.bitsquare.gui.main.market.spread;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.offerbook;
+package io.bitsquare.gui.main.market.offerbook;
 
 import com.google.common.math.LongMath;
 import com.google.inject.Inject;
