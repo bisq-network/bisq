@@ -981,7 +981,7 @@ public class TradeWalletService {
         transaction.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
         transaction.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
         if (lockTime != 0) {
-            log.info("We use a lockTime of " + lockTime);
+            log.debug("We use a lockTime of " + lockTime);
             // When using lockTime we need to set sequenceNumber to 0 
             transaction.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
             transaction.setLockTime(lockTime);

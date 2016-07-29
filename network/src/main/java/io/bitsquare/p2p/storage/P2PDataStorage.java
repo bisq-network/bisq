@@ -28,6 +28,7 @@ import io.bitsquare.storage.Storage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -98,7 +99,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                         ByteArray hashOfPayload = entry.getKey();
                         ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
                         toRemoveSet.add(protectedStorageEntry);
-                        log.info("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
+                        log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
                         map.remove(hashOfPayload);
                     });
 
@@ -160,7 +161,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                 ByteArray hashOfPayload = getHashAsByteArray(expirablePayload);
                                 boolean containsKey = map.containsKey(hashOfPayload);
                                 if (containsKey) {
-                                    log.info("We remove the data as the data owner got disconnected with " +
+                                    log.debug("We remove the data as the data owner got disconnected with " +
                                             "closeConnectionReason=" + closeConnectionReason);
 
                                     Log.logIfStressTests("We remove the data as the data owner got disconnected with " +
@@ -234,7 +235,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             if (hasSequenceNrIncreased) {
                 sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
                 // We set the delay higher as we might receive a batch of items
-                storage.queueUpForSave(sequenceNumberMap, 2000);
+                storage.queueUpForSave(new HashMap<>(sequenceNumberMap), 2000);
 
                 if (allowBroadcast)
                     broadcast(new AddDataMessage(protectedStorageEntry), sender, listener, isDataOwner);
@@ -278,7 +279,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     storedData.updateSignature(signature);
                     printData("after refreshTTL");
                     sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
-                    storage.queueUpForSave(sequenceNumberMap, 1000);
+                    storage.queueUpForSave(new HashMap<>(sequenceNumberMap), 1000);
 
                     broadcast(refreshTTLMessage, sender, null, isDataOwner);
                 }
@@ -307,7 +308,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
             printData("after remove");
             sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
-            storage.queueUpForSave(sequenceNumberMap, 300);
+            storage.queueUpForSave(new HashMap<>(sequenceNumberMap), 300);
 
             broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
         } else {
@@ -334,7 +335,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfData);
             printData("after removeMailboxData");
             sequenceNumberMap.put(hashOfData, new MapValue(protectedMailboxStorageEntry.sequenceNumber, System.currentTimeMillis()));
-            storage.queueUpForSave(sequenceNumberMap, 300);
+            storage.queueUpForSave(new HashMap<>(sequenceNumberMap), 300);
 
             broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender, null, isDataOwner);
         } else {
@@ -415,6 +416,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (sequenceNumberMap.containsKey(hashOfData)) {
             int storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
             if (newSequenceNumber >= storedSequenceNumber) {
+                log.trace("Sequence number is valid (>=). sequenceNumber = "
+                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
                 return true;
             } else {
                 log.debug("Sequence number is invalid. sequenceNumber = "
@@ -423,6 +426,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 return false;
             }
         } else {
+            log.trace("Sequence number is valid (!sequenceNumberMap.containsKey(hashOfData)). sequenceNumber = " + newSequenceNumber);
             return true;
         }
     }
@@ -431,6 +435,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (sequenceNumberMap.containsKey(hashOfData)) {
             int storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
             if (newSequenceNumber > storedSequenceNumber) {
+                log.trace("Sequence number has increased (>). sequenceNumber = "
+                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + " / hashOfData=" + hashOfData.toString());
                 return true;
             } else if (newSequenceNumber == storedSequenceNumber) {
                 String msg;
@@ -450,6 +456,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 return false;
             }
         } else {
+            log.trace("Sequence number has increased (!sequenceNumberMap.containsKey(hashOfData)). sequenceNumber = " + newSequenceNumber + " / hashOfData=" + hashOfData.toString());
             return true;
         }
     }
@@ -589,7 +596,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             });
             sb.append("\n------------------------------------------------------------\n");
             log.debug(sb.toString());
-            log.info("Data set " + info + " operation: size=" + map.values().size());
+            log.debug("Data set " + info + " operation: size=" + map.values().size());
         }
     }
 
@@ -651,6 +658,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         @Override
         public int hashCode() {
             return bytes != null ? Arrays.hashCode(bytes) : 0;
+        }
+
+        @Override
+        public String toString() {
+            return "ByteArray{" +
+                    "bytes as Hex=" + Hex.toHexString(bytes) +
+                    '}';
         }
     }
 

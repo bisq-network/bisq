@@ -334,7 +334,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
                     "It will be refunded to you after the trade has successfully completed.")
                     .actionButtonText("Visit FAQ web page")
-                    .onAction(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
+                    .onAction(() -> GUIUtil.openWebPage("https://bitsquare.io/faq#6"))
                     .closeButtonText("I understand")
                     .dontShowAgainId(key, preferences)
                     .show();

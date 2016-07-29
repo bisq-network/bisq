@@ -202,17 +202,17 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                                 handlerMap.remove(nodeAddress);
                                 if (!remainingNodeAddresses.isEmpty()) {
                                     if (!peerManager.hasSufficientConnections()) {
-                                        log.info("There are remaining nodes available for requesting peers. " +
+                                        log.debug("There are remaining nodes available for requesting peers. " +
                                                 "We will try getReportedPeers again.");
                                         NodeAddress nextCandidate = remainingNodeAddresses.get(new Random().nextInt(remainingNodeAddresses.size()));
                                         remainingNodeAddresses.remove(nextCandidate);
                                         requestReportedPeers(nextCandidate, remainingNodeAddresses);
                                     } else {
                                         // That path will rarely be reached
-                                        log.info("We have already sufficient connections.");
+                                        log.debug("We have already sufficient connections.");
                                     }
                                 } else {
-                                    log.info("There is no remaining node available for requesting peers. " +
+                                    log.debug("There is no remaining node available for requesting peers. " +
                                             "That is expected if no other node is online.\n\t" +
                                             "We will try again after a pause.");
                                     if (retryTimer == null)
@@ -259,7 +259,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 Collections.shuffle(filteredSeedNodeAddresses);
                 list.addAll(filteredSeedNodeAddresses);
 
-                log.info("Number of peers in list for connectToMorePeers: {}", list.size());
+                log.debug("Number of peers in list for connectToMorePeers: {}", list.size());
                 log.trace("Filtered connectToMorePeers list: list=" + list);
                 if (!list.isEmpty()) {
                     // Dont shuffle as we want the seed nodes at the last entries
@@ -267,7 +267,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                     list.remove(nextCandidate);
                     requestReportedPeers(nextCandidate, list);
                 } else {
-                    log.info("No more peers are available for requestReportedPeers. We will try again after a pause.");
+                    log.debug("No more peers are available for requestReportedPeers. We will try again after a pause.");
                     if (retryTimer == null)
                         retryTimer = UserThread.runAfter(() -> {
                             if (!stopped) {
@@ -281,7 +281,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                         }, RETRY_DELAY_SEC);
                 }
             } else {
-                log.info("We have already sufficient connections.");
+                log.debug("We have already sufficient connections.");
             }
         } else {
             log.trace("We have stopped already. We ignore that requestWithAvailablePeers call.");

@@ -75,7 +75,7 @@ public abstract class NetworkNode implements MessageListener {
         if (connection != null) {
             return sendMessage(connection, message);
         } else {
-            log.info("We have not found any connection for peerAddress {}.\n\t" +
+            log.debug("We have not found any connection for peerAddress {}.\n\t" +
                     "We will create a new outbound connection.", peersNodeAddress);
 
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
@@ -85,10 +85,10 @@ public abstract class NetworkNode implements MessageListener {
                 try {
                     // can take a while when using tor
                     long startTs = System.currentTimeMillis();
-                    log.info("Start create socket to peersNodeAddress {}", peersNodeAddress.getFullAddress());
+                    log.debug("Start create socket to peersNodeAddress {}", peersNodeAddress.getFullAddress());
                     Socket socket = createSocket(peersNodeAddress);
                     long duration = System.currentTimeMillis() - startTs;
-                    log.info("Socket creation to peersNodeAddress {} took {} ms", peersNodeAddress.getFullAddress(),
+                    log.debug("Socket creation to peersNodeAddress {} took {} ms", peersNodeAddress.getFullAddress(),
                             duration);
 
                     if (duration > CREATE_SOCKET_TIMEOUT_MILLIS)
@@ -101,7 +101,7 @@ public abstract class NetworkNode implements MessageListener {
                         existingConnection = getOutboundConnection(peersNodeAddress);
 
                     if (existingConnection != null) {
-                        log.info("We found in the meantime a connection for peersNodeAddress {}, " +
+                        log.debug("We found in the meantime a connection for peersNodeAddress {}, " +
                                         "so we use that for sending the message.\n" +
                                         "That can happen if Tor needs long for creating a new outbound connection.\n" +
                                         "We might have got a new inbound or outbound connection.",
@@ -141,7 +141,7 @@ public abstract class NetworkNode implements MessageListener {
                                     }
                                 }, peersNodeAddress);
 
-                        log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                        log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "NetworkNode created new outbound connection:"
                                 + "\nmyNodeAddress=" + getNodeAddress()
                                 + "\npeersNodeAddress=" + peersNodeAddress
@@ -278,7 +278,7 @@ public abstract class NetworkNode implements MessageListener {
             }
 
             getAllConnections().stream().forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
-            log.info("NetworkNode shutdown complete");
+            log.debug("NetworkNode shutdown complete");
         }
         if (shutDownCompleteHandler != null) shutDownCompleteHandler.run();
     }

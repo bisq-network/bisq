@@ -93,7 +93,7 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                             String errorMessage = "Sending pong to " + connection +
                                     " failed. That is expected if the peer is offline. pong=" + pong + "." +
                                     "Exception: " + throwable.getMessage();
-                            log.info(errorMessage);
+                            log.debug(errorMessage);
                             peerManager.handleConnectionFault(connection);
                         } else {
                             log.warn("We have stopped already. We ignore that  networkNode.sendMessage.onFailure call.");
@@ -200,7 +200,7 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                     });
 
             int size = handlerMap.size();
-            log.info("handlerMap size=" + size);
+            log.debug("handlerMap size=" + size);
             if (size > peerManager.getMaxConnections())
                 log.warn("Seems we didn't clean up out map correctly.\n" +
                         "handlerMap size={}, peerManager.getMaxConnections()={}", size, peerManager.getMaxConnections());

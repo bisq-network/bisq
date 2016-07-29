@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.offer.takeoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -28,6 +27,7 @@ import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.deposit.DepositView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
@@ -148,7 +148,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                         "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.\n\n" +
                         "Please note, that the price is denominated as ETC/BTC not BTC/ETC!")
                         .closeButtonText("I understand")
-                        .onAction(() -> Utilities.openWebPage("https://ethereumclassic.github.io/"))
+                        .onAction(() -> GUIUtil.openWebPage("https://ethereumclassic.github.io/"))
                         .actionButtonText("Open Ethereum Classic web page")
                         .dontShowAgainId(key, dataModel.getPreferences())
                         .show();

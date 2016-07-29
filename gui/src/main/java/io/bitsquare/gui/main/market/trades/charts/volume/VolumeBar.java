@@ -14,8 +14,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
-package io.bitsquare.gui.main.markets.trades.charts.volume;
+package io.bitsquare.gui.main.market.trades.charts.volume;
 
+import io.bitsquare.gui.main.market.trades.charts.CandleData;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
@@ -51,9 +52,10 @@ public class VolumeBar extends Group {
         updateStyleClasses();
     }
 
-    public void update(double height, double candleWidth, double accumulatedAmount) {
+    public void update(double height, double candleWidth, CandleData candleData) {
         bar.resizeRelocate(-candleWidth / 2, 0, candleWidth, height);
-        tooltip.setText("Volume: " + volumeStringConverter.toString(accumulatedAmount));
+        tooltip.setText("Volume: " + volumeStringConverter.toString(candleData.accumulatedAmount) + "\n" +
+                "Date: " + candleData.date);
     }
 
     private void updateStyleClasses() {

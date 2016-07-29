@@ -18,12 +18,13 @@ import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bitsquare.p2p.storage.P2PDataStorage;
+import io.bitsquare.p2p.storage.payload.StoragePayload;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Random;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -93,7 +94,7 @@ public class RequestDataHandler implements MessageListener {
                             if (!stopped) {
                                 String errorMessage = "A timeout occurred at sending getDataRequest:" + getDataRequest +
                                         " on nodeAddress:" + nodeAddress;
-                                log.info(errorMessage + " / RequestDataHandler=" + RequestDataHandler.this);
+                                log.debug(errorMessage + " / RequestDataHandler=" + RequestDataHandler.this);
                                 handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                             } else {
                                 log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
@@ -103,7 +104,7 @@ public class RequestDataHandler implements MessageListener {
                         TIME_OUT_SEC);
             }
 
-            log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
+            log.debug("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
@@ -125,7 +126,7 @@ public class RequestDataHandler implements MessageListener {
                                 " failed. That is expected if the peer is offline.\n\t" +
                                 "getDataRequest=" + getDataRequest + "." +
                                 "\n\tException=" + throwable.getMessage();
-                        log.info(errorMessage);
+                        log.debug(errorMessage);
                         handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call. " +
@@ -149,6 +150,19 @@ public class RequestDataHandler implements MessageListener {
             Log.traceCall(message.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 GetDataResponse getDataResponse = (GetDataResponse) message;
+                Map<String, Set<StoragePayload>> payloadByClassName = new HashMap<>();
+                getDataResponse.dataSet.stream().forEach(e -> {
+                    final StoragePayload storagePayload = e.getStoragePayload();
+                    String className = storagePayload.getClass().getSimpleName();
+                    if (!payloadByClassName.containsKey(className))
+                        payloadByClassName.put(className, new HashSet<>());
+
+                    payloadByClassName.get(className).add(storagePayload);
+                });
+                StringBuilder sb = new StringBuilder("Received data size: ").append(getDataResponse.dataSet.size()).append(", data items: ");
+                payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getValue().size()).append(" items of ").append(e.getKey()).append("; "));
+                log.info(sb.toString());
+
                 if (getDataResponse.requestNonce == nonce) {
                     stopTimeoutTimer();
                     checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
@@ -156,7 +170,7 @@ public class RequestDataHandler implements MessageListener {
                                     "at that moment");
 
                     final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
-                    ((GetDataResponse) message).dataSet.stream().forEach(protectedStorageEntry -> {
+                    getDataResponse.dataSet.stream().forEach(protectedStorageEntry -> {
                         // We dont broadcast here as we are only connected to the seed node and would be pointless
                         dataStorage.add(protectedStorageEntry, sender, null, false, false);
                     });

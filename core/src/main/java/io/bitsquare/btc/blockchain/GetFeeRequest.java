@@ -33,7 +33,7 @@ class GetFeeRequest {
             try {
                 return provider.getFee(transactionId);
             } catch (IOException | HttpException e) {
-                log.info("Fee request failed for tx {} from provider {}\n" +
+                log.debug("Fee request failed for tx {} from provider {}\n" +
                                 "That is expected if the tx was not propagated yet to the provider.\n" +
                                 "error={}",
                         transactionId, provider, e.getMessage());
@@ -43,7 +43,7 @@ class GetFeeRequest {
 
         Futures.addCallback(future, new FutureCallback<Coin>() {
             public void onSuccess(Coin fee) {
-                log.info("Received fee of {}\nfor tx {}\nfrom provider {}", fee.toFriendlyString(), transactionId, provider);
+                log.debug("Received fee of {}\nfor tx {}\nfrom provider {}", fee.toFriendlyString(), transactionId, provider);
                 resultFuture.set(fee);
             }
 

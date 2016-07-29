@@ -30,11 +30,11 @@ public class ScryptUtil {
     public static void deriveKeyWithScrypt(KeyCrypterScrypt keyCrypterScrypt, String password, DeriveKeyResultHandler resultHandler) {
         Utilities.getThreadPoolExecutor("ScryptUtil:deriveKeyWithScrypt-%d", 1, 2, 5L).submit(() -> {
             try {
-                log.info("Doing key derivation");
+                log.debug("Doing key derivation");
                 long start = System.currentTimeMillis();
                 KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
                 long duration = System.currentTimeMillis() - start;
-                log.info("Key derivation took {} msec", duration);
+                log.debug("Key derivation took {} msec", duration);
                 UserThread.execute(() -> {
                     try {
                         resultHandler.handleResult(aesKey);

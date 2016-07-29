@@ -68,8 +68,9 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
     }
 
     public AddressEntry addAddressEntry(AddressEntry addressEntry) {
-        add(addressEntry);
-        storage.queueUpForSave();
+        boolean changed = add(addressEntry);
+        if (changed)
+            storage.queueUpForSave();
         return addressEntry;
     }
 
@@ -78,17 +79,19 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
         Optional<AddressEntry> addressEntryOptional = this.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId())).findAny();
         if (addressEntryOptional.isPresent()) {
             AddressEntry addressEntry = addressEntryOptional.get();
-            add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
-            remove(addressEntry);
-            storage.queueUpForSave();
+            boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
+            boolean changed2 = remove(addressEntry);
+            if (changed1 || changed2)
+                storage.queueUpForSave();
         }
     }
 
     public void swapToAvailable(AddressEntry addressEntry) {
         remove(addressEntry);
-        add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
-        remove(addressEntry);
-        storage.queueUpForSave();
+        boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
+        boolean changed2 = remove(addressEntry);
+        if (changed1 || changed2)
+            storage.queueUpForSave();
     }
 
     public void queueUpForSave() {

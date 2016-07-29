@@ -46,7 +46,7 @@ public class PriceFeedService {
         }
     }
 
-    private static final long PERIOD_FIAT_SEC = new Random().nextInt(5) + 90;
+    private static final long PERIOD_FIAT_SEC = new Random().nextInt(5) + 70;
     private static final long PERIOD_ALL_FIAT_SEC = new Random().nextInt(5) + 180;
     private static final long PERIOD_ALL_CRYPTO_SEC = new Random().nextInt(5) + 180;
 
@@ -63,8 +63,7 @@ public class PriceFeedService {
     private long bitcoinAveragePriceProviderLastCallAllTs;
     private long poloniexPriceProviderLastCallAllTs;
     private long bitcoinAveragePriceProviderLastCallTs;
-    private Timer cryptoCurrenciesTime;
-    private Timer fiatCurrenciesTime;
+    private Timer requestFiatPriceTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -86,20 +85,11 @@ public class PriceFeedService {
         this.priceConsumer = resultHandler;
         this.faultHandler = faultHandler;
 
-        requestAllPrices(fiatPriceProvider, () -> {
-            applyPrice();
-            if (fiatCurrenciesTime == null)
-                fiatCurrenciesTime = UserThread.runPeriodically(() -> requestPrice(fiatPriceProvider), PERIOD_FIAT_SEC);
-        });
+        requestAllPrices(fiatPriceProvider, () -> applyPriceToConsumer());
+        UserThread.runPeriodically(() -> requestAllPrices(fiatPriceProvider, this::applyPriceToConsumer), PERIOD_ALL_FIAT_SEC);
 
-        requestAllPrices(cryptoCurrenciesPriceProvider, () -> {
-            applyPrice();
-            if (cryptoCurrenciesTime == null)
-                cryptoCurrenciesTime = UserThread.runPeriodically(() -> requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPrice),
-                        PERIOD_ALL_CRYPTO_SEC);
-        });
-
-        UserThread.runPeriodically(() -> requestAllPrices(fiatPriceProvider, this::applyPrice), PERIOD_ALL_FIAT_SEC);
+        requestAllPrices(cryptoCurrenciesPriceProvider, () -> applyPriceToConsumer());
+        UserThread.runPeriodically(() -> requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPriceToConsumer), PERIOD_ALL_CRYPTO_SEC);
     }
 
     @Nullable
@@ -110,7 +100,6 @@ public class PriceFeedService {
             return null;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -118,19 +107,21 @@ public class PriceFeedService {
     public void setType(Type type) {
         this.type = type;
         typeProperty.set(type);
-        applyPrice();
+        applyPriceToConsumer();
     }
 
     public void setCurrencyCode(String currencyCode) {
         if (this.currencyCode == null || !this.currencyCode.equals(currencyCode)) {
             this.currencyCode = currencyCode;
             currencyCodeProperty.set(currencyCode);
-            applyPrice();
+            applyPriceToConsumer();
 
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                stopRequestFiatPriceTimer();
                 // Poloniex does not support calls for one currency just for all which is quite a bit of data
-                requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPrice);
+                requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPriceToConsumer);
             } else {
+                startRequestFiatPriceTimer();
                 requestPrice(fiatPriceProvider);
             }
         }
@@ -166,12 +157,27 @@ public class PriceFeedService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyPrice() {
+
+    private void startRequestFiatPriceTimer() {
+        stopRequestFiatPriceTimer();
+        requestFiatPriceTimer = UserThread.runPeriodically(() -> requestPrice(fiatPriceProvider), PERIOD_FIAT_SEC);
+    }
+
+    private void stopRequestFiatPriceTimer() {
+        if (requestFiatPriceTimer != null)
+            requestFiatPriceTimer.stop();
+    }
+
+    private void applyPriceToConsumer() {
         if (priceConsumer != null && currencyCode != null && type != null) {
             if (cache.containsKey(currencyCode)) {
-                MarketPrice marketPrice = cache.get(currencyCode);
-                if (marketPrice != null)
+                try {
+                    MarketPrice marketPrice = cache.get(currencyCode);
                     priceConsumer.accept(marketPrice.getPrice(type));
+                } catch (Throwable t) {
+                    log.warn("Error at applyPriceToConsumer " + t.getMessage());
+                }
+
             } else {
                 String errorMessage = "We don't have a price for currencyCode " + currencyCode;
                 log.debug(errorMessage);
@@ -192,21 +198,25 @@ public class PriceFeedService {
 
         if (allowed) {
             GetPriceRequest getPriceRequest = new GetPriceRequest();
-            SettableFuture<MarketPrice> future = getPriceRequest.requestPrice(currencyCode, provider);
-            Futures.addCallback(future, new FutureCallback<MarketPrice>() {
-                public void onSuccess(MarketPrice marketPrice) {
-                    UserThread.execute(() -> {
-                        if (marketPrice != null && priceConsumer != null) {
-                            cache.put(marketPrice.currencyCode, marketPrice);
-                            priceConsumer.accept(marketPrice.getPrice(type));
-                        }
-                    });
-                }
+            if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+                SettableFuture<MarketPrice> future = getPriceRequest.requestPrice(currencyCode, provider);
+                Futures.addCallback(future, new FutureCallback<MarketPrice>() {
+                    public void onSuccess(MarketPrice marketPrice) {
+                        UserThread.execute(() -> {
+                            if (marketPrice != null && priceConsumer != null) {
+                                cache.put(marketPrice.currencyCode, marketPrice);
+                                priceConsumer.accept(marketPrice.getPrice(type));
+                            }
+                        });
+                    }
 
-                public void onFailure(@NotNull Throwable throwable) {
-                    log.debug("Could not load marketPrice\n" + throwable.getMessage());
-                }
-            });
+                    public void onFailure(@NotNull Throwable throwable) {
+                        log.debug("Could not load marketPrice\n" + throwable.getMessage());
+                    }
+                });
+            } else {
+                log.warn("We tried to call requestPrice with a non fiat currency selected: selectedCurrencyCode=" + currencyCode);
+            }
         } else {
             log.debug("Ignore request. Too many attempt to call the API provider " + provider);
         }

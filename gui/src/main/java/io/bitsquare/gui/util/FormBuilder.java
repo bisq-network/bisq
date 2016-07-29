@@ -21,7 +21,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Tuple4;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.*;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -170,7 +169,7 @@ public class FormBuilder {
 
     public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url, double top) {
         HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);
-        hyperlinkWithIcon.setOnAction(e -> Utilities.openWebPage(url));
+        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
@@ -191,7 +190,7 @@ public class FormBuilder {
         Label label = addLabel(gridPane, rowIndex, labelTitle, top);
 
         HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);
-        hyperlinkWithIcon.setOnAction(e -> Utilities.openWebPage(url));
+        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 1);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));

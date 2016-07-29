@@ -29,9 +29,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.bitsquare.gui.main.markets.trades.charts.price;
+package io.bitsquare.gui.main.market.trades.charts.price;
 
-import io.bitsquare.gui.main.markets.trades.charts.CandleData;
+import io.bitsquare.gui.main.market.trades.charts.CandleData;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
@@ -70,15 +70,12 @@ public class CandleStickChart extends XYChart<Number, Number> {
      * @param xAxis The x axis to use
      * @param yAxis The y axis to use
      */
-    public CandleStickChart(Axis<Number> xAxis, Axis<Number> yAxis) {
+    public CandleStickChart(Axis<Number> xAxis, Axis<Number> yAxis, StringConverter<Number> priceStringConverter) {
         super(xAxis, yAxis);
+        this.priceStringConverter = priceStringConverter;
     }
 
     // -------------- METHODS ------------------------------------------------------------------------------------------
-
-    public final void setToolTipStringConverter(StringConverter<Number> priceStringConverter) {
-        this.priceStringConverter = priceStringConverter;
-    }
 
     /**
      * Called to update and layout the content for the plot

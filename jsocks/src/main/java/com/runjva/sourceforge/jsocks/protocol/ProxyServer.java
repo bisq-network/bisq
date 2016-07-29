@@ -158,13 +158,13 @@ public class ProxyServer implements Runnable {
             ss = new ServerSocket(port, backlog, localIP);
             final String address = ss.getInetAddress().getHostAddress();
             final int localPort = ss.getLocalPort();
-            log.info("Starting SOCKS Proxy on: {}:{}", address, localPort);
+            log.debug("Starting SOCKS Proxy on: {}:{}", address, localPort);
 
             while (true) {
                 final Socket s = ss.accept();
                 final String hostName = s.getInetAddress().getHostName();
                 final int port2 = s.getPort();
-                log.info("Accepted from:{}:{}", hostName, port2);
+                log.debug("Accepted from:{}:{}", hostName, port2);
 
                 final ProxyServer ps = new ProxyServer(auth, s);
                 (new Thread(ps)).start();
@@ -203,7 +203,7 @@ public class ProxyServer implements Runnable {
                     if (auth != null) {
                         auth.endSession();
                     }
-                    log.info("Main thread(client->remote)stopped.");
+                    log.debug("Main thread(client->remote)stopped.");
                 }
                 break;
             case ACCEPT_MODE:
@@ -219,7 +219,7 @@ public class ProxyServer implements Runnable {
                     handleException(ioe);
                 } finally {
                     abort();
-                    log.info("Accept thread(remote->client) stopped");
+                    log.debug("Accept thread(remote->client) stopped");
                 }
                 break;
             case PIPE_MODE:
@@ -228,7 +228,7 @@ public class ProxyServer implements Runnable {
                 } catch (final IOException ioe) {
                 } finally {
                     abort();
-                    log.info("Support thread(remote->client) stopped");
+                    log.debug("Support thread(remote->client) stopped");
                 }
                 break;
             case ABORT_MODE:
@@ -252,7 +252,7 @@ public class ProxyServer implements Runnable {
         }
 
         if (auth == null) { // Authentication failed
-            log.info("Authentication failed");
+            log.debug("Authentication failed");
             return;
         }
 
@@ -336,7 +336,7 @@ public class ProxyServer implements Runnable {
             s = new SocksSocket(proxy, msg.ip, msg.port);
         }
 
-        log.info("Connected to " + s.getInetAddress() + ":" + s.getPort());
+        log.debug("Connected to " + s.getInetAddress() + ":" + s.getPort());
 
         ProxyMessage response = null;
         final InetAddress localAddress = s.getLocalAddress();
@@ -367,7 +367,7 @@ public class ProxyServer implements Runnable {
 
         final InetAddress inetAddress = ss.getInetAddress();
         final int localPort = ss.getLocalPort();
-        log.info("Trying accept on {}:{}", inetAddress, localPort);
+        log.debug("Trying accept on {}:{}", inetAddress, localPort);
 
         if (msg.version == 5) {
             final int cmd = SocksProxyBase.SOCKS_SUCCESS;
@@ -425,7 +425,7 @@ public class ProxyServer implements Runnable {
         if (msg.ip.getHostAddress().equals("0.0.0.0")) {
             msg.ip = sock.getInetAddress();
         }
-        log.info("Creating UDP relay server for {}:{}", msg.ip, msg.port);
+        log.debug("Creating UDP relay server for {}:{}", msg.ip, msg.port);
 
         relayServer = new UDPRelayServer(msg.ip, msg.port,
                 Thread.currentThread(), sock, auth);
@@ -494,7 +494,7 @@ public class ProxyServer implements Runnable {
 
         final InetAddress inetAddress = s.getInetAddress();
         final int port = s.getPort();
-        log.info("Accepted from {}:{}", s.getInetAddress(), port);
+        log.debug("Accepted from {}:{}", s.getInetAddress(), port);
 
         ProxyMessage response;
 
@@ -564,7 +564,7 @@ public class ProxyServer implements Runnable {
         }
         mode = ABORT_MODE;
         try {
-            log.info("Aborting operation");
+            log.debug("Aborting operation");
             if (remote_sock != null) {
                 remote_sock.close();
             }

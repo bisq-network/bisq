@@ -20,17 +20,13 @@ package io.bitsquare.gui.main.account.content.altcoinaccounts;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.CryptoCurrencyForm;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.FormBuilder;
-import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.gui.util.Layout;
+import io.bitsquare.gui.util.*;
 import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.TradeCurrency;
@@ -173,7 +169,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                 new Popup().information("The EHT/ETC fork situation carries considerable risks.\n" +
                         "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.")
                         .closeButtonText("I understand")
-                        .onAction(() -> Utilities.openWebPage("https://ethereumclassic.github.io/"))
+                        .onAction(() -> GUIUtil.openWebPage("https://ethereumclassic.github.io/"))
                         .actionButtonText("Open Ethereum Classic web page")
                         .show();
             }

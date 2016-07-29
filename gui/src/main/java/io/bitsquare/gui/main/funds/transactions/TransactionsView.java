@@ -294,7 +294,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void openTxInBlockExplorer(TransactionsListItem item) {
         if (item.getTxId() != null) {
             try {
-                Utilities.openWebPage(preferences.getBlockChainExplorer().txUrl + item.getTxId());
+                GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + item.getTxId());
             } catch (Exception e) {
                 log.error(e.getMessage());
                 new Popup().warning("Opening browser failed. Please check your internet " +
@@ -306,7 +306,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void openAddressInBlockExplorer(TransactionsListItem item) {
         if (item.getAddressString() != null) {
             try {
-                Utilities.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
+                GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
             } catch (Exception e) {
                 log.error(e.getMessage());
                 new Popup().warning("Opening browser failed. Please check your internet " +

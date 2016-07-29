@@ -121,8 +121,10 @@ public final class Preferences implements Persistable {
     private long nonTradeTxFeePerKB = FeePolicy.getNonTradeFeePerKb().value;
     private double maxPriceDistanceInPercent;
     private boolean useInvertedMarketPrice;
-    private String marketScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
-    private String tradeStatisticsScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+
+    private String offerBookChartScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    private String tradeChartsScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
+    
     private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private int tradeStatisticsTickUnitIndex = 0;
@@ -215,10 +217,10 @@ public final class Preferences implements Persistable {
             if (persisted.getPeerTagMap() != null)
                 peerTagMap = persisted.getPeerTagMap();
 
-            marketScreenCurrencyCode = persisted.getMarketScreenCurrencyCode();
+            offerBookChartScreenCurrencyCode = persisted.getOfferBookChartScreenCurrencyCode();
             buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
             sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
-            tradeStatisticsScreenCurrencyCode = persisted.getTradeStatisticsScreenCurrencyCode();
+            tradeChartsScreenCurrencyCode = persisted.getTradeChartsScreenCurrencyCode();
             tradeStatisticsTickUnitIndex = persisted.getTradeStatisticsTickUnitIndex();
 
             if (persisted.getIgnoreTradersList() != null)
@@ -449,8 +451,8 @@ public final class Preferences implements Persistable {
         }
     }
 
-    public void setMarketScreenCurrencyCode(String marketScreenCurrencyCode) {
-        this.marketScreenCurrencyCode = marketScreenCurrencyCode;
+    public void setOfferBookChartScreenCurrencyCode(String offerBookChartScreenCurrencyCode) {
+        this.offerBookChartScreenCurrencyCode = offerBookChartScreenCurrencyCode;
         storage.queueUpForSave();
     }
 
@@ -474,8 +476,8 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
-    public void setTradeStatisticsScreenCurrencyCode(String tradeStatisticsScreenCurrencyCode) {
-        this.tradeStatisticsScreenCurrencyCode = tradeStatisticsScreenCurrencyCode;
+    public void setTradeChartsScreenCurrencyCode(String tradeChartsScreenCurrencyCode) {
+        this.tradeChartsScreenCurrencyCode = tradeChartsScreenCurrencyCode;
         storage.queueUpForSave();
     }
 
@@ -486,6 +488,7 @@ public final class Preferences implements Persistable {
 
     public void setUseTorForHttpRequests(boolean useTorForHttpRequests) {
         useTorForHttpRequestsProperty.set(useTorForHttpRequests);
+        storage.queueUpForSave();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -620,8 +623,8 @@ public final class Preferences implements Persistable {
         return bridgeAddresses;
     }
 
-    public String getMarketScreenCurrencyCode() {
-        return marketScreenCurrencyCode;
+    public String getOfferBookChartScreenCurrencyCode() {
+        return offerBookChartScreenCurrencyCode;
     }
 
     public String getBuyScreenCurrencyCode() {
@@ -640,8 +643,8 @@ public final class Preferences implements Persistable {
         return defaultPath;
     }
 
-    public String getTradeStatisticsScreenCurrencyCode() {
-        return tradeStatisticsScreenCurrencyCode;
+    public String getTradeChartsScreenCurrencyCode() {
+        return tradeChartsScreenCurrencyCode;
     }
 
     public int getTradeStatisticsTickUnitIndex() {
@@ -679,11 +682,11 @@ public final class Preferences implements Persistable {
 
     private void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
         this.blockChainExplorerTestNet = blockChainExplorerTestNet;
-        storage.queueUpForSave(2000);
+        storage.queueUpForSave();
     }
 
     private void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
         this.blockChainExplorerMainNet = blockChainExplorerMainNet;
-        storage.queueUpForSave(2000);
+        storage.queueUpForSave();
     }
 }

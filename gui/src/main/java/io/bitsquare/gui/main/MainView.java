@@ -24,20 +24,20 @@ import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.funds.FundsView;
-import io.bitsquare.gui.main.markets.MarketView;
+import io.bitsquare.gui.main.market.MarketView;
 import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.settings.SettingsView;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Transitions;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -227,19 +227,24 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 navigation.navigateToPreviousVisitedView();
 
                 if (!persistedFilesCorrupted.isEmpty()) {
-                    // show warning that some files has been corrupted
-                    new Popup().warning("We detected incompatible data base files!\n\n" +
-                            "Those database file(s) are not compatible with our current code base:" +
-                            "\n" + persistedFilesCorrupted.toString() +
-                            "\n\nWe made a backup of the corrupted file(s) and applied the default values to a new " +
-                            "database version." +
-                            "\n\nThe backup is located at:\n[you local app data directory]/db/backup_of_corrupted_data.\n\n" +
-                            "Please check if you have the latest version of Bitsquare installed.\n" +
-                            "You can download it at:\nhttps://github.com/bitsquare/bitsquare/releases\n\n" +
-                            "Please restart the application.")
-                            .closeButtonText("Shut down")
-                            .onClose(BitsquareApp.shutDownHandler::run)
-                            .show();
+                    if (persistedFilesCorrupted.size() > 1 || !persistedFilesCorrupted.get(0).equals("Navigation")) {
+                        // show warning that some files has been corrupted
+                        new Popup().warning("We detected incompatible data base files!\n\n" +
+                                "Those database file(s) are not compatible with our current code base:" +
+                                "\n" + persistedFilesCorrupted.toString() +
+                                "\n\nWe made a backup of the corrupted file(s) and applied the default values to a new " +
+                                "database version." +
+                                "\n\nThe backup is located at:\n[you local app data directory]/db/backup_of_corrupted_data.\n\n" +
+                                "Please check if you have the latest version of Bitsquare installed.\n" +
+                                "You can download it at:\nhttps://github.com/bitsquare/bitsquare/releases\n\n" +
+                                "Please restart the application.")
+                                .closeButtonText("Shut down")
+                                .onClose(BitsquareApp.shutDownHandler::run)
+                                .show();
+                    } else {
+                        log.debug("We detected incompatible data base file for Navigation. That is a minor issue happening with refactoring of UI classes " +
+                                "and we don't display a warning popup to the user.");
+                    }
                 }
 
                 transitions.fadeOutAndRemove(splashScreen, 1500, actionEvent -> disposeSplashScreen());
@@ -320,7 +325,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.setStyle("-fx-background-color: transparent;");
         HBox.setMargin(btcAverageIconButton, new Insets(0, 27, 0, 0));
-        btcAverageIconButton.setOnAction(e -> Utilities.openWebPage("https://bitcoinaverage.com"));
+        btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.setTooltip(new Tooltip("Market price is provided by https://bitcoinaverage.com"));
@@ -332,7 +337,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.setStyle("-fx-background-color: transparent;");
         HBox.setMargin(poloniexIconButton, new Insets(1, 27, 0, 0));
-        poloniexIconButton.setOnAction(e -> Utilities.openWebPage("https://poloniex.com"));
+        poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.setTooltip(new Tooltip("Market price is provided by https://poloniex.com"));

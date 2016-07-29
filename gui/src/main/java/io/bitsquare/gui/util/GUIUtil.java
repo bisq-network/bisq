@@ -23,7 +23,11 @@ import com.googlecode.jcsv.writer.CSVEntryConverter;
 import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.DevFlags;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.FiatCurrency;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
@@ -34,6 +38,7 @@ import javafx.scene.control.ScrollBar;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,12 +46,18 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GUIUtil {
     private static final Logger log = LoggerFactory.getLogger(GUIUtil.class);
+
+    public final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
+    public final static String EDIT_FLAG = "EDIT_FLAG";
 
     public static double getScrollbarWidth(Node scrollablePane) {
         Node node = scrollablePane.lookup(".scroll-bar");
@@ -81,7 +92,7 @@ public class GUIUtil {
             String directory = getDirectoryFormChooser(preferences, stage);
             Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
             paymentAccountsStorage.initAndGetPersisted(accounts, fileName);
-            paymentAccountsStorage.queueUpForSave(20);
+            paymentAccountsStorage.queueUpForSave();
             new Popup<>().feedback("Payment accounts saved to path:\n" + Paths.get(directory, fileName).toAbsolutePath()).show();
         } else {
             new Popup<>().warning("You don't have payment accounts set up for exporting.").show();
@@ -161,6 +172,75 @@ public class GUIUtil {
             return directory;
         } else {
             return "";
+        }
+    }
+
+    public static StringConverter<TradeCurrency> getCurrencyListConverter() {
+        return new StringConverter<TradeCurrency>() {
+            @Override
+            public String toString(TradeCurrency tradeCurrency) {
+                String code = tradeCurrency.getCode();
+                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
+                    return "▶ Show all";
+                else if (code.equals(GUIUtil.EDIT_FLAG))
+                    return "▼ Edit currency list";
+                else if (tradeCurrency instanceof FiatCurrency)
+                    return "★ " + tradeCurrency.getNameAndCode();
+                else if (tradeCurrency instanceof CryptoCurrency)
+                    return "✦ " + tradeCurrency.getNameAndCode();
+                else
+                    return "-";
+            }
+
+            @Override
+            public TradeCurrency fromString(String s) {
+                return null;
+            }
+        };
+    }
+
+
+    public static void openWebPage(String target) {
+        String key = "warnOpenURLWhenTorEnabled";
+        final Preferences preferences = Preferences.INSTANCE;
+        if (preferences.getUseTorForHttpRequests() && preferences.showAgain(key)) {
+            new Popup<>().information("You have Tor enabled for Http requests and are going to open a web page " +
+                    "in your system web browser.\n" +
+                    "Do you want to open the web page now?\n\n" +
+                    "If you are not using the \"Tor Browser\" as your default system web browser you " +
+                    "will connect to the web page in clear net.\n\n" +
+                    "URL: \"" + target)
+                    .actionButtonText("Open the web page and don't ask again")
+                    .onAction(() -> {
+                        preferences.dontShowAgain(key, true);
+                        doOpenWebPage(target);
+                    })
+                    .closeButtonText("Copy URL and cancel")
+                    .onClose(() -> Utilities.copyToClipboard(target))
+                    .show();
+        } else {
+            doOpenWebPage(target);
+        }
+    }
+
+    private static void doOpenWebPage(String target) {
+        try {
+            Utilities.openURI(new URI(target));
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        }
+    }
+
+    public static void openMail(String to, String subject, String body) {
+        try {
+            subject = URLEncoder.encode(subject, "UTF-8").replace("+", "%20");
+            body = URLEncoder.encode(body, "UTF-8").replace("+", "%20");
+            Utilities.openURI(new URI("mailto:" + to + "?subject=" + subject + "&body=" + body));
+        } catch (IOException | URISyntaxException e) {
+            log.error("openMail failed " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

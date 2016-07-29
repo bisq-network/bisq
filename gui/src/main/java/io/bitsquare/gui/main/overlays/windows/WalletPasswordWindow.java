@@ -372,7 +372,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void doRestore() {
-        log.info("Attempting wallet restore using seed '{}' from date {}", restoreSeedWordsTextArea.getText(), restoreDatePicker.getValue());
         long date = restoreDatePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(restoreSeedWordsTextArea.getText()), null, "", date);
         walletService.restoreSeedWords(seed,

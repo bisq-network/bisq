@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.charts;
+package io.bitsquare.gui.main.market.offerbook;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple3;
@@ -27,7 +27,10 @@ import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.*;
+import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -45,7 +48,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import javafx.util.StringConverter;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.slf4j.Logger;
@@ -54,8 +56,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 
 @FxmlView
-public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChartsViewModel> {
-    private static final Logger log = LoggerFactory.getLogger(MarketsChartsView.class);
+public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
+    private static final Logger log = LoggerFactory.getLogger(OfferBookChartView.class);
 
     private NumberAxis xAxis, yAxis;
     XYChart.Series seriesBuy, seriesSell;
@@ -71,6 +73,8 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
     private Button buyOfferButton;
     private Button sellOfferButton;
+    private ChangeListener<Number> selectedTabIndexListener;
+    private SingleSelectionModel<Tab> tabPaneSelectionModel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +82,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MarketsChartsView(MarketsChartsViewModel model, Navigation navigation, BSFormatter formatter) {
+    public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, BSFormatter formatter) {
         super(model);
         this.navigation = navigation;
         this.formatter = formatter;
@@ -90,24 +94,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     public void initialize() {
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
-            @Override
-            public String toString(TradeCurrency tradeCurrency) {
-                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-                if (tradeCurrency instanceof FiatCurrency)
-                    return "★ " + tradeCurrency.getNameAndCode();
-                else if (tradeCurrency instanceof CryptoCurrency)
-                    return "✦ " + tradeCurrency.getNameAndCode();
-                else
-                    return "-";
-            }
-
-            @Override
-            public TradeCurrency fromString(String s) {
-                return null;
-            }
-        });
-
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListConverter());
 
         Label currencyLabel = new Label("Currency:");
         HBox currencyHBox = new HBox();
@@ -135,8 +122,15 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
 
     @Override
     protected void activate() {
+        // root.getParent() is null at initialize
+        tabPaneSelectionModel = ((TabPane) root.getParent().getParent()).getSelectionModel();
+        selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
+
+        model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
+        tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
+
         currencyComboBox.setItems(model.getTradeCurrencies());
-        currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
+        currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrencyProperty());
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
         currencyComboBox.setOnAction(e -> {
             TradeCurrency tradeCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
@@ -145,7 +139,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
         });
 
         model.getOfferBookListItems().addListener(changeListener);
-        tradeCurrencySubscriber = EasyBind.subscribe(model.tradeCurrency,
+        tradeCurrencySubscriber = EasyBind.subscribe(model.selectedTradeCurrencyProperty,
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
                     String tradeCurrencyName = tradeCurrency.getName();
@@ -173,6 +167,7 @@ public class MarketsChartsView extends ActivatableViewAndModel<VBox, MarketsChar
     @Override
     protected void deactivate() {
         model.getOfferBookListItems().removeListener(changeListener);
+        tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
         tradeCurrencySubscriber.unsubscribe();
         currencyComboBox.setOnAction(null);
     }

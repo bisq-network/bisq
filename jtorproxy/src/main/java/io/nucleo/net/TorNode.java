@@ -30,7 +30,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
         log.debug("Running Tornode with " + mgr.getClass().getSimpleName() + " and  " + ctx.getClass().getSimpleName());
         tor = initTor(mgr, ctx, useBridges);
         int proxyPort = tor.getIPv4LocalHostSocksPort();
-        log.info("TorSocks running on port " + proxyPort);
+        log.debug("TorSocks running on port " + proxyPort);
         this.proxy = setupSocksProxy(proxyPort);
     }
     
@@ -58,7 +58,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
             try {
                 SocksSocket ssock = new SocksSocket(proxy, onionUrl, port);
                 if (debug)
-                    log.info("Took " + (GregorianCalendar.getInstance().getTimeInMillis() - before)
+                    log.debug("Took " + (GregorianCalendar.getInstance().getTimeInMillis() - before)
                             + " milliseconds to connect to " + onionUrl + ":" + port);
                 ssock.setTcpNoDelay(true);
                 return ssock;
@@ -89,7 +89,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
 
     public HiddenServiceDescriptor createHiddenService(final int localPort, final int servicePort,
                                                        final HiddenServiceReadyListener listener) throws IOException {
-        log.info("Publishing Hidden Service. This will at least take half a minute...");
+        log.debug("Publishing Hidden Service. This will at least take half a minute...");
         final String hiddenServiceName = tor.publishHiddenService(servicePort, localPort);
         final HiddenServiceDescriptor hiddenServiceDescriptor = new HiddenServiceDescriptor(hiddenServiceName,
                 localPort, servicePort);

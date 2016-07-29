@@ -30,6 +30,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.*;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
@@ -60,9 +61,6 @@ import java.util.stream.Collectors;
 class OfferBookViewModel extends ActivatableViewModel {
     protected final static Logger log = LoggerFactory.getLogger(OfferBookViewModel.class);
 
-    final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
-    final static String EDIT_FLAG = "EDIT_FLAG";
-
     private final OpenOfferManager openOfferManager;
     private final User user;
     private final OfferBook offerBook;
@@ -87,8 +85,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     // If id is empty string we ignore filter (display all methods)
 
-    PaymentMethod selectedPaymentMethod = new PaymentMethod(SHOW_ALL_FLAG, 0, 0, null);
-    private CryptoCurrency showAllCurrenciesItem = new CryptoCurrency(SHOW_ALL_FLAG, SHOW_ALL_FLAG);
+    PaymentMethod selectedPaymentMethod = new PaymentMethod(GUIUtil.SHOW_ALL_FLAG, 0, 0, null);
 
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private boolean isTabSelected;
@@ -146,9 +143,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     private void fillAllTradeCurrencies() {
         allTradeCurrencies.clear();
         // Used for ignoring filter (show all)
-        allTradeCurrencies.add(showAllCurrenciesItem);
+        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG));
         allTradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
-        allTradeCurrencies.add(new CryptoCurrency(EDIT_FLAG, EDIT_FLAG));
+        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
     }
 
     private void setMarketPriceFeedCurrency() {
@@ -254,7 +251,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     public ObservableList<PaymentMethod> getPaymentMethods() {
         ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.ALL_VALUES);
-        list.add(0, new PaymentMethod(SHOW_ALL_FLAG, 0, 0, null));
+        list.add(0, new PaymentMethod(GUIUtil.SHOW_ALL_FLAG, 0, 0, null));
         return list;
     }
 
@@ -418,11 +415,11 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private boolean isShowAllEntry(String id) {
-        return id.equals(SHOW_ALL_FLAG);
+        return id.equals(GUIUtil.SHOW_ALL_FLAG);
     }
 
     private boolean isEditEntry(String id) {
-        return id.equals(EDIT_FLAG);
+        return id.equals(GUIUtil.EDIT_FLAG);
     }
 
     int getNumPastTrades(Offer offer) {

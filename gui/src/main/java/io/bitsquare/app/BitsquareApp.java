@@ -265,7 +265,7 @@ public class BitsquareApp extends Application {
     private void showErrorPopup(Throwable throwable, boolean doShutDown) {
         if (!shutDownRequested) {
             if (scene == null) {
-                log.warn("Scene not available yet, we create a new scene. The bug might be caused by a guice circular dependency.");
+                log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in guice.");
                 scene = new Scene(new StackPane(), 1000, 650);
                 scene.getStylesheets().setAll(
                         "/io/bitsquare/gui/bitsquare.css",
@@ -357,7 +357,7 @@ public class BitsquareApp extends Application {
                     .show();
             UserThread.runAfter(() -> {
                 gracefulShutDown(() -> {
-                    log.info("App shutdown complete");
+                    log.debug("App shutdown complete");
                     System.exit(0);
                 });
             }, 200, TimeUnit.MILLISECONDS);
@@ -376,7 +376,7 @@ public class BitsquareApp extends Application {
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         injector.getInstance(WalletService.class).shutDownDone.addListener((ov, o, n) -> {
                             bitsquareAppModule.close(injector);
-                            log.info("Graceful shutdown completed");
+                            log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
                         injector.getInstance(WalletService.class).shutDown();
@@ -388,7 +388,7 @@ public class BitsquareApp extends Application {
                 UserThread.runAfter(resultHandler::handleResult, 1);
             }
         } catch (Throwable t) {
-            log.info("App shutdown failed with exception");
+            log.debug("App shutdown failed with exception");
             t.printStackTrace();
             System.exit(1);
         }

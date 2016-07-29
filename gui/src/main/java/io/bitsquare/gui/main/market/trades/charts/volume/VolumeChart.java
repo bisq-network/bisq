@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
-package io.bitsquare.gui.main.markets.trades.charts.volume;
+package io.bitsquare.gui.main.market.trades.charts.volume;
 
-import io.bitsquare.gui.main.markets.trades.charts.CandleData;
-import io.bitsquare.gui.main.markets.trades.charts.price.CandleStickChart;
+import io.bitsquare.gui.main.market.trades.charts.CandleData;
+import io.bitsquare.gui.main.market.trades.charts.price.CandleStickChart;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
@@ -38,11 +38,8 @@ public class VolumeChart extends XYChart<Number, Number> {
 
     private StringConverter<Number> toolTipStringConverter;
 
-    public VolumeChart(Axis<Number> xAxis, Axis<Number> yAxis) {
+    public VolumeChart(Axis<Number> xAxis, Axis<Number> yAxis, StringConverter<Number> toolTipStringConverter) {
         super(xAxis, yAxis);
-    }
-
-    public final void setToolTipStringConverter(StringConverter<Number> toolTipStringConverter) {
         this.toolTipStringConverter = toolTipStringConverter;
     }
 
@@ -73,7 +70,7 @@ public class VolumeChart extends XYChart<Number, Number> {
                     // Did not find a way how to request the chart data height
                     final double height = getHeight() - 43;
                     double upperYPos = Math.min(height - 5, y); // We want min 5px height to allow tooltips
-                    volumeBar.update(height - upperYPos, candleWidth, candleData.accumulatedAmount);
+                    volumeBar.update(height - upperYPos, candleWidth, candleData);
                     volumeBar.setLayoutX(x);
                     volumeBar.setLayoutY(upperYPos);
                 }

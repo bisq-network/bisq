@@ -15,19 +15,28 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.markets.trades;
+package io.bitsquare.gui.main.market.trades;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
-import io.bitsquare.gui.main.markets.trades.charts.CandleData;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.market.trades.charts.CandleData;
+import io.bitsquare.gui.main.settings.SettingsView;
+import io.bitsquare.gui.main.settings.preferences.PreferencesView;
+import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.statistics.TradeStatistics;
 import io.bitsquare.trade.statistics.TradeStatisticsManager;
 import io.bitsquare.user.Preferences;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -42,6 +51,8 @@ import java.util.stream.Collectors;
 
 class TradesChartsViewModel extends ActivatableViewModel {
     private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModel.class);
+    private static final int TAB_INDEX = 2;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -59,9 +70,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private final TradeStatisticsManager tradeStatisticsManager;
     final Preferences preferences;
     private PriceFeedService priceFeedService;
+    private Navigation navigation;
+    private BSFormatter formatter;
 
     private final SetChangeListener<TradeStatistics> setChangeListener;
-    final ObjectProperty<TradeCurrency> tradeCurrencyProperty = new SimpleObjectProperty<>();
+    final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
+    final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
 
     final ObservableList<TradeStatistics> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
@@ -69,6 +83,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     TickUnit tickUnit = TickUnit.MONTH;
     int maxTicks = 30;
+    private int selectedTabIndex;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,19 +91,20 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradesChartsViewModel(TradeStatisticsManager tradeStatisticsManager, Preferences preferences, PriceFeedService priceFeedService) {
+    public TradesChartsViewModel(TradeStatisticsManager tradeStatisticsManager, Preferences preferences, PriceFeedService priceFeedService, Navigation navigation, BSFormatter formatter) {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
+        this.navigation = navigation;
+        this.formatter = formatter;
 
         setChangeListener = change -> updateChartData();
 
-        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getTradeStatisticsScreenCurrencyCode());
+        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getTradeChartsScreenCurrencyCode());
         if (tradeCurrencyOptional.isPresent())
-            tradeCurrencyProperty.set(tradeCurrencyOptional.get());
-        else {
-            tradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
-        }
+            selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
+        else
+            selectedTradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
 
         tickUnit = TickUnit.values()[preferences.getTradeStatisticsTickUnitIndex()];
     }
@@ -105,9 +121,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
     protected void activate() {
         tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(setChangeListener);
         updateChartData();
-
-        if (!preferences.getUseStickyMarketPrice())
-            priceFeedService.setCurrencyCode(tradeCurrencyProperty.get().getCode());
+        syncPriceFeedCurrency();
+        setMarketPriceFeedCurrency();
     }
 
     @Override
@@ -120,20 +135,42 @@ class TradesChartsViewModel extends ActivatableViewModel {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
-        this.tradeCurrencyProperty.set(tradeCurrency);
-        preferences.setTradeStatisticsScreenCurrencyCode(tradeCurrency.getCode());
-        updateChartData();
+    void onSetTradeCurrency(TradeCurrency tradeCurrency) {
+        if (tradeCurrency != null) {
+            final String code = tradeCurrency.getCode();
 
-        if (!preferences.getUseStickyMarketPrice())
-            priceFeedService.setCurrencyCode(tradeCurrency.getCode());
+            if (isEditEntry(code)) {
+                navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
+            } else {
+                boolean showAllEntry = isShowAllEntry(code);
+                showAllTradeCurrenciesProperty.set(showAllEntry);
+                if (!showAllEntry) {
+                    selectedTradeCurrencyProperty.set(tradeCurrency);
+                    preferences.setTradeChartsScreenCurrencyCode(code);
+                }
 
+                updateChartData();
+
+                if (!preferences.getUseStickyMarketPrice()) {
+                    if (showAllEntry)
+                        priceFeedService.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
+                    else
+                        priceFeedService.setCurrencyCode(code);
+                }
+            }
+        }
     }
 
-    public void setTickUnit(TickUnit tickUnit) {
+    void setTickUnit(TickUnit tickUnit) {
         this.tickUnit = tickUnit;
         preferences.setTradeStatisticsTickUnitIndex(tickUnit.ordinal());
         updateChartData();
+    }
+
+    void setSelectedTabIndex(int selectedTabIndex) {
+        this.selectedTabIndex = selectedTabIndex;
+        syncPriceFeedCurrency();
+        setMarketPriceFeedCurrency();
     }
 
 
@@ -142,15 +179,18 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getCurrencyCode() {
-        return tradeCurrencyProperty.get().getCode();
+        return selectedTradeCurrencyProperty.get().getCode();
     }
 
     public ObservableList<TradeCurrency> getTradeCurrencies() {
-        return preferences.getTradeCurrenciesAsObservable();
+        final ObservableList<TradeCurrency> list = FXCollections.observableArrayList(preferences.getTradeCurrenciesAsObservable());
+        list.add(0, new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG));
+        list.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
+        return list;
     }
 
-    public TradeCurrency getTradeCurrency() {
-        return tradeCurrencyProperty.get();
+    public TradeCurrency getSelectedTradeCurrency() {
+        return selectedTradeCurrencyProperty.get();
     }
 
 
@@ -158,10 +198,23 @@ class TradesChartsViewModel extends ActivatableViewModel {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void setMarketPriceFeedCurrency() {
+        if (!preferences.getUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX) {
+            if (showAllTradeCurrenciesProperty.get())
+                priceFeedService.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
+            else
+                priceFeedService.setCurrencyCode(getCurrencyCode());
+        }
+    }
+
+    private void syncPriceFeedCurrency() {
+        if (!preferences.getUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX)
+            priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
+    }
 
     private void updateChartData() {
         tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> e.currency.equals(getCurrencyCode()))
+                .filter(e -> showAllTradeCurrenciesProperty.get() || e.currency.equals(getCurrencyCode()))
                 .collect(Collectors.toList()));
 
         // Get all entries for the defined time interval
@@ -183,6 +236,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         // create CandleData for defined time interval
         List<CandleData> candleDataList = itemsPerInterval.entrySet().stream()
                 .map(entry -> getCandleData(entry.getKey(), entry.getValue()))
+                .filter(e -> e.tick >= 0)
                 .collect(Collectors.toList());
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
@@ -221,7 +275,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
             close = list.get(list.size() - 1).tradePrice;
         }
         boolean isBullish = close > open;
-        return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume, isBullish);
+        final Date date = new Date(getTimeFromTickIndex(tick));
+        String dateString = tickUnit.ordinal() > TickUnit.DAY.ordinal() ?
+                formatter.formatDateTime(date) :
+                formatter.formatDate(date);
+        return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume,
+                isBullish, dateString);
     }
 
     long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {
@@ -266,5 +325,13 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long now = getTickFromTime(new Date().getTime(), tickUnit);
         long tick = now - (maxTicks - index);
         return getTimeFromTick(tick, tickUnit);
+    }
+
+    private boolean isShowAllEntry(String id) {
+        return id.equals(GUIUtil.SHOW_ALL_FLAG);
+    }
+
+    private boolean isEditEntry(String id) {
+        return id.equals(GUIUtil.EDIT_FLAG);
     }
 }

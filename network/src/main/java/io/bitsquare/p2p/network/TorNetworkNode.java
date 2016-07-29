@@ -121,7 +121,7 @@ public class TorNetworkNode extends NetworkNode {
                 try {
                     MoreExecutors.shutdownAndAwaitTermination(executorService, 500, TimeUnit.MILLISECONDS);
                     log.debug("Shutdown executorService done after " + (System.currentTimeMillis() - ts) + " ms.");
-                    log.info("Shutdown completed");
+                    log.debug("Shutdown completed");
                 } catch (Throwable t) {
                     log.error("Shutdown executorService failed with exception: " + t.getMessage());
                     t.printStackTrace();
@@ -138,11 +138,11 @@ public class TorNetworkNode extends NetworkNode {
         executorService.submit(() -> {
             Utilities.setThreadName("torNetworkNodeShutDown");
             long ts = System.currentTimeMillis();
-            log.info("Shutdown torNetworkNode");
+            log.debug("Shutdown torNetworkNode");
             try {
                 if (torNetworkNode != null)
                     torNetworkNode.shutdown();
-                log.info("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");
+                log.debug("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");
             } catch (Throwable e) {
                 log.error("Shutdown torNetworkNode failed with exception: " + e.getMessage());
                 e.printStackTrace();
@@ -221,7 +221,7 @@ public class TorNetworkNode extends NetworkNode {
             if (torDir.mkdirs())
                 log.trace("Created directory for tor at {}", torDir.getAbsolutePath());
             TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode = new JavaTorNode(torDir, useBridges);
-            log.info("\n\n############################################################\n" +
+            log.debug("\n\n############################################################\n" +
                     "TorNode created:" +
                     "\nTook " + (System.currentTimeMillis() - ts) + " ms"
                     + "\n############################################################\n");
@@ -250,7 +250,7 @@ public class TorNetworkNode extends NetworkNode {
                 long ts = System.currentTimeMillis();
                 HiddenServiceDescriptor hiddenServiceDescriptor = torNode.createHiddenService(localPort, servicePort);
                 torNode.addHiddenServiceReadyListener(hiddenServiceDescriptor, descriptor -> {
-                    log.info("\n\n############################################################\n" +
+                    log.debug("\n\n############################################################\n" +
                             "Hidden service published:" +
                             "\nAddress=" + descriptor.getFullAddress() +
                             "\nTook " + (System.currentTimeMillis() - ts) + " ms"

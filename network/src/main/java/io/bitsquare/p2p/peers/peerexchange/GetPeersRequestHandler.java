@@ -75,9 +75,9 @@ class GetPeersRequestHandler {
         timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                     if (!stopped) {
                         String errorMessage = "A timeout occurred at sending getPeersResponse:" + getPeersResponse + " on connection:" + connection;
-                        log.info(errorMessage + " / PeerExchangeHandshake=" +
+                        log.debug(errorMessage + " / PeerExchangeHandshake=" +
                                 GetPeersRequestHandler.this);
-                        log.info("timeoutTimer called. this=" + this);
+                        log.debug("timeoutTimer called. this=" + this);
                         handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
                     } else {
                         log.trace("We have stopped already. We ignore that timeoutTimer.run call.");
@@ -105,7 +105,7 @@ class GetPeersRequestHandler {
                     String errorMessage = "Sending getPeersResponse to " + connection +
                             " failed. That is expected if the peer is offline. getPeersResponse=" + getPeersResponse + "." +
                             "Exception: " + throwable.getMessage();
-                    log.info(errorMessage);
+                    log.debug(errorMessage);
                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);
                 } else {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");

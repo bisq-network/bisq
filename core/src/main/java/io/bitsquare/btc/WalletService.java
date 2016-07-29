@@ -170,7 +170,7 @@ public class WalletService {
         backupWallet();
 
         final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
-        log.info("Use socks5Proxy for bitcoinj: " + socks5Proxy);
+        log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
         
         // If seed is non-null it means we are restoring from backup.
         walletAppKit = new WalletAppKitBitSquare(params, socks5Proxy, walletDir, "Bitsquare") {
@@ -714,7 +714,7 @@ public class WalletService {
     public void doubleSpendTransaction(Transaction txToDoubleSpend, Address toAddress, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException, AddressFormatException, AddressEntryException {
         final TransactionConfidence.ConfidenceType confidenceType = txToDoubleSpend.getConfidence().getConfidenceType();
         if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
-            log.info("txToDoubleSpend nr. of inputs " + txToDoubleSpend.getInputs().size());
+            log.debug("txToDoubleSpend nr. of inputs " + txToDoubleSpend.getInputs().size());
 
             Transaction newTransaction = new Transaction(params);
             txToDoubleSpend.getInputs().stream().forEach(input -> {
@@ -739,8 +739,8 @@ public class WalletService {
                     }
             );
 
-            log.info("newTransaction nr. of inputs " + newTransaction.getInputs().size());
-            log.info("newTransaction size in kB " + newTransaction.bitcoinSerialize().length / 1024);
+            log.debug("newTransaction nr. of inputs " + newTransaction.getInputs().size());
+            log.debug("newTransaction size in kB " + newTransaction.bitcoinSerialize().length / 1024);
 
             if (!newTransaction.getInputs().isEmpty()) {
                 Coin amount = Coin.valueOf(newTransaction.getInputs().stream()
@@ -795,7 +795,7 @@ public class WalletService {
                     }
                 }
                 if (sendResult != null) {
-                    log.info("Broadcasting double spending transaction. " + newTransaction);
+                    log.debug("Broadcasting double spending transaction. " + newTransaction);
                     Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction result) {
@@ -835,9 +835,9 @@ public class WalletService {
             newSendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
             wallet.completeTx(newSendRequest);
 
-            log.info("After fee check: amount  " + amount.toFriendlyString());
-            log.info("Output fee  " + sendRequest.tx.getFee().toFriendlyString());
-            sendRequest.tx.getOutputs().stream().forEach(o -> log.info("Output value " + o.getValue().toFriendlyString()));
+            log.debug("After fee check: amount  " + amount.toFriendlyString());
+            log.debug("Output fee  " + sendRequest.tx.getFee().toFriendlyString());
+            sendRequest.tx.getOutputs().stream().forEach(o -> log.debug("Output value " + o.getValue().toFriendlyString()));
         } catch (InsufficientMoneyException e) {
             if (e.missing != null) {
                 log.trace("missing fee " + e.missing.toFriendlyString());

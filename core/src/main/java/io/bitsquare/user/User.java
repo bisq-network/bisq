@@ -181,8 +181,9 @@ public final class User implements Persistable {
 
     public void addAcceptedArbitrator(Arbitrator arbitrator) {
         if (!acceptedArbitrators.contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator)) {
-            acceptedArbitrators.add(arbitrator);
-            storage.queueUpForSave();
+            boolean changed = acceptedArbitrators.add(arbitrator);
+            if (changed)
+                storage.queueUpForSave();
         }
     }
 
@@ -191,8 +192,9 @@ public final class User implements Persistable {
     }
 
     public void removeAcceptedArbitrator(Arbitrator arbitrator) {
-        acceptedArbitrators.remove(arbitrator);
-        storage.queueUpForSave();
+        boolean changed = acceptedArbitrators.remove(arbitrator);
+        if (changed)
+            storage.queueUpForSave();
     }
 
     public void clearAcceptedArbitrators() {
@@ -200,7 +202,7 @@ public final class User implements Persistable {
         storage.queueUpForSave();
     }
 
-    public void setRegisteredArbitrator(@org.jetbrains.annotations.Nullable Arbitrator arbitrator) {
+    public void setRegisteredArbitrator(@Nullable Arbitrator arbitrator) {
         this.registeredArbitrator = arbitrator;
         storage.queueUpForSave();
     }
@@ -330,7 +332,7 @@ public final class User implements Persistable {
 
     public void setDevelopersAlert(Alert developersAlert) {
         this.developersAlert = developersAlert;
-        storage.queueUpForSave(2000);
+        storage.queueUpForSave();
     }
 
     public Alert getDevelopersAlert() {
@@ -339,7 +341,7 @@ public final class User implements Persistable {
 
     public void setDisplayedAlert(Alert displayedAlert) {
         this.displayedAlert = displayedAlert;
-        storage.queueUpForSave(2000);
+        storage.queueUpForSave();
     }
 
     public Alert getDisplayedAlert() {

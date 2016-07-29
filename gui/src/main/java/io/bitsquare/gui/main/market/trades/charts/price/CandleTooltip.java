@@ -29,29 +29,34 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.bitsquare.gui.main.markets.trades.charts.price;
+package io.bitsquare.gui.main.market.trades.charts.price;
 
-import io.bitsquare.gui.main.markets.trades.charts.CandleData;
+import io.bitsquare.gui.main.market.trades.charts.CandleData;
 import io.bitsquare.gui.util.Layout;
+import javafx.geometry.HPos;
 import javafx.scene.control.Label;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.util.StringConverter;
 
 /**
  * The content for Candle tool tips
  */
-public class TooltipContent extends GridPane {
+public class CandleTooltip extends GridPane {
     private final StringConverter<Number> priceStringConverter;
     private final Label openValue = new Label();
     private final Label closeValue = new Label();
     private final Label highValue = new Label();
     private final Label lowValue = new Label();
     private final Label averageValue = new Label();
+    private final Label dateValue = new Label();
 
-    TooltipContent(StringConverter<Number> priceStringConverter) {
+    CandleTooltip(StringConverter<Number> priceStringConverter) {
         this.priceStringConverter = priceStringConverter;
 
         setHgap(Layout.GRID_GAP);
+
         setVgap(2);
         
         Label open = new Label("Open:");
@@ -59,10 +64,7 @@ public class TooltipContent extends GridPane {
         Label high = new Label("High:");
         Label low = new Label("Low:");
         Label average = new Label("Average:");
-       /* open.getStyleClass().add("candlestick-tooltip-label");
-        close.getStyleClass().add("candlestick-tooltip-label");
-        high.getStyleClass().add("candlestick-tooltip-label");
-        low.getStyleClass().add("candlestick-tooltip-label");*/
+        Label date = new Label("Date:");
         setConstraints(open, 0, 0);
         setConstraints(openValue, 1, 0);
         setConstraints(close, 0, 1);
@@ -73,7 +75,17 @@ public class TooltipContent extends GridPane {
         setConstraints(lowValue, 1, 3);
         setConstraints(average, 0, 4);
         setConstraints(averageValue, 1, 4);
-        getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue, average, averageValue);
+        setConstraints(date, 0, 5);
+        setConstraints(dateValue, 1, 5);
+
+        ColumnConstraints columnConstraints1 = new ColumnConstraints();
+        columnConstraints1.setHalignment(HPos.RIGHT);
+        columnConstraints1.setHgrow(Priority.NEVER);
+        ColumnConstraints columnConstraints2 = new ColumnConstraints();
+        columnConstraints2.setHgrow(Priority.ALWAYS);
+        getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+
+        getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue, average, averageValue, date, dateValue);
     }
 
     public void update(CandleData candleData) {
@@ -82,5 +94,6 @@ public class TooltipContent extends GridPane {
         highValue.setText(priceStringConverter.toString(candleData.high));
         lowValue.setText(priceStringConverter.toString(candleData.low));
         averageValue.setText(priceStringConverter.toString(candleData.average));
+        dateValue.setText(candleData.date);
     }
 }

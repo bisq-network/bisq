@@ -91,7 +91,7 @@ public class LocalhostNetworkNode extends NetworkNode {
             long ts = System.currentTimeMillis();
             if (simulateTorDelayTorNode > 0)
                 Uninterruptibles.sleepUninterruptibly(simulateTorDelayTorNode, TimeUnit.MILLISECONDS);
-            log.info("\n\n############################################################\n" +
+            log.debug("\n\n############################################################\n" +
                     "TorNode created [simulation]:" +
                     "\nTook " + (System.currentTimeMillis() - ts) + " ms"
                     + "\n############################################################\n");
@@ -120,7 +120,7 @@ public class LocalhostNetworkNode extends NetworkNode {
             long ts = System.currentTimeMillis();
             if (simulateTorDelayHiddenService > 0)
                 Uninterruptibles.sleepUninterruptibly(simulateTorDelayHiddenService, TimeUnit.MILLISECONDS);
-            log.info("\n\n############################################################\n" +
+            log.debug("\n\n############################################################\n" +
                     "Hidden service published [simulation]:" +
                     "\nTook " + (System.currentTimeMillis() - ts) + " ms"
                     + "\n############################################################\n");

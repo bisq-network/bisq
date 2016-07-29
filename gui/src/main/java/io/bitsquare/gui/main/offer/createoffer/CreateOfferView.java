@@ -333,7 +333,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     "When another trader wants to take your offer it requires that your application is online and able to react.\n" +
                     "Be sure that you have standby mode deactivated as that would disconnect your client from the network (standby of the monitor is not a problem).")
                     .actionButtonText("Visit FAQ web page")
-                    .onAction(() -> Utilities.openWebPage("https://bitsquare.io/faq#6"))
+                    .onAction(() -> GUIUtil.openWebPage("https://bitsquare.io/faq#6"))
                     .closeButtonText("I understand")
                     .dontShowAgainId(key, preferences)
                     .show();

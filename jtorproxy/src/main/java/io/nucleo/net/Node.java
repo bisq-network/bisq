@@ -165,7 +165,7 @@ public class Node {
             try {
                 while (running) {
                     final Socket socket = serverSocket.accept();
-                    log.info("Accepting Client on port " + socket.getLocalPort());
+                    log.debug("Accepting Client on port " + socket.getLocalPort());
                     executorService.submit(new Acceptor(socket));
                 }
             } catch (IOException e) {
@@ -237,7 +237,7 @@ public class Node {
                         out = prepareOOSForSocket(socket);
                         objectInputStream = new ObjectInputStream(socket.getInputStream());
                     } catch (EOFException e) {
-                        log.info("Got bogus incoming connection");
+                        log.debug("Got bogus incoming connection");
                     } catch (IOException e) {
                         e.printStackTrace();
                         try {

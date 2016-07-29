@@ -64,7 +64,7 @@ public class PublishTradeStatistics extends TradeTask {
                             }
                         }
                         if (!matches) {
-                            log.warn("We publish tradeStatistics because the offerer uses an old version.");
+                            log.debug("We publish tradeStatistics because the offerer uses an old version so we publish to have at least 1 data item published.");
                             processModel.getP2PService().addData(tradeStatistics, true);
                         } else {
                             log.trace("We do not publish tradeStatistics because the offerer support the capabilities.");

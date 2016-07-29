@@ -152,7 +152,7 @@ public class GetDataRequestHandler {
 
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, Connection connection) {
         if (!stopped) {
-            log.info(errorMessage + "\n\tcloseConnectionReason=" + closeConnectionReason);
+            log.debug(errorMessage + "\n\tcloseConnectionReason=" + closeConnectionReason);
             cleanup();
             listener.onFault(errorMessage, connection);
         } else {

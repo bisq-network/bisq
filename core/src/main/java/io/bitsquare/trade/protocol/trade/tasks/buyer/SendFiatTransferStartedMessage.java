@@ -48,14 +48,14 @@ public class SendFiatTransferStartedMessage extends TradeTask {
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
-                            log.info("Message arrived at peer.");
+                            log.debug("Message arrived at peer.");
                             trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
                             complete();
                         }
 
                         @Override
                         public void onStoredInMailbox() {
-                            log.info("Message stored in mailbox.");
+                            log.debug("Message stored in mailbox.");
                             trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
                             complete();
                         }

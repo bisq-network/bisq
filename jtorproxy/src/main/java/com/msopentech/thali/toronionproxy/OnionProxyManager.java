@@ -128,7 +128,7 @@ public abstract class OnionProxyManager {
                     if (isBootstrapped() == false) {
                         Thread.sleep(1000, 0);
                     } else {
-                        log.info("Tor has bootstrapped");
+                        log.debug("Tor has bootstrapped");
                         return true;
                     }
                 }
@@ -211,7 +211,7 @@ public abstract class OnionProxyManager {
                     + "this.");
         }
 
-        log.info("Creating hidden service");
+        log.debug("Creating hidden service");
         File hostnameFile = onionProxyContext.getHostNameFile();
 
         if (hostnameFile.getParentFile().exists() == false && hostnameFile.getParentFile().mkdirs() == false) {
@@ -257,7 +257,7 @@ public abstract class OnionProxyManager {
 
         // Publish the hidden service's onion hostname in transport properties
         String hostname = new String(FileUtilities.read(hostnameFile), "UTF-8").trim();
-        log.info("Hidden service config has completed.");
+        log.debug("Hidden service config has completed.");
 
         return hostname;
     }
@@ -285,7 +285,7 @@ public abstract class OnionProxyManager {
             if (controlConnection == null) {
                 return;
             }
-            log.info("Stopping Tor");
+            log.debug("Stopping Tor");
             controlConnection.setConf("DisableNetwork", "1");
             controlConnection.shutdownTor("TERM");
         } finally {
@@ -319,7 +319,7 @@ public abstract class OnionProxyManager {
         if (controlConnection == null) {
             throw new RuntimeException("Tor is not running!");
         }
-        log.info("Enabling network: " + enable);
+        log.debug("Enabling network: " + enable);
         controlConnection.setConf("DisableNetwork", enable ? "0" : "1");
     }
 
@@ -390,18 +390,18 @@ public abstract class OnionProxyManager {
         // then Tor is dead. This assumes, of course, that takeOwnership works
         // and we can't end up with Zombies.
         if (controlConnection != null) {
-            log.info("Tor is already running");
+            log.debug("Tor is already running");
             return true;
         }
 
         // The code below is why this method is synchronized, we don't want two
         // instances of it running at once
         // as the result would be a mess of screwed up files and connections.
-        log.info("Tor is not running");
+        log.debug("Tor is not running");
 
         installAndConfigureFiles(useBridges);
 
-        log.info("Starting Tor");
+        log.debug("Starting Tor");
         File cookieFile = onionProxyContext.getCookieFile();
         if (cookieFile.getParentFile().exists() == false && cookieFile.getParentFile().mkdirs() == false) {
             throw new RuntimeException("Could not create cookieFile parent directory");
@@ -536,7 +536,7 @@ public abstract class OnionProxyManager {
                                         nextLine.substring(nextLine.lastIndexOf(" ") + 1, nextLine.length() - 1));
                                 countDownLatch.countDown();
                             }
-                            log.info(nextLine);
+                            log.debug(nextLine);
                         }
                     }
                 } finally {

@@ -197,12 +197,12 @@ public class FileManager<T> {
 
             renameTempFileToFile(tempFile, storageFile);
         } catch (Throwable t) {
-            log.debug("storageFile " + storageFile.toString());
+            log.error("storageFile " + storageFile.toString());
             t.printStackTrace();
             log.error("Error at saveToFile: " + t.getMessage());
         } finally {
             if (tempFile != null && tempFile.exists()) {
-                log.warn("Temp file still exists after failed save. storageFile=" + storageFile);
+                log.warn("Temp file still exists after failed save. We will delete it now. storageFile=" + storageFile);
                 if (!tempFile.delete())
                     log.error("Cannot delete temp file.");
             }

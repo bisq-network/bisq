@@ -75,8 +75,6 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
-    private static final long REPUBLISH_STATISTICS_INTERVAL_MIN = TimeUnit.HOURS.toMillis(1);
-
     private final User user;
     private final KeyRing keyRing;
     private final WalletService walletService;
@@ -223,16 +221,8 @@ public class TradeManager {
         }
 
         // We start later to have better connectivity to the network
-        UserThread.runPeriodically(() -> publishTradeStatistics(tradesForStatistics),
+        UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics),
                 30, TimeUnit.SECONDS);
-
-        //TODO can be removed at next release
-        // For the first 2 weeks of the release we re publish the trades to get faster good distribution
-        // otherwise the trades would only be published again at restart and if a client dont do that the stats might be missing
-        // for a longer time as initially there are not many peer upgraded and supporting flooding of the stats data.
-        if (new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 8)))
-            UserThread.runPeriodically(() -> publishTradeStatistics(tradesForStatistics),
-                    REPUBLISH_STATISTICS_INTERVAL_MIN, TimeUnit.MILLISECONDS);
 
         pendingTradesInitialized.set(true);
     }
@@ -249,7 +239,8 @@ public class TradeManager {
             tradeStatisticsManager.add(tradeStatistics);
 
             // Only trades from last 30 days
-            if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(30)) {
+            //TODO we want to get old trades published so we dont do the 30 days check for the first few weeks of the new version
+            if (new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30)) || (new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(30)) {
                 long delay = 3000;
                 final long minDelay = (i + 1) * delay;
                 final long maxDelay = (i + 2) * delay;
@@ -289,7 +280,7 @@ public class TradeManager {
             // TODO respond
             //(RequestDepositTxInputsMessage)message.
             //  messageService.sendEncryptedMessage(peerAddress,messageWithPubKey.getMessage().);
-            log.info("We received a take offer request but don't have that offer anymore.");
+            log.debug("We received a take offer request but don't have that offer anymore.");
         }
     }
 
@@ -391,7 +382,7 @@ public class TradeManager {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
-                    log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
+                    log.debug("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
                     addTradeToClosedTrades(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
                     resultHandler.handleResult();

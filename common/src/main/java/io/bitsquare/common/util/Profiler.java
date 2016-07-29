@@ -24,12 +24,11 @@ public class Profiler {
     private static final Logger log = LoggerFactory.getLogger(Profiler.class);
 
     public static void printSystemLoad(Logger log) {
-        log.warn(printSystemLoadString());
+        log.info(printSystemLoadString());
     }
 
     public static String printSystemLoadString() {
-        long used = getUsedMemoryInMB();
-        return "System load: Memory (MB)): " + used + " / Nr. of threads: " + Thread.activeCount();
+        return "System load: Memory (MB)): " + getUsedMemoryInMB() + " / Nr. of threads: " + Thread.activeCount();
     }
 
     public static long getUsedMemoryInMB() {

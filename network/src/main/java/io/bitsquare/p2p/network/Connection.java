@@ -174,14 +174,13 @@ public class Connection implements MessageListener {
         if (!stopped) {
             if (!isCapabilityRequired(message) || isCapabilitySupported(message)) {
                 try {
-                    log.info("sendMessage message=" + Utilities.toTruncatedString(message));
                     Log.traceCall();
 
                     // Throttle outbound messages
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastSendTimeStamp;
                     if (elapsed < 20) {
-                        log.info("We got 2 sendMessage requests in less than 20 ms. We set the thread to sleep " +
+                        log.debug("We got 2 sendMessage requests in less than 20 ms. We set the thread to sleep " +
                                         "for 50 ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}",
                                 lastSendTimeStamp, now, elapsed);
                         Thread.sleep(50);
@@ -201,13 +200,13 @@ public class Connection implements MessageListener {
                     } else if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                         setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
-                        log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                        log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Sending direct message to peer" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
                                 peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
                     } else {
-                        log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                        log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
                                 peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
@@ -370,7 +369,7 @@ public class Connection implements MessageListener {
 
         String peersNodeAddress = getPeersNodeAddressOptional().isPresent() ? getPeersNodeAddressOptional().get().getFullAddress() : "";
         if (this instanceof InboundConnection) {
-            log.info("\n\n############################################################\n" +
+            log.debug("\n\n############################################################\n" +
                     "We got the peers node address set.\n" +
                     "peersNodeAddress= " + peersNodeAddress +
                     "\nconnection.uid=" + getUid() +
@@ -435,7 +434,7 @@ public class Connection implements MessageListener {
         Log.traceCall(this.toString());
         if (!stopped) {
             String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
-            log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+            log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                     "ShutDown connection:"
                     + "\npeersNodeAddress=" + peersNodeAddress
                     + "\ncloseConnectionReason=" + closeConnectionReason
@@ -681,6 +680,7 @@ public class Connection implements MessageListener {
 
         private volatile boolean stopped;
         private long lastReadTimeStamp;
+        private boolean threadNameSet;
 
         public InputHandler(SharedModel sharedModel, ObjectInputStream objectInputStream, String portInfo, MessageListener messageListener) {
             this.sharedModel = sharedModel;
@@ -705,8 +705,19 @@ public class Connection implements MessageListener {
         @Override
         public void run() {
             try {
-                Thread.currentThread().setName("InputHandler-" + portInfo);
+                Thread.currentThread().setName("InputHandler");
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
+                    if (!threadNameSet && sharedModel.connection.getPeersNodeAddressOptional().isPresent()) {
+                        Thread.currentThread().setName("InputHandler-" + sharedModel.connection.getPeersNodeAddressOptional().get().getFullAddress());
+                        threadNameSet = true;
+                    }
+
+                    if (objectInputStream.available() < 0) {
+                        log.warn("Shutdown because objectInputStream.available() < 0. objectInputStream.available()=" + objectInputStream.available());
+                        sharedModel.shutDown(CloseConnectionReason.TERMINATED);
+                        return;
+                    }
+
                     Connection connection = sharedModel.connection;
                     log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
                     try {
@@ -716,7 +727,7 @@ public class Connection implements MessageListener {
                         long now = System.currentTimeMillis();
                         long elapsed = now - lastReadTimeStamp;
                         if (elapsed < 10) {
-                            log.info("We got 2 messages received in less than 10 ms. We set the thread to sleep " +
+                            log.debug("We got 2 messages received in less than 10 ms. We set the thread to sleep " +
                                             "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
                                     lastReadTimeStamp, now, elapsed);
                             Thread.sleep(20);
@@ -737,7 +748,8 @@ public class Connection implements MessageListener {
                         } else if (rawInputObject instanceof Message) {
                             // We want to log all incoming messages (except Pong and RefreshTTLMessage) 
                             // so we log before the data type checks
-                            log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
+                            //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
+                            log.debug("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
                                             "Received object (truncated)={} / size={}"
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
@@ -752,6 +764,7 @@ public class Connection implements MessageListener {
                                     connection,
                                     size);
                             try {
+                                // Don't call toString on rawInputObject
                                 log.error("rawInputObject.className=" + rawInputObject.getClass().getName());
                             } catch (Throwable ignore) {
                             }
@@ -823,7 +836,7 @@ public class Connection implements MessageListener {
 
                         if (message instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down
-                            log.info("CloseConnectionMessage received. Reason={}\n\t" +
+                            log.debug("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", ((CloseConnectionMessage) message).reason, connection);
                             stop();
                             if (CloseConnectionReason.PEER_BANNED.name().equals(((CloseConnectionMessage) message).reason)) {

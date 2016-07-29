@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.help;
 
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.util.GUIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class Help {
     public static void openWindow(HelpId id) {
         try {
             // TODO create user guide
-            Utilities.openWebPage("http://bitsquare.io/faq");
+            GUIUtil.openWebPage("http://bitsquare.io/faq");
             // Utilities.openWebPage("https://github.com/bitsquare/bitsquare/wiki/User-Guide");
         } catch (Exception e) {
             log.error(e.getMessage());

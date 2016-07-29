@@ -44,7 +44,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
             model.tradeWalletService.broadcastTx(model.getTransaction(), new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
-                    log.info("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
+                    log.debug("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
 
                     if (model.getTransaction().getHashAsString().equals(transaction.getHashAsString())) {
                         model.offer.setState(Offer.State.OFFER_FEE_PAID);
@@ -57,7 +57,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
                         model.offerBookService.removeOffer(model.offer,
                                 () -> {
-                                    log.info("We store now the changed txID to the offer and add that again.");
+                                    log.debug("We store now the changed txID to the offer and add that again.");
                                     // We store now the changed txID to the offer and add that again.
                                     model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
                                     model.setTransaction(transaction);
@@ -106,7 +106,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
         if (!removeOfferFailed && !addOfferFailed) {
             // If broadcast fails we need to remove offer from offerbook
             model.offerBookService.removeOffer(model.offer,
-                    () -> log.info("Offer removed from offerbook because broadcast failed."),
+                    () -> log.debug("Offer removed from offerbook because broadcast failed."),
                     errorMessage -> log.error("removeOffer failed. " + errorMessage));
         }
     }
