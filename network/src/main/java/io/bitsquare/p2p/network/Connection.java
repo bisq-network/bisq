@@ -681,6 +681,7 @@ public class Connection implements MessageListener {
 
         private volatile boolean stopped;
         private long lastReadTimeStamp;
+        private boolean threadNameSet;
 
         public InputHandler(SharedModel sharedModel, ObjectInputStream objectInputStream, String portInfo, MessageListener messageListener) {
             this.sharedModel = sharedModel;
@@ -705,8 +706,19 @@ public class Connection implements MessageListener {
         @Override
         public void run() {
             try {
-                Thread.currentThread().setName("InputHandler-" + portInfo);
+                Thread.currentThread().setName("InputHandler");
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
+                    if (!threadNameSet && sharedModel.connection.getPeersNodeAddressOptional().isPresent()) {
+                        Thread.currentThread().setName("InputHandler-" + sharedModel.connection.getPeersNodeAddressOptional().get().getFullAddress());
+                        threadNameSet = true;
+                    }
+
+                    if (objectInputStream.available() < 0) {
+                        log.warn("Shutdown because objectInputStream.available() < 0. objectInputStream.available()=" + objectInputStream.available());
+                        sharedModel.shutDown(CloseConnectionReason.TERMINATED);
+                        return;
+                    }
+
                     Connection connection = sharedModel.connection;
                     log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
                     try {
@@ -737,7 +749,8 @@ public class Connection implements MessageListener {
                         } else if (rawInputObject instanceof Message) {
                             // We want to log all incoming messages (except Pong and RefreshTTLMessage) 
                             // so we log before the data type checks
-                            log.info("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
+                            log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
+                            log.debug("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
                                             "Received object (truncated)={} / size={}"
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
