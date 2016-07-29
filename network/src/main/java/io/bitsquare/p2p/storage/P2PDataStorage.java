@@ -28,6 +28,7 @@ import io.bitsquare.storage.Storage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -415,6 +416,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (sequenceNumberMap.containsKey(hashOfData)) {
             int storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
             if (newSequenceNumber >= storedSequenceNumber) {
+                log.trace("Sequence number is valid (>=). sequenceNumber = "
+                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
                 return true;
             } else {
                 log.debug("Sequence number is invalid. sequenceNumber = "
@@ -423,6 +426,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 return false;
             }
         } else {
+            log.trace("Sequence number is valid (!sequenceNumberMap.containsKey(hashOfData)). sequenceNumber = " + newSequenceNumber);
             return true;
         }
     }
@@ -431,6 +435,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (sequenceNumberMap.containsKey(hashOfData)) {
             int storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
             if (newSequenceNumber > storedSequenceNumber) {
+                log.trace("Sequence number has increased (>). sequenceNumber = "
+                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + " / hashOfData=" + hashOfData.toString());
                 return true;
             } else if (newSequenceNumber == storedSequenceNumber) {
                 String msg;
@@ -450,6 +456,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 return false;
             }
         } else {
+            log.trace("Sequence number has increased (!sequenceNumberMap.containsKey(hashOfData)). sequenceNumber = " + newSequenceNumber + " / hashOfData=" + hashOfData.toString());
             return true;
         }
     }
@@ -651,6 +658,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         @Override
         public int hashCode() {
             return bytes != null ? Arrays.hashCode(bytes) : 0;
+        }
+
+        @Override
+        public String toString() {
+            return "ByteArray{" +
+                    "bytes as Hex=" + Hex.toHexString(bytes) +
+                    '}';
         }
     }
 
