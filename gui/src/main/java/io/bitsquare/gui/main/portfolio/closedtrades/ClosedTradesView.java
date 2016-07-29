@@ -92,14 +92,15 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         dateColumn.setComparator((o1, o2) -> o1.getTradable().getDate().compareTo(o2.getTradable().getDate()));
         directionColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getDirection().compareTo(o2.getTradable().getOffer().getDirection()));
         priceColumn.setComparator((o1, o2) -> {
-            Tradable tradable = o1.getTradable();
-            if (tradable instanceof Trade)
-                return ((Trade) o1.getTradable()).getTradePrice().compareTo(((Trade) o2.getTradable()).getTradePrice());
-            else {
-                Fiat price1 = o1.getTradable().getOffer().getPrice();
-                Fiat price2 = o2.getTradable().getOffer().getPrice();
-                return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
-            }
+            final Tradable tradable1 = o1.getTradable();
+            final Tradable tradable2 = o2.getTradable();
+            Fiat price1 = null;
+            Fiat price2 = null;
+            if (tradable1 != null)
+                price1 = tradable1 instanceof Trade ? ((Trade) tradable1).getTradePrice() : tradable1.getOffer().getPrice();
+            if (tradable2 != null)
+                price2 = tradable2 instanceof Trade ? ((Trade) tradable2).getTradePrice() : tradable2.getOffer().getPrice();
+            return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
         });
         volumeColumn.setComparator((o1, o2) -> {
             if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
