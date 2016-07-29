@@ -24,6 +24,9 @@ import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.FiatCurrency;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
@@ -34,6 +37,7 @@ import javafx.scene.control.ScrollBar;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +51,9 @@ import java.util.List;
 
 public class GUIUtil {
     private static final Logger log = LoggerFactory.getLogger(GUIUtil.class);
+
+    public final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
+    public final static String EDIT_FLAG = "EDIT_FLAG";
 
     public static double getScrollbarWidth(Node scrollablePane) {
         Node node = scrollablePane.lookup(".scroll-bar");
@@ -162,5 +169,30 @@ public class GUIUtil {
         } else {
             return "";
         }
+    }
+
+    public static StringConverter<TradeCurrency> getCurrencyListConverter() {
+        return new StringConverter<TradeCurrency>() {
+            @Override
+            public String toString(TradeCurrency tradeCurrency) {
+                String code = tradeCurrency.getCode();
+                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
+                    return "▶ Show all";
+                else if (code.equals(GUIUtil.EDIT_FLAG))
+                    return "▼ Edit currency list";
+                else if (tradeCurrency instanceof FiatCurrency)
+                    return "★ " + tradeCurrency.getNameAndCode();
+                else if (tradeCurrency instanceof CryptoCurrency)
+                    return "✦ " + tradeCurrency.getNameAndCode();
+                else
+                    return "-";
+            }
+
+            @Override
+            public TradeCurrency fromString(String s) {
+                return null;
+            }
+        };
     }
 }

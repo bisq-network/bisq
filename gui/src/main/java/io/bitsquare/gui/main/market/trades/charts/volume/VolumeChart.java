@@ -38,11 +38,8 @@ public class VolumeChart extends XYChart<Number, Number> {
 
     private StringConverter<Number> toolTipStringConverter;
 
-    public VolumeChart(Axis<Number> xAxis, Axis<Number> yAxis) {
+    public VolumeChart(Axis<Number> xAxis, Axis<Number> yAxis, StringConverter<Number> toolTipStringConverter) {
         super(xAxis, yAxis);
-    }
-
-    public final void setToolTipStringConverter(StringConverter<Number> toolTipStringConverter) {
         this.toolTipStringConverter = toolTipStringConverter;
     }
 
@@ -73,7 +70,7 @@ public class VolumeChart extends XYChart<Number, Number> {
                     // Did not find a way how to request the chart data height
                     final double height = getHeight() - 43;
                     double upperYPos = Math.min(height - 5, y); // We want min 5px height to allow tooltips
-                    volumeBar.update(height - upperYPos, candleWidth, candleData.accumulatedAmount);
+                    volumeBar.update(height - upperYPos, candleWidth, candleData);
                     volumeBar.setLayoutX(x);
                     volumeBar.setLayoutY(upperYPos);
                 }

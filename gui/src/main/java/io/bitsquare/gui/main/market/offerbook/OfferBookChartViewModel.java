@@ -20,9 +20,15 @@ package io.bitsquare.gui.main.market.offerbook;
 import com.google.common.math.LongMath;
 import com.google.inject.Inject;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
+import io.bitsquare.gui.main.settings.SettingsView;
+import io.bitsquare.gui.main.settings.preferences.PreferencesView;
+import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
@@ -52,8 +58,9 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final OfferBook offerBook;
     private final Preferences preferences;
     final PriceFeedService priceFeedService;
+    private Navigation navigation;
 
-    final ObjectProperty<TradeCurrency> tradeCurrencyProperty = new SimpleObjectProperty<>();
+    final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     private final List<XYChart.Data> buyData = new ArrayList<>();
     private final List<XYChart.Data> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
@@ -62,23 +69,24 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final ObservableList<Offer> top3SellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
     private int selectedTabIndex;
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService) {
+    public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService, Navigation navigation) {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
+        this.navigation = navigation;
 
-        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getMarketScreenCurrencyCode());
+        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getOfferBookChartScreenCurrencyCode());
         if (tradeCurrencyOptional.isPresent())
-            tradeCurrencyProperty.set(tradeCurrencyOptional.get());
+            selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
         else {
-            tradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
+            selectedTradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
         }
 
         offerBookListItems = offerBook.getOfferBookListItems();
@@ -89,7 +97,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 list.addAll(c.getAddedSubList());
                 if (list.stream()
                         .map(OfferBookListItem::getOffer)
-                        .filter(e -> e.getCurrencyCode().equals(tradeCurrencyProperty.get().getCode()))
+                        .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode()))
                         .findAny()
                         .isPresent())
                     updateChartData();
@@ -133,13 +141,21 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
-        this.tradeCurrencyProperty.set(tradeCurrency);
-        updateChartData();
+        if (tradeCurrency != null) {
+            final String code = tradeCurrency.getCode();
 
-        if (!preferences.getUseStickyMarketPrice())
-            priceFeedService.setCurrencyCode(tradeCurrency.getCode());
+            if (isEditEntry(code)) {
+                navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
+            } else {
+                selectedTradeCurrencyProperty.set(tradeCurrency);
+                preferences.setOfferBookChartScreenCurrencyCode(code);
 
-        preferences.setMarketScreenCurrencyCode(tradeCurrency.getCode());
+                updateChartData();
+
+                if (!preferences.getUseStickyMarketPrice())
+                    priceFeedService.setCurrencyCode(code);
+            }
+        }
     }
 
     void setSelectedTabIndex(int selectedTabIndex) {
@@ -161,7 +177,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     public String getCurrencyCode() {
-        return tradeCurrencyProperty.get().getCode();
+        return selectedTradeCurrencyProperty.get().getCode();
     }
 
     public ObservableList<OfferBookListItem> getOfferBookListItems() {
@@ -177,11 +193,13 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     public ObservableList<TradeCurrency> getTradeCurrencies() {
-        return preferences.getTradeCurrenciesAsObservable();
+        final ObservableList<TradeCurrency> list = FXCollections.observableArrayList(preferences.getTradeCurrenciesAsObservable());
+        list.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
+        return list;
     }
 
-    public TradeCurrency getTradeCurrencyProperty() {
-        return tradeCurrencyProperty.get();
+    public TradeCurrency getSelectedTradeCurrencyProperty() {
+        return selectedTradeCurrencyProperty.get();
     }
 
 
@@ -191,7 +209,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
     private void syncPriceFeedCurrency() {
         if (!preferences.getUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX)
-            priceFeedService.setCurrencyCode(tradeCurrencyProperty.get().getCode());
+            priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
     }
 
     private boolean isAnyPricePresent() {
@@ -201,7 +219,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private void updateChartData() {
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
-                .filter(e -> e.getCurrencyCode().equals(tradeCurrencyProperty.get().getCode())
+                .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(Offer.Direction.BUY))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().value : 0;
@@ -216,7 +234,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
         List<Offer> allSellOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
-                .filter(e -> e.getCurrencyCode().equals(tradeCurrencyProperty.get().getCode())
+                .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getDirection().equals(Offer.Direction.SELL))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().value : 0;
@@ -245,5 +263,9 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                     data.add(new XYChart.Data(price, accumulatedAmount));
             }
         }
+    }
+
+    private boolean isEditEntry(String id) {
+        return id.equals(GUIUtil.EDIT_FLAG);
     }
 }

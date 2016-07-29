@@ -23,8 +23,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.market.trades.charts.price.CandleStickChart;
 import io.bitsquare.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.CryptoCurrency;
-import io.bitsquare.locale.FiatCurrency;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.statistics.TradeStatistics;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -84,6 +83,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private TableColumn<TradeStatistics, TradeStatistics> priceColumn;
     private ChangeListener<Number> selectedTabIndexListener;
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
+    private ChangeListener<Boolean> showAllTradeCurrenciesListener;
+    private TableColumn<TradeStatistics, TradeStatistics> volumeColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -125,6 +126,13 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             layoutChart();
         };
         tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText("Nr. of trades: " + model.tradeStatisticsByCurrency.size());
+        showAllTradeCurrenciesListener = (observable, oldValue, newValue) -> {
+            priceChart.setVisible(!newValue);
+            priceChart.setManaged(!newValue);
+            priceColumn.setSortable(!newValue);
+            priceColumnLabel.set("Price" + (newValue ? "" : (" (" + model.getCurrencyCode() + ")")));
+            volumeColumn.setText("Volume" + (newValue ? "" : (" (" + model.getCurrencyCode() + ")")));
+        };
     }
 
     @Override
@@ -136,7 +144,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
 
         currencyComboBox.setItems(model.getTradeCurrencies());
-        currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
+
+        if (model.showAllTradeCurrenciesProperty.get())
+            currencyComboBox.getSelectionModel().select(0);
+        else
+            currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
+
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
         currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
 
@@ -147,18 +160,21 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisY.widthProperty().addListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().addListener(volumeAxisYWidthListener);
         model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
+        model.showAllTradeCurrenciesProperty.addListener(showAllTradeCurrenciesListener);
 
         priceAxisY.labelProperty().bind(priceColumnLabel);
         priceColumn.textProperty().bind(priceColumnLabel);
 
-        tradeCurrencySubscriber = EasyBind.subscribe(model.tradeCurrencyProperty,
+        tradeCurrencySubscriber = EasyBind.subscribe(model.selectedTradeCurrencyProperty,
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
                     String tradeCurrencyName = tradeCurrency.getName();
 
                     priceSeries.setName(tradeCurrencyName);
                     final String currencyPair = formatter.getCurrencyPair(code);
-                    priceColumnLabel.set("Price (" + currencyPair + ")");
+                    final boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
+                    priceColumnLabel.set("Price" + (showAllTradeCurrencies ? "" : (" (" + currencyPair + ")")));
+                    volumeColumn.setText("Volume" + (showAllTradeCurrencies ? "" : (" (" + code + ")")));
                 });
 
         sortedList = new SortedList<>(model.tradeStatisticsByCurrency);
@@ -184,6 +200,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
         model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
+        model.showAllTradeCurrenciesProperty.removeListener(showAllTradeCurrenciesListener);
 
         priceAxisY.labelProperty().unbind();
         priceColumn.textProperty().unbind();
@@ -225,11 +242,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
 
-        priceChart = new CandleStickChart(priceAxisX, priceAxisY);
-        priceChart.setMinHeight(250);
-        priceChart.setLegendVisible(false);
-        priceChart.setData(FXCollections.observableArrayList(priceSeries));
-        priceChart.setToolTipStringConverter(new StringConverter<Number>() {
+        priceChart = new CandleStickChart(priceAxisX, priceAxisY, new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
                 return formatter.formatFiatWithCode(Fiat.valueOf(model.getCurrencyCode(), (long) object));
@@ -240,6 +253,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
+        priceChart.setMinHeight(250);
+        priceChart.setMaxHeight(300);
+        priceChart.setLegendVisible(false);
+        priceChart.setData(FXCollections.observableArrayList(priceSeries));
 
 
         volumeSeries = new XYChart.Series<>();
@@ -266,14 +283,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
 
-        volumeChart = new VolumeChart(volumeAxisX, volumeAxisY);
-        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
-        volumeChart.setMinHeight(140);
-        volumeChart.setLegendVisible(false);
-        volumeChart.setToolTipStringConverter(new StringConverter<Number>() {
+        volumeChart = new VolumeChart(volumeAxisX, volumeAxisY, new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
-                return formatter.formatCoinWithCode(Coin.valueOf(new Double((double) object).longValue()));
+                return formatter.formatCoinWithCode(Coin.valueOf((long) object));
             }
 
             @Override
@@ -281,6 +294,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
+        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
+        volumeChart.setMinHeight(140);
+        volumeChart.setMaxHeight(200);
+        volumeChart.setLegendVisible(false);
     }
 
     private void updateChartData() {
@@ -338,23 +355,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
-            @Override
-            public String toString(TradeCurrency tradeCurrency) {
-                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-                if (tradeCurrency instanceof FiatCurrency)
-                    return "★ " + tradeCurrency.getNameAndCode();
-                else if (tradeCurrency instanceof CryptoCurrency)
-                    return "✦ " + tradeCurrency.getNameAndCode();
-                else
-                    return "-";
-            }
-
-            @Override
-            public TradeCurrency fromString(String s) {
-                return null;
-            }
-        });
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListConverter());
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -395,6 +396,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private void createTable() {
         tableView = new TableView<>();
         tableView.setMinHeight(120);
+        VBox.setVgrow(tableView, Priority.ALWAYS);
 
         // date
         TableColumn<TradeStatistics, TradeStatistics> dateColumn = new TableColumn<>("Date/Time");
@@ -458,7 +460,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.formatFiat(item.getTradePrice()));
+                                    setText(model.showAllTradeCurrenciesProperty.get() ?
+                                            formatter.formatFiatWithCode(item.getTradePrice()) :
+                                            formatter.formatFiat(item.getTradePrice()));
                                 else
                                     setText("");
                             }
@@ -469,9 +473,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(priceColumn);
 
         // volume
-        TableColumn<TradeStatistics, TradeStatistics> volumeColumn = new TableColumn<>();
+        volumeColumn = new TableColumn<>();
         volumeColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
-        volumeColumn.setText("Volume (BTC)");
         volumeColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
                         TradeStatistics>>() {
@@ -483,7 +486,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.formatFiatWithCode(item.getTradeVolume()));
+                                    setText(model.showAllTradeCurrenciesProperty.get() ?
+                                            formatter.formatFiatWithCode(item.getTradeVolume()) :
+                                            formatter.formatFiat(item.getTradeVolume()));
                                 else
                                     setText("");
                             }

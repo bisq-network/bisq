@@ -70,15 +70,12 @@ public class CandleStickChart extends XYChart<Number, Number> {
      * @param xAxis The x axis to use
      * @param yAxis The y axis to use
      */
-    public CandleStickChart(Axis<Number> xAxis, Axis<Number> yAxis) {
+    public CandleStickChart(Axis<Number> xAxis, Axis<Number> yAxis, StringConverter<Number> priceStringConverter) {
         super(xAxis, yAxis);
+        this.priceStringConverter = priceStringConverter;
     }
 
     // -------------- METHODS ------------------------------------------------------------------------------------------
-
-    public final void setToolTipStringConverter(StringConverter<Number> priceStringConverter) {
-        this.priceStringConverter = priceStringConverter;
-    }
 
     /**
      * Called to update and layout the content for the plot
