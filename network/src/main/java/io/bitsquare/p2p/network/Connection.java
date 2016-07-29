@@ -174,7 +174,6 @@ public class Connection implements MessageListener {
         if (!stopped) {
             if (!isCapabilityRequired(message) || isCapabilitySupported(message)) {
                 try {
-                    log.error("sendMessage message=" + Utilities.toTruncatedString(message));
                     Log.traceCall();
 
                     // Throttle outbound messages
