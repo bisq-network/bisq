@@ -184,7 +184,7 @@ public class PeerManager implements ConnectionListener {
                 " / closeConnectionReason: " + closeConnectionReason);
 
         final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
-        log.info("onDisconnect: peer = {}{}", (addressOptional.isPresent() ? addressOptional.get().hostName : "unknown address"), isSeedNode(connection) ? " (SeedNode)" : "");
+        log.info("onDisconnect: peer = {}{}", (addressOptional.isPresent() ? addressOptional.get().hostName : "not known yet"), isSeedNode(connection) ? " (SeedNode)" : "");
         
         handleConnectionFault(connection);
 
