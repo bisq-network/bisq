@@ -221,7 +221,7 @@ public class TradeManager {
         }
 
         // We start later to have better connectivity to the network
-        UserThread.runPeriodically(() -> publishTradeStatistics(tradesForStatistics),
+        UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics),
                 30, TimeUnit.SECONDS);
 
         pendingTradesInitialized.set(true);

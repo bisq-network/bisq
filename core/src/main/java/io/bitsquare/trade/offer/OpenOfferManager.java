@@ -505,7 +505,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                 // we delay to avoid reaching throttle limits
                                 // roughly 4 offers per second
 
-                                long delay = 150;
+                                long delay = 300;
                                 final long minDelay = (i + 1) * delay;
                                 final long maxDelay = (i + 2) * delay;
                                 final OpenOffer openOffer = openOffersList.get(i);
