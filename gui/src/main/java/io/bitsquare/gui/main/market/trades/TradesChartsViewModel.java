@@ -236,6 +236,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         // create CandleData for defined time interval
         List<CandleData> candleDataList = itemsPerInterval.entrySet().stream()
                 .map(entry -> getCandleData(entry.getKey(), entry.getValue()))
+                .filter(e -> e.tick >= 0)
                 .collect(Collectors.toList());
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
@@ -274,11 +275,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
             close = list.get(list.size() - 1).tradePrice;
         }
         boolean isBullish = close > open;
-        String date = tickUnit.ordinal() > TickUnit.DAY.ordinal() ?
-                formatter.formatDateTime(new Date(getTimeFromTickIndex(tick))) :
-                formatter.formatDate(new Date(getTimeFromTickIndex(tick)));
+        final Date date = new Date(getTimeFromTickIndex(tick));
+        String dateString = tickUnit.ordinal() > TickUnit.DAY.ordinal() ?
+                formatter.formatDateTime(date) :
+                formatter.formatDate(date);
         return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume,
-                isBullish, date);
+                isBullish, dateString);
     }
 
     long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {
