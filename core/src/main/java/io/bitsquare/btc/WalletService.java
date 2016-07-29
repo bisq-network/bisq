@@ -170,7 +170,7 @@ public class WalletService {
         backupWallet();
 
         final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
-        log.info("Use socks5Proxy for bitcoinj: " + socks5Proxy);
+        log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
         
         // If seed is non-null it means we are restoring from backup.
         walletAppKit = new WalletAppKitBitSquare(params, socks5Proxy, walletDir, "Bitsquare") {

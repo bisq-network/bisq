@@ -10,21 +10,21 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bitsquare.storage.Storage" level="WARN"/>
-    <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
-    <logger name="io.bitsquare.locale.BSResources" level="ERROR"/>
-
-    <!--<logger name="io.bitsquare.p2p" level="WARN"/>-->
-    <logger name="io.bitsquare.btc.pricefeed" level="WARN"/>
-
-
-    <logger name="io.bitsquare.storage.Storage" level="WARN"/>
-    <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
-
-    <logger name="io.bitsquare.p2p.peers" level="WARN"/>
-    <logger name="io.bitsquare.p2p.peers.getdata" level="WARN"/>
-    <logger name="io.bitsquare.p2p.peers.keepalive" level="WARN"/>
-    <logger name="io.bitsquare.p2p.peers.peerexchange" level="WARN"/>
+    <!-- <logger name="io.bitsquare.storage.Storage" level="WARN"/>
+     <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
+     <logger name="io.bitsquare.locale.BSResources" level="ERROR"/>
+ 
+     &lt;!&ndash;<logger name="io.bitsquare.p2p" level="WARN"/>&ndash;&gt;
+     <logger name="io.bitsquare.btc.pricefeed" level="WARN"/>
+ 
+ 
+     <logger name="io.bitsquare.storage.Storage" level="WARN"/>
+     <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
+ 
+     <logger name="io.bitsquare.p2p.peers" level="WARN"/>
+     <logger name="io.bitsquare.p2p.peers.getdata" level="WARN"/>
+     <logger name="io.bitsquare.p2p.peers.keepalive" level="WARN"/>
+     <logger name="io.bitsquare.p2p.peers.peerexchange" level="WARN"/>-->
 
     <!--<logger name="io.bitsquare.p2p.network" level="WARN"/>-->
     <!-- <logger name="io.bitsquare.p2p.P2PService" level="WARN"/>-->
