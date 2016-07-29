@@ -126,7 +126,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                 onFault(errorMessage, false);
             }, timeoutDelay);
 
-            log.info("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeersSet.size());
+            log.debug("Broadcast message to {} peers out of {} total connected peers.", numOfPeers, connectedPeersSet.size());
             for (int i = 0; i < numOfPeers; i++) {
                 if (stopped)
                     break;  // do not continue sending after a timeout or a cancellation
@@ -181,7 +181,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                         public void onFailure(@NotNull Throwable throwable) {
                             numOfFailedBroadcasts++;
                             if (!stopped) {
-                                log.info("Broadcast to " + nodeAddress + " failed.\n\t" +
+                                log.debug("Broadcast to " + nodeAddress + " failed.\n\t" +
                                         "ErrorMessage=" + throwable.getMessage());
                                 if (numOfCompletedBroadcasts + numOfFailedBroadcasts == numOfPeers)
                                     onFault("stopped at onFailure: " + errorMessage);
@@ -241,7 +241,7 @@ public class BroadcastHandler implements PeerManager.Listener {
         if (logWarning)
             log.warn(errorMessage);
         else
-            log.trace(errorMessage);
+            log.debug(errorMessage);
 
         if (listener != null)
             listener.onBroadcastFailed(errorMessage);

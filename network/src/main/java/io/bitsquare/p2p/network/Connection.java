@@ -174,7 +174,7 @@ public class Connection implements MessageListener {
         if (!stopped) {
             if (!isCapabilityRequired(message) || isCapabilitySupported(message)) {
                 try {
-                    log.info("sendMessage message=" + Utilities.toTruncatedString(message));
+                    log.error("sendMessage message=" + Utilities.toTruncatedString(message));
                     Log.traceCall();
 
                     // Throttle outbound messages
@@ -201,13 +201,13 @@ public class Connection implements MessageListener {
                     } else if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                         setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
-                        log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                        log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Sending direct message to peer" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
                                 peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
                     } else {
-                        log.info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                        log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
                                 peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
@@ -370,7 +370,7 @@ public class Connection implements MessageListener {
 
         String peersNodeAddress = getPeersNodeAddressOptional().isPresent() ? getPeersNodeAddressOptional().get().getFullAddress() : "";
         if (this instanceof InboundConnection) {
-            log.info("\n\n############################################################\n" +
+            log.debug("\n\n############################################################\n" +
                     "We got the peers node address set.\n" +
                     "peersNodeAddress= " + peersNodeAddress +
                     "\nconnection.uid=" + getUid() +
@@ -435,7 +435,7 @@ public class Connection implements MessageListener {
         Log.traceCall(this.toString());
         if (!stopped) {
             String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
-            log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+            log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                     "ShutDown connection:"
                     + "\npeersNodeAddress=" + peersNodeAddress
                     + "\ncloseConnectionReason=" + closeConnectionReason
@@ -749,7 +749,7 @@ public class Connection implements MessageListener {
                         } else if (rawInputObject instanceof Message) {
                             // We want to log all incoming messages (except Pong and RefreshTTLMessage) 
                             // so we log before the data type checks
-                            log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
+                            log.error("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
                             log.debug("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
                                             "Received object (truncated)={} / size={}"
@@ -836,7 +836,7 @@ public class Connection implements MessageListener {
 
                         if (message instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down
-                            log.info("CloseConnectionMessage received. Reason={}\n\t" +
+                            log.debug("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", ((CloseConnectionMessage) message).reason, connection);
                             stop();
                             if (CloseConnectionReason.PEER_BANNED.name().equals(((CloseConnectionMessage) message).reason)) {

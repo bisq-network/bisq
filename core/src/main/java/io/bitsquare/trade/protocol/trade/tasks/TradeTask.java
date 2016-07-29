@@ -64,7 +64,7 @@ public abstract class TradeTask extends Task<Trade> {
         if (processModel.getTradeMessage() instanceof MailboxMessage) {
             DecryptedMsgWithPubKey mailboxMessage = trade.getMailboxMessage();
             if (mailboxMessage != null && mailboxMessage.message.equals(processModel.getTradeMessage())) {
-                log.info("Remove mailboxMessage from P2P network. mailboxMessage = " + mailboxMessage);
+                log.debug("Remove mailboxMessage from P2P network. mailboxMessage = " + mailboxMessage);
                 processModel.getP2PService().removeEntryFromMailbox(mailboxMessage);
                 trade.setMailboxMessage(null);
             }

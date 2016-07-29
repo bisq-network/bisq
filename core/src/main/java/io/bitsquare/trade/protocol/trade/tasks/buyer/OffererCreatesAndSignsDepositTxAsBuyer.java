@@ -46,7 +46,7 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
             Coin buyerInputAmount = FeePolicy.getSecurityDeposit().add(FeePolicy.getFixedTxFeeForTrades());
             Coin msOutputAmount = buyerInputAmount.add(FeePolicy.getSecurityDeposit()).add(trade.getTradeAmount());
 
-            log.info("\n\n------------------------------------------------------------\n"
+            log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"
                     + trade.getContractAsJson()
                     + "\n------------------------------------------------------------\n");

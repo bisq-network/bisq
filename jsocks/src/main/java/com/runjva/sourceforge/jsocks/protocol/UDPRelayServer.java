@@ -115,8 +115,8 @@ class UDPRelayServer implements Runnable {
         remote_sock.setSoTimeout(iddleTimeout);
         client_sock.setSoTimeout(iddleTimeout);
 
-        log.info("Starting UDP relay server on {}:{}", relayIP, relayPort);
-        log.info("Remote socket {}:{}", remote_sock.getLocalAddress(),
+        log.debug("Starting UDP relay server on {}:{}", relayIP, relayPort);
+        log.debug("Remote socket {}:{}", remote_sock.getLocalAddress(),
                 remote_sock.getLocalPort());
 
         pipe_thread1 = new Thread(this, "pipe1");
@@ -151,7 +151,7 @@ class UDPRelayServer implements Runnable {
         } catch (final IOException ioe) {
         } finally {
             abort();
-            log.info("UDP Pipe thread " + Thread.currentThread().getName()
+            log.debug("UDP Pipe thread " + Thread.currentThread().getName()
                     + " stopped.");
         }
 
@@ -164,7 +164,7 @@ class UDPRelayServer implements Runnable {
             return;
         }
 
-        log.info("Aborting UDP Relay Server");
+        log.debug("Aborting UDP Relay Server");
 
         remote_sock.close();
         client_sock.close();
@@ -201,7 +201,7 @@ class UDPRelayServer implements Runnable {
                 }
 
             } catch (final UnknownHostException uhe) {
-                log.info("Dropping datagram for unknown host");
+                log.debug("Dropping datagram for unknown host");
             } catch (final InterruptedIOException iioe) {
                 // log("Interrupted: "+iioe);
                 // If we were interrupted by other thread.

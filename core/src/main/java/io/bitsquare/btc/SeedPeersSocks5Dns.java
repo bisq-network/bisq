@@ -145,7 +145,7 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
             InetAddress addrResolved = proxySocket.getInetAddress();
             proxySocket.close();
             if( addrResolved != null ) {
-                log.info("Resolved " + addr.getHostString() + " to " + addrResolved.getHostAddress() );
+                log.debug("Resolved " + addr.getHostString() + " to " + addrResolved.getHostAddress());
                 return new InetSocketAddress(addrResolved, addr.getPort() );
             }
             else {

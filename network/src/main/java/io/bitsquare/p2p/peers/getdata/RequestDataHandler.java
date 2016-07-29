@@ -94,7 +94,7 @@ public class RequestDataHandler implements MessageListener {
                             if (!stopped) {
                                 String errorMessage = "A timeout occurred at sending getDataRequest:" + getDataRequest +
                                         " on nodeAddress:" + nodeAddress;
-                                log.info(errorMessage + " / RequestDataHandler=" + RequestDataHandler.this);
+                                log.debug(errorMessage + " / RequestDataHandler=" + RequestDataHandler.this);
                                 handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                             } else {
                                 log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
@@ -104,7 +104,7 @@ public class RequestDataHandler implements MessageListener {
                         TIME_OUT_SEC);
             }
 
-            log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
+            log.debug("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
@@ -126,7 +126,7 @@ public class RequestDataHandler implements MessageListener {
                                 " failed. That is expected if the peer is offline.\n\t" +
                                 "getDataRequest=" + getDataRequest + "." +
                                 "\n\tException=" + throwable.getMessage();
-                        log.info(errorMessage);
+                        log.debug(errorMessage);
                         handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call. " +
@@ -161,7 +161,7 @@ public class RequestDataHandler implements MessageListener {
                 });
                 StringBuilder sb = new StringBuilder("Received data size: ").append(getDataResponse.dataSet.size()).append(", data items: ");
                 payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getValue().size()).append("items of ").append(e.getKey()).append("; "));
-                log.info(sb.toString());
+                log.debug(sb.toString());
 
                 if (getDataResponse.requestNonce == nonce) {
                     stopTimeoutTimer();

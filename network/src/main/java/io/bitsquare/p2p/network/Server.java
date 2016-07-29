@@ -39,13 +39,13 @@ class Server implements Runnable {
             Thread.currentThread().setName("Server-" + serverSocket.getLocalPort());
             try {
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
-                    log.info("Ready to accept new clients on port " + serverSocket.getLocalPort());
+                    log.debug("Ready to accept new clients on port " + serverSocket.getLocalPort());
                     final Socket socket = serverSocket.accept();
                     if (!stopped && !Thread.currentThread().isInterrupted()) {
-                        log.info("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
+                        log.debug("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
                         InboundConnection connection = new InboundConnection(socket, messageListener, connectionListener);
 
-                        log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                        log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "Server created new inbound connection:"
                                 + "\nlocalPort/port=" + serverSocket.getLocalPort()
                                 + "/" + socket.getPort()
@@ -78,12 +78,12 @@ class Server implements Runnable {
             try {
                 serverSocket.close();
             } catch (SocketException e) {
-                log.warn("SocketException at shutdown might be expected " + e.getMessage());
+                log.debug("SocketException at shutdown might be expected " + e.getMessage());
             } catch (IOException e) {
                 log.error("Exception at shutdown. " + e.getMessage());
                 e.printStackTrace();
             } finally {
-                log.info("Server shutdown complete");
+                log.debug("Server shutdown complete");
             }
         } else {
             log.warn("stopped already called ast shutdown");

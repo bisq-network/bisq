@@ -257,7 +257,7 @@ public class SOCKS {
     // /////////////////
 
     static void inform(String s) {
-        log.info(s);
+        log.debug(s);
     }
 
     static void exit(String msg) {

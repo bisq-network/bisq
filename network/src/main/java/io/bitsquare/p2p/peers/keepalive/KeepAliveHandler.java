@@ -100,7 +100,7 @@ class KeepAliveHandler implements MessageListener {
                         String errorMessage = "Sending ping to " + connection +
                                 " failed. That is expected if the peer is offline.\n\tping=" + ping +
                                 ".\n\tException=" + throwable.getMessage();
-                        log.info(errorMessage);
+                        log.debug(errorMessage);
                         cleanup();
                         //peerManager.shutDownConnection(connection, CloseConnectionReason.SEND_MSG_FAILURE);
                         peerManager.handleConnectionFault(connection);

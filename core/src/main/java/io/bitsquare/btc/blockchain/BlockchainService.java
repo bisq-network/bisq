@@ -38,7 +38,7 @@ public class BlockchainService {
             Futures.addCallback(future, new FutureCallback<Coin>() {
                 public void onSuccess(Coin fee) {
                     if (!resultFuture.isDone()) {
-                        log.info("Request fee from providers done after {} ms.", (System.currentTimeMillis() - startTime));
+                        log.debug("Request fee from providers done after {} ms.", (System.currentTimeMillis() - startTime));
                         resultFuture.set(fee);
                     }
                 }

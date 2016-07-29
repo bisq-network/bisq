@@ -446,7 +446,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         DecryptedMsgWithPubKey decryptedMsgWithPubKey = optionalEncryptionService.get().decryptAndVerify(
                                 prefixedSealedAndSignedMessage.sealedAndSigned);
 
-                        log.info("\n\nDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n" +
+                        log.debug("\n\nDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n" +
                                 "Decrypted SealedAndSignedMessage:\ndecryptedMsgWithPubKey={}"
                                 + "\nDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n", decryptedMsgWithPubKey);
                         if (connection.getPeersNodeAddressOptional().isPresent())
@@ -455,12 +455,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         else
                             log.error("peersNodeAddress is not available at onMessage.");
                     } else {
-                        log.info("Wrong receiverAddressMaskHash. The message is not intended for us.");
+                        log.debug("Wrong receiverAddressMaskHash. The message is not intended for us.");
                     }
                 } catch (CryptoException e) {
-                    log.info(message.toString());
-                    log.info(e.toString());
-                    log.info("Decryption of prefixedSealedAndSignedMessage.sealedAndSigned failed. " +
+                    log.debug(message.toString());
+                    log.debug(e.toString());
+                    log.debug("Decryption of prefixedSealedAndSignedMessage.sealedAndSigned failed. " +
                             "That is expected if the message is not intended for us.");
                 }
             }
@@ -505,7 +505,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(optionalEncryptionService.isPresent(), "EncryptionService not set. Seems that is called on a seed node which must not happen.");
         checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at doSendEncryptedDirectMessage");
         try {
-            log.info("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
+            log.debug("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
                     "Encrypt message:\nmessage={}"
                     + "\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n", message);
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(networkNode.getNodeAddress(),
@@ -564,12 +564,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 "decryptedMsgWithPubKey.message=", decryptedMsgWithPubKey.message);
                     }
                 } catch (CryptoException e) {
-                    log.info(e.toString());
-                    log.info("Decryption of prefixedSealedAndSignedMessage.sealedAndSigned failed. " +
+                    log.debug(e.toString());
+                    log.debug("Decryption of prefixedSealedAndSignedMessage.sealedAndSigned failed. " +
                             "That is expected if the message is not intended for us.");
                 }
             } else {
-                log.info("Wrong blurredAddressHash. The message is not intended for us.");
+                log.debug("Wrong blurredAddressHash. The message is not intended for us.");
             }
         }
     }
@@ -592,7 +592,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (isBootstrapped()) {
             if (!networkNode.getAllConnections().isEmpty()) {
                 try {
-                    log.info("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
+                    log.debug("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
                             "Encrypt message:\nmessage={}"
                             + "\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n", message);
                     PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
@@ -611,7 +611,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         public void onFailure(@NotNull Throwable throwable) {
                             log.trace("SendEncryptedMailboxMessage onFailure");
                             log.debug(throwable.toString());
-                            log.info("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
+                            log.debug("We cannot send message to peer. Peer might be offline. We will store message in mailbox.");
                             log.trace("create MailboxEntry with peerAddress " + peersNodeAddress);
                             PublicKey receiverStoragePublicKey = peersPubKeyRing.getSignaturePubKey();
                             addMailboxData(new MailboxStoragePayload(prefixedSealedAndSignedMessage,

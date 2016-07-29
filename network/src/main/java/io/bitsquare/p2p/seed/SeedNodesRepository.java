@@ -87,7 +87,7 @@ public class SeedNodesRepository {
                 .filter(e -> String.valueOf(e.port).endsWith(networkIdAsString))
                 .filter(e -> !e.equals(nodeAddressToExclude))
                 .collect(Collectors.toSet());
-        log.info("SeedNodeAddresses (useLocalhost={}) for networkId {}:\nnetworkId={}", useLocalhost, networkId, filtered);
+        log.debug("SeedNodeAddresses (useLocalhost={}) for networkId {}:\nnetworkId={}", useLocalhost, networkId, filtered);
         return filtered;
     }
 

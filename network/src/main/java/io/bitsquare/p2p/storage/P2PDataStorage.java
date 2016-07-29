@@ -99,7 +99,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                         ByteArray hashOfPayload = entry.getKey();
                         ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
                         toRemoveSet.add(protectedStorageEntry);
-                        log.info("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
+                        log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
                         map.remove(hashOfPayload);
                     });
 
@@ -161,7 +161,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                 ByteArray hashOfPayload = getHashAsByteArray(expirablePayload);
                                 boolean containsKey = map.containsKey(hashOfPayload);
                                 if (containsKey) {
-                                    log.info("We remove the data as the data owner got disconnected with " +
+                                    log.debug("We remove the data as the data owner got disconnected with " +
                                             "closeConnectionReason=" + closeConnectionReason);
 
                                     Log.logIfStressTests("We remove the data as the data owner got disconnected with " +
@@ -596,7 +596,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             });
             sb.append("\n------------------------------------------------------------\n");
             log.debug(sb.toString());
-            log.info("Data set " + info + " operation: size=" + map.values().size());
+            log.debug("Data set " + info + " operation: size=" + map.values().size());
         }
     }
 

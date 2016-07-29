@@ -304,7 +304,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             if (depositTx != null) {
                 doOpenDispute(isSupportTicket, getTrade().getDepositTx());
             } else {
-                log.warn("Trade.depositTx is null. We try to find the tx in our wallet.");
+                log.info("Trade.depositTx is null. We try to find the tx in our wallet.");
                 List<Transaction> candidates = new ArrayList<>();
                 List<Transaction> transactions = walletService.getWallet().getRecentTransactions(100, true);
                 transactions.stream().forEach(transaction -> {

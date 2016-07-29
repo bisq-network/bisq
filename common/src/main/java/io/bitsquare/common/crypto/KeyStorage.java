@@ -34,6 +34,7 @@ import java.security.interfaces.DSAParams;
 import java.security.interfaces.DSAPrivateKey;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.*;
+import java.util.Date;
 
 // TODO: use a password protection for key storage
 public class KeyStorage {
@@ -124,7 +125,7 @@ public class KeyStorage {
                 throw new RuntimeException("Unsupported key algo" + keyEntry.getAlgorithm());
             }
 
-            //log.info("load completed in {} msec", System.currentTimeMillis() - now);
+            log.debug("load completed in {} msec", System.currentTimeMillis() - new Date().getTime());
             return new KeyPair(publicKey, privateKey);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
             e.printStackTrace();

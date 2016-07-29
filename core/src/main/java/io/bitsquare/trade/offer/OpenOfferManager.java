@@ -152,7 +152,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         stopPeriodicRepublishOffersTimer();
         stopRetryRepublishOffersTimer();
 
-        log.info("remove all open offers at shutDown");
+        log.debug("remove all open offers at shutDown");
         // we remove own offers from offerbook when we go offline
         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
 
@@ -407,12 +407,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
                             @Override
                             public void onFault() {
-                                log.info("Sending OfferAvailabilityResponse failed.");
+                                log.debug("Sending OfferAvailabilityResponse failed.");
                             }
                         });
             } catch (Throwable t) {
                 t.printStackTrace();
-                log.info("Exception at handleRequestIsOfferAvailableMessage " + t.getMessage());
+                log.debug("Exception at handleRequestIsOfferAvailableMessage " + t.getMessage());
             }
         } else {
             log.debug("We have stopped already. We ignore that handleOfferAvailabilityRequest call.");
@@ -532,7 +532,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void restart() {
-        log.info("Restart after connection loss");
+        log.debug("Restart after connection loss");
         if (retryRepublishOffersTimer == null)
             retryRepublishOffersTimer = UserThread.runAfter(() -> {
                 stopped = false;

@@ -89,9 +89,9 @@ class PeerExchangeHandler implements MessageListener {
                     timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                                 if (!stopped) {
                                     String errorMessage = "A timeout occurred at sending getPeersRequest:" + getPeersRequest + " for nodeAddress:" + nodeAddress;
-                                    log.info(errorMessage + " / PeerExchangeHandler=" +
+                                    log.debug(errorMessage + " / PeerExchangeHandler=" +
                                             PeerExchangeHandler.this);
-                                    log.info("timeoutTimer called on " + this);
+                                    log.debug("timeoutTimer called on " + this);
                                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, nodeAddress);
                                 } else {
                                     log.trace("We have stopped that handler already. We ignore that timeoutTimer.run call.");
@@ -125,7 +125,7 @@ class PeerExchangeHandler implements MessageListener {
                             String errorMessage = "Sending getPeersRequest to " + nodeAddress +
                                     " failed. That is expected if the peer is offline.\n\tgetPeersRequest=" + getPeersRequest +
                                     ".\n\tException=" + throwable.getMessage();
-                            log.info(errorMessage);
+                            log.debug(errorMessage);
                             handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, nodeAddress);
                         } else {
                             log.trace("We have stopped that handler already. We ignore that sendGetPeersRequest.onFailure call.");

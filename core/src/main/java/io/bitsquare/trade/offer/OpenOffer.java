@@ -114,7 +114,7 @@ public final class OpenOffer implements Tradable {
         stopTimeout();
 
         timeoutTimer = UserThread.runAfter(() -> {
-            log.info("Timeout for resettin State.RESERVED reached");
+            log.debug("Timeout for resettin State.RESERVED reached");
             if (state == State.RESERVED)
                 setState(State.AVAILABLE);
         }, TIMEOUT_SEC);

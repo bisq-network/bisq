@@ -135,7 +135,7 @@ public class OfferAvailabilityProtocol {
     private void startTimeout() {
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {
-                log.warn("Timeout reached at " + this);
+                log.debug("Timeout reached at " + this);
                 model.offer.setState(Offer.State.OFFERER_OFFLINE);
                 errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
             }, TIMEOUT_SEC);

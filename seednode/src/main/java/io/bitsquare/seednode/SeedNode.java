@@ -126,7 +126,7 @@ public class SeedNode {
 
     public void shutDown() {
         gracefulShutDown(() -> {
-            log.info("Shutdown complete");
+            log.debug("Shutdown complete");
             System.exit(0);
         });
     }
@@ -140,7 +140,7 @@ public class SeedNode {
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         injector.getInstance(WalletService.class).shutDownDone.addListener((ov, o, n) -> {
                             seedNodeModule.close(injector);
-                            log.info("Graceful shutdown completed");
+                            log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
                         injector.getInstance(WalletService.class).shutDown();
@@ -152,7 +152,7 @@ public class SeedNode {
                 UserThread.runAfter(resultHandler::handleResult, 1);
             }
         } catch (Throwable t) {
-            log.info("App shutdown failed with exception");
+            log.debug("App shutdown failed with exception");
             t.printStackTrace();
             System.exit(1);
         }

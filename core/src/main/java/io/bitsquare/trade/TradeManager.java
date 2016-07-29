@@ -280,7 +280,7 @@ public class TradeManager {
             // TODO respond
             //(RequestDepositTxInputsMessage)message.
             //  messageService.sendEncryptedMessage(peerAddress,messageWithPubKey.getMessage().);
-            log.info("We received a take offer request but don't have that offer anymore.");
+            log.debug("We received a take offer request but don't have that offer anymore.");
         }
     }
 
@@ -382,7 +382,7 @@ public class TradeManager {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
-                    log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
+                    log.debug("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
                     addTradeToClosedTrades(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
                     resultHandler.handleResult();

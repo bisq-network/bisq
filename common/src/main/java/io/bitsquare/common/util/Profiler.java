@@ -24,7 +24,7 @@ public class Profiler {
     private static final Logger log = LoggerFactory.getLogger(Profiler.class);
 
     public static void printSystemLoad(Logger log) {
-        log.warn(printSystemLoadString());
+        log.debug(printSystemLoadString());
     }
 
     public static String printSystemLoadString() {

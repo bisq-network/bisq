@@ -277,13 +277,13 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 handlerMap.remove(nodeAddress);
 
                                 if (!remainingNodeAddresses.isEmpty()) {
-                                    log.info("There are remaining nodes available for requesting data. " +
+                                    log.debug("There are remaining nodes available for requesting data. " +
                                             "We will try requestDataFromPeers again.");
                                     NodeAddress nextCandidate = remainingNodeAddresses.get(0);
                                     remainingNodeAddresses.remove(nextCandidate);
                                     requestData(nextCandidate, remainingNodeAddresses);
                                 } else {
-                                    log.info("There is no remaining node available for requesting data. " +
+                                    log.debug("There is no remaining node available for requesting data. " +
                                             "That is expected if no other node is online.\n\t" +
                                             "We will try to use reported peers (if no available we use persisted peers) " +
                                             "and try again to request data from our seed nodes after a random pause.");
