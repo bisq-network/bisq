@@ -161,7 +161,7 @@ public class RequestDataHandler implements MessageListener {
                 });
                 StringBuilder sb = new StringBuilder("Received data size: ").append(getDataResponse.dataSet.size()).append(", data items: ");
                 payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getValue().size()).append("items of ").append(e.getKey()).append("; "));
-                log.debug(sb.toString());
+                log.info(sb.toString());
 
                 if (getDataResponse.requestNonce == nonce) {
                     stopTimeoutTimer();

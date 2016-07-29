@@ -748,7 +748,7 @@ public class Connection implements MessageListener {
                         } else if (rawInputObject instanceof Message) {
                             // We want to log all incoming messages (except Pong and RefreshTTLMessage) 
                             // so we log before the data type checks
-                            //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
+                            log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
                             log.debug("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
                                             "Received object (truncated)={} / size={}"
@@ -764,6 +764,7 @@ public class Connection implements MessageListener {
                                     connection,
                                     size);
                             try {
+                                // Don't call toString on rawInputObject
                                 log.error("rawInputObject.className=" + rawInputObject.getClass().getName());
                             } catch (Throwable ignore) {
                             }
