@@ -25,7 +25,6 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.AddressTextField;
@@ -278,7 +277,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private void openBlockExplorer(DepositListItem item) {
         if (item.getAddressString() != null) {
             try {
-                Utilities.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
+                GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
             } catch (Exception e) {
                 log.error(e.getMessage());
                 new Popup().warning("Opening browser failed. Please check your internet " +

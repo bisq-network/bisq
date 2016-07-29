@@ -24,6 +24,7 @@ import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.user.Preferences;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -135,7 +136,7 @@ public class TxIdTextField extends AnchorPane {
     private void openBlockExplorer(String txID) {
         try {
             if (preferences != null)
-                Utilities.openWebPage(preferences.getBlockChainExplorer().txUrl + txID);
+                GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + txID);
         } catch (Exception e) {
             log.error(e.getMessage());
             new Popup().warning("Opening browser failed. Please check your internet " +

@@ -39,7 +39,6 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -53,6 +52,7 @@ import io.bitsquare.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bitsquare.gui.main.overlays.windows.TacWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
@@ -590,7 +590,7 @@ public class MainViewModel implements ViewModel {
                             .actionButtonText("Shut down")
                             .onAction(BitsquareApp.shutDownHandler::run)
                             .closeButtonText("Report bug at Github issues")
-                            .onClose(() -> Utilities.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
+                            .onClose(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
                             .show());
                 }
             }
@@ -602,7 +602,7 @@ public class MainViewModel implements ViewModel {
                     .actionButtonText("Shut down")
                     .onAction(BitsquareApp.shutDownHandler::run)
                     .closeButtonText("Report bug at Github issues")
-                    .onClose(() -> Utilities.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
+                    .onClose(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
                     .show();
         }
     }

@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.alert.Alert;
 import io.bitsquare.common.util.Tuple2;
-import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.user.Preferences;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -90,7 +90,7 @@ public class AddBridgeEntriesWindow extends Overlay<AddBridgeEntriesWindow> {
             actionButton.setOnAction(event -> save());
 
             Button urlButton = new Button("Open Tor project web page");
-            urlButton.setOnAction(event -> Utilities.openWebPage("https://bridges.torproject.org/bridges"));
+            urlButton.setOnAction(event -> GUIUtil.openWebPage("https://bridges.torproject.org/bridges"));
 
             Pane spacer = new Pane();
             HBox hBox = new HBox();

@@ -22,6 +22,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.user.Preferences;
@@ -680,7 +681,7 @@ public abstract class Overlay<T extends Overlay> {
 
         githubButton.setOnAction(event -> {
             Utilities.copyToClipboard(message);
-            Utilities.openWebPage("https://github.com/bitsquare/bitsquare/issues");
+            GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues");
         });
 
         Button mailButton = new Button("Report by email");
@@ -690,7 +691,7 @@ public abstract class Overlay<T extends Overlay> {
         gridPane.getChildren().add(mailButton);
         mailButton.setOnAction(event -> {
             Utilities.copyToClipboard(message);
-            Utilities.openMail("manfred@bitsquare.io",
+            GUIUtil.openMail("manfred@bitsquare.io",
                     "Error report",
                     "Error message:\n" + message);
         });

@@ -23,6 +23,7 @@ import com.googlecode.jcsv.writer.CSVEntryConverter;
 import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.DevFlags;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.FiatCurrency;
@@ -45,6 +46,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -194,5 +198,49 @@ public class GUIUtil {
                 return null;
             }
         };
+    }
+
+
+    public static void openWebPage(String target) {
+        String key = "warnOpenURLWhenTorEnabled";
+        final Preferences preferences = Preferences.INSTANCE;
+        if (preferences.getUseTorForHttpRequests() && preferences.showAgain(key)) {
+            new Popup<>().information("You have Tor enabled for Http requests and are going to open a web page " +
+                    "in your system web browser.\n" +
+                    "Do you want to open the web page now?\n\n" +
+                    "If you are not using the \"Tor Browser\" as your default system web browser you " +
+                    "will connect to the web page in clear net.\n\n" +
+                    "URL: \"" + target)
+                    .actionButtonText("Open the web page and don't ask again")
+                    .onAction(() -> {
+                        preferences.dontShowAgain(key, true);
+                        doOpenWebPage(target);
+                    })
+                    .closeButtonText("Copy URL and cancel")
+                    .onClose(() -> Utilities.copyToClipboard(target))
+                    .show();
+        } else {
+            doOpenWebPage(target);
+        }
+    }
+
+    private static void doOpenWebPage(String target) {
+        try {
+            Utilities.openURI(new URI(target));
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        }
+    }
+
+    public static void openMail(String to, String subject, String body) {
+        try {
+            subject = URLEncoder.encode(subject, "UTF-8").replace("+", "%20");
+            body = URLEncoder.encode(body, "UTF-8").replace("+", "%20");
+            Utilities.openURI(new URI("mailto:" + to + "?subject=" + subject + "&body=" + body));
+        } catch (IOException | URISyntaxException e) {
+            log.error("openMail failed " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

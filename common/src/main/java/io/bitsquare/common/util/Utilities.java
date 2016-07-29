@@ -33,9 +33,7 @@ import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLConnection;
-import java.net.URLEncoder;
 import java.security.Permission;
 import java.security.PermissionCollection;
 import java.util.Locale;
@@ -204,26 +202,6 @@ public class Utilities {
             // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
             if (!DesktopUtil.open(directory))
                 throw new IOException("Failed to open directory: " + directory.toString());
-        }
-    }
-
-    public static void openWebPage(String target) {
-        try {
-            openURI(new URI(target));
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-        }
-    }
-
-    public static void openMail(String to, String subject, String body) {
-        try {
-            subject = URLEncoder.encode(subject, "UTF-8").replace("+", "%20");
-            body = URLEncoder.encode(body, "UTF-8").replace("+", "%20");
-            openURI(new URI("mailto:" + to + "?subject=" + subject + "&body=" + body));
-        } catch (IOException | URISyntaxException e) {
-            log.error("openMail failed " + e.getMessage());
-            e.printStackTrace();
         }
     }
 

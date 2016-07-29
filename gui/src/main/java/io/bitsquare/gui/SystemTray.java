@@ -20,6 +20,7 @@ package io.bitsquare.gui;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.ImageUtil;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -123,7 +124,7 @@ public class SystemTray {
 
         aboutItem.addActionListener(e -> {
             try {
-                Utilities.openWebPage("https://bitsquare.io");
+                GUIUtil.openWebPage("https://bitsquare.io");
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
