@@ -48,6 +48,7 @@
         <module>headless</module>
         <module>seednode</module>
         <module>monitor</module>
+        <module>statistics</module>
         <module>jdkfix</module>
     </modules>
 

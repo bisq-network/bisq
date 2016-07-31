@@ -162,7 +162,7 @@ public class PeerManager implements ConnectionListener {
         final boolean seedNode = isSeedNode(connection);
 
         final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
-        log.info("onConnection: peer = {}{}", (addressOptional.isPresent() ? addressOptional.get().hostName : "unknown address"), seedNode ? " (SeedNode)" : "");
+        log.info("onConnection: peer = {}{}", (addressOptional.isPresent() ? addressOptional.get().hostName : "not known yet"), seedNode ? " (SeedNode)" : "");
 
         if (seedNode)
             connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -185,7 +185,7 @@ public class PeerManager implements ConnectionListener {
 
         final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
         log.info("onDisconnect: peer = {}{}", (addressOptional.isPresent() ? addressOptional.get().hostName : "not known yet"), isSeedNode(connection) ? " (SeedNode)" : "");
-        
+
         handleConnectionFault(connection);
 
         lostAllConnections = networkNode.getAllConnections().isEmpty();
