@@ -47,15 +47,15 @@ public class TradeStatisticsManager {
         this.dumpStatistics = dumpStatistics;
 
         if (dumpStatistics) {
-            this.statisticsJsonStorage.initAndGetPersistedWithFileName("trade_statistics.json");
+            this.statisticsJsonStorage.initWithFileName("trade_statistics.json");
 
-            this.fiatCurrencyListJsonStorage.initAndGetPersistedWithFileName("fiat_currency_list.json");
+            this.fiatCurrencyListJsonStorage.initWithFileName("fiat_currency_list.json");
             ArrayList<CurrencyTuple> fiatCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName()))
                     .collect(Collectors.toList()));
             fiatCurrencyListJsonStorage.queueUpForSave(new JsonString(Utilities.objectToJson(fiatCurrencyList)), 2000);
 
-            this.cryptoCurrencyListJsonStorage.initAndGetPersistedWithFileName("crypto_currency_list.json");
+            this.cryptoCurrencyListJsonStorage.initWithFileName("crypto_currency_list.json");
             ArrayList<CurrencyTuple> cryptoCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName()))
                     .collect(Collectors.toList()));

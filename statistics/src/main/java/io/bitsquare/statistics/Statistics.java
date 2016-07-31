@@ -9,12 +9,15 @@ import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.P2PServiceListener;
+import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.statistics.TradeStatisticsManager;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -33,6 +36,8 @@ public class Statistics {
     private final Injector injector;
     private final StatisticsModule statisticsModule;
     private final TradeStatisticsManager tradeStatisticsManager;
+    private final OfferBookService offerBookService;
+    private final PriceFeedService priceFeedService;
 
     private P2PService p2pService;
 
@@ -74,54 +79,22 @@ public class Statistics {
         injector = Guice.createInjector(statisticsModule);
         Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
         p2pService = injector.getInstance(P2PService.class);
-        p2pService.start(false, new P2PServiceListener() {
-            @Override
-            public void onRequestingDataCompleted() {
-            }
-
-            @Override
-            public void onNoSeedNodeAvailable() {
-
-            }
-
-            @Override
-            public void onNoPeersAvailable() {
-
-            }
-
+        p2pService.start(false, new BootstrapListener() {
             @Override
             public void onBootstrapComplete() {
-
-            }
-
-            @Override
-            public void onTorNodeReady() {
-
-            }
-
-            @Override
-            public void onHiddenServicePublished() {
-
-            }
-
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
-
             }
         });
 
         // We want to persist trade statistics so we need to instantiate the tradeStatisticsManager
         tradeStatisticsManager = injector.getInstance(TradeStatisticsManager.class);
+        offerBookService = injector.getInstance(OfferBookService.class);
+        priceFeedService = injector.getInstance(PriceFeedService.class);
+
+        // We need the price feed for market based offers
+        priceFeedService.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
+        priceFeedService.setType(PriceFeedService.Type.LAST);
+        priceFeedService.init(price -> log.debug("price " + price),
+                (errorMessage, throwable) -> log.warn(throwable.getMessage()));
     }
 
     public void shutDown() {

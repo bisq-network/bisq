@@ -13,8 +13,8 @@ import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.trade.statistics.TradeStatisticsManager;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -74,49 +74,9 @@ public class SeedNode {
         injector = Guice.createInjector(seedNodeModule);
         Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
         p2pService = injector.getInstance(P2PService.class);
-        p2pService.start(false, new P2PServiceListener() {
-            @Override
-            public void onRequestingDataCompleted() {
-            }
-
-            @Override
-            public void onNoSeedNodeAvailable() {
-
-            }
-
-            @Override
-            public void onNoPeersAvailable() {
-
-            }
-
+        p2pService.start(false, new BootstrapListener() {
             @Override
             public void onBootstrapComplete() {
-
-            }
-
-            @Override
-            public void onTorNodeReady() {
-
-            }
-
-            @Override
-            public void onHiddenServicePublished() {
-
-            }
-
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
-
             }
         });
 
