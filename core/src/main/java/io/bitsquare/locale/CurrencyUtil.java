@@ -78,6 +78,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
+        result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("XEM", "NEM"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
@@ -144,6 +145,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
+        result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
