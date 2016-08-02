@@ -71,6 +71,7 @@ public class GetDataRequestHandler {
         Log.traceCall(getDataRequest + "\n\tconnection=" + connection);
 
         final HashSet<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
+        final HashSet<StoragePayload> storagePayloadSet = new HashSet<>();
         for (ProtectedStorageEntry protectedStorageEntry : dataStorage.getMap().values()) {
             final StoragePayload storagePayload = protectedStorageEntry.getStoragePayload();
             boolean doAdd = false;
@@ -99,8 +100,12 @@ public class GetDataRequestHandler {
             } else {
                 doAdd = true;
             }
-            if (doAdd)
-                filteredDataSet.add(protectedStorageEntry);
+            if (doAdd) {
+                // We have TradeStatistic data of both traders but we only send 1 item, 
+                // so we use storagePayloadSet as container to check
+                if (storagePayloadSet.add(storagePayload))
+                    filteredDataSet.add(protectedStorageEntry);
+            }
         }
 
         GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet, getDataRequest.getNonce());
