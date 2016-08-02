@@ -5,6 +5,8 @@ This guide will walk you through the process of building Bitsquare from source.
 
 > _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bitsquare/bitsquare/releases), where you'll find installers for Windows, Linux and Mac OS X._
 
+There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, Bitsquare) on Linux in that directory (install_on_unix.sh, install_on_unix_fin.sh).
+
 System requirements
 -------------
 
@@ -27,7 +29,7 @@ To install the Oracle JDK use:
  
     $ sudo add-apt-repository ppa:webupd8team/java
     $ sudo apt-get update
-    $ sudo apt-get -y oracle-java8-installer install
+    $ sudo apt-get -y install oracle-java8-installer
 
 Check if $JAVA_HOME is set
 
@@ -105,6 +107,10 @@ You will get an error when building Bitsquare package if you don't have these.
     $ unzip jce_policy-8.zip
     $ sudo cp UnlimitedJCEPolicyJDK8/US_export_policy.jar $JAVA_HOME/jre/lib/security/US_export_policy.jar
     $ sudo cp UnlimitedJCEPolicyJDK8/local_policy.jar $JAVA_HOME/jre/lib/security/local_policy.jar
+    $ sudo chmod 777 /usr/lib/jvm/java-8-oracle/jre/lib/security/US_export_policy.jar
+    $ sudo chmod 777 /usr/lib/jvm/java-8-oracle/jre/lib/security/local_policy.jar
+    $ sudo rm -r UnlimitedJCEPolicyJDK8
+    $ sudo rm jce_policy-8.zip
 
 Build Bitsquare
 -----------------
