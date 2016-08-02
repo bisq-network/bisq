@@ -18,6 +18,7 @@ import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bitsquare.p2p.storage.P2PDataStorage;
+import io.bitsquare.p2p.storage.payload.LazyProcessedPayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -170,10 +172,29 @@ public class RequestDataHandler implements MessageListener {
                                     "at that moment");
 
                     final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
-                    getDataResponse.dataSet.stream().forEach(protectedStorageEntry -> {
-                        // We dont broadcast here as we are only connected to the seed node and would be pointless
-                        dataStorage.add(protectedStorageEntry, sender, null, false, false);
-                    });
+
+                    // The non LazyProcessedPayload items we process directly (mainly Offers)
+                    getDataResponse.dataSet.stream()
+                            .filter(e -> !(e.getStoragePayload() instanceof LazyProcessedPayload))
+                            .forEach(protectedStorageEntry -> {
+                                // We dont broadcast here as we are only connected to the seed node and would be pointless
+                                dataStorage.add(protectedStorageEntry, sender, null, false, false);
+                            });
+
+                    // The LazyProcessedPayload items we process delayed (TradeStatistics)
+                    final long[] i = {0};
+                    getDataResponse.dataSet.stream()
+                            .filter(e -> e.getStoragePayload() instanceof LazyProcessedPayload)
+                            .forEach(protectedStorageEntry -> {
+                                i[0] += 100;
+                                // We don't want the UI get stuck when processing 100s of entries.
+                                // The dataStorage.add call is a bit expensive as sig checks is done there
+                                UserThread.runAfter(() -> {
+                                            // We dont broadcast here as we are only connected to the seed node and would be pointless
+                                            dataStorage.add(protectedStorageEntry, sender, null, false, false);
+                                        },
+                                        i[0], TimeUnit.MILLISECONDS);
+                            });
                     cleanup();
                     listener.onComplete();
                 } else {
