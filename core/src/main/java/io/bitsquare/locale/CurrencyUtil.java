@@ -132,6 +132,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
         result.add(new CryptoCurrency("DAO", "DAO", true));
         result.add(new CryptoCurrency("CMT", "Comet"));
+        result.add(new CryptoCurrency("SYNQ", "BitSYNQ"));
         result.add(new CryptoCurrency("ETHC", "EtherClassic (deprecated ticker symbol)"));
         return result;
     }
