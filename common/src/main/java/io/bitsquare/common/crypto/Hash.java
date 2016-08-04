@@ -31,21 +31,23 @@ import java.security.NoSuchProviderException;
 
 public class Hash {
     private static final Logger log = LoggerFactory.getLogger(Hash.class);
+    private static MessageDigest digestSha256;
 
     /**
      * @param data Data as byte array
      * @return Hash of data
      */
     public static byte[] getHash(byte[] data) {
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance("SHA-256", "BC");
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
-            log.error("Could not create MessageDigest for hash. " + e.getMessage());
-            throw new RuntimeException(e);
+        if ( digestSha256 == null) {
+            try {
+                digestSha256 = MessageDigest.getInstance("SHA-256", "BC");
+            } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+                log.error("Could not create MessageDigest for hash. " + e.getMessage());
+                throw new RuntimeException(e);
+            }
         }
-        digest.update(data, 0, data.length);
-        return digest.digest();
+        digestSha256.update(data, 0, data.length);
+        return digestSha256.digest();
     }
 
     /**
