@@ -711,16 +711,16 @@ public class Connection implements MessageListener {
                         Thread.currentThread().setName("InputHandler-" + sharedModel.connection.getPeersNodeAddressOptional().get().getFullAddress());
                         threadNameSet = true;
                     }
-
-                    if (objectInputStream.available() < 0) {
-                        log.warn("Shutdown because objectInputStream.available() < 0. objectInputStream.available()=" + objectInputStream.available());
-                        sharedModel.shutDown(CloseConnectionReason.TERMINATED);
-                        return;
-                    }
-
-                    Connection connection = sharedModel.connection;
-                    log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
                     try {
+                        if (objectInputStream.available() < 0) {
+                            log.warn("Shutdown because objectInputStream.available() < 0. objectInputStream.available()=" + objectInputStream.available());
+                            sharedModel.shutDown(CloseConnectionReason.TERMINATED);
+                            return;
+                        }
+
+                        Connection connection = sharedModel.connection;
+                        log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
+                    
                         Object rawInputObject = objectInputStream.readObject();
 
                         // Throttle inbound messages
