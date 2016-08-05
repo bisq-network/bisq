@@ -79,7 +79,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String logLevel;
     private BitcoinNetwork bitcoinNetwork;
     private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, useTorForHttp,
-            myAddress, banList, dumpStatistics, socks5ProxyBtcAddress, socks5ProxyHttpAddress;
+            myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress, socks5ProxyHttpAddress;
 
     public BitsquareEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -141,7 +141,10 @@ public class BitsquareEnvironment extends StandardEnvironment {
         dumpStatistics = commandLineProperties.containsProperty(CoreOptionKeys.DUMP_STATISTICS) ?
                 (String) commandLineProperties.getProperty(CoreOptionKeys.DUMP_STATISTICS) :
                 "";
-
+        maxMemory = commandLineProperties.containsProperty(CoreOptionKeys.MAX_MEMORY) ?
+                (String) commandLineProperties.getProperty(CoreOptionKeys.MAX_MEMORY) :
+                "";
+        
         seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
                 "";
@@ -239,6 +242,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
                 setProperty(CoreOptionKeys.DUMP_STATISTICS, dumpStatistics);
                 setProperty(CoreOptionKeys.APP_NAME_KEY, appName);
+                setProperty(CoreOptionKeys.MAX_MEMORY, maxMemory);
                 setProperty(CoreOptionKeys.USER_DATA_DIR_KEY, userDataDir);
 
                 setProperty(BtcOptionKeys.BTC_SEED_NODES, btcSeedNodes);

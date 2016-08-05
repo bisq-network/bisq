@@ -6,4 +6,5 @@ public class CoreOptionKeys {
     public static final String USER_DATA_DIR_KEY = "userDataDir";
     public static final String APP_NAME_KEY = "appName";
     public static final String APP_DATA_DIR_KEY = "appDataDir";
+    public static final String MAX_MEMORY = "maxMemory";
 }

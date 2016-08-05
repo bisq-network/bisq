@@ -39,10 +39,11 @@ import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class StatisticsMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(StatisticsMain.class);
-    private static final long MAX_MEMORY_MB = 600;
+    private static long MAX_MEMORY_MB_DEFAULT = 600;
     private static final long CHECK_MEMORY_PERIOD_SEC = 10 * 60;
     private Statistics statistics;
     private volatile boolean stopped;
+    private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
 
     public static void main(String[] args) throws Exception {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
@@ -89,11 +90,20 @@ public class StatisticsMain extends BitsquareExecutable {
         Statistics.setEnvironment(environment);
         UserThread.execute(() -> statistics = new Statistics());
 
+        String maxMemoryOption = environment.getProperty(CoreOptionKeys.MAX_MEMORY);
+        if (maxMemoryOption != null && !maxMemoryOption.isEmpty()) {
+            try {
+                maxMemory = Integer.parseInt(maxMemoryOption);
+            } catch (Throwable t) {
+                log.error(t.getMessage());
+            }
+        }
+        
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad(log);
             long usedMemoryInMB = Profiler.getUsedMemoryInMB();
             if (!stopped) {
-                if (usedMemoryInMB > (MAX_MEMORY_MB - 100)) {
+                if (usedMemoryInMB > (maxMemory - 100)) {
                     log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                     "We are over our memory warn limit and call the GC. usedMemoryInMB: {}" +
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
@@ -103,7 +113,7 @@ public class StatisticsMain extends BitsquareExecutable {
                     Profiler.printSystemLoad(log);
                 }
 
-                if (usedMemoryInMB > MAX_MEMORY_MB) {
+                if (usedMemoryInMB > maxMemory) {
                     stopped = true;
                     statistics.gracefulShutDown(() -> {
                         try {
