@@ -113,7 +113,7 @@ public final class TradeStatistics implements Priority2StoragePayload, Capabilit
 
         if (direction != null && that.direction != null && direction.ordinal() != that.direction.ordinal())
             return false;
-        else if ((direction == null && that.direction != null) || direction != null)
+        else if ((direction == null && that.direction != null) || (direction != null && that.direction == null))
             return false;
         
         if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)

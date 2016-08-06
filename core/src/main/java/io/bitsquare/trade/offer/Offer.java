@@ -505,7 +505,7 @@ public final class Offer implements Priority1StoragePayload, RequiresOwnerIsOnli
 
         if (direction != null && that.direction != null && direction.ordinal() != that.direction.ordinal())
             return false;
-        else if ((direction == null && that.direction != null) || direction != null)
+        else if ((direction == null && that.direction != null) || (direction != null && that.direction == null))
             return false;
 
         if (currencyCode != null ? !currencyCode.equals(that.currencyCode) : that.currencyCode != null) return false;

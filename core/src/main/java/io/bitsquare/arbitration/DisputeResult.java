@@ -253,17 +253,17 @@ public final class DisputeResult implements Payload {
 
         if (disputeFeePolicy != null && that.disputeFeePolicy != null && disputeFeePolicy.ordinal() != that.disputeFeePolicy.ordinal())
             return false;
-        else if ((disputeFeePolicy == null && that.disputeFeePolicy != null) || disputeFeePolicy != null)
+        else if ((disputeFeePolicy == null && that.disputeFeePolicy != null) || (disputeFeePolicy != null && that.disputeFeePolicy == null))
             return false;
 
         if (reason != null && that.reason != null && reason.ordinal() != that.reason.ordinal())
             return false;
-        else if ((reason == null && that.reason != null) || reason != null)
+        else if ((reason == null && that.reason != null) || (reason != null && that.reason == null))
             return false;
 
         if (winner != null && that.winner != null && winner.ordinal() != that.winner.ordinal())
             return false;
-        else if ((winner == null && that.winner != null) || winner != null)
+        else if ((winner == null && that.winner != null) || (winner != null && that.winner == null))
             return false;
         
         if (summaryNotes != null ? !summaryNotes.equals(that.summaryNotes) : that.summaryNotes != null) return false;
