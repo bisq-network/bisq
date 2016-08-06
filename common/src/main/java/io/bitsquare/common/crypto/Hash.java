@@ -32,14 +32,16 @@ import java.security.NoSuchProviderException;
 public class Hash {
     private static final Logger log = LoggerFactory.getLogger(Hash.class);
 
+    private static MessageDigest digest = null;
+
     /**
      * @param data Data as byte array
      * @return Hash of data
      */
     public static byte[] getHash(byte[] data) {
-        MessageDigest digest;
         try {
-            digest = MessageDigest.getInstance("SHA-256", "BC");
+            if (digest == null)
+                digest = MessageDigest.getInstance("SHA-256", "BC");
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             log.error("Could not create MessageDigest for hash. " + e.getMessage());
             throw new RuntimeException(e);
