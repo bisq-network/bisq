@@ -42,7 +42,7 @@ public final class CryptoCurrencyAccountContractData extends PaymentAccountContr
 
     @Override
     public String getPaymentDetails() {
-        return "Receivers cryptocurrency address: " + address;
+        return "Receivers altcoin address: " + address;
     }
 
     @Override
