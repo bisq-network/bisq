@@ -28,8 +28,8 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.storage.payload.Priority1StoragePayload;
 import io.bitsquare.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
-import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.exceptions.MarketPriceNotAvailableException;
 import io.bitsquare.trade.exceptions.TradePriceOutOfToleranceException;
@@ -53,7 +53,8 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload {
+public final class Offer implements Priority1StoragePayload, RequiresOwnerIsOnlinePayload {
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
