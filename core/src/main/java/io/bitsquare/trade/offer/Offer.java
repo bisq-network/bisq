@@ -502,7 +502,12 @@ public final class Offer implements Priority1StoragePayload, RequiresOwnerIsOnli
         if (amount != offer.amount) return false;
         if (minAmount != offer.minAmount) return false;
         if (id != null ? !id.equals(offer.id) : offer.id != null) return false;
-        if (direction != offer.direction) return false;
+
+        if (direction != null && offer.direction != null && direction.ordinal() != offer.direction.ordinal())
+            return false;
+        else if ((direction == null && offer.direction != null) || direction != null)
+            return false;
+
         if (currencyCode != null ? !currencyCode.equals(offer.currencyCode) : offer.currencyCode != null) return false;
         if (offererNodeAddress != null ? !offererNodeAddress.equals(offer.offererNodeAddress) : offer.offererNodeAddress != null)
             return false;
@@ -526,7 +531,7 @@ public final class Offer implements Priority1StoragePayload, RequiresOwnerIsOnli
     @Override
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (direction != null ? direction.hashCode() : 0);
+        result = 31 * result + (direction != null ? direction.ordinal() : 0);
         result = 31 * result + (currencyCode != null ? currencyCode.hashCode() : 0);
         result = 31 * result + (int) (date ^ (date >>> 32));
         result = 31 * result + (int) (fiatPrice ^ (fiatPrice >>> 32));
@@ -577,6 +582,7 @@ public final class Offer implements Priority1StoragePayload, RequiresOwnerIsOnli
                 "\n\terrorMessageProperty=" + errorMessageProperty +
                 "\n\tTAC_OFFERER=" + TAC_OFFERER +
                 "\n\tTAC_TAKER=" + TAC_TAKER +
+                "\n\thashCode=" + hashCode() +
                 '}';
     }
 }

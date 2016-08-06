@@ -110,12 +110,16 @@ public final class TradeStatistics implements Priority2StoragePayload, Capabilit
         if (offerAmount != that.offerAmount) return false;
         if (offerMinAmount != that.offerMinAmount) return false;
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) return false;
-        if (direction != that.direction) return false;
+
+        if (direction != null && that.direction != null && direction.ordinal() != that.direction.ordinal())
+            return false;
+        else if ((direction == null && that.direction != null) || direction != null)
+            return false;
+        
         if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
             return false;
         if (offerId != null ? !offerId.equals(that.offerId) : that.offerId != null) return false;
         return !(depositTxId != null ? !depositTxId.equals(that.depositTxId) : that.depositTxId != null);
-
     }
 
     @Override
@@ -123,7 +127,7 @@ public final class TradeStatistics implements Priority2StoragePayload, Capabilit
         int result;
         long temp;
         result = currency != null ? currency.hashCode() : 0;
-        result = 31 * result + (direction != null ? direction.hashCode() : 0);
+        result = 31 * result + (direction != null ? direction.ordinal() : 0);
         result = 31 * result + (int) (tradePrice ^ (tradePrice >>> 32));
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
         result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
@@ -155,6 +159,7 @@ public final class TradeStatistics implements Priority2StoragePayload, Capabilit
                 ", offerId='" + offerId + '\'' +
                 ", depositTxId='" + depositTxId + '\'' +
                 ", pubKeyRing=" + pubKeyRing +
+                ", hashCode=" + hashCode() +
                 '}';
     }
 }
