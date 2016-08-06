@@ -757,12 +757,7 @@ public class Connection implements MessageListener {
                                     Utilities.toTruncatedString(rawInputObject),
                                     size);
                         } else {
-                            log.error("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "Invalid data arrived at inputHandler of connection {}.\n" +
-                                            "Size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    size);
+                            log.error("Invalid data arrived at inputHandler of connection {} Size={}", connection, size);
                             try {
                                 // Don't call toString on rawInputObject
                                 log.error("rawInputObject.className=" + rawInputObject.getClass().getName());
