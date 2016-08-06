@@ -494,38 +494,38 @@ public final class Offer implements Priority1StoragePayload, RequiresOwnerIsOnli
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Offer)) return false;
-        Offer offer = (Offer) o;
-        if (date != offer.date) return false;
-        if (fiatPrice != offer.fiatPrice) return false;
-        if (Double.compare(offer.marketPriceMargin, marketPriceMargin) != 0) return false;
-        if (useMarketBasedPrice != offer.useMarketBasedPrice) return false;
-        if (amount != offer.amount) return false;
-        if (minAmount != offer.minAmount) return false;
-        if (id != null ? !id.equals(offer.id) : offer.id != null) return false;
+        Offer that = (Offer) o;
+        if (date != that.date) return false;
+        if (fiatPrice != that.fiatPrice) return false;
+        if (Double.compare(that.marketPriceMargin, marketPriceMargin) != 0) return false;
+        if (useMarketBasedPrice != that.useMarketBasedPrice) return false;
+        if (amount != that.amount) return false;
+        if (minAmount != that.minAmount) return false;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
 
-        if (direction != null && offer.direction != null && direction.ordinal() != offer.direction.ordinal())
+        if (direction != null && that.direction != null && direction.ordinal() != that.direction.ordinal())
             return false;
-        else if ((direction == null && offer.direction != null) || direction != null)
+        else if ((direction == null && that.direction != null) || direction != null)
             return false;
 
-        if (currencyCode != null ? !currencyCode.equals(offer.currencyCode) : offer.currencyCode != null) return false;
-        if (offererNodeAddress != null ? !offererNodeAddress.equals(offer.offererNodeAddress) : offer.offererNodeAddress != null)
+        if (currencyCode != null ? !currencyCode.equals(that.currencyCode) : that.currencyCode != null) return false;
+        if (offererNodeAddress != null ? !offererNodeAddress.equals(that.offererNodeAddress) : that.offererNodeAddress != null)
             return false;
-        if (pubKeyRing != null ? !pubKeyRing.equals(offer.pubKeyRing) : offer.pubKeyRing != null) return false;
-        if (paymentMethodName != null ? !paymentMethodName.equals(offer.paymentMethodName) : offer.paymentMethodName != null)
+        if (pubKeyRing != null ? !pubKeyRing.equals(that.pubKeyRing) : that.pubKeyRing != null) return false;
+        if (paymentMethodName != null ? !paymentMethodName.equals(that.paymentMethodName) : that.paymentMethodName != null)
             return false;
-        if (countryCode != null ? !countryCode.equals(offer.countryCode) : offer.countryCode != null)
+        if (countryCode != null ? !countryCode.equals(that.countryCode) : that.countryCode != null)
             return false;
-        if (offererPaymentAccountId != null ? !offererPaymentAccountId.equals(offer.offererPaymentAccountId) : offer.offererPaymentAccountId != null)
+        if (offererPaymentAccountId != null ? !offererPaymentAccountId.equals(that.offererPaymentAccountId) : that.offererPaymentAccountId != null)
             return false;
-        if (acceptedCountryCodes != null ? !acceptedCountryCodes.equals(offer.acceptedCountryCodes) : offer.acceptedCountryCodes != null)
+        if (acceptedCountryCodes != null ? !acceptedCountryCodes.equals(that.acceptedCountryCodes) : that.acceptedCountryCodes != null)
             return false;
-        if (bankId != null ? !bankId.equals(offer.bankId) : offer.bankId != null) return false;
-        if (acceptedBankIds != null ? !acceptedBankIds.equals(offer.acceptedBankIds) : offer.acceptedBankIds != null)
+        if (bankId != null ? !bankId.equals(that.bankId) : that.bankId != null) return false;
+        if (acceptedBankIds != null ? !acceptedBankIds.equals(that.acceptedBankIds) : that.acceptedBankIds != null)
             return false;
-        if (arbitratorNodeAddresses != null ? !arbitratorNodeAddresses.equals(offer.arbitratorNodeAddresses) : offer.arbitratorNodeAddresses != null)
+        if (arbitratorNodeAddresses != null ? !arbitratorNodeAddresses.equals(that.arbitratorNodeAddresses) : that.arbitratorNodeAddresses != null)
             return false;
-        return !(offerFeePaymentTxID != null ? !offerFeePaymentTxID.equals(offer.offerFeePaymentTxID) : offer.offerFeePaymentTxID != null);
+        return !(offerFeePaymentTxID != null ? !offerFeePaymentTxID.equals(that.offerFeePaymentTxID) : that.offerFeePaymentTxID != null);
     }
 
     @Override
