@@ -39,7 +39,7 @@ import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class SeedNodeMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
-    private static long MAX_MEMORY_MB_DEFAULT = 600;
+    private static long MAX_MEMORY_MB_DEFAULT = 500;
     private static final long CHECK_MEMORY_PERIOD_SEC = 10 * 60;
     private SeedNode seedNode;
     private volatile boolean stopped;
