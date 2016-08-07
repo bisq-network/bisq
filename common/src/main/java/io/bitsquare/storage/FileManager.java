@@ -178,6 +178,7 @@ public class FileManager<T> {
                     log.warn("make dir failed");
 
             tempFile = File.createTempFile("temp", null, dir);
+            tempFile.deleteOnExit();
             if (serializable instanceof PlainTextWrapper) {
                 // When we dump json files we don't want to safe it as java serialized string objects, so we use PrintWriter instead.
                 printWriter = new PrintWriter(tempFile);
