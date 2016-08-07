@@ -81,7 +81,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
 
-    TickUnit tickUnit = TickUnit.MONTH;
+    TickUnit tickUnit = TickUnit.DAY;
     int maxTicks = 30;
     private int selectedTabIndex;
 

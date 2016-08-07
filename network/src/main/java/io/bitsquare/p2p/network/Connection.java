@@ -720,7 +720,7 @@ public class Connection implements MessageListener {
 
                         Connection connection = sharedModel.connection;
                         log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
-                    
+
                         Object rawInputObject = objectInputStream.readObject();
 
                         // Throttle inbound messages
@@ -778,11 +778,12 @@ public class Connection implements MessageListener {
 
                         // First we check the size
                         boolean exceeds;
-                        if (rawInputObject instanceof GetDataResponse)
+                        if (rawInputObject instanceof GetDataResponse) {
                             exceeds = size > MAX_MSG_SIZE_GET_DATA;
-                        else
+                            log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
+                        } else {
                             exceeds = size > MAX_MSG_SIZE;
-
+                        }
                         if (exceeds)
                             log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, message);
 

@@ -4,9 +4,7 @@ import com.google.common.io.Files;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Date;
@@ -77,5 +75,21 @@ public class FileUtil {
         }
         if (file.exists() && !file.delete())
             throw new FileNotFoundException("Failed to delete file: " + file);
+    }
+
+    public static void resourceToFile(String resourcePath, File destinationFile) throws ResourceNotFoundException, IOException {
+        InputStream inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(resourcePath);
+        if (inputStream == null)
+            throw new ResourceNotFoundException(resourcePath);
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(destinationFile)) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                fileOutputStream.write(buffer, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            throw e;
+        }
     }
 }

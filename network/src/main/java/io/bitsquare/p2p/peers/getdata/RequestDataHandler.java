@@ -179,7 +179,7 @@ public class RequestDataHandler implements MessageListener {
                             .filter(e -> !dataStorage.mapContainsStoragePayload(e.getStoragePayload()))
                             .collect(Collectors.toSet());
 
-                    log.error("newItems.size() " + newItems.size());
+                    log.debug("newItems.size() " + newItems.size());
 
                     // The non PriorityStoragePayload items we process directly
                     newItems.stream()
@@ -190,21 +190,25 @@ public class RequestDataHandler implements MessageListener {
                             });
 
 
-                    // The LazyProcessedStoragePayload items we process with a delay (TradeStatistics)
-                    final long[] counter = {50};
-                    newItems.stream()
+                    // The LazyProcessedStoragePayload items (TradeStatistics) we process in batches with a delay in between
+                    // We don't want the UI get stuck when processing 100s of entries.
+                    // The dataStorage.add call is a bit expensive as sig checks is done there
+                    List<ProtectedStorageEntry> delayedItems = newItems.stream()
                             .filter(e -> e.getStoragePayload() instanceof LazyProcessedStoragePayload)
-                            .forEach(protectedStorageEntry -> {
-                                long delay = (counter[0] / 50) * 500;
-                                counter[0]++;
-                                // We don't want the UI get stuck when processing 100s of entries.
-                                // The dataStorage.add call is a bit expensive as sig checks is done there
-                                UserThread.runAfter(() -> {
-                                            // We dont broadcast here as we are only connected to the seed node and would be pointless
-                                            dataStorage.add(protectedStorageEntry, sender, null, false, false);
-                                        },
-                                        delay, TimeUnit.MILLISECONDS);
-                            });
+                            .collect(Collectors.toList());
+
+                    int size = delayedItems.size();
+                    int chunkSize = 50;
+                    int chunks = 1 + size / chunkSize;
+                    int startIndex = 0;
+                    for (int i = 0; i < chunks && startIndex < size; i++, startIndex += chunkSize) {
+                        long delay = (i + 1) * 200;
+                        int endIndex = Math.min(size, startIndex + chunkSize);
+                        List<ProtectedStorageEntry> subList = delayedItems.subList(startIndex, endIndex);
+                        UserThread.runAfter(() -> {
+                            subList.stream().forEach(protectedStorageEntry -> dataStorage.add(protectedStorageEntry, sender, null, false, false));
+                        }, delay, TimeUnit.MILLISECONDS);
+                    }
 
                     cleanup();
                     listener.onComplete();
