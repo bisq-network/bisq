@@ -86,6 +86,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
         result.add(new CryptoCurrency("SDC", "ShadowCash"));
+        result.add(new CryptoCurrency("BITUSD", "BitUSD"));
+        result.add(new CryptoCurrency("SBD", "Steem Dollars", true));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("XPM", "Primecoin"));
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
@@ -151,6 +153,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
+        result.add(new CryptoCurrency("BITUSD", "BitUSD"));
+        result.add(new CryptoCurrency("SBD", "Steem Dollars", true));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
