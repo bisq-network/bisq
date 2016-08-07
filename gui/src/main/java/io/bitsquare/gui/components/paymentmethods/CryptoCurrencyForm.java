@@ -100,7 +100,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
             String address = addressInputTextField.getText();
             address = StringUtils.abbreviate(address, 9);
             String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "?";
-            accountNameTextField.setText(method.concat(", ").concat(currency).concat(", ").concat(address));
+            accountNameTextField.setText(currency.concat(": ").concat(address));
         }
     }
 
