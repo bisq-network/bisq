@@ -74,12 +74,12 @@
                     <PropertyValueFactory property="onionAddress"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="In/Out" fx:id="connectionTypeColumn" minWidth="80" maxWidth="90" sortable="false">
+            <TableColumn text="In/Out" fx:id="connectionTypeColumn" minWidth="80" maxWidth="90">
                 <cellValueFactory>
                     <PropertyValueFactory property="connectionType"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Established" fx:id="creationDateColumn" minWidth="180" maxWidth="180" sortable="false">
+            <TableColumn text="Established" fx:id="creationDateColumn" minWidth="180" maxWidth="180">
                 <cellValueFactory>
                     <PropertyValueFactory property="creationDate"/>
                 </cellValueFactory>
@@ -89,22 +89,22 @@
                      <PropertyValueFactory property="lastActivity"/>
                  </cellValueFactory>
              </TableColumn>-->
-            <TableColumn text="Roundtrip" fx:id="roundTripTimeColumn" minWidth="80" maxWidth="80" sortable="false">
+            <TableColumn text="Roundtrip" fx:id="roundTripTimeColumn" minWidth="80" maxWidth="80">
                 <cellValueFactory>
                     <PropertyValueFactory property="roundTripTime"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Sent" fx:id="sentBytesColumn" minWidth="100" maxWidth="120" sortable="false">
+            <TableColumn text="Sent" fx:id="sentBytesColumn" minWidth="100" maxWidth="120">
                 <cellValueFactory>
                     <PropertyValueFactory property="sentBytes"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Received" fx:id="receivedBytesColumn" minWidth="100" maxWidth="120" sortable="false">
+            <TableColumn text="Received" fx:id="receivedBytesColumn" minWidth="100" maxWidth="120">
                 <cellValueFactory>
                     <PropertyValueFactory property="receivedBytes"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Peer type" fx:id="peerTypeColumn" minWidth="100" maxWidth="100" sortable="false">
+            <TableColumn text="Peer type" fx:id="peerTypeColumn" minWidth="100" maxWidth="100">
                 <cellValueFactory>
                     <PropertyValueFactory property="peerType"/>
                 </cellValueFactory>
