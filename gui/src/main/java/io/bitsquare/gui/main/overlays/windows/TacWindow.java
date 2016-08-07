@@ -18,7 +18,7 @@ public class TacWindow extends Overlay<TacWindow> {
     public TacWindow(Preferences preferences) {
         this.preferences = preferences;
         type = Type.Attention;
-        width = 800;
+        width = 900;
     }
 
     public void showIfNeeded() {
