@@ -225,7 +225,7 @@ public class TradeManager {
 
         // We start later to have better connectivity to the network
         UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics),
-                30, TimeUnit.SECONDS);
+                90, TimeUnit.SECONDS);
 
         pendingTradesInitialized.set(true);
     }
@@ -246,7 +246,7 @@ public class TradeManager {
             // But we could check which tradeStatistics we received from the seed nodes and 
             // only re-publish in case tradeStatistics are missing.
             if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(10)) {
-                long delay = 3000;
+                long delay = 5000;
                 final long minDelay = (i + 1) * delay;
                 final long maxDelay = (i + 2) * delay;
                 UserThread.runAfterRandomDelay(() -> {

@@ -21,6 +21,7 @@ import io.bitsquare.p2p.storage.P2PDataStorage;
 import io.bitsquare.p2p.storage.payload.Priority1StoragePayload;
 import io.bitsquare.p2p.storage.payload.Priority2StoragePayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
+import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -174,8 +176,14 @@ public class RequestDataHandler implements MessageListener {
 
                     final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
 
+                    Set<ProtectedStorageEntry> newItems = getDataResponse.dataSet.stream()
+                            .filter(e -> !dataStorage.mapContainsStoragePayload(e.getStoragePayload()))
+                            .collect(Collectors.toSet());
+
+                    log.debug("newItems.size() " + newItems.size());
+
                     // The non PriorityStoragePayload items we process directly
-                    getDataResponse.dataSet.stream()
+                    newItems.stream()
                             .filter(e -> !(e.getStoragePayload() instanceof Priority1StoragePayload) &&
                                     !(e.getStoragePayload() instanceof Priority2StoragePayload))
                             .forEach(protectedStorageEntry -> {
@@ -184,33 +192,37 @@ public class RequestDataHandler implements MessageListener {
                             });
 
                     // The Priority1StoragePayload items we process with a short delay (Offers)
-                    final long[] i = {0};
-                    getDataResponse.dataSet.stream()
+                    final long[] counter = {0};
+                    newItems.stream()
                             .filter(e -> e.getStoragePayload() instanceof Priority1StoragePayload)
                             .forEach(protectedStorageEntry -> {
-                                i[0] += 50;
+                                // We process 10 items at a time and make a 100 ms delay between them
+                                // One processing takes about 5-20 ms (sig check)
+                                long delay = (counter[0] / 10) * 100 + 1;
+                                counter[0]++;
                                 // We don't want the UI get stuck when processing 100s of entries.
                                 // The dataStorage.add call is a bit expensive as sig checks is done there
                                 UserThread.runAfter(() -> {
                                             // We dont broadcast here as we are only connected to the seed node and would be pointless
                                             dataStorage.add(protectedStorageEntry, sender, null, false, false);
                                         },
-                                        i[0], TimeUnit.MILLISECONDS);
+                                        delay, TimeUnit.MILLISECONDS);
                             });
 
                     // The Priority2StoragePayload items we process with a longer delay (TradeStatistics)
-                    final long[] n = {0};
-                    getDataResponse.dataSet.stream()
+                    final long[] counter2 = {0};
+                    newItems.stream()
                             .filter(e -> e.getStoragePayload() instanceof Priority2StoragePayload)
                             .forEach(protectedStorageEntry -> {
-                                n[0] += 100;
+                                long delay = (counter2[0] / 50) * 500 + 1;
+                                counter2[0]++;
                                 // We don't want the UI get stuck when processing 100s of entries.
                                 // The dataStorage.add call is a bit expensive as sig checks is done there
                                 UserThread.runAfter(() -> {
                                             // We dont broadcast here as we are only connected to the seed node and would be pointless
                                             dataStorage.add(protectedStorageEntry, sender, null, false, false);
                                         },
-                                        n[0], TimeUnit.MILLISECONDS);
+                                        delay, TimeUnit.MILLISECONDS);
                             });
 
                     cleanup();

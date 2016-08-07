@@ -253,7 +253,7 @@ public class CurrencyUtil {
             try {
                 return Currency.getInstance(currencyCode).getDisplayName(Preferences.getDefaultLocale());
             } catch (Throwable t) {
-                log.warn("No currency name available " + t.getMessage());
+                log.debug("No currency name available " + t.getMessage());
                 return currencyCode;
             }
     }
