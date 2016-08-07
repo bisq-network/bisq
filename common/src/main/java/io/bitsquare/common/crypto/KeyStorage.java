@@ -88,7 +88,7 @@ public class KeyStorage {
     }
 
     public KeyPair loadKeyPair(KeyEntry keyEntry) {
-        FileUtil.rollingBackup(storageDir, keyEntry.getFileName() + ".key");
+        FileUtil.rollingBackup(storageDir, keyEntry.getFileName() + ".key", 20);
         // long now = System.currentTimeMillis();
         try {
             KeyFactory keyFactory = KeyFactory.getInstance(keyEntry.getAlgorithm(), "BC");
