@@ -15,10 +15,6 @@ import java.util.List;
 public class FileUtil {
     private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
 
-    public static void rollingBackup(File dir, String fileName) {
-        rollingBackup(dir, fileName, 10);
-    }
-
     public static void rollingBackup(File dir, String fileName, int numMaxBackupFiles) {
         if (dir.exists()) {
             File backupDir = new File(Paths.get(dir.getAbsolutePath(), "backup").toString());

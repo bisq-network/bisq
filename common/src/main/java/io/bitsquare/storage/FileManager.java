@@ -152,8 +152,8 @@ public class FileManager<T> {
         renameTempFileToFile(storageFile, corruptedFile);
     }
 
-    public synchronized void backupFile(String fileName) throws IOException {
-        FileUtil.rollingBackup(dir, fileName);
+    public synchronized void backupFile(String fileName, int numMaxBackupFiles) throws IOException {
+        FileUtil.rollingBackup(dir, fileName, numMaxBackupFiles);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
