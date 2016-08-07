@@ -32,7 +32,7 @@ $JAVA_HOME/bin/javapackager \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare
 
-alien -r -c -k gui/deploy/bundles/bitsquare-$version.deb
+sudo alien -r -c -k gui/deploy/bundles/bitsquare-$version.deb
 
 mv "gui/deploy/bundles/bitsquare-$version.deb" "/media/sf_vm_shared_ubuntu14_64bit/Bitsquare-64bit-$version.deb"
 mv "bitsquare-$version-1.i386.rpm" "/media/sf_vm_shared_ubuntu14_64bit/Bitsquare-64bit-$version.rpm"
