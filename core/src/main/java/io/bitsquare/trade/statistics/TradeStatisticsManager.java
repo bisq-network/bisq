@@ -10,18 +10,13 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
-import io.bitsquare.storage.FileUtil;
 import io.bitsquare.storage.PlainTextWrapper;
-import io.bitsquare.storage.ResourceNotFoundException;
 import io.bitsquare.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +39,6 @@ public class TradeStatisticsManager {
                                   Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage,
                                   Storage<PlainTextWrapper> statisticsJsonStorage,
                                   P2PService p2PService,
-                                  @javax.inject.Named(Storage.DIR_KEY) File storageDir,
                                   @Named(CoreOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.statisticsStorage = statisticsStorage;
         this.fiatCurrencyListJsonStorage = fiatCurrencyListJsonStorage;
@@ -52,20 +46,10 @@ public class TradeStatisticsManager {
         this.statisticsJsonStorage = statisticsJsonStorage;
         this.dumpStatistics = dumpStatistics;
 
-        init(p2PService, storageDir);
+        init(p2PService);
     }
 
-    private void init(P2PService p2PService, File storageDir) {
-        // We copy the TradeStatistics from the resources to the db directory to avoid that we have to load too 
-        // much data form the P2P network
-        final String tradeStatisticsFileName = "TradeStatistics";
-        try {
-            FileUtil.resourceToFile(tradeStatisticsFileName, new File(Paths.get(storageDir.getAbsolutePath(), tradeStatisticsFileName).toString()));
-        } catch (ResourceNotFoundException | IOException e) {
-            e.printStackTrace();
-            log.error("Could not copy the TradeStatistics resource file to the db directory.\n" + e.getMessage());
-        }
-
+    private void init(P2PService p2PService) {
         if (dumpStatistics) {
             this.statisticsJsonStorage.initWithFileName("trade_statistics.json");
 
@@ -82,7 +66,7 @@ public class TradeStatisticsManager {
             cryptoCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(cryptoCurrencyList)), 2000);
         }
 
-        HashSet<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName(tradeStatisticsFileName);
+        HashSet<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
         if (persisted != null)
             persisted.stream().forEach(this::add);
 
@@ -98,6 +82,13 @@ public class TradeStatisticsManager {
             public void onRemoved(ProtectedStorageEntry data) {
                 // We don't remove items
             }
+        });
+
+        // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
+        p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
+            final StoragePayload storagePayload = e.getStoragePayload();
+            if (storagePayload instanceof TradeStatistics)
+                add((TradeStatistics) storagePayload);
         });
     }
 

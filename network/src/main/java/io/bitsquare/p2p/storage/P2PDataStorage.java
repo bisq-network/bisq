@@ -21,6 +21,8 @@ import io.bitsquare.p2p.storage.messages.*;
 import io.bitsquare.p2p.storage.payload.*;
 import io.bitsquare.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bitsquare.storage.FileUtil;
+import io.bitsquare.storage.ResourceNotFoundException;
 import io.bitsquare.storage.Storage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -29,7 +31,9 @@ import org.spongycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.*;
@@ -71,16 +75,43 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         networkNode.addConnectionListener(this);
 
         sequenceNumberMapStorage = new Storage<>(storageDir);
+        persistedEntryMapStorage = new Storage<>(storageDir);
+
+        init(storageDir);
+    }
+
+    private void init(File storageDir) {
         sequenceNumberMapStorage.setNumMaxBackupFiles(5);
         HashMap<ByteArray, MapValue> persistedSequenceNumberMap = sequenceNumberMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName("SequenceNumberMap");
         if (persistedSequenceNumberMap != null)
             sequenceNumberMap = getPurgedSequenceNumberMap(persistedSequenceNumberMap);
 
-        persistedEntryMapStorage = new Storage<>(storageDir);
-        HashMap<ByteArray, ProtectedStorageEntry> persisted = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName("P2PStorage");
+        final String storageFileName = "PersistedP2PStorageData";
+
+        File dbDir = new File(storageDir.getAbsolutePath());
+        if (!dbDir.exists() && !dbDir.mkdir())
+            log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
+
+        final File destinationFile = new File(Paths.get(storageDir.getAbsolutePath(), storageFileName).toString());
+        if (!destinationFile.exists()) {
+            try {
+                FileUtil.resourceToFile(storageFileName, destinationFile);
+            } catch (ResourceNotFoundException | IOException e) {
+                e.printStackTrace();
+                log.error("Could not copy the " + storageFileName + " resource file to the db directory.\n" + e.getMessage());
+            }
+        } else {
+            log.debug(storageFileName + " file exists already.");
+        }
+
+        HashMap<ByteArray, ProtectedStorageEntry> persisted = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName);
         if (persisted != null) {
             persistedMap = persisted;
             map.putAll(persistedMap);
+
+            // In case another object is already listening...
+            map.values().stream()
+                    .forEach(protectedStorageEntry -> hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry)));
         }
     }
 
@@ -415,8 +446,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         hashMapChangedListeners.remove(hashMapChangedListener);
     }
 
-    public boolean mapContainsStoragePayload(StoragePayload storagePayload) {
-        return map.containsKey(getHashAsByteArray(storagePayload));
+    public Set<ProtectedStorageEntry> getFilteredValues(Set<ByteArray> excludedKeys) {
+        return map.entrySet()
+                .stream().filter(e -> !excludedKeys.contains(e.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toSet());
     }
 
 

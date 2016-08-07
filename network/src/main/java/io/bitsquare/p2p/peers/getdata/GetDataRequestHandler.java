@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class GetDataRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetDataRequestHandler.class);
@@ -73,7 +74,14 @@ public class GetDataRequestHandler {
 
         final HashSet<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
         final Set<Integer> lookupSet = new HashSet<>();
-        for (ProtectedStorageEntry protectedStorageEntry : dataStorage.getMap().values()) {
+
+        Set<P2PDataStorage.ByteArray> excludedItems = getDataRequest.getExcludedKeys() != null ?
+                getDataRequest.getExcludedKeys().stream()
+                        .map(P2PDataStorage.ByteArray::new)
+                        .collect(Collectors.toSet())
+                : new HashSet<>();
+
+        for (ProtectedStorageEntry protectedStorageEntry : dataStorage.getFilteredValues(excludedItems)) {
             final StoragePayload storagePayload = protectedStorageEntry.getStoragePayload();
             boolean doAdd = false;
             if (storagePayload instanceof CapabilityRequiringPayload) {
