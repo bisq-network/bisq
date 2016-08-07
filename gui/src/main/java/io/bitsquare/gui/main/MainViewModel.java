@@ -574,6 +574,7 @@ public class MainViewModel implements ViewModel {
             @Override
             public void run() {
                 try {
+                    Thread.currentThread().setName("checkCryptoThread");
                     log.trace("Run crypto test");
                     // just use any simple dummy msg
                     io.bitsquare.p2p.peers.keepalive.messages.Ping payload = new Ping(1, 1);
