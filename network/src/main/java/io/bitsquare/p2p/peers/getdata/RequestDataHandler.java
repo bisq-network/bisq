@@ -18,8 +18,7 @@ import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bitsquare.p2p.storage.P2PDataStorage;
-import io.bitsquare.p2p.storage.payload.Priority1StoragePayload;
-import io.bitsquare.p2p.storage.payload.Priority2StoragePayload;
+import io.bitsquare.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import org.jetbrains.annotations.NotNull;
@@ -180,42 +179,24 @@ public class RequestDataHandler implements MessageListener {
                             .filter(e -> !dataStorage.mapContainsStoragePayload(e.getStoragePayload()))
                             .collect(Collectors.toSet());
 
-                    log.debug("newItems.size() " + newItems.size());
+                    log.error("newItems.size() " + newItems.size());
 
                     // The non PriorityStoragePayload items we process directly
                     newItems.stream()
-                            .filter(e -> !(e.getStoragePayload() instanceof Priority1StoragePayload) &&
-                                    !(e.getStoragePayload() instanceof Priority2StoragePayload))
+                            .filter(e -> !(e.getStoragePayload() instanceof LazyProcessedStoragePayload))
                             .forEach(protectedStorageEntry -> {
                                 // We dont broadcast here as we are only connected to the seed node and would be pointless
                                 dataStorage.add(protectedStorageEntry, sender, null, false, false);
                             });
 
-                    // The Priority1StoragePayload items we process with a short delay (Offers)
-                    final long[] counter = {0};
-                    newItems.stream()
-                            .filter(e -> e.getStoragePayload() instanceof Priority1StoragePayload)
-                            .forEach(protectedStorageEntry -> {
-                                // We process 10 items at a time and make a 100 ms delay between them
-                                // One processing takes about 5-20 ms (sig check)
-                                long delay = (counter[0] / 10) * 100 + 1;
-                                counter[0]++;
-                                // We don't want the UI get stuck when processing 100s of entries.
-                                // The dataStorage.add call is a bit expensive as sig checks is done there
-                                UserThread.runAfter(() -> {
-                                            // We dont broadcast here as we are only connected to the seed node and would be pointless
-                                            dataStorage.add(protectedStorageEntry, sender, null, false, false);
-                                        },
-                                        delay, TimeUnit.MILLISECONDS);
-                            });
 
-                    // The Priority2StoragePayload items we process with a longer delay (TradeStatistics)
-                    final long[] counter2 = {0};
+                    // The LazyProcessedStoragePayload items we process with a delay (TradeStatistics)
+                    final long[] counter = {50};
                     newItems.stream()
-                            .filter(e -> e.getStoragePayload() instanceof Priority2StoragePayload)
+                            .filter(e -> e.getStoragePayload() instanceof LazyProcessedStoragePayload)
                             .forEach(protectedStorageEntry -> {
-                                long delay = (counter2[0] / 50) * 500 + 1;
-                                counter2[0]++;
+                                long delay = (counter[0] / 50) * 500;
+                                counter[0]++;
                                 // We don't want the UI get stuck when processing 100s of entries.
                                 // The dataStorage.add call is a bit expensive as sig checks is done there
                                 UserThread.runAfter(() -> {

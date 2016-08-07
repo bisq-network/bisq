@@ -241,7 +241,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 }
 
                 hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
-                printData("after add");
+                // printData("after add");
             } else {
                 log.trace("We got that version of the data already, so we don't store it.");
             }

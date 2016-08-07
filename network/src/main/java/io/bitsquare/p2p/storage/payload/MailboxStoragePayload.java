@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Typical payloads are trade or dispute messages to be stored when the peer is offline.
  */
-public final class MailboxStoragePayload implements Priority1StoragePayload {
+public final class MailboxStoragePayload implements StoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(MailboxStoragePayload.class);
