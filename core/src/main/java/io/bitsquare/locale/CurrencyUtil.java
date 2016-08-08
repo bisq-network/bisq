@@ -77,7 +77,9 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
+        result.add(new CryptoCurrency("STEEMUSD", "Steem Dollars", true));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
+        result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("XEM", "NEM"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
@@ -85,6 +87,17 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
         result.add(new CryptoCurrency("SDC", "ShadowCash"));
+        result.add(new CryptoCurrency("BTS", "BitShares"));
+        result.add(new CryptoCurrency("BITUSD", "BitUSD", true));
+        result.add(new CryptoCurrency("BITEUR", "BitEUR", true));
+        result.add(new CryptoCurrency("BITCNY", "BitCNY", true));
+        result.add(new CryptoCurrency("BITCHF", "BitCHF", true));
+        result.add(new CryptoCurrency("BITGBP", "BitGBP", true));
+        result.add(new CryptoCurrency("BITNZD", "BitNZD", true));
+        result.add(new CryptoCurrency("BITAUD", "BitAUD", true));
+        result.add(new CryptoCurrency("BITSGD", "BitSGD", true));
+        result.add(new CryptoCurrency("BITHKD", "BitHKD", true));
+        result.add(new CryptoCurrency("BITSEK", "BitSEK", true));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("XPM", "Primecoin"));
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
@@ -93,7 +106,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BLK", "Blackcoin"));
         result.add(new CryptoCurrency("FCT", "Factom"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
-        result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
@@ -131,7 +143,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
         result.add(new CryptoCurrency("DAO", "DAO", true));
-        result.add(new CryptoCurrency("ETHC", "EtherClassic (deprecated ticker symbol)"));
+        result.add(new CryptoCurrency("CMT", "Comet"));
+        result.add(new CryptoCurrency("SYNQ", "BitSYNQ"));
         return result;
     }
 
@@ -142,11 +155,14 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
+        result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
+        result.add(new CryptoCurrency("BITUSD", "BitUSD", true));
+        result.add(new CryptoCurrency("STEEMUSD", "Steem Dollars", true));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
@@ -237,9 +253,13 @@ public class CurrencyUtil {
             try {
                 return Currency.getInstance(currencyCode).getDisplayName(Preferences.getDefaultLocale());
             } catch (Throwable t) {
-                log.warn("No currency name available " + t.getMessage());
-                return "N/A (" + currencyCode + ")";
+                log.debug("No currency name available " + t.getMessage());
+                return currencyCode;
             }
+    }
+
+    public static String getNameAndCode(String currencyCode) {
+        return getNameByCode(currencyCode) + " (" + currencyCode + ")";
     }
 
     public static TradeCurrency getDefaultTradeCurrency() {

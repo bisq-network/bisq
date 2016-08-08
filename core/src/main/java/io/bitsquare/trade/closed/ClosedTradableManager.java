@@ -40,7 +40,10 @@ public class ClosedTradableManager {
     @Inject
     public ClosedTradableManager(KeyRing keyRing, PriceFeedService priceFeedService, @Named(Storage.DIR_KEY) File storageDir) {
         this.keyRing = keyRing;
-        this.closedTrades = new TradableList<>(new Storage<>(storageDir), "ClosedTrades");
+        final Storage<TradableList<Tradable>> tradableListStorage = new Storage<>(storageDir);
+        // The ClosedTrades object can become a few MB so we don't keep so many backups
+        tradableListStorage.setNumMaxBackupFiles(3);
+        this.closedTrades = new TradableList<>(tradableListStorage, "ClosedTrades");
         closedTrades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
     }
 

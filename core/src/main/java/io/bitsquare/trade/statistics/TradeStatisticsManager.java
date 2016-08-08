@@ -10,6 +10,7 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bitsquare.storage.PlainTextWrapper;
 import io.bitsquare.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
@@ -25,18 +26,18 @@ public class TradeStatisticsManager {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsManager.class);
 
     private final Storage<HashSet<TradeStatistics>> statisticsStorage;
-    private Storage<String> fiatCurrencyListJsonStorage;
-    private Storage<String> cryptoCurrencyListJsonStorage;
-    private Storage<String> statisticsJsonStorage;
+    private Storage<PlainTextWrapper> fiatCurrencyListJsonStorage;
+    private Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage;
+    private Storage<PlainTextWrapper> statisticsJsonStorage;
     private boolean dumpStatistics;
     private ObservableSet<TradeStatistics> observableTradeStatisticsSet = FXCollections.observableSet();
     private HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
 
     @Inject
     public TradeStatisticsManager(Storage<HashSet<TradeStatistics>> statisticsStorage,
-                                  Storage<String> fiatCurrencyListJsonStorage,
-                                  Storage<String> cryptoCurrencyListJsonStorage,
-                                  Storage<String> statisticsJsonStorage,
+                                  Storage<PlainTextWrapper> fiatCurrencyListJsonStorage,
+                                  Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage,
+                                  Storage<PlainTextWrapper> statisticsJsonStorage,
                                   P2PService p2PService,
                                   @Named(CoreOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.statisticsStorage = statisticsStorage;
@@ -45,20 +46,24 @@ public class TradeStatisticsManager {
         this.statisticsJsonStorage = statisticsJsonStorage;
         this.dumpStatistics = dumpStatistics;
 
-        if (dumpStatistics) {
-            this.statisticsJsonStorage.initAndGetPersistedWithFileName("trade_statistics.json");
+        init(p2PService);
+    }
 
-            this.fiatCurrencyListJsonStorage.initAndGetPersistedWithFileName("fiat_currency_list.json");
+    private void init(P2PService p2PService) {
+        if (dumpStatistics) {
+            this.statisticsJsonStorage.initWithFileName("trade_statistics.json");
+
+            this.fiatCurrencyListJsonStorage.initWithFileName("fiat_currency_list.json");
             ArrayList<CurrencyTuple> fiatCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName()))
                     .collect(Collectors.toList()));
-            fiatCurrencyListJsonStorage.queueUpForSave(Utilities.objectToJson(fiatCurrencyList), 2000);
+            fiatCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(fiatCurrencyList)), 2000);
 
-            this.cryptoCurrencyListJsonStorage.initAndGetPersistedWithFileName("crypto_currency_list.json");
+            this.cryptoCurrencyListJsonStorage.initWithFileName("crypto_currency_list.json");
             ArrayList<CurrencyTuple> cryptoCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName()))
                     .collect(Collectors.toList()));
-            cryptoCurrencyListJsonStorage.queueUpForSave(Utilities.objectToJson(cryptoCurrencyList), 2000);
+            cryptoCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(cryptoCurrencyList)), 2000);
         }
 
         HashSet<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
@@ -78,6 +83,13 @@ public class TradeStatisticsManager {
                 // We don't remove items
             }
         });
+
+        // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
+        p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
+            final StoragePayload storagePayload = e.getStoragePayload();
+            if (storagePayload instanceof TradeStatistics)
+                add((TradeStatistics) storagePayload);
+        });
     }
 
     public void add(TradeStatistics tradeStatistics) {
@@ -90,7 +102,7 @@ public class TradeStatisticsManager {
 
                 dump();
             } else {
-                log.error("We have already an item with the same offer ID. That might happen if both the offerer and the taker published the tradeStatistics");
+                log.debug("We have already an item with the same offer ID. That might happen if both the offerer and the taker published the tradeStatistics");
             }
         }
     }
@@ -111,8 +123,7 @@ public class TradeStatisticsManager {
             list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? 1 : (o1.tradeDate == o2.tradeDate ? 0 : -1)));
             TradeStatistics[] array = new TradeStatistics[tradeStatisticsSet.size()];
             list.toArray(array);
-            statisticsJsonStorage.queueUpForSave(Utilities.objectToJson(array), 5000);
+            statisticsJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
         }
     }
-
 }

@@ -238,8 +238,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes)) {
                 countries = "All Euro countries";
             } else {
-                countries = CountryUtil.getCodesString(acceptedCountryCodes);
-                tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
+                if (acceptedCountryCodes.size() == 1) {
+                    countries = CountryUtil.getNameAndCode(acceptedCountryCodes.get(0));
+                    tooltip = new Tooltip(countries);
+                } else {
+                    countries = CountryUtil.getCodesString(acceptedCountryCodes);
+                    tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
+                }
             }
             TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex, "Accepted taker countries:", countries).second;
             if (tooltip != null) {

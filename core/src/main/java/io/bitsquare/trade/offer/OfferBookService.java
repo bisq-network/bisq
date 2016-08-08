@@ -17,12 +17,19 @@
 
 package io.bitsquare.trade.offer;
 
+import com.google.inject.name.Named;
+import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.Utilities;
+import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bitsquare.storage.PlainTextWrapper;
+import io.bitsquare.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +54,7 @@ public class OfferBookService {
 
     private final P2PService p2PService;
     private PriceFeedService priceFeedService;
+    private final Storage<PlainTextWrapper> offersJsonStorage;
     private final List<OfferBookChangedListener> offerBookChangedListeners = new LinkedList<>();
 
 
@@ -55,9 +63,13 @@ public class OfferBookService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferBookService(P2PService p2PService, PriceFeedService priceFeedService) {
+    public OfferBookService(P2PService p2PService,
+                            PriceFeedService priceFeedService,
+                            Storage<PlainTextWrapper> offersJsonStorage,
+                            @Named(CoreOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
+        this.offersJsonStorage = offersJsonStorage;
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -79,10 +91,28 @@ public class OfferBookService {
                 });
             }
         });
-    }
 
-    public void addOfferBookChangedListener(OfferBookChangedListener offerBookChangedListener) {
-        offerBookChangedListeners.add(offerBookChangedListener);
+        if (dumpStatistics) {
+            this.offersJsonStorage.initWithFileName("offers_statistics.json");
+
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onBootstrapComplete() {
+                    addOfferBookChangedListener(new OfferBookChangedListener() {
+                        @Override
+                        public void onAdded(Offer offer) {
+                            doDumpStatistics();
+                        }
+
+                        @Override
+                        public void onRemoved(Offer offer) {
+                            doDumpStatistics();
+                        }
+                    });
+                    UserThread.runAfter(OfferBookService.this::doDumpStatistics, 1);
+                }
+            });
+        }
     }
 
 
@@ -139,5 +169,43 @@ public class OfferBookService {
 
     public boolean isBootstrapped() {
         return p2PService.isBootstrapped();
+    }
+
+    public void addOfferBookChangedListener(OfferBookChangedListener offerBookChangedListener) {
+        offerBookChangedListeners.add(offerBookChangedListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void doDumpStatistics() {
+        // We filter the case that it is a MarketBasedPrice but the price is not available
+        // That should only be possible if the price feed provider is not available
+        final List<FlatOffer> flatOffers = getOffers().stream()
+                .filter(offer -> !offer.getUseMarketBasedPrice() || priceFeedService.getMarketPrice(offer.getCurrencyCode()) != null)
+                .map(offer -> {
+                    try {
+                        return new FlatOffer(offer.getDirection(),
+                                offer.getCurrencyCode(),
+                                offer.getMinAmount(),
+                                offer.getAmount(),
+                                offer.getPrice(),
+                                offer.getDate(),
+                                offer.getId(),
+                                offer.getUseMarketBasedPrice(),
+                                offer.getMarketPriceMargin(),
+                                offer.getPaymentMethod(),
+                                offer.getOfferFeePaymentTxID()
+                        );
+                    } catch (Throwable t) {
+                        // In case a offer was corrupted with null values we ignore it
+                        return null;
+                    }
+                })
+                .filter(e -> e != null)
+                .collect(Collectors.toList());
+        offersJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(flatOffers)), 5000);
     }
 }

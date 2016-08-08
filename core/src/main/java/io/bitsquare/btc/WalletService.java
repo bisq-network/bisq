@@ -410,7 +410,7 @@ public class WalletService {
     }
 
     public void backupWallet() {
-        FileUtil.rollingBackup(walletDir, "Bitsquare.wallet");
+        FileUtil.rollingBackup(walletDir, "Bitsquare.wallet", 20);
     }
 
     public void clearBackup() {

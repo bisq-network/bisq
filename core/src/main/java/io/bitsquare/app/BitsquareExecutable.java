@@ -100,6 +100,8 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(CoreOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
                 .withRequiredArg();
+        parser.accepts(CoreOptionKeys.MAX_MEMORY, description("Max. permitted memory (used only at headless versions)", 600))
+                .withRequiredArg();
         parser.accepts(CoreOptionKeys.APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(CoreOptionKeys.IGNORE_DEV_MSG_KEY, description("If set to true all signed messages from Bitsquare developers are ignored " +

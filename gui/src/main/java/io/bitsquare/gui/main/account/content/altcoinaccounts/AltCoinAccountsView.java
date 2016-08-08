@@ -218,7 +218,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private void buildForm() {
         addTitledGroupBg(root, gridRow, 1, "Manage accounts");
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your cryptocurrency accounts:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your altcoin accounts:", Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);

@@ -77,7 +77,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
 
         ToggleGroup toggleGroup = new ToggleGroup();
         paymentAccount = new MenuItem(navigation, toggleGroup, "National currency accounts", FiatAccountsView.class, AwesomeIcon.MONEY);
-        altCoinsAccountView = new MenuItem(navigation, toggleGroup, "Cryptocurrency accounts", AltCoinAccountsView.class, AwesomeIcon.LINK);
+        altCoinsAccountView = new MenuItem(navigation, toggleGroup, "Altcoin accounts", AltCoinAccountsView.class, AwesomeIcon.LINK);
         arbitratorSelection = new MenuItem(navigation, toggleGroup, "Arbitrator selection", ArbitratorSelectionView.class, AwesomeIcon.USER_MD);
         password = new MenuItem(navigation, toggleGroup, "Wallet password", PasswordView.class, AwesomeIcon.UNLOCK_ALT);
         seedWords = new MenuItem(navigation, toggleGroup, "Wallet seed", SeedWordsView.class, AwesomeIcon.KEY);

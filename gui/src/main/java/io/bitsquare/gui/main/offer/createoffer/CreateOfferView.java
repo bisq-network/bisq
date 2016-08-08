@@ -763,6 +763,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, "Payment account:", Layout.FIRST_ROW_DISTANCE).second;
         paymentAccountsComboBox.setPromptText("Select payment account");
+        paymentAccountsComboBox.setMinWidth(300);
         editOfferElements.add(paymentAccountsComboBox);
 
         // we display either currencyComboBox (multi currency account) or currencyTextField (single)

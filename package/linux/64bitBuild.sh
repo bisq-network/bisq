@@ -6,7 +6,7 @@ mkdir -p gui/deploy
 set -e
 
 # Edit version
-version=0.4.9.2
+version=0.4.9.3
 
 jarFile="/media/sf_vm_shared_ubuntu/Bitsquare-$version.jar"
 jdkfixFile="/media/sf_vm_shared_ubuntu/jdkfix-$version.jar"
@@ -32,12 +32,10 @@ $JAVA_HOME/bin/javapackager \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare
 
-rm gui/deploy/Bitsquare.html
-rm gui/deploy/Bitsquare.jnlp
-rm gui/deploy/LICENSE
-mv "gui/deploy/bundles/bitsquare-$version.deb" "gui/deploy/Bitsquare-$version.deb"
-rmdir gui/deploy/bundles
-cp "gui/deploy/Bitsquare-$version.deb" "/media/sf_vm_shared_ubuntu/Bitsquare-64bit-$version.deb"
-cp "gui/deploy/Bitsquare-$version.deb" "/home/mk/Desktop/Bitsquare-64bit-$version.deb"
+#sudo alien -r -c -k gui/deploy/bundles/bitsquare-$version.deb
+
+mv "gui/deploy/bundles/bitsquare-$version.deb" "/media/sf_vm_shared_ubuntu/Bitsquare-64bit-$version.deb"
+#mv "bitsquare-$version-1.x86_64.rpm" "/media/sf_vm_shared_ubuntu/Bitsquare-64bit-$version.rpm"
+rm -r gui/deploy/
 
 cd package/linux

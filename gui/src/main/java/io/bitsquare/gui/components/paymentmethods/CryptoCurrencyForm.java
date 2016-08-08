@@ -72,7 +72,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
         addTradeCurrencyComboBox();
         currencyComboBox.setPrefWidth(250);
-        Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(gridPane, ++gridRow, "Cryptocurrency address:");
+        Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(gridPane, ++gridRow, "Altcoin address:");
         addressLabel = tuple2.first;
         addressInputTextField = tuple2.second;
         addressInputTextField.setValidator(altCoinAddressValidator);
@@ -100,7 +100,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
             String address = addressInputTextField.getText();
             address = StringUtils.abbreviate(address, 9);
             String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "?";
-            accountNameTextField.setText(method.concat(", ").concat(currency).concat(", ").concat(address));
+            accountNameTextField.setText(currency.concat(": ").concat(address));
         }
     }
 
@@ -109,11 +109,11 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", cryptoCurrencyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
-        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow, "Cryptocurrency address:", cryptoCurrencyAccount.getAddress());
+        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow, "Altcoin address:", cryptoCurrencyAccount.getAddress());
         addressLabel = tuple2.first;
         TextField field = tuple2.second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Cryptocurrency:", cryptoCurrencyAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, "Altcoin:", cryptoCurrencyAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 
@@ -126,8 +126,8 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
     @Override
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = addLabelSearchComboBox(gridPane, ++gridRow, "Cryptocurrency:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        currencyComboBox.setPromptText("Select or search cryptocurrency");
+        currencyComboBox = addLabelSearchComboBox(gridPane, ++gridRow, "Altcoin:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        currencyComboBox.setPromptText("Select or search altcoin");
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedCryptoCurrencies()));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 20));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {

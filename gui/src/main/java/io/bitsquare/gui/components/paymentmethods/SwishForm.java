@@ -82,9 +82,9 @@ public class SwishForm extends PaymentMethodForm {
     protected void autoFillNameTextField() {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String mobileNr = mobileNrInputTextField.getText();
-            mobileNr = StringUtils.abbreviate(mobileNr, 5);
+            mobileNr = StringUtils.abbreviate(mobileNr, 9);
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(", ").concat(mobileNr));
+            accountNameTextField.setText(method.concat(": ").concat(mobileNr));
         }
     }
 

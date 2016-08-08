@@ -711,16 +711,16 @@ public class Connection implements MessageListener {
                         Thread.currentThread().setName("InputHandler-" + sharedModel.connection.getPeersNodeAddressOptional().get().getFullAddress());
                         threadNameSet = true;
                     }
-
-                    if (objectInputStream.available() < 0) {
-                        log.warn("Shutdown because objectInputStream.available() < 0. objectInputStream.available()=" + objectInputStream.available());
-                        sharedModel.shutDown(CloseConnectionReason.TERMINATED);
-                        return;
-                    }
-
-                    Connection connection = sharedModel.connection;
-                    log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
                     try {
+                        if (objectInputStream.available() < 0) {
+                            log.warn("Shutdown because objectInputStream.available() < 0. objectInputStream.available()=" + objectInputStream.available());
+                            sharedModel.shutDown(CloseConnectionReason.TERMINATED);
+                            return;
+                        }
+
+                        Connection connection = sharedModel.connection;
+                        log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
+
                         Object rawInputObject = objectInputStream.readObject();
 
                         // Throttle inbound messages
@@ -757,12 +757,7 @@ public class Connection implements MessageListener {
                                     Utilities.toTruncatedString(rawInputObject),
                                     size);
                         } else {
-                            log.error("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "Invalid data arrived at inputHandler of connection {}.\n" +
-                                            "Size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    size);
+                            log.error("Invalid data arrived at inputHandler of connection {} Size={}", connection, size);
                             try {
                                 // Don't call toString on rawInputObject
                                 log.error("rawInputObject.className=" + rawInputObject.getClass().getName());
@@ -783,11 +778,12 @@ public class Connection implements MessageListener {
 
                         // First we check the size
                         boolean exceeds;
-                        if (rawInputObject instanceof GetDataResponse)
+                        if (rawInputObject instanceof GetDataResponse) {
                             exceeds = size > MAX_MSG_SIZE_GET_DATA;
-                        else
+                            log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
+                        } else {
                             exceeds = size > MAX_MSG_SIZE;
-
+                        }
                         if (exceeds)
                             log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, message);
 

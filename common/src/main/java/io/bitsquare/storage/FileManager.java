@@ -152,8 +152,8 @@ public class FileManager<T> {
         renameTempFileToFile(storageFile, corruptedFile);
     }
 
-    public synchronized void backupFile(String fileName) throws IOException {
-        FileUtil.rollingBackup(dir, fileName);
+    public synchronized void backupFile(String fileName, int numMaxBackupFiles) throws IOException {
+        FileUtil.rollingBackup(dir, fileName, numMaxBackupFiles);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -171,30 +171,36 @@ public class FileManager<T> {
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
+        PrintWriter printWriter = null;
         try {
             if (!dir.exists())
                 if (!dir.mkdir())
                     log.warn("make dir failed");
 
             tempFile = File.createTempFile("temp", null, dir);
+            tempFile.deleteOnExit();
+            if (serializable instanceof PlainTextWrapper) {
+                // When we dump json files we don't want to safe it as java serialized string objects, so we use PrintWriter instead.
+                printWriter = new PrintWriter(tempFile);
+                printWriter.println(((PlainTextWrapper) serializable).plainText);
+            } else {
+                // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
+                // and we need to close it
+                // manually before replacing file with temp file
+                fileOutputStream = new FileOutputStream(tempFile);
+                objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
-            // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
-            // and we need to close it
-            // manually before replacing file with temp file
-            fileOutputStream = new FileOutputStream(tempFile);
-            objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                objectOutputStream.writeObject(serializable);
+                // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
+                // to not write through to physical media for at least a few seconds, but this is the best we can do.
+                fileOutputStream.flush();
+                fileOutputStream.getFD().sync();
 
-            objectOutputStream.writeObject(serializable);
-            // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
-            // to not write through to physical media for at least a few seconds, but this is the best we can do.
-            fileOutputStream.flush();
-            fileOutputStream.getFD().sync();
-
-            // Close resources before replacing file with temp file because otherwise it causes problems on windows
-            // when rename temp file
-            fileOutputStream.close();
-            objectOutputStream.close();
-
+                // Close resources before replacing file with temp file because otherwise it causes problems on windows
+                // when rename temp file
+                fileOutputStream.close();
+                objectOutputStream.close();
+            }
             renameTempFileToFile(tempFile, storageFile);
         } catch (Throwable t) {
             log.error("storageFile " + storageFile.toString());
@@ -212,6 +218,8 @@ public class FileManager<T> {
                     objectOutputStream.close();
                 if (fileOutputStream != null)
                     fileOutputStream.close();
+                if (printWriter != null)
+                    printWriter.close();
             } catch (IOException e) {
                 // We swallow that
                 e.printStackTrace();

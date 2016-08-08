@@ -75,9 +75,9 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     protected void autoFillNameTextField() {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String accountNr = accountNrInputTextField.getText();
-            accountNr = StringUtils.abbreviate(accountNr, 5);
+            accountNr = StringUtils.abbreviate(accountNr, 9);
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(", ").concat(accountNr));
+            accountNameTextField.setText(method.concat(": ").concat(accountNr));
         }
     }
 
