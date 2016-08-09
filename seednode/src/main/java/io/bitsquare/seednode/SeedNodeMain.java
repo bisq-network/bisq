@@ -27,6 +27,8 @@ import io.bitsquare.common.util.RestartUtil;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.bitcoinj.store.BlockStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +42,7 @@ import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
 public class SeedNodeMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
     private static long MAX_MEMORY_MB_DEFAULT = 500;
-    private static final long CHECK_MEMORY_PERIOD_SEC = 10 * 60;
+    private static final long CHECK_MEMORY_PERIOD_SEC = 5 * 60;
     private SeedNode seedNode;
     private volatile boolean stopped;
     private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
@@ -88,7 +90,27 @@ public class SeedNodeMain extends BitsquareExecutable {
     protected void doExecute(OptionSet options) {
         final BitsquareEnvironment environment = new BitsquareEnvironment(options);
         SeedNode.setEnvironment(environment);
+
         UserThread.execute(() -> seedNode = new SeedNode());
+
+        Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
+            if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
+                    throwable.getCause().getCause() instanceof BlockStoreException) {
+                log.error(throwable.getMessage());
+            } else {
+                log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
+                log.error("throwableMessage= " + throwable.getMessage());
+                log.error("throwableClass= " + throwable.getClass());
+                log.error("Stack trace:\n" + ExceptionUtils.getStackTrace(throwable));
+                throwable.printStackTrace();
+                log.error("We shut down the app because an unhandled error occurred");
+                // We don't use the restart as in case of OutOfMemory errors the restart might fail as well
+                // The run loop will restart the node anyway...
+                System.exit(EXIT_FAILURE);
+            }
+        };
+        Thread.setDefaultUncaughtExceptionHandler(handler);
+        Thread.currentThread().setUncaughtExceptionHandler(handler);
 
         String maxMemoryOption = environment.getProperty(CoreOptionKeys.MAX_MEMORY);
         if (maxMemoryOption != null && !maxMemoryOption.isEmpty()) {
@@ -113,22 +135,11 @@ public class SeedNodeMain extends BitsquareExecutable {
                     Profiler.printSystemLoad(log);
                 }
 
-                if (usedMemoryInMB > maxMemory) {
-                    stopped = true;
-                    seedNode.gracefulShutDown(() -> {
-                        try {
-                            final String[] tokens = environment.getAppDataDir().split("_");
-                            String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
-                            RestartUtil.restartApplication(logPath);
-                        } catch (IOException e) {
-                            log.error(e.toString());
-                            e.printStackTrace();
-                        } finally {
-                            log.warn("Shutdown complete");
-                            System.exit(0);
-                        }
-                    });
-                }
+                final long finalUsedMemoryInMB = usedMemoryInMB;
+                UserThread.runAfter(() -> {
+                    if (finalUsedMemoryInMB > maxMemory)
+                        restart(environment);
+                }, 1);
             }
         }, CHECK_MEMORY_PERIOD_SEC);
 
@@ -138,5 +149,22 @@ public class SeedNodeMain extends BitsquareExecutable {
             } catch (InterruptedException ignore) {
             }
         }
+    }
+
+    private void restart(BitsquareEnvironment environment) {
+        stopped = true;
+        seedNode.gracefulShutDown(() -> {
+            try {
+                final String[] tokens = environment.getAppDataDir().split("_");
+                String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";
+                RestartUtil.restartApplication(logPath);
+            } catch (IOException e) {
+                log.error(e.toString());
+                e.printStackTrace();
+            } finally {
+                log.warn("Shutdown complete");
+                System.exit(0);
+            }
+        });
     }
 }
