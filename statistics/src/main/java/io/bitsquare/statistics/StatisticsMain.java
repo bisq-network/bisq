@@ -103,8 +103,10 @@ public class StatisticsMain extends BitsquareExecutable {
                 log.error("throwableClass= " + throwable.getClass());
                 log.error("Stack trace:\n" + ExceptionUtils.getStackTrace(throwable));
                 throwable.printStackTrace();
-                log.error("We restart the app because an unhandled error occurred");
-                UserThread.execute(() -> restart(environment));
+                log.error("We shut down the app because an unhandled error occurred");
+                // We don't use the restart as in case of OutOfMemory errors the restart might fail as well
+                // The run loop will restart the node anyway...
+                System.exit(EXIT_FAILURE);
             }
         };
         Thread.setDefaultUncaughtExceptionHandler(handler);
