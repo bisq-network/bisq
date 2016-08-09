@@ -147,7 +147,7 @@ public abstract class BitsquareExecutable {
                 return;
         }
         try {
-            Files.createDirectory(dir);
+            Files.createDirectories(dir);
         } catch (IOException ex) {
             throw new BitsquareException(ex, "Application data directory '%s' could not be created", dir);
         }
