@@ -193,7 +193,7 @@ public class SellerStep3View extends TradeStepView {
     protected String getInfoText() {
         if (model.isBlockChainMethod()) {
             return "The bitcoin buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
-                    "Check for blockchain confirmations at your cryptocurrency wallet or block explorer and " +
+                    "Check for blockchain confirmations at your altcoin wallet or block explorer and " +
                     "confirm the payment when you have sufficient blockchain confirmations.";
         } else {
             return "The bitcoin buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +

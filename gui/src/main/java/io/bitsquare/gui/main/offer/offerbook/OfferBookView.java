@@ -300,7 +300,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void onCreateOffer() {
         if (!model.hasPaymentAccount()) {
             openPopupForMissingAccountSetup("You have not setup a payment account",
-                    "You need to setup a national currency or cryptocurrency account before you can create an offer.\n" +
+                    "You need to setup a national currency or altcoin account before you can create an offer.\n" +
                             "Do you want to setup an account?", FiatAccountsView.class, "\"Account\"");
         } else if (!model.hasPaymentAccountForCurrency()) {
             openPopupForMissingAccountSetup("No matching payment account",

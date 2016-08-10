@@ -22,7 +22,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class GetDataRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetDataRequestHandler.class);
@@ -71,8 +73,15 @@ public class GetDataRequestHandler {
         Log.traceCall(getDataRequest + "\n\tconnection=" + connection);
 
         final HashSet<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
-        final HashSet<StoragePayload> storagePayloadSet = new HashSet<>();
-        for (ProtectedStorageEntry protectedStorageEntry : dataStorage.getMap().values()) {
+        final Set<Integer> lookupSet = new HashSet<>();
+
+        Set<P2PDataStorage.ByteArray> excludedItems = getDataRequest.getExcludedKeys() != null ?
+                getDataRequest.getExcludedKeys().stream()
+                        .map(P2PDataStorage.ByteArray::new)
+                        .collect(Collectors.toSet())
+                : new HashSet<>();
+
+        for (ProtectedStorageEntry protectedStorageEntry : dataStorage.getFilteredValues(excludedItems)) {
             final StoragePayload storagePayload = protectedStorageEntry.getStoragePayload();
             boolean doAdd = false;
             if (storagePayload instanceof CapabilityRequiringPayload) {
@@ -102,8 +111,11 @@ public class GetDataRequestHandler {
             }
             if (doAdd) {
                 // We have TradeStatistic data of both traders but we only send 1 item, 
-                // so we use storagePayloadSet as container to check
-                if (storagePayloadSet.add(storagePayload))
+                // so we use lookupSet as for a fast lookup. Using filteredDataSet would require a loop as it stores 
+                // protectedStorageEntry not storagePayload. protectedStorageEntry is different for both traders but storagePayload not, 
+                // as we ignore the pubKey and data there in the hashCode method.
+                boolean notContained = lookupSet.add(storagePayload.hashCode());
+                if (notContained)
                     filteredDataSet.add(protectedStorageEntry);
             }
         }

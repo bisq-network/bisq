@@ -5,8 +5,8 @@ import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.p2p.storage.payload.CapabilityRequiringPayload;
-import io.bitsquare.p2p.storage.payload.LazyProcessedPayload;
-import io.bitsquare.p2p.storage.payload.StoragePayload;
+import io.bitsquare.p2p.storage.payload.LazyProcessedStoragePayload;
+import io.bitsquare.p2p.storage.payload.PersistedStoragePayload;
 import io.bitsquare.trade.offer.Offer;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Immutable
-public final class TradeStatistics implements StoragePayload, CapabilityRequiringPayload, LazyProcessedPayload {
+public final class TradeStatistics implements LazyProcessedStoragePayload, CapabilityRequiringPayload, PersistedStoragePayload {
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
@@ -111,12 +111,16 @@ public final class TradeStatistics implements StoragePayload, CapabilityRequirin
         if (offerAmount != that.offerAmount) return false;
         if (offerMinAmount != that.offerMinAmount) return false;
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) return false;
-        if (direction != that.direction) return false;
+
+        if (direction != null && that.direction != null && direction.ordinal() != that.direction.ordinal())
+            return false;
+        else if ((direction == null && that.direction != null) || (direction != null && that.direction == null))
+            return false;
+        
         if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
             return false;
         if (offerId != null ? !offerId.equals(that.offerId) : that.offerId != null) return false;
         return !(depositTxId != null ? !depositTxId.equals(that.depositTxId) : that.depositTxId != null);
-
     }
 
     @Override
@@ -124,7 +128,7 @@ public final class TradeStatistics implements StoragePayload, CapabilityRequirin
         int result;
         long temp;
         result = currency != null ? currency.hashCode() : 0;
-        result = 31 * result + (direction != null ? direction.hashCode() : 0);
+        result = 31 * result + (direction != null ? direction.ordinal() : 0);
         result = 31 * result + (int) (tradePrice ^ (tradePrice >>> 32));
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
         result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
@@ -156,6 +160,7 @@ public final class TradeStatistics implements StoragePayload, CapabilityRequirin
                 ", offerId='" + offerId + '\'' +
                 ", depositTxId='" + depositTxId + '\'' +
                 ", pubKeyRing=" + pubKeyRing +
+                ", hashCode=" + hashCode() +
                 '}';
     }
 }

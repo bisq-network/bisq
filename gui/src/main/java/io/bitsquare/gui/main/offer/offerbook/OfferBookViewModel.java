@@ -313,26 +313,35 @@ class OfferBookViewModel extends ActivatableViewModel {
         String result = "";
         if (item != null) {
             Offer offer = item.getOffer();
-            String method = BSResources.get(offer.getPaymentMethod().getId());
+            result = "Payment method: " + BSResources.get(offer.getPaymentMethod().getId());
+            result += "\nCurrency: " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
+
             String methodCountryCode = offer.getCountryCode();
+            if (methodCountryCode != null) {
+                String bankId = offer.getBankId();
+                if (bankId != null && !bankId.equals("null")) {
+                    if (BankUtil.isBankIdRequired(methodCountryCode))
+                        result += "\nOfferers bank ID: " + bankId;
+                    else if (BankUtil.isBankNameRequired(methodCountryCode))
+                        result += "\nOfferers bank name: " + bankId;
+                }
+            }
 
             if (methodCountryCode != null)
-                result = method + "\n\nOfferers seat of bank country:\n" + CountryUtil.getNameByCode(methodCountryCode);
-            else
-                result = method;
+                result += "\nOfferers seat of bank country: " + CountryUtil.getNameByCode(methodCountryCode);
 
             List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
             List<String> acceptedBanks = offer.getAcceptedBankIds();
             if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
                 if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
-                    result += "\n\nAccepted takers seat of bank countries:\nAll Euro countries";
+                    result += "\nAccepted seat of bank countries (taker): All Euro countries";
                 else
-                    result += "\n\nAccepted taker seat of bank countries:\n" + CountryUtil.getNamesByCodesString(acceptedCountryCodes);
+                    result += "\nAccepted seat of bank countries (taker):\n" + CountryUtil.getNamesByCodesString(acceptedCountryCodes);
             } else if (acceptedBanks != null && !acceptedBanks.isEmpty()) {
                 if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK))
-                    result += "\n\nBank name: " + acceptedBanks.get(0);
+                    result += "\nBank name: " + acceptedBanks.get(0);
                 else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS))
-                    result += "\n\nAccepted banks: " + Joiner.on(", ").join(acceptedBanks);
+                    result += "\nAccepted banks: " + Joiner.on(", ").join(acceptedBanks);
             }
         }
         return result;

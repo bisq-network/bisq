@@ -24,9 +24,17 @@ public class CurrencyTuple implements Serializable {
 
     public final String code;
     public final String name;
+    public final int precision; // precision 4 is 1/10000 -> 0.0001 is smallest unit
 
     public CurrencyTuple(String code, String name) {
+        // We use Fiat class and there precision is 4
+        // In future we might add custom precision per currency 
+        this(code, name, 4);
+    }
+
+    public CurrencyTuple(String code, String name, int precision) {
         this.code = code;
         this.name = name;
+        this.precision = precision;
     }
 }

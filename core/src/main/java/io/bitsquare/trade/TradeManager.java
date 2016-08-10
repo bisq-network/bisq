@@ -66,7 +66,10 @@ import org.spongycastle.crypto.params.KeyParameter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -222,7 +225,7 @@ public class TradeManager {
 
         // We start later to have better connectivity to the network
         UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics),
-                30, TimeUnit.SECONDS);
+                90, TimeUnit.SECONDS);
 
         pendingTradesInitialized.set(true);
     }
@@ -238,10 +241,12 @@ public class TradeManager {
                     keyRing.getPubKeyRing());
             tradeStatisticsManager.add(tradeStatistics);
 
-            // Only trades from last 30 days
-            //TODO we want to get old trades published so we dont do the 30 days check for the first few weeks of the new version
-            if (new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30)) || (new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(30)) {
-                long delay = 3000;
+            // We only republish trades from last 10 days
+            // TODO check if needed at all. Don't want to remove it atm to not risk anything.
+            // But we could check which tradeStatistics we received from the seed nodes and 
+            // only re-publish in case tradeStatistics are missing.
+            if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(10)) {
+                long delay = 5000;
                 final long minDelay = (i + 1) * delay;
                 final long maxDelay = (i + 2) * delay;
                 UserThread.runAfterRandomDelay(() -> {

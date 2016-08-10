@@ -63,6 +63,7 @@ import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.payment.CryptoCurrencyAccount;
 import io.bitsquare.payment.OKPayAccount;
+import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -74,6 +75,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.SetChangeListener;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -350,7 +352,7 @@ public class MainViewModel implements ViewModel {
                 bootstrapState.set("Tor node created");
                 p2PNetworkIconId.set("image-connection-tor");
 
-                if (preferences.getUseTorForBitcoinJ()) 
+                if (preferences.getUseTorForBitcoinJ())
                     initWalletService();
             }
 
@@ -430,10 +432,10 @@ public class MainViewModel implements ViewModel {
 
         // We only init wallet service here if not using Tor for bitcoinj.        
         // When using Tor, wallet init must be deferred until Tor is ready.
-        if (!preferences.getUseTorForBitcoinJ()) 
+        if (!preferences.getUseTorForBitcoinJ())
             initWalletService();
     }
-    
+
     private void initWalletService() {
         Log.traceCall();
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
@@ -572,6 +574,7 @@ public class MainViewModel implements ViewModel {
             @Override
             public void run() {
                 try {
+                    Thread.currentThread().setName("checkCryptoThread");
                     log.trace("Run crypto test");
                     // just use any simple dummy msg
                     io.bitsquare.p2p.peers.keepalive.messages.Ping payload = new Ping(1, 1);
@@ -611,6 +614,20 @@ public class MainViewModel implements ViewModel {
                     .onClose(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
                     .show();
         }
+
+        String remindPasswordAndBackupKey = "remindPasswordAndBackup";
+        user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
+            if (preferences.showAgain(remindPasswordAndBackupKey) && change.wasAdded()) {
+                new Popup<>().headLine("Important security recommendation")
+                        .information("We would like to remind you to consider using password protection for your wallet if you have not already enabled that.\n\n" +
+                                "It is also highly recommended to write down the wallet seed words. Those seed words are like a master password for recovering your Bitcoin wallet.\n" +
+                                "At the \"Wallet Seed\" section you find more information.\n\n" +
+                                "Additionally you can backup the complete application data folder at the \"Backup\" section.\n" +
+                                "Please note, that this backup is not encrypted!")
+                        .dontShowAgainId(remindPasswordAndBackupKey, preferences)
+                        .show();
+            }
+        });
     }
 
 

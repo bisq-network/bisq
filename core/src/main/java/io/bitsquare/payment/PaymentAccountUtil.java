@@ -7,7 +7,9 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,31 +54,31 @@ public class PaymentAccountUtil {
                 return false;
 
             if (paymentAccount instanceof SepaAccount || offer.getPaymentMethod().equals(PaymentMethod.SEPA)) {
-                boolean samePaymentMethod = paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
-                return samePaymentMethod;
+                return paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
             } else if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK) ||
                     offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
 
-                checkNotNull(offer.getAcceptedBankIds(), "offer.getAcceptedBankIds() must not be null");
+                final List<String> acceptedBankIds = offer.getAcceptedBankIds();
+                checkNotNull(acceptedBankIds, "offer.getAcceptedBankIds() must not be null");
+                final String bankId = ((BankAccount) paymentAccount).getBankId();
                 if (paymentAccount instanceof SpecificBanksAccount) {
                     // check if we have a matching bank
-                    boolean offerSideMatchesBank = offer.getAcceptedBankIds().contains(((BankAccount) paymentAccount).getBankId());
+                    boolean offerSideMatchesBank = bankId != null && acceptedBankIds.contains(bankId);
                     boolean paymentAccountSideMatchesBank = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks().contains(offer.getBankId());
                     return offerSideMatchesBank && paymentAccountSideMatchesBank;
                 } else {
                     // national or same bank
-                    boolean matchesBank = offer.getAcceptedBankIds().contains(((BankAccount) paymentAccount).getBankId());
-                    return matchesBank;
+                    return bankId != null && acceptedBankIds.contains(bankId);
                 }
             } else {
                 if (paymentAccount instanceof SpecificBanksAccount) {
                     // check if we have a matching bank
-                    boolean paymentAccountSideMatchesBank = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks().contains(offer.getBankId());
-                    return paymentAccountSideMatchesBank;
+                    final ArrayList<String> acceptedBanks = ((SpecificBanksAccount) paymentAccount).getAcceptedBanks();
+                    return acceptedBanks != null && offer.getBankId() != null && acceptedBanks.contains(offer.getBankId());
                 } else if (paymentAccount instanceof SameBankAccount) {
                     // check if we have a matching bank
-                    boolean paymentAccountSideMatchesBank = ((SameBankAccount) paymentAccount).getBankId().equals(offer.getBankId());
-                    return paymentAccountSideMatchesBank;
+                    final String bankId = ((SameBankAccount) paymentAccount).getBankId();
+                    return bankId != null && offer.getBankId() != null && bankId.equals(offer.getBankId());
                 } else {
                     // national
                     return true;

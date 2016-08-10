@@ -152,8 +152,8 @@ public class FileManager<T> {
         renameTempFileToFile(storageFile, corruptedFile);
     }
 
-    public synchronized void backupFile(String fileName) throws IOException {
-        FileUtil.rollingBackup(dir, fileName);
+    public synchronized void backupFile(String fileName, int numMaxBackupFiles) throws IOException {
+        FileUtil.rollingBackup(dir, fileName, numMaxBackupFiles);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -178,10 +178,11 @@ public class FileManager<T> {
                     log.warn("make dir failed");
 
             tempFile = File.createTempFile("temp", null, dir);
-            if (serializable instanceof JsonString) {
+            tempFile.deleteOnExit();
+            if (serializable instanceof PlainTextWrapper) {
                 // When we dump json files we don't want to safe it as java serialized string objects, so we use PrintWriter instead.
                 printWriter = new PrintWriter(tempFile);
-                printWriter.println(((JsonString) serializable).json);
+                printWriter.println(((PlainTextWrapper) serializable).plainText);
             } else {
                 // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
                 // and we need to close it

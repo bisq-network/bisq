@@ -73,11 +73,11 @@ You need to get the Bitsquare dependencies first as we need to copy the BountyCa
       
 ### 4. Copy the jdkfix jar file
       
-Copy the jdkfix-0.4.9.2.jar from the Bitsquare jdkfix/target directory to $JAVA_HOME/jre/lib/ext/. 
-jdkfix-0.4.9.2.jar includes a bugfix of the SortedList class which will be released with the next JDK version. 
+Copy the jdkfix-0.4.9.3.jar from the Bitsquare jdkfix/target directory to $JAVA_HOME/jre/lib/ext/. 
+jdkfix-0.4.9.3.jar includes a bugfix of the SortedList class which will be released with the next JDK version. 
 We need to load that class before the default java class. This step will be removed once the bugfix is in the official JDK.
     
-    $ sudo cp bitsquare/jdkfix/target/jdkfix-0.4.9.2.jar $JAVA_HOME/jre/lib/ext/jdkfix-0.4.9.2.jar
+    $ sudo cp bitsquare/jdkfix/target/jdkfix-0.4.9.3.jar $JAVA_HOME/jre/lib/ext/jdkfix-0.4.9.3.jar
 
 ### 5. Copy the BountyCastle provider jar file
 

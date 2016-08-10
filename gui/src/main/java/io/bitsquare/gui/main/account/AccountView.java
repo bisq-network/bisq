@@ -122,9 +122,11 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         String key = "accountPrivacyInfo";
         if (!DevFlags.DEV_MODE)
             new Popup().backgroundInfo("In the account screen you can setup your payment accounts for national currencies " +
-                    "as well as for crypto currencies.\n\n" +
-                    "Please note that this data is stored locally on your computer only. Bitsquare does not operate servers " +
-                    "and has no access to users data.\n\n" +
+                    "as well as for altcoins.\n\n" +
+                    "For Bitcoin you don't need to set up an account.\n" +
+                    "You can manage your Bitsquare wallet at the \"Funds\" section.\n\n" +
+                    "Please note, that any account data is only stored locally on your computer. Bitsquare does not operate servers " +
+                    "and has no access to users data!\n\n" +
                     "When you are trading you will exchange in the trade process with your trading partner the " +
                     "required account data for that trade (e.g. bank account data or altcoin address).")
                     .dontShowAgainId(key, preferences)

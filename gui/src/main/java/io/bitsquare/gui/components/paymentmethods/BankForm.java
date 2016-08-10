@@ -470,27 +470,27 @@ abstract class BankForm extends PaymentMethodForm {
                 countryCode = "";
             if (BankUtil.isBankIdRequired(countryCode)) {
                 bankId = bankIdInputTextField.getText();
-                if (bankId.length() > 6)
+                if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBranchIdRequired(countryCode)) {
                 bankId = branchIdInputTextField.getText();
-                if (bankId.length() > 6)
+                if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBankNameRequired(countryCode)) {
                 bankId = bankNameInputTextField.getText();
-                if (bankId.length() > 6)
+                if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             }
 
             String accountNr = accountNrInputTextField.getText();
-            if (accountNr.length() > 6)
+            if (accountNr.length() > 9)
                 accountNr = StringUtils.abbreviate(accountNr, 9);
 
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
-            if (bankId != null)
-                accountNameTextField.setText(method.concat(", ").concat(bankId).concat(", ").concat(accountNr));
+            if (bankId != null && !bankId.isEmpty())
+                accountNameTextField.setText(method.concat(": ").concat(bankId).concat(", ").concat(accountNr));
             else
-                accountNameTextField.setText(method.concat(", ").concat(accountNr));
+                accountNameTextField.setText(method.concat(": ").concat(accountNr));
         }
     }
 

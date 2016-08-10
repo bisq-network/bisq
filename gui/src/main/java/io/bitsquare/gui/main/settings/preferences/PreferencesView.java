@@ -206,7 +206,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             }
         });
 
-        Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, "Display crypto currencies:");
+        Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, "Display altcoins:");
         GridPane.setValignment(cryptoCurrenciesTuple.first, VPos.TOP);
         GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(0, 0, 0, 20));
         cryptoCurrenciesListView = cryptoCurrenciesTuple.second;
@@ -214,7 +214,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         GridPane.setColumnIndex(cryptoCurrenciesListView, 3);
         cryptoCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
         cryptoCurrenciesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
-        placeholder = new Label("There are no crypto currencies selected");
+        placeholder = new Label("There are no altcoins selected");
         placeholder.setWrapText(true);
         cryptoCurrenciesListView.setPlaceholder(placeholder);
         cryptoCurrenciesListView.setCellFactory(new Callback<ListView<CryptoCurrency>, ListCell<CryptoCurrency>>() {
@@ -273,7 +273,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         Tuple2<Label, ComboBox> labelComboBoxTuple2 = addLabelComboBox(root, gridRow);
         cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
-        cryptoCurrenciesComboBox.setPromptText("Add cryptocurrency");
+        cryptoCurrenciesComboBox.setPromptText("Add altcoin");
         cryptoCurrenciesComboBox.setConverter(new StringConverter<CryptoCurrency>() {
             @Override
             public String toString(CryptoCurrency tradeCurrency) {

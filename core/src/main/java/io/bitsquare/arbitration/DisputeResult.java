@@ -57,7 +57,8 @@ public final class DisputeResult implements Payload {
     public final String tradeId;
     public final int traderId;
     private DisputeFeePolicy disputeFeePolicy;
-
+    private Winner winner;
+    private Reason reason;
     private boolean tamperProofEvidence;
     private boolean idVerification;
     private boolean screenCast;
@@ -70,8 +71,6 @@ public final class DisputeResult implements Payload {
     private String arbitratorAddressAsString;
     private byte[] arbitratorPubKey;
     private long closeDate;
-    private Winner winner;
-    private Reason reason;
 
     transient private BooleanProperty tamperProofEvidenceProperty = new SimpleBooleanProperty();
     transient private BooleanProperty idVerificationProperty = new SimpleBooleanProperty();
@@ -251,6 +250,22 @@ public final class DisputeResult implements Payload {
         if (tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null) return false;
         if (disputeFeePolicy != that.disputeFeePolicy) return false;
         if (reason != that.reason) return false;
+
+        if (disputeFeePolicy != null && that.disputeFeePolicy != null && disputeFeePolicy.ordinal() != that.disputeFeePolicy.ordinal())
+            return false;
+        else if ((disputeFeePolicy == null && that.disputeFeePolicy != null) || (disputeFeePolicy != null && that.disputeFeePolicy == null))
+            return false;
+
+        if (reason != null && that.reason != null && reason.ordinal() != that.reason.ordinal())
+            return false;
+        else if ((reason == null && that.reason != null) || (reason != null && that.reason == null))
+            return false;
+
+        if (winner != null && that.winner != null && winner.ordinal() != that.winner.ordinal())
+            return false;
+        else if ((winner == null && that.winner != null) || (winner != null && that.winner == null))
+            return false;
+        
         if (summaryNotes != null ? !summaryNotes.equals(that.summaryNotes) : that.summaryNotes != null) return false;
         if (disputeCommunicationMessage != null ? !disputeCommunicationMessage.equals(that.disputeCommunicationMessage) : that.disputeCommunicationMessage != null)
             return false;
@@ -258,7 +273,7 @@ public final class DisputeResult implements Payload {
         if (arbitratorAddressAsString != null ? !arbitratorAddressAsString.equals(that.arbitratorAddressAsString) : that.arbitratorAddressAsString != null)
             return false;
         if (!Arrays.equals(arbitratorPubKey, that.arbitratorPubKey)) return false;
-        return winner == that.winner;
+        return true;
 
     }
 
@@ -266,8 +281,9 @@ public final class DisputeResult implements Payload {
     public int hashCode() {
         int result = tradeId != null ? tradeId.hashCode() : 0;
         result = 31 * result + traderId;
-        result = 31 * result + (disputeFeePolicy != null ? disputeFeePolicy.hashCode() : 0);
-        result = 31 * result + (reason != null ? reason.hashCode() : 0);
+        result = 31 * result + (disputeFeePolicy != null ? disputeFeePolicy.ordinal() : 0);
+        result = 31 * result + (reason != null ? reason.ordinal() : 0);
+        result = 31 * result + (winner != null ? winner.ordinal() : 0);
         result = 31 * result + (tamperProofEvidence ? 1 : 0);
         result = 31 * result + (idVerification ? 1 : 0);
         result = 31 * result + (screenCast ? 1 : 0);
@@ -280,7 +296,6 @@ public final class DisputeResult implements Payload {
         result = 31 * result + (arbitratorAddressAsString != null ? arbitratorAddressAsString.hashCode() : 0);
         result = 31 * result + (arbitratorPubKey != null ? Arrays.hashCode(arbitratorPubKey) : 0);
         result = 31 * result + (int) (closeDate ^ (closeDate >>> 32));
-        result = 31 * result + (winner != null ? winner.hashCode() : 0);
         return result;
     }
 }
