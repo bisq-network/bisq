@@ -137,8 +137,13 @@ public class StatisticsMain extends BitsquareExecutable {
 
                 final long finalUsedMemoryInMB = usedMemoryInMB;
                 UserThread.runAfter(() -> {
-                    if (finalUsedMemoryInMB > maxMemory)
-                        restart(environment);
+                    if (finalUsedMemoryInMB > maxMemory) {
+                        log.error("\n\n############################################################\n" +
+                                        "We shut down as we are over our memory limit. usedMemoryInMB: {}" +
+                                        "\n############################################################\n\n",
+                                finalUsedMemoryInMB);
+                        System.exit(EXIT_FAILURE);
+                    }
                 }, 1);
             }
         }, CHECK_MEMORY_PERIOD_SEC);
