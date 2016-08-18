@@ -28,7 +28,6 @@ import io.bitsquare.locale.*;
 import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.storage.Storage;
 import io.nucleo.net.bridge.BridgeProvider;
-import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -164,7 +163,37 @@ public final class Preferences implements Persistable {
         else
             defaultPath = System.getProperty("user.home");
 
+        fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
+        cryptoCurrencies = new ArrayList<>(cryptoCurrenciesAsObservable);
 
+        btcDenominationProperty.addListener((ov) -> {
+            btcDenomination = btcDenominationProperty.get();
+            storage.queueUpForSave();
+        });
+        useAnimationsProperty.addListener((ov) -> {
+            useAnimations = useAnimationsProperty.get();
+            staticUseAnimations = useAnimations;
+            storage.queueUpForSave();
+        });
+        useInvertedMarketPriceProperty.addListener((ov) -> {
+            useInvertedMarketPrice = useInvertedMarketPriceProperty.get();
+            storage.queueUpForSave();
+        });
+        fiatCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
+            fiatCurrencies.clear();
+            fiatCurrencies.addAll(fiatCurrenciesAsObservable);
+            storage.queueUpForSave();
+        });
+        cryptoCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
+            cryptoCurrencies.clear();
+            cryptoCurrencies.addAll(cryptoCurrenciesAsObservable);
+            storage.queueUpForSave();
+        });
+        useTorForHttpRequestsProperty.addListener((ov) -> {
+            useTorForHttpRequests = useTorForHttpRequestsProperty.get();
+            storage.queueUpForSave();
+        });
+        
         Preferences persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             setBtcDenomination(persisted.btcDenomination);
@@ -172,10 +201,7 @@ public final class Preferences implements Persistable {
             setUseInvertedMarketPrice(persisted.useInvertedMarketPrice);
 
             setFiatCurrencies(persisted.fiatCurrencies);
-            fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
-
             setCryptoCurrencies(persisted.cryptoCurrencies);
-            cryptoCurrencies = new ArrayList<>(cryptoCurrenciesAsObservable);
 
             setBlockChainExplorerTestNet(persisted.getBlockChainExplorerTestNet());
             setBlockChainExplorerMainNet(persisted.getBlockChainExplorerMainNet());
@@ -230,10 +256,7 @@ public final class Preferences implements Persistable {
                 defaultPath = persisted.getDefaultPath();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
-            fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
-
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
-            cryptoCurrencies = new ArrayList<>(cryptoCurrenciesAsObservable);
 
             setBlockChainExplorerTestNet(blockChainExplorersTestNet.get(0));
             setBlockChainExplorerMainNet(blockChainExplorersMainNet.get(0));
@@ -247,35 +270,6 @@ public final class Preferences implements Persistable {
         }
 
         this.bitcoinNetwork = bitsquareEnvironment.getBitcoinNetwork();
-
-        // Use that to guarantee update of the serializable field and to make a storage update in case of a change
-        btcDenominationProperty.addListener((ov) -> {
-            btcDenomination = btcDenominationProperty.get();
-            storage.queueUpForSave();
-        });
-        useAnimationsProperty.addListener((ov) -> {
-            useAnimations = useAnimationsProperty.get();
-            staticUseAnimations = useAnimations;
-            storage.queueUpForSave();
-        });
-        useInvertedMarketPriceProperty.addListener((ov) -> {
-            useInvertedMarketPrice = useInvertedMarketPriceProperty.get();
-            storage.queueUpForSave();
-        });
-        fiatCurrenciesAsObservable.addListener((Observable ov) -> {
-            fiatCurrencies.clear();
-            fiatCurrencies.addAll(fiatCurrenciesAsObservable);
-            storage.queueUpForSave();
-        });
-        cryptoCurrenciesAsObservable.addListener((Observable ov) -> {
-            cryptoCurrencies.clear();
-            cryptoCurrencies.addAll(cryptoCurrenciesAsObservable);
-            storage.queueUpForSave();
-        });
-        useTorForHttpRequestsProperty.addListener((ov) -> {
-            useTorForHttpRequests = useTorForHttpRequestsProperty.get();
-            storage.queueUpForSave();
-        });
 
         fiatCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
         cryptoCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
