@@ -301,18 +301,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
 
-        final ImageView invertIcon = new ImageView();
-        invertIcon.setId("invert");
-        final Button invertIconButton = new Button("", invertIcon);
-        invertIconButton.setPadding(new Insets(0, 0, 0, 0));
-        invertIconButton.setFocusTraversable(false);
-        invertIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(invertIconButton, new Insets(2, 0, 0, 0));
-        invertIconButton.setOnAction(e -> model.preferences.flipUseInvertedMarketPrice());
-
-        HBox hBox1 = new HBox();
-        hBox1.getChildren().setAll(priceComboBox, invertIconButton);
-
         Label label = new Label(text);
         label.setId("nav-balance-label");
         label.setTextAlignment(TextAlignment.CENTER);
@@ -351,7 +339,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         VBox vBox = new VBox();
         vBox.setSpacing(3);
         vBox.setPadding(new Insets(11, 0, 0, 0));
-        vBox.getChildren().addAll(hBox1, hBox2);
+        vBox.getChildren().addAll(priceComboBox, hBox2);
         return new Tuple3<>(priceComboBox, label, vBox);
     }
 
