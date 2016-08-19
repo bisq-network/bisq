@@ -18,6 +18,7 @@
 package io.bitsquare.gui.util;
 
 import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.p2p.NodeAddress;
@@ -218,7 +219,12 @@ public class BSFormatter {
 
     public String formatPriceWithCode(Fiat fiat) {
         if (fiat != null) {
-            return formatFiat(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
+            final String currencyCode = fiat.getCurrencyCode();
+            if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                final double value = fiat.value != 0 ? 10000D / fiat.value : 0;
+                return MathUtils.roundDouble(value, 8) + " " + getCurrencyPair(currencyCode);
+            } else
+                return formatFiat(fiat) + " " + getCurrencyPair(currencyCode);
         } else {
             return "N/A";
         }
