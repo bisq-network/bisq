@@ -204,7 +204,7 @@ public class BSFormatter {
         }
     }
 
-    public String formatFiatWithCode(Fiat fiat) {
+    private String formatFiatWithCode(Fiat fiat) {
         if (fiat != null) {
             try {
                 return fiatFormat.noCode().format(fiat).toString() + " " + fiat.getCurrencyCode();
@@ -259,6 +259,40 @@ public class BSFormatter {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Amount
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String formatAmount(Fiat fiat) {
+        return formatFiat(fiat);
+    }
+
+    public String formatAmountWithCode(Fiat fiat) {
+        return formatFiatWithCode(fiat);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Volume
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String formatVolume(Fiat fiat) {
+        return formatFiat(fiat);
+    }
+
+    public String formatVolumeWithCode(Fiat fiat) {
+        return formatFiatWithCode(fiat);
+    }
+
+    public String formatVolumeLabel(String currencyCode) {
+        return formatVolumeLabel(currencyCode, "");
+    }
+
+    public String formatVolumeLabel(String currencyCode, String postFix) {
+        return CurrencyUtil.getNameByCode(currencyCode) + " amount" + postFix;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Price
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -267,9 +301,9 @@ public class BSFormatter {
             final String currencyCode = fiat.getCurrencyCode();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                 final double value = fiat.value != 0 ? 10000D / fiat.value : 0;
-                return MathUtils.roundDouble(value, 8) + " " + getCurrencyPair(currencyCode);
+                return String.valueOf(MathUtils.roundDouble(value, 8));
             } else
-                return formatFiat(fiat) + " " + getCurrencyPair(currencyCode);
+                return formatFiat(fiat);
         } else {
             return "N/A";
         }

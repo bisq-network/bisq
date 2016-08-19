@@ -163,7 +163,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         }
 
         amountRange = formatter.formatCoin(offer.getMinAmount()) + " - " + formatter.formatCoin(offer.getAmount());
-        price = formatter.formatFiat(dataModel.tradePrice);
+        price = formatter.formatPrice(dataModel.tradePrice);
         marketPriceMargin = formatter.formatPercentagePrice(offer.getMarketPriceMargin());
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
 
@@ -399,8 +399,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        volume.bind(createStringBinding(() -> formatter.formatFiat(dataModel.volumeAsFiat.get()), dataModel.volumeAsFiat));
-
+        volume.bind(createStringBinding(() -> formatter.formatVolume(dataModel.volumeAsFiat.get()), dataModel.volumeAsFiat));
 
         if (dataModel.getDirection() == Offer.Direction.SELL) {
             volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));

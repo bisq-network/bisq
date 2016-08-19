@@ -233,7 +233,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
-                return formatter.formatFiat(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
+                return formatter.formatPrice(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
             }
 
             @Override
@@ -245,7 +245,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChart = new CandleStickChart(priceAxisX, priceAxisY, new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
-                return formatter.formatFiatWithCode(Fiat.valueOf(model.getCurrencyCode(), (long) object));
+                return formatter.formatPriceWithCode(Fiat.valueOf(model.getCurrencyCode(), (long) object));
             }
 
             @Override
@@ -461,8 +461,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(model.showAllTradeCurrenciesProperty.get() ?
-                                            formatter.formatFiatWithCode(item.getTradePrice()) :
-                                            formatter.formatFiat(item.getTradePrice()));
+                                            formatter.formatPriceWithCode(item.getTradePrice()) :
+                                            formatter.formatPrice(item.getTradePrice()));
                                 else
                                     setText("");
                             }
@@ -487,8 +487,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(model.showAllTradeCurrenciesProperty.get() ?
-                                            formatter.formatFiatWithCode(item.getTradeVolume()) :
-                                            formatter.formatFiat(item.getTradeVolume()));
+                                            formatter.formatVolumeWithCode(item.getTradeVolume()) :
+                                            formatter.formatVolume(item.getTradeVolume()));
                                 else
                                     setText("");
                             }

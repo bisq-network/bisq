@@ -25,7 +25,6 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Contract;
@@ -118,9 +117,10 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addLabelTextField(gridPane, ++rowIndex, "Offer date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(dispute.getTradeDate()));
         addLabelTextField(gridPane, ++rowIndex, "Trade type:", formatter.getDirectionBothSides(offer.getDirection()));
-        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatFiat(contract.getTradePrice()) + " " + offer.getCurrencyCode());
+        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatPriceWithCode(contract.getTradePrice()));
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount:", formatter.formatFiatWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
+        addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(offer.getCurrencyCode(), ":"),
+                formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer bitcoin address:",
                 contract.getBuyerPayoutAddressString()).second.setMouseTransparent(false);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Seller bitcoin address:",

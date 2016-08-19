@@ -25,7 +25,6 @@ import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
@@ -127,7 +126,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         }
 
         addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(trade.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(trade.getTradeVolume()));
+        addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo, formatter.formatVolumeWithCode(trade.getTradeVolume()));
         addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatPriceWithCode(trade.getTradePrice()));
         addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
 

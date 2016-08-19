@@ -61,14 +61,14 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return formatter.formatFiat(((Trade) tradable).getTradePrice());
+            return formatter.formatPrice(((Trade) tradable).getTradePrice());
         else
-            return formatter.formatFiat(tradable.getOffer().getPrice());
+            return formatter.formatPrice(tradable.getOffer().getPrice());
     }
 
     String getVolume(ClosedTradableListItem item) {
         if (item != null && item.getTradable() instanceof Trade)
-            return formatter.formatFiatWithCode(((Trade) item.getTradable()).getTradeVolume());
+            return formatter.formatVolumeWithCode(((Trade) item.getTradable()).getTradeVolume());
         else if (item != null && item.getTradable() instanceof OpenOffer)
             return "-";
         else

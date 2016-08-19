@@ -34,7 +34,6 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.BankUtil;
 import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
@@ -174,19 +173,20 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         }
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(tradeAmount));
-            addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(offer.getVolumeByAmount(tradeAmount)));
+            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo,
+                    formatter.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
         } else {
             addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(offer.getAmount()));
             addLabelTextField(gridPane, ++rowIndex, "Min. bitcoin amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
-            String amount = formatter.formatFiatWithCode(offer.getOfferVolume());
+            String amount = formatter.formatAmountWithCode(offer.getOfferVolume());
             String minVolume = "";
             if (!offer.getAmount().equals(offer.getMinAmount()))
-                minVolume = " (min. " + formatter.formatFiatWithCode(offer.getMinOfferVolume()) + ")";
-            addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, amount + minVolume);
+                minVolume = " (min. " + formatter.formatVolumeWithCode(offer.getMinOfferVolume()) + ")";
+            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo, amount + minVolume);
         }
 
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(tradePrice) + " " + offer.getCurrencyCode() + "/" + "BTC");
+            addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(tradePrice));
         } else {
             Fiat price = offer.getPrice();
             if (offer.getUseMarketBasedPrice()) {

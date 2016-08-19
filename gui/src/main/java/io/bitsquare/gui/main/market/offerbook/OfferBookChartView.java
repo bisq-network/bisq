@@ -197,7 +197,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
-                                        setText(formatter.formatFiat(offer.getPrice()));
+                                        setText(formatter.formatPrice(offer.getPrice()));
                                         model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }
                                 }
@@ -212,7 +212,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
                                         setText("N/A");
                                     } else {
-                                        setText(formatter.formatFiat(offer.getPrice()));
+                                        setText(formatter.formatPrice(offer.getPrice()));
                                     }
                                 } else {
                                     if (listener != null)
@@ -268,7 +268,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
-                                        setText(formatter.formatFiat(offer.getOfferVolume()));
+                                        setText(formatter.formatVolume(offer.getOfferVolume()));
                                         model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }
                                 }
@@ -283,7 +283,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
                                         setText("N/A");
                                     } else {
-                                        setText(formatter.formatFiat(offer.getOfferVolume()));
+                                        setText(formatter.formatVolume(offer.getOfferVolume()));
                                     }
                                 } else {
                                     if (listener != null)

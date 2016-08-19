@@ -70,7 +70,7 @@ public class SellerStep3View extends TradeStepView {
                 PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
                 String key = "confirmPayment" + trade.getId();
                 String message;
-                String tradeAmountWithCode = model.formatter.formatFiatWithCode(trade.getTradeVolume());
+                String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
                 String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
                 if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData) {
                     String address = ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress();
@@ -79,13 +79,13 @@ public class SellerStep3View extends TradeStepView {
                             " blockchain explorer if the transaction to your receiving address\n" +
                             "" + address + "\n" +
                             "has already sufficient blockchain confirmations.\n" +
-                            "The payment amount has to be " + tradeAmountWithCode + "\n\n" +
+                            "The payment amount has to be " + tradeVolumeWithCode + "\n\n" +
                             "You can copy & paste your " + currencyName + " address from the main screen after " +
                             "closing that popup.";
                 } else {
                     message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
                             "Please go to your online banking web page and check if you have received " +
-                            tradeAmountWithCode + " from the bitcoin buyer.\n\n" +
+                            tradeVolumeWithCode + " from the bitcoin buyer.\n\n" +
                             "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
                     Optional<String> optionalHolderName = getOptionalHolderName();
                     if (optionalHolderName.isPresent()) {

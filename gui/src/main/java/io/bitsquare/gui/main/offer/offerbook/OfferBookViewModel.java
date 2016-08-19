@@ -286,9 +286,9 @@ class OfferBookViewModel extends ActivatableViewModel {
         Fiat minOfferVolume = item.getOffer().getMinOfferVolume();
         if (offerVolume != null && minOfferVolume != null) {
             if (showAllTradeCurrenciesProperty.get())
-                return formatter.formatFiatWithCode(offerVolume) + " (" + formatter.formatFiatWithCode(minOfferVolume) + ")";
+                return formatter.formatVolumeWithCode(offerVolume) + " (" + formatter.formatVolumeWithCode(minOfferVolume) + ")";
             else
-                return formatter.formatFiat(offerVolume) + " (" + formatter.formatFiat(minOfferVolume) + ")";
+                return formatter.formatVolume(offerVolume) + " (" + formatter.formatVolume(minOfferVolume) + ")";
         } else {
             return "N/A";
         }
