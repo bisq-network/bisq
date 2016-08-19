@@ -18,12 +18,14 @@
 package io.bitsquare.gui.main.market.trades;
 
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.market.trades.charts.price.CandleStickChart;
 import io.bitsquare.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.statistics.TradeStatistics;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -233,7 +235,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
-                return formatter.formatPrice(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
+                if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
+                    final double value = (double) object / 100000000D;
+                    return String.valueOf(MathUtils.roundDouble(value, 8));
+                } else
+                    return formatter.formatPrice(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
             }
 
             @Override
@@ -245,7 +251,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChart = new CandleStickChart(priceAxisX, priceAxisY, new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
-                return formatter.formatPriceWithCode(Fiat.valueOf(model.getCurrencyCode(), (long) object));
+                if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
+                    final double value = (long) object / 100000000D;
+                    return String.valueOf(MathUtils.roundDouble(value, 8)) + " " + formatter.getCurrencyPair(model.getCurrencyCode());
+                } else {
+                    return formatter.formatPriceWithCode(Fiat.valueOf(model.getCurrencyCode(), (long) object));
+                }
             }
 
             @Override

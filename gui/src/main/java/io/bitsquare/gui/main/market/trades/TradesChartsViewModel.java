@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.market.trades;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.MainView;
@@ -235,9 +236,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
         // create CandleData for defined time interval
         List<CandleData> candleDataList = itemsPerInterval.entrySet().stream()
+                .filter(entry -> entry.getKey() >= 0)
                 .map(entry -> getCandleData(entry.getKey(), entry.getValue()))
-                .filter(e -> e.tick >= 0)
                 .collect(Collectors.toList());
+
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
         priceItems.setAll(candleDataList.stream()
@@ -259,9 +261,15 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long accumulatedAmount = 0;
 
         for (TradeStatistics item : set) {
-            final long tradePriceAsLong = item.tradePrice;
-            low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
-            high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
+            long tradePriceAsLong = item.tradePrice;
+            if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
+                low = (low != 0) ? Math.max(low, tradePriceAsLong) : tradePriceAsLong;
+                high = (high != 0) ? Math.min(high, tradePriceAsLong) : tradePriceAsLong;
+            } else {
+                low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
+                high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
+            }
+            
             accumulatedVolume += (item.getTradeVolume() != null) ? item.getTradeVolume().value : 0;
             accumulatedAmount += item.tradeAmount;
         }
@@ -279,8 +287,19 @@ class TradesChartsViewModel extends ActivatableViewModel {
         String dateString = tickUnit.ordinal() > TickUnit.DAY.ordinal() ?
                 formatter.formatDateTime(date) :
                 formatter.formatDate(date);
-        return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume,
-                isBullish, dateString);
+        if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
+            return new CandleData(tick, getInvertedPrice(open), getInvertedPrice(close), getInvertedPrice(high),
+                    getInvertedPrice(low), getInvertedPrice(averagePrice), accumulatedAmount, accumulatedVolume,
+                    isBullish, dateString);
+        } else {
+            return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume,
+                    isBullish, dateString);
+        }
+    }
+
+    long getInvertedPrice(long price) {
+        final double value = price != 0 ? 1000000000000D / price : 0;
+        return Math.round(MathUtils.roundDouble(value, 8));
     }
 
     long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {
