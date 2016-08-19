@@ -26,7 +26,10 @@ import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.CryptoCurrencyForm;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.gui.util.*;
+import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.FormBuilder;
+import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.TradeCurrency;
@@ -45,8 +48,6 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 
 import javax.inject.Inject;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -163,17 +164,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     "If you are not sure about that process visit the Monero forum (https://forum.getmonero.org) to find more information.")
                     .closeButtonText("I understand")
                     .show();
-        } else if (code.equals("ETC")) {
-            //TODO remove after AUGUST, 30
-            if (new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
-                new Popup().information("The EHT/ETC fork situation carries considerable risks.\n" +
-                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.")
-                        .closeButtonText("I understand")
-                        .onAction(() -> GUIUtil.openWebPage("https://ethereumclassic.github.io/"))
-                        .actionButtonText("Open Ethereum Classic web page")
-                        .show();
-            }
-        } 
+        }
 
         if (!model.getPaymentAccounts().stream().filter(e -> {
             if (e.getAccountName() != null)

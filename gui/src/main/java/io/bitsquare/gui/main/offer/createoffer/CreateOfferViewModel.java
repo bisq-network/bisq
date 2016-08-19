@@ -32,7 +32,6 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -50,8 +49,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
-import java.util.Calendar;
-import java.util.Date;
 
 import static com.google.common.math.LongMath.checkedPow;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -130,7 +127,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private PriceFeedService.Type priceFeedType;
     private boolean inputIsMarketBasedPrice;
     private ChangeListener<Boolean> useMarketBasedPriceListener;
-    private ChangeListener<String> currencyCodeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -190,9 +186,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             directionLabel = BSResources.get("shared.sellBitcoin");
             amountDescription = BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.sell"));
         }
-
-        //TODO remove after AUGUST, 30
-        applyCurrencyCode(dataModel.getTradeCurrency().getCode());
     }
 
     @Override
@@ -341,26 +334,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
        /* feeFromFundingTxListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
         };*/
-
-
-        currencyCodeListener = (observable, oldValue, newValue) -> applyCurrencyCode(newValue);
-    }
-
-    //TODO remove after AUGUST, 30
-    private void applyCurrencyCode(String newValue) {
-        String key = "ETH-ETC-Warning";
-        if (preferences.showAgain(key) && new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
-            if (newValue.equals("ETC")) {
-                new Popup().information("The EHT/ETC fork situation carries considerable risks.\n" +
-                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.\n\n" +
-                        "Please note, that the price is denominated as ETC/BTC not BTC/ETC!")
-                        .closeButtonText("I understand")
-                        .onAction(() -> GUIUtil.openWebPage("https://ethereumclassic.github.io/"))
-                        .actionButtonText("Open Ethereum Classic web page")
-                        .dontShowAgainId(key, preferences)
-                        .show();
-            }
-        }
     }
 
     private void addListeners() {
@@ -381,9 +354,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         // dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
-
-        //TODO remove after AUGUST, 30
-        dataModel.tradeCurrencyCode.addListener(currencyCodeListener);
     }
 
     private void removeListeners() {
@@ -405,9 +375,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         if (offer != null && errorMessageListener != null)
             offer.errorMessageProperty().removeListener(errorMessageListener);
-
-        //TODO remove after AUGUST, 30
-        dataModel.tradeCurrencyCode.removeListener(currencyCodeListener);
     }
 
 
