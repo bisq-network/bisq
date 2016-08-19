@@ -788,8 +788,7 @@ public class MainViewModel implements ViewModel {
 
         marketPriceBinding = EasyBind.combine(
                 marketPriceCurrencyCode, marketPrice,
-                (marketPriceCurrency, marketPrice) ->
-                        marketPrice + " " + marketPriceCurrency + "/BTC");
+                (marketPriceCurrency, marketPrice) -> marketPrice + " " + formatter.getCurrencyPair(marketPriceCurrency));
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
@@ -838,7 +837,6 @@ public class MainViewModel implements ViewModel {
             String currencyCode = item.currencyCode;
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             String priceString;
-            String currencyPairString = currencyCode + "/BTC";
             if (marketPrice != null) {
                 double price = marketPrice.getPrice(priceFeedService.getType());
                 if (price != 0) {
@@ -853,7 +851,7 @@ public class MainViewModel implements ViewModel {
                 priceString = "N/A";
                 item.setIsPriceAvailable(false);
             }
-            item.setDisplayString(priceString + " " + currencyPairString);
+            item.setDisplayString(priceString + " " + formatter.getCurrencyPair(currencyCode));
         });
     }
 
