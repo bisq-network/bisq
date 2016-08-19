@@ -776,13 +776,8 @@ public class MainViewModel implements ViewModel {
             priceFeedService.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
         if (priceFeedService.getType() == null)
             priceFeedService.setType(PriceFeedService.Type.LAST);
-        priceFeedService.init(price -> {
-                    marketPrice.set(formatter.formatMarketPrice(price));
-                    //marketPriceInverted.set(price != 0 ? formatter.formatMarketPrice(1 / price, 8) : "");
-                },
-                (errorMessage, throwable) -> {
-                    marketPrice.set("N/A");
-                });
+        priceFeedService.init(price -> marketPrice.set(formatter.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
+                (errorMessage, throwable) -> marketPrice.set("N/A"));
         marketPriceCurrencyCode.bind(priceFeedService.currencyCodeProperty());
         typeProperty.bind(priceFeedService.typeProperty());
 
@@ -840,8 +835,7 @@ public class MainViewModel implements ViewModel {
             if (marketPrice != null) {
                 double price = marketPrice.getPrice(priceFeedService.getType());
                 if (price != 0) {
-                    //double priceInverted = 1 / price;
-                    priceString = formatter.formatMarketPrice(price); //useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, 8) : 
+                    priceString = formatter.formatMarketPrice(price, currencyCode);
                     item.setIsPriceAvailable(true);
                 } else {
                     priceString = "N/A";

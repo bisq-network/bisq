@@ -264,8 +264,11 @@ public class BSFormatter {
         return parseToFiat(input, currencyCode).equals(parseToFiatWith2Decimals(input, currencyCode));
     }
 
-    public String formatMarketPrice(double price) {
-        return formatMarketPrice(price, 3);
+    public String formatMarketPrice(double price, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return formatMarketPrice(price, 3);
+        else
+            return formatMarketPrice(price != 0 ? (1 / price) : 0, 8);
     }
 
     public String formatMarketPrice(double price, int decimals) {
