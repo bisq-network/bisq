@@ -527,7 +527,7 @@ public class BSFormatter {
     }
 
     public String getCurrencyPair(String currencyCode) {
-        if (CurrencyUtil.isCryptoCurrency(currencyCode))
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
             return "BTC/" + currencyCode;
         else
             return currencyCode + "/BTC";
