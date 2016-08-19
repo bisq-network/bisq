@@ -217,19 +217,6 @@ public class BSFormatter {
         }
     }
 
-    public String formatPriceWithCode(Fiat fiat) {
-        if (fiat != null) {
-            final String currencyCode = fiat.getCurrencyCode();
-            if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                final double value = fiat.value != 0 ? 10000D / fiat.value : 0;
-                return MathUtils.roundDouble(value, 8) + " " + getCurrencyPair(currencyCode);
-            } else
-                return formatFiat(fiat) + " " + getCurrencyPair(currencyCode);
-        } else {
-            return "N/A";
-        }
-    }
-
     private Fiat parseToFiat(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
@@ -270,11 +257,39 @@ public class BSFormatter {
         return parseToFiat(input, currencyCode).equals(parseToFiatWith2Decimals(input, currencyCode));
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Price
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String formatPrice(Fiat fiat) {
+        if (fiat != null) {
+            final String currencyCode = fiat.getCurrencyCode();
+            if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                final double value = fiat.value != 0 ? 10000D / fiat.value : 0;
+                return MathUtils.roundDouble(value, 8) + " " + getCurrencyPair(currencyCode);
+            } else
+                return formatFiat(fiat) + " " + getCurrencyPair(currencyCode);
+        } else {
+            return "N/A";
+        }
+    }
+
+    public String formatPriceWithCode(Fiat fiat) {
+        return formatPrice(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Market price
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
     public String formatMarketPrice(double price, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return formatMarketPrice(price, 3);
         else
-            return formatMarketPrice(price != 0 ? (1 / price) : 0, 8);
+            return formatMarketPrice(price != 0 ? (1D / price) : 0, 8);
     }
 
     public String formatMarketPrice(double price, int decimals) {
@@ -282,6 +297,7 @@ public class BSFormatter {
         df.setMaximumFractionDigits(decimals);
         return df.format(price);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Other

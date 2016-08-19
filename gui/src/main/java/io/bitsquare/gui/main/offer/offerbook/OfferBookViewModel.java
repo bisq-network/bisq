@@ -275,7 +275,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             if (showAllTradeCurrenciesProperty.get())
                 return formatter.formatPriceWithCode(price) + postFix;
             else
-                return formatter.formatFiat(price) + postFix;
+                return formatter.formatPrice(price) + postFix;
         } else {
             return "N/A";
         }
