@@ -141,10 +141,14 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("USDT", "USD Tether"));
         result.add(new CryptoCurrency("EURT", "EUR Tether"));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
+        result.add(new CryptoCurrency("SYNX", "Syndicate"));
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
         result.add(new CryptoCurrency("DAO", "DAO", true));
         result.add(new CryptoCurrency("CMT", "Comet"));
         result.add(new CryptoCurrency("SYNQ", "BitSYNQ"));
+        result.add(new CryptoCurrency("HNC", "HunCoin"));
+        result.add(new CryptoCurrency("UNO", "Unobtanium"));
+        result.add(new CryptoCurrency("DGB", "Digibyte"));
         return result;
     }
 
