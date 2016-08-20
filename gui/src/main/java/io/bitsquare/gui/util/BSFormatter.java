@@ -329,7 +329,7 @@ public class BSFormatter {
     public String formatMarketPrice(double price, int decimals) {
         DecimalFormat df = new DecimalFormat("#.#");
         df.setMaximumFractionDigits(decimals);
-        return df.format(price);
+        return df.format(price).replace(",", ".");
     }
 
 
@@ -404,7 +404,7 @@ public class BSFormatter {
         decimalFormat.setMinimumFractionDigits(digits);
         decimalFormat.setMaximumFractionDigits(digits);
         decimalFormat.setGroupingUsed(false);
-        return decimalFormat.format(value * 100.0);
+        return decimalFormat.format(value * 100.0).replace(",", ".");
     }
 
     public String formatToNumberString(double value, int digits) {
@@ -412,7 +412,7 @@ public class BSFormatter {
         decimalFormat.setMinimumFractionDigits(digits);
         decimalFormat.setMaximumFractionDigits(digits);
         decimalFormat.setGroupingUsed(false);
-        return decimalFormat.format(value);
+        return decimalFormat.format(value).replace(",", ".");
     }
 
     public double parseNumberStringToDouble(String percentString) throws NumberFormatException {
@@ -443,14 +443,6 @@ public class BSFormatter {
         } catch (NumberFormatException e) {
             throw e;
         }
-    }
-
-    public double roundDouble(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
-        long factor = (long) Math.pow(10, places);
-        value = value * factor;
-        long tmp = Math.round(value);
-        return (double) tmp / factor;
     }
 
     private String cleanInput(String input) {

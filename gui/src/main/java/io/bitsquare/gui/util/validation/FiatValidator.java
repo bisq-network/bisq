@@ -23,7 +23,6 @@ import javax.inject.Inject;
 
 public class FiatValidator extends NumberValidator {
     public static final double MIN_FIAT_VALUE = 0.01;
-    public static final double MIN_ALTCOIN_VALUE = 0.00000001;
     public static final double MAX_VALUE = 1000000000000D;
 
     public double minValue = MIN_FIAT_VALUE;

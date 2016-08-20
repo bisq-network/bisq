@@ -9,13 +9,30 @@ import java.math.RoundingMode;
 public class MathUtils {
     private static final Logger log = LoggerFactory.getLogger(MathUtils.class);
 
-    public static double roundDouble(double value, int digits) {
-        if (digits < 0)
+    public static double roundDouble(double value, int precision) {
+        return roundDouble(value, precision, RoundingMode.HALF_UP);
+    }
+
+    public static double roundDouble(double value, int precision, RoundingMode roundingMode) {
+        if (precision < 0)
             throw new IllegalArgumentException();
 
-        BigDecimal bd = BigDecimal.valueOf(value);
-        bd = bd.setScale(digits, RoundingMode.HALF_UP);
-        return bd.doubleValue();
+        try {
+            BigDecimal bd = BigDecimal.valueOf(value);
+            bd = bd.setScale(precision, roundingMode);
+            return bd.doubleValue();
+        } catch (Throwable t) {
+            log.error(t.toString());
+            return 0;
+        }
+    }
+
+    public static double scaleUp(double value, int precision) {
+        if (precision < 0)
+            throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, precision);
+        return value * factor;
     }
 
     public static double exactMultiply(double value1, double value2) {

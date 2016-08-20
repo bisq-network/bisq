@@ -47,8 +47,6 @@ import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,12 +94,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
     //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
 
     // final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
-    final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> minAmount = new SimpleObjectProperty<>();
     // Price is always otherCurrency/BTC, for altcoins we only invert at the display level. 
     // If we would change the price representation in the domain we would not be backward compatible
-    final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
-    final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
+    final ObjectProperty<Price> price = new SimpleObjectProperty<>();
+    final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
     final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
@@ -261,10 +259,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Offer createAndGetOffer() {
-        long fiatPrice = priceAsFiat.get() != null && !useMarketBasedPrice.get() ? priceAsFiat.get().getValue() : 0L;
+        long priceAsLong = price.get() != null && !useMarketBasedPrice.get() ? price.get().getValue() : 0L;
         double marketPriceMarginParam = useMarketBasedPrice.get() ? marketPriceMargin : 0;
-        long amount = amountAsCoin.get() != null ? amountAsCoin.get().getValue() : 0L;
-        long minAmount = minAmountAsCoin.get() != null ? minAmountAsCoin.get().getValue() : 0L;
+        long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
+        long minAmount = this.minAmount.get() != null ? this.minAmount.get().getValue() : 0L;
 
         ArrayList<String> acceptedCountryCodes = null;
         if (paymentAccount instanceof SepaAccount) {
@@ -293,7 +291,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,
-                fiatPrice,
+                priceAsLong,
                 marketPriceMarginParam,
                 useMarketBasedPrice.get(),
                 amount,
@@ -316,10 +314,16 @@ class CreateOfferDataModel extends ActivatableDataModel {
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         if (paymentAccount != null)
             this.paymentAccount = paymentAccount;
+
+        volume.set(null);
+        price.set(null);
     }
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         if (tradeCurrency != null) {
+            volume.set(null);
+            price.set(null);
+
             this.tradeCurrency = tradeCurrency;
             final String code = tradeCurrency.getCode();
             tradeCurrencyCode.set(code);
@@ -362,8 +366,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
-        if (minAmountAsCoin.get() != null && amountAsCoin.get() != null)
-            return !minAmountAsCoin.get().isGreaterThan(amountAsCoin.get());
+        if (minAmount.get() != null && amount.get() != null)
+            return !minAmount.get().isGreaterThan(amount.get());
         return true;
     }
 
@@ -406,32 +410,39 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void calculateVolume() {
-        if (priceAsFiat.get() != null &&
-                amountAsCoin.get() != null &&
-                !amountAsCoin.get().isZero() &&
-                !priceAsFiat.get().isZero()) {
-            volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+        if (price.get() != null &&
+                amount.get() != null &&
+                !amount.get().isZero() &&
+                !price.get().isZero()) {
+            try {
+                volume.set(new Volume(price.get().exchange(amount.get())));
+            } catch (Throwable t) {
+                log.error(t.toString());
+            }
         }
 
         updateBalance();
     }
 
     void calculateAmount() {
-        if (volumeAsFiat.get() != null &&
-                priceAsFiat.get() != null &&
-                !volumeAsFiat.get().isZero() &&
-                !priceAsFiat.get().isZero()) {
-            // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-            amountAsCoin.set(formatter.reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get())));
-
-            calculateTotalToPay();
+        if (volume.get() != null &&
+                price.get() != null &&
+                !volume.get().isZero() &&
+                !price.get().isZero()) {
+            try {
+                final Coin exchange = price.get().exchange(volume.get().getMonetary());
+                amount.set(formatter.reduceTo4Decimals(exchange));
+                calculateTotalToPay();
+            } catch (Throwable t) {
+                log.error(t.toString());
+            }
         }
     }
 
     void calculateTotalToPay() {
-        if (direction != null && amountAsCoin.get() != null) {
+        if (direction != null && amount.get() != null) {
             Coin feeAndSecDeposit = offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin);
-            Coin feeAndSecDepositAndAmount = feeAndSecDeposit.add(amountAsCoin.get());
+            Coin feeAndSecDepositAndAmount = feeAndSecDeposit.add(amount.get());
             Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDepositAndAmount;
             totalToPayAsCoin.set(required);
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
