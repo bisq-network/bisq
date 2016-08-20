@@ -172,15 +172,15 @@ public class BSFormatterTest {
         BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
         formatter.setLocale(Locale.GERMAN);
-        assertTrue(formatter.hasFiatValidDecimals(null, "EUR"));
-        assertTrue(formatter.hasFiatValidDecimals("0", "EUR"));
-        assertTrue(formatter.hasFiatValidDecimals("0,01", "EUR"));
-        assertTrue(formatter.hasFiatValidDecimals("0.01", "EUR"));
-        assertTrue(formatter.hasFiatValidDecimals("0.09", "EUR"));
-        assertTrue(formatter.hasFiatValidDecimals("20000000.01", "EUR"));
-        assertFalse(formatter.hasFiatValidDecimals("20000000.0123", "EUR"));
-        assertFalse(formatter.hasFiatValidDecimals("0.012", "EUR"));
-        assertFalse(formatter.hasFiatValidDecimals("0.01222312312312313", "EUR"));
+        assertTrue(formatter.isFiatAlteredWhenPrecisionApplied(null, "EUR"));
+        assertTrue(formatter.isFiatAlteredWhenPrecisionApplied("0", "EUR"));
+        assertTrue(formatter.isFiatAlteredWhenPrecisionApplied("0,01", "EUR"));
+        assertTrue(formatter.isFiatAlteredWhenPrecisionApplied("0.01", "EUR"));
+        assertTrue(formatter.isFiatAlteredWhenPrecisionApplied("0.09", "EUR"));
+        assertTrue(formatter.isFiatAlteredWhenPrecisionApplied("20000000.01", "EUR"));
+        assertFalse(formatter.isFiatAlteredWhenPrecisionApplied("20000000.0123", "EUR"));
+        assertFalse(formatter.isFiatAlteredWhenPrecisionApplied("0.012", "EUR"));
+        assertFalse(formatter.isFiatAlteredWhenPrecisionApplied("0.01222312312312313", "EUR"));
     }
 
 }

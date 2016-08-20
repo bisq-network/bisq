@@ -540,7 +540,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             boolean isValid = result.isValid;
             priceValidationResult.set(result);
             if (isValid) {
-                showWarningInvalidFiatDecimalPlaces.set(!formatter.hasFiatValidDecimals(userInput, dataModel.tradeCurrencyCode.get()));
+                showWarningInvalidFiatDecimalPlaces.set(!formatter.isFiatAlteredWhenPrecisionApplied(userInput, dataModel.tradeCurrencyCode.get()));
                 setPriceToModel();
                 price.set(formatter.formatFiat(dataModel.priceAsFiat.get()));
 
@@ -560,7 +560,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             InputValidator.ValidationResult result = isFiatInputValid(volume.get());
             volumeValidationResult.set(result);
             if (result.isValid) {
-                showWarningInvalidFiatDecimalPlaces.set(!formatter.hasFiatValidDecimals(userInput, dataModel.tradeCurrencyCode.get()));
+                showWarningInvalidFiatDecimalPlaces.set(!formatter.isFiatAlteredWhenPrecisionApplied(userInput, dataModel.tradeCurrencyCode.get()));
                 setVolumeToModel();
                 volume.set(formatter.formatFiat(dataModel.volumeAsFiat.get()));
 

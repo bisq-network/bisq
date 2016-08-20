@@ -253,7 +253,7 @@ public class BSFormatter {
         return Fiat.valueOf(currencyCode, 0);
     }
 
-    public boolean hasFiatValidDecimals(String input, String currencyCode) {
+    public boolean isFiatAlteredWhenPrecisionApplied(String input, String currencyCode) {
         return parseToFiat(input, currencyCode).equals(parseToFiatWithPrecision(input, currencyCode));
     }
 
