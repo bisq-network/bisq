@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.market.trades;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
-import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.MainView;
@@ -299,7 +298,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     long getInvertedPrice(long price) {
         final double value = price != 0 ? 1000000000000D / price : 0;
-        return Math.round(MathUtils.roundDouble(value, 8));
+        return Math.round(value);
     }
 
     long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {
