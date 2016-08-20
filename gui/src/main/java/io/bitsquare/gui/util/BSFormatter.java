@@ -240,7 +240,7 @@ public class BSFormatter {
      * @return
      */
 
-    public Fiat parseToFiatWith2Decimals(String input, String currencyCode) {
+    public Fiat parseToFiatWithPrecision(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
                 return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(), currencyCode);
@@ -254,7 +254,7 @@ public class BSFormatter {
     }
 
     public boolean hasFiatValidDecimals(String input, String currencyCode) {
-        return parseToFiat(input, currencyCode).equals(parseToFiatWith2Decimals(input, currencyCode));
+        return parseToFiat(input, currencyCode).equals(parseToFiatWithPrecision(input, currencyCode));
     }
 
 

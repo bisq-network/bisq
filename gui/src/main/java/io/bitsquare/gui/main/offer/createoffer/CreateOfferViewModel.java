@@ -36,6 +36,7 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccount;
@@ -567,7 +568,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
                 // must be placed after calculateAmount (btc value has been adjusted in case the calculation leads to
                 // invalid decimal places for the amount value
-                showWarningAdjustedVolume.set(!formatter.formatFiat(formatter.parseToFiatWith2Decimals(userInput, dataModel.tradeCurrencyCode.get()))
+                showWarningAdjustedVolume.set(!formatter.formatFiat(formatter.parseToFiatWithPrecision(userInput, dataModel.tradeCurrencyCode.get()))
                         .equals(volume
                                 .get()));
             }
@@ -718,11 +719,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private void setPriceToModel() {
-        dataModel.priceAsFiat.set(formatter.parseToFiatWith2Decimals(price.get(), dataModel.tradeCurrencyCode.get()));
+        dataModel.priceAsFiat.set(formatter.parseToFiatWithPrecision(price.get(), dataModel.tradeCurrencyCode.get()));
     }
 
     private void setVolumeToModel() {
-        dataModel.volumeAsFiat.set(formatter.parseToFiatWith2Decimals(volume.get(), dataModel.tradeCurrencyCode.get()));
+        dataModel.volumeAsFiat.set(formatter.parseToFiatWithPrecision(volume.get(), dataModel.tradeCurrencyCode.get()));
     }
 
     private InputValidator.ValidationResult isBtcInputValid(String input) {
@@ -730,6 +731,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private InputValidator.ValidationResult isFiatInputValid(String input) {
+        if (CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()))
+            fiatValidator.setMinValue(FiatValidator.MIN_ALTCOIN_VALUE);
+        else
+            fiatValidator.setMinValue(FiatValidator.MIN_FIAT_VALUE);
+
         return fiatValidator.validate(input);
     }
 

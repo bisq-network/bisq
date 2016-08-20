@@ -159,12 +159,12 @@ public class BSFormatterTest {
         BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
         formatter.setLocale(Locale.GERMAN);
-        assertEquals("0", formatter.parseToFiatWith2Decimals("0", "EUR").toPlainString());
-        assertEquals("0", formatter.parseToFiatWith2Decimals(null, "EUR").toPlainString());
-        assertEquals("0", formatter.parseToFiatWith2Decimals("s", "EUR").toPlainString());
-        assertEquals("0.12", formatter.parseToFiatWith2Decimals("0.123", "EUR").toPlainString());
-        assertEquals("0.13", formatter.parseToFiatWith2Decimals("0.125", "EUR").toPlainString());
-        assertEquals("0.13", formatter.parseToFiatWith2Decimals("0,125", "EUR").toPlainString());
+        assertEquals("0", formatter.parseToFiatWithPrecision("0", "EUR").toPlainString());
+        assertEquals("0", formatter.parseToFiatWithPrecision(null, "EUR").toPlainString());
+        assertEquals("0", formatter.parseToFiatWithPrecision("s", "EUR").toPlainString());
+        assertEquals("0.12", formatter.parseToFiatWithPrecision("0.123", "EUR").toPlainString());
+        assertEquals("0.13", formatter.parseToFiatWithPrecision("0.125", "EUR").toPlainString());
+        assertEquals("0.13", formatter.parseToFiatWithPrecision("0,125", "EUR").toPlainString());
     }
 
     @Test
