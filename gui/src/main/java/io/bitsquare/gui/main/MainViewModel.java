@@ -867,15 +867,15 @@ public class MainViewModel implements ViewModel {
                     .ifPresent(item2 -> selectedPriceFeedComboBoxItemProperty.set(item2));
         }
 
-        // Need a delay to next execute cycle as we get item.isPriceAvailable() set after that call. 
+        // Need a delay a bit as we get item.isPriceAvailable() set after that call. 
         // (In case we add a new currency in settings)
-        UserThread.execute(() -> {
+        UserThread.runAfter(() -> {
             if (item != null) {
                 String code = item.currencyCode;
                 isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable());
                 isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable());
             }
-        });
+        }, 10, TimeUnit.MILLISECONDS);
     }
 
     Optional<PriceFeedComboBoxItem> findPriceFeedComboBoxItem(String currencyCode) {

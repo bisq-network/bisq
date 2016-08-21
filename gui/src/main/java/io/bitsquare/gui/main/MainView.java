@@ -303,8 +303,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         Label label = new Label(text);
         label.setId("nav-balance-label");
-        label.setTextAlignment(TextAlignment.CENTER);
-        label.setPadding(new Insets(0, 25, 0, 0));
+        //label.setTextAlignment(TextAlignment.CENTER);
+        label.setPadding(new Insets(0, 0, 0, 2));
 
         final ImageView btcAverageIcon = new ImageView();
         btcAverageIcon.setId("btcaverage");
@@ -312,8 +312,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(btcAverageIconButton, new Insets(0, 27, 0, 0));
+        HBox.setMargin(btcAverageIconButton, new Insets(0, 5, 0, 0));
         btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
+        btcAverageIconButton.setVisible(model.isFiatCurrencyPriceFeedSelected.get());
+        btcAverageIconButton.setManaged(model.isFiatCurrencyPriceFeedSelected.get());
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.setTooltip(new Tooltip("Market price is provided by https://bitcoinaverage.com"));
@@ -324,8 +326,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(poloniexIconButton, new Insets(1, 27, 0, 0));
+        HBox.setMargin(poloniexIconButton, new Insets(1, 3, 0, 0));
         poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
+        poloniexIconButton.setVisible(model.isCryptoCurrencyPriceFeedSelected.get());
+        poloniexIconButton.setManaged(model.isCryptoCurrencyPriceFeedSelected.get());
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.setTooltip(new Tooltip("Market price is provided by https://poloniex.com"));

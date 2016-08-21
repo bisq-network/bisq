@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-
 /**
  * Represents a monetary fiat value. It was decided to not fold this into {@link org.bitcoinj.core.Coin} because of type
  * safety. Volume values always come with an attached currency code.

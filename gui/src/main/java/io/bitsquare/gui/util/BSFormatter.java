@@ -300,8 +300,10 @@ public class BSFormatter {
         if (fiat != null) {
             final String currencyCode = fiat.getCurrencyCode();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                DecimalFormat df = new DecimalFormat("#.#");
+                df.setMaximumFractionDigits(8);
                 final double value = fiat.value != 0 ? 10000D / fiat.value : 0;
-                return String.valueOf(MathUtils.roundDouble(value, 8));
+                return df.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
             } else
                 return formatFiat(fiat);
         } else {
