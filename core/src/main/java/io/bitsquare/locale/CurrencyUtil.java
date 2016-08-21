@@ -150,6 +150,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("HNC", "HunCoin"));
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("DGB", "Digibyte"));
+        result.add(new CryptoCurrency("VCN", "VCoin"));
         return result;
     }
 
