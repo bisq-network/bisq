@@ -131,7 +131,7 @@ public class BuyerStep2View extends TradeStepView {
                 "Start payment using " + BSResources.get(paymentAccountContractData.getPaymentMethodName()),
                 Layout.GROUP_DISTANCE);
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to transfer:",
-                model.getFiatAmount(),
+                model.getFiatVolume(),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 

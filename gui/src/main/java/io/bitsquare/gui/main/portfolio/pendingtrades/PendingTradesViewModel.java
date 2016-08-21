@@ -246,10 +246,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             return "";
     }
 
-    public String getFiatAmount() {
-        return dataModel.getTrade() != null ? formatter.formatAmountWithCode(dataModel.getTrade().getTradeVolume()) : "";
-    }
-
     // summary
     public String getTradeVolume() {
         return dataModel.getTrade() != null ? formatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount()) : "";

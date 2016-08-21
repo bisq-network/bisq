@@ -178,11 +178,11 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         } else {
             addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(offer.getAmount()));
             addLabelTextField(gridPane, ++rowIndex, "Min. bitcoin amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
-            String amount = formatter.formatAmountWithCode(offer.getOfferVolume());
+            String volume = formatter.formatVolumeWithCode(offer.getOfferVolume());
             String minVolume = "";
             if (!offer.getAmount().equals(offer.getMinAmount()))
                 minVolume = " (min. " + formatter.formatVolumeWithCode(offer.getMinOfferVolume()) + ")";
-            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo, amount + minVolume);
+            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo, volume + minVolume);
         }
 
         if (takeOfferHandlerOptional.isPresent()) {

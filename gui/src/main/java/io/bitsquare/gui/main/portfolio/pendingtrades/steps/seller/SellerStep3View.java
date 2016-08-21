@@ -134,7 +134,7 @@ public class SellerStep3View extends TradeStepView {
         TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, "Confirm payment receipt", Layout.GROUP_DISTANCE);
 
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to receive:",
-                model.getFiatAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                model.getFiatVolume(), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
         String myPaymentDetails = "";
