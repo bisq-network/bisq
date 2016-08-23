@@ -451,7 +451,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         minAmountBtcLabel.textProperty().bind(model.btcCode);
         priceDescriptionLabel.textProperty().bind(createStringBinding(() -> {
             // String currencyCode = model.tradeCurrencyCode.get();
-            return formatter.getPriceWithCounterCurrencyAndCurrencyPair(model.tradeCurrencyCode.get());
+            return formatter.getPriceWithCurrencyCode(model.tradeCurrencyCode.get());
             //BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode);
            /* return CurrencyUtil.isCryptoCurrency(currencyCode) ?
                     BSResources.get("createOffer.amountPriceBox.priceDescriptionAltcoin", currencyCode) :

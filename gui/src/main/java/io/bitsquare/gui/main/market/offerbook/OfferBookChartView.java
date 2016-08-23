@@ -151,7 +151,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     String tradeCurrencyName = tradeCurrency.getName();
                     areaChart.setTitle("Offer book for " + formatter.getCurrencyNameAndCurrencyPair(code));
                     volumeColumnLabel.set("Amount in " + code);
-                    xAxis.setLabel(formatter.getPriceWithCounterCurrencyAndCurrencyPair(code));
+                    xAxis.setLabel(formatter.getPriceWithCurrencyCode(code));
                     xAxis.setTickLabelFormatter(new StringConverter<Number>() {
                         @Override
                         public String toString(Number object) {

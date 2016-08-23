@@ -243,7 +243,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
         addLabelTextField(gridPane, ++rowIndex, "Traders role:", role);
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatPriceWithCode(contract.getTradePrice()));
+        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatPrice(contract.getTradePrice()));
         addLabelTextField(gridPane, ++rowIndex, "Trade volume:", formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
     }
 

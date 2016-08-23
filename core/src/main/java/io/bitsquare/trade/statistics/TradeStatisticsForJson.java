@@ -32,9 +32,10 @@ public final class TradeStatisticsForJson {
     public final String depositTxId;
 
     // Used in Json to provide same formatting/rounding for price
-    public String tradePriceDisplayString = "";
-    public String tradeAmountDisplayString = "";
-    public String tradeVolumeDisplayString = "";
+    public String tradePriceDisplayString;
+    public String tradeAmountDisplayString;
+    public String tradeVolumeDisplayString;
+    public String currencyPair;
 
     public TradeStatisticsForJson(TradeStatistics tradeStatistics) {
         this.direction = tradeStatistics.direction;
@@ -60,11 +61,14 @@ public final class TradeStatisticsForJson {
                 decimalFormat.setMaximumFractionDigits(8);
                 final double value = tradePriceAsFiat.value != 0 ? 10000D / tradePriceAsFiat.value : 0;
                 tradePriceDisplayString = decimalFormat.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
+                currencyPair = currency + "/" + "BTC";
             } else {
                 tradePriceDisplayString = fiatFormat.noCode().format(tradePriceAsFiat).toString();
+                currencyPair = "BTC/" + currency;
             }
             tradeAmountDisplayString = coinFormat.noCode().format(getTradeAmount()).toString();
             tradeVolumeDisplayString = fiatFormat.noCode().format(getTradeVolume()).toString();
+
         } catch (Throwable t) {
             log.error("Error at setDisplayStrings: " + t.getMessage());
         }

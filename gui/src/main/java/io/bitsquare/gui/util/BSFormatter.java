@@ -55,7 +55,7 @@ public class BSFormatter {
     // Input of a group separator (1,123,45) lead to an validation error.
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
-    private MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
+    private MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(2, 3);
 
     //  private String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
@@ -288,6 +288,7 @@ public class BSFormatter {
         if (fiat != null) {
             final String currencyCode = fiat.getCurrencyCode();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                decimalFormat.setMinimumFractionDigits(8);
                 decimalFormat.setMaximumFractionDigits(8);
                 final double value = fiat.value != 0 ? 10000D / fiat.value : 0;
                 return decimalFormat.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
@@ -324,6 +325,7 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String formatRoundedDoubleWithPrecision(double value, int precision) {
+        decimalFormat.setMinimumFractionDigits(precision);
         decimalFormat.setMaximumFractionDigits(precision);
         return decimalFormat.format(MathUtils.roundDouble(value, precision)).replace(",", ".");
     }
@@ -580,7 +582,7 @@ public class BSFormatter {
         return CurrencyUtil.getNameByCode(currencyCode) + " (" + getCurrencyPair(currencyCode) + ")";
     }
 
-    public String getPriceWithCounterCurrencyAndCurrencyPair(String currencyCode) {
-        return "Price in " + getCounterCurrencyAndCurrencyPair(currencyCode);
+    public String getPriceWithCurrencyCode(String currencyCode) {
+        return "Price in " + currencyCode;
     }
 }

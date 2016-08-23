@@ -186,14 +186,14 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         }
 
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(tradePrice));
+            addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPrice(tradePrice));
         } else {
             Fiat price = offer.getPrice();
             if (offer.getUseMarketBasedPrice()) {
-                addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price) +
+                addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPrice(price) +
                         " (distance from market price: " + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")");
             } else {
-                addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price));
+                addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPrice(price));
             }
         }
         final PaymentMethod paymentMethod = offer.getPaymentMethod();

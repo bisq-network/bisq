@@ -219,9 +219,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     setDirectionTitles();
                     String tradeCurrencyCode = model.tradeCurrencyCode.get();
                     boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
-                    priceColumn.setText(!showAllTradeCurrencies ?
-                            formatter.getPriceWithCounterCurrencyAndCurrencyPair(tradeCurrencyCode) :
-                            "Price");
                     return !showAllTradeCurrencies ?
                             "Amount in " + tradeCurrencyCode + " (Min.)" :
                             "Amount (Min.)";

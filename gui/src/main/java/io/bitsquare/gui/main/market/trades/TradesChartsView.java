@@ -132,9 +132,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             priceChart.setVisible(!newValue);
             priceChart.setManaged(!newValue);
             priceColumn.setSortable(!newValue);
-            priceColumnLabel.set("Price" + (newValue ? "" : (" (" + model.getCurrencyCode() + ")")));
-            volumeColumn.setText("Volume" + (newValue ? "" : (" (" + model.getCurrencyCode() + ")")));
+            volumeColumn.setText("Amount" + (newValue ? "" : (" in " + model.getCurrencyCode())));
         };
+        priceColumnLabel.set("Price");
     }
 
     @Override
@@ -175,8 +175,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     priceSeries.setName(tradeCurrencyName);
                     final String currencyPair = formatter.getCurrencyPair(code);
                     final boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
-                    priceColumnLabel.set((showAllTradeCurrencies ? "" : (formatter.getPriceWithCounterCurrencyAndCurrencyPair(code))));
-                    volumeColumn.setText("Volume " + (showAllTradeCurrencies ? "" : ("(" + code + ")")));
+                    volumeColumn.setText("Amount " + (showAllTradeCurrencies ? "" : (" in " + code)));
                 });
 
         sortedList = new SortedList<>(model.tradeStatisticsByCurrency);
@@ -255,7 +254,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     final double value = MathUtils.scaleDownByPowerOf10((long) object, 8);
                     return formatter.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
-                    return formatter.formatPriceWithCode(Fiat.valueOf(model.getCurrencyCode(), (long) object));
+                    return formatter.formatPrice(Fiat.valueOf(model.getCurrencyCode(), (long) object));
                 }
             }
 
@@ -281,7 +280,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisY = new NumberAxis();
         volumeAxisY.setForceZeroInRange(true);
         volumeAxisY.setAutoRanging(true);
-        volumeAxisY.setLabel("Volume (BTC)");
+        volumeAxisY.setLabel("Volume in BTC");
         volumeAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
@@ -433,6 +432,35 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         dateColumn.setComparator((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
         tableView.getColumns().add(dateColumn);
 
+        // market
+        TableColumn<TradeStatistics, TradeStatistics> marketColumn = new TableColumn<TradeStatistics, TradeStatistics>("Market") {
+            {
+                setMinWidth(130);
+                setMaxWidth(130);
+            }
+        };
+        marketColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
+        marketColumn.setCellFactory(
+                new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
+                        TradeStatistics>>() {
+                    @Override
+                    public TableCell<TradeStatistics, TradeStatistics> call(
+                            TableColumn<TradeStatistics, TradeStatistics> column) {
+                        return new TableCell<TradeStatistics, TradeStatistics>() {
+                            @Override
+                            public void updateItem(final TradeStatistics item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(formatter.getCurrencyPair(item.currency));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        marketColumn.setComparator((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
+        tableView.getColumns().add(marketColumn);
+
         // price
         priceColumn = new TableColumn<>();
         priceColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
@@ -447,9 +475,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(model.showAllTradeCurrenciesProperty.get() ?
-                                            formatter.formatPriceWithCode(item.getTradePrice()) :
-                                            formatter.formatPrice(item.getTradePrice()));
+                                    setText(formatter.formatPrice(item.getTradePrice()));
                                 else
                                     setText("");
                             }
