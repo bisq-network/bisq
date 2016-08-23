@@ -56,7 +56,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private static final int TAB_INDEX = 0;
 
     private final OfferBook offerBook;
-    private final Preferences preferences;
+    final Preferences preferences;
     final PriceFeedService priceFeedService;
     private Navigation navigation;
 
@@ -65,8 +65,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final List<XYChart.Data> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
-    private final ObservableList<Offer> top3BuyOfferList = FXCollections.observableArrayList();
-    private final ObservableList<Offer> top3SellOfferList = FXCollections.observableArrayList();
+    private final ObservableList<Offer> topBuyOfferList = FXCollections.observableArrayList();
+    private final ObservableList<Offer> topSellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
     private int selectedTabIndex;
 
@@ -184,12 +184,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         return offerBookListItems;
     }
 
-    public ObservableList<Offer> getTop3BuyOfferList() {
-        return top3BuyOfferList;
+    public ObservableList<Offer> getTopBuyOfferList() {
+        return topBuyOfferList;
     }
 
-    public ObservableList<Offer> getTop3SellOfferList() {
-        return top3SellOfferList;
+    public ObservableList<Offer> getTopSellOfferList() {
+        return topSellOfferList;
     }
 
     public ObservableList<TradeCurrency> getTradeCurrencies() {
@@ -229,7 +229,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                     return 0;
                 })
                 .collect(Collectors.toList());
-        top3BuyOfferList.setAll(allBuyOffers.subList(0, Math.min(3, allBuyOffers.size())));
+        topBuyOfferList.setAll(allBuyOffers.subList(0, Math.min(100, allBuyOffers.size())));
         buildChartDataItems(allBuyOffers, Offer.Direction.BUY, buyData);
 
         List<Offer> allSellOffers = offerBookListItems.stream()
@@ -244,7 +244,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                     return 0;
                 })
                 .collect(Collectors.toList());
-        top3SellOfferList.setAll(allSellOffers.subList(0, Math.min(3, allSellOffers.size())));
+        topSellOfferList.setAll(allSellOffers.subList(0, Math.min(100, allSellOffers.size())));
         buildChartDataItems(allSellOffers, Offer.Direction.SELL, sellData);
     }
 

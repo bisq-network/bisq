@@ -112,7 +112,7 @@ public final class Preferences implements Persistable {
     private boolean autoSelectArbitrators = true;
     private final Map<String, Boolean> dontShowAgainMap;
     private boolean tacAccepted;
-    private boolean useTorForBitcoinJ = false;
+    private boolean useTorForBitcoinJ = true;
     private boolean useTorForHttpRequests = true;
     private boolean showOwnOffersInOfferBook = true;
     private Locale preferredLocale;

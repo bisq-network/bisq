@@ -108,7 +108,10 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                     onTakeOfferViewRemoved();
             }
         };
+    }
 
+    @Override
+    protected void activate() {
         Optional<TradeCurrency> tradeCurrencyOptional = (this instanceof SellOfferView) ?
                 CurrencyUtil.getTradeCurrency(preferences.getSellScreenCurrencyCode()) :
                 CurrencyUtil.getTradeCurrency(preferences.getBuyScreenCurrencyCode());
@@ -117,10 +120,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         else {
             tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
         }
-    }
-
-    @Override
-    protected void activate() {
+        
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         root.getTabs().addListener(tabListChangeListener);
         navigation.addListener(navigationListener);

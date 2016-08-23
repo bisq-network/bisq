@@ -125,6 +125,16 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
+        String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        if (code != null && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
+            showAllTradeCurrenciesProperty.set(false);
+            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
+        } else {
+            showAllTradeCurrenciesProperty.set(true);
+            selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+        }
+        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
+        
         fillAllTradeCurrencies();
         btcCode.bind(preferences.btcDenominationProperty());
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
@@ -163,16 +173,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     void initWithDirection(Offer.Direction direction) {
         this.direction = direction;
-
-        String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
-        if (code != null && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
-            showAllTradeCurrenciesProperty.set(false);
-            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
-        } else {
-            showAllTradeCurrenciesProperty.set(true);
-            selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
-        }
-        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
     }
 
     void onTabSelected(boolean isSelected) {

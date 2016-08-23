@@ -1,16 +1,13 @@
-package io.bitsquare.gui.main.offer.createoffer;
+package io.bitsquare.gui.main.offer.createoffer.monetary;
 
 import io.bitsquare.locale.CurrencyUtil;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;
-import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Volume extends MonetaryWrapper {
     private static final Logger log = LoggerFactory.getLogger(Volume.class);
-
-    private final MonetaryFormat altCoinFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
 
     public Volume(Monetary monetary) {
         super(monetary);
@@ -25,7 +22,7 @@ public class Volume extends MonetaryWrapper {
     }
 
     @Override
-    public String format() {
+    public String toString() {
         if (monetary != null) {
             try {
                 if (monetary instanceof Fiat)

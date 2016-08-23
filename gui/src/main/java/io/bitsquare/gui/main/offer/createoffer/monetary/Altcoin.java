@@ -1,4 +1,4 @@
-package io.bitsquare.gui.main.offer.createoffer;
+package io.bitsquare.gui.main.offer.createoffer.monetary;
 
 import com.google.common.math.LongMath;
 import org.bitcoinj.core.Monetary;
@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
+ * Cloned from Fiat class and altered SMALLEST_UNIT_EXPONENT as Fiat is final.
+ * 
  * Represents a monetary fiat value. It was decided to not fold this into {@link org.bitcoinj.core.Coin} because of type
  * safety. Volume values always come with an attached currency code.
  * <p>

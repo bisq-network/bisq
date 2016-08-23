@@ -77,7 +77,7 @@ public class BtcValidator extends NumberValidator {
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {
-            return new ValidationResult(false, "Invalid input");
+            return new ValidationResult(false, "Invalid input: " + t.getMessage());
         }
     }
 }

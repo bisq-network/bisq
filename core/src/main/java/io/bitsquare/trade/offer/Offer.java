@@ -27,6 +27,8 @@ import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
+import io.bitsquare.common.util.MathUtils;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
@@ -45,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.PublicKey;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -54,7 +57,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload {
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +150,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     transient private StringProperty errorMessageProperty = new SimpleStringProperty();
     @JsonExclude
     transient private PriceFeedService priceFeedService;
+    @JsonExclude
+    transient private DecimalFormat decimalFormat;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -194,6 +199,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
         date = new Date().getTime();
         setState(State.UNDEFINED);
+        decimalFormat = new DecimalFormat("#.#");
+        decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -203,6 +210,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
             // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
             errorMessageProperty = new SimpleStringProperty();
+            decimalFormat = new DecimalFormat("#.#");
+            decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
         } catch (Throwable t) {
             log.warn("Cannot be deserialized." + t.getMessage());
         }
@@ -362,17 +371,17 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
             if (marketPrice != null) {
                 PriceFeedService.Type priceFeedType = direction == Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
                 double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
-                double factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
+                double factor;
+                if (CurrencyUtil.isCryptoCurrency(currencyCode))
+                    factor = direction == Offer.Direction.SELL ? 1 - marketPriceMargin : 1 + marketPriceMargin;
+                else
+                    factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
                 double targetPrice = marketPriceAsDouble * factor;
-
-                // round
-                long factor1 = (long) Math.pow(10, 2);
-                targetPrice = targetPrice * factor1;
-                long tmp = Math.round(targetPrice);
-                targetPrice = (double) tmp / factor1;
-
+                if (CurrencyUtil.isCryptoCurrency(currencyCode))
+                    targetPrice = targetPrice != 0 ? 1d / targetPrice : 0;
                 try {
-                    return Fiat.parseFiat(currencyCode, String.valueOf(targetPrice));
+                    final double rounded = MathUtils.roundDouble(targetPrice, Fiat.SMALLEST_UNIT_EXPONENT);
+                    return Fiat.parseFiat(currencyCode, decimalFormat.format(rounded).replace(",", "."));
                 } catch (Exception e) {
                     log.error("Exception at getPrice / parseToFiat: " + e.toString() + "\n" +
                             "That case should never happen.");
@@ -395,7 +404,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
         if (offerPriceAsFiat == null)
             throw new MarketPriceNotAvailableException("Market price required for calculating trade price is not available.");
-        
+
         double factor = (double) takersTradePrice / (double) offerPriceAsFiat.value;
         // We allow max. 2 % difference between own offer price calculation and takers calculation.
         // Market price might be different at offerers and takers side so we need a bit of tolerance.

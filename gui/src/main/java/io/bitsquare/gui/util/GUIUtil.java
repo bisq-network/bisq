@@ -26,6 +26,7 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
@@ -180,16 +181,17 @@ public class GUIUtil {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
                 String code = tradeCurrency.getCode();
+                final String displayString = CurrencyUtil.getNameAndCode(code);
                 // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
                 if (code.equals(GUIUtil.SHOW_ALL_FLAG))
                     return "▶ Show all";
                 else if (code.equals(GUIUtil.EDIT_FLAG))
                     return "▼ Edit currency list";
                 else if (tradeCurrency instanceof FiatCurrency)
-                    return "★ " + tradeCurrency.getNameAndCode();
-                else if (tradeCurrency instanceof CryptoCurrency)
-                    return "✦ " + tradeCurrency.getNameAndCode();
-                else
+                    return "★ " + displayString;
+                else if (tradeCurrency instanceof CryptoCurrency) {
+                    return "✦ " + displayString;
+                } else
                     return "-";
             }
 
@@ -199,7 +201,6 @@ public class GUIUtil {
             }
         };
     }
-
 
     public static void openWebPage(String target) {
         String key = "warnOpenURLWhenTorEnabled";

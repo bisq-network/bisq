@@ -1,5 +1,6 @@
 package io.bitsquare.common.util;
 
+import com.google.common.math.DoubleMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,12 +28,44 @@ public class MathUtils {
         }
     }
 
-    public static double scaleUp(double value, int precision) {
-        if (precision < 0)
-            throw new IllegalArgumentException();
+    public static long roundDoubleToLong(double value) {
+        return roundDoubleToLong(value, RoundingMode.HALF_UP);
+    }
 
-        long factor = (long) Math.pow(10, precision);
+    public static long roundDoubleToLong(double value, RoundingMode roundingMode) {
+        return DoubleMath.roundToLong(value, roundingMode);
+    }
+
+    public static int roundDoubleToInt(double value) {
+        return roundDoubleToInt(value, RoundingMode.HALF_UP);
+    }
+
+    public static int roundDoubleToInt(double value, RoundingMode roundingMode) {
+        return DoubleMath.roundToInt(value, roundingMode);
+    }
+
+    public static long doubleToLong(double value) {
+        return new Double(value).longValue();
+    }
+
+    public static double scaleUpByPowerOf10(double value, int exponent) {
+        double factor = Math.pow(10, exponent);
         return value * factor;
+    }
+
+    public static double scaleUpByPowerOf10(long value, int exponent) {
+        double factor = Math.pow(10, exponent);
+        return ((double) value) * factor;
+    }
+
+    public static double scaleDownByPowerOf10(double value, int exponent) {
+        double factor = Math.pow(10, exponent);
+        return value / factor;
+    }
+
+    public static double scaleDownByPowerOf10(long value, int exponent) {
+        double factor = Math.pow(10, exponent);
+        return ((double) value) / factor;
     }
 
     public static double exactMultiply(double value1, double value2) {

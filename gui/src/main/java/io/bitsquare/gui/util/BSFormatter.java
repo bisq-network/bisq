@@ -61,6 +61,7 @@ public class BSFormatter {
 
     // format is like: 1,00  never more then 2 decimals
     private final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
+    private DecimalFormat decimalFormat = new DecimalFormat("#.#");
 
 
     @Inject
@@ -245,7 +246,7 @@ public class BSFormatter {
             try {
                 return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(), currencyCode);
             } catch (Throwable t) {
-                log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
+                log.warn("Exception at parseToFiatWithPrecision: " + t.toString());
                 return Fiat.valueOf(currencyCode, 0);
             }
 
@@ -287,10 +288,9 @@ public class BSFormatter {
         if (fiat != null) {
             final String currencyCode = fiat.getCurrencyCode();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                DecimalFormat df = new DecimalFormat("#.#");
-                df.setMaximumFractionDigits(8);
+                decimalFormat.setMaximumFractionDigits(8);
                 final double value = fiat.value != 0 ? 10000D / fiat.value : 0;
-                return df.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
+                return decimalFormat.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
             } else
                 return formatFiat(fiat);
         } else {
@@ -311,19 +311,22 @@ public class BSFormatter {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return formatMarketPrice(price, 3);
         else
-            return formatMarketPrice(price != 0 ? (1D / price) : 0, 8);
+            return formatMarketPrice(price, 8);
     }
 
-    public String formatMarketPrice(double price, int decimals) {
-        DecimalFormat df = new DecimalFormat("#.#");
-        df.setMaximumFractionDigits(decimals);
-        return df.format(price).replace(",", ".");
+    public String formatMarketPrice(double price, int precision) {
+        return formatRoundedDoubleWithPrecision(price, precision);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Other
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String formatRoundedDoubleWithPrecision(double value, int precision) {
+        decimalFormat.setMaximumFractionDigits(precision);
+        return decimalFormat.format(MathUtils.roundDouble(value, precision)).replace(",", ".");
+    }
 
     public String getDirection(Offer.Direction direction) {
         return getDirection(direction, false) + " bitcoin";
@@ -382,24 +385,19 @@ public class BSFormatter {
         }
     }
 
+    public String formatToPercentWithSymbol(double value) {
+        return formatToPercent(value) + "%";
+    }
+
+    public String formatPercentagePrice(double value) {
+        return formatToPercentWithSymbol(value);
+    }
+
     public String formatToPercent(double value) {
-        return formatToPercent(value, 1);
-    }
-
-    public String formatToPercent(double value, int digits) {
-        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
-        decimalFormat.setMinimumFractionDigits(digits);
-        decimalFormat.setMaximumFractionDigits(digits);
-        decimalFormat.setGroupingUsed(false);
-        return decimalFormat.format(value * 100.0).replace(",", ".");
-    }
-
-    public String formatToNumberString(double value, int digits) {
-        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
-        decimalFormat.setMinimumFractionDigits(digits);
-        decimalFormat.setMaximumFractionDigits(digits);
-        decimalFormat.setGroupingUsed(false);
-        return decimalFormat.format(value).replace(",", ".");
+        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        decimalFormat.setMinimumFractionDigits(2);
+        decimalFormat.setMaximumFractionDigits(2);
+        return decimalFormat.format(MathUtils.roundDouble(value * 100.0, 2)).replace(",", ".");
     }
 
     public double parseNumberStringToDouble(String percentString) throws NumberFormatException {
@@ -412,21 +410,13 @@ public class BSFormatter {
         }
     }
 
-    public String formatToPercentWithSymbol(double value) {
-        return formatToPercent(value) + " %";
-    }
-
-    public String formatPercentagePrice(double value) {
-        return formatToPercent(value, 2) + " %";
-    }
-
     public double parsePercentStringToDouble(String percentString) throws NumberFormatException {
         try {
             String input = percentString.replace("%", "");
             input = input.replace(",", ".");
             input = input.replace(" ", "");
             double value = Double.parseDouble(input);
-            return value / 100;
+            return value / 100d;
         } catch (NumberFormatException e) {
             throw e;
         }
@@ -566,5 +556,27 @@ public class BSFormatter {
             return "BTC/" + currencyCode;
         else
             return currencyCode + "/BTC";
+    }
+
+    public String getCounterCurrency(String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return currencyCode;
+        else
+            return "BTC";
+    }
+
+    public String getBaseCurrency(String currencyCode) {
+        if (CurrencyUtil.isCryptoCurrency(currencyCode))
+            return currencyCode;
+        else
+            return "BTC";
+    }
+
+    public String getCounterCurrencyAndCurrencyPair(String currencyCode) {
+        return getCounterCurrency(currencyCode) + " (" + getCurrencyPair(currencyCode) + ")";
+    }
+
+    public String getPriceWithCounterCurrencyAndCurrencyPair(String currencyCode) {
+        return "Price in " + getCounterCurrencyAndCurrencyPair(currencyCode);
     }
 }

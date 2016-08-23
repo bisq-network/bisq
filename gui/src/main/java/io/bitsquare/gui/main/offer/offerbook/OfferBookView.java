@@ -105,7 +105,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         offerBookTitle = addTitledGroupBg(root, gridRow, 3, "");
 
-        currencyComboBox = addLabelComboBox(root, gridRow, "Filter by currency:", Layout.FIRST_ROW_DISTANCE).second;
+        currencyComboBox = addLabelComboBox(root, gridRow, "Filter by market:", Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText("Select currency");
         currencyComboBox.setConverter(GUIUtil.getCurrencyListConverter());
 
@@ -220,7 +220,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     String tradeCurrencyCode = model.tradeCurrencyCode.get();
                     boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
                     priceColumn.setText(!showAllTradeCurrencies ?
-                            "Price in " + formatter.getCurrencyPair(tradeCurrencyCode) :
+                            formatter.getPriceWithCounterCurrencyAndCurrencyPair(tradeCurrencyCode) :
                             "Price");
                     return !showAllTradeCurrencies ?
                             "Amount in " + tradeCurrencyCode + " (Min.)" :

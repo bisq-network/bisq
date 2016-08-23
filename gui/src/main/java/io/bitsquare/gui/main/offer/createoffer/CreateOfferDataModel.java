@@ -30,6 +30,8 @@ import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.gui.main.offer.createoffer.monetary.Price;
+import io.bitsquare.gui.main.offer.createoffer.monetary.Volume;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
@@ -89,7 +91,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final StringProperty btcCode = new SimpleStringProperty();
 
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
-    final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
+    final BooleanProperty useMarketPriceMargin = new SimpleBooleanProperty();
     //final BooleanProperty isMainNet = new SimpleBooleanProperty();
     //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
 
@@ -143,7 +145,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
         securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
-        useMarketBasedPrice.set(preferences.getUsePercentageBasedPrice());
+        useMarketPriceMargin.set(preferences.getUsePercentageBasedPrice());
 
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -259,8 +261,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Offer createAndGetOffer() {
-        long priceAsLong = price.get() != null && !useMarketBasedPrice.get() ? price.get().getValue() : 0L;
-        double marketPriceMarginParam = useMarketBasedPrice.get() ? marketPriceMargin : 0;
+        long priceAsLong = price.get() != null && !useMarketPriceMargin.get() ? price.get().getValue() : 0L;
+        // We use precision 8 in AltcoinPrice but in Offer we use Fiat with precision 4. Will be refactored once in a bigger update....
+        if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
+            priceAsLong = priceAsLong / 10000;
+
+        double marketPriceMarginParam = useMarketPriceMargin.get() ? marketPriceMargin : 0;
         long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
         long minAmount = this.minAmount.get() != null ? this.minAmount.get().getValue() : 0L;
 
@@ -293,7 +299,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 direction,
                 priceAsLong,
                 marketPriceMarginParam,
-                useMarketBasedPrice.get(),
+                useMarketPriceMargin.get(),
                 amount,
                 minAmount,
                 tradeCurrencyCode.get(),
@@ -312,18 +318,25 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        if (paymentAccount != null)
-            this.paymentAccount = paymentAccount;
+        if (paymentAccount != null) {
 
-        volume.set(null);
-        price.set(null);
+            if (!this.paymentAccount.equals(paymentAccount)) {
+                volume.set(null);
+                price.set(null);
+                marketPriceMargin = 0;
+            }
+            this.paymentAccount = paymentAccount;
+        }
     }
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         if (tradeCurrency != null) {
-            volume.set(null);
-            price.set(null);
-
+            if (!this.tradeCurrency.equals(tradeCurrency)) {
+                volume.set(null);
+                price.set(null);
+                marketPriceMargin = 0;
+            }
+            
             this.tradeCurrency = tradeCurrency;
             final String code = tradeCurrency.getCode();
             tradeCurrencyCode.set(code);
@@ -395,9 +408,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return user.getAcceptedArbitrators().size() > 0;
     }
 
-    public void setUseMarketBasedPrice(boolean useMarketBasedPrice) {
-        this.useMarketBasedPrice.set(useMarketBasedPrice);
-        preferences.setUsePercentageBasedPrice(useMarketBasedPrice);
+    public void setUseMarketPriceMargin(boolean useMarketPriceMargin) {
+        this.useMarketPriceMargin.set(useMarketPriceMargin);
+        preferences.setUsePercentageBasedPrice(useMarketPriceMargin);
     }
 
     /*boolean isFeeFromFundingTxSufficient() {
@@ -415,7 +428,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 !amount.get().isZero() &&
                 !price.get().isZero()) {
             try {
-                volume.set(new Volume(price.get().exchange(amount.get())));
+                volume.set(new Volume(price.get().getVolumeByAmount(amount.get())));
             } catch (Throwable t) {
                 log.error(t.toString());
             }
@@ -430,8 +443,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 !volume.get().isZero() &&
                 !price.get().isZero()) {
             try {
-                final Coin exchange = price.get().exchange(volume.get().getMonetary());
-                amount.set(formatter.reduceTo4Decimals(exchange));
+                amount.set(formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get().getMonetary())));
                 calculateTotalToPay();
             } catch (Throwable t) {
                 log.error(t.toString());

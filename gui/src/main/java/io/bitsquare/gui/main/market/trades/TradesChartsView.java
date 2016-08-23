@@ -175,8 +175,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     priceSeries.setName(tradeCurrencyName);
                     final String currencyPair = formatter.getCurrencyPair(code);
                     final boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
-                    priceColumnLabel.set("Price" + (showAllTradeCurrencies ? "" : (" (" + currencyPair + ")")));
-                    volumeColumn.setText("Volume" + (showAllTradeCurrencies ? "" : (" (" + code + ")")));
+                    priceColumnLabel.set((showAllTradeCurrencies ? "" : (formatter.getPriceWithCounterCurrencyAndCurrencyPair(code))));
+                    volumeColumn.setText("Volume " + (showAllTradeCurrencies ? "" : ("(" + code + ")")));
                 });
 
         sortedList = new SortedList<>(model.tradeStatisticsByCurrency);
@@ -236,10 +236,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             @Override
             public String toString(Number object) {
                 if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
-                    final double value = (double) object / 100000000D;
-                    return String.valueOf(MathUtils.roundDouble(value, 8));
+                    final double value = MathUtils.scaleDownByPowerOf10((double) object, 8);
+                    return formatter.formatRoundedDoubleWithPrecision(value, 8);
                 } else
-                    return formatter.formatPrice(Fiat.valueOf(model.getCurrencyCode(), new Double((double) object).longValue()));
+                    return formatter.formatPrice(Fiat.valueOf(model.getCurrencyCode(), MathUtils.doubleToLong((double) object)));
             }
 
             @Override
@@ -252,8 +252,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             @Override
             public String toString(Number object) {
                 if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
-                    final double value = (long) object / 100000000D;
-                    return String.valueOf(MathUtils.roundDouble(value, 8)) + " " + formatter.getCurrencyPair(model.getCurrencyCode());
+                    final double value = MathUtils.scaleDownByPowerOf10((long) object, 8);
+                    return formatter.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
                     return formatter.formatPriceWithCode(Fiat.valueOf(model.getCurrencyCode(), (long) object));
                 }
@@ -285,7 +285,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
-                return formatter.formatCoin(Coin.valueOf(new Double((double) object).longValue()));
+                return formatter.formatCoin(Coin.valueOf(MathUtils.doubleToLong((double) object)));
             }
 
             @Override
@@ -340,7 +340,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         return new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
-                long index = new Double((double) object).longValue();
+                long index = MathUtils.doubleToLong((double) object);
                 long time = model.getTimeFromTickIndex(index);
                 if (model.tickUnit.ordinal() <= TradesChartsViewModel.TickUnit.DAY.ordinal())
                     return index % 4 == 0 ? formatter.formatDate(new Date(time)) : "";

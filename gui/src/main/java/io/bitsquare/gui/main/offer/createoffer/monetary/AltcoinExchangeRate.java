@@ -1,4 +1,4 @@
-package io.bitsquare.gui.main.offer.createoffer;
+package io.bitsquare.gui.main.offer.createoffer.monetary;
 
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -9,6 +9,7 @@ import java.math.BigInteger;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+// Cloned from ExchangeRate. Use Altcoin instead of Fiat.
 public class AltcoinExchangeRate implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(AltcoinExchangeRate.class);
 

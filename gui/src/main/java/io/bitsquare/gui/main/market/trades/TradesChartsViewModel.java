@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.market.trades;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.MainView;
@@ -238,7 +239,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .filter(entry -> entry.getKey() >= 0)
                 .map(entry -> getCandleData(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
-
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
         priceItems.setAll(candleDataList.stream()
@@ -268,12 +268,13 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
                 high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
             }
-            
+
             accumulatedVolume += (item.getTradeVolume() != null) ? item.getTradeVolume().value : 0;
             accumulatedAmount += item.tradeAmount;
         }
         // 100000000 -> Coin.COIN.value;
-        long averagePrice = Math.round((double) accumulatedVolume * 100000000d / (double) accumulatedAmount);
+        final double value = MathUtils.scaleUpByPowerOf10(accumulatedVolume, 8);
+        long averagePrice = MathUtils.roundDoubleToLong(value / (double) accumulatedAmount);
 
         List<TradeStatistics> list = new ArrayList<>(set);
         list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? -1 : (o1.tradeDate == o2.tradeDate ? 0 : 1)));
@@ -298,7 +299,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     long getInvertedPrice(long price) {
         final double value = price != 0 ? 1000000000000D / price : 0;
-        return Math.round(value);
+        return MathUtils.roundDoubleToLong(value);
     }
 
     long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {

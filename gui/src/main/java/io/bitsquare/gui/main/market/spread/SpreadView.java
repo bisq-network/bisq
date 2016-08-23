@@ -119,7 +119,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         numberOfOffersColumn.setText("Total offers (" + sortedList.stream().mapToInt(item -> item.numberOfOffers).sum() + ")");
         numberOfBuyOffersColumn.setText("Bid offers (" + sortedList.stream().mapToInt(item -> item.numberOfBuyOffers).sum() + ")");
         numberOfSellOffersColumn.setText("Ask offers (" + sortedList.stream().mapToInt(item -> item.numberOfSellOffers).sum() + ")");
-        totalAmountColumn.setText("Total amount (" + formatter.formatCoinWithCode(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
+        totalAmountColumn.setText("Total amount in BTC (" + formatter.formatCoin(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
     }
 
 
@@ -145,7 +145,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(CurrencyUtil.getNameByCode(item.currencyCode));
+                                    setText(CurrencyUtil.getNameAndCode(item.currencyCode));
                                 else
                                     setText("");
                             }

@@ -303,7 +303,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         Label label = new Label(text);
         label.setId("nav-balance-label");
-        //label.setTextAlignment(TextAlignment.CENTER);
         label.setPadding(new Insets(0, 0, 0, 2));
 
         final ImageView btcAverageIcon = new ImageView();
