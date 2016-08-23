@@ -183,11 +183,11 @@ public class OfferBookService {
     private void doDumpStatistics() {
         // We filter the case that it is a MarketBasedPrice but the price is not available
         // That should only be possible if the price feed provider is not available
-        final List<FlatOffer> flatOffers = getOffers().stream()
+        final List<OfferForJson> offerForJsonList = getOffers().stream()
                 .filter(offer -> !offer.getUseMarketBasedPrice() || priceFeedService.getMarketPrice(offer.getCurrencyCode()) != null)
                 .map(offer -> {
                     try {
-                        return new FlatOffer(offer.getDirection(),
+                        return new OfferForJson(offer.getDirection(),
                                 offer.getCurrencyCode(),
                                 offer.getMinAmount(),
                                 offer.getAmount(),
@@ -206,6 +206,6 @@ public class OfferBookService {
                 })
                 .filter(e -> e != null)
                 .collect(Collectors.toList());
-        offersJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(flatOffers)), 5000);
+        offersJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(offerForJsonList)), 5000);
     }
 }

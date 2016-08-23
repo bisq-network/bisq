@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Date;
 
-public class FlatOffer {
-    private static final Logger log = LoggerFactory.getLogger(FlatOffer.class);
+public class OfferForJson {
+    private static final Logger log = LoggerFactory.getLogger(OfferForJson.class);
 
     public final Offer.Direction direction;
     public final String currencyCode;
@@ -35,17 +35,17 @@ public class FlatOffer {
     public String minAmountDisplayString = "";
     public String volumeDisplayString = "";
 
-    public FlatOffer(Offer.Direction direction,
-                     String currencyCode,
-                     Coin minAmount,
-                     Coin amount,
-                     Fiat price,
-                     Date date,
-                     String id,
-                     boolean useMarketBasedPrice,
-                     double marketPriceMargin,
-                     PaymentMethod paymentMethod,
-                     String offerFeeTxID) {
+    public OfferForJson(Offer.Direction direction,
+                        String currencyCode,
+                        Coin minAmount,
+                        Coin amount,
+                        Fiat price,
+                        Date date,
+                        String id,
+                        boolean useMarketBasedPrice,
+                        double marketPriceMargin,
+                        PaymentMethod paymentMethod,
+                        String offerFeeTxID) {
 
         this.direction = direction;
         this.currencyCode = currencyCode;

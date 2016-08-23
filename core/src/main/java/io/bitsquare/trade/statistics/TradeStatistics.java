@@ -4,8 +4,6 @@ import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.JsonExclude;
-import io.bitsquare.common.util.MathUtils;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bitsquare.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bitsquare.p2p.storage.payload.PersistedStoragePayload;
@@ -13,14 +11,11 @@ import io.bitsquare.trade.offer.Offer;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.Immutable;
-import java.io.IOException;
 import java.security.PublicKey;
-import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -51,11 +46,6 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     @JsonExclude
     public final PubKeyRing pubKeyRing;
 
-    // Used in Json to provide same formatting/rounding for price
-    public String tradePriceDisplayString = "";
-    public String tradeAmountDisplayString = "";
-    public String tradeVolumeDisplayString = "";
-
     public TradeStatistics(Offer offer, Fiat tradePrice, Coin tradeAmount, Date tradeDate, String depositTxId, PubKeyRing pubKeyRing) {
         this.direction = offer.getDirection();
         this.currency = offer.getCurrencyCode();
@@ -72,38 +62,6 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         this.tradeDate = tradeDate.getTime();
         this.depositTxId = depositTxId;
         this.pubKeyRing = pubKeyRing;
-
-        setDisplayStrings();
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            setDisplayStrings();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
-    }
-
-    private void setDisplayStrings() {
-        try {
-            MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
-            MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
-            final Fiat tradePriceAsFiat = getTradePrice();
-            if (CurrencyUtil.isCryptoCurrency(currency)) {
-                DecimalFormat decimalFormat = new DecimalFormat("#.#");
-                decimalFormat.setMaximumFractionDigits(8);
-                final double value = tradePriceAsFiat.value != 0 ? 10000D / tradePriceAsFiat.value : 0;
-                tradePriceDisplayString = decimalFormat.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
-
-            } else {
-                tradePriceDisplayString = fiatFormat.noCode().format(tradePriceAsFiat).toString();
-            }
-            tradeAmountDisplayString = coinFormat.noCode().format(getTradeAmount()).toString();
-            tradeVolumeDisplayString = fiatFormat.noCode().format(getTradeVolume()).toString();
-        } catch (Throwable t) {
-            log.error("Error at setDisplayStrings: " + t.getMessage());
-        }
     }
 
     @Override
