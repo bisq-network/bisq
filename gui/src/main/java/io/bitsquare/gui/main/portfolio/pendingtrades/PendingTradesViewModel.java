@@ -149,6 +149,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getTrade() != null ? formatter.formatCoinWithCode(dataModel.getTrade().getPayoutAmount()) : "";
     }
 
+    String getMarketLabel(PendingTradesListItem item) {
+        if ((item == null))
+            return "";
+
+        return formatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
+    }
     // trade period
 
     private long getMaxTradePeriod() {

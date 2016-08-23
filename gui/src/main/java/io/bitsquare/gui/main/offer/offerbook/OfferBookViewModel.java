@@ -273,7 +273,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                 postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
             }
             if (showAllTradeCurrenciesProperty.get())
-                return formatter.formatPriceWithCode(price) + postFix;
+                return formatter.formatPrice(price) + postFix;
             else
                 return formatter.formatPrice(price) + postFix;
         } else {

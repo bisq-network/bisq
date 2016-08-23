@@ -55,7 +55,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> selectColumn, priceColumn, tradeVolumeColumn, tradeAmountColumn, avatarColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
+    TableColumn<PendingTradesListItem, PendingTradesListItem> selectColumn, priceColumn, tradeVolumeColumn, tradeAmountColumn, avatarColumn, marketColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
     @FXML
 
     private SortedList<PendingTradesListItem> sortedList;
@@ -88,6 +88,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
         setPaymentMethodColumnCellFactory();
+        setMarketColumnCellFactory();
         setRoleColumnCellFactory();
         setAvatarColumnCellFactory();
 
@@ -103,6 +104,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         paymentMethodColumn.setComparator((o1, o2) -> o1.getTrade().getOffer().getPaymentMethod().getId().compareTo(o2.getTrade().getOffer().getPaymentMethod().getId()));
         avatarColumn.setComparator((o1, o2) -> o1.getTrade().getTradingPeerNodeAddress().hostName.compareTo(o2.getTrade().getTradingPeerNodeAddress().hostName));
         roleColumn.setComparator((o1, o2) -> model.getMyRole(o1).compareTo(model.getMyRole(o2)));
+        marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -362,7 +364,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.formatPriceWithCode(item.getPrice()));
+                                    setText(formatter.formatPrice(item.getPrice()));
                                 else
                                     setText(null);
                             }
@@ -409,6 +411,25 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     setText(model.getPaymentMethod(item));
                                 else
                                     setText(null);
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setMarketColumnCellFactory() {
+        marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        marketColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
+                        PendingTradesListItem>>() {
+                    @Override
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
+                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                            @Override
+                            public void updateItem(final PendingTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setText(model.getMarketLabel(item));
                             }
                         };
                     }

@@ -130,7 +130,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getCurrencyColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Currency") {
             {
-                setMinWidth(100);
+                setMinWidth(110);
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -242,7 +242,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getTotalAmountColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Total amount") {
             {
-                setMinWidth(160);
+                setMinWidth(170);
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));

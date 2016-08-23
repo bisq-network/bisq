@@ -518,8 +518,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             boolean result = Sig.verify(ownerPubKey, hashOfDataAndSeqNr, signature);
             if (!result)
                 log.warn("Signature verification failed at checkSignature. " +
-                        "That should not happen. ownerPubKey=" + ownerPubKey +
-                        ", hashOfDataAndSeqNr=" + Arrays.toString(hashOfDataAndSeqNr) + ", signature=" + Arrays.toString(signature));
+                        "That should not happen.");
 
             return result;
         } catch (CryptoException e) {

@@ -306,7 +306,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
         volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
-        volumeChart.setMinHeight(140);
+        volumeChart.setMinHeight(150);
         volumeChart.setMaxHeight(200);
         volumeChart.setLegendVisible(false);
     }
@@ -406,7 +406,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private void createTable() {
         tableView = new TableView<>();
-        tableView.setMinHeight(120);
+        tableView.setMinHeight(140);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
         // date

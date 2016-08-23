@@ -83,6 +83,13 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         return formatter.formatDateTime(item.getTradable().getDate());
     }
 
+    String getMarketLabel(ClosedTradableListItem item) {
+        if ((item == null))
+            return "";
+
+        return formatter.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode());
+    }
+
     String getState(ClosedTradableListItem item) {
         if (item != null) {
             if (item.getTradable() instanceof Trade) {
