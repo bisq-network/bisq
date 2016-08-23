@@ -55,7 +55,9 @@ import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 class OfferBookViewModel extends ActivatableViewModel {
@@ -67,6 +69,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     final Preferences preferences;
     private final P2PService p2PService;
     final PriceFeedService priceFeedService;
+    private Set<String> tradeCurrencyCodes = new HashSet<>();
     private ClosedTradableManager closedTradableManager;
     private FilterManager filterManager;
     private Navigation navigation;
@@ -120,11 +123,16 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filteredItems = new FilteredList<>(offerBookListItems);
         this.sortedItems = new SortedList<>(filteredItems);
 
-        tradeCurrencyListChangeListener = c -> fillAllTradeCurrencies();
+        tradeCurrencyListChangeListener = c -> {
+            tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream().map(e -> e.getCode()).collect(Collectors.toSet());
+            fillAllTradeCurrencies();
+        };
     }
 
     @Override
     protected void activate() {
+        tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream().map(e -> e.getCode()).collect(Collectors.toSet());
+        
         String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
         if (code != null && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
@@ -134,7 +142,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
-        
+
         fillAllTradeCurrencies();
         btcCode.bind(preferences.btcDenominationProperty());
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
@@ -380,8 +388,13 @@ class OfferBookViewModel extends ActivatableViewModel {
         filteredItems.setPredicate(offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
             boolean directionResult = offer.getDirection() != direction;
-            boolean currencyResult = showAllTradeCurrenciesProperty.get() ||
-                    offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
+            boolean currencyResult;
+            final String currencyCode = offer.getCurrencyCode();
+            if (showAllTradeCurrenciesProperty.get()) {
+                currencyResult = tradeCurrencyCodes.contains(currencyCode);
+            } else
+                currencyResult = currencyCode.equals(selectedTradeCurrency.getCode());
+
             boolean paymentMethodResult = showAllPaymentMethods ||
                     offer.getPaymentMethod().equals(selectedPaymentMethod);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.getShowOwnOffersInOfferBook();
