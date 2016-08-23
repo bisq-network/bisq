@@ -64,8 +64,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     public void initialize() {
         setOfferIdColumnCellFactory();
         setDirectionColumnCellFactory();
-        setAmountColumnCellFactory();
         setPriceColumnCellFactory();
+        setAmountColumnCellFactory();
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
         setRemoveColumnCellFactory();

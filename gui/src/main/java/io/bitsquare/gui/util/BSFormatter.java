@@ -576,6 +576,10 @@ public class BSFormatter {
         return getCounterCurrency(currencyCode) + " (" + getCurrencyPair(currencyCode) + ")";
     }
 
+    public String getCurrencyNameAndCurrencyPair(String currencyCode) {
+        return CurrencyUtil.getNameByCode(currencyCode) + " (" + getCurrencyPair(currencyCode) + ")";
+    }
+
     public String getPriceWithCounterCurrencyAndCurrencyPair(String currencyCode) {
         return "Price in " + getCounterCurrencyAndCurrencyPair(currencyCode);
     }

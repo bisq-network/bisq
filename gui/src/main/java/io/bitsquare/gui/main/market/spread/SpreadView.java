@@ -242,7 +242,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getTotalAmountColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Total amount") {
             {
-                setMinWidth(150);
+                setMinWidth(160);
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));

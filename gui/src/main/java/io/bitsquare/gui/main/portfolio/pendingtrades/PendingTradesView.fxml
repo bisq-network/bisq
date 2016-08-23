@@ -31,8 +31,8 @@
             <TableColumn text="Select" fx:id="selectColumn" minWidth="70" maxWidth="70" sortable="false"/>
             <TableColumn text="Trade ID" fx:id="idColumn" minWidth="100"/>
             <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="130"/>
-            <TableColumn text="Trade amount in BTC" fx:id="tradeAmountColumn" minWidth="130"/>
             <TableColumn text="Price" fx:id="priceColumn" minWidth="140"/>
+            <TableColumn text="Trade amount in BTC" fx:id="tradeAmountColumn" minWidth="130"/>
             <TableColumn text="Trade amount" fx:id="tradeVolumeColumn" minWidth="130"/>
             <TableColumn text="Payment method" fx:id="paymentMethodColumn" minWidth="120"/>
             <TableColumn text="My role" fx:id="roleColumn" minWidth="120" maxWidth="120"/>

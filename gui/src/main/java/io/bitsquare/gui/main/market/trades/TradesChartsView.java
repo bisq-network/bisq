@@ -433,30 +433,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         dateColumn.setComparator((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
         tableView.getColumns().add(dateColumn);
 
-        // amount
-        TableColumn<TradeStatistics, TradeStatistics> amountColumn = new TableColumn<>("Amount in BTC");
-        amountColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
-        amountColumn.setCellFactory(
-                new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
-                        TradeStatistics>>() {
-                    @Override
-                    public TableCell<TradeStatistics, TradeStatistics> call(
-                            TableColumn<TradeStatistics, TradeStatistics> column) {
-                        return new TableCell<TradeStatistics, TradeStatistics>() {
-                            @Override
-                            public void updateItem(final TradeStatistics item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(formatter.formatCoinWithCode(item.getTradeAmount()));
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        amountColumn.setComparator((o1, o2) -> o1.getTradeAmount().compareTo(o2.getTradeAmount()));
-        tableView.getColumns().add(amountColumn);
-
         // price
         priceColumn = new TableColumn<>();
         priceColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
@@ -482,6 +458,30 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 });
         priceColumn.setComparator((o1, o2) -> o1.getTradePrice().compareTo(o2.getTradePrice()));
         tableView.getColumns().add(priceColumn);
+
+        // amount
+        TableColumn<TradeStatistics, TradeStatistics> amountColumn = new TableColumn<>("Amount in BTC");
+        amountColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
+        amountColumn.setCellFactory(
+                new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
+                        TradeStatistics>>() {
+                    @Override
+                    public TableCell<TradeStatistics, TradeStatistics> call(
+                            TableColumn<TradeStatistics, TradeStatistics> column) {
+                        return new TableCell<TradeStatistics, TradeStatistics>() {
+                            @Override
+                            public void updateItem(final TradeStatistics item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(formatter.formatCoinWithCode(item.getTradeAmount()));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        amountColumn.setComparator((o1, o2) -> o1.getTradeAmount().compareTo(o2.getTradeAmount()));
+        tableView.getColumns().add(amountColumn);
 
         // volume
         volumeColumn = new TableColumn<>();

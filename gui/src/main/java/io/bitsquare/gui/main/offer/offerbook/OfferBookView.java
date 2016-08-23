@@ -138,10 +138,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
 
-        amountColumn = getAmountColumn();
-        tableView.getColumns().add(amountColumn);
         priceColumn = getPriceColumn();
         tableView.getColumns().add(priceColumn);
+        amountColumn = getAmountColumn();
+        tableView.getColumns().add(amountColumn);
         volumeColumn = getVolumeColumn();
         tableView.getColumns().add(volumeColumn);
         paymentMethodColumn = getPaymentMethodColumn();

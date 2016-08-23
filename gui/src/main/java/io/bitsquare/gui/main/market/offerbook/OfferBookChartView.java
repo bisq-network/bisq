@@ -70,7 +70,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private AreaChart<Number, Number> areaChart;
     private ComboBox<TradeCurrency> currencyComboBox;
     private Subscription tradeCurrencySubscriber;
-    private final StringProperty priceColumnLabel = new SimpleStringProperty();
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
     private Button buyOfferButton;
     private Button sellOfferButton;
@@ -150,10 +149,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
                     String tradeCurrencyName = tradeCurrency.getName();
-                    areaChart.setTitle("Offer book for " + tradeCurrencyName);
-                    priceColumnLabel.set(formatter.getPriceWithCounterCurrencyAndCurrencyPair(code));
-                    volumeColumnLabel.set(code);
-                    xAxis.setLabel(priceColumnLabel.get());
+                    areaChart.setTitle("Offer book for " + formatter.getCurrencyNameAndCurrencyPair(code));
+                    volumeColumnLabel.set("Amount in " + code);
+                    xAxis.setLabel(formatter.getPriceWithCounterCurrencyAndCurrencyPair(code));
                     xAxis.setTickLabelFormatter(new StringConverter<Number>() {
                         @Override
                         public String toString(Number object) {
@@ -185,6 +183,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                     buyOfferHeaderLabel.setText("Buy " + code + " offers");
                     sellOfferHeaderLabel.setText("Sell " + code + " offers");
+                    seriesBuy.setName(buyOfferHeaderLabel.getText() + "   ");
+                    seriesSell.setName(sellOfferHeaderLabel.getText());
                 });
 
         buyOfferTableView.setItems(model.getTopBuyOfferList());
@@ -310,7 +310,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 });
 
         // amount
-        TableColumn<Offer, Offer> amountColumn = new TableColumn<>("BTC");
+        TableColumn<Offer, Offer> amountColumn = new TableColumn<>("Amount in BTC");
         amountColumn.setMinWidth(125);
         amountColumn.setMaxWidth(125);
         amountColumn.setSortable(false);
@@ -356,13 +356,13 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         if (direction == Offer.Direction.BUY) {
             tableView.getColumns().add(paymentMethodColumn);
-            tableView.getColumns().add(amountColumn);
             tableView.getColumns().add(volumeColumn);
+            tableView.getColumns().add(amountColumn);
             tableView.getColumns().add(priceColumn);
         } else {
             tableView.getColumns().add(priceColumn);
-            tableView.getColumns().add(volumeColumn);
             tableView.getColumns().add(amountColumn);
+            tableView.getColumns().add(volumeColumn);
             tableView.getColumns().add(paymentMethodColumn);
         }
 
@@ -408,7 +408,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         xAxis = new NumberAxis();
         xAxis.setForceZeroInRange(false);
         xAxis.setAutoRanging(true);
-        xAxis.setLabel(priceColumnLabel.get());
 
         yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(false);
@@ -417,10 +416,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));
 
         seriesBuy = new XYChart.Series();
-        seriesBuy.setName("Bid offers   ");
-
         seriesSell = new XYChart.Series();
-        seriesSell.setName("Ask offers");
 
         areaChart = new AreaChart<>(xAxis, yAxis);
         areaChart.setAnimated(false);
