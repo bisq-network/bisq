@@ -190,8 +190,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             if (waitingForFundsBusyAnimation != null)
                 waitingForFundsBusyAnimation.play();
 
-            useMarketBasedPriceButton.setSelected(model.dataModel.useMarketPriceMargin.get());
-            fixedPriceButton.setSelected(!model.dataModel.useMarketPriceMargin.get());
+            useMarketBasedPriceButton.setSelected(model.dataModel.useMarketBasedPrice.get());
+            fixedPriceButton.setSelected(!model.dataModel.useMarketBasedPrice.get());
 
             directionLabel.setText(model.getDirectionLabel());
             amountDescriptionLabel.setText(model.getAmountDescription());
@@ -442,10 +442,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void addBindings() {
         amountBtcLabel.textProperty().bind(model.btcCode);
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> formatter.getCounterCurrency(model.tradeCurrencyCode.get()), model.btcCode, model.tradeCurrencyCode));
-        fixedPriceTextField.disableProperty().bind(model.dataModel.useMarketPriceMargin);
-        priceCurrencyLabel.disableProperty().bind(model.dataModel.useMarketPriceMargin);
-        marketBasedPriceTextField.disableProperty().bind(model.dataModel.useMarketPriceMargin.not());
-        marketBasedPriceLabel.disableProperty().bind(model.dataModel.useMarketPriceMargin.not());
+        fixedPriceTextField.disableProperty().bind(model.dataModel.useMarketBasedPrice);
+        priceCurrencyLabel.disableProperty().bind(model.dataModel.useMarketBasedPrice);
+        marketBasedPriceTextField.disableProperty().bind(model.dataModel.useMarketBasedPrice.not());
+        marketBasedPriceLabel.disableProperty().bind(model.dataModel.useMarketBasedPrice.not());
         marketBasedPriceLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
         minAmountBtcLabel.textProperty().bind(model.btcCode);
@@ -968,7 +968,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceButton.setId("toggle-price-left");
         fixedPriceButton.setToggleGroup(toggleGroup);
         fixedPriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
-            model.dataModel.setUseMarketPriceMargin(!newValue);
+            model.dataModel.setUseMarketBasedPrice(!newValue);
             useMarketBasedPriceButton.setSelected(!newValue);
         });
 
@@ -977,7 +977,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         useMarketBasedPriceButton.setId("toggle-price-right");
         useMarketBasedPriceButton.setToggleGroup(toggleGroup);
         useMarketBasedPriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
-            model.dataModel.setUseMarketPriceMargin(newValue);
+            model.dataModel.setUseMarketBasedPrice(newValue);
             fixedPriceButton.setSelected(!newValue);
         });
 

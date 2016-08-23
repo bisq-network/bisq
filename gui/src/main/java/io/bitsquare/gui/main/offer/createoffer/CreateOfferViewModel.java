@@ -384,7 +384,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         minAmount.addListener(minAmountStringListener);
         price.addListener(priceStringListener);
         marketPriceMargin.addListener(marketPriceMarginStringListener);
-        dataModel.useMarketPriceMargin.addListener(useMarketBasedPriceListener);
+        dataModel.useMarketBasedPrice.addListener(useMarketBasedPriceListener);
         volume.addListener(volumeStringListener);
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
@@ -402,7 +402,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         minAmount.removeListener(minAmountStringListener);
         price.removeListener(priceStringListener);
         marketPriceMargin.removeListener(marketPriceMarginStringListener);
-        dataModel.useMarketPriceMargin.removeListener(useMarketBasedPriceListener);
+        dataModel.useMarketBasedPrice.removeListener(useMarketBasedPriceListener);
         volume.removeListener(volumeStringListener);
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
