@@ -369,13 +369,16 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
             checkNotNull(priceFeedService, "priceFeed must not be null");
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             if (marketPrice != null) {
-                PriceFeedService.Type priceFeedType = direction == Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
-                double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
+                PriceFeedService.Type priceFeedType;
                 double factor;
-                if (CurrencyUtil.isCryptoCurrency(currencyCode))
+                if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                    priceFeedType = direction == Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
                     factor = direction == Offer.Direction.SELL ? 1 - marketPriceMargin : 1 + marketPriceMargin;
-                else
+                } else {
+                    priceFeedType = direction == Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
                     factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
+                }
+                double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
                 double targetPrice = marketPriceAsDouble * factor;
                 if (CurrencyUtil.isCryptoCurrency(currencyCode))
                     targetPrice = targetPrice != 0 ? 1d / targetPrice : 0;

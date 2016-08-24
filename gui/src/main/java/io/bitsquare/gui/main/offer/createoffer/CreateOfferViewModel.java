@@ -53,6 +53,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import java.util.concurrent.TimeUnit;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
@@ -122,7 +123,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private ChangeListener<String> errorMessageListener;
     private Offer offer;
     private Timer timeoutTimer;
-    private PriceFeedService.Type priceFeedType;
     private boolean inputIsMarketBasedPrice;
     private ChangeListener<Boolean> useMarketBasedPriceListener;
     private boolean ignorePriceStringListener, ignoreVolumeStringListener, ignoreAmountStringListener;
@@ -161,7 +161,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 amount.set("1");
                 minAmount.set(amount.get());
-                price.set("0.02");
+                price.set("500");
 
                 setAmountToModel();
                 setMinAmountToModel();
@@ -171,7 +171,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 dataModel.calculateTotalToPay();
                 updateButtonDisableState();
                 updateSpinnerInfo();
-            }, 1);
+            }, 10, TimeUnit.MILLISECONDS);
         }
 
         addBindings();
@@ -257,7 +257,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         final String currencyCode = dataModel.tradeCurrencyCode.get();
                         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
                         if (marketPrice != null) {
-                            double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
+                            double marketPriceAsDouble = marketPrice.getPrice(getPriceFeedType());
                             try {
                                 double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
                                 double relation = priceAsDouble / marketPriceAsDouble;
@@ -295,7 +295,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
 
-                                double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
+                                double marketPriceAsDouble = marketPrice.getPrice(getPriceFeedType());
                                 double factor;
                                 if (CurrencyUtil.isCryptoCurrency(currencyCode))
                                     factor = dataModel.getDirection() == Offer.Direction.SELL ? 1 - percentage : 1 + percentage;
@@ -427,8 +427,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         boolean result = dataModel.initWithData(direction, tradeCurrency);
         if (dataModel.paymentAccount != null)
             btcValidator.setMaxTradeLimitInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimit());
-
-        priceFeedType = direction == Offer.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
 
         return result;
     }
@@ -822,6 +820,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || !dataModel.isWalletFunded.get());
     }
 
+    private PriceFeedService.Type getPriceFeedType() {
+        if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
+            return dataModel.getDirection() == Offer.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
+        else
+            return dataModel.getDirection() == Offer.Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
+    }
 
     private void stopTimeoutTimer() {
         if (timeoutTimer != null) {

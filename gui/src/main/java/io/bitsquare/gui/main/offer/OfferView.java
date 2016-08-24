@@ -139,8 +139,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         View view;
         boolean isBuy = direction == Offer.Direction.BUY;
 
-        priceFeedService.setType(isBuy ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
-
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.

@@ -310,7 +310,7 @@ public class BSFormatter {
 
     public String formatMarketPrice(double price, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return formatMarketPrice(price, 3);
+            return formatMarketPrice(price, 2);
         else
             return formatMarketPrice(price, 8);
     }
