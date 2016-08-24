@@ -875,7 +875,7 @@ public class MainViewModel implements ViewModel {
                 isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable());
                 isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable());
             }
-        }, 10, TimeUnit.MILLISECONDS);
+        }, 100, TimeUnit.MILLISECONDS);
     }
 
     Optional<PriceFeedComboBoxItem> findPriceFeedComboBoxItem(String currencyCode) {
