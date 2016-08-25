@@ -16,6 +16,7 @@ import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.BanList;
+import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
@@ -60,7 +61,8 @@ public class Connection implements MessageListener {
     public enum PeerType {
         SEED_NODE,
         PEER,
-        DIRECT_MSG_PEER
+        DIRECT_MSG_PEER,
+        INITIAL_DATA_REQUEST
     }
 
 
@@ -205,6 +207,8 @@ public class Connection implements MessageListener {
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
                                 peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
+                    } else if (message instanceof GetDataResponse && ((GetDataResponse) message).isGetUpdatedDataResponse) {
+                        setPeerType(Connection.PeerType.PEER);
                     } else {
                         log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
@@ -845,6 +849,9 @@ public class Connection implements MessageListener {
                             // We don't want to get the activity ts updated by ping/pong msg
                             if (!(message instanceof KeepAliveMessage))
                                 connection.statistic.updateLastActivityTimestamp();
+
+                            if (message instanceof GetDataRequest)
+                                connection.setPeerType(PeerType.INITIAL_DATA_REQUEST);
 
                             // First a seed node gets a message from a peer (PreliminaryDataRequest using
                             // AnonymousMessage interface) which does not have its hidden service

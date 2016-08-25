@@ -266,9 +266,9 @@ public class PeerManager implements ConnectionListener {
                         log.debug("No candidates found. We check if we exceed our " +
                                 "maxConnectionsNonDirect limit of {}", maxConnectionsNonDirect);
                         if (size > maxConnectionsNonDirect) {
-                            log.debug("Lets try to remove any connection which is not of type DIRECT_MSG_PEER.");
+                            log.debug("Lets try to remove any connection which is not of type DIRECT_MSG_PEER or INITIAL_DATA_REQUEST.");
                             candidates = allConnections.stream()
-                                    .filter(e -> e.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER)
+                                    .filter(e -> e.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER && e.getPeerType() != Connection.PeerType.INITIAL_DATA_REQUEST)
                                     .collect(Collectors.toList());
 
                             if (candidates.size() == 0) {

@@ -12,6 +12,7 @@ import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.NetworkNode;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
+import io.bitsquare.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bitsquare.p2p.storage.P2PDataStorage;
 import io.bitsquare.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
@@ -120,7 +121,7 @@ public class GetDataRequestHandler {
             }
         }
 
-        GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet, getDataRequest.getNonce());
+        GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet, getDataRequest.getNonce(), getDataRequest instanceof GetUpdatedDataRequest);
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
