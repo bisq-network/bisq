@@ -78,8 +78,8 @@ public final class TradeStatisticsForJson {
                 primaryMarketTradeAmount = getTradeVolume().longValue();
                 primaryMarketTradeVolume = getTradeAmount().longValue();
             } else {
-                tradePriceDisplayString = fiatFormat.noCode().format(tradePriceAsFiat).toString();
                 currencyPair = "BTC/" + currency;
+                tradePriceDisplayString = fiatFormat.noCode().format(tradePriceAsFiat).toString();
 
                 primaryMarketTradePrice = tradePriceAsFiat.longValue();
 

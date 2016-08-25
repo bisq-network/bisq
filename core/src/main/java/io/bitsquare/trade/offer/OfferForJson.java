@@ -30,10 +30,20 @@ public class OfferForJson {
     public final String offerFeeTxID;
 
     // Used in Json to provide same formatting/rounding for price
-    public String priceDisplayString = "";
-    public String amountDisplayString = "";
-    public String minAmountDisplayString = "";
-    public String volumeDisplayString = "";
+    public String currencyPair;
+
+    public String priceDisplayString;
+    public String primaryMarketAmountDisplayString;
+    public String primaryMarketMinAmountDisplayString;
+    public String primaryMarketVolumeDisplayString;
+    public String primaryMarketMinVolumeDisplayString;
+
+    public long primaryMarketPrice;
+    public long primaryMarketAmount;
+    public long primaryMarketMinAmount;
+    public long primaryMarketVolume;
+    public long primaryMarketMinVolume;
+
 
     public OfferForJson(Offer.Direction direction,
                         String currencyCode,
@@ -77,18 +87,39 @@ public class OfferForJson {
             MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
             final Fiat priceAsFiat = getPriceAsFiat();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                currencyPair = currencyCode + "/" + "BTC";
+
                 DecimalFormat decimalFormat = new DecimalFormat("#.#");
                 decimalFormat.setMaximumFractionDigits(8);
                 final double value = priceAsFiat.value != 0 ? 10000D / priceAsFiat.value : 0;
                 priceDisplayString = decimalFormat.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
+                primaryMarketMinAmountDisplayString = fiatFormat.noCode().format(getMinVolumeAsFiat()).toString();
+                primaryMarketAmountDisplayString = fiatFormat.noCode().format(getVolumeAsFiat()).toString();
+                primaryMarketMinVolumeDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
+                primaryMarketVolumeDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
+
+                primaryMarketPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(value, 8));
+                primaryMarketMinAmount = getMinVolumeAsFiat().longValue();
+                primaryMarketAmount = getVolumeAsFiat().longValue();
+                primaryMarketMinVolume = getMinAmountAsCoin().longValue();
+                primaryMarketVolume = getAmountAsCoin().longValue();
 
             } else {
+                currencyPair = "BTC/" + currencyCode;
                 priceDisplayString = fiatFormat.noCode().format(priceAsFiat).toString();
+
+                primaryMarketMinAmountDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
+                primaryMarketAmountDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
+                primaryMarketMinVolumeDisplayString = fiatFormat.noCode().format(getMinVolumeAsFiat()).toString();
+                primaryMarketVolumeDisplayString = fiatFormat.noCode().format(getVolumeAsFiat()).toString();
+
+                primaryMarketPrice = priceAsFiat.longValue();
+                primaryMarketMinAmount = getMinAmountAsCoin().longValue();
+                primaryMarketAmount = getAmountAsCoin().longValue();
+                primaryMarketMinVolume = getMinVolumeAsFiat().longValue();
+                primaryMarketVolume = getVolumeAsFiat().longValue();
             }
 
-            amountDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
-            minAmountDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
-            volumeDisplayString = fiatFormat.noCode().format(getVolumeAsFiat()).toString();
         } catch (Throwable t) {
             log.error("Error at setDisplayStrings: " + t.getMessage());
         }
@@ -108,5 +139,9 @@ public class OfferForJson {
 
     private Fiat getVolumeAsFiat() {
         return new ExchangeRate(getPriceAsFiat()).coinToFiat(getAmountAsCoin());
+    }
+
+    private Fiat getMinVolumeAsFiat() {
+        return new ExchangeRate(getPriceAsFiat()).coinToFiat(getMinAmountAsCoin());
     }
 }
