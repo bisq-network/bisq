@@ -160,6 +160,15 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.ALI_PAY_ID:
                 gridRow = AliPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
+            case PaymentMethod.CLEAR_X_CHANGE_ID:
+                gridRow = ClearXExchangeForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
+            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
+                gridRow = USPostalMoneyOrderForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
+            case PaymentMethod.US_CASH_DEPOSIT_ID:
+                gridRow = USCashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = "Sellers " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " address:";
                 gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData, labelTitle);

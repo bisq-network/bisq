@@ -48,8 +48,8 @@ public class SpecificBankForm extends BankForm {
     }
 
     public SpecificBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
-                            GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+                            GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter, closeHandler);
         this.specificBanksAccountContractData = (SpecificBanksAccountContractData) paymentAccount.contractData;
     }
 

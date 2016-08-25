@@ -48,6 +48,9 @@ public final class PaymentMethod implements Persistable, Comparable {
     public static final String SPECIFIC_BANKS_ID = "SPECIFIC_BANKS";
     public static final String SWISH_ID = "SWISH";
     public static final String ALI_PAY_ID = "ALI_PAY";
+    public static final String CLEAR_X_CHANGE_ID = "CLEAR_X_CHANGE";
+    public static final String US_POSTAL_MONEY_ORDER_ID = "US_POSTAL_MONEY_ORDER";
+    public static final String US_CASH_DEPOSIT_ID = "US_CASH_DEPOSIT";
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
 
     public static PaymentMethod OK_PAY;
@@ -58,6 +61,9 @@ public final class PaymentMethod implements Persistable, Comparable {
     public static PaymentMethod SPECIFIC_BANKS;
     public static PaymentMethod SWISH;
     public static PaymentMethod ALI_PAY;
+    public static PaymentMethod CLEAR_X_CHANGE;
+    public static PaymentMethod US_POSTAL_MONEY_ORDER;
+    public static PaymentMethod US_CASH_DEPOSIT;
     public static PaymentMethod BLOCK_CHAINS;
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
@@ -69,9 +75,11 @@ public final class PaymentMethod implements Persistable, Comparable {
             PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY, Coin.parseCoin("1")),
             SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("1.5")),
             ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("1.5")),
+            CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 0, 8 * DAY, Coin.parseCoin("0.5")),
+            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
+            US_CASH_DEPOSIT = new PaymentMethod(US_CASH_DEPOSIT_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
             BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("2"))
     ));
-
 
     private final String id;
     private long lockTime;

@@ -33,7 +33,7 @@ public class NationalBankForm extends BankForm {
     }
 
     public NationalBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
-                            GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
+                            GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter, closeHandler);
     }
 }

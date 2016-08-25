@@ -41,6 +41,12 @@ public class PaymentAccountFactory {
                 return new AliPayAccount();
             case PaymentMethod.SWISH_ID:
                 return new SwishAccount();
+            case PaymentMethod.CLEAR_X_CHANGE_ID:
+                return new ClearXExchangeAccount();
+            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
+                return new USPostalMoneyOrderAccount();
+            case PaymentMethod.US_CASH_DEPOSIT_ID:
+                return new USCashDepositAccount();
             case PaymentMethod.BLOCK_CHAINS_ID:
                 return new CryptoCurrencyAccount();
             default:
