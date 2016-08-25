@@ -79,10 +79,7 @@ bg color of non edit textFields: fafafa
     -fx-font-family: "Verdana";
 }
 
-
-
 /* Splash */
-
 
 #splash {
     -fx-background-color: #ffffff;
@@ -155,6 +152,10 @@ bg color of non edit textFields: fafafa
 
 .text-field:readonly {
     -fx-text-fill: #000000;
+    -fx-background-color: #FAFAFA;
+}
+
+.text-area:readonly .content {
     -fx-background-color: #FAFAFA;
 }
 
