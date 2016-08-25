@@ -76,8 +76,8 @@ public final class PaymentMethod implements Persistable, Comparable {
             SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("1.5")),
             ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("1.5")),
             CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 0, 8 * DAY, Coin.parseCoin("0.5")),
-            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
-            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
+            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, 6 * DAY, Coin.parseCoin("0.5")),
+            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 0, 6 * DAY, Coin.parseCoin("0.5")),
             BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("2"))
     ));
 
