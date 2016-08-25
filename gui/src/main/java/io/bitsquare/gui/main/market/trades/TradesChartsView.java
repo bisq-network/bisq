@@ -177,10 +177,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
                         String code = selectedTradeCurrency.getCode();
                         volumeColumn.setText("Amount in " + code);
-                        if (CurrencyUtil.isCryptoCurrency(code))
-                            priceColumnLabel.set("Price in BTC for 1 " + code);
-                        else
-                            priceColumnLabel.set("Price in " + code + " for 1 BTC");
+                        priceColumnLabel.set(formatter.getPriceWithCurrencyCode(code));
 
                         if (tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().remove(marketColumn);

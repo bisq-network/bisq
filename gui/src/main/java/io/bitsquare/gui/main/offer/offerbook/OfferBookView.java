@@ -38,7 +38,6 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentMethod;
@@ -210,7 +209,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
 
         priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
-        amountColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
+        volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
 
         paymentMethodComboBox.setItems(model.getPaymentMethods());
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
@@ -233,11 +232,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             tableView.getColumns().add(0, marketColumn);
                     } else {
                         volumeColumn.setText("Amount in " + code + " (Min.)");
-
-                        if (CurrencyUtil.isCryptoCurrency(code))
-                            priceColumn.setText("Price in BTC for 1 " + code);
-                        else
-                            priceColumn.setText("Price in " + code + " for 1 BTC");
+                        priceColumn.setText(formatter.getPriceWithCurrencyCode(code));
 
                         if (tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().remove(marketColumn);

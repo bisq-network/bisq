@@ -152,7 +152,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     String tradeCurrencyName = tradeCurrency.getName();
                     areaChart.setTitle("Offer book for " + formatter.getCurrencyNameAndCurrencyPair(code));
                     volumeColumnLabel.set("Amount in " + code);
-                    xAxis.setLabel(formatter.getPriceWithCurrencyCode(code));
                     xAxis.setTickLabelFormatter(new StringConverter<Number>() {
                         @Override
                         public String toString(Number object) {
@@ -192,6 +191,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
                         priceColumnLabel.set("Price in " + code);
                     }
+                    xAxis.setLabel(formatter.getPriceWithCurrencyCode(code));
+
                     seriesBuy.setName(buyOfferHeaderLabel.getText() + "   ");
                     seriesSell.setName(sellOfferHeaderLabel.getText());
                 });
