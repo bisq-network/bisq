@@ -61,9 +61,9 @@ public class TradeStatisticsManager {
 
             this.cryptoCurrencyListJsonStorage.initWithFileName("crypto_currency_list.json");
             ArrayList<CurrencyTuple> cryptoCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedCryptoCurrencies().stream()
-                    .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
+                    .map(e -> new CurrencyTuple(e.getCode(), e.getName()))
                     .collect(Collectors.toList()));
-            cryptoCurrencyList.add(0, new CurrencyTuple("BTC", "Bitcoin", 8));
+            cryptoCurrencyList.add(0, new CurrencyTuple("BTC", "Bitcoin"));
             cryptoCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(cryptoCurrencyList)), 2000);
         }
 
