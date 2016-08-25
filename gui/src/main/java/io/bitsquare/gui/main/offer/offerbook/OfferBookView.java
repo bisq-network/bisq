@@ -59,11 +59,13 @@ import javafx.scene.layout.Priority;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.bitcoinj.utils.Fiat;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
-import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {
@@ -76,7 +78,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private Button createOfferButton;
-    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, priceColumn, paymentMethodColumn, avatarColumn;
+    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn, paymentMethodColumn, avatarColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -84,6 +86,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TitledGroupBg offerBookTitle;
     private Label nrOfOffersLabel;
     private ListChangeListener<OfferBookListItem> offerListListener;
+    private MonadicBinding<Void> currencySelectionBinding;
+    private Subscription currencySelectionSubscriber;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -138,6 +142,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setMargin(tableView, new Insets(10, -10, -10, -10));
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
+
+        marketColumn = getMarketColumn();
 
         priceColumn = getPriceColumn();
         tableView.getColumns().add(priceColumn);
@@ -215,32 +221,33 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         createOfferButton.setOnAction(e -> onCreateOffer());
 
-        volumeColumn.textProperty().bind(createStringBinding(
-                () -> {
-                    setDirectionTitles();
-                    String tradeCurrencyCode = model.tradeCurrencyCode.get();
-                    return !model.showAllTradeCurrenciesProperty.get() ?
-                            "Amount in " + tradeCurrencyCode + " (Min.)" :
-                            "Amount (Min.)";
-                },
-                model.tradeCurrencyCode,
-                model.showAllTradeCurrenciesProperty));
+        currencySelectionBinding = EasyBind.combine(
+                model.showAllTradeCurrenciesProperty, model.tradeCurrencyCode,
+                (showAll, code) -> {
 
-        priceColumn.textProperty().bind(createStringBinding(
-                () -> {
-                    String tradeCurrencyCode = model.tradeCurrencyCode.get();
-                    if (model.showAllTradeCurrenciesProperty.get()) {
-                        return "Price";
+                    if (showAll) {
+                        volumeColumn.setText("Amount (Min.)");
+                        priceColumn.setText("Price");
+
+                        if (!tableView.getColumns().contains(marketColumn))
+                            tableView.getColumns().add(0, marketColumn);
                     } else {
-                        if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode))
-                            return "Price in BTC for 1 " + tradeCurrencyCode;
-                        else
-                            return "Price in " + tradeCurrencyCode + " for 1 BTC";
-                    }
-                },
-                model.tradeCurrencyCode,
-                model.showAllTradeCurrenciesProperty));
+                        volumeColumn.setText("Amount in " + code + " (Min.)");
 
+                        if (CurrencyUtil.isCryptoCurrency(code))
+                            priceColumn.setText("Price in BTC for 1 " + code);
+                        else
+                            priceColumn.setText("Price in " + code + " for 1 BTC");
+
+                        if (tableView.getColumns().contains(marketColumn))
+                            tableView.getColumns().remove(marketColumn);
+                    }
+
+                    return null;
+                });
+
+        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
+        });
 
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
 
@@ -256,12 +263,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox.setOnAction(null);
         paymentMethodComboBox.setOnAction(null);
         createOfferButton.setOnAction(null);
-        volumeColumn.textProperty().unbind();
         model.getOfferList().comparatorProperty().unbind();
 
         priceColumn.sortableProperty().unbind();
         amountColumn.sortableProperty().unbind();
         model.getOfferList().removeListener(offerListListener);
+
+        currencySelectionSubscriber.unsubscribe();
     }
 
 
@@ -441,6 +449,37 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
                                     setText(model.getAmount(item));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Market") {
+            {
+                setMinWidth(130);
+                setMaxWidth(130);
+            }
+        };
+        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
+                        OfferBookListItem>>() {
+                    @Override
+                    public TableCell<OfferBookListItem, OfferBookListItem> call(
+                            TableColumn<OfferBookListItem, OfferBookListItem> column) {
+                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+
+                            @Override
+                            public void updateItem(final OfferBookListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty)
+                                    setText(formatter.getCurrencyPair(item.getOffer().getCurrencyCode()));
                                 else
                                     setText("");
                             }

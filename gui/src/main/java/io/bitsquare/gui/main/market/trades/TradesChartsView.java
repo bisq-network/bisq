@@ -167,22 +167,23 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     priceChart.setManaged(!showAll);
                     priceColumn.setSortable(!showAll);
 
-                    String code = selectedTradeCurrency.getCode();
                     if (showAll) {
                         volumeColumn.setText("Amount");
                         priceColumnLabel.set("Price");
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(1, marketColumn);
                     } else {
-                        priceSeries.setName(model.selectedTradeCurrencyProperty.get().getName());
-                        volumeColumn.setText("Amount in " + code);
+                        priceSeries.setName(selectedTradeCurrency.getName());
 
-                        if (tableView.getColumns().contains(marketColumn))
-                            tableView.getColumns().remove(marketColumn);
+                        String code = selectedTradeCurrency.getCode();
+                        volumeColumn.setText("Amount in " + code);
                         if (CurrencyUtil.isCryptoCurrency(code))
                             priceColumnLabel.set("Price in BTC for 1 " + code);
                         else
                             priceColumnLabel.set("Price in " + code + " for 1 BTC");
+
+                        if (tableView.getColumns().contains(marketColumn))
+                            tableView.getColumns().remove(marketColumn);
                     }
                     return null;
                 });
