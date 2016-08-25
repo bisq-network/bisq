@@ -18,7 +18,6 @@
 package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
@@ -51,8 +50,6 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ProcessModel implements Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -148,14 +145,6 @@ public class ProcessModel implements Model, Serializable {
 
     public TradeWalletService getTradeWalletService() {
         return tradeWalletService;
-    }
-
-    public byte[] getArbitratorPubKey(NodeAddress arbitratorNodeAddress) {
-        Arbitrator acceptedArbitratorByAddress = user.getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-        checkNotNull(acceptedArbitratorByAddress, "acceptedArbitratorByAddress must not be null.\n" +
-                "Maybe there is no arbitrator in the network available or you did not receive the data from the P2P network.\n" +
-                "You can try to restart the app to see if that resolved the issue.");
-        return acceptedArbitratorByAddress.getBtcPubKey();
     }
 
     public Offer getOffer() {

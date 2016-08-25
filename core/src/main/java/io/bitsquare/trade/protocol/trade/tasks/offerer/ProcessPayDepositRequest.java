@@ -75,7 +75,7 @@ public class ProcessPayDepositRequest extends TradeTask {
             processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.acceptedArbitratorNodeAddresses));
             if (payDepositRequest.acceptedArbitratorNodeAddresses.isEmpty())
                 failed("acceptedArbitratorNames must not be empty");
-            trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.arbitratorNodeAddress));
+            trade.applyArbitratorNodeAddress(checkNotNull(payDepositRequest.arbitratorNodeAddress));
 
             try {
                 long takersTradePrice = payDepositRequest.tradePrice;
