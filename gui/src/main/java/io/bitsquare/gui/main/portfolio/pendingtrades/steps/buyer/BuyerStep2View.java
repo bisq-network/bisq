@@ -29,6 +29,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.payment.CashDepositAccountContractData;
 import io.bitsquare.payment.CryptoCurrencyAccountContractData;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
@@ -77,18 +78,34 @@ public class BuyerStep2View extends TradeStepView {
                                 "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n\n" +
                                 "(You can copy & paste the values from the main screen after closing that popup.)";
                     else if (paymentAccountContractData != null)
-                        message = "Your trade has reached at least one blockchain confirmation.\n" +
-                                "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
-                                "Please go to your online banking web page and pay " +
-                                model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
-                                "Here are the payment account details of the bitcoin seller:\n" +
-                                "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
-                                "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
-                                "Please don't forget to add the trade ID \"" + trade.getShortId() +
-                                "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
-                                "DO NOT use any additional notice in the \"reason for payment\" text like " +
-                                "Bitcoin, Btc or Bitsquare.\n\n" +
-                                "If your bank charges fees you have to cover those fees.";
+                        if (paymentAccountContractData instanceof CashDepositAccountContractData)
+                            message = "Your trade has reached at least one blockchain confirmation.\n" +
+                                    "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
+                                    "Please go to a bank and pay " +
+                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
+                                    "Here are the payment account details of the bitcoin seller:\n" +
+                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
+                                    "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
+                                    "Please don't forget to add the trade ID \"" + trade.getShortId() +
+                                    "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
+                                    "DO NOT use any additional notice in the \"reason for payment\" text like " +
+                                    "Bitcoin, Btc or Bitsquare.\n\n" +
+                                    "If your bank charges fees you have to cover those fees.\n\n" +
+                                    "After you have done the payment write on the paper receipt: NO REFUNDS.\n" +
+                                    "Then tear it in 2 parts, make a photo and send it to the seller's email address.";
+                        else
+                            message = "Your trade has reached at least one blockchain confirmation.\n" +
+                                    "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
+                                    "Please go to your online banking web page and pay " +
+                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
+                                    "Here are the payment account details of the bitcoin seller:\n" +
+                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
+                                    "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
+                                    "Please don't forget to add the trade ID \"" + trade.getShortId() +
+                                    "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
+                                    "DO NOT use any additional notice in the \"reason for payment\" text like " +
+                                    "Bitcoin, Btc or Bitsquare.\n\n" +
+                                    "If your bank charges fees you have to cover those fees.";
 
                     if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                         preferences.dontShowAgain(key, true);

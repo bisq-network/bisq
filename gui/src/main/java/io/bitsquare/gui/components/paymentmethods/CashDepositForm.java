@@ -51,7 +51,7 @@ public class CashDepositForm extends PaymentMethodForm {
     private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
     private TextField currencyTextField;
     private Label holderIdLabel;
-    protected InputTextField holderNameInputTextField;
+    protected InputTextField holderNameInputTextField, holderEmailInputTextField;
     private Label bankIdLabel;
     private Label branchIdLabel;
     private Label accountNrLabel;
@@ -70,10 +70,10 @@ public class CashDepositForm extends PaymentMethodForm {
         String countryCode = ((CashDepositAccountContractData) paymentAccountContractData).getCountryCode();
 
         if (data.getHolderTaxId() != null)
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name / " + BankUtil.getHolderIdLabel(countryCode),
-                    data.getHolderName() + " / " + data.getHolderTaxId());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name / email / " + BankUtil.getHolderIdLabel(countryCode),
+                    data.getHolderName() + " / " + data.getHolderEmail() + " / " + data.getHolderTaxId());
         else
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", data.getHolderName());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name / email:", data.getHolderName() + " / " + data.getHolderEmail());
 
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameAndCode(countryCode));
 
@@ -205,6 +205,7 @@ public class CashDepositForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Currency:", paymentAccount.getSingleTradeCurrency().getNameAndCode());
         addAcceptedBanksForDisplayAccount();
         addHolderNameAndIdForDisplayAccount();
+        addLabelTextField(gridPane, ++gridRow, "Account holder email:", cashDepositAccountContractData.getHolderEmail());
 
         if (BankUtil.isBankNameRequired(countryCode))
             addLabelTextField(gridPane, ++gridRow, "Bank name:", cashDepositAccountContractData.getBankName()).second.setMouseTransparent(false);
@@ -301,6 +302,7 @@ public class CashDepositForm extends PaymentMethodForm {
                     accountNrInputTextField.setValidator(null);
                 }
                 holderNameInputTextField.resetValidation();
+                holderEmailInputTextField.resetValidation();
                 bankNameInputTextField.resetValidation();
                 bankIdInputTextField.resetValidation();
                 branchIdInputTextField.resetValidation();
@@ -447,6 +449,14 @@ public class CashDepositForm extends PaymentMethodForm {
         holderNameInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
         holderNameInputTextField.setValidator(inputValidator);
 
+        holderEmailInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account holder email:").second;
+        holderEmailInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            cashDepositAccountContractData.setHolderEmail(newValue);
+            updateFromInputs();
+        });
+        holderEmailInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
+        holderEmailInputTextField.setValidator(inputValidator);
+
         useHolderID = true;
         holderIdLabel = tuple.third;
         holderIdLabel.setVisible(false);
@@ -499,7 +509,8 @@ public class CashDepositForm extends PaymentMethodForm {
         boolean result = isAccountNameValid()
                 && paymentAccount.getSingleTradeCurrency() != null
                 && getCountryBasedPaymentAccount().getCountry() != null
-                && holderNameInputTextField.getValidator().validate(cashDepositAccountContractData.getHolderName()).isValid;
+                && holderNameInputTextField.getValidator().validate(cashDepositAccountContractData.getHolderName()).isValid
+                && holderEmailInputTextField.getValidator().validate(cashDepositAccountContractData.getHolderEmail()).isValid;
 
         String countryCode = cashDepositAccountContractData.getCountryCode();
         if (validatorsApplied && BankUtil.useValidation(countryCode)) {

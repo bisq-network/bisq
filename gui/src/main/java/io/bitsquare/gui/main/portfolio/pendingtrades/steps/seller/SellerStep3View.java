@@ -27,10 +27,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.payment.BankAccountContractData;
-import io.bitsquare.payment.CryptoCurrencyAccountContractData;
-import io.bitsquare.payment.PaymentAccountContractData;
-import io.bitsquare.payment.SepaAccountContractData;
+import io.bitsquare.payment.*;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.user.Preferences;
@@ -87,12 +84,23 @@ public class SellerStep3View extends TradeStepView {
                             "Please go to your online banking web page and check if you have received " +
                             tradeVolumeWithCode + " from the bitcoin buyer.\n\n" +
                             "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
+
+                    if (paymentAccountContractData instanceof CashDepositAccountContractData)
+                        message += "\n\nBecause the payment is done via Cash Deposit the buyer has to write \"NO REFUND\" " +
+                                "on the paper receipt, tear it in 2 parts and send you a photo by email.\n\n" +
+                                "To avoid chargeback risk, only confirm if you received the email and if you are " +
+                                "sure the paper receipt is valid.\n" +
+                                "If you are not sure, please don't confirm but open a dispute " +
+                                "by entering \"cmd + o\" or \"ctrl + o\".";
+
                     Optional<String> optionalHolderName = getOptionalHolderName();
                     if (optionalHolderName.isPresent()) {
                         message = message + "\n\n" +
-                                "Please also verify that the senders name in your bank statement matches that one from the trade contract:\n" +
+                                "Please also verify that the senders name in your bank statement matches that one from the " +
+                                "trade contract:\n" +
                                 "Senders name: " + optionalHolderName.get() + "\n\n" +
-                                "If the name is not the same as the one displayed here, please don't confirm but open a dispute by entering \"cmd + o\" or \"ctrl + o\".";
+                                "If the name is not the same as the one displayed here, please don't confirm but open a dispute " +
+                                "by entering \"cmd + o\" or \"ctrl + o\".";
                     }
                 }
                 if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {

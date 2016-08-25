@@ -32,6 +32,7 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
     private static final Logger log = LoggerFactory.getLogger(CashDepositAccountContractData.class);
 
     protected String holderName;
+    protected String holderEmail;
     protected String bankName;
     protected String bankId;
     protected String branchId;
@@ -60,6 +61,7 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
         String holderIdString = BankUtil.isHolderIdRequired(countryCode) ? (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
 
         return "Holder name: " + holderName + "\n" +
+                "Holder email: " + holderEmail + "\n" +
                 bankName +
                 bankId +
                 branchId +
@@ -80,6 +82,14 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
 
     public String getHolderName() {
         return holderName;
+    }
+
+    public void setHolderEmail(String holderEmail) {
+        this.holderEmail = holderEmail;
+    }
+
+    public String getHolderEmail() {
+        return holderEmail;
     }
 
     public void setBankName(String bankName) {

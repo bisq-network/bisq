@@ -34,7 +34,7 @@ public final class CashDepositAccount extends CountryBasedPaymentAccount impleme
 
     @Override
     public String getBankId() {
-        return ((BankAccountContractData) contractData).getBankId();
+        return ((CashDepositAccountContractData) contractData).getBankId();
     }
 
     @Override
