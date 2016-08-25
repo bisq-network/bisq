@@ -32,10 +32,17 @@ public final class TradeStatisticsForJson {
     public final String depositTxId;
 
     // Used in Json to provide same formatting/rounding for price
-    public String tradePriceDisplayString;
-    public String tradeAmountDisplayString;
-    public String tradeVolumeDisplayString;
     public String currencyPair;
+
+    public String tradePriceDisplayString;
+
+    public String primaryMarketTradeAmountDisplayString;
+    public String primaryMarketTradeVolumeDisplayString;
+
+    public long primaryMarketTradePrice;
+    public long primaryMarketTradeAmount;
+    public long primaryMarketTradeVolume;
+
 
     public TradeStatisticsForJson(TradeStatistics tradeStatistics) {
         this.direction = tradeStatistics.direction;
@@ -57,18 +64,31 @@ public final class TradeStatisticsForJson {
             MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
             final Fiat tradePriceAsFiat = getTradePrice();
             if (CurrencyUtil.isCryptoCurrency(currency)) {
+                final double value = tradePriceAsFiat.value != 0 ? 10000D / tradePriceAsFiat.value : 0;
                 DecimalFormat decimalFormat = new DecimalFormat("#.#");
                 decimalFormat.setMaximumFractionDigits(8);
-                final double value = tradePriceAsFiat.value != 0 ? 10000D / tradePriceAsFiat.value : 0;
                 tradePriceDisplayString = decimalFormat.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
                 currencyPair = currency + "/" + "BTC";
+
+                primaryMarketTradePrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(value, 8));
+
+                primaryMarketTradeVolumeDisplayString = coinFormat.noCode().format(getTradeAmount()).toString();
+                primaryMarketTradeAmountDisplayString = fiatFormat.noCode().format(getTradeVolume()).toString();
+
+                primaryMarketTradeAmount = getTradeVolume().longValue();
+                primaryMarketTradeVolume = getTradeAmount().longValue();
             } else {
                 tradePriceDisplayString = fiatFormat.noCode().format(tradePriceAsFiat).toString();
                 currencyPair = "BTC/" + currency;
-            }
-            tradeAmountDisplayString = coinFormat.noCode().format(getTradeAmount()).toString();
-            tradeVolumeDisplayString = fiatFormat.noCode().format(getTradeVolume()).toString();
 
+                primaryMarketTradePrice = tradePriceAsFiat.longValue();
+
+                primaryMarketTradeAmountDisplayString = coinFormat.noCode().format(getTradeAmount()).toString();
+                primaryMarketTradeVolumeDisplayString = fiatFormat.noCode().format(getTradeVolume()).toString();
+
+                primaryMarketTradeAmount = getTradeAmount().longValue();
+                primaryMarketTradeVolume = getTradeVolume().longValue();
+            }
         } catch (Throwable t) {
             log.error("Error at setDisplayStrings: " + t.getMessage());
         }
@@ -104,9 +124,9 @@ public final class TradeStatisticsForJson {
         if (offerMinAmount != that.offerMinAmount) return false;
         if (tradePriceDisplayString != null ? !tradePriceDisplayString.equals(that.tradePriceDisplayString) : that.tradePriceDisplayString != null)
             return false;
-        if (tradeAmountDisplayString != null ? !tradeAmountDisplayString.equals(that.tradeAmountDisplayString) : that.tradeAmountDisplayString != null)
+        if (primaryMarketTradeAmountDisplayString != null ? !primaryMarketTradeAmountDisplayString.equals(that.primaryMarketTradeAmountDisplayString) : that.primaryMarketTradeAmountDisplayString != null)
             return false;
-        if (tradeVolumeDisplayString != null ? !tradeVolumeDisplayString.equals(that.tradeVolumeDisplayString) : that.tradeVolumeDisplayString != null)
+        if (primaryMarketTradeVolumeDisplayString != null ? !primaryMarketTradeVolumeDisplayString.equals(that.primaryMarketTradeVolumeDisplayString) : that.primaryMarketTradeVolumeDisplayString != null)
             return false;
         if (currency != null ? !currency.equals(that.currency) : that.currency != null) return false;
         if (direction != that.direction) return false;
@@ -121,8 +141,8 @@ public final class TradeStatisticsForJson {
         int result;
         long temp;
         result = tradePriceDisplayString != null ? tradePriceDisplayString.hashCode() : 0;
-        result = 31 * result + (tradeAmountDisplayString != null ? tradeAmountDisplayString.hashCode() : 0);
-        result = 31 * result + (tradeVolumeDisplayString != null ? tradeVolumeDisplayString.hashCode() : 0);
+        result = 31 * result + (primaryMarketTradeAmountDisplayString != null ? primaryMarketTradeAmountDisplayString.hashCode() : 0);
+        result = 31 * result + (primaryMarketTradeVolumeDisplayString != null ? primaryMarketTradeVolumeDisplayString.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (direction != null ? direction.hashCode() : 0);
         result = 31 * result + (int) (tradePrice ^ (tradePrice >>> 32));
@@ -138,5 +158,30 @@ public final class TradeStatisticsForJson {
         result = 31 * result + (offerId != null ? offerId.hashCode() : 0);
         result = 31 * result + (depositTxId != null ? depositTxId.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "TradeStatisticsForJson{" +
+                "currency='" + currency + '\'' +
+                ", direction=" + direction +
+                ", tradePrice=" + tradePrice +
+                ", tradeAmount=" + tradeAmount +
+                ", tradeDate=" + tradeDate +
+                ", paymentMethod='" + paymentMethod + '\'' +
+                ", offerDate=" + offerDate +
+                ", useMarketBasedPrice=" + useMarketBasedPrice +
+                ", marketPriceMargin=" + marketPriceMargin +
+                ", offerAmount=" + offerAmount +
+                ", offerMinAmount=" + offerMinAmount +
+                ", offerId='" + offerId + '\'' +
+                ", depositTxId='" + depositTxId + '\'' +
+                ", tradePriceDisplayString='" + tradePriceDisplayString + '\'' +
+                ", tradeAmountDisplayString='" + primaryMarketTradeAmountDisplayString + '\'' +
+                ", tradeVolumeDisplayString='" + primaryMarketTradeVolumeDisplayString + '\'' +
+                ", currencyPair='" + currencyPair + '\'' +
+                ", primaryMarketTradeAmount=" + primaryMarketTradeAmount +
+                ", primaryMarketTradeVolume=" + primaryMarketTradeVolume +
+                '}';
     }
 }
