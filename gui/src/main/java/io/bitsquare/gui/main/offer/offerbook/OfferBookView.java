@@ -38,6 +38,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentMethod;
@@ -218,13 +219,28 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 () -> {
                     setDirectionTitles();
                     String tradeCurrencyCode = model.tradeCurrencyCode.get();
-                    boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
-                    return !showAllTradeCurrencies ?
+                    return !model.showAllTradeCurrenciesProperty.get() ?
                             "Amount in " + tradeCurrencyCode + " (Min.)" :
                             "Amount (Min.)";
                 },
                 model.tradeCurrencyCode,
                 model.showAllTradeCurrenciesProperty));
+
+        priceColumn.textProperty().bind(createStringBinding(
+                () -> {
+                    String tradeCurrencyCode = model.tradeCurrencyCode.get();
+                    if (model.showAllTradeCurrenciesProperty.get()) {
+                        return "Price";
+                    } else {
+                        if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode))
+                            return "Price in BTC for 1 " + tradeCurrencyCode;
+                        else
+                            return "Price in " + tradeCurrencyCode + " for 1 BTC";
+                    }
+                },
+                model.tradeCurrencyCode,
+                model.showAllTradeCurrenciesProperty));
+
 
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
 
@@ -435,7 +451,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Price") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
             {
                 setMinWidth(130);
             }

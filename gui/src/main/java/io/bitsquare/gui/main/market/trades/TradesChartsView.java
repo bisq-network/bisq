@@ -50,6 +50,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,18 +76,18 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private double priceAxisYWidth;
     private double volumeAxisYWidth;
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
-    private ChangeListener<Toggle> toggleChangeListener;
+    private ChangeListener<Toggle> timeUnitChangeListener;
     private ToggleGroup toggleGroup;
     private final ListChangeListener<XYChart.Data<Number, Number>> itemsChangeListener;
-    private Subscription tradeCurrencySubscriber;
     private SortedList<TradeStatistics> sortedList;
     private Label nrOfTradeStatisticsLabel;
     private ListChangeListener<TradeStatistics> tradeStatisticsByCurrencyListener;
     private TableColumn<TradeStatistics, TradeStatistics> priceColumn;
     private ChangeListener<Number> selectedTabIndexListener;
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
-    private ChangeListener<Boolean> showAllTradeCurrenciesListener;
-    private TableColumn<TradeStatistics, TradeStatistics> volumeColumn;
+    private TableColumn<TradeStatistics, TradeStatistics> volumeColumn, marketColumn;
+    private MonadicBinding<Void> currencySelectionBinding;
+    private Subscription currencySelectionSubscriber;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +113,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         nrOfTradeStatisticsLabel.setPadding(new Insets(-5, 0, -10, 5));
         root.getChildren().addAll(toolBox, priceChart, volumeChart, tableView, nrOfTradeStatisticsLabel);
 
-        toggleChangeListener = (observable, oldValue, newValue) -> {
+        timeUnitChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 model.setTickUnit((TradesChartsViewModel.TickUnit) newValue.getUserData());
                 priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
@@ -128,13 +129,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             layoutChart();
         };
         tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText("Nr. of trades: " + model.tradeStatisticsByCurrency.size());
-        showAllTradeCurrenciesListener = (observable, oldValue, newValue) -> {
-            priceChart.setVisible(!newValue);
-            priceChart.setManaged(!newValue);
-            priceColumn.setSortable(!newValue);
-            volumeColumn.setText("Amount" + (newValue ? "" : (" in " + model.getCurrencyCode())));
-        };
-        priceColumnLabel.set("Price");
     }
 
     @Override
@@ -158,25 +152,43 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.getToggles().get(model.tickUnit.ordinal()).setSelected(true);
 
         model.priceItems.addListener(itemsChangeListener);
-        toggleGroup.selectedToggleProperty().addListener(toggleChangeListener);
+        toggleGroup.selectedToggleProperty().addListener(timeUnitChangeListener);
         priceAxisY.widthProperty().addListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().addListener(volumeAxisYWidthListener);
         model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
-        model.showAllTradeCurrenciesProperty.addListener(showAllTradeCurrenciesListener);
 
         priceAxisY.labelProperty().bind(priceColumnLabel);
         priceColumn.textProperty().bind(priceColumnLabel);
 
-        tradeCurrencySubscriber = EasyBind.subscribe(model.selectedTradeCurrencyProperty,
-                tradeCurrency -> {
-                    String code = tradeCurrency.getCode();
-                    String tradeCurrencyName = tradeCurrency.getName();
+        currencySelectionBinding = EasyBind.combine(
+                model.showAllTradeCurrenciesProperty, model.selectedTradeCurrencyProperty,
+                (showAll, selectedTradeCurrency) -> {
+                    priceChart.setVisible(!showAll);
+                    priceChart.setManaged(!showAll);
+                    priceColumn.setSortable(!showAll);
 
-                    priceSeries.setName(tradeCurrencyName);
-                    final String currencyPair = formatter.getCurrencyPair(code);
-                    final boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
-                    volumeColumn.setText("Amount " + (showAllTradeCurrencies ? "" : (" in " + code)));
+                    String code = selectedTradeCurrency.getCode();
+                    if (showAll) {
+                        volumeColumn.setText("Amount");
+                        priceColumnLabel.set("Price");
+                        if (!tableView.getColumns().contains(marketColumn))
+                            tableView.getColumns().add(1, marketColumn);
+                    } else {
+                        priceSeries.setName(model.selectedTradeCurrencyProperty.get().getName());
+                        volumeColumn.setText("Amount in " + code);
+
+                        if (tableView.getColumns().contains(marketColumn))
+                            tableView.getColumns().remove(marketColumn);
+                        if (CurrencyUtil.isCryptoCurrency(code))
+                            priceColumnLabel.set("Price in BTC for 1 " + code);
+                        else
+                            priceColumnLabel.set("Price in " + code + " for 1 BTC");
+                    }
+                    return null;
                 });
+
+        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
+        });
 
         sortedList = new SortedList<>(model.tradeStatisticsByCurrency);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -197,16 +209,15 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
         model.priceItems.removeListener(itemsChangeListener);
-        toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
+        toggleGroup.selectedToggleProperty().removeListener(timeUnitChangeListener);
         priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
         model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
-        model.showAllTradeCurrenciesProperty.removeListener(showAllTradeCurrenciesListener);
 
         priceAxisY.labelProperty().unbind();
         priceColumn.textProperty().unbind();
 
-        tradeCurrencySubscriber.unsubscribe();
+        currencySelectionSubscriber.unsubscribe();
 
         sortedList.comparatorProperty().unbind();
 
@@ -433,7 +444,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(dateColumn);
 
         // market
-        TableColumn<TradeStatistics, TradeStatistics> marketColumn = new TableColumn<TradeStatistics, TradeStatistics>("Market") {
+        marketColumn = new TableColumn<TradeStatistics, TradeStatistics>("Market") {
             {
                 setMinWidth(130);
                 setMaxWidth(130);

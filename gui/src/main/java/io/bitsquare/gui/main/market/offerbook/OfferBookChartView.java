@@ -71,6 +71,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private ComboBox<TradeCurrency> currencyComboBox;
     private Subscription tradeCurrencySubscriber;
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
+    private final StringProperty priceColumnLabel = new SimpleStringProperty();
     private Button buyOfferButton;
     private Button sellOfferButton;
     private ChangeListener<Number> selectedTabIndexListener;
@@ -175,14 +176,22 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     });
 
                     if (CurrencyUtil.isCryptoCurrency(code)) {
-                        buyOfferButton.setText("I want to sell bitcoin / buy " + tradeCurrencyName);
-                        sellOfferButton.setText("I want to buy bitcoin / sell " + tradeCurrencyName);
+                        buyOfferHeaderLabel.setText("Offers to sell " + code + " for BTC");
+                        buyOfferButton.setText("I want to buy " + code + " (sell BTC)");
+
+                        sellOfferHeaderLabel.setText("Offers to buy " + code + " for BTC");
+                        sellOfferButton.setText("I want to sell " + code + " (buy BTC)");
+
+                        priceColumnLabel.set("Price in BTC");
                     } else {
-                        buyOfferButton.setText("I want to sell bitcoin");
-                        sellOfferButton.setText("I want to buy bitcoin");
+                        buyOfferHeaderLabel.setText("Offers to buy BTC for " + code);
+                        buyOfferButton.setText("I want to sell BTC for " + code);
+
+                        sellOfferHeaderLabel.setText("Offers to sell BTC for " + code);
+                        sellOfferButton.setText("I want to buy BTC for " + code);
+
+                        priceColumnLabel.set("Price in " + code);
                     }
-                    buyOfferHeaderLabel.setText("Buy " + code + " offers");
-                    sellOfferHeaderLabel.setText("Sell " + code + " offers");
                     seriesBuy.setName(buyOfferHeaderLabel.getText() + "   ");
                     seriesSell.setName(sellOfferHeaderLabel.getText());
                 });
@@ -221,7 +230,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         // price
         TableColumn<Offer, Offer> priceColumn = new TableColumn<>();
-        priceColumn.setText("Price");
+        priceColumn.textProperty().bind(priceColumnLabel);
         priceColumn.setMinWidth(130);
         priceColumn.setMaxWidth(130);
         priceColumn.setSortable(false);
