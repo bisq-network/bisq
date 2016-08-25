@@ -58,7 +58,7 @@ class GetPriceRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                log.error("requestPrice.onFailure: throwable=" + throwable.toString());
+                log.debug("requestPrice.onFailure: throwable=" + throwable.toString());
                 resultFuture.setException(throwable);
             }
         });
