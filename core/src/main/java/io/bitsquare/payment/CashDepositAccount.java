@@ -18,27 +18,27 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.locale.FiatCurrency;
 
-public final class USCashDepositAccount extends PaymentAccount {
+public final class CashDepositAccount extends CountryBasedPaymentAccount implements SameCountryRestrictedBankAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    public USCashDepositAccount() {
-        super(PaymentMethod.US_CASH_DEPOSIT);
-        setSingleTradeCurrency(new FiatCurrency("USD"));
+    public CashDepositAccount() {
+        super(PaymentMethod.CASH_DEPOSIT);
     }
 
     @Override
     protected PaymentAccountContractData setContractData() {
-        return new USCashDepositAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+        return new CashDepositAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
-    public void setEmailOrMobileNr(String mobileNr) {
-        ((USCashDepositAccountContractData) contractData).setEmailOrMobileNr(mobileNr);
+    @Override
+    public String getBankId() {
+        return ((BankAccountContractData) contractData).getBankId();
     }
 
-    public String getEmailOrMobileNr() {
-        return ((USCashDepositAccountContractData) contractData).getEmailOrMobileNr();
+    @Override
+    public String getCountryCode() {
+        return getCountry() != null ? getCountry().code : "";
     }
 }

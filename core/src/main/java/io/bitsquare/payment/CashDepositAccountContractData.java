@@ -25,11 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
-public abstract class BankAccountContractData extends CountryBasedPaymentAccountContractData {
+public class CashDepositAccountContractData extends CountryBasedPaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(BankAccountContractData.class);
+    private static final Logger log = LoggerFactory.getLogger(CashDepositAccountContractData.class);
 
     protected String holderName;
     protected String bankName;
@@ -41,13 +41,13 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
     @Nullable
     protected String holderTaxId;
 
-    public BankAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public CashDepositAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
     @Override
     public String getPaymentDetails() {
-        return "Bank account transfer - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+        return "Cash deposit - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override

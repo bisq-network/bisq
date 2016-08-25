@@ -166,8 +166,8 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 gridRow = USPostalMoneyOrderForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
-            case PaymentMethod.US_CASH_DEPOSIT_ID:
-                gridRow = USCashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+            case PaymentMethod.CASH_DEPOSIT_ID:
+                gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = "Sellers " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " address:";

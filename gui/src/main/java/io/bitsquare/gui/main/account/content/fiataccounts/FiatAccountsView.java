@@ -56,7 +56,7 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
 
     private ListView<PaymentAccount> paymentAccountsListView;
-    private ComboBox<PaymentMethod> paymentMethodsComboBox;
+    private ComboBox<PaymentMethod> paymentMethodComboBox;
 
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
@@ -67,9 +67,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final SwishValidator swishValidator;
     private final ClearXExchangeValidator clearXExchangeValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
-    private final USCashDepositValidator usCashDepositValidator;
     
-    private final AltCoinAddressValidator altCoinAddressValidator;
     private BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
@@ -89,8 +87,6 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             SwishValidator swishValidator,
                             ClearXExchangeValidator clearXExchangeValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
-                            USCashDepositValidator usCashDepositValidator,
-                            AltCoinAddressValidator altCoinAddressValidator,
                             BSFormatter formatter) {
         super(model);
 
@@ -103,8 +99,6 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.swishValidator = swishValidator;
         this.clearXExchangeValidator = clearXExchangeValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
-        this.usCashDepositValidator = usCashDepositValidator;
-        this.altCoinAddressValidator = altCoinAddressValidator;
         this.formatter = formatter;
     }
 
@@ -233,14 +227,15 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", Layout.GROUP_DISTANCE);
-        paymentMethodsComboBox = addLabelComboBox(root, gridRow, "Payment method:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        paymentMethodsComboBox.setPromptText("Select payment method");
-        paymentMethodsComboBox.setPrefWidth(250);
+        paymentMethodComboBox = addLabelComboBox(root, gridRow, "Payment method:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        paymentMethodComboBox.setPromptText("Select payment method");
+        paymentMethodComboBox.setVisibleRowCount(20);
+        paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.ALL_VALUES.stream()
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
                 .collect(Collectors.toList());
-        paymentMethodsComboBox.setItems(FXCollections.observableArrayList(list));
-        paymentMethodsComboBox.setConverter(new StringConverter<PaymentMethod>() {
+        paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
+        paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
                 return paymentMethod != null ? BSResources.get(paymentMethod.getId()) : "";
@@ -251,13 +246,13 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return null;
             }
         });
-        paymentMethodsComboBox.setOnAction(e -> {
+        paymentMethodComboBox.setOnAction(e -> {
             if (paymentMethodForm != null) {
                 FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
                 GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
             }
             gridRow = 2;
-            paymentMethodForm = getPaymentMethodForm(paymentMethodsComboBox.getSelectionModel().getSelectedItem());
+            paymentMethodForm = getPaymentMethodForm(paymentMethodComboBox.getSelectionModel().getSelectedItem());
             if (paymentMethodForm != null) {
                 paymentMethodForm.addFormForAddAccount();
                 gridRow = paymentMethodForm.getGridRow();
@@ -326,8 +321,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new ClearXExchangeForm(paymentAccount, clearXExchangeValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 return new USPostalMoneyOrderForm(paymentAccount, usPostalMoneyOrderValidator, inputValidator, root, gridRow, formatter);
-            case PaymentMethod.US_CASH_DEPOSIT_ID:
-                return new USCashDepositForm(paymentAccount, usCashDepositValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CASH_DEPOSIT_ID:
+                return new CashDepositForm(paymentAccount, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;
