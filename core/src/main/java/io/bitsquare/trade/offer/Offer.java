@@ -348,7 +348,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public String getId() {
-        getVersion();
         String[] tokens = id.split("_");
         return tokens[0];
     }
