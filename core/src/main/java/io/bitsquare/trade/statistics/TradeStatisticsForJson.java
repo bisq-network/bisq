@@ -75,19 +75,19 @@ public final class TradeStatisticsForJson {
                 primaryMarketTradeVolumeDisplayString = coinFormat.noCode().format(getTradeAmount()).toString();
                 primaryMarketTradeAmountDisplayString = fiatFormat.noCode().format(getTradeVolume()).toString();
 
-                primaryMarketTradeAmount = getTradeVolume().longValue();
+                primaryMarketTradeAmount = (long) MathUtils.scaleUpByPowerOf10(getTradeVolume().longValue(), 4);
                 primaryMarketTradeVolume = getTradeAmount().longValue();
             } else {
                 currencyPair = "BTC/" + currency;
                 tradePriceDisplayString = fiatFormat.noCode().format(tradePriceAsFiat).toString();
 
-                primaryMarketTradePrice = tradePriceAsFiat.longValue();
+                primaryMarketTradePrice = (long) MathUtils.scaleUpByPowerOf10(tradePriceAsFiat.longValue(), 4);
 
                 primaryMarketTradeAmountDisplayString = coinFormat.noCode().format(getTradeAmount()).toString();
                 primaryMarketTradeVolumeDisplayString = fiatFormat.noCode().format(getTradeVolume()).toString();
 
                 primaryMarketTradeAmount = getTradeAmount().longValue();
-                primaryMarketTradeVolume = getTradeVolume().longValue();
+                primaryMarketTradeVolume = (long) MathUtils.scaleUpByPowerOf10(getTradeVolume().longValue(), 4);
             }
         } catch (Throwable t) {
             log.error("Error at setDisplayStrings: " + t.getMessage());

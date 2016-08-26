@@ -99,8 +99,8 @@ public class OfferForJson {
                 primaryMarketVolumeDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
 
                 primaryMarketPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(value, 8));
-                primaryMarketMinAmount = getMinVolumeAsFiat().longValue();
-                primaryMarketAmount = getVolumeAsFiat().longValue();
+                primaryMarketMinAmount = (long) MathUtils.scaleUpByPowerOf10(getMinVolumeAsFiat().longValue(), 4);
+                primaryMarketAmount = (long) MathUtils.scaleUpByPowerOf10(getVolumeAsFiat().longValue(), 4);
                 primaryMarketMinVolume = getMinAmountAsCoin().longValue();
                 primaryMarketVolume = getAmountAsCoin().longValue();
 
@@ -113,11 +113,11 @@ public class OfferForJson {
                 primaryMarketMinVolumeDisplayString = fiatFormat.noCode().format(getMinVolumeAsFiat()).toString();
                 primaryMarketVolumeDisplayString = fiatFormat.noCode().format(getVolumeAsFiat()).toString();
 
-                primaryMarketPrice = priceAsFiat.longValue();
+                primaryMarketPrice = (long) MathUtils.scaleUpByPowerOf10(priceAsFiat.longValue(), 4);
                 primaryMarketMinAmount = getMinAmountAsCoin().longValue();
                 primaryMarketAmount = getAmountAsCoin().longValue();
-                primaryMarketMinVolume = getMinVolumeAsFiat().longValue();
-                primaryMarketVolume = getVolumeAsFiat().longValue();
+                primaryMarketMinVolume = (long) MathUtils.scaleUpByPowerOf10(getMinVolumeAsFiat().longValue(), 4);
+                primaryMarketVolume = (long) MathUtils.scaleUpByPowerOf10(getVolumeAsFiat().longValue(), 4);
             }
 
         } catch (Throwable t) {
