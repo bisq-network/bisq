@@ -32,10 +32,11 @@ $JAVA_HOME/bin/javapackager \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare
 
-sudo alien -r -c -k gui/deploy/bundles/bitsquare-$version.deb
+# uncomment because the build VM does not support alien
+#sudo alien -r -c -k gui/deploy/bundles/bitsquare-$version.deb
 
 mv "gui/deploy/bundles/bitsquare-$version.deb" "/media/sf_vm_shared_ubuntu/Bitsquare-64bit-$version.deb"
-mv "bitsquare-$version-1.x86_64.rpm" "/media/sf_vm_shared_ubuntu/Bitsquare-64bit-$version.rpm"
+#mv "bitsquare-$version-1.x86_64.rpm" "/media/sf_vm_shared_ubuntu/Bitsquare-64bit-$version.rpm"
 rm -r gui/deploy/
 
 cd package/linux
