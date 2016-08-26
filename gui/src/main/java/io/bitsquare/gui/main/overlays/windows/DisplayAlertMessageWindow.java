@@ -70,7 +70,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
         if (alert.isUpdateInfo) {
             headLine = "Important update information!";
             headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
-            String url = "https://github.com/bitsquare/bitsquare/releases";
+            String url = "https://bitsquare.io/downloads";
             HyperlinkWithIcon hyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
                     "Download:", url, url).second;
             hyperlinkWithIcon.setMaxWidth(550);
