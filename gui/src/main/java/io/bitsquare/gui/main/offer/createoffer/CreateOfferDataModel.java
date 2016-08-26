@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.offer.createoffer;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
@@ -293,7 +294,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
-        return new Offer(offerId,
+
+        // We encode the version into the id to be able to distinguish in future versions offers
+        // Once we have a hard fork we can remove that hack and add the version as a field
+        String idWithExtra = offerId + "_" + Version.VERSION;
+        return new Offer(idWithExtra,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,
