@@ -55,7 +55,7 @@ public class TradeStatisticsManager {
 
             this.fiatCurrencyListJsonStorage.initWithFileName("fiat_currency_list.json");
             ArrayList<CurrencyTuple> fiatCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies().stream()
-                    .map(e -> new CurrencyTuple(e.getCode(), e.getName()))
+                    .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toList()));
             fiatCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(fiatCurrencyList)), 2000);
 
