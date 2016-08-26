@@ -8,7 +8,7 @@
 
 :: Did not get -BjvmOptions=-Xbootclasspath working on windows, but if the jdkfix jar is copied into the jdk/jre dir it will override the default classes
 
-SET version=0.4.9.4
+SET version=0.4.9.5
 SET jdk=C:\Program Files\Java\jdk1.8.0_92
 SET outdir=\\VBOXSVR\vm_shared_windows
 
