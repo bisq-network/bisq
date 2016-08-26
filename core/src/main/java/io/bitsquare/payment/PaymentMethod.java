@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 // Don't use Enum as it breaks serialisation when changing entries and we want to stay flexible here
 public final class PaymentMethod implements Persistable, Comparable {
@@ -109,7 +110,11 @@ public final class PaymentMethod implements Persistable, Comparable {
     }
 
     public static PaymentMethod getPaymentMethodById(String name) {
-        return ALL_VALUES.stream().filter(e -> e.getId().equals(name)).findFirst().get();
+        Optional<PaymentMethod> paymentMethodOptional = ALL_VALUES.stream().filter(e -> e.getId().equals(name)).findFirst();
+        if (paymentMethodOptional.isPresent())
+            return paymentMethodOptional.get();
+        else
+            return new PaymentMethod("N/A", 1, DAY, Coin.parseCoin("0"));
     }
 
     public String getId() {
