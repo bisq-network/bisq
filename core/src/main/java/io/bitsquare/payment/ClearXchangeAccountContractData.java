@@ -19,31 +19,41 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 
-public final class ClearXExchangeAccountContractData extends PaymentAccountContractData {
+public final class ClearXchangeAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private String mobileNr;
+    private String holderName;
+    private String emailOrMobileNr;
 
-    public ClearXExchangeAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public ClearXchangeAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public void setEmailOrMobileNr(String mobileNr) {
-        this.mobileNr = mobileNr;
+    public String getHolderName() {
+        return holderName;
+    }
+
+    public void setHolderName(String holderName) {
+        this.holderName = holderName;
+    }
+
+    public void setEmailOrMobileNr(String emailOrMobileNr) {
+        this.emailOrMobileNr = emailOrMobileNr;
     }
 
     public String getEmailOrMobileNr() {
-        return mobileNr;
+        return emailOrMobileNr;
     }
 
     @Override
     public String getPaymentDetails() {
-        return "ClearXExchange - Email or mobile nr.: " + mobileNr;
+        return "ClearXchange - Holder name: " + holderName + ", email or mobile nr.: " + emailOrMobileNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "Email or mobile nr.: " + mobileNr;
+        return "Holder name: " + holderName + "\n" +
+                "Email or mobile nr.: " + emailOrMobileNr;
     }
 }

@@ -18,7 +18,7 @@
 package io.bitsquare.gui.util.validation;
 
 
-public final class ClearXExchangeValidator extends InputValidator {
+public final class ClearXchangeValidator extends InputValidator {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods

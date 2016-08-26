@@ -42,7 +42,7 @@ public class PaymentAccountFactory {
             case PaymentMethod.SWISH_ID:
                 return new SwishAccount();
             case PaymentMethod.CLEAR_X_CHANGE_ID:
-                return new ClearXExchangeAccount();
+                return new ClearXchangeAccount();
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 return new USPostalMoneyOrderAccount();
             case PaymentMethod.CASH_DEPOSIT_ID:

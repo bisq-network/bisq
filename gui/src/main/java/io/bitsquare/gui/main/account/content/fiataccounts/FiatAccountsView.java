@@ -65,7 +65,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final AliPayValidator aliPayValidator;
     private final PerfectMoneyValidator perfectMoneyValidator;
     private final SwishValidator swishValidator;
-    private final ClearXExchangeValidator clearXExchangeValidator;
+    private final ClearXchangeValidator clearXchangeValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
     
     private BSFormatter formatter;
@@ -85,7 +85,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             AliPayValidator aliPayValidator,
                             PerfectMoneyValidator perfectMoneyValidator,
                             SwishValidator swishValidator,
-                            ClearXExchangeValidator clearXExchangeValidator,
+                            ClearXchangeValidator clearXchangeValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
                             BSFormatter formatter) {
         super(model);
@@ -97,7 +97,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.aliPayValidator = aliPayValidator;
         this.perfectMoneyValidator = perfectMoneyValidator;
         this.swishValidator = swishValidator;
-        this.clearXExchangeValidator = clearXExchangeValidator;
+        this.clearXchangeValidator = clearXchangeValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
         this.formatter = formatter;
     }
@@ -318,7 +318,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             case PaymentMethod.SWISH_ID:
                 return new SwishForm(paymentAccount, swishValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CLEAR_X_CHANGE_ID:
-                return new ClearXExchangeForm(paymentAccount, clearXExchangeValidator, inputValidator, root, gridRow, formatter);
+                return new ClearXchangeForm(paymentAccount, clearXchangeValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 return new USPostalMoneyOrderForm(paymentAccount, usPostalMoneyOrderValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_DEPOSIT_ID:

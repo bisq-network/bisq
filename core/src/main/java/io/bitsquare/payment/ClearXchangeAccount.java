@@ -20,25 +20,33 @@ package io.bitsquare.payment;
 import io.bitsquare.app.Version;
 import io.bitsquare.locale.FiatCurrency;
 
-public final class ClearXExchangeAccount extends PaymentAccount {
+public final class ClearXchangeAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    public ClearXExchangeAccount() {
+    public ClearXchangeAccount() {
         super(PaymentMethod.CLEAR_X_CHANGE);
         setSingleTradeCurrency(new FiatCurrency("USD"));
     }
 
     @Override
     protected PaymentAccountContractData setContractData() {
-        return new ClearXExchangeAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+        return new ClearXchangeAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setEmailOrMobileNr(String mobileNr) {
-        ((ClearXExchangeAccountContractData) contractData).setEmailOrMobileNr(mobileNr);
+        ((ClearXchangeAccountContractData) contractData).setEmailOrMobileNr(mobileNr);
     }
 
     public String getEmailOrMobileNr() {
-        return ((ClearXExchangeAccountContractData) contractData).getEmailOrMobileNr();
+        return ((ClearXchangeAccountContractData) contractData).getEmailOrMobileNr();
+    }
+
+    public void setHolderName(String holderName) {
+        ((ClearXchangeAccountContractData) contractData).setHolderName(holderName);
+    }
+
+    public String getHolderName() {
+        return ((ClearXchangeAccountContractData) contractData).getHolderName();
     }
 }

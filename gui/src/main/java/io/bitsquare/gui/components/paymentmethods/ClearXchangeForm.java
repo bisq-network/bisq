@@ -20,11 +20,11 @@ package io.bitsquare.gui.components.paymentmethods;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.gui.util.validation.ClearXExchangeValidator;
+import io.bitsquare.gui.util.validation.ClearXchangeValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.payment.ClearXExchangeAccount;
-import io.bitsquare.payment.ClearXExchangeAccountContractData;
+import io.bitsquare.payment.ClearXchangeAccount;
+import io.bitsquare.payment.ClearXchangeAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import javafx.scene.control.TextField;
@@ -36,36 +36,44 @@ import org.slf4j.LoggerFactory;
 import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
 import static io.bitsquare.gui.util.FormBuilder.addLabelTextField;
 
-public class ClearXExchangeForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(ClearXExchangeForm.class);
+public class ClearXchangeForm extends PaymentMethodForm {
+    private static final Logger log = LoggerFactory.getLogger(ClearXchangeForm.class);
 
-    private final ClearXExchangeAccount clearXExchangeAccount;
-    private final ClearXExchangeValidator clearXExchangeValidator;
+    private final ClearXchangeAccount clearXchangeAccount;
+    private final ClearXchangeValidator clearXchangeValidator;
     private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextField(gridPane, ++gridRow, "Email or mobile nr.:", ((ClearXExchangeAccountContractData) paymentAccountContractData).getEmailOrMobileNr());
+        addLabelTextField(gridPane, ++gridRow, "Account holder name:", ((ClearXchangeAccountContractData) paymentAccountContractData).getHolderName());
+        addLabelTextField(gridPane, ++gridRow, "Email or mobile nr.:", ((ClearXchangeAccountContractData) paymentAccountContractData).getEmailOrMobileNr());
         return gridRow;
     }
 
-    public ClearXExchangeForm(PaymentAccount paymentAccount, ClearXExchangeValidator clearXExchangeValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public ClearXchangeForm(PaymentAccount paymentAccount, ClearXchangeValidator clearXchangeValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
-        this.clearXExchangeAccount = (ClearXExchangeAccount) paymentAccount;
-        this.clearXExchangeValidator = clearXExchangeValidator;
+        this.clearXchangeAccount = (ClearXchangeAccount) paymentAccount;
+        this.clearXchangeValidator = clearXchangeValidator;
     }
 
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
+        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:").second;
+        holderNameInputTextField.setValidator(inputValidator);
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            clearXchangeAccount.setHolderName(newValue);
+            updateFromInputs();
+        });
+        
         mobileNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Email or mobile nr.:").second;
-        mobileNrInputTextField.setValidator(clearXExchangeValidator);
+        mobileNrInputTextField.setValidator(clearXchangeValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            clearXExchangeAccount.setEmailOrMobileNr(newValue);
+            clearXchangeAccount.setEmailOrMobileNr(newValue);
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", clearXExchangeAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, "Currency:", clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -83,18 +91,20 @@ public class ClearXExchangeForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, "Account name:", clearXExchangeAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(clearXExchangeAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Email or mobile nr.:", clearXExchangeAccount.getEmailOrMobileNr()).second;
+        addLabelTextField(gridPane, gridRow, "Account name:", clearXchangeAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(clearXchangeAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, "Account holder name:", clearXchangeAccount.getHolderName());
+        TextField field = addLabelTextField(gridPane, ++gridRow, "Email or mobile nr.:", clearXchangeAccount.getEmailOrMobileNr()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", clearXExchangeAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, "Currency:", clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && clearXExchangeValidator.validate(clearXExchangeAccount.getEmailOrMobileNr()).isValid
-                && clearXExchangeAccount.getTradeCurrencies().size() > 0);
+                && clearXchangeValidator.validate(clearXchangeAccount.getEmailOrMobileNr()).isValid
+                && inputValidator.validate(clearXchangeAccount.getHolderName()).isValid
+                && clearXchangeAccount.getTradeCurrencies().size() > 0);
     }
 }

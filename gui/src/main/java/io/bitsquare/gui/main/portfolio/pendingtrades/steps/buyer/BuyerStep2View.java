@@ -178,7 +178,7 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = AliPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
             case PaymentMethod.CLEAR_X_CHANGE_ID:
-                gridRow = ClearXExchangeForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = ClearXchangeForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 gridRow = USPostalMoneyOrderForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
