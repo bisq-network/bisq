@@ -291,7 +291,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox(String text) {
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
-        priceComboBox.setVisibleRowCount(40);
+        priceComboBox.setVisibleRowCount(20);
         priceComboBox.setMaxWidth(220);
         priceComboBox.setMinWidth(220);
         priceComboBox.setFocusTraversable(false);

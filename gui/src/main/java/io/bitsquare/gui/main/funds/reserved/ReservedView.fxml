@@ -31,7 +31,7 @@
             <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180" maxWidth="180"/>
             <TableColumn text="Details" fx:id="detailsColumn" minWidth="320"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="320"/>
-            <TableColumn text="Balance (BTC)" fx:id="balanceColumn" minWidth="110"/>
+            <TableColumn text="Balance in BTC" fx:id="balanceColumn" minWidth="110"/>
         </columns>
     </TableView>
 

@@ -279,6 +279,10 @@ public class BSFormatter {
         return CurrencyUtil.getNameByCode(currencyCode) + " amount" + postFix;
     }
 
+    public String formatMinVolumeAndVolume(Offer offer) {
+        return formatVolume(offer.getMinOfferVolume()) + " - " + formatVolume(offer.getOfferVolume());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Price
@@ -342,11 +346,15 @@ public class BSFormatter {
         return result;
     }
 
-    public String formatAmountWithMinAmount(Offer offer) {
-        return formatCoin(offer.getAmount()) + " (" + formatCoin(offer.getMinAmount()) + ")";
+    public String formatAmount(Offer offer) {
+        return formatCoin(offer.getAmount());
     }
 
-    public String formatVolumeWithMinVolumeWithCode(Offer offer) {
+    public String formatAmountWithMinAmount(Offer offer) {
+        return formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount());
+    }
+
+    public String formatMinVolumeAndVolumeWithCode(Offer offer) {
         return formatFiatWithCode(offer.getOfferVolume()) +
                 " (" + formatFiatWithCode(offer.getMinOfferVolume()) + ")";
     }

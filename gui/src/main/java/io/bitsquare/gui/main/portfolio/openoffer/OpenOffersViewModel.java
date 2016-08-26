@@ -76,7 +76,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getVolume(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatVolumeWithMinVolumeWithCode(item.getOffer()) : "";
+        return (item != null) ? formatter.formatMinVolumeAndVolumeWithCode(item.getOffer()) : "";
     }
 
     String getDirectionLabel(OpenOfferListItem item) {

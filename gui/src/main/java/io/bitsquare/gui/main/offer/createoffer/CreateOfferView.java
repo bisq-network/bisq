@@ -198,7 +198,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             addressTextField.setAddress(model.getAddressAsString());
             addressTextField.setPaymentLabel(model.getPaymentLabel());
 
-            paymentAccountsComboBox.setItems(model.getPaymentAccounts());
+            paymentAccountsComboBox.setItems(model.dataModel.getPaymentAccounts());
             paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
 
             onPaymentAccountsComboBoxSelected();
@@ -241,10 +241,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     public void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = model.initWithData(direction, tradeCurrency);
 
-        if (!result) {
-            log.error("Payment account set up. That should not be possible as UI does not support that case.");
+        if (!result) 
             new Popup().warning("You don't have a payment account set up.").onClose(this::close).show();
-        }
 
         if (direction == Offer.Direction.BUY) {
             imageView.setId("image-buy-large");

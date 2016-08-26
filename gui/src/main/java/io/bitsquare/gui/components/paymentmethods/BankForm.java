@@ -251,7 +251,7 @@ abstract class BankForm extends PaymentMethodForm {
 
 
         ComboBox<Country> countryComboBox = tuple3.third;
-        countryComboBox.setVisibleRowCount(20);
+        countryComboBox.setVisibleRowCount(15);
         countryComboBox.setDisable(true);
         countryComboBox.setPromptText("Select country");
         countryComboBox.setConverter(new StringConverter<Country>() {

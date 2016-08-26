@@ -32,7 +32,7 @@ public class SearchComboBox<T> extends ComboBox<T> {
                     filteredList.setPredicate(item -> newValue.isEmpty() ||
                             getConverter().toString(item).toLowerCase().contains(newValue.toLowerCase()));
                     hide();
-                    setVisibleRowCount(Math.min(20, filteredList.size()));
+                    setVisibleRowCount(Math.min(12, filteredList.size()));
                     show();
                 });
             }

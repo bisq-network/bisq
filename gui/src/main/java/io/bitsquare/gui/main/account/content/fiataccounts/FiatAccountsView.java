@@ -229,7 +229,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", Layout.GROUP_DISTANCE);
         paymentMethodComboBox = addLabelComboBox(root, gridRow, "Payment method:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         paymentMethodComboBox.setPromptText("Select payment method");
-        paymentMethodComboBox.setVisibleRowCount(20);
+        paymentMethodComboBox.setVisibleRowCount(15);
         paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.ALL_VALUES.stream()
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.BLOCK_CHAINS_ID))

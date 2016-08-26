@@ -51,6 +51,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,7 +133,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     @Override
     protected void activate() {
         tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream().map(e -> e.getCode()).collect(Collectors.toSet());
-        
+
         String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
         if (code != null && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
@@ -271,10 +272,14 @@ class OfferBookViewModel extends ActivatableViewModel {
         return list;
     }
 
-
     String getAmount(OfferBookListItem item) {
-        return (item != null) ? formatter.formatCoin(item.getOffer().getAmount()) +
-                " (" + formatter.formatCoin(item.getOffer().getMinAmount()) + ")" : "";
+        Offer offer = item.getOffer();
+        Coin amount = offer.getAmount();
+        Coin minAmount = offer.getMinAmount();
+        if (amount.equals(minAmount))
+            return formatter.formatAmount(offer);
+        else
+            return formatter.formatAmountWithMinAmount(offer);
     }
 
     String getPrice(OfferBookListItem item) {
@@ -298,13 +303,15 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getVolume(OfferBookListItem item) {
-        Fiat offerVolume = item.getOffer().getOfferVolume();
-        Fiat minOfferVolume = item.getOffer().getMinOfferVolume();
+        Offer offer = item.getOffer();
+        Fiat offerVolume = offer.getOfferVolume();
+        Fiat minOfferVolume = offer.getMinOfferVolume();
         if (offerVolume != null && minOfferVolume != null) {
-            if (showAllTradeCurrenciesProperty.get())
-                return formatter.formatVolumeWithCode(offerVolume) + " (" + formatter.formatVolumeWithCode(minOfferVolume) + ")";
+            String postFix = showAllTradeCurrenciesProperty.get() ? " " + offer.getCurrencyCode() : "";
+            if (offerVolume.equals(minOfferVolume))
+                return formatter.formatVolume(offerVolume) + postFix;
             else
-                return formatter.formatVolume(offerVolume) + " (" + formatter.formatVolume(minOfferVolume) + ")";
+                return formatter.formatMinVolumeAndVolume(offer) + postFix;
         } else {
             return "N/A";
         }

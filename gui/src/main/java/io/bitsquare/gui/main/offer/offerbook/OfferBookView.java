@@ -226,13 +226,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 (showAll, code) -> {
 
                     if (showAll) {
-                        volumeColumn.setText("Amount (Min.)");
+                        volumeColumn.setText("Amount (min - max)");
                         priceColumn.setText("Price");
 
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(0, marketColumn);
                     } else {
-                        volumeColumn.setText("Amount in " + code + " (Min.)");
+                        volumeColumn.setText("Amount in " + code + " (min - max)");
                         priceColumn.setText(formatter.getPriceWithCurrencyCode(code));
 
                         if (tableView.getColumns().contains(marketColumn))
@@ -427,9 +427,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAmountColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Amount in BTC (Min.)") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Amount in BTC (min - max)") {
             {
-                setMinWidth(130);
+                setMinWidth(150);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));

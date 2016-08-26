@@ -30,7 +30,7 @@
         <columns>
             <TableColumn text="Select" fx:id="selectColumn" minWidth="60" maxWidth="60" sortable="false"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="320"/>
-            <TableColumn text="Balance (BTC)" fx:id="balanceColumn" minWidth="310" maxWidth="310"/>
+            <TableColumn text="Balance in BTC" fx:id="balanceColumn" minWidth="310" maxWidth="310"/>
         </columns>
     </TableView>
 

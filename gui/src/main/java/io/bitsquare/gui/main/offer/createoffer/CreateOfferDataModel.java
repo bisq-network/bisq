@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -107,7 +108,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
     final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
 
-    final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
+    private final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     PaymentAccount paymentAccount;
     boolean isTabSelected;
@@ -177,15 +178,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
             }
         };
 
-        paymentAccountsChangeListener = change -> paymentAccounts.setAll(user.getPaymentAccounts());
+        paymentAccountsChangeListener = change -> fillPaymentAccounts();
     }
 
     @Override
     protected void activate() {
         addBindings();
         addListeners();
-
-        paymentAccounts.setAll(user.getPaymentAccounts());
 
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
@@ -226,17 +225,19 @@ class CreateOfferDataModel extends ActivatableDataModel {
     boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
 
+        fillPaymentAccounts();
+
         PaymentAccount account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
-        if (account != null) {
+        if (account != null && !isUSBankAccount(account)) {
             paymentAccount = account;
             this.tradeCurrency = tradeCurrency;
         } else {
-            Optional<PaymentAccount> paymentAccountOptional = user.getPaymentAccounts().stream().findAny();
+            Optional<PaymentAccount> paymentAccountOptional = paymentAccounts.stream().findAny();
             if (paymentAccountOptional.isPresent()) {
                 paymentAccount = paymentAccountOptional.get();
                 this.tradeCurrency = paymentAccount.getSingleTradeCurrency();
             } else {
-                // Should never get called as in offer view you should not be able to open a create offer view
+                log.warn("PaymentAccount not available. Should never get called as in offer view you should not be able to open a create offer view");
                 return false;
             }
         }
@@ -341,7 +342,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 price.set(null);
                 marketPriceMargin = 0;
             }
-            
+
             this.tradeCurrency = tradeCurrency;
             final String code = tradeCurrency.getCode();
             tradeCurrencyCode.set(code);
@@ -374,6 +375,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
             this.useSavingsWallet = false;
             updateBalance();
         }
+    }
+
+    void setMarketPriceMargin(double marketPriceMargin) {
+        this.marketPriceMargin = marketPriceMargin;
     }
 
 
@@ -421,6 +426,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
     /*boolean isFeeFromFundingTxSufficient() {
         return !isMainNet.get() || feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0;
     }*/
+
+    public ObservableList<PaymentAccount> getPaymentAccounts() {
+        return paymentAccounts;
+    }
+
+    double getMarketPriceMargin() {
+        return marketPriceMargin;
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -531,11 +544,16 @@ class CreateOfferDataModel extends ActivatableDataModel {
         walletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 
-    double getMarketPriceMargin() {
-        return marketPriceMargin;
+    private void fillPaymentAccounts() {
+        paymentAccounts.setAll(user.getPaymentAccounts().stream()
+                .filter(e -> !isUSBankAccount(e))
+                .collect(Collectors.toSet()));
     }
 
-    void setMarketPriceMargin(double marketPriceMargin) {
-        this.marketPriceMargin = marketPriceMargin;
+    private boolean isUSBankAccount(PaymentAccount paymentAccount) {
+        if (paymentAccount instanceof SameCountryRestrictedBankAccount && paymentAccount.getContractData() instanceof BankAccountContractData)
+            return ((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
+        else
+            return false;
     }
 }

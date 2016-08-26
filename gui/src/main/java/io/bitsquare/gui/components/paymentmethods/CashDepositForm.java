@@ -249,7 +249,7 @@ public class CashDepositForm extends PaymentMethodForm {
         regionComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllRegions()));
 
         ComboBox<Country> countryComboBox = tuple3.third;
-        countryComboBox.setVisibleRowCount(20);
+        countryComboBox.setVisibleRowCount(15);
         countryComboBox.setDisable(true);
         countryComboBox.setPromptText("Select country");
         countryComboBox.setConverter(new StringConverter<Country>() {

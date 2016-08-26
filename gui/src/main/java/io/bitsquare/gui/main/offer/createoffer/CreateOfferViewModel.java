@@ -48,7 +48,6 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.ObservableList;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 
@@ -654,10 +653,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     boolean isSellOffer() {
         return dataModel.getDirection() == Offer.Direction.SELL;
-    }
-
-    public ObservableList<PaymentAccount> getPaymentAccounts() {
-        return dataModel.paymentAccounts;
     }
 
     public TradeCurrency getTradeCurrency() {
