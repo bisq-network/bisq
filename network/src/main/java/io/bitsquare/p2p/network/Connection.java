@@ -716,7 +716,7 @@ public class Connection implements MessageListener {
                         threadNameSet = true;
                     }
                     try {
-                        if (objectInputStream.available() < 0) {
+                        if (sharedModel.getSocket().isClosed() || objectInputStream.available() < 0) {
                             log.warn("Shutdown because objectInputStream.available() < 0. objectInputStream.available()=" + objectInputStream.available());
                             sharedModel.shutDown(CloseConnectionReason.TERMINATED);
                             return;
