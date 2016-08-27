@@ -37,7 +37,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.chart.AreaChart;
@@ -55,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.Collections;
 
 @FxmlView
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
@@ -78,6 +81,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
     private Label buyOfferHeaderLabel, sellOfferHeaderLabel;
     private ChangeListener<Offer> sellTableRowSelectionListener, buyTableRowSelectionListener;
+    private HBox bottomHBox;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +106,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         Label currencyLabel = new Label("Currency:");
         HBox currencyHBox = new HBox();
         currencyHBox.setSpacing(5);
-        currencyHBox.setPadding(new Insets(10, -20, -20, 20));
+        currencyHBox.setPadding(new Insets(10, -20, -10, 20));
         currencyHBox.setAlignment(Pos.CENTER_LEFT);
         currencyHBox.getChildren().addAll(currencyLabel, currencyComboBox);
 
@@ -119,12 +123,14 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         buyOfferHeaderLabel = tupleBuy.forth;
         sellOfferHeaderLabel = tupleSell.forth;
 
-        HBox hBox = new HBox();
-        hBox.setSpacing(30);
-        hBox.setAlignment(Pos.CENTER);
-        hBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
+        bottomHBox = new HBox();
+        bottomHBox.setSpacing(30);
+        bottomHBox.setAlignment(Pos.CENTER);
+        tupleBuy.second.setUserData("BUY");
+        tupleSell.second.setUserData("SELL");
+        bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
-        root.getChildren().addAll(currencyHBox, areaChart, hBox);
+        root.getChildren().addAll(currencyHBox, areaChart, bottomHBox);
     }
 
     @Override
@@ -149,7 +155,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tradeCurrencySubscriber = EasyBind.subscribe(model.selectedTradeCurrencyProperty,
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
-                    String tradeCurrencyName = tradeCurrency.getName();
                     areaChart.setTitle("Offer book for " + formatter.getCurrencyNameAndCurrencyPair(code));
                     volumeColumnLabel.set("Amount in " + code);
                     xAxis.setTickLabelFormatter(new StringConverter<Number>() {
@@ -157,10 +162,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         public String toString(Number object) {
                             final double doubleValue = (double) object;
                             if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
-                                final double value = doubleValue != 0 ? 1d / doubleValue : 0;
-                                final String withPrecision4 = formatter.formatRoundedDoubleWithPrecision(value, 4);
+                                final String withPrecision4 = formatter.formatRoundedDoubleWithPrecision(doubleValue, 4);
                                 if (withPrecision4.equals("0.0000"))
-                                    return formatter.formatRoundedDoubleWithPrecision(value, 8);
+                                    return formatter.formatRoundedDoubleWithPrecision(doubleValue, 8);
                                 else
                                     return withPrecision4;
                             } else {
@@ -175,6 +179,11 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     });
 
                     if (CurrencyUtil.isCryptoCurrency(code)) {
+                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals("BUY")) {
+                            bottomHBox.getChildren().get(0).toFront();
+                            reverseTableColumns();
+                        }
+
                         buyOfferHeaderLabel.setText("Offers to sell " + code + " for BTC");
                         buyOfferButton.setText("I want to buy " + code + " (sell BTC)");
 
@@ -183,6 +192,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
                         priceColumnLabel.set("Price in BTC");
                     } else {
+                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals("SELL")) {
+                            bottomHBox.getChildren().get(0).toFront();
+                            reverseTableColumns();
+                        }
                         buyOfferHeaderLabel.setText("Offers to buy BTC for " + code);
                         buyOfferButton.setText("I want to sell BTC for " + code);
 
@@ -223,6 +236,36 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         sellOfferTableView.getSelectionModel().selectedItemProperty().removeListener(sellTableRowSelectionListener);
     }
 
+    private void createChart() {
+        xAxis = new NumberAxis();
+        xAxis.setForceZeroInRange(false);
+        xAxis.setAutoRanging(true);
+
+        yAxis = new NumberAxis();
+        yAxis.setForceZeroInRange(false);
+        yAxis.setAutoRanging(true);
+        yAxis.setLabel("Amount in BTC");
+        yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));
+
+        seriesBuy = new XYChart.Series();
+        seriesSell = new XYChart.Series();
+
+        areaChart = new AreaChart<>(xAxis, yAxis);
+        areaChart.setLegendVisible(false);
+        areaChart.setAnimated(false);
+        areaChart.setId("charts");
+        areaChart.setMinHeight(300);
+        areaChart.setPadding(new Insets(0, 30, 0, 0));
+        areaChart.getData().addAll(seriesBuy, seriesSell);
+    }
+
+    private void updateChartData() {
+        seriesBuy.getData().clear();
+        seriesSell.getData().clear();
+
+        seriesBuy.getData().addAll(model.getBuyData());
+        seriesSell.getData().addAll(model.getSellData());
+    }
 
     private Tuple4<TableView<Offer>, VBox, Button, Label> getOfferTable(Offer.Direction direction) {
         TableView<Offer> tableView = new TableView<>();
@@ -414,33 +457,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         return new Tuple4<>(tableView, vBox, button, titleLabel);
     }
 
-    private void createChart() {
-        xAxis = new NumberAxis();
-        xAxis.setForceZeroInRange(false);
-        xAxis.setAutoRanging(true);
+    private void reverseTableColumns() {
+        ObservableList<TableColumn<Offer, ?>> columns = FXCollections.observableArrayList(buyOfferTableView.getColumns());
+        buyOfferTableView.getColumns().clear();
+        Collections.reverse(columns);
+        buyOfferTableView.getColumns().addAll(columns);
 
-        yAxis = new NumberAxis();
-        yAxis.setForceZeroInRange(false);
-        yAxis.setAutoRanging(true);
-        yAxis.setLabel("Amount in BTC");
-        yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));
-
-        seriesBuy = new XYChart.Series();
-        seriesSell = new XYChart.Series();
-
-        areaChart = new AreaChart<>(xAxis, yAxis);
-        areaChart.setAnimated(false);
-        areaChart.setId("charts");
-        areaChart.setMinHeight(300);
-        areaChart.setPadding(new Insets(0, 30, 0, 0));
-        areaChart.getData().addAll(seriesBuy, seriesSell);
-    }
-
-    private void updateChartData() {
-        seriesBuy.getData().clear();
-        seriesSell.getData().clear();
-
-        seriesBuy.getData().addAll(model.getBuyData());
-        seriesSell.getData().addAll(model.getSellData());
+        columns = FXCollections.observableArrayList(sellOfferTableView.getColumns());
+        sellOfferTableView.getColumns().clear();
+        Collections.reverse(columns);
+        sellOfferTableView.getColumns().addAll(columns);
     }
 }

@@ -254,13 +254,21 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         for (Offer offer : sortedList) {
             Fiat priceAsFiat = offer.getPrice();
             if (priceAsFiat != null) {
-                double price = (double) priceAsFiat.value / LongMath.pow(10, priceAsFiat.smallestUnitExponent());
                 double amount = (double) offer.getAmount().value / LongMath.pow(10, offer.getAmount().smallestUnitExponent());
                 accumulatedAmount += amount;
-                if (direction.equals(Offer.Direction.BUY))
-                    data.add(0, new XYChart.Data(price, accumulatedAmount));
-                else
-                    data.add(new XYChart.Data(price, accumulatedAmount));
+                double price = (double) priceAsFiat.value / LongMath.pow(10, priceAsFiat.smallestUnitExponent());
+                if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
+                    price = price != 0 ? 1d / price : 0;
+                    if (direction.equals(Offer.Direction.SELL))
+                        data.add(0, new XYChart.Data(price, accumulatedAmount));
+                    else
+                        data.add(new XYChart.Data(price, accumulatedAmount));
+                } else {
+                    if (direction.equals(Offer.Direction.BUY))
+                        data.add(0, new XYChart.Data(price, accumulatedAmount));
+                    else
+                        data.add(new XYChart.Data(price, accumulatedAmount));
+                }
             }
         }
     }
