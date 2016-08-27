@@ -156,7 +156,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("CBX", "Crypto Bullion"));
         result.add(new CryptoCurrency("1CR", "1CRedit"));
-
+        result.add(new CryptoCurrency("YACC", "YACCoin"));
+        
         result.sort(TradeCurrency::compareTo);
         return result;
     }
