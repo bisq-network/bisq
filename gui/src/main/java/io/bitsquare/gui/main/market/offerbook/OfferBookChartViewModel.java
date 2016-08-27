@@ -229,6 +229,9 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                     return 0;
                 })
                 .collect(Collectors.toList());
+
+        allBuyOffers = filterOffersWithRelevantPrices(allBuyOffers);
+        
         topBuyOfferList.setAll(allBuyOffers.subList(0, Math.min(100, allBuyOffers.size())));
         buildChartDataItems(allBuyOffers, Offer.Direction.BUY, buyData);
 
@@ -244,8 +247,31 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                     return 0;
                 })
                 .collect(Collectors.toList());
+
+        allSellOffers = filterOffersWithRelevantPrices(allSellOffers);
+
         topSellOfferList.setAll(allSellOffers.subList(0, Math.min(100, allSellOffers.size())));
         buildChartDataItems(allSellOffers, Offer.Direction.SELL, sellData);
+    }
+
+    // If there are more then 3 offers we ignore the offers which are further thn 30% from the best price
+    private List<Offer> filterOffersWithRelevantPrices(List<Offer> offers) {
+        if (offers.size() > 3) {
+            Fiat bestPrice = offers.get(0).getPrice();
+            if (bestPrice != null) {
+                long bestPriceAsLong = bestPrice.longValue();
+                return offers.stream()
+                        .filter(e -> {
+                            if (e.getPrice() == null)
+                                return false;
+
+                            double ratio = (double) e.getPrice().longValue() / (double) bestPriceAsLong;
+                            return Math.abs(1 - ratio) < 0.3;
+                        })
+                        .collect(Collectors.toList());
+            }
+        }
+        return offers;
     }
 
     private void buildChartDataItems(List<Offer> sortedList, Offer.Direction direction, List<XYChart.Data> data) {
@@ -260,14 +286,14 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
                     price = price != 0 ? 1d / price : 0;
                     if (direction.equals(Offer.Direction.SELL))
-                        data.add(0, new XYChart.Data(price, accumulatedAmount));
+                        data.add(0, new XYChart.Data<>(price, accumulatedAmount));
                     else
-                        data.add(new XYChart.Data(price, accumulatedAmount));
+                        data.add(new XYChart.Data<>(price, accumulatedAmount));
                 } else {
                     if (direction.equals(Offer.Direction.BUY))
-                        data.add(0, new XYChart.Data(price, accumulatedAmount));
+                        data.add(0, new XYChart.Data<>(price, accumulatedAmount));
                     else
-                        data.add(new XYChart.Data(price, accumulatedAmount));
+                        data.add(new XYChart.Data<>(price, accumulatedAmount));
                 }
             }
         }
