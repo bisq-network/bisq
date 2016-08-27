@@ -126,7 +126,7 @@ public final class Preferences implements Persistable {
 
     private String offerBookChartScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String tradeChartsScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
-    
+
     private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private int tradeStatisticsTickUnitIndex = 0;
@@ -180,18 +180,20 @@ public final class Preferences implements Persistable {
         fiatCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
             fiatCurrencies.clear();
             fiatCurrencies.addAll(fiatCurrenciesAsObservable);
+            fiatCurrencies.sort(TradeCurrency::compareTo);
             storage.queueUpForSave();
         });
         cryptoCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
             cryptoCurrencies.clear();
             cryptoCurrencies.addAll(cryptoCurrenciesAsObservable);
+            cryptoCurrencies.sort(TradeCurrency::compareTo);
             storage.queueUpForSave();
         });
         useTorForHttpRequestsProperty.addListener((ov) -> {
             useTorForHttpRequests = useTorForHttpRequestsProperty.get();
             storage.queueUpForSave();
         });
-        
+
         Preferences persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             setBtcDenomination(persisted.btcDenomination);
@@ -324,7 +326,7 @@ public final class Preferences implements Persistable {
     }
 
     public void addCryptoCurrency(CryptoCurrency tradeCurrency) {
-        if (!cryptoCurrenciesAsObservable.contains(tradeCurrency))
+        if (!cryptoCurrenciesAsObservable.contains(tradeCurrency)) 
             cryptoCurrenciesAsObservable.add(tradeCurrency);
     }
 
