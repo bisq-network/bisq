@@ -185,6 +185,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     public ObservableList<TradeCurrency> getTradeCurrencies() {
         final ObservableList<TradeCurrency> list = FXCollections.observableArrayList(preferences.getTradeCurrenciesAsObservable());
+        FXCollections.sort(list);
         list.add(0, new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG));
         list.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
         return list;

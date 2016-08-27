@@ -194,6 +194,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
     public ObservableList<TradeCurrency> getTradeCurrencies() {
         final ObservableList<TradeCurrency> list = FXCollections.observableArrayList(preferences.getTradeCurrenciesAsObservable());
+
+        FXCollections.sort(list);
         list.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
         return list;
     }
