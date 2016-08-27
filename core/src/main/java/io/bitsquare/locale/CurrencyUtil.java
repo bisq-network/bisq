@@ -152,6 +152,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DGB", "Digibyte"));
         result.add(new CryptoCurrency("VCN", "VCoin"));
         result.add(new CryptoCurrency("DCR", "Decred"));
+        result.add(new CryptoCurrency("CBX", "Crypto Bullion"));
         return result;
     }
 
