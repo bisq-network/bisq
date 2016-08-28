@@ -334,16 +334,11 @@ public class BSFormatter {
         return decimalFormat.format(MathUtils.roundDouble(value, precision)).replace(",", ".");
     }
 
-    public String getDirection(Offer.Direction direction) {
-        return getDirection(direction, false) + " bitcoin";
-    }
-
-    private String getDirection(Offer.Direction direction, boolean allUpperCase) {
-        String result = (direction == Offer.Direction.BUY) ? "Buy" : "Sell";
-        if (allUpperCase) {
-            result = result.toUpperCase();
-        }
-        return result;
+    public String getDirection(Offer.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return (direction == Offer.Direction.BUY) ? "Buy BTC" : "Sell BTC";
+        else
+            return (direction == Offer.Direction.SELL) ? "Buy " + currencyCode : "Sell " + currencyCode;
     }
 
     public String formatAmount(Offer offer) {

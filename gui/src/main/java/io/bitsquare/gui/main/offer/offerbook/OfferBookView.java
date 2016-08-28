@@ -107,7 +107,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     public void initialize() {
         root.setPadding(new Insets(20, 25, 5, 25));
 
-        offerBookTitle = addTitledGroupBg(root, gridRow, 3, "");
+        offerBookTitle = addTitledGroupBg(root, gridRow, 3, "Available offers");
 
         currencyComboBox = addLabelComboBox(root, gridRow, "Filter by currency:", Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText("Select currency");
@@ -224,7 +224,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencySelectionBinding = EasyBind.combine(
                 model.showAllTradeCurrenciesProperty, model.tradeCurrencyCode,
                 (showAll, code) -> {
-
+                    setDirectionTitles();
                     if (showAll) {
                         volumeColumn.setText("Amount (min - max)");
                         priceColumn.setText("Price");
@@ -289,16 +289,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void setDirectionTitles() {
-        Offer.Direction direction = model.getDirection();
-        String directionText = direction == Offer.Direction.BUY ? "buying" : "selling";
-        String mirroredDirectionText = direction == Offer.Direction.SELL ? "buying" : "selling";
         TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
-        String postFix = selectedTradeCurrency instanceof FiatCurrency || model.showAllTradeCurrenciesProperty.get() ? "" :
-                " (" + mirroredDirectionText + " " + selectedTradeCurrency.getName() + ")";
-
-        // offerBookTitle.setText("Offers for " + directionText + " bitcoin" + postFix);
-        offerBookTitle.setText("Available offers");
-        createOfferButton.setText("Create new offer for " + directionText + " bitcoin" + postFix);
+        if (selectedTradeCurrency != null) {
+            Offer.Direction direction = model.getDirection();
+            String directionText = direction == Offer.Direction.BUY ? "buying" : "selling";
+            String mirroredDirectionText = direction == Offer.Direction.SELL ? "buying" : "selling";
+            String code = selectedTradeCurrency.getCode();
+            String preFix = "Create new offer for ";
+            if (model.showAllTradeCurrenciesProperty.get())
+                createOfferButton.setText(preFix + directionText + " BTC");
+            else if (selectedTradeCurrency instanceof FiatCurrency)
+                createOfferButton.setText(preFix + directionText + " BTC for " + code);
+            else
+                createOfferButton.setText(preFix + mirroredDirectionText + " " + code + " (" + directionText + " BTC)");
+        }
     }
 
     public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {

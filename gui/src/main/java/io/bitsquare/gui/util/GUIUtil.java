@@ -215,7 +215,7 @@ public class GUIUtil {
                 else if (code.equals(GUIUtil.EDIT_FLAG))
                     return "▼ Edit currency list";
                 else {
-                    final String displayString = CurrencyUtil.getNameAndCode(code) + " (" + item.numTrades + " " + info + ")";
+                    final String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ", " + item.numTrades + ", " + info + ")";
                     if (tradeCurrency instanceof FiatCurrency)
                         return "★ " + displayString;
                     else if (tradeCurrency instanceof CryptoCurrency) {

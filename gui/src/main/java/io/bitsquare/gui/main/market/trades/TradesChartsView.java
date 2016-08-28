@@ -141,7 +141,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         currencyComboBox.setItems(model.getCurrencyListItems());
 
-        if (model.showAllTradeCurrenciesProperty.get() && !currencyComboBox.getSelectionModel().isEmpty())
+        if (model.showAllTradeCurrenciesProperty.get())
             currencyComboBox.getSelectionModel().select(0);
         else if (model.getSelectedCurrencyListItem().isPresent())
             currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
@@ -378,7 +378,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("trades"));
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("trades, all time"));
         currencyComboBox.setVisibleRowCount(25);
 
         Pane spacer = new Pane();
@@ -567,7 +567,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.getDirection(item.direction));
+                                    setText(formatter.getDirection(item.direction, item.currency));
                                 else
                                     setText("");
                             }

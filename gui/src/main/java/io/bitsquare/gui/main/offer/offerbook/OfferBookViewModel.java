@@ -371,7 +371,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getDirectionLabel(Offer offer) {
-        return formatter.getDirection(offer.getMirroredDirection());
+        return formatter.getDirection(offer.getMirroredDirection(), offer.getCurrencyCode());
     }
 
 

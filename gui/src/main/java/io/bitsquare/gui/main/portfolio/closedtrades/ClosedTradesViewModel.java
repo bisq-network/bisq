@@ -76,7 +76,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     }
 
     String getDirectionLabel(ClosedTradableListItem item) {
-        return (item != null) ? formatter.getDirection(dataModel.getDirection(item.getTradable().getOffer())) : "";
+        return (item != null) ? formatter.getDirection(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "";
     }
 
     String getDate(ClosedTradableListItem item) {
