@@ -115,7 +115,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         currencyComboBox = addLabelComboBox(root, gridRow, "Filter by currency:", Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers"));
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers", model.preferences));
 
         paymentMethodComboBox = addLabelComboBox(root, ++gridRow, "Filter by payment method:").second;
         paymentMethodComboBox.setPromptText("Select payment method");
@@ -312,14 +312,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
             Offer.Direction direction = model.getDirection();
+            String preFix = "Create new offer for ";
             String directionText = direction == Offer.Direction.BUY ? "buying" : "selling";
             String mirroredDirectionText = direction == Offer.Direction.SELL ? "buying" : "selling";
             String code = selectedTradeCurrency.getCode();
-            String preFix = "Create new offer for ";
             if (model.showAllTradeCurrenciesProperty.get())
                 createOfferButton.setText(preFix + directionText + " BTC");
             else if (selectedTradeCurrency instanceof FiatCurrency)
-                createOfferButton.setText(preFix + directionText + " BTC for " + code);
+                createOfferButton.setText(preFix + directionText + " BTC" + (direction == Offer.Direction.BUY ? " with " : " for ") + code);
             else
                 createOfferButton.setText(preFix + mirroredDirectionText + " " + code + " (" + directionText + " BTC)");
         }

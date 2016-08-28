@@ -178,33 +178,7 @@ public class GUIUtil {
         }
     }
 
-    public static StringConverter<TradeCurrency> getCurrencyListConverter() {
-        return new StringConverter<TradeCurrency>() {
-            @Override
-            public String toString(TradeCurrency tradeCurrency) {
-                String code = tradeCurrency.getCode();
-                final String displayString = CurrencyUtil.getNameAndCode(code);
-                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
-                    return "▶ Show all";
-                else if (code.equals(GUIUtil.EDIT_FLAG))
-                    return "▼ Edit currency list";
-                else if (tradeCurrency instanceof FiatCurrency)
-                    return "★ " + displayString;
-                else if (tradeCurrency instanceof CryptoCurrency) {
-                    return "✦ " + displayString;
-                } else
-                    return "-";
-            }
-
-            @Override
-            public TradeCurrency fromString(String s) {
-                return null;
-            }
-        };
-    }
-
-    public static StringConverter<CurrencyListItem> getCurrencyListItemConverter(String postFix) {
+    public static StringConverter<CurrencyListItem> getCurrencyListItemConverter(String postFix, Preferences preferences) {
         return new StringConverter<CurrencyListItem>() {
             @Override
             public String toString(CurrencyListItem item) {
@@ -216,7 +190,9 @@ public class GUIUtil {
                 else if (code.equals(GUIUtil.EDIT_FLAG))
                     return "▼ Edit currency list";
                 else {
-                    final String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ", " + item.numTrades + " " + postFix + ")";
+                    String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
+                    if (preferences.getSortMarketCurrenciesNumerically())
+                        displayString += " - " + item.numTrades + " " + postFix;
                     if (tradeCurrency instanceof FiatCurrency)
                         return "★ " + displayString;
                     else if (tradeCurrency instanceof CryptoCurrency) {

@@ -343,7 +343,7 @@ public class BSFormatter {
 
     public String getDirectionWithCodeDetailed(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == Offer.Direction.BUY) ? "buying BTC for " + currencyCode : "selling BTC for " + currencyCode;
+            return (direction == Offer.Direction.BUY) ? "buying BTC with " + currencyCode : "selling BTC for " + currencyCode;
         else
             return (direction == Offer.Direction.SELL) ? "buying " + currencyCode + " (selling BTC)" : "selling " + currencyCode + " (buying BTC)";
     }

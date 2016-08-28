@@ -107,7 +107,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers"));
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers", model.preferences));
 
         Label currencyLabel = new Label("Currency:");
         HBox currencyHBox = new HBox();
@@ -200,7 +200,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         buyOfferHeaderLabel.setText("Offers to sell " + code + " for BTC");
                         buyOfferButton.setText("I want to buy " + code + " (sell BTC)");
 
-                        sellOfferHeaderLabel.setText("Offers to buy " + code + " for BTC");
+                        sellOfferHeaderLabel.setText("Offers to buy " + code + " with BTC");
                         sellOfferButton.setText("I want to sell " + code + " (buy BTC)");
 
                         priceColumnLabel.set("Price in BTC");
@@ -209,11 +209,11 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             bottomHBox.getChildren().get(0).toFront();
                             reverseTableColumns();
                         }
-                        buyOfferHeaderLabel.setText("Offers to buy BTC for " + code);
+                        buyOfferHeaderLabel.setText("Offers to buy BTC with " + code);
                         buyOfferButton.setText("I want to sell BTC for " + code);
 
                         sellOfferHeaderLabel.setText("Offers to sell BTC for " + code);
-                        sellOfferButton.setText("I want to buy BTC for " + code);
+                        sellOfferButton.setText("I want to buy BTC with " + code);
 
                         priceColumnLabel.set("Price in " + code);
                     }
