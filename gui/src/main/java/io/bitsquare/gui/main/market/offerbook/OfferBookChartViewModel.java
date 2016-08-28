@@ -45,7 +45,9 @@ import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 class OfferBookChartViewModel extends ActivatableViewModel {
@@ -118,38 +120,20 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private void fillTradeCurrencies() {
-        Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
-        Map<String, Integer> tradesPerCurrencyMap = new HashMap<>();
-        offerBookListItems.stream().forEach(e -> {
-            CurrencyUtil.getTradeCurrency(e.getOffer().getCurrencyCode()).ifPresent(tradeCurrency -> {
-                tradeCurrencySet.add(tradeCurrency);
-                String code = tradeCurrency.getCode();
-                if (tradesPerCurrencyMap.containsKey(code))
-                    tradesPerCurrencyMap.put(code, tradesPerCurrencyMap.get(code) + 1);
-                else
-                    tradesPerCurrencyMap.put(code, 1);
-            });
-        });
+        // Don't use a set as we need all entries
+        List<TradeCurrency> tradeCurrencyList = offerBookListItems.stream()
+                .map(e -> {
+                    Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(e.getOffer().getCurrencyCode());
+                    if (tradeCurrencyOptional.isPresent())
+                        return tradeCurrencyOptional.get();
+                    else
+                        return null;
 
-        List<CurrencyListItem> fiatList = tradeCurrencySet.stream()
-                .filter(e -> CurrencyUtil.isFiatCurrency(e.getCode()))
-                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
-                .collect(Collectors.toList());
-        List<CurrencyListItem> cryptoList = tradeCurrencySet.stream()
-                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCode()))
-                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
+                })
+                .filter(e -> e != null)
                 .collect(Collectors.toList());
 
-        if (preferences.getSortMarketCurrenciesNumerically()) {
-            fiatList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
-            cryptoList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
-        } else {
-            fiatList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
-            cryptoList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
-        }
-
-        fiatList.addAll(cryptoList);
-        currencyListItems.setAll(fiatList);
+        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, preferences);
     }
 
     @Override

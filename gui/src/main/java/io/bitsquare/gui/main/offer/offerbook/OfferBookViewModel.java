@@ -30,6 +30,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.*;
 import io.bitsquare.p2p.NodeAddress;
@@ -80,6 +81,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final SortedList<OfferBookListItem> sortedItems;
     private final ListChangeListener<TradeCurrency> tradeCurrencyListChangeListener;
     private TradeCurrency selectedTradeCurrency;
+    final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
     private final ObservableList<TradeCurrency> allTradeCurrencies = FXCollections.observableArrayList();
 
     private Offer.Direction direction;
