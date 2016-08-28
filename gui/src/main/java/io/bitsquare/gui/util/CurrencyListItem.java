@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.market;
+package io.bitsquare.gui.util;
 
 import io.bitsquare.locale.TradeCurrency;
 
