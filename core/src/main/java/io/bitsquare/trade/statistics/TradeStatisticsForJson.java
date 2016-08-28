@@ -31,8 +31,9 @@ public final class TradeStatisticsForJson {
     public final String offerId;
     public final String depositTxId;
 
-    // Used in Json to provide same formatting/rounding for price
+    // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
+    public Offer.Direction primaryMarketDirection;
 
     public String tradePriceDisplayString;
 
@@ -59,11 +60,13 @@ public final class TradeStatisticsForJson {
         this.tradeDate = tradeStatistics.tradeDate;
         this.depositTxId = tradeStatistics.depositTxId;
 
+
         try {
             MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
             MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
             final Fiat tradePriceAsFiat = getTradePrice();
             if (CurrencyUtil.isCryptoCurrency(currency)) {
+                primaryMarketDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
                 final double value = tradePriceAsFiat.value != 0 ? 10000D / tradePriceAsFiat.value : 0;
                 DecimalFormat decimalFormat = new DecimalFormat("#.#");
                 decimalFormat.setMaximumFractionDigits(8);
@@ -78,6 +81,7 @@ public final class TradeStatisticsForJson {
                 primaryMarketTradeAmount = (long) MathUtils.scaleUpByPowerOf10(getTradeVolume().longValue(), 4);
                 primaryMarketTradeVolume = getTradeAmount().longValue();
             } else {
+                primaryMarketDirection = direction;
                 currencyPair = "BTC/" + currency;
                 tradePriceDisplayString = fiatFormat.noCode().format(tradePriceAsFiat).toString();
 

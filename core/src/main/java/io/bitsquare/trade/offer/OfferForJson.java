@@ -29,8 +29,9 @@ public class OfferForJson {
     public final String id;
     public final String offerFeeTxID;
 
-    // Used in Json to provide same formatting/rounding for price
+    // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
+    public Offer.Direction primaryMarketDirection;
 
     public String priceDisplayString;
     public String primaryMarketAmountDisplayString;
@@ -87,6 +88,7 @@ public class OfferForJson {
             MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
             final Fiat priceAsFiat = getPriceAsFiat();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                primaryMarketDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
                 currencyPair = currencyCode + "/" + "BTC";
 
                 DecimalFormat decimalFormat = new DecimalFormat("#.#");
@@ -105,6 +107,7 @@ public class OfferForJson {
                 primaryMarketVolume = getAmountAsCoin().longValue();
 
             } else {
+                primaryMarketDirection = direction;
                 currencyPair = "BTC/" + currencyCode;
                 priceDisplayString = fiatFormat.noCode().format(priceAsFiat).toString();
 
