@@ -23,6 +23,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.market.CurrencyListItem;
 import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
@@ -30,7 +31,6 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -71,7 +71,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private TableView<Offer> buyOfferTableView;
     private TableView<Offer> sellOfferTableView;
     private AreaChart<Number, Number> areaChart;
-    private ComboBox<TradeCurrency> currencyComboBox;
+    private ComboBox<CurrencyListItem> currencyComboBox;
     private Subscription tradeCurrencySubscriber;
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
@@ -82,6 +82,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private Label buyOfferHeaderLabel, sellOfferHeaderLabel;
     private ChangeListener<Offer> sellTableRowSelectionListener, buyTableRowSelectionListener;
     private HBox bottomHBox;
+    private ListChangeListener<CurrencyListItem> currencyListItemsListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -95,13 +96,19 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         this.formatter = formatter;
 
         changeListener = c -> updateChartData();
+
+        currencyListItemsListener = c -> {
+            if (model.getSelectedCurrencyListItem().isPresent())
+                currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
+        };
     }
 
     @Override
     public void initialize() {
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListConverter());
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers"));
+        currencyComboBox.setVisibleRowCount(25);
 
         Label currencyLabel = new Label("Currency:");
         HBox currencyHBox = new HBox();
@@ -142,14 +149,20 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
 
-        currencyComboBox.setItems(model.getTradeCurrencies());
-        currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrencyProperty());
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
+        currencyComboBox.setItems(model.getCurrencyListItems());
+
+        if (model.getSelectedCurrencyListItem().isPresent())
+            currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
+
         currencyComboBox.setOnAction(e -> {
-            TradeCurrency tradeCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
-            model.onSetTradeCurrency(tradeCurrency);
-            updateChartData();
+            CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                model.onSetTradeCurrency(selectedItem.tradeCurrency);
+                updateChartData();
+            }
         });
+
+        model.currencyListItems.addListener(currencyListItemsListener);
 
         model.getOfferBookListItems().addListener(changeListener);
         tradeCurrencySubscriber = EasyBind.subscribe(model.selectedTradeCurrencyProperty,
@@ -230,6 +243,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     protected void deactivate() {
         model.getOfferBookListItems().removeListener(changeListener);
         tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
+        model.currencyListItems.removeListener(currencyListItemsListener);
         tradeCurrencySubscriber.unsubscribe();
         currencyComboBox.setOnAction(null);
         buyOfferTableView.getSelectionModel().selectedItemProperty().removeListener(buyTableRowSelectionListener);

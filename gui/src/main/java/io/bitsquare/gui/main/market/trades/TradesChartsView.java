@@ -21,12 +21,12 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.main.market.CurrencyListItem;
 import io.bitsquare.gui.main.market.trades.charts.price.CandleStickChart;
 import io.bitsquare.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.statistics.TradeStatistics;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -65,7 +65,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private final BSFormatter formatter;
 
     private TableView<TradeStatistics> tableView;
-    private ComboBox<TradeCurrency> currencyComboBox;
+    private ComboBox<CurrencyListItem> currencyComboBox;
     private VolumeChart volumeChart;
     private CandleStickChart priceChart;
     private NumberAxis priceAxisX, priceAxisY, volumeAxisY, volumeAxisX;
@@ -139,15 +139,19 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
 
-        currencyComboBox.setItems(model.getTradeCurrencies());
+        currencyComboBox.setItems(model.getCurrencyListItems());
 
-        if (model.showAllTradeCurrenciesProperty.get())
+        if (model.showAllTradeCurrenciesProperty.get() && !currencyComboBox.getSelectionModel().isEmpty())
             currencyComboBox.getSelectionModel().select(0);
-        else
-            currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
+        else if (model.getSelectedCurrencyListItem().isPresent())
+            currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
 
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
-        currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
+        currencyComboBox.setOnAction(e -> {
+            CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
+            if (selectedItem != null)
+                model.onSetTradeCurrency(selectedItem.tradeCurrency);
+        });
+
 
         toggleGroup.getToggles().get(model.tickUnit.ordinal()).setSelected(true);
 
@@ -374,7 +378,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListConverter());
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("trades"));
+        currencyComboBox.setVisibleRowCount(25);
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);

@@ -132,6 +132,7 @@ public final class Preferences implements Persistable {
     private int tradeStatisticsTickUnitIndex = 0;
 
     private boolean useStickyMarketPrice = false;
+    private boolean sortMarketCurrenciesNumerically = false;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
     @Nullable
@@ -226,6 +227,8 @@ public final class Preferences implements Persistable {
                 setUseTorForHttpRequests(useTorForHttpFromOptions.toLowerCase().equals("true"));
 
             useStickyMarketPrice = persisted.getUseStickyMarketPrice();
+            sortMarketCurrenciesNumerically = persisted.getSortMarketCurrenciesNumerically();
+
             usePercentageBasedPrice = persisted.getUsePercentageBasedPrice();
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
             maxPriceDistanceInPercent = persisted.getMaxPriceDistanceInPercent();
@@ -326,7 +329,7 @@ public final class Preferences implements Persistable {
     }
 
     public void addCryptoCurrency(CryptoCurrency tradeCurrency) {
-        if (!cryptoCurrenciesAsObservable.contains(tradeCurrency)) 
+        if (!cryptoCurrenciesAsObservable.contains(tradeCurrency))
             cryptoCurrenciesAsObservable.add(tradeCurrency);
     }
 
@@ -474,6 +477,12 @@ public final class Preferences implements Persistable {
         useTorForHttpRequestsProperty.set(useTorForHttpRequests);
         storage.queueUpForSave();
     }
+
+    public void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically) {
+        this.sortMarketCurrenciesNumerically = sortMarketCurrenciesNumerically;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -633,6 +642,10 @@ public final class Preferences implements Persistable {
 
     public BooleanProperty useTorForHttpRequestsProperty() {
         return useTorForHttpRequestsProperty;
+    }
+
+    public boolean getSortMarketCurrenciesNumerically() {
+        return sortMarketCurrenciesNumerically;
     }
 
 

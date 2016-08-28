@@ -23,12 +23,12 @@ import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.market.CurrencyListItem;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.GUIUtil;
-import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.offer.Offer;
@@ -45,9 +45,7 @@ import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 class OfferBookChartViewModel extends ActivatableViewModel {
@@ -65,6 +63,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final List<XYChart.Data> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
+    final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
     private final ObservableList<Offer> topBuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<Offer> topSellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
@@ -102,6 +101,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                         .isPresent())
                     updateChartData();
             }
+
+            fillTradeCurrencies();
         };
 
         currenciesUpdatedListener = new ChangeListener<Number>() {
@@ -116,12 +117,48 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         };
     }
 
+    private void fillTradeCurrencies() {
+        Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
+        Map<String, Integer> tradesPerCurrencyMap = new HashMap<>();
+        offerBookListItems.stream().forEach(e -> {
+            CurrencyUtil.getTradeCurrency(e.getOffer().getCurrencyCode()).ifPresent(tradeCurrency -> {
+                tradeCurrencySet.add(tradeCurrency);
+                String code = tradeCurrency.getCode();
+                if (tradesPerCurrencyMap.containsKey(code))
+                    tradesPerCurrencyMap.put(code, tradesPerCurrencyMap.get(code) + 1);
+                else
+                    tradesPerCurrencyMap.put(code, 1);
+            });
+        });
+
+        List<CurrencyListItem> fiatList = tradeCurrencySet.stream()
+                .filter(e -> CurrencyUtil.isFiatCurrency(e.getCode()))
+                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
+                .collect(Collectors.toList());
+        List<CurrencyListItem> cryptoList = tradeCurrencySet.stream()
+                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCode()))
+                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
+                .collect(Collectors.toList());
+
+        if (preferences.getSortMarketCurrenciesNumerically()) {
+            fiatList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
+            cryptoList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
+        } else {
+            fiatList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
+            cryptoList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
+        }
+
+        fiatList.addAll(cryptoList);
+        currencyListItems.setAll(fiatList);
+    }
+
     @Override
     protected void activate() {
         priceFeedService.setType(PriceFeedService.Type.LAST);
         offerBookListItems.addListener(listChangeListener);
 
         offerBook.fillOfferBookListItems();
+        fillTradeCurrencies();
         updateChartData();
 
         if (isAnyPricePresent())
@@ -192,14 +229,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         return topSellOfferList;
     }
 
-    public ObservableList<TradeCurrency> getTradeCurrencies() {
-        final ObservableList<TradeCurrency> list = FXCollections.observableArrayList(preferences.getTradeCurrenciesAsObservable());
-        list.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
-        return list;
+    public ObservableList<CurrencyListItem> getCurrencyListItems() {
+        return currencyListItems;
     }
 
-    public TradeCurrency getSelectedTradeCurrencyProperty() {
-        return selectedTradeCurrencyProperty.get();
+    public Optional<CurrencyListItem> getSelectedCurrencyListItem() {
+        return currencyListItems.stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
 
 
@@ -231,7 +266,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allBuyOffers = filterOffersWithRelevantPrices(allBuyOffers);
-        
+
         topBuyOfferList.setAll(allBuyOffers.subList(0, Math.min(100, allBuyOffers.size())));
         buildChartDataItems(allBuyOffers, Offer.Direction.BUY, buyData);
 

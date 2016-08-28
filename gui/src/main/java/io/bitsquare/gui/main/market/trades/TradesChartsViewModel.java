@@ -24,6 +24,7 @@ import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.market.CurrencyListItem;
 import io.bitsquare.gui.main.market.trades.charts.CandleData;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
@@ -77,7 +78,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private final SetChangeListener<TradeStatistics> setChangeListener;
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
-
+    private final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
     final ObservableList<TradeStatistics> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
@@ -99,7 +100,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
         this.navigation = navigation;
         this.formatter = formatter;
 
-        setChangeListener = change -> updateChartData();
+        setChangeListener = change -> {
+            updateChartData();
+            fillTradeCurrencies();
+        };
 
         Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getTradeChartsScreenCurrencyCode());
         if (tradeCurrencyOptional.isPresent())
@@ -108,6 +112,42 @@ class TradesChartsViewModel extends ActivatableViewModel {
             selectedTradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
 
         tickUnit = TickUnit.values()[preferences.getTradeStatisticsTickUnitIndex()];
+    }
+
+    private void fillTradeCurrencies() {
+        Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
+        Map<String, Integer> tradesPerCurrencyMap = new HashMap<>();
+        tradeStatisticsManager.getObservableTradeStatisticsSet().stream().forEach(e -> {
+            CurrencyUtil.getTradeCurrency(e.currency).ifPresent(tradeCurrency -> {
+                tradeCurrencySet.add(tradeCurrency);
+                String code = tradeCurrency.getCode();
+                if (tradesPerCurrencyMap.containsKey(code))
+                    tradesPerCurrencyMap.put(code, tradesPerCurrencyMap.get(code) + 1);
+                else
+                    tradesPerCurrencyMap.put(code, 1);
+            });
+        });
+
+        List<CurrencyListItem> fiatList = tradeCurrencySet.stream()
+                .filter(e -> CurrencyUtil.isFiatCurrency(e.getCode()))
+                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
+                .collect(Collectors.toList());
+
+        List<CurrencyListItem> cryptoList = tradeCurrencySet.stream()
+                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCode()))
+                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
+                .collect(Collectors.toList());
+
+        if (preferences.getSortMarketCurrenciesNumerically()) {
+            fiatList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
+            cryptoList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
+        } else {
+            fiatList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
+            cryptoList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
+        }
+        fiatList.add(0, new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1));
+        fiatList.addAll(cryptoList);
+        currencyListItems.setAll(fiatList);
     }
 
     @VisibleForTesting
@@ -121,6 +161,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     @Override
     protected void activate() {
         tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(setChangeListener);
+        fillTradeCurrencies();
         updateChartData();
         syncPriceFeedCurrency();
         setMarketPriceFeedCurrency();
@@ -183,15 +224,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
         return selectedTradeCurrencyProperty.get().getCode();
     }
 
-    public ObservableList<TradeCurrency> getTradeCurrencies() {
-        final ObservableList<TradeCurrency> list = FXCollections.observableArrayList(preferences.getTradeCurrenciesAsObservable());
-        list.add(0, new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG));
-        list.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
-        return list;
+    public ObservableList<CurrencyListItem> getCurrencyListItems() {
+        return currencyListItems;
     }
 
-    public TradeCurrency getSelectedTradeCurrency() {
-        return selectedTradeCurrencyProperty.get();
+    public Optional<CurrencyListItem> getSelectedCurrencyListItem() {
+        return currencyListItems.stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
 
 

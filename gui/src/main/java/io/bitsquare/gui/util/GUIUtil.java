@@ -24,6 +24,7 @@ import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.main.market.CurrencyListItem;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.CurrencyUtil;
@@ -197,6 +198,35 @@ public class GUIUtil {
 
             @Override
             public TradeCurrency fromString(String s) {
+                return null;
+            }
+        };
+    }
+
+    public static StringConverter<CurrencyListItem> getCurrencyListItemConverter(String info) {
+        return new StringConverter<CurrencyListItem>() {
+            @Override
+            public String toString(CurrencyListItem item) {
+                TradeCurrency tradeCurrency = item.tradeCurrency;
+                String code = tradeCurrency.getCode();
+                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
+                    return "▶ Show all";
+                else if (code.equals(GUIUtil.EDIT_FLAG))
+                    return "▼ Edit currency list";
+                else {
+                    final String displayString = CurrencyUtil.getNameAndCode(code) + " (" + item.numTrades + " " + info + ")";
+                    if (tradeCurrency instanceof FiatCurrency)
+                        return "★ " + displayString;
+                    else if (tradeCurrency instanceof CryptoCurrency) {
+                        return "✦ " + displayString;
+                    } else
+                        return "-";
+                }
+            }
+
+            @Override
+            public CurrencyListItem fromString(String s) {
                 return null;
             }
         };
