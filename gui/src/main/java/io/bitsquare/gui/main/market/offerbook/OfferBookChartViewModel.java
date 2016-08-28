@@ -133,7 +133,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .filter(e -> e != null)
                 .collect(Collectors.toList());
 
-        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, preferences);
+        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, null, preferences);
     }
 
     @Override

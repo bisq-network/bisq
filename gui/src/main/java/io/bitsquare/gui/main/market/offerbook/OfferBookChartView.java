@@ -108,7 +108,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
         currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers"));
-        currencyComboBox.setVisibleRowCount(25);
 
         Label currencyLabel = new Label("Currency:");
         HBox currencyHBox = new HBox();
@@ -150,6 +149,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
 
         currencyComboBox.setItems(model.getCurrencyListItems());
+        currencyComboBox.setVisibleRowCount(25);
 
         if (model.getSelectedCurrencyListItem().isPresent())
             currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());

@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.offer.offerbook;
 
 import io.bitsquare.alert.PrivateNotificationManager;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -64,6 +65,7 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -114,7 +116,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox = addLabelComboBox(root, gridRow, "Filter by currency:", Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText("Select currency");
         currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers"));
-        currencyComboBox.setVisibleRowCount(25);
 
         paymentMethodComboBox = addLabelComboBox(root, ++gridRow, "Filter by payment method:").second;
         paymentMethodComboBox.setPromptText("Select payment method");
@@ -205,12 +206,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     protected void activate() {
         currencyComboBox.setItems(model.getCurrencyListItems());
+        currencyComboBox.setVisibleRowCount(25);
+
         model.currencyListItems.addListener(currencyListItemsListener);
 
         applyCurrencyComboBoxSelection();
 
         currencyComboBox.setOnAction(e -> {
             CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
+
             if (selectedItem != null)
                 model.onSetTradeCurrency(selectedItem.tradeCurrency);
         });
@@ -275,10 +279,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void applyCurrencyComboBoxSelection() {
-        if (model.showAllTradeCurrenciesProperty.get())
-            currencyComboBox.getSelectionModel().select(0);
-        else if (model.getSelectedCurrencyListItem().isPresent())
-            currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
+        Optional<CurrencyListItem> selectedCurrencyListItem = model.getSelectedCurrencyListItem();
+        UserThread.execute(() -> {
+            if (model.showAllTradeCurrenciesProperty.get() || !selectedCurrencyListItem.isPresent())
+                currencyComboBox.getSelectionModel().select(model.getShowAllCurrencyListItem());
+            else
+                currencyComboBox.getSelectionModel().select(selectedCurrencyListItem.get());
+        });
     }
 
 
@@ -604,7 +611,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Payment method") {
             {
-                setMinWidth(130);
+                setMinWidth(120);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -717,6 +724,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         button.setStyle("-fx-text-fill: white;"); // does not take the font colors sometimes from the style
                                         title = model.getDirectionLabel(offer);
+                                        button.setTooltip(new Tooltip("Take offer for " + model.getDirectionLabelTooltip(offer)));
                                         button.setOnAction(e -> onTakeOffer(offer));
                                     }
 

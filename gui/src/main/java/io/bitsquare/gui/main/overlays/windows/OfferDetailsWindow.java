@@ -160,20 +160,21 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         String fiatDirectionInfo = ":";
         String btcDirectionInfo = ":";
         Offer.Direction direction = offer.getDirection();
+        String currencyCode = offer.getCurrencyCode();
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(direction), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
             fiatDirectionInfo = direction == Offer.Direction.BUY ? " to receive:" : " to spend:";
             btcDirectionInfo = direction == Offer.Direction.SELL ? " to receive:" : " to spend:";
         } else if (placeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(direction), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
             fiatDirectionInfo = direction == Offer.Direction.SELL ? " to receive:" : " to spend:";
             btcDirectionInfo = direction == Offer.Direction.BUY ? " to receive:" : " to spend:";
         } else {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(direction), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
         }
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(tradeAmount));
-            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo,
+            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
                     formatter.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
         } else {
             addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(offer.getAmount()));
@@ -182,7 +183,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             String minVolume = "";
             if (!offer.getAmount().equals(offer.getMinAmount()))
                 minVolume = " (min. " + formatter.formatVolumeWithCode(offer.getMinOfferVolume()) + ")";
-            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo, volume + minVolume);
+            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo, volume + minVolume);
         }
 
         if (takeOfferHandlerOptional.isPresent()) {

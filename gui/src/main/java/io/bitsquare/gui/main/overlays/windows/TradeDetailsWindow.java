@@ -116,11 +116,11 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         String fiatDirectionInfo;
         String btcDirectionInfo;
         if (tradeManager.isBuyer(offer)) {
-            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForBuyer(myOffer), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
             fiatDirectionInfo = " to spend:";
             btcDirectionInfo = " to receive:";
         } else {
-            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForSeller(myOffer), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForSeller(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
             fiatDirectionInfo = " to receive:";
             btcDirectionInfo = " to spend:";
         }
@@ -180,11 +180,11 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
         if (contract != null) {
             if (buyerPaymentAccountContractData != null) {
-                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer payment details:", BSResources.get(buyerPaymentAccountContractData.getPaymentDetails())).second;
+                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC buyer payment details:", BSResources.get(buyerPaymentAccountContractData.getPaymentDetails())).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (sellerPaymentAccountContractData != null) {
-                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Seller payment details:", BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second;
+                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC seller payment details:", BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (buyerPaymentAccountContractData == null && sellerPaymentAccountContractData == null)

@@ -83,8 +83,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private TradeCurrency selectedTradeCurrency;
     private final ListChangeListener<OfferBookListItem> offerBookListItemsListener;
     final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
-    private final ObservableList<TradeCurrency> allTradeCurrencies = FXCollections.observableArrayList();
-
+    private CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1);
     private Offer.Direction direction;
 
     private final StringProperty btcCode = new SimpleStringProperty();
@@ -135,7 +134,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         offerBookListItems.addListener(offerBookListItemsListener);
 
         String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
-        if (code != null && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
+        if (code != null && !code.equals("SHOW_ALL_FLAG") && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
             selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
         } else {
@@ -143,6 +142,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
+
         setPriceFeedType();
 
         btcCode.bind(preferences.btcDenominationProperty());
@@ -249,6 +249,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         return currencyListItems.stream().filter(e -> tradeCurrencyCode.get() != null && e.tradeCurrency.getCode().equals(tradeCurrencyCode.get())).findAny();
     }
 
+    CurrencyListItem getShowAllCurrencyListItem() {
+        return showAllCurrencyListItem;
+    }
+
 
     String getAmount(OfferBookListItem item) {
         Offer offer = item.getOffer();
@@ -349,7 +353,11 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getDirectionLabel(Offer offer) {
-        return formatter.getDirection(offer.getMirroredDirection(), offer.getCurrencyCode());
+        return formatter.getDirectionWithCode(offer.getMirroredDirection(), offer.getCurrencyCode());
+    }
+
+    String getDirectionLabelTooltip(Offer offer) {
+        return formatter.getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
     }
 
 
@@ -389,8 +397,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                 .filter(e -> e != null)
                 .collect(Collectors.toList());
 
-        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, preferences);
-        currencyListItems.add(0, new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1));
+        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, showAllCurrencyListItem, preferences);
         tradeCurrencyCodes = currencyListItems.stream().map(e -> e.tradeCurrency.getCode()).collect(Collectors.toSet());
     }
 

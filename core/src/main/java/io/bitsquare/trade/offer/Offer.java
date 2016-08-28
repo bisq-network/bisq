@@ -348,17 +348,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public String getId() {
-        String[] tokens = id.split("_");
-        return tokens[0];
-    }
-
-    @Nullable
-    public String getVersion() {
-        String[] tokens = id.split("_");
-        if (tokens.length > 1)
-            return tokens[1];
-        else
-            return null;
+        return id;
     }
 
     public String getShortId() {

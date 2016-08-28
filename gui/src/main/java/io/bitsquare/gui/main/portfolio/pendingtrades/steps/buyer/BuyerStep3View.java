@@ -37,12 +37,12 @@ public class BuyerStep3View extends TradeStepView {
 
     @Override
     protected String getInfoBlockTitle() {
-        return "Wait for seller's payment confirmation";
+        return "Wait for BTC seller's payment confirmation";
     }
 
     @Override
     protected String getInfoText() {
-        return "Waiting for the bitcoin seller's confirmation " +
+        return "Waiting for the BTC seller's confirmation " +
                 "for the receipt of the " + model.dataModel.getCurrencyCode() + " payment.";
     }
 
@@ -57,9 +57,9 @@ public class BuyerStep3View extends TradeStepView {
         String substitute = model.isBlockChainMethod() ?
                 "on the " + model.dataModel.getCurrencyCode() + "blockchain" :
                 "at your payment provider (e.g. bank)";
-        return "The seller still has not confirmed your payment!\n" +
+        return "The BTC seller still has not confirmed your payment!\n" +
                 "Please check " + substitute + " if the payment sending was successful.\n" +
-                "If the seller does not confirm the receipt of your payment until " +
+                "If the BTC seller does not confirm the receipt of your payment until " +
                 model.getDateForOpenDispute() +
                 " the trade will be investigated by the arbitrator.";
     }
@@ -71,7 +71,7 @@ public class BuyerStep3View extends TradeStepView {
 
     @Override
     protected String getOpenForDisputeText() {
-        return "The seller has not confirmed your payment!\n" +
+        return "The BTC seller has not confirmed your payment!\n" +
                 "The max. period for the trade has elapsed.\n" +
                 "Please contact the arbitrator for opening a dispute.";
     }

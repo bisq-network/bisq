@@ -79,6 +79,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
     private final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
+    private CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1);
     final ObservableList<TradeStatistics> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
@@ -128,8 +129,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .filter(e -> e != null)
                 .collect(Collectors.toList());
 
-        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, preferences);
-        currencyListItems.add(0, new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1));
+        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, showAllCurrencyListItem, preferences);
     }
 
     @VisibleForTesting

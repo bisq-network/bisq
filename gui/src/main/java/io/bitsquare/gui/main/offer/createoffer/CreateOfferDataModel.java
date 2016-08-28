@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.offer.createoffer;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
@@ -296,10 +295,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
 
-        // We encode the version into the id to be able to distinguish in future versions offers
-        // Once we have a hard fork we can remove that hack and add the version as a field
-        String idWithExtra = offerId + "_" + Version.VERSION;
-        return new Offer(idWithExtra,
+        return new Offer(offerId,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,

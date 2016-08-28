@@ -28,5 +28,30 @@ public class CurrencyListItem {
         this.numTrades = numTrades;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
+        CurrencyListItem that = (CurrencyListItem) o;
+
+        if (numTrades != that.numTrades) return false;
+        return !(tradeCurrency != null ? !tradeCurrency.equals(that.tradeCurrency) : that.tradeCurrency != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = tradeCurrency != null ? tradeCurrency.hashCode() : 0;
+        result = 31 * result + numTrades;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "CurrencyListItem{" +
+                "tradeCurrency=" + tradeCurrency +
+                ", numTrades=" + numTrades +
+                '}';
+    }
 }

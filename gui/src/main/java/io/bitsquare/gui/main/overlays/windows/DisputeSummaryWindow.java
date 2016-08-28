@@ -232,14 +232,14 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addLabelTextField(gridPane, ++rowIndex, "Ticket opening date:", formatter.formatDateTime(dispute.getOpeningDate()));
         if (dispute.isDisputeOpenerIsOfferer()) {
             if (dispute.isDisputeOpenerIsBuyer())
-                role = "Buyer/offerer";
+                role = "BTC Buyer/offerer";
             else
-                role = "Seller/offerer";
+                role = "BTC Seller/offerer";
         } else {
             if (dispute.isDisputeOpenerIsBuyer())
-                role = "Buyer/taker";
+                role = "BTC Buyer/taker";
             else
-                role = "Seller/taker";
+                role = "BTC Seller/taker";
         }
         addLabelTextField(gridPane, ++rowIndex, "Traders role:", role);
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
@@ -272,8 +272,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Label distributionLabel = addLabel(gridPane, ++rowIndex, "Trade amount payout:", 10);
         GridPane.setValignment(distributionLabel, VPos.TOP);
 
-        buyerIsWinnerRadioButton = new RadioButton("Buyer gets trade amount payout");
-        sellerIsWinnerRadioButton = new RadioButton("Seller gets trade amount payout");
+        buyerIsWinnerRadioButton = new RadioButton("BTC buyer gets trade amount payout");
+        sellerIsWinnerRadioButton = new RadioButton("BTC seller gets trade amount payout");
         shareRadioButton = new RadioButton("Both gets half trade amount payout");
         VBox radioButtonPane = new VBox();
         radioButtonPane.setSpacing(20);
@@ -475,8 +475,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             "\n" + role + " delivered tamper proof evidence: " + formatter.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()) +
                             "\n" + role + " did ID verification: " + formatter.booleanToYesNo(disputeResult.idVerificationProperty().get()) +
                             "\n" + role + " did screencast or video: " + formatter.booleanToYesNo(disputeResult.screenCastProperty().get()) +
-                            "\nPayout amount for buyer: " + formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()) +
-                            "\nPayout amount for seller: " + formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()) +
+                            "\nPayout amount for BTC buyer: " + formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()) +
+                            "\nPayout amount for BTC seller: " + formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()) +
                             "\nArbitrators dispute fee: " + formatter.formatCoinWithCode(disputeResult.getArbitratorPayoutAmount()) +
                             "\n\nSummary notes:\n" + disputeResult.summaryNotesProperty().get();
 

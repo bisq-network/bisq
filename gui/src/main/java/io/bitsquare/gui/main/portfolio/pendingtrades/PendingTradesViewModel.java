@@ -212,10 +212,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     String getMyRole(PendingTradesListItem item) {
         Trade trade = item.getTrade();
         Contract contract = trade.getContract();
-        if (contract != null)
-            return formatter.getRole(contract.isBuyerOffererAndSellerTaker(), dataModel.isOfferer(trade.getOffer()));
-        else
+        if (contract != null) {
+            Offer offer = trade.getOffer();
+            return formatter.getRole(contract.isBuyerOffererAndSellerTaker(), dataModel.isOfferer(offer), offer.getCurrencyCode());
+        } else {
             return "";
+        }
     }
 
     String getPaymentMethod(PendingTradesListItem item) {

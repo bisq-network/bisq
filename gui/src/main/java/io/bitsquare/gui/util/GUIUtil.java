@@ -44,6 +44,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -232,7 +233,7 @@ public class GUIUtil {
         };
     }
 
-    public static void fillCurrencyListItems(List<TradeCurrency> tradeCurrencyList, ObservableList<CurrencyListItem> currencyListItems, Preferences preferences) {
+    public static void fillCurrencyListItems(List<TradeCurrency> tradeCurrencyList, ObservableList<CurrencyListItem> currencyListItems, @Nullable CurrencyListItem showAllCurrencyListItem, Preferences preferences) {
         Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
         Map<String, Integer> tradesPerCurrencyMap = new HashMap<>();
         tradeCurrencyList.stream().forEach(tradeCurrency -> {
@@ -244,7 +245,7 @@ public class GUIUtil {
                 tradesPerCurrencyMap.put(code, 1);
         });
 
-        List<CurrencyListItem> fiatList = tradeCurrencySet.stream()
+        List<CurrencyListItem> list = tradeCurrencySet.stream()
                 .filter(e -> CurrencyUtil.isFiatCurrency(e.getCode()))
                 .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
                 .collect(Collectors.toList());
@@ -254,15 +255,19 @@ public class GUIUtil {
                 .collect(Collectors.toList());
 
         if (preferences.getSortMarketCurrenciesNumerically()) {
-            fiatList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
+            list.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
             cryptoList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
         } else {
-            fiatList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
+            list.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
             cryptoList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
         }
 
-        fiatList.addAll(cryptoList);
-        currencyListItems.setAll(fiatList);
+        list.addAll(cryptoList);
+
+        if (showAllCurrencyListItem != null)
+            list.add(0, showAllCurrencyListItem);
+
+        currencyListItems.setAll(list);
     }
 
     public static void openWebPage(String target) {

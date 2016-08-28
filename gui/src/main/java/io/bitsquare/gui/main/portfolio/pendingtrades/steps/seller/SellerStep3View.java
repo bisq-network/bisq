@@ -82,11 +82,11 @@ public class SellerStep3View extends TradeStepView {
                 } else {
                     message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
                             "Please go to your online banking web page and check if you have received " +
-                            tradeVolumeWithCode + " from the bitcoin buyer.\n\n" +
+                            tradeVolumeWithCode + " from the BTC buyer.\n\n" +
                             "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
 
                     if (paymentAccountContractData instanceof CashDepositAccountContractData)
-                        message += "\n\nBecause the payment is done via Cash Deposit the buyer has to write \"NO REFUND\" " +
+                        message += "\n\nBecause the payment is done via Cash Deposit the BTC buyer has to write \"NO REFUND\" " +
                                 "on the paper receipt, tear it in 2 parts and send you a photo by email.\n\n" +
                                 "To avoid chargeback risk, only confirm if you received the email and if you are " +
                                 "sure the paper receipt is valid.\n" +
@@ -200,11 +200,11 @@ public class SellerStep3View extends TradeStepView {
     @Override
     protected String getInfoText() {
         if (model.isBlockChainMethod()) {
-            return "The bitcoin buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
+            return "The BTC buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
                     "Check for blockchain confirmations at your altcoin wallet or block explorer and " +
                     "confirm the payment when you have sufficient blockchain confirmations.";
         } else {
-            return "The bitcoin buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
+            return "The BTC buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
                     "Check at your payment account (e.g. bank account) and confirm when you have " +
                     "received the payment.";
         }
@@ -271,7 +271,7 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += "Please note, that as soon you have confirmed the receipt, the locked trade amount will be released " +
-                        "to the bitcoin buyer and the security deposit will be refunded.";
+                        "to the BTC buyer and the security deposit will be refunded.";
                 new Popup()
                         .headLine("Confirm that you have received the payment")
                         .confirmation(message)

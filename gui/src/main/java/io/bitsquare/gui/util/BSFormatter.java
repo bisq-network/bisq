@@ -334,11 +334,18 @@ public class BSFormatter {
         return decimalFormat.format(MathUtils.roundDouble(value, precision)).replace(",", ".");
     }
 
-    public String getDirection(Offer.Direction direction, String currencyCode) {
+    public String getDirectionWithCode(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return (direction == Offer.Direction.BUY) ? "Buy BTC" : "Sell BTC";
         else
             return (direction == Offer.Direction.SELL) ? "Buy " + currencyCode : "Sell " + currencyCode;
+    }
+
+    public String getDirectionWithCodeDetailed(Offer.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return (direction == Offer.Direction.BUY) ? "buying BTC for " + currencyCode : "selling BTC for " + currencyCode;
+        else
+            return (direction == Offer.Direction.SELL) ? "buying " + currencyCode + " (selling BTC)" : "selling " + currencyCode + " (buying BTC)";
     }
 
     public String formatAmount(Offer offer) {
@@ -512,36 +519,64 @@ public class BSFormatter {
         }
     }
 
-    public String getDirectionBothSides(Offer.Direction direction) {
-        return direction == Offer.Direction.BUY ? "Offerer as bitcoin buyer / Taker as bitcoin seller" :
-                "Offerer as bitcoin seller / Taker as bitcoin buyer";
-    }
-
-    public String getDirectionForBuyer(boolean isMyOffer) {
-        return isMyOffer ? "You are buying bitcoin as offerer / Taker is selling bitcoin" :
-                "You are buying bitcoin as taker / Offerer is selling bitcoin";
-    }
-
-    public String getDirectionForSeller(boolean isMyOffer) {
-        return isMyOffer ? "You are selling bitcoin as offerer / Taker is buying bitcoin" :
-                "You are selling bitcoin as taker / Offerer is buying bitcoin";
-    }
-
-    public String getDirectionForTakeOffer(Offer.Direction direction) {
-        return direction == Offer.Direction.BUY ? "You are selling bitcoin (by taking an offer from someone who wants to buy bitcoin)" :
-                "You are buying bitcoin (by taking an offer from someone who wants to sell bitcoin)";
-    }
-
-    public String getOfferDirectionForCreateOffer(Offer.Direction direction) {
-        return direction == Offer.Direction.BUY ? "You are creating an offer for buying bitcoin" :
-                "You are creating an offer for selling bitcoin";
-    }
-
-    public String getRole(boolean isBuyerOffererAndSellerTaker, boolean isOfferer) {
-        if (isBuyerOffererAndSellerTaker)
-            return isOfferer ? "Buyer (offerer)" : "Seller (taker)";
+    public String getDirectionBothSides(Offer.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return direction == Offer.Direction.BUY ? "Offerer as BTC buyer / Taker as BTC seller" :
+                    "Offerer as BTC seller / Taker as BTC buyer";
         else
-            return isOfferer ? "Seller (offerer)" : "Buyer (taker)";
+            return direction == Offer.Direction.SELL ? "Offerer as " + currencyCode + " buyer / Taker as " + currencyCode + " seller" :
+                    "Offerer as " + currencyCode + " seller / Taker as " + currencyCode + " buyer";
+    }
+
+    public String getDirectionForBuyer(boolean isMyOffer, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return isMyOffer ? "You are buying BTC as offerer / Taker is selling BTC" :
+                    "You are buying BTC as taker / Offerer is selling BTC";
+        else
+            return isMyOffer ? "You are selling " + currencyCode + " as offerer / Taker is buying " + currencyCode + "" :
+                    "You are selling " + currencyCode + " as taker / Offerer is buying " + currencyCode + "";
+    }
+
+    public String getDirectionForSeller(boolean isMyOffer, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return isMyOffer ? "You are selling BTC as offerer / Taker is buying BTC" :
+                    "You are selling BTC as taker / Offerer is buying BTC";
+        else
+            return isMyOffer ? "You are buying " + currencyCode + " as offerer / Taker is selling " + currencyCode + "" :
+                    "You are buying " + currencyCode + " as taker / Offerer is selling " + currencyCode + "";
+    }
+
+    public String getDirectionForTakeOffer(Offer.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return direction == Offer.Direction.BUY ? "You are selling BTC (buying " + currencyCode + ")" :
+                    "You are buying BTC (selling " + currencyCode + ")";
+        else
+            return direction == Offer.Direction.SELL ? "You are selling " + currencyCode + " (buying BTC)" :
+                    "You are buying " + currencyCode + " (selling BTC)";
+    }
+
+    public String getOfferDirectionForCreateOffer(Offer.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return direction == Offer.Direction.BUY ? "You are creating an offer for buying BTC" :
+                    "You are creating an offer for selling BTC";
+        else
+            return direction == Offer.Direction.SELL ? "You are creating an offer for buying " + currencyCode + " (selling BTC)" :
+                    "You are creating an offer for selling " + currencyCode + " (buying BTC)";
+    }
+
+    public String getRole(boolean isBuyerOffererAndSellerTaker, boolean isOfferer, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            if (isBuyerOffererAndSellerTaker)
+                return isOfferer ? "BTC buyer as offerer" : "BTC seller as taker";
+            else
+                return isOfferer ? "BTC seller as offerer" : "BTC buyer as taker";
+        } else {
+            if (isBuyerOffererAndSellerTaker)
+                return isOfferer ? currencyCode + " seller as offerer" : currencyCode + " buyer as taker";
+            else
+                return isOfferer ? currencyCode + " buyer as offerer" : currencyCode + " seller as taker";
+        }
+
     }
 
     public String formatBytes(long bytes) {

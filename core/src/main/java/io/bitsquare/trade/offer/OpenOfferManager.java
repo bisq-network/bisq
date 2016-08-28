@@ -361,40 +361,46 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
             Optional<OpenOffer> openOfferOptional = findOpenOffer(message.offerId);
             AvailabilityResult availabilityResult;
-            if (openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
-                final Offer offer = openOfferOptional.get().getOffer();
-                if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent()) {
-                    availabilityResult = AvailabilityResult.AVAILABLE;
-                    List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
-                    if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
-                        // We need to be backward compatible. takersTradePrice was not used before 0.4.9.
-                        if (message.takersTradePrice > 0) {
-                            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference 
-                            // in trade price between the peers. Also here poor connectivity might cause market price API connection 
-                            // losses and therefore an outdated market price.
-                            try {
-                                offer.checkTradePriceTolerance(message.takersTradePrice);
-                            } catch (TradePriceOutOfToleranceException e) {
-                                log.warn("Trade price check failed because takers price is outside out tolerance.");
-                                availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
-                            } catch (MarketPriceNotAvailableException e) {
-                                log.warn(e.getMessage());
-                                availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
-                            } catch (Throwable e) {
-                                log.warn("Trade price check failed. " + e.getMessage());
-                                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+            if (openOfferOptional.isPresent()) {
+                if (openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
+                    final Offer offer = openOfferOptional.get().getOffer();
+                    if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent()) {
+                        availabilityResult = AvailabilityResult.AVAILABLE;
+                        List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
+                        if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
+                            // We need to be backward compatible. takersTradePrice was not used before 0.4.9.
+                            if (message.takersTradePrice > 0) {
+                                // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference 
+                                // in trade price between the peers. Also here poor connectivity might cause market price API connection 
+                                // losses and therefore an outdated market price.
+                                try {
+                                    offer.checkTradePriceTolerance(message.takersTradePrice);
+                                } catch (TradePriceOutOfToleranceException e) {
+                                    log.warn("Trade price check failed because takers price is outside out tolerance.");
+                                    availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                                } catch (MarketPriceNotAvailableException e) {
+                                    log.warn(e.getMessage());
+                                    availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
+                                } catch (Throwable e) {
+                                    log.warn("Trade price check failed. " + e.getMessage());
+                                    availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                                }
                             }
+                        } else {
+                            log.warn("acceptedArbitrators is null or empty: acceptedArbitrators=" + acceptedArbitrators);
+                            availabilityResult = AvailabilityResult.NO_ARBITRATORS;
                         }
                     } else {
-                        log.warn("acceptedArbitrators is null or empty: acceptedArbitrators=" + acceptedArbitrators);
-                        availabilityResult = AvailabilityResult.NO_ARBITRATORS;
+                        availabilityResult = AvailabilityResult.USER_IGNORED;
                     }
                 } else {
-                    availabilityResult = AvailabilityResult.USER_IGNORED;
+                    availabilityResult = AvailabilityResult.OFFER_TAKEN;
                 }
             } else {
+                log.warn("handleOfferAvailabilityRequest: openOffer not found. That should never happen.");
                 availabilityResult = AvailabilityResult.OFFER_TAKEN;
             }
+
             try {
                 p2PService.sendEncryptedDirectMessage(sender,
                         message.getPubKeyRing(),

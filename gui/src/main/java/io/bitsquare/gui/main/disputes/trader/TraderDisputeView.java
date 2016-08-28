@@ -152,19 +152,28 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         tableView.getSelectionModel().clearSelection();
 
         tableView.getColumns().add(getSelectColumn());
-        TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
-        tableView.getColumns().add(tradeIdColumn);
-        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
-        tableView.getColumns().add(roleColumn);
-        TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
-        tableView.getColumns().add(dateColumn);
+
         TableColumn<Dispute, Dispute> contractColumn = getContractColumn();
         tableView.getColumns().add(contractColumn);
+
+        TableColumn<Dispute, Dispute> dateColumn = getDateColumn();
+        tableView.getColumns().add(dateColumn);
+
+        TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
+        tableView.getColumns().add(tradeIdColumn);
+
+        TableColumn<Dispute, Dispute> marketColumn = getMarketColumn();
+        tableView.getColumns().add(marketColumn);
+
+        TableColumn<Dispute, Dispute> roleColumn = getRoleColumn();
+        tableView.getColumns().add(roleColumn);
+
         TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
         tableView.getColumns().add(stateColumn);
 
         tradeIdColumn.setComparator((o1, o2) -> o1.getTradeId().compareTo(o2.getTradeId()));
         dateColumn.setComparator((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
+        marketColumn.setComparator((o1, o2) -> formatter.getCurrencyPair(o1.getContract().offer.getCurrencyCode()).compareTo(o2.getContract().offer.getCurrencyCode()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -251,7 +260,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     @Override
     protected void activate() {
         disputeManager.cleanupDisputes();
-        
+
         FilteredList<Dispute> filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
         setFilteredListPredicate(filteredList);
 
@@ -859,6 +868,32 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
+    private TableColumn<Dispute, Dispute> getMarketColumn() {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Market") {
+            {
+                setMinWidth(130);
+            }
+        };
+        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                    @Override
+                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                        return new TableCell<Dispute, Dispute>() {
+                            @Override
+                            public void updateItem(final Dispute item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(formatter.getCurrencyPair(item.getContract().offer.getCurrencyCode()));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
     private TableColumn<Dispute, Dispute> getRoleColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Role") {
             {
@@ -876,9 +911,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (item.isDisputeOpenerIsOfferer())
-                                        setText(item.isDisputeOpenerIsBuyer() ? "Buyer/Offerer" : "Seller/Offerer");
+                                        setText(item.isDisputeOpenerIsBuyer() ? "BTC buyer/Offerer" : "BTC seller/Offerer");
                                     else
-                                        setText(item.isDisputeOpenerIsBuyer() ? "Buyer/Taker" : "Seller/Taker");
+                                        setText(item.isDisputeOpenerIsBuyer() ? "BTC buyer/Taker" : "BTC seller/Taker");
                                 } else {
                                     setText("");
                                 }

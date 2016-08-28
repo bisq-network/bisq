@@ -622,7 +622,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isPriceInRange() {
-        if (marketPriceMargin.get() != null) {
+        if (marketPriceMargin.get() != null && !marketPriceMargin.get().isEmpty()) {
             if (formatter.parsePercentStringToDouble(marketPriceMargin.get()) > preferences.getMaxPriceDistanceInPercent()) {
                 displayPriceOutOfRangePopup();
                 return false;

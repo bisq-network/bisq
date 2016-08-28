@@ -73,7 +73,7 @@ public class BuyerStep2View extends TradeStepView {
                                 "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
                                 "Please transfer from your external " +
                                 CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " wallet\n" +
-                                model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
+                                model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the BTC seller.\n\n" +
                                 "Here are the payment account details of the bitcoin seller:\n" +
                                 "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n\n" +
                                 "(You can copy & paste the values from the main screen after closing that popup.)";
@@ -82,8 +82,8 @@ public class BuyerStep2View extends TradeStepView {
                             message = "Your trade has reached at least one blockchain confirmation.\n" +
                                     "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
                                     "Please go to a bank and pay " +
-                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
-                                    "Here are the payment account details of the bitcoin seller:\n" +
+                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the BTC seller.\n\n" +
+                                    "Here are the payment account details of the BTC seller:\n" +
                                     "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
                                     "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
                                     "Please don't forget to add the trade ID \"" + trade.getShortId() +
@@ -92,13 +92,13 @@ public class BuyerStep2View extends TradeStepView {
                                     "Bitcoin, Btc or Bitsquare.\n\n" +
                                     "If your bank charges fees you have to cover those fees.\n\n" +
                                     "After you have done the payment write on the paper receipt: NO REFUNDS.\n" +
-                                    "Then tear it in 2 parts, make a photo and send it to the seller's email address.";
+                                    "Then tear it in 2 parts, make a photo and send it to the BTC seller's email address.";
                         else
                             message = "Your trade has reached at least one blockchain confirmation.\n" +
                                     "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
                                     "Please go to your online banking web page and pay " +
-                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
-                                    "Here are the payment account details of the bitcoin seller:\n" +
+                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the BTC seller.\n\n" +
+                                    "Here are the payment account details of the BTC seller:\n" +
                                     "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
                                     "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
                                     "Please don't forget to add the trade ID \"" + trade.getShortId() +

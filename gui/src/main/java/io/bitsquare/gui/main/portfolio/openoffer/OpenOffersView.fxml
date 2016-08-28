@@ -34,7 +34,7 @@
             <TableColumn text="Price" fx:id="priceColumn" minWidth="160"/>
             <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="180" maxWidth="190"/>
             <TableColumn text="Amount (Min.)" fx:id="volumeColumn" minWidth="200"/>
-            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="100" maxWidth="100"/>
+            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="100"/>
             <TableColumn text="" fx:id="removeItemColumn" minWidth="120" maxWidth="120" sortable="false"/>
         </columns>
     </TableView>
