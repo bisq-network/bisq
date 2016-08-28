@@ -30,6 +30,7 @@ import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.trade.statistics.TradeStatistics;
@@ -128,6 +129,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, preferences);
+        currencyListItems.add(0, new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1));
     }
 
     @VisibleForTesting

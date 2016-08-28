@@ -64,7 +64,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final List<XYChart.Data> buyData = new ArrayList<>();
     private final List<XYChart.Data> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
-    private final ListChangeListener<OfferBookListItem> listChangeListener;
+    private final ListChangeListener<OfferBookListItem> offerBookListItemsListener;
     final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
     private final ObservableList<Offer> topBuyOfferList = FXCollections.observableArrayList();
     private final ObservableList<Offer> topSellOfferList = FXCollections.observableArrayList();
@@ -91,7 +91,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         }
 
         offerBookListItems = offerBook.getOfferBookListItems();
-        listChangeListener = c -> {
+        offerBookListItemsListener = c -> {
             c.next();
             if (c.wasAdded() || c.wasRemoved()) {
                 ArrayList<OfferBookListItem> list = new ArrayList<>(c.getRemoved());
@@ -139,7 +139,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     @Override
     protected void activate() {
         priceFeedService.setType(PriceFeedService.Type.LAST);
-        offerBookListItems.addListener(listChangeListener);
+        offerBookListItems.addListener(offerBookListItemsListener);
 
         offerBook.fillOfferBookListItems();
         fillTradeCurrencies();
@@ -153,7 +153,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
     @Override
     protected void deactivate() {
-        offerBookListItems.removeListener(listChangeListener);
+        offerBookListItems.removeListener(offerBookListItemsListener);
     }
 
 

@@ -64,8 +64,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private static final Logger log = LoggerFactory.getLogger(OfferBookChartView.class);
 
     private NumberAxis xAxis, yAxis;
-    XYChart.Series seriesBuy, seriesSell;
-    private final ListChangeListener<OfferBookListItem> changeListener;
+    private XYChart.Series seriesBuy, seriesSell;
     private final Navigation navigation;
     private final BSFormatter formatter;
     private TableView<Offer> buyOfferTableView;
@@ -82,6 +81,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private Label buyOfferHeaderLabel, sellOfferHeaderLabel;
     private ChangeListener<Offer> sellTableRowSelectionListener, buyTableRowSelectionListener;
     private HBox bottomHBox;
+    private ListChangeListener<OfferBookListItem> changeListener;
     private ListChangeListener<CurrencyListItem> currencyListItemsListener;
 
 
@@ -94,17 +94,17 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         super(model);
         this.navigation = navigation;
         this.formatter = formatter;
+    }
 
+    @Override
+    public void initialize() {
         changeListener = c -> updateChartData();
 
         currencyListItemsListener = c -> {
             if (model.getSelectedCurrencyListItem().isPresent())
                 currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
         };
-    }
 
-    @Override
-    public void initialize() {
         currencyComboBox = new ComboBox<>();
         currencyComboBox.setPromptText("Select currency");
         currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers"));

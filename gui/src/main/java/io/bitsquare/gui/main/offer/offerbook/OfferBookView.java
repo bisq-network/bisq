@@ -35,6 +35,7 @@ import io.bitsquare.gui.main.offer.OfferView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
@@ -74,7 +75,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private BSFormatter formatter;
     private PrivateNotificationManager privateNotificationManager;
 
-    private ComboBox<TradeCurrency> currencyComboBox;
+    private ComboBox<CurrencyListItem> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private Button createOfferButton;
     private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn, paymentMethodColumn, avatarColumn;
@@ -87,6 +88,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private ListChangeListener<OfferBookListItem> offerListListener;
     private MonadicBinding<Void> currencySelectionBinding;
     private Subscription currencySelectionSubscriber;
+    private ListChangeListener<CurrencyListItem> currencyListItemsListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +113,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         currencyComboBox = addLabelComboBox(root, gridRow, "Filter by currency:", Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListConverter());
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers"));
+        currencyComboBox.setVisibleRowCount(25);
 
         paymentMethodComboBox = addLabelComboBox(root, ++gridRow, "Filter by payment method:").second;
         paymentMethodComboBox.setPromptText("Select payment method");
@@ -196,18 +199,21 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setVgrow(createOfferButton, Priority.NEVER);
         GridPane.setValignment(createOfferButton, VPos.TOP);
         offerListListener = c -> nrOfOffersLabel.setText("Nr. of offers: " + model.getOfferList().size());
+        currencyListItemsListener = c -> applyCurrencyComboBoxSelection();
     }
 
     @Override
     protected void activate() {
-        currencyComboBox.setItems(model.getTradeCurrencies());
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
-        currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
+        currencyComboBox.setItems(model.getCurrencyListItems());
+        model.currencyListItems.addListener(currencyListItemsListener);
 
-        if (model.showAllTradeCurrenciesProperty.get())
-            currencyComboBox.getSelectionModel().select(0);
-        else
-            currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
+        applyCurrencyComboBoxSelection();
+
+        currencyComboBox.setOnAction(e -> {
+            CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
+            if (selectedItem != null)
+                model.onSetTradeCurrency(selectedItem.tradeCurrency);
+        });
 
         priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
@@ -264,8 +270,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         priceColumn.sortableProperty().unbind();
         amountColumn.sortableProperty().unbind();
         model.getOfferList().removeListener(offerListListener);
-
+        model.currencyListItems.removeListener(currencyListItemsListener);
         currencySelectionSubscriber.unsubscribe();
+    }
+
+    private void applyCurrencyComboBoxSelection() {
+        if (model.showAllTradeCurrenciesProperty.get())
+            currencyComboBox.getSelectionModel().select(0);
+        else if (model.getSelectedCurrencyListItem().isPresent())
+            currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
     }
 
 
