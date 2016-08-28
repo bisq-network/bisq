@@ -47,7 +47,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -294,7 +293,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         }
     }
 
-    @NotNull
     private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
         boolean isBuyOffer = offer.getDirection() == Offer.Direction.BUY;
         boolean isBuyerRole = isPlaceOffer ? isBuyOffer : !isBuyOffer;

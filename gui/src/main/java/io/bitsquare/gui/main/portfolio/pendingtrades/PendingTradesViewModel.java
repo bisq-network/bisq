@@ -277,8 +277,16 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public int getNumPastTrades(Trade trade) {
         return closedTradableManager.getClosedTrades().stream()
-                .filter(e -> e instanceof Trade && ((Trade) e).getTradingPeerNodeAddress() != null &&
-                        ((Trade) e).getTradingPeerNodeAddress().hostName.equals(trade.getTradingPeerNodeAddress().hostName))
+                .filter(e -> {
+                    if (e instanceof Trade) {
+                        Trade t = (Trade) e;
+                        return t.getTradingPeerNodeAddress() != null &&
+                                trade.getTradingPeerNodeAddress() != null &&
+                                t.getTradingPeerNodeAddress().hostName.equals(trade.getTradingPeerNodeAddress().hostName);
+                    } else
+                        return false;
+
+                })
                 .collect(Collectors.toSet())
                 .size();
     }

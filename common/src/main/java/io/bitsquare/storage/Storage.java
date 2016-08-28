@@ -77,7 +77,6 @@ public class Storage<T extends Serializable> {
         this.dir = dir;
     }
 
-    @Nullable
     public void initWithFileName(String fileName) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);

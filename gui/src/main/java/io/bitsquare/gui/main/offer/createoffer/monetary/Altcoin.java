@@ -3,6 +3,7 @@ package io.bitsquare.gui.main.offer.createoffer.monetary;
 import com.google.common.math.LongMath;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.MonetaryFormat;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -209,7 +210,7 @@ public final class Altcoin implements Monetary, Comparable<Altcoin>, Serializabl
     }
 
     @Override
-    public int compareTo(final Altcoin other) {
+    public int compareTo(@NotNull final Altcoin other) {
         if (!this.currencyCode.equals(other.currencyCode))
             return this.currencyCode.compareTo(other.currencyCode);
         if (this.value != other.value)

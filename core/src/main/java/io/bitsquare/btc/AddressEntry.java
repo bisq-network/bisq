@@ -182,6 +182,7 @@ public final class AddressEntry implements Persistable {
         this.lockedTradeAmount = lockedTradeAmount;
     }
 
+    @org.jetbrains.annotations.Nullable
     public Coin getLockedTradeAmount() {
         return lockedTradeAmount;
     }

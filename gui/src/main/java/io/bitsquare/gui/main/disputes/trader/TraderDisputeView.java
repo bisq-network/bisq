@@ -331,7 +331,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 hideSendMsgInfo(timer);
             }
         };
-        if (disputeCommunicationMessage.arrivedProperty() != null)
+        if (disputeCommunicationMessage != null && disputeCommunicationMessage.arrivedProperty() != null)
             disputeCommunicationMessage.arrivedProperty().addListener(arrivedPropertyListener);
         storedInMailboxPropertyListener = (observable, oldValue, newValue) -> {
             if (newValue) {
@@ -341,7 +341,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 hideSendMsgInfo(timer);
             }
         };
-        disputeCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
+        if (disputeCommunicationMessage != null)
+            disputeCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
     }
 
     private void hideSendMsgInfo(Timer timer) {

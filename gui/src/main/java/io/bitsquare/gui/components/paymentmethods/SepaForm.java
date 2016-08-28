@@ -283,8 +283,9 @@ public class SepaForm extends PaymentMethodForm {
             if (iban.length() > 9)
                 iban = StringUtils.abbreviate(iban, 9);
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
-            String country = ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : "?";
-            String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "?";
+            CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) this.paymentAccount;
+            String country = countryBasedPaymentAccount.getCountry() != null ? countryBasedPaymentAccount.getCountry().code : "?";
+            String currency = this.paymentAccount.getSingleTradeCurrency() != null ? this.paymentAccount.getSingleTradeCurrency().getCode() : "?";
             accountNameTextField.setText(method.concat(" (").concat(currency).concat("/").concat(country).concat("): ").concat(iban));
         }
     }

@@ -62,7 +62,7 @@ public abstract class TradeProtocol {
                     if (tradeMessage.tradeId.equals(processModel.getId()))
                         doHandleDecryptedMessage(tradeMessage, peersNodeAddress);
                 }
-            } else {
+            } //else {
                 //TODO not clear anymore what case is handled here
                 // it might be that we received a msg from the arbitrator, we don't handle that here but we don't want to log an error
                 /*Optional<Arbitrator> arbitratorOptional = processModel.getArbitratorManager().getArbitratorsObservableMap().values().stream()
@@ -73,7 +73,7 @@ public abstract class TradeProtocol {
 
                 if ((arbitratorPubKeyRing != null && !signaturePubKey.equals(arbitratorPubKeyRing.getSignaturePubKey())))
                     log.error("Signature used in seal message does not match the one stored with that trade for the trading peer or arbitrator.");*/
-            }
+            //}
         };
         processModel.getP2PService().addDecryptedDirectMessageListener(decryptedDirectMessageListener);
     }

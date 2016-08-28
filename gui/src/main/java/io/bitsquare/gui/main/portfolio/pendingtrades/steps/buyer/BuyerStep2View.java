@@ -145,7 +145,7 @@ public class BuyerStep2View extends TradeStepView {
         PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
         String paymentMethodName = paymentAccountContractData != null ? paymentAccountContractData.getPaymentMethodName() : "";
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
-                "Start payment using " + BSResources.get(paymentAccountContractData.getPaymentMethodName()),
+                "Start payment using " + BSResources.get(paymentMethodName),
                 Layout.GROUP_DISTANCE);
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to transfer:",
                 model.getFiatVolume(),

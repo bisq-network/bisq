@@ -287,6 +287,7 @@ public final class User implements Persistable {
             return null;
     }
 
+    @org.jetbrains.annotations.Nullable
     public Filter getDevelopersFilter() {
         return developersFilter;
     }
