@@ -43,7 +43,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
     private TextArea postalAddressTextArea;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextField(gridPane, ++gridRow, "Account holder name:", ((USPostalMoneyOrderAccountContractData) paymentAccountContractData).getHolderName());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", ((USPostalMoneyOrderAccountContractData) paymentAccountContractData).getHolderName());
         TextArea textArea = addLabelTextArea(gridPane, ++gridRow, "Postal address:", "").second;
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
