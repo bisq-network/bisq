@@ -22,7 +22,7 @@ import java.util.Random;
 public class KeepAliveManager implements MessageListener, ConnectionListener, PeerManager.Listener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveManager.class);
 
-    private static final int INTERVAL_SEC = new Random().nextInt(5) + 20;
+    private static final int INTERVAL_SEC = new Random().nextInt(5) + 40;
     private static final long LAST_ACTIVITY_AGE_MS = INTERVAL_SEC / 2;
 
     private final NetworkNode networkNode;
