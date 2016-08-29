@@ -109,8 +109,8 @@ public class BroadcastHandler implements PeerManager.Listener {
             numOfPeers = connectedPeersList.size();
             int delay = 50;
             if (!isDataOwner) {
-                // for not data owner (relay nodes) we send to max. 7 nodes and use a longer delay
-                numOfPeers = Math.min(7, connectedPeersList.size());
+                // for not data owner (relay nodes) we send to max. 5 nodes and use a longer delay
+                numOfPeers = Math.min(5, connectedPeersList.size());
                 delay = 100;
             }
 
