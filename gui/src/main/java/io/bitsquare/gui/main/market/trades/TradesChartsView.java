@@ -83,10 +83,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private SortedList<TradeStatistics> sortedList;
     private Label nrOfTradeStatisticsLabel;
     private ListChangeListener<TradeStatistics> tradeStatisticsByCurrencyListener;
-    private TableColumn<TradeStatistics, TradeStatistics> priceColumn;
     private ChangeListener<Number> selectedTabIndexListener;
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
-    private TableColumn<TradeStatistics, TradeStatistics> volumeColumn, marketColumn;
+    private TableColumn<TradeStatistics, TradeStatistics> priceColumn, volumeColumn, marketColumn;
     private MonadicBinding<Void> currencySelectionBinding;
     private Subscription currencySelectionSubscriber;
 
@@ -569,14 +568,14 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(getDirectionLabel(item));
+                                    setText(getPaymentMethodLabel(item));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        paymentMethodColumn.setComparator((o1, o2) -> getDirectionLabel(o1).compareTo(getDirectionLabel(o2)));
+        paymentMethodColumn.setComparator((o1, o2) -> getPaymentMethodLabel(o1).compareTo(getPaymentMethodLabel(o2)));
         tableView.getColumns().add(paymentMethodColumn);
 
         // direction
@@ -593,14 +592,14 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(getPaymentMethodLabel(item));
+                                    setText(getDirectionLabel(item));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        directionColumn.setComparator((o1, o2) -> getPaymentMethodLabel(o1).compareTo(getPaymentMethodLabel(o2)));
+        directionColumn.setComparator((o1, o2) -> getDirectionLabel(o1).compareTo(getDirectionLabel(o2)));
         tableView.getColumns().add(directionColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
