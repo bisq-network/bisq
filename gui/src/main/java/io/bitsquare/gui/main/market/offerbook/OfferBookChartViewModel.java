@@ -66,8 +66,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> offerBookListItemsListener;
     final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
-    private final ObservableList<Offer> topBuyOfferList = FXCollections.observableArrayList();
-    private final ObservableList<Offer> topSellOfferList = FXCollections.observableArrayList();
+    private final ObservableList<OfferListItem> topBuyOfferList = FXCollections.observableArrayList();
+    private final ObservableList<OfferListItem> topSellOfferList = FXCollections.observableArrayList();
     private final ChangeListener<Number> currenciesUpdatedListener;
     private int selectedTabIndex;
 
@@ -205,11 +205,11 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         return offerBookListItems;
     }
 
-    public ObservableList<Offer> getTopBuyOfferList() {
+    public ObservableList<OfferListItem> getTopBuyOfferList() {
         return topBuyOfferList;
     }
 
-    public ObservableList<Offer> getTopSellOfferList() {
+    public ObservableList<OfferListItem> getTopSellOfferList() {
         return topSellOfferList;
     }
 
@@ -250,9 +250,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allBuyOffers = filterOffersWithRelevantPrices(allBuyOffers);
-
-        topBuyOfferList.setAll(allBuyOffers.subList(0, Math.min(100, allBuyOffers.size())));
-        buildChartDataItems(allBuyOffers, Offer.Direction.BUY, buyData);
+        buildChartAndTableEntries(allBuyOffers, Offer.Direction.BUY, buyData, topBuyOfferList);
 
         List<Offer> allSellOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
@@ -268,9 +266,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allSellOffers = filterOffersWithRelevantPrices(allSellOffers);
-
-        topSellOfferList.setAll(allSellOffers.subList(0, Math.min(100, allSellOffers.size())));
-        buildChartDataItems(allSellOffers, Offer.Direction.SELL, sellData);
+        buildChartAndTableEntries(allSellOffers, Offer.Direction.SELL, sellData, topSellOfferList);
     }
 
     // If there are more then 3 offers we ignore the offers which are further thn 30% from the best price
@@ -293,14 +289,17 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         return offers;
     }
 
-    private void buildChartDataItems(List<Offer> sortedList, Offer.Direction direction, List<XYChart.Data> data) {
+    private void buildChartAndTableEntries(List<Offer> sortedList, Offer.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {
         data.clear();
         double accumulatedAmount = 0;
+        List<OfferListItem> offerTableListTemp = new ArrayList<>();
         for (Offer offer : sortedList) {
             Fiat priceAsFiat = offer.getPrice();
             if (priceAsFiat != null) {
                 double amount = (double) offer.getAmount().value / LongMath.pow(10, offer.getAmount().smallestUnitExponent());
                 accumulatedAmount += amount;
+                offerTableListTemp.add(new OfferListItem(offer, accumulatedAmount));
+
                 double price = (double) priceAsFiat.value / LongMath.pow(10, priceAsFiat.smallestUnitExponent());
                 if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
                     price = price != 0 ? 1d / price : 0;
@@ -316,6 +315,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 }
             }
         }
+        offerTableList.setAll(offerTableListTemp);
     }
 
     private boolean isEditEntry(String id) {

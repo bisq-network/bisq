@@ -55,7 +55,7 @@ public class BSFormatter {
     // Input of a group separator (1,123,45) lead to an validation error.
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
-    private MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(2, 3);
+    private MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(4).repeatOptionalDecimals(0, 0);
 
     //  private String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
@@ -285,6 +285,19 @@ public class BSFormatter {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Amount
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String formatAmount(Offer offer) {
+        return formatCoin(offer.getAmount());
+    }
+
+    public String formatAmountWithMinAmount(Offer offer) {
+        return formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount());
+    }
+    
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Price
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -346,19 +359,6 @@ public class BSFormatter {
             return (direction == Offer.Direction.BUY) ? "buying BTC with " + currencyCode : "selling BTC for " + currencyCode;
         else
             return (direction == Offer.Direction.SELL) ? "buying " + currencyCode + " (selling BTC)" : "selling " + currencyCode + " (buying BTC)";
-    }
-
-    public String formatAmount(Offer offer) {
-        return formatCoin(offer.getAmount());
-    }
-
-    public String formatAmountWithMinAmount(Offer offer) {
-        return formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount());
-    }
-
-    public String formatMinVolumeAndVolumeWithCode(Offer offer) {
-        return formatFiatWithCode(offer.getOfferVolume()) +
-                " (" + formatFiatWithCode(offer.getMinOfferVolume()) + ")";
     }
 
     public String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
