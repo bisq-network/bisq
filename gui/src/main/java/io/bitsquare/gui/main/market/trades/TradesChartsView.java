@@ -26,6 +26,7 @@ import io.bitsquare.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.trade.statistics.TradeStatistics;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -108,6 +109,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         HBox toolBox = getToolBox();
         createCharts();
         createTable();
+
         nrOfTradeStatisticsLabel = new Label("");
         nrOfTradeStatisticsLabel.setId("num-offers");
         nrOfTradeStatisticsLabel.setPadding(new Insets(-5, 0, -10, 5));
@@ -553,6 +555,30 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         });
         tableView.getColumns().add(volumeColumn);
 
+        // paymentMethod
+        TableColumn<TradeStatistics, TradeStatistics> paymentMethodColumn = new TableColumn<>("Payment method");
+        paymentMethodColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
+        paymentMethodColumn.setCellFactory(
+                new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
+                        TradeStatistics>>() {
+                    @Override
+                    public TableCell<TradeStatistics, TradeStatistics> call(
+                            TableColumn<TradeStatistics, TradeStatistics> column) {
+                        return new TableCell<TradeStatistics, TradeStatistics>() {
+                            @Override
+                            public void updateItem(final TradeStatistics item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(getDirectionLabel(item));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        paymentMethodColumn.setComparator((o1, o2) -> getDirectionLabel(o1).compareTo(getDirectionLabel(o2)));
+        tableView.getColumns().add(paymentMethodColumn);
+
         // direction
         TableColumn<TradeStatistics, TradeStatistics> directionColumn = new TableColumn<>("Trade type");
         directionColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
@@ -567,14 +593,14 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.getDirectionWithCode(item.direction, item.currency));
+                                    setText(getPaymentMethodLabel(item));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        directionColumn.setComparator((o1, o2) -> o1.direction.compareTo(o2.direction));
+        directionColumn.setComparator((o1, o2) -> getPaymentMethodLabel(o1).compareTo(getPaymentMethodLabel(o2)));
         tableView.getColumns().add(directionColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -583,5 +609,15 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.setPlaceholder(placeholder);
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
+    }
+
+    @NotNull
+    private String getDirectionLabel(TradeStatistics item) {
+        return formatter.getDirectionWithCode(item.direction, item.currency);
+    }
+
+    @NotNull
+    private String getPaymentMethodLabel(TradeStatistics item) {
+        return BSResources.get(item.paymentMethod);
     }
 }
