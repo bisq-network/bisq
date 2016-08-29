@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
@@ -200,11 +201,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         priceChart.setAnimated(model.preferences.getUseAnimations());
         volumeChart.setAnimated(model.preferences.getUseAnimations());
-        updateChartData();
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
         nrOfTradeStatisticsLabel.setText("Nr. of trades: " + model.tradeStatisticsByCurrency.size());
+
+        UserThread.runAfter(this::updateChartData, 100, TimeUnit.MILLISECONDS);
     }
 
     @Override
