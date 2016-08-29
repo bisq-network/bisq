@@ -71,7 +71,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = 10;
-    private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 10;
+    private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 30;
     private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 20 : 20);
     private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 4 : 4);
 
@@ -439,7 +439,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             for (int i = 0; i < size; i++) {
                 // we delay to avoid reaching throttle limits
 
-                long delay = 500;
+                long delay = 700;
                 final long minDelay = (i + 1) * delay;
                 final long maxDelay = (i + 2) * delay;
                 final OpenOffer openOffer = openOffersList.get(i);
