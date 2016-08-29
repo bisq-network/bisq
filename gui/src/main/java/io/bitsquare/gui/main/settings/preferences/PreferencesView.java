@@ -137,7 +137,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeDisplayCurrencies() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 3, "Currencies in market price list");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 3, "Currencies in market price feed list");
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         preferredTradeCurrencyComboBox = addLabelComboBox(root, gridRow, "Preferred currency:", Layout.FIRST_ROW_DISTANCE).second;
