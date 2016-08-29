@@ -80,10 +80,16 @@ public class SellerStep3View extends TradeStepView {
                             "You can copy & paste your " + currencyName + " address from the main screen after " +
                             "closing that popup.";
                 } else {
-                    message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
-                            "Please go to your online banking web page and check if you have received " +
-                            tradeVolumeWithCode + " from the BTC buyer.\n\n" +
-                            "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
+                    if (paymentAccountContractData instanceof USPostalMoneyOrderAccountContractData)
+                        message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
+                                "Please check if you have received " +
+                                tradeVolumeWithCode + " with \"US Postal Money Order\" from the BTC buyer.\n\n" +
+                                "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
+                    else
+                        message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
+                                "Please go to your online banking web page and check if you have received " +
+                                tradeVolumeWithCode + " from the BTC buyer.\n\n" +
+                                "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
 
                     if (paymentAccountContractData instanceof CashDepositAccountContractData)
                         message += "\n\nBecause the payment is done via Cash Deposit the BTC buyer has to write \"NO REFUND\" " +
