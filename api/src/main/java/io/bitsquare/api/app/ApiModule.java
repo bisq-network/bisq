@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.api;
+package io.bitsquare.api.app;
 
 import com.google.inject.Singleton;
 import io.bitsquare.alert.AlertModule;
@@ -42,7 +42,7 @@ import java.io.File;
 
 import static com.google.inject.name.Names.named;
 
-class ApiModule extends AppModule {
+public class ApiModule extends AppModule {
     private static final Logger log = LoggerFactory.getLogger(ApiModule.class);
 
     public ApiModule(Environment env) {
@@ -56,6 +56,7 @@ class ApiModule extends AppModule {
         bind(User.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
+        bind(DropwizardApplication.class).in(Singleton.class);
 
         File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
         bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);

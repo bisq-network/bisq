@@ -14,6 +14,8 @@ import io.bitsquare.storage.JsonString;
 import io.bitsquare.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,15 +24,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class TradeStatisticsManager {
-    private static final Logger log = LoggerFactory.getLogger(TradeStatisticsManager.class);
-
+    @Getter
     private final Storage<HashSet<TradeStatistics>> statisticsStorage;
+    @Getter
     private Storage<JsonString> fiatCurrencyListJsonStorage;
+    @Getter
     private Storage<JsonString> cryptoCurrencyListJsonStorage;
+    @Getter
     private Storage<JsonString> statisticsJsonStorage;
     private boolean dumpStatistics;
     private ObservableSet<TradeStatistics> observableTradeStatisticsSet = FXCollections.observableSet();
+    @Getter
     private HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
 
     @Inject
