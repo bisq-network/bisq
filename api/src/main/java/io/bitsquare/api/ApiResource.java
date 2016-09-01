@@ -14,6 +14,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.Optional;
@@ -28,26 +29,39 @@ public class ApiResource {
     private final String defaultName;
     private final AtomicLong counter;
     private final TradeStatisticsManager tradeStatisticsManager;
+    private final CurrencyList currencyList = new CurrencyList();
 
     public ApiResource(String template, String defaultName, TradeStatisticsManager manager) {
         this.template = template;
         this.defaultName = defaultName;
         this.counter = new AtomicLong();
         this.tradeStatisticsManager = manager;
+        calculateCurrencyList();
     }
 
     @GET
     @Timed
     @Path("/currency_list")
-    public CurrencyList currency_list() {
+    public CurrencyList currencyList() {
 
         HashSet<TradeStatistics> tradeStatisticsSet = tradeStatisticsManager.getTradeStatisticsSet();
 //        tradeStatisticsSet.stream().map(tradeStatistics -> tradeStatistics.toString()).collect(Collectors.joining())
-        CurrencyList currencyList = new CurrencyList();
-
-        CurrencyUtil.getAllSortedCryptoCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getCode(), cryptoCurrency.getName(), "crypto"));
-        CurrencyUtil.getAllSortedFiatCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getSymbol(), cryptoCurrency.getName(), "fiat"));
 
         return currencyList;
+    }
+
+    @GET
+    @Timed
+    @Path("/market_list")
+    public CurrencyList marketList() {
+
+
+        return currencyList;
+    }
+
+    private void calculateCurrencyList() {
+        CurrencyUtil.getAllSortedCryptoCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getCode(), cryptoCurrency.getName(), "crypto"));
+        CurrencyUtil.getAllSortedFiatCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getSymbol(), cryptoCurrency.getName(), "fiat"));
+        Collections.sort(currencyList.currencies, (Currency p1, Currency p2) -> p1.name.compareTo(p2.name));
     }
 }

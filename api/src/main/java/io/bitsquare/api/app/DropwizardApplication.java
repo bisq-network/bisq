@@ -1,5 +1,9 @@
 package io.bitsquare.api.app;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.inject.Inject;
 import io.bitsquare.api.ApiConfiguration;
 import io.bitsquare.api.ApiResource;
@@ -31,6 +35,7 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
     @Override
     public void run(ApiConfiguration configuration,
                     Environment environment) {
+//        environment.getObjectMapper().configure(SerializationFeature.WRAP_ROOT_VALUE, false);
         final ApiResource resource = new ApiResource(
                 configuration.getTemplate(),
                 configuration.getDefaultName(),
