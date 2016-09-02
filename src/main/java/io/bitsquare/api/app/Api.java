@@ -33,6 +33,7 @@ public class Api {
     private final Injector injector;
     private final OfferBookService offerBookService;
     private final OpenOfferManager openOfferManager;
+    private final WalletService walletService;
     private final ApiModule apiModule;
 
     private P2PService p2pService;
@@ -76,6 +77,7 @@ public class Api {
         Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
         p2pService = injector.getInstance(P2PService.class);
         offerBookService = injector.getInstance(OfferBookService.class);
+        walletService = injector.getInstance(WalletService.class);
         openOfferManager = injector.getInstance(OpenOfferManager.class);
         p2pService.start(false, new P2PServiceListener() {
             @Override

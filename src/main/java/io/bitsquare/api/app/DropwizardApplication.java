@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.inject.Inject;
 import io.bitsquare.api.ApiConfiguration;
 import io.bitsquare.api.ApiResource;
+import io.bitsquare.api.BitsquareProxy;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.trade.statistics.TradeStatisticsManager;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
@@ -15,7 +17,7 @@ import io.dropwizard.setup.Environment;
 
 public class DropwizardApplication extends Application<ApiConfiguration> {
     @Inject
-    TradeStatisticsManager tradeStatisticsManager;
+    WalletService walletService;
 
     public static void main(String[] args) throws Exception {
         new DropwizardApplication().run(args);
@@ -36,10 +38,11 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
     public void run(ApiConfiguration configuration,
                     Environment environment) {
 //        environment.getObjectMapper().configure(SerializationFeature.WRAP_ROOT_VALUE, false);
+        BitsquareProxy bitsquareProxy = new BitsquareProxy(walletService);
         final ApiResource resource = new ApiResource(
                 configuration.getTemplate(),
                 configuration.getDefaultName(),
-                tradeStatisticsManager
+                bitsquareProxy
         );
         environment.jersey().register(resource);
     }
