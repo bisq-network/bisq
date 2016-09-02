@@ -34,6 +34,7 @@ import io.bitsquare.trade.TradeModule;
 import io.bitsquare.trade.offer.OfferModule;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -42,8 +43,8 @@ import java.io.File;
 
 import static com.google.inject.name.Names.named;
 
+@Slf4j
 public class ApiModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(ApiModule.class);
 
     public ApiModule(Environment env) {
         super(env);
