@@ -19,6 +19,8 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 
+import javax.annotation.Nullable;
+
 public final class CashDepositAccount extends CountryBasedPaymentAccount implements SameCountryRestrictedBankAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -40,5 +42,14 @@ public final class CashDepositAccount extends CountryBasedPaymentAccount impleme
     @Override
     public String getCountryCode() {
         return getCountry() != null ? getCountry().code : "";
+    }
+
+    @Nullable
+    public String getRequirements() {
+        return ((CashDepositAccountContractData) contractData).getRequirements();
+    }
+
+    public void setRequirements(String requirements) {
+        ((CashDepositAccountContractData) contractData).setRequirements(requirements);
     }
 }
