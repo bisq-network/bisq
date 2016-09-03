@@ -41,11 +41,11 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage {
     @Override
     public String toString() {
         return "GetDataResponse{" +
-                "messageVersion=" + messageVersion +
-                ", dataSet.size()=" + dataSet.size() +
+                "dataSet.size()=" + dataSet.size() +
+                ", isGetUpdatedDataResponse=" + isGetUpdatedDataResponse +
                 ", requestNonce=" + requestNonce +
                 ", supportedCapabilities=" + supportedCapabilities +
-                ", isGetUpdatedDataResponse=" + isGetUpdatedDataResponse +
+                ", messageVersion=" + messageVersion +
                 '}';
     }
 }
