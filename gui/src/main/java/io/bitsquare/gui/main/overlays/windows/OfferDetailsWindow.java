@@ -297,10 +297,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         boolean isBuyOffer = offer.getDirection() == Offer.Direction.BUY;
         boolean isBuyerRole = isPlaceOffer ? isBuyOffer : !isBuyOffer;
 
-        // String placeOfferButtonText = isBuyerRole ? "Confirm offer for buying bitcoin" : "Confirm offer for selling bitcoin";
-        // String takeOfferButtonText = isBuyerRole ? "Confirm offer for buying bitcoin" : "Confirm offer for selling bitcoin";
-        String placeOfferButtonText = "Confirm";
-        String takeOfferButtonText = "Confirm";
+        String placeOfferButtonText = isBuyerRole ? "Confirm offer for buying bitcoin" : "Confirm offer for selling bitcoin";
+        String takeOfferButtonText = isBuyerRole ? "Confirm offer for buying bitcoin" : "Confirm offer for selling bitcoin";
 
         ImageView iconView = new ImageView();
         iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");
