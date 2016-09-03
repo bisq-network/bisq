@@ -93,8 +93,21 @@ public final class AddressEntry implements Persistable {
         this.keyPair = keyPair;
         this.params = params;
         this.context = context;
-        this.offerId = offerId;
 
+        // We got some issues that users created offers with a dev version where we added the version nr after 
+        // the id, but we reverted that as it caused issues. To avoid ongoing issues with those dangling offers
+        // we add that check.
+        // TODO remove after version 0.4.9.7 (if no offers with that invalid id are online anymore)
+        if (offerId != null) {
+            String[] tokens = offerId.split("_");
+            if (tokens.length > 1)
+                this.offerId = tokens[0];
+            else
+                this.offerId = offerId;
+        } else {
+            this.offerId = null;
+        }
+        
         paramId = params.getId();
 
         checkNotNull(keyPair);
@@ -130,13 +143,26 @@ public final class AddressEntry implements Persistable {
 
     @Nullable
     public String getOfferId() {
-        return offerId;
+        // We got some issues that users created offers with a dev version where we added the version nr after 
+        // the id, but we reverted that as it caused issues. To avoid ongoing issues with those dangling offers
+        // we add that check.
+        // TODO remove after version 0.4.9.7 (if no offers with that invalid id are online anymore)
+        if (offerId != null) {
+            String[] tokens = offerId.split("_");
+
+            if (tokens.length > 1)
+                return tokens[0];
+            else
+                return offerId;
+        } else {
+            return null;
+        }
     }
 
     // For display we usually only display the first 8 characters.
     @Nullable
     public String getShortOfferId() {
-        return offerId != null ? offerId.substring(0, Math.min(8, offerId.length())) : null;
+        return getOfferId() != null ? getOfferId().substring(0, Math.min(8, getOfferId().length())) : null;
     }
 
     public Context getContext() {
@@ -190,7 +216,7 @@ public final class AddressEntry implements Persistable {
     @Override
     public String toString() {
         return "AddressEntry{" +
-                "offerId='" + offerId + '\'' +
+                "offerId='" + getOfferId() + '\'' +
                 ", context=" + context +
                 ", address=" + getAddressString() +
                 '}';

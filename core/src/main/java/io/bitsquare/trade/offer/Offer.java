@@ -277,7 +277,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public String getReferenceText() {
-        return id.substring(0, Math.min(8, id.length()));
+        return getId().substring(0, Math.min(8, getId().length()));
     }
 
 
@@ -348,11 +348,19 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public String getId() {
-        return id;
+        // We got some issues that users created offers with a dev version where we added the version nr after 
+        // the id, but we reverted that as it caused issues. To avoid ongoing issues with those dangling offers
+        // we add that check.
+        // TODO remove after version 0.4.9.7 (if no offers with that invalid id are online anymore)
+        String[] tokens = id.split("_");
+        if (tokens.length > 1)
+            return tokens[0];
+        else
+            return id;
     }
 
     public String getShortId() {
-        return id.substring(0, Math.min(8, id.length()));
+        return getId().substring(0, Math.min(8, getId().length()));
     }
 
     public NodeAddress getOffererNodeAddress() {
@@ -513,7 +521,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         if (useMarketBasedPrice != that.useMarketBasedPrice) return false;
         if (amount != that.amount) return false;
         if (minAmount != that.minAmount) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
 
         if (direction != null && that.direction != null && direction.ordinal() != that.direction.ordinal())
             return false;
@@ -542,7 +550,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
     @Override
     public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
+        int result = getId() != null ? getId().hashCode() : 0;
         result = 31 * result + (direction != null ? direction.ordinal() : 0);
         result = 31 * result + (currencyCode != null ? currencyCode.hashCode() : 0);
         result = 31 * result + (int) (date ^ (date >>> 32));
@@ -568,7 +576,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     @Override
     public String toString() {
         return "Offer{" +
-                "\n\tid='" + id + '\'' +
+                "\n\tid='" + getId() + '\'' +
                 "\n\tdirection=" + direction +
                 "\n\tcurrencyCode='" + currencyCode + '\'' +
                 "\n\tdate=" + new Date(date) +
