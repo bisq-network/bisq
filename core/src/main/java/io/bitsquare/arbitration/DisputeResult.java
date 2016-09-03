@@ -50,6 +50,8 @@ public final class DisputeResult implements Payload {
     public enum Reason {
         BUG,
         USABILITY,
+        PROTOCOL_VIOLATION,
+        NO_REPLY,
         SCAM,
         OTHER
     }
