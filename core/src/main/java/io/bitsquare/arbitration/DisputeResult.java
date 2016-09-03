@@ -25,6 +25,7 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Arrays;
@@ -47,20 +48,27 @@ public final class DisputeResult implements Payload {
         STALE_MATE
     }
 
+    // only append new values as we use the ordinal value
     public enum Reason {
         BUG,
         USABILITY,
-        PROTOCOL_VIOLATION,
-        NO_REPLY,
         SCAM,
-        OTHER
+        OTHER,
+        PROTOCOL_VIOLATION,
+        NO_REPLY
     }
 
     public final String tradeId;
     public final int traderId;
     private DisputeFeePolicy disputeFeePolicy;
     private Winner winner;
+
+    // Keep it for backward compatibility but use reasonOrdinal to allow changes in the ENum without breaking serialisation
+    @Deprecated
+    @Nullable
     private Reason reason;
+    private int reasonOrdinal = Reason.OTHER.ordinal();
+
     private boolean tamperProofEvidence;
     private boolean idVerification;
     private boolean screenCast;
@@ -147,17 +155,20 @@ public final class DisputeResult implements Payload {
     }
 
     public void setReason(Reason reason) {
-        this.reason = reason;
+        this.reasonOrdinal = reason.ordinal();
     }
 
     public Reason getReason() {
-        return reason;
+        if (reasonOrdinal < Reason.values().length)
+            return Reason.values()[reasonOrdinal];
+        else
+            return Reason.OTHER;
     }
 
     public void setSummaryNotes(String summaryNotes) {
         this.summaryNotesProperty.set(summaryNotes);
     }
-    
+
     public StringProperty summaryNotesProperty() {
         return summaryNotesProperty;
     }
@@ -251,6 +262,7 @@ public final class DisputeResult implements Payload {
         if (closeDate != that.closeDate) return false;
         if (tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null) return false;
         if (disputeFeePolicy != that.disputeFeePolicy) return false;
+        if (reasonOrdinal != that.reasonOrdinal) return false;
         if (reason != that.reason) return false;
 
         if (disputeFeePolicy != null && that.disputeFeePolicy != null && disputeFeePolicy.ordinal() != that.disputeFeePolicy.ordinal())
@@ -267,7 +279,7 @@ public final class DisputeResult implements Payload {
             return false;
         else if ((winner == null && that.winner != null) || (winner != null && that.winner == null))
             return false;
-        
+
         if (summaryNotes != null ? !summaryNotes.equals(that.summaryNotes) : that.summaryNotes != null) return false;
         if (disputeCommunicationMessage != null ? !disputeCommunicationMessage.equals(that.disputeCommunicationMessage) : that.disputeCommunicationMessage != null)
             return false;
@@ -284,6 +296,7 @@ public final class DisputeResult implements Payload {
         int result = tradeId != null ? tradeId.hashCode() : 0;
         result = 31 * result + traderId;
         result = 31 * result + (disputeFeePolicy != null ? disputeFeePolicy.ordinal() : 0);
+        result = 31 * result + reasonOrdinal;
         result = 31 * result + (reason != null ? reason.ordinal() : 0);
         result = 31 * result + (winner != null ? winner.ordinal() : 0);
         result = 31 * result + (tamperProofEvidence ? 1 : 0);
