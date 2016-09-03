@@ -62,6 +62,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DisputeManager {
@@ -699,6 +700,23 @@ public class DisputeManager {
         return disputeResult.getArbitratorAddressAsString().equals(walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR).getAddressString());
     }
 
+    public String getNrOfDisputes(boolean isBuyer, Contract contract) {
+        return String.valueOf(getDisputesAsObservableList().stream()
+                .filter(e -> {
+                    Contract contract1 = e.getContract();
+                    if (contract1 == null)
+                        return false;
+
+                    if (isBuyer) {
+                        NodeAddress buyerNodeAddress = contract1.getBuyerNodeAddress();
+                        return buyerNodeAddress != null && buyerNodeAddress.equals(contract.getBuyerNodeAddress());
+                    } else {
+                        NodeAddress sellerNodeAddress = contract1.getSellerNodeAddress();
+                        return sellerNodeAddress != null && sellerNodeAddress.equals(contract.getSellerNodeAddress());
+                    }
+                })
+                .collect(Collectors.toSet()).size());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils

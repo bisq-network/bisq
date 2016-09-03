@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
 import io.bitsquare.arbitration.Dispute;
+import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
@@ -52,6 +53,7 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 public class ContractWindow extends Overlay<ContractWindow> {
     protected static final Logger log = LoggerFactory.getLogger(ContractWindow.class);
 
+    private DisputeManager disputeManager;
     private final BSFormatter formatter;
     private Dispute dispute;
 
@@ -61,7 +63,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractWindow(BSFormatter formatter) {
+    public ContractWindow(DisputeManager disputeManager, BSFormatter formatter) {
+        this.disputeManager = disputeManager;
         this.formatter = formatter;
         type = Type.Confirmation;
     }
@@ -70,7 +73,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         this.dispute = dispute;
 
         rowIndex = -1;
-        width = 850;
+        width = 1100;
         createGridPane();
         addContent();
         display();
@@ -100,7 +103,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
 
-        int rows = 18;
+        int rows = 16;
         if (dispute.getDepositTxSerialized() != null)
             rows++;
         if (dispute.getPayoutTxSerialized() != null)
@@ -111,31 +114,29 @@ public class ContractWindow extends Overlay<ContractWindow> {
             rows++;
 
         PaymentAccountContractData sellerPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
-        addTitledGroupBg(gridPane, ++rowIndex, rows, "Contract");
+        addTitledGroupBg(gridPane, ++rowIndex, rows, "Dispute details");
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(),
                 Layout.FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++rowIndex, "Offer date:", formatter.formatDateTime(offer.getDate()));
-        addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(dispute.getTradeDate()));
+        addLabelTextField(gridPane, ++rowIndex, "Offer date / Trade date:", formatter.formatDateTime(offer.getDate()) + " / " + formatter.formatDateTime(dispute.getTradeDate()));
         String currencyCode = offer.getCurrencyCode();
         addLabelTextField(gridPane, ++rowIndex, "Trade type:", formatter.getDirectionBothSides(offer.getDirection(), currencyCode));
         addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatPrice(contract.getTradePrice()));
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
         addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode, ":"),
                 formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC buyer bitcoin address:",
-                contract.getBuyerPayoutAddressString()).second.setMouseTransparent(false);
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC seller bitcoin address:",
-                contract.getSellerPayoutAddressString()).second.setMouseTransparent(false);
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Contract hash:",
-                Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC buyer address:", contract.getBuyerNodeAddress().getFullAddress());
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC seller address:", contract.getSellerNodeAddress().getFullAddress());
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Selected arbitrator:", contract.arbitratorNodeAddress.getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Bitcoin address BTC buyer / BTC seller:",
+                contract.getBuyerPayoutAddressString() + " / " + contract.getSellerPayoutAddressString()).second.setMouseTransparent(false);
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Network address BTC buyer / BTC seller:", contract.getBuyerNodeAddress().getFullAddress() + " / " + contract.getSellerNodeAddress().getFullAddress());
+
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Nr. of disputes BTC buyer / BTC seller:", disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
+
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC buyer payment details:",
                 BSResources.get(contract.getBuyerPaymentAccountContractData().getPaymentDetails())).second.setMouseTransparent(false);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC seller payment details:",
                 BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second.setMouseTransparent(false);
 
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Selected arbitrator:", contract.arbitratorNodeAddress.getFullAddress());
+        
         if (showAcceptedCountryCodes) {
             String countries;
             Tooltip tooltip = null;
@@ -167,6 +168,9 @@ public class ContractWindow extends Overlay<ContractWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, "Deposit transaction ID:", dispute.getDepositTxId());
         if (dispute.getPayoutTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Payout transaction ID:", dispute.getPayoutTxId());
+
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Contract hash:",
+                Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
 
         if (contract != null) {
             Button viewContractButton = addLabelButton(gridPane, ++rowIndex, "Contract in JSON format:", "View contract in JSON format", 0).second;
