@@ -352,11 +352,15 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         // the id, but we reverted that as it caused issues. To avoid ongoing issues with those dangling offers
         // we add that check.
         // TODO remove after version 0.4.9.7 (if no offers with that invalid id are online anymore)
-        String[] tokens = id.split("_");
-        if (tokens.length > 1)
-            return tokens[0];
-        else
-            return id;
+        if (id != null) {
+            String[] tokens = id.split("_");
+            if (tokens.length > 1)
+                return tokens[0];
+            else
+                return id;
+        } else {
+            return null;
+        }
     }
 
     public String getShortId() {
