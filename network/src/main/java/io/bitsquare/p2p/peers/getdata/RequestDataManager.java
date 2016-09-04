@@ -24,6 +24,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     private static final long RETRY_DELAY_SEC = 10;
     private static final long CLEANUP_TIMER = 120;
+    private boolean isPreliminaryDataRequest = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +102,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
             Collections.shuffle(nodeAddresses);
             NodeAddress nextCandidate = nodeAddresses.get(0);
             nodeAddresses.remove(nextCandidate);
+            isPreliminaryDataRequest = true;
             requestData(nextCandidate, nodeAddresses);
         }
     }
@@ -114,6 +116,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
             Collections.shuffle(remainingNodeAddresses);
             NodeAddress candidate = nodeAddressOfPreliminaryDataRequest.get();
             remainingNodeAddresses.remove(candidate);
+            isPreliminaryDataRequest = false;
             requestData(candidate, remainingNodeAddresses);
         }
     }
@@ -301,7 +304,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                             }
                         });
                 handlerMap.put(nodeAddress, requestDataHandler);
-                requestDataHandler.requestData(nodeAddress);
+                requestDataHandler.requestData(nodeAddress, isPreliminaryDataRequest);
             } else {
                 log.warn("We have started already a requestDataHandshake to peer. nodeAddress=" + nodeAddress + "\n" +
                         "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
