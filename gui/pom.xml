@@ -147,6 +147,11 @@
             <artifactId>jcsv</artifactId>
             <version>1.4.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.bitsquare</groupId>
+            <artifactId>api</artifactId>
+            <version>0.4.9.2</version>
+        </dependency>
 
     </dependencies>
 </project>

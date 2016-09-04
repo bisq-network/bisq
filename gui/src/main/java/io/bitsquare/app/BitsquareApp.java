@@ -22,6 +22,7 @@ import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
+import io.bitsquare.api.service.DropwizardApplication;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.CommonOptionKeys;
@@ -144,6 +145,7 @@ public class BitsquareApp extends Application {
             bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
             injector = Guice.createInjector(bitsquareAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
+            injector.getInstance(DropwizardApplication.class).run("server", "bitsquare-api.yml");
 
             Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
 
