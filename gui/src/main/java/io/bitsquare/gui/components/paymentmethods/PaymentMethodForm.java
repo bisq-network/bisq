@@ -53,7 +53,7 @@ public abstract class PaymentMethodForm {
     protected int gridRowFrom;
     protected InputTextField accountNameTextField;
     protected CheckBox useCustomAccountNameCheckBox;
-    private ComboBox<TradeCurrency> currencyComboBox;
+    protected ComboBox<TradeCurrency> currencyComboBox;
 
     public PaymentMethodForm(PaymentAccount paymentAccount, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         this.paymentAccount = paymentAccount;
