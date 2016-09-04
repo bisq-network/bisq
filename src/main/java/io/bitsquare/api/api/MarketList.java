@@ -1,8 +1,7 @@
-package io.bitsquare.api;
+package io.bitsquare.api.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,17 +31,3 @@ public class MarketList {
 
 }
 
-class Market {
-    @JsonProperty
-    String pair;
-    @JsonProperty
-    String lsymbol;
-    @JsonProperty
-    String rsymbol;
-
-    Market(String lsymbol, String rsymbol) {
-        this.pair = lsymbol.toLowerCase() + "_" + rsymbol.toLowerCase();
-        this.lsymbol = lsymbol;
-        this.rsymbol = rsymbol;
-    }
-}

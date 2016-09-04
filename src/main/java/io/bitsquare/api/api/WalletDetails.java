@@ -1,4 +1,4 @@
-package io.bitsquare.api;
+package io.bitsquare.api.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

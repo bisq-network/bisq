@@ -3,6 +3,7 @@ package io.bitsquare.api.app;
 import ch.qos.logback.classic.Level;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import io.bitsquare.api.service.DropwizardApplication;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.app.Log;
@@ -17,6 +18,7 @@ import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.trade.offer.OpenOfferManager;
+import io.bitsquare.user.User;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -35,6 +37,7 @@ public class Api {
     private final OpenOfferManager openOfferManager;
     private final WalletService walletService;
     private final ApiModule apiModule;
+    private final User user;
 
     private P2PService p2pService;
 
@@ -78,7 +81,9 @@ public class Api {
         p2pService = injector.getInstance(P2PService.class);
         offerBookService = injector.getInstance(OfferBookService.class);
         walletService = injector.getInstance(WalletService.class);
+        user = injector.getInstance(User.class);
         openOfferManager = injector.getInstance(OpenOfferManager.class);
+
         p2pService.start(false, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {

@@ -1,14 +1,14 @@
-package io.bitsquare.api;
+package io.bitsquare.api.service;
 
 import com.codahale.metrics.annotation.Timed;
-import io.bitsquare.trade.statistics.TradeStatistics;
-import io.bitsquare.trade.statistics.TradeStatisticsManager;
+import io.bitsquare.api.BitsquareProxy;
+import io.bitsquare.api.api.AccountList;
+import io.bitsquare.api.api.CurrencyList;
+import io.bitsquare.api.api.MarketList;
+import io.bitsquare.api.api.WalletDetails;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Path("/api")
@@ -20,6 +20,8 @@ public class ApiResource {
     private final CurrencyList currencyList;
     private final MarketList marketList;
     private final BitsquareProxy bitsquareProxy;
+    // "0x7fffffff";
+    private static final String STRING_END_MAX_VALUE = "2147483647";
 
     public ApiResource(String template, String defaultName, BitsquareProxy bitsquareProxy) {
         this.template = template;
@@ -80,5 +82,43 @@ public class ApiResource {
     public WalletDetails walletDetail() {
         return new WalletDetails(bitsquareProxy.getWalletDetails());
     }
+
+    /**
+     * wallet_tx_list
+
+     Returns list of wallet transactions according to criteria
+
+     Param	Type	Required?	Default	Description
+     start	timestamp	no	0	start of period
+     end	timestamp	no	INT_MAX	end of period
+     limit	int	no	100	maximum records to return.
+     Example Return
+
+     {
+     "amount": 1.3453,
+     "type": "send",
+     "address": "14w4mZx4b6JjtEd9BZPnLCSXzbHjKH3Pn3",
+     "time": <timestamp>,
+     "confirmations": 5
+     // TBD
+     }
+     */
+    @GET
+    @Timed
+    @Path("/wallet_tx_list")
+    public WalletDetails walletTransactionList(@DefaultValue("0") @QueryParam("start") Integer start,
+                                               @DefaultValue(STRING_END_MAX_VALUE) @QueryParam("end") Integer end,
+                                               @DefaultValue("100") @QueryParam("start") Integer limit
+                                               ) {
+        return new WalletDetails(bitsquareProxy.getWalletDetails());
+    }
+
+ @GET
+    @Timed
+    @Path("/account_list")
+    public AccountList walletTransactionList() {
+        return bitsquareProxy.getAccountList();
+    }
+
 
 }

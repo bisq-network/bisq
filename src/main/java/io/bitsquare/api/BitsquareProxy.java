@@ -1,9 +1,10 @@
 package io.bitsquare.api;
 
 import com.google.inject.Inject;
-import com.sun.tools.javac.util.Bits;
+import io.bitsquare.api.api.*;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.user.User;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,8 +19,12 @@ public class BitsquareProxy {
     @Inject
     private WalletService walletService;
 
-    public BitsquareProxy(WalletService walletService) {
+    @Inject
+    private User user;
+
+    public BitsquareProxy(WalletService walletService, User user) {
         this.walletService = walletService;
+        this.user = user;
     }
 
     public CurrencyList getCurrencyList() {
@@ -45,4 +50,22 @@ public class BitsquareProxy {
     public long getWalletDetails() {
         return walletService.getAvailableBalance().getValue();
     }
+
+//    public WalletTransactions getWalletTransactions(long start, long end, long limit) {
+//        boolean includeDeadTransactions = false;
+//        Set<Transaction> transactions = walletService.getWallet().getTransactions(includeDeadTransactions);
+//        WalletTransactions walletTransactions = new WalletTransactions();
+//        List<io.bitsquare.api.Transaction> transactionList = walletTransactions.getTransactions();
+//
+//        for (Transaction t : transactions) {
+//            transactionList.add(new io.bitsquare.api.Transaction(t.getValue(walletService.getWallet().getTransactionsByTime())))
+//        }
+//    }
+
+    public AccountList getAccountList() {
+        AccountList accountList = new AccountList();
+        accountList.paymentAccounts = user.getPaymentAccounts();
+        return accountList;
+    }
+
 }
