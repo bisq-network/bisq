@@ -12,6 +12,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.network.NetworkOptionKeys;
@@ -155,7 +156,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.torDir = torDir;
         this.clock = clock;
         this.socks5ProxyProvider = socks5ProxyProvider;
-        
+
         optionalEncryptionService = Optional.ofNullable(encryptionService);
         optionalKeyRing = Optional.ofNullable(keyRing);
 
@@ -312,7 +313,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
 
         socks5ProxyProvider.setSocks5ProxyInternal(networkNode.getSocksProxy());
-        
+
         requestDataManager.requestPreliminaryData();
         keepAliveManager.start();
         p2pServiceListeners.stream().forEach(SetupListener::onTorNodeReady);
@@ -662,12 +663,24 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             // We only want to notify our sendMailboxMessageListener for the calls he is interested in.
                             if (message instanceof AddDataMessage &&
                                     ((AddDataMessage) message).protectedStorageEntry.equals(protectedMailboxStorageEntry)) {
-                                sendMailboxMessageListener.onStoredInMailbox();
+                                // We delay a bit to give more time for sufficient propagation in the P2P network.
+                                // This should help to avoid situations where a user closes the app too early and the msg
+                                // does not arrive.
+                                // We could use onBroadcastCompleted instead but it might take too long if one peer
+                                // is very badly connected.
+                                // TODO We could check for a certain threshold of nr. of incoming messages of the same msg 
+                                // to see how well it is propagated. BitcoinJ uses such an approach for tx propagation.
+                                UserThread.runAfter(() -> {
+                                    log.info("Broadcasted to first peer (with 3 sec. delayed):  Message = {}", Utilities.toTruncatedString(message));
+                                    sendMailboxMessageListener.onStoredInMailbox();
+                                }, 3);
                             }
                         }
 
                         @Override
                         public void onBroadcastCompleted(BroadcastMessage message, int numOfCompletedBroadcasts, int numOfFailedBroadcasts) {
+                            log.info("Broadcast completed: Sent to {} peers (failed: {}). Message = {}",
+                                    numOfCompletedBroadcasts, numOfFailedBroadcasts, Utilities.toTruncatedString(message));
                             if (numOfCompletedBroadcasts == 0)
                                 sendMailboxMessageListener.onFault("Broadcast completed without any successful broadcast");
                         }
