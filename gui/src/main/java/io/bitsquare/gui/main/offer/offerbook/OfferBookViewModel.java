@@ -433,7 +433,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             boolean currencyResult;
             final String currencyCode = offer.getCurrencyCode();
             if (showAllTradeCurrenciesProperty.get()) {
-                currencyResult = tradeCurrencyCodes.contains(currencyCode);
+                currencyResult = true;
             } else
                 currencyResult = currencyCode.equals(selectedTradeCurrency.getCode());
 
