@@ -1,8 +1,7 @@
-package io.bitsquare.api;
+package io.bitsquare.api.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import org.hibernate.validator.constraints.Length;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,17 +26,3 @@ public class CurrencyList {
     }
 }
 
-class Currency {
-    @JsonProperty
-    String symbol;
-    @JsonProperty
-    String name;
-    @JsonProperty
-    String type;
-
-    Currency(String symbol, String name, String type) {
-        this.symbol = symbol;
-        this.name = name;
-        this.type = type;
-    }
-}

@@ -19,6 +19,7 @@ package io.bitsquare.api.app;
 
 import com.google.inject.Singleton;
 import io.bitsquare.alert.AlertModule;
+import io.bitsquare.api.service.DropwizardApplication;
 import io.bitsquare.app.AppModule;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.arbitration.ArbitratorModule;
@@ -35,8 +36,6 @@ import io.bitsquare.trade.offer.OfferModule;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
