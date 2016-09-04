@@ -91,8 +91,7 @@ public class OfferBook {
     public void fillOfferBookListItems() {
         log.debug("fillOfferBookListItems");
 
-        offerBookListItems.clear();
-        offerBookListItems.addAll(offerBookService.getOffers().stream()
+        offerBookListItems.setAll(offerBookService.getOffers().stream()
                 .map(OfferBookListItem::new)
                 .collect(Collectors.toList()));
 

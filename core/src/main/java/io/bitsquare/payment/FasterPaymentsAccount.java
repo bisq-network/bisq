@@ -18,38 +18,35 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.locale.FiatCurrency;
 
-import javax.annotation.Nullable;
-
-public final class CashDepositAccount extends CountryBasedPaymentAccount implements SameCountryRestrictedBankAccount {
+public final class FasterPaymentsAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    public CashDepositAccount() {
-        super(PaymentMethod.CASH_DEPOSIT);
+    public FasterPaymentsAccount() {
+        super(PaymentMethod.FASTER_PAYMENTS);
+        setSingleTradeCurrency(new FiatCurrency("GBP"));
     }
 
     @Override
     protected PaymentAccountContractData setContractData() {
-        return new CashDepositAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+        return new FasterPaymentsAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
-    @Override
-    public String getBankId() {
-        return ((CashDepositAccountContractData) contractData).getBankId();
+    public void setSortCode(String value) {
+        ((FasterPaymentsAccountContractData) contractData).setSortCode(value);
     }
 
-    @Override
-    public String getCountryCode() {
-        return getCountry() != null ? getCountry().code : "";
+    public String getSortCode() {
+        return ((FasterPaymentsAccountContractData) contractData).getSortCode();
     }
 
-    @Nullable
-    public String getRequirements() {
-        return ((CashDepositAccountContractData) contractData).getRequirements();
+    public void setAccountNr(String value) {
+        ((FasterPaymentsAccountContractData) contractData).setAccountNr(value);
     }
 
-    public void setRequirements(String requirements) {
-        ((CashDepositAccountContractData) contractData).setRequirements(requirements);
+    public String getAccountNr() {
+        return ((FasterPaymentsAccountContractData) contractData).getAccountNr();
     }
 }

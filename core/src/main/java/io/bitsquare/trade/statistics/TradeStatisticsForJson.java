@@ -54,7 +54,7 @@ public final class TradeStatisticsForJson {
         this.marketPriceMargin = tradeStatistics.marketPriceMargin;
         this.offerAmount = tradeStatistics.offerAmount;
         this.offerMinAmount = tradeStatistics.offerMinAmount;
-        this.offerId = tradeStatistics.offerId;
+        this.offerId = tradeStatistics.getOfferId();
         this.tradePrice = tradeStatistics.tradePrice;
         this.tradeAmount = tradeStatistics.tradeAmount;
         this.tradeDate = tradeStatistics.tradeDate;

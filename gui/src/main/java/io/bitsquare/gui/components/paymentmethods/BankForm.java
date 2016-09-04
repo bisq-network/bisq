@@ -50,7 +50,6 @@ abstract class BankForm extends PaymentMethodForm {
 
     protected final BankAccountContractData bankAccountContractData;
     private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
-    private TextField currencyTextField;
     private Label holderIdLabel;
     protected InputTextField holderNameInputTextField;
     private Label bankIdLabel;
@@ -66,6 +65,8 @@ abstract class BankForm extends PaymentMethodForm {
     private boolean validatorsApplied;
     private boolean useHolderID;
     private Runnable closeHandler;
+    private ComboBox<TradeCurrency> currencyComboBox;
+
     static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         BankAccountContractData data = (BankAccountContractData) paymentAccountContractData;
         String countryCode = ((BankAccountContractData) paymentAccountContractData).getCountryCode();
@@ -231,8 +232,6 @@ abstract class BankForm extends PaymentMethodForm {
         gridRowFrom = gridRow + 1;
 
         Tuple3<Label, ComboBox, ComboBox> tuple3 = addLabelComboBoxComboBox(gridPane, ++gridRow, "Country:");
-        currencyTextField = addLabelTextField(gridPane, ++gridRow, "Currency:").second;
-        currencyTextField.setMouseTransparent(true);
 
         ComboBox<Region> regionComboBox = tuple3.second;
         regionComboBox.setPromptText("Select region");
@@ -278,7 +277,8 @@ abstract class BankForm extends PaymentMethodForm {
                     String countryCode = selectedItem.code;
                     TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode);
                     paymentAccount.setSingleTradeCurrency(currency);
-                    currencyTextField.setText(currency.getNameAndCode());
+                    currencyComboBox.setDisable(false);
+                    currencyComboBox.getSelectionModel().select(currency);
 
                     bankIdLabel.setText(BankUtil.getBankIdLabel(countryCode));
                     branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
@@ -320,7 +320,7 @@ abstract class BankForm extends PaymentMethodForm {
                         holderNameInputTextField.minWidthProperty().unbind();
                         holderNameInputTextField.setMinWidth(300);
                     } else {
-                        holderNameInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
+                        holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
                     }
 
                     if (useHolderID) {
@@ -381,6 +381,40 @@ abstract class BankForm extends PaymentMethodForm {
                 countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesForRegion(selectedItem)));
             }
         });
+
+        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, "Currency:").second;
+        currencyComboBox.setPromptText("Select currency");
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
+        currencyComboBox.setOnAction(e -> {
+            TradeCurrency selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
+            FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code);
+            if (!defaultCurrency.equals(selectedItem)) {
+                new Popup<>().warning("Are you sure you want to choose a currency other than the countries default currency?")
+                        .actionButtonText("Yes")
+                        .onAction(() -> {
+                            paymentAccount.setSingleTradeCurrency(selectedItem);
+                            autoFillNameTextField();
+                        })
+                        .closeButtonText("No, restore default currency")
+                        .onClose(() -> currencyComboBox.getSelectionModel().select(defaultCurrency))
+                        .show();
+            } else {
+                paymentAccount.setSingleTradeCurrency(selectedItem);
+                autoFillNameTextField();
+            }
+        });
+        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+            @Override
+            public String toString(TradeCurrency currency) {
+                return currency.getNameAndCode();
+            }
+
+            @Override
+            public TradeCurrency fromString(String string) {
+                return null;
+            }
+        });
+        currencyComboBox.setDisable(true);
 
         addAcceptedBanksForAddAccount();
 
@@ -454,7 +488,7 @@ abstract class BankForm extends PaymentMethodForm {
             bankAccountContractData.setHolderName(newValue);
             updateFromInputs();
         });
-        holderNameInputTextField.minWidthProperty().bind(currencyTextField.widthProperty());
+        holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
         holderNameInputTextField.setValidator(inputValidator);
 
         useHolderID = true;

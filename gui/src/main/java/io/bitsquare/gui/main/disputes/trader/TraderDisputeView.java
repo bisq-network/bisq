@@ -39,8 +39,10 @@ import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Connection;
+import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -162,6 +164,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         TableColumn<Dispute, Dispute> tradeIdColumn = getTradeIdColumn();
         tableView.getColumns().add(tradeIdColumn);
 
+        TableColumn<Dispute, Dispute> buyerOnionAddressColumn = getBuyerOnionAddressColumn();
+        tableView.getColumns().add(buyerOnionAddressColumn);
+
+        TableColumn<Dispute, Dispute> sellerOnionAddressColumn = getSellerOnionAddressColumn();
+        tableView.getColumns().add(sellerOnionAddressColumn);
+
+
         TableColumn<Dispute, Dispute> marketColumn = getMarketColumn();
         tableView.getColumns().add(marketColumn);
 
@@ -173,6 +182,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
         tradeIdColumn.setComparator((o1, o2) -> o1.getTradeId().compareTo(o2.getTradeId()));
         dateColumn.setComparator((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
+        buyerOnionAddressColumn.setComparator((o1, o2) -> getBuyerOnionAddressColumnLabel(o1).compareTo(getBuyerOnionAddressColumnLabel(o2)));
+        sellerOnionAddressColumn.setComparator((o1, o2) -> getSellerOnionAddressColumnLabel(o1).compareTo(getSellerOnionAddressColumnLabel(o2)));
         marketColumn.setComparator((o1, o2) -> formatter.getCurrencyPair(o1.getContract().offer.getCurrencyCode()).compareTo(o2.getContract().offer.getCurrencyCode()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
@@ -787,8 +798,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getSelectColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Select") {
             {
-                setMinWidth(110);
-                setMaxWidth(110);
+                setMinWidth(80);
+                setMaxWidth(80);
                 setSortable(false);
             }
         };
@@ -828,10 +839,74 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         return column;
     }
 
+    private TableColumn<Dispute, Dispute> getContractColumn() {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Details") {
+            {
+                setMinWidth(80);
+                setSortable(false);
+            }
+        };
+        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+
+                    @Override
+                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                        return new TableCell<Dispute, Dispute>() {
+                            final Button button = new Button("Details");
+
+                            {
+
+                            }
+
+                            @Override
+                            public void updateItem(final Dispute item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    button.setOnAction(e -> onOpenContract(item));
+                                    setGraphic(button);
+                                } else {
+                                    setGraphic(null);
+                                    button.setOnAction(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<Dispute, Dispute> getDateColumn() {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Date") {
+            {
+                setMinWidth(150);
+            }
+        };
+        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                    @Override
+                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                        return new TableCell<Dispute, Dispute>() {
+                            @Override
+                            public void updateItem(final Dispute item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(formatter.formatDateTime(item.getOpeningDate()));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
     private TableColumn<Dispute, Dispute> getTradeIdColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Trade ID") {
             {
-                setMinWidth(130);
+                setMinWidth(110);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -867,6 +942,85 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     }
                 });
         return column;
+    }
+
+    private TableColumn<Dispute, Dispute> getBuyerOnionAddressColumn() {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("BTC buyer address") {
+            {
+                setMinWidth(170);
+            }
+        };
+        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                    @Override
+                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                        return new TableCell<Dispute, Dispute>() {
+                            @Override
+                            public void updateItem(final Dispute item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(getBuyerOnionAddressColumnLabel(item));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+    private TableColumn<Dispute, Dispute> getSellerOnionAddressColumn() {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("BTC seller address") {
+            {
+                setMinWidth(170);
+            }
+        };
+        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                    @Override
+                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
+                        return new TableCell<Dispute, Dispute>() {
+                            @Override
+                            public void updateItem(final Dispute item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty)
+                                    setText(getSellerOnionAddressColumnLabel(item));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
+
+    private String getBuyerOnionAddressColumnLabel(Dispute item) {
+        Contract contract = item.getContract();
+        if (contract != null) {
+            NodeAddress buyerNodeAddress = contract.getBuyerNodeAddress();
+            if (buyerNodeAddress != null)
+                return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + disputeManager.getNrOfDisputes(true, contract) + ")";
+            else
+                return "N/A";
+        } else {
+            return "N/A";
+        }
+    }
+
+    private String getSellerOnionAddressColumnLabel(Dispute item) {
+        Contract contract = item.getContract();
+        if (contract != null) {
+            NodeAddress sellerNodeAddress = contract.getSellerNodeAddress();
+            if (sellerNodeAddress != null)
+                return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + disputeManager.getNrOfDisputes(false, contract) + ")";
+            else
+                return "N/A";
+        } else {
+            return "N/A";
+        }
     }
 
     private TableColumn<Dispute, Dispute> getMarketColumn() {
@@ -917,70 +1071,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                         setText(item.isDisputeOpenerIsBuyer() ? "BTC buyer/Taker" : "BTC seller/Taker");
                                 } else {
                                     setText("");
-                                }
-                            }
-                        };
-                    }
-                });
-        return column;
-    }
-
-    private TableColumn<Dispute, Dispute> getDateColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Date") {
-            {
-                setMinWidth(130);
-            }
-        };
-        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
-        column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
-                    @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
-                            @Override
-                            public void updateItem(final Dispute item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty)
-                                    setText(formatter.formatDateTime(item.getOpeningDate()));
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        return column;
-    }
-
-    private TableColumn<Dispute, Dispute> getContractColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Contract") {
-            {
-                setMinWidth(80);
-                setSortable(false);
-            }
-        };
-        column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
-        column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
-
-                    @Override
-                    public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
-                            final Button button = new Button("Open contract");
-
-                            {
-
-                            }
-
-                            @Override
-                            public void updateItem(final Dispute item, boolean empty) {
-                                super.updateItem(item, empty);
-
-                                if (item != null && !empty) {
-                                    button.setOnAction(e -> onOpenContract(item));
-                                    setGraphic(button);
-                                } else {
-                                    setGraphic(null);
-                                    button.setOnAction(null);
                                 }
                             }
                         };

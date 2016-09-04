@@ -158,6 +158,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("1CR", "1CRedit"));
         result.add(new CryptoCurrency("YACC", "YACCoin"));
         result.add(new CryptoCurrency("AIB", "Advanced Internet Blocks"));
+        result.add(new CryptoCurrency("OPAL", "Opal"));
+        result.add(new CryptoCurrency("AMP", "Synereo", true));
         
         result.sort(TradeCurrency::compareTo);
         return result;

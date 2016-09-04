@@ -97,6 +97,18 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         return new ExchangeRate(getTradePrice()).coinToFiat(getTradeAmount());
     }
 
+    public String getOfferId() {
+        // We got some issues that users created offers with a dev version where we added the version nr after 
+        // the id, but we reverted that as it caused issues. To avoid ongoing issues with those dangling offers
+        // we add that check.
+        // TODO remove after version 0.4.9.7 (if no offers with that invalid id are online anymore)
+        String[] tokens = offerId.split("_");
+        if (tokens.length > 1)
+            return tokens[0];
+        else
+            return offerId;
+    }
+
     // We don't include the pubKeyRing as both traders might publish it if the offerer uses an old 
     // version and update later (taker publishes first, then later offerer)
     // We also don't include the trade date as that is set locally and different for offerer and taker
@@ -123,7 +135,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
 
         if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
             return false;
-        if (offerId != null ? !offerId.equals(that.offerId) : that.offerId != null) return false;
+        if (getOfferId() != null ? !getOfferId().equals(that.getOfferId()) : that.getOfferId() != null) return false;
         return !(depositTxId != null ? !depositTxId.equals(that.depositTxId) : that.depositTxId != null);
     }
 
@@ -142,7 +154,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (int) (offerAmount ^ (offerAmount >>> 32));
         result = 31 * result + (int) (offerMinAmount ^ (offerMinAmount >>> 32));
-        result = 31 * result + (offerId != null ? offerId.hashCode() : 0);
+        result = 31 * result + (getOfferId() != null ? getOfferId().hashCode() : 0);
         result = 31 * result + (depositTxId != null ? depositTxId.hashCode() : 0);
         return result;
     }
@@ -161,7 +173,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 ", marketPriceMargin=" + marketPriceMargin +
                 ", offerAmount=" + offerAmount +
                 ", offerMinAmount=" + offerMinAmount +
-                ", offerId='" + offerId + '\'' +
+                ", offerId='" + getOfferId() + '\'' +
                 ", depositTxId='" + depositTxId + '\'' +
                 ", pubKeyRing=" + pubKeyRing +
                 ", hashCode=" + hashCode() +

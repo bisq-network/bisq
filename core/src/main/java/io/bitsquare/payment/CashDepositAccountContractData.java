@@ -38,7 +38,8 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
     protected String branchId;
     protected String accountNr;
     protected String accountType;
-
+    @Nullable
+    protected String requirements;
     @Nullable
     protected String holderTaxId;
 
@@ -59,6 +60,7 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
         String accountNr = BankUtil.isAccountNrRequired(countryCode) ? BankUtil.getAccountNrLabel(countryCode) + " " + this.accountNr + "\n" : "";
         String accountType = BankUtil.isAccountTypeRequired(countryCode) ? BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
         String holderIdString = BankUtil.isHolderIdRequired(countryCode) ? (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
+        String requirementsString = requirements != null && !requirements.isEmpty() ? ("Extra requirements: " + requirements + "\n") : "";
 
         return "Holder name: " + holderName + "\n" +
                 "Holder email: " + holderEmail + "\n" +
@@ -68,6 +70,7 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
                 accountNr +
                 accountType +
                 holderIdString +
+                requirementsString +
                 "Country of bank: " + CountryUtil.getNameAndCode(getCountryCode());
     }
 
@@ -145,4 +148,14 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
     public String getAccountType() {
         return accountType;
     }
+
+    @Nullable
+    public String getRequirements() {
+        return requirements;
+    }
+
+    public void setRequirements(String requirements) {
+        this.requirements = requirements;
+    }
+
 }

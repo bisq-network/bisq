@@ -33,8 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
-import static io.bitsquare.gui.util.FormBuilder.addLabelTextField;
+import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class ClearXchangeForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(ClearXchangeForm.class);
@@ -44,8 +43,8 @@ public class ClearXchangeForm extends PaymentMethodForm {
     private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextField(gridPane, ++gridRow, "Account holder name:", ((ClearXchangeAccountContractData) paymentAccountContractData).getHolderName());
-        addLabelTextField(gridPane, ++gridRow, "Email or mobile nr.:", ((ClearXchangeAccountContractData) paymentAccountContractData).getEmailOrMobileNr());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", ((ClearXchangeAccountContractData) paymentAccountContractData).getHolderName());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Email or mobile nr.:", ((ClearXchangeAccountContractData) paymentAccountContractData).getEmailOrMobileNr());
         return gridRow;
     }
 

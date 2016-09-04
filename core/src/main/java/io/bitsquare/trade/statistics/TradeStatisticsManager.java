@@ -95,7 +95,7 @@ public class TradeStatisticsManager {
 
     public void add(TradeStatistics tradeStatistics) {
         if (!tradeStatisticsSet.contains(tradeStatistics)) {
-            boolean itemAlreadyAdded = tradeStatisticsSet.stream().filter(e -> (e.offerId.equals(tradeStatistics.offerId))).findAny().isPresent();
+            boolean itemAlreadyAdded = tradeStatisticsSet.stream().filter(e -> (e.getOfferId().equals(tradeStatistics.getOfferId()))).findAny().isPresent();
             if (!itemAlreadyAdded) {
                 tradeStatisticsSet.add(tradeStatistics);
                 observableTradeStatisticsSet.add(tradeStatistics);

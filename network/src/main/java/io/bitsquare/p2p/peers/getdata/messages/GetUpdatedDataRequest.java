@@ -47,9 +47,9 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
     @Override
     public String toString() {
         return "GetUpdatedDataRequest{" +
-                "messageVersion=" + messageVersion +
-                ", senderNodeAddress=" + senderNodeAddress +
+                "senderNodeAddress=" + senderNodeAddress +
                 ", nonce=" + nonce +
+                ", messageVersion=" + messageVersion +
                 '}';
     }
 }

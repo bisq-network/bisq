@@ -307,6 +307,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new PerfectMoneyForm(paymentAccount, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_ID:
                 return new SepaForm(paymentAccount, ibanValidator, bicValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.FASTER_PAYMENTS_ID:
+                return new FasterPaymentsForm(paymentAccount, inputValidator, root, gridRow, formatter);
             case PaymentMethod.NATIONAL_BANK_ID:
                 return new NationalBankForm(paymentAccount, inputValidator, root, gridRow, formatter, () -> onCancelNewAccount());
             case PaymentMethod.SAME_BANK_ID:

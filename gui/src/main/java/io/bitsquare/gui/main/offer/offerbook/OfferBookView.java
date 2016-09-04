@@ -344,10 +344,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     "You need to setup a national currency or altcoin account before you can create an offer.\n" +
                             "Do you want to setup an account?", FiatAccountsView.class, "\"Account\"");
         } else if (!model.hasPaymentAccountForCurrency()) {
-            openPopupForMissingAccountSetup("No matching payment account",
-                    "You don't have a payment account for the currency required for that offer.\n" +
-                            "You need to setup a payment account for that currency to be able to take this offer.\n" +
-                            "Do you want to do this now?", FiatAccountsView.class, "\"Account\"");
+            new Popup().headLine("No payment account for selected currency")
+                    .instruction("You don't have a payment account for the selected currency.\n" +
+                            "Do you want to create an offer with one of your existing payment accounts?")
+                    .actionButtonText("Yes, create offer")
+                    .onAction(() -> {
+                        createOfferButton.setDisable(true);
+                        offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
+                    })
+                    .closeButtonText("Set up a new payment account")
+                    .onClose(() -> {
+                        navigation.setReturnPath(navigation.getCurrentPath());
+                        navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
+                    })
+                    .show();
         } else if (!model.hasAcceptedArbitrators()) {
             openPopupForMissingAccountSetup("You don't have an arbitrator selected.",
                     "You need to setup at least one arbitrator to be able to trade.\n" +

@@ -36,7 +36,7 @@ cd bitsquare
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
 echo "Copy the jdkfix jar file"
-cp bitsquare/jdkfix/target/jdkfix-0.4.9.5.jar $JAVA_HOME/jre/lib/ext/jdkfix-0.4.9.5.jar
+cp bitsquare/jdkfix/target/jdkfix-0.4.9.6.jar $JAVA_HOME/jre/lib/ext/jdkfix-0.4.9.6.jar
 
 echo "Add BountyCastle.jar"
 cd ~

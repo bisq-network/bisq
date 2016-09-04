@@ -48,9 +48,9 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
     @Override
     public String toString() {
         return "PreliminaryGetDataRequest{" +
-                "messageVersion=" + messageVersion +
-                ", nonce=" + nonce +
+                "nonce=" + nonce +
                 ", supportedCapabilities=" + supportedCapabilities +
+                ", messageVersion=" + messageVersion +
                 '}';
     }
 }
