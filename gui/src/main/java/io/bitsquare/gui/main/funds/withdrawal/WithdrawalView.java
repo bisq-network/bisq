@@ -22,9 +22,11 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
@@ -208,33 +210,56 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 // We need to use the max. amount (amountOfSelectedItems) as the senderAmount might be less then
                 // we have available and then the fee calculation would return 0
                 // TODO Get a proper fee calculation from BitcoinJ directly
-                Coin requiredFee = walletService.getRequiredFeeForMultipleAddresses(fromAddresses,
-                        withdrawToTextField.getText(), amountOfSelectedItems);
-                Coin receiverAmount = senderAmountAsCoinProperty.get().subtract(requiredFee);
-                if (receiverAmount.isPositive()) {
-                    if (DevFlags.DEV_MODE) {
-                        doWithdraw(receiverAmount, callback);
-                    } else {
-                        new Popup().headLine("Confirm withdrawal request")
-                                .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmountAsCoinProperty.get()) + "\n" +
-                                        "From address: " + withdrawFromTextField.getText() + "\n" +
-                                        "To receiving address: " + withdrawToTextField.getText() + ".\n" +
-                                        "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n\n" +
-                                        "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
-                                        "Are you sure you want to withdraw that amount?")
-                                .actionButtonText("Yes")
-                                .onAction(() -> doWithdraw(receiverAmount, callback))
-                                .closeButtonText("Cancel")
-                                .show();
-
+                Coin requiredFee = null;
+                try {
+                    requiredFee = walletService.getRequiredFeeForMultipleAddresses(fromAddresses,
+                            withdrawToTextField.getText(), amountOfSelectedItems);
+                } catch (Throwable t) {
+                    try {
+                        // TODO Using amountOfSelectedItems caused problems if it exceeds the max size (in case of arbitrator)
+                        log.warn("Error at getRequiredFeeForMultipleAddresses: " + t.toString() + "\n" +
+                                "We use the default fee instead to estimate tx size and then re-calculate fee.");
+                        int tempTxSize = walletService.getTransactionSize(fromAddresses,
+                                withdrawToTextField.getText(), senderAmountAsCoinProperty.get().subtract(FeePolicy.getNonTradeFeePerKb()));
+                        requiredFee = Coin.valueOf(FeePolicy.getNonTradeFeePerKb().value * tempTxSize / 1000);
+                    } catch (Throwable t2) {
+                        t2.printStackTrace();
+                        log.error(t2.toString());
+                        new Popup<>().error("Error at creating transaction: " + t2.toString()).show();
                     }
-                } else {
-                    new Popup().warning("The amount you would like to send is too low as the bitcoin transaction fee will be deducted.\n" +
-                            "Please use a higher amount.").show();
+                }
+                if (requiredFee != null) {
+                    Coin receiverAmount = senderAmountAsCoinProperty.get().subtract(requiredFee);
+                    int txSize = walletService.getTransactionSize(fromAddresses,
+                            withdrawToTextField.getText(), receiverAmount);
+                    log.info("Fee for tx with size {}: {} BTC", txSize, requiredFee.toPlainString());
+
+                    if (receiverAmount.isPositive()) {
+                        if (DevFlags.DEV_MODE) {
+                            doWithdraw(receiverAmount, callback);
+                        } else {
+                            double satPerByte = (double) requiredFee.value / (double) txSize;
+                            new Popup().headLine("Confirm withdrawal request")
+                                    .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmountAsCoinProperty.get()) + "\n" +
+                                            "From address: " + withdrawFromTextField.getText() + "\n" +
+                                            "To receiving address: " + withdrawToTextField.getText() + ".\n" +
+                                            "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + " (" + MathUtils.roundDouble(satPerByte, 2) + " Satoshis/byte)\n" +
+                                            "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
+                                            "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
+                                            "Are you sure you want to withdraw that amount?")
+                                    .actionButtonText("Yes")
+                                    .onAction(() -> doWithdraw(receiverAmount, callback))
+                                    .closeButtonText("Cancel")
+                                    .show();
+                        }
+                    } else {
+                        new Popup().warning("The amount you would like to send is too low as the bitcoin transaction fee will be deducted.\n" +
+                                "Please use a higher amount.").show();
+                    }
                 }
             } catch (Throwable e) {
                 e.printStackTrace();
-                log.error(e.getMessage());
+                log.error(e.toString());
                 new Popup().warning(e.getMessage()).show();
             }
         }
