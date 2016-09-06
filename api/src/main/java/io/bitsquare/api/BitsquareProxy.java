@@ -2,8 +2,10 @@ package io.bitsquare.api;
 
 import com.google.inject.Inject;
 import io.bitsquare.api.api.*;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
 import java.util.Collections;
@@ -18,12 +20,14 @@ import java.util.stream.Collectors;
 public class BitsquareProxy {
     @Inject
     private WalletService walletService;
-
     @Inject
     private User user;
+    @Inject
+    private TradeManager tradeManager;
 
-    public BitsquareProxy(WalletService walletService, User user) {
+    public BitsquareProxy(WalletService walletService, TradeManager tradeManager, User user) {
         this.walletService = walletService;
+        this.tradeManager = tradeManager;
         this.user = user;
     }
 
@@ -64,8 +68,13 @@ public class BitsquareProxy {
 
     public AccountList getAccountList() {
         AccountList accountList = new AccountList();
-        accountList.paymentAccounts = user.getPaymentAccounts();
+        accountList.accounts = user.getPaymentAccounts().stream()
+                .map(paymentAccount -> new Account(paymentAccount)).collect(Collectors.toSet());
         return accountList;
+    }
+
+    public void offerMake() {
+//        tradeManager.create
     }
 
 }
