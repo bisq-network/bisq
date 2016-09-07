@@ -113,10 +113,10 @@ public class ApiResource {
         return new WalletDetails(bitsquareProxy.getWalletDetails());
     }
 
- @GET
+    @GET
     @Timed
     @Path("/account_list")
-    public AccountList walletTransactionList() {
+    public AccountList accountList() {
         return bitsquareProxy.getAccountList();
     }
 

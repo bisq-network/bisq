@@ -2,6 +2,7 @@ package io.bitsquare.api.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import io.bitsquare.payment.*;
 
 import java.util.List;
@@ -24,7 +25,7 @@ import java.util.List;
 public class ContractData {
     PaymentAccountContractData contractData;
     @JsonProperty
-    String payment_method_name;
+    String payment_method_id;
     @JsonProperty
     String contract_id;
     @JsonProperty
@@ -48,7 +49,7 @@ public class ContractData {
 
     public ContractData(PaymentAccount bitsquarePaymentAccount) {
         this.contractData = bitsquarePaymentAccount.getContractData();
-        this.payment_method_name = contractData.getPaymentMethodName();
+        this.payment_method_id = contractData.getPaymentMethodName();
         this.contract_id = contractData.getId();
         this.max_trade_period = contractData.getMaxTradePeriod();
 
