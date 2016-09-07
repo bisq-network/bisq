@@ -74,7 +74,7 @@ public class BitsquareProxy {
     }
 
     public void offerMake() {
-//        tradeManager.create
+//        tradeManager.
     }
 
 }

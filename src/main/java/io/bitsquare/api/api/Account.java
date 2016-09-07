@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * "trade_currencies": ['EUR'],
  * "selected_trade_currency": 'EUR',
  * "contract_data": {
- * "payment_method_name": "SEPA",
+ * "payment_method_id": "SEPA",
  * "contract_id": "c4e4645a-18e6-45be-8853-c7ebac68f0a4",
  * "max_trade_period": 691200000,
  * "country_code": "BE",
@@ -70,14 +70,12 @@ public class Account {
     @JsonProperty
     long created;
     @JsonProperty
-    AccountPaymentMethod paymentMethod;
+    AccountPaymentMethod payment_method;
     @JsonProperty
     String account_name;
     @JsonProperty
     List<String> trade_currencies;
-    @JsonProperty
-    String selected_trade_currency;
-    @JsonProperty
+    @JsonProperty("payment_method_details")
     ContractData contract_data;
     @JsonProperty
     Country country;
@@ -100,14 +98,11 @@ public class Account {
     public Account(PaymentAccount bitsquarePaymentAccount) {
         this.account_id = bitsquarePaymentAccount.getId();
         this.created = bitsquarePaymentAccount.getCreationDate().toInstant().toEpochMilli();
-        this.paymentMethod = new AccountPaymentMethod(bitsquarePaymentAccount.getPaymentMethod());
+        this.payment_method = new AccountPaymentMethod(bitsquarePaymentAccount.getPaymentMethod());
         this.account_name = bitsquarePaymentAccount.getAccountName();
         if (!CollectionUtils.isEmpty(bitsquarePaymentAccount.getTradeCurrencies())) {
             this.trade_currencies = bitsquarePaymentAccount.getTradeCurrencies().stream()
                     .map(tradeCurrency -> tradeCurrency.getCode()).collect(Collectors.toList());
-        }
-        if(bitsquarePaymentAccount.getSelectedTradeCurrency() != null) {
-            this.selected_trade_currency = bitsquarePaymentAccount.getSelectedTradeCurrency().getCode();
         }
         this.contract_data = new ContractData(bitsquarePaymentAccount);
     }
