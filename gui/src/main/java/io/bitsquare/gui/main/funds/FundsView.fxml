@@ -28,6 +28,5 @@
     <Tab fx:id="reservedTab" text="Reserved funds" closable="false"/>
     <Tab fx:id="lockedTab" text="Locked funds" closable="false"/>
     <Tab fx:id="transactionsTab" text="Transactions" closable="false"/>
-    <Tab fx:id="multiSigWalletTab" text="Multisig Wallet" closable="false"/>
 
 </TabPane>
