@@ -278,6 +278,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long low = 0;
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
+        long numTrades = set.size();
 
         for (TradeStatistics item : set) {
             long tradePriceAsLong = item.tradePrice;
@@ -310,10 +311,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
         if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
             return new CandleData(tick, getInvertedPrice(open), getInvertedPrice(close), getInvertedPrice(high),
                     getInvertedPrice(low), getInvertedPrice(averagePrice), accumulatedAmount, accumulatedVolume,
-                    isBullish, dateString);
+                    numTrades, isBullish, dateString);
         } else {
             return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume,
-                    isBullish, dateString);
+                    numTrades, isBullish, dateString);
         }
     }
 
