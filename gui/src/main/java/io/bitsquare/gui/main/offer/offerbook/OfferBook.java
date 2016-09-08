@@ -91,12 +91,20 @@ public class OfferBook {
     public void fillOfferBookListItems() {
         log.debug("fillOfferBookListItems");
 
-        offerBookListItems.setAll(offerBookService.getOffers().stream()
-                .map(OfferBookListItem::new)
-                .collect(Collectors.toList()));
+        try {
+            // setAll causes sometimes an UnsupportedOperationException
+            // Investigate why....
+            offerBookListItems.clear();
+            offerBookListItems.addAll(offerBookService.getOffers().stream()
+                    .map(OfferBookListItem::new)
+                    .collect(Collectors.toList()));
 
-        Log.logIfStressTests("Offer filled: Nr. of offers = " + offerBookListItems.size());
+            Log.logIfStressTests("Offer filled: Nr. of offers = " + offerBookListItems.size());
 
-        log.debug("offerBookListItems " + offerBookListItems.size());
+            log.debug("offerBookListItems " + offerBookListItems.size());
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error("Error at fillOfferBookListItems: " + t.toString());
+        }
     }
 }
