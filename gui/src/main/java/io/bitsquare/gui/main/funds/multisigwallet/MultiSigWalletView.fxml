@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
   ~ This file is part of Bitsquare.
   ~
@@ -16,18 +17,7 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.AnchorPane?>
-<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.funds.FundsView"
-         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-         AnchorPane.topAnchor="0.0"
-         xmlns:fx="http://javafx.com/fxml">
-
-    <Tab fx:id="depositTab" text="Deposit funds" closable="false"/>
-    <Tab fx:id="withdrawalTab" text="Available for withdrawal" closable="false"/>
-    <Tab fx:id="reservedTab" text="Reserved funds" closable="false"/>
-    <Tab fx:id="lockedTab" text="Locked funds" closable="false"/>
-    <Tab fx:id="transactionsTab" text="Transactions" closable="false"/>
-    <Tab fx:id="multiSigWalletTab" text="Multisig Wallet" closable="false"/>
-
-</TabPane>
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.funds.multisigwallet.MultiSigWalletView"
+            xmlns:fx="http://javafx.com/fxml">
+</AnchorPane>

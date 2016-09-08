@@ -55,6 +55,7 @@ public class VolumeBar extends Group {
     public void update(double height, double candleWidth, CandleData candleData) {
         bar.resizeRelocate(-candleWidth / 2, 0, candleWidth, height);
         tooltip.setText("Volume: " + volumeStringConverter.toString(candleData.accumulatedAmount) + "\n" +
+                "Nr. of trades: " + candleData.numTrades + "\n" +
                 "Date: " + candleData.date);
     }
 

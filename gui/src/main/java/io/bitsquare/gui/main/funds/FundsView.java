@@ -23,6 +23,7 @@ import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.funds.deposit.DepositView;
 import io.bitsquare.gui.main.funds.locked.LockedView;
+import io.bitsquare.gui.main.funds.multisigwallet.MultiSigWalletView;
 import io.bitsquare.gui.main.funds.reserved.ReservedView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
@@ -37,7 +38,7 @@ import javax.inject.Inject;
 public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
-    Tab depositTab, withdrawalTab, reservedTab, lockedTab, transactionsTab;
+    Tab depositTab, withdrawalTab, reservedTab, lockedTab, transactionsTab, multiSigWalletTab;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -70,6 +71,9 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
                 navigation.navigateTo(MainView.class, FundsView.class, LockedView.class);
             else if (newValue == transactionsTab)
                 navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
+            else if (newValue == multiSigWalletTab) {
+                navigation.navigateTo(MainView.class, FundsView.class, MultiSigWalletView.class);
+            }
         };
     }
 
@@ -88,6 +92,8 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
             navigation.navigateTo(MainView.class, FundsView.class, LockedView.class);
         else if (root.getSelectionModel().getSelectedItem() == transactionsTab)
             navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
+        else if (root.getSelectionModel().getSelectedItem() == multiSigWalletTab)
+            navigation.navigateTo(MainView.class, FundsView.class, MultiSigWalletView.class);
     }
 
     @Override
@@ -114,6 +120,8 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
             currentTab = lockedTab;
         else if (view instanceof TransactionsView)
             currentTab = transactionsTab;
+        else if (view instanceof MultiSigWalletView)
+            currentTab = multiSigWalletTab;
 
         currentTab.setContent(view.getRoot());
         root.getSelectionModel().select(currentTab);
