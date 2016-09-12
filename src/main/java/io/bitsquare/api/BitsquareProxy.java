@@ -2,11 +2,12 @@ package io.bitsquare.api;
 
 import com.google.inject.Inject;
 import io.bitsquare.api.api.*;
-import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Wallet;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 
 /**
  * This class is a proxy for all bitsquare features the api will use.
- *
+ * <p>
  * No methods/representations used in the interface layers (REST/Socket/...) should be used in this class.
  */
 public class BitsquareProxy {
@@ -51,18 +52,24 @@ public class BitsquareProxy {
         return marketList;
     }
 
-    public long getWalletDetails() {
-        return walletService.getAvailableBalance().getValue();
+    public WalletDetails getWalletDetails() {
+        Wallet wallet = walletService.getWallet();
+        if (wallet == null) {
+            return null;
+        }
+        Coin availableBalance = wallet.getBalance(Wallet.BalanceType.AVAILABLE);
+        Coin reservedBalance = wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
+        return new WalletDetails(availableBalance.longValue(), reservedBalance.longValue());
     }
 
 //    public WalletTransactions getWalletTransactions(long start, long end, long limit) {
 //        boolean includeDeadTransactions = false;
-//        Set<Transaction> transactions = walletService.getWallet().getTransactions(includeDeadTransactions);
+//        Set<org.bitcoinj.core.Transaction> transactions = walletService.getWallet().getTransactions(includeDeadTransactions);
 //        WalletTransactions walletTransactions = new WalletTransactions();
-//        List<io.bitsquare.api.Transaction> transactionList = walletTransactions.getTransactions();
+//        List<io.bitsquare.api.api.WalletTransaction> transactionList = walletTransactions.getTransactions();
 //
 //        for (Transaction t : transactions) {
-//            transactionList.add(new io.bitsquare.api.Transaction(t.getValue(walletService.getWallet().getTransactionsByTime())))
+//            transactionList.add(new io.bitsquare.api.api.WalletTransaction(t.getValue(walletService.getWallet().getTransactionsByTime())))
 //        }
 //    }
 
@@ -74,7 +81,7 @@ public class BitsquareProxy {
     }
 
     public void offerMake() {
-//        tradeManager.
-    }
+//        offerbookservice. public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
 
+    }
 }

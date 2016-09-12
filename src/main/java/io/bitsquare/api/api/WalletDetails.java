@@ -6,7 +6,10 @@ import lombok.Setter;
 
 @AllArgsConstructor
 public class WalletDetails {
-    @Setter
     @JsonProperty
-    private long balance;
+    private long available_balance;
+    @JsonProperty
+    private long reserved_balance;
+//    @JsonProperty
+//    private long locked_balance;
 }
