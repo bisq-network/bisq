@@ -12,11 +12,11 @@ import java.util.List;
  */
 public class WalletTransactions {
     @Setter
-    List<Transaction> transactions = new ArrayList<>();
+    List<WalletTransaction> transactions = new ArrayList<>();
 
     @JsonValue
 
-    public List<Transaction> getTransactions() {
+    public List<WalletTransaction> getTransactions() {
         return transactions;
     }
 }
@@ -25,11 +25,3 @@ enum TransactionType {
     SEND, RECEIVE
 }
 
-@AllArgsConstructor
-class Transaction {
-    long amount;
-    TransactionType transactionType;
-    String address;
-    long timestamp;
-    long confirmations;
-}
