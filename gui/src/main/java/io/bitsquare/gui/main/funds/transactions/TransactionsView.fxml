@@ -31,7 +31,7 @@
             <TableColumn text="Details" fx:id="detailsColumn" minWidth="220" maxWidth="220"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="260"/>
             <TableColumn text="Transaction ID" fx:id="transactionColumn" minWidth="180"/>
-            <TableColumn text="Amount (BTC)" fx:id="amountColumn" minWidth="130" maxWidth="130"/>
+            <TableColumn text="Amount in BTC" fx:id="amountColumn" minWidth="130" maxWidth="130"/>
             <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="130" maxWidth="130"/>
             <TableColumn text="Revert Tx" fx:id="revertTxColumn" sortable="false" minWidth="110" maxWidth="110"
                          visible="false"/>

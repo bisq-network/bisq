@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.mocks.MockPayload;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -110,7 +111,7 @@ public class TorNetworkNodeTest {
             }
 
             @Override
-            public void onFailure(Throwable throwable) {
+            public void onFailure(@NotNull Throwable throwable) {
                 log.debug("onFailure ");
             }
         });
@@ -204,7 +205,7 @@ public class TorNetworkNodeTest {
             }
 
             @Override
-            public void onFailure(Throwable throwable) {
+            public void onFailure(@NotNull Throwable throwable) {
                 log.debug("onFailure ");
             }
         });

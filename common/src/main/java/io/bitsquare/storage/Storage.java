@@ -65,6 +65,7 @@ public class Storage<T extends Serializable> {
     private File storageFile;
     private T serializable;
     private String fileName;
+    private int numMaxBackupFiles = 10;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +77,6 @@ public class Storage<T extends Serializable> {
         this.dir = dir;
     }
 
-    @Nullable
     public void initWithFileName(String fileName) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
@@ -113,6 +113,10 @@ public class Storage<T extends Serializable> {
 
     public void queueUpForSave(long delayInMilli) {
         queueUpForSave(serializable, delayInMilli);
+    }
+
+    public void setNumMaxBackupFiles(int numMaxBackupFiles) {
+        this.numMaxBackupFiles = numMaxBackupFiles;
     }
 
     // Save delayed and on a background thread
@@ -159,7 +163,7 @@ public class Storage<T extends Serializable> {
 
                 // If we did not get any exception we can be sure the data are consistent so we make a backup 
                 now = System.currentTimeMillis();
-                fileManager.backupFile(fileName);
+                fileManager.backupFile(fileName, numMaxBackupFiles);
                 log.trace("Backup {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
 
                 return persistedObject;

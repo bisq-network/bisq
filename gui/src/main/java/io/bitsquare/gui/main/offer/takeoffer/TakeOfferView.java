@@ -880,7 +880,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceAsPercentageLabel = priceAsPercentageTuple.third;
 
         Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, "Distance in % from market price");
-        priceAsPercentageInputBoxTuple.first.setPrefWidth(200);
+        priceAsPercentageInputBoxTuple.first.setPrefWidth(220);
         priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
         priceAsPercentageTextField.setPromptText("Enter % value");
@@ -920,7 +920,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Tuple2<Label, VBox> getTradeInputBox(HBox amountValueBox, String promptText) {
         Label descriptionLabel = new Label(promptText);
         descriptionLabel.setId("input-description-label");
-        descriptionLabel.setPrefWidth(170);
+        descriptionLabel.setPrefWidth(190);
 
         VBox box = new VBox();
         box.setSpacing(4);
@@ -930,7 +930,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private Tuple3<HBox, InputTextField, Label> getAmountCurrencyBox(String promptText) {
         InputTextField input = new InputTextField();
-        input.setPrefWidth(170);
+        input.setPrefWidth(190);
         input.setAlignment(Pos.CENTER_RIGHT);
         input.setId("text-input-with-currency-text-field");
         input.setPromptText(promptText);
@@ -945,7 +945,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private Tuple3<HBox, TextField, Label> getValueCurrencyBox() {
         TextField textField = new InputTextField();
-        textField.setPrefWidth(170);
+        textField.setPrefWidth(190);
         textField.setAlignment(Pos.CENTER_RIGHT);
         textField.setId("text-input-with-currency-text-field");
         textField.setMouseTransparent(true);

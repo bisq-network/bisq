@@ -70,7 +70,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private ToggleGroup tradeAmountToggleGroup;
     private DisputeResult disputeResult;
     private RadioButton buyerIsWinnerRadioButton, sellerIsWinnerRadioButton, shareRadioButton, loserPaysFeeRadioButton, splitFeeRadioButton,
-            waiveFeeRadioButton, reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton, reasonWasScamRadioButton, reasonWasOtherRadioButton;
+            waiveFeeRadioButton, reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton, reasonProtocolViolationRadioButton, reasonNoReplyRadioButton, reasonWasScamRadioButton, reasonWasOtherRadioButton;
     private Optional<Dispute> peersDisputeOptional;
     private Coin arbitratorPayoutAmount, winnerPayoutAmount, loserPayoutAmount, stalematePayoutAmount;
     private ToggleGroup feeToggleGroup, reasonToggleGroup;
@@ -201,6 +201,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
             reasonWasBugRadioButton.setDisable(true);
             reasonWasUsabilityIssueRadioButton.setDisable(true);
+            reasonProtocolViolationRadioButton.setDisable(true);
+            reasonNoReplyRadioButton.setDisable(true);
             reasonWasScamRadioButton.setDisable(true);
             reasonWasOtherRadioButton.setDisable(true);
 
@@ -209,7 +211,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         } else {
             applyPayoutAmounts(disputeResult.disputeFeePolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get());
             feePaymentPolicyChanged = Bindings.createObjectBinding(
-                    () -> new Tuple2(disputeResult.disputeFeePolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get()),
+                    () -> new Tuple2<>(disputeResult.disputeFeePolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get()),
                     disputeResult.disputeFeePolicyProperty(),
                     tradeAmountToggleGroup.selectedToggleProperty());
             feePaymentPolicyListener = (observable, oldValue, newValue) -> {
@@ -232,19 +234,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addLabelTextField(gridPane, ++rowIndex, "Ticket opening date:", formatter.formatDateTime(dispute.getOpeningDate()));
         if (dispute.isDisputeOpenerIsOfferer()) {
             if (dispute.isDisputeOpenerIsBuyer())
-                role = "Buyer/offerer";
+                role = "BTC Buyer/offerer";
             else
-                role = "Seller/offerer";
+                role = "BTC Seller/offerer";
         } else {
             if (dispute.isDisputeOpenerIsBuyer())
-                role = "Buyer/taker";
+                role = "BTC Buyer/taker";
             else
-                role = "Seller/taker";
+                role = "BTC Seller/taker";
         }
         addLabelTextField(gridPane, ++rowIndex, "Traders role:", role);
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatFiatWithCode(contract.getTradePrice()));
-        addLabelTextField(gridPane, ++rowIndex, "Trade volume:", formatter.formatFiatWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
+        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatPrice(contract.getTradePrice()));
+        addLabelTextField(gridPane, ++rowIndex, "Trade volume:", formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
     }
 
     private void addCheckboxes() {
@@ -272,8 +274,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Label distributionLabel = addLabel(gridPane, ++rowIndex, "Trade amount payout:", 10);
         GridPane.setValignment(distributionLabel, VPos.TOP);
 
-        buyerIsWinnerRadioButton = new RadioButton("Buyer gets trade amount payout");
-        sellerIsWinnerRadioButton = new RadioButton("Seller gets trade amount payout");
+        buyerIsWinnerRadioButton = new RadioButton("BTC buyer gets trade amount payout");
+        sellerIsWinnerRadioButton = new RadioButton("BTC seller gets trade amount payout");
         shareRadioButton = new RadioButton("Both gets half trade amount payout");
         VBox radioButtonPane = new VBox();
         radioButtonPane.setSpacing(20);
@@ -358,12 +360,15 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         reasonWasBugRadioButton = new RadioButton("Bug");
         reasonWasUsabilityIssueRadioButton = new RadioButton("Usability");
+        reasonProtocolViolationRadioButton = new RadioButton("Protocol violation");
+        reasonNoReplyRadioButton = new RadioButton("No reply");
         reasonWasScamRadioButton = new RadioButton("Scam");
         reasonWasOtherRadioButton = new RadioButton("Other");
 
         HBox feeRadioButtonPane = new HBox();
         feeRadioButtonPane.setSpacing(20);
         feeRadioButtonPane.getChildren().addAll(reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton,
+                reasonProtocolViolationRadioButton, reasonNoReplyRadioButton,
                 reasonWasScamRadioButton, reasonWasOtherRadioButton);
         GridPane.setRowIndex(feeRadioButtonPane, rowIndex);
         GridPane.setColumnIndex(feeRadioButtonPane, 1);
@@ -373,6 +378,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         reasonToggleGroup = new ToggleGroup();
         reasonWasBugRadioButton.setToggleGroup(reasonToggleGroup);
         reasonWasUsabilityIssueRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonProtocolViolationRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonNoReplyRadioButton.setToggleGroup(reasonToggleGroup);
         reasonWasScamRadioButton.setToggleGroup(reasonToggleGroup);
         reasonWasOtherRadioButton.setToggleGroup(reasonToggleGroup);
 
@@ -381,6 +388,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 disputeResult.setReason(DisputeResult.Reason.BUG);
             else if (newValue == reasonWasUsabilityIssueRadioButton)
                 disputeResult.setReason(DisputeResult.Reason.USABILITY);
+            else if (newValue == reasonProtocolViolationRadioButton)
+                disputeResult.setReason(DisputeResult.Reason.PROTOCOL_VIOLATION);
+            else if (newValue == reasonNoReplyRadioButton)
+                disputeResult.setReason(DisputeResult.Reason.NO_REPLY);
             else if (newValue == reasonWasScamRadioButton)
                 disputeResult.setReason(DisputeResult.Reason.SCAM);
             else if (newValue == reasonWasOtherRadioButton)
@@ -397,6 +408,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     break;
                 case USABILITY:
                     reasonToggleGroup.selectToggle(reasonWasUsabilityIssueRadioButton);
+                    break;
+                case PROTOCOL_VIOLATION:
+                    reasonToggleGroup.selectToggle(reasonProtocolViolationRadioButton);
+                    break;
+                case NO_REPLY:
+                    reasonToggleGroup.selectToggle(reasonNoReplyRadioButton);
                     break;
                 case SCAM:
                     reasonToggleGroup.selectToggle(reasonWasScamRadioButton);
@@ -475,8 +492,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             "\n" + role + " delivered tamper proof evidence: " + formatter.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()) +
                             "\n" + role + " did ID verification: " + formatter.booleanToYesNo(disputeResult.idVerificationProperty().get()) +
                             "\n" + role + " did screencast or video: " + formatter.booleanToYesNo(disputeResult.screenCastProperty().get()) +
-                            "\nPayout amount for buyer: " + formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()) +
-                            "\nPayout amount for seller: " + formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()) +
+                            "\nPayout amount for BTC buyer: " + formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()) +
+                            "\nPayout amount for BTC seller: " + formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()) +
                             "\nArbitrators dispute fee: " + formatter.formatCoinWithCode(disputeResult.getArbitratorPayoutAmount()) +
                             "\n\nSummary notes:\n" + disputeResult.summaryNotesProperty().get();
 

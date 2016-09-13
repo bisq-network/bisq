@@ -28,12 +28,13 @@
 
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Offer ID" fx:id="offerIdColumn" minWidth="130" maxWidth="130"/>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="190" maxWidth="190"/>
-            <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="190" maxWidth="190"/>
-            <TableColumn text="Price" fx:id="priceColumn" minWidth="200"/>
-            <TableColumn text="Amount (Min.)" fx:id="volumeColumn" minWidth="210"/>
-            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="100" maxWidth="100"/>
+            <TableColumn text="Offer ID" fx:id="offerIdColumn" minWidth="120" maxWidth="130"/>
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="170" maxWidth="190"/>
+            <TableColumn text="Market" fx:id="marketColumn" minWidth="100"/>
+            <TableColumn text="Price" fx:id="priceColumn" minWidth="160"/>
+            <TableColumn text="Amount in BTC (min - max)" fx:id="amountColumn" minWidth="220"/>
+            <TableColumn text="Amount (min - max)" fx:id="volumeColumn" minWidth="180"/>
+            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="100"/>
             <TableColumn text="" fx:id="removeItemColumn" minWidth="120" maxWidth="120" sortable="false"/>
         </columns>
     </TableView>

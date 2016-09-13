@@ -25,7 +25,6 @@ import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
@@ -117,18 +116,18 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         String fiatDirectionInfo;
         String btcDirectionInfo;
         if (tradeManager.isBuyer(offer)) {
-            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForBuyer(myOffer), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
             fiatDirectionInfo = " to spend:";
             btcDirectionInfo = " to receive:";
         } else {
-            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForSeller(myOffer), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForSeller(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
             fiatDirectionInfo = " to receive:";
             btcDirectionInfo = " to spend:";
         }
 
         addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(trade.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(trade.getTradeVolume()));
-        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatPriceWithCode(trade.getTradePrice()));
+        addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo, formatter.formatVolumeWithCode(trade.getTradeVolume()));
+        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatPrice(trade.getTradePrice()));
         addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
 
         // second group
@@ -181,11 +180,11 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
         if (contract != null) {
             if (buyerPaymentAccountContractData != null) {
-                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Buyer payment details:", BSResources.get(buyerPaymentAccountContractData.getPaymentDetails())).second;
+                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC buyer payment details:", BSResources.get(buyerPaymentAccountContractData.getPaymentDetails())).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (sellerPaymentAccountContractData != null) {
-                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Seller payment details:", BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second;
+                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC seller payment details:", BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (buyerPaymentAccountContractData == null && sellerPaymentAccountContractData == null)

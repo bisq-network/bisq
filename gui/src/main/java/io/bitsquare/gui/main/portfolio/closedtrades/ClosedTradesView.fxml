@@ -30,9 +30,10 @@
         <columns>
             <TableColumn text="Trade ID" fx:id="tradeIdColumn" minWidth="120" maxWidth="120"/>
             <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="150"/>
-            <TableColumn text="Trade amount in BTC" fx:id="amountColumn" minWidth="130"/>
+            <TableColumn text="Market" fx:id="marketColumn" minWidth="100"/>
             <TableColumn text="Price" fx:id="priceColumn" minWidth="100"/>
-            <TableColumn text="Trade amount" fx:id="volumeColumn" minWidth="130"/>
+            <TableColumn text="Amount in BTC" fx:id="amountColumn" minWidth="130"/>
+            <TableColumn text="Amount" fx:id="volumeColumn" minWidth="130"/>
             <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80"/>
             <TableColumn text="State" fx:id="stateColumn" minWidth="80"/>
             <TableColumn text="" fx:id="avatarColumn" minWidth="40" maxWidth="40"/>

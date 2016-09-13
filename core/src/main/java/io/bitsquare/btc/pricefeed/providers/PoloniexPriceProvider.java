@@ -55,7 +55,7 @@ public class PoloniexPriceProvider extends PriceProvider {
                             temp.clear();
                             treeMap2.entrySet().stream().forEach(e2 -> temp.put(e2.getKey(), e2.getValue().toString()));
                             marketPriceMap.put(otherCurrency,
-                                    new MarketPrice(otherCurrency, temp.get("lowestAsk"), temp.get("highestBid"), temp.get("last"), true));
+                                    new MarketPrice(otherCurrency, temp.get("lowestAsk"), temp.get("highestBid"), temp.get("last")));
                         }
                     }
                 }

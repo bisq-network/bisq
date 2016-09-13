@@ -162,7 +162,7 @@ public class PeerManager implements ConnectionListener {
         final boolean seedNode = isSeedNode(connection);
 
         final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
-        log.info("onConnection: peer = {}{}",
+        log.debug("onConnection: peer = {}{}",
                 (addressOptional.isPresent() ? addressOptional.get().hostName : "not known yet (connection id=" + connection.getUid() + ")"),
                 seedNode ? " (SeedNode)" : "");
 
@@ -186,7 +186,7 @@ public class PeerManager implements ConnectionListener {
                 " / closeConnectionReason: " + closeConnectionReason);
 
         final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
-        log.info("onDisconnect: peer = {}{} / closeConnectionReason: {}",
+        log.debug("onDisconnect: peer = {}{} / closeConnectionReason: {}",
                 (addressOptional.isPresent() ? addressOptional.get().hostName : "not known yet (connection id=" + connection.getUid() + ")"),
                 isSeedNode(connection) ? " (SeedNode)" : "",
                 closeConnectionReason);
@@ -266,9 +266,9 @@ public class PeerManager implements ConnectionListener {
                         log.debug("No candidates found. We check if we exceed our " +
                                 "maxConnectionsNonDirect limit of {}", maxConnectionsNonDirect);
                         if (size > maxConnectionsNonDirect) {
-                            log.debug("Lets try to remove any connection which is not of type DIRECT_MSG_PEER.");
+                            log.debug("Lets try to remove any connection which is not of type DIRECT_MSG_PEER or INITIAL_DATA_REQUEST.");
                             candidates = allConnections.stream()
-                                    .filter(e -> e.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER)
+                                    .filter(e -> e.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER && e.getPeerType() != Connection.PeerType.INITIAL_DATA_REQUEST)
                                     .collect(Collectors.toList());
 
                             if (candidates.size() == 0) {

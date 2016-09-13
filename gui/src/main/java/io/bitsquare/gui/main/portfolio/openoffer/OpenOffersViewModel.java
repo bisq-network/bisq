@@ -69,18 +69,28 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
             String postFix = "";
             if (offer.getUseMarketBasedPrice())
                 postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-            return formatter.formatPriceWithCode(price) + postFix;
+            return formatter.formatPrice(price) + postFix;
         } else {
             return "N/A";
         }
     }
 
     String getVolume(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatVolumeWithMinVolumeWithCode(item.getOffer()) : "";
+        return (item != null) ? formatter.formatMinVolumeAndVolume(item.getOffer()) + " " + item.getOffer().getCurrencyCode() : "";
     }
 
     String getDirectionLabel(OpenOfferListItem item) {
-        return (item != null) ? formatter.getDirection(dataModel.getDirection(item.getOffer())) : "";
+        if ((item == null))
+            return "";
+
+        return formatter.getDirectionWithCode(dataModel.getDirection(item.getOffer()), item.getOffer().getCurrencyCode());
+    }
+
+    String getMarketLabel(OpenOfferListItem item) {
+        if ((item == null))
+            return "";
+
+        return formatter.getCurrencyPair(item.getOffer().getCurrencyCode());
     }
 
     String getDate(OpenOfferListItem item) {

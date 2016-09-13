@@ -27,6 +27,8 @@ import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
+import io.bitsquare.common.util.MathUtils;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
@@ -45,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.PublicKey;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -54,6 +57,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload {
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -146,6 +150,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     transient private StringProperty errorMessageProperty = new SimpleStringProperty();
     @JsonExclude
     transient private PriceFeedService priceFeedService;
+    @JsonExclude
+    transient private DecimalFormat decimalFormat;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -193,6 +199,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
         date = new Date().getTime();
         setState(State.UNDEFINED);
+        decimalFormat = new DecimalFormat("#.#");
+        decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -202,6 +210,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
             // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
             errorMessageProperty = new SimpleStringProperty();
+            decimalFormat = new DecimalFormat("#.#");
+            decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
         } catch (Throwable t) {
             log.warn("Cannot be deserialized." + t.getMessage());
         }
@@ -267,7 +277,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public String getReferenceText() {
-        return id.substring(0, Math.min(8, id.length()));
+        return getId().substring(0, Math.min(8, getId().length()));
     }
 
 
@@ -338,11 +348,23 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public String getId() {
-        return id;
+        // We got some issues that users created offers with a dev version where we added the version nr after 
+        // the id, but we reverted that as it caused issues. To avoid ongoing issues with those dangling offers
+        // we add that check.
+        // TODO remove after version 0.4.9.7 (if no offers with that invalid id are online anymore)
+        if (id != null) {
+            String[] tokens = id.split("_");
+            if (tokens.length > 1)
+                return tokens[0];
+            else
+                return id;
+        } else {
+            return null;
+        }
     }
 
     public String getShortId() {
-        return id.substring(0, Math.min(8, id.length()));
+        return getId().substring(0, Math.min(8, getId().length()));
     }
 
     public NodeAddress getOffererNodeAddress() {
@@ -359,19 +381,22 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
             checkNotNull(priceFeedService, "priceFeed must not be null");
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             if (marketPrice != null) {
-                PriceFeedService.Type priceFeedType = direction == Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
+                PriceFeedService.Type priceFeedType;
+                double factor;
+                if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                    priceFeedType = direction == Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
+                    factor = direction == Offer.Direction.SELL ? 1 - marketPriceMargin : 1 + marketPriceMargin;
+                } else {
+                    priceFeedType = direction == Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
+                    factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
+                }
                 double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
-                double factor = direction == Offer.Direction.BUY ? 1 - marketPriceMargin : 1 + marketPriceMargin;
                 double targetPrice = marketPriceAsDouble * factor;
-
-                // round
-                long factor1 = (long) Math.pow(10, 2);
-                targetPrice = targetPrice * factor1;
-                long tmp = Math.round(targetPrice);
-                targetPrice = (double) tmp / factor1;
-
+                if (CurrencyUtil.isCryptoCurrency(currencyCode))
+                    targetPrice = targetPrice != 0 ? 1d / targetPrice : 0;
                 try {
-                    return Fiat.parseFiat(currencyCode, String.valueOf(targetPrice));
+                    final double rounded = MathUtils.roundDouble(targetPrice, Fiat.SMALLEST_UNIT_EXPONENT);
+                    return Fiat.parseFiat(currencyCode, decimalFormat.format(rounded).replace(",", "."));
                 } catch (Exception e) {
                     log.error("Exception at getPrice / parseToFiat: " + e.toString() + "\n" +
                             "That case should never happen.");
@@ -394,7 +419,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
         if (offerPriceAsFiat == null)
             throw new MarketPriceNotAvailableException("Market price required for calculating trade price is not available.");
-        
+
         double factor = (double) takersTradePrice / (double) offerPriceAsFiat.value;
         // We allow max. 2 % difference between own offer price calculation and takers calculation.
         // Market price might be different at offerers and takers side so we need a bit of tolerance.
@@ -493,39 +518,44 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Offer)) return false;
-        Offer offer = (Offer) o;
-        if (date != offer.date) return false;
-        if (fiatPrice != offer.fiatPrice) return false;
-        if (Double.compare(offer.marketPriceMargin, marketPriceMargin) != 0) return false;
-        if (useMarketBasedPrice != offer.useMarketBasedPrice) return false;
-        if (amount != offer.amount) return false;
-        if (minAmount != offer.minAmount) return false;
-        if (id != null ? !id.equals(offer.id) : offer.id != null) return false;
-        if (direction != offer.direction) return false;
-        if (currencyCode != null ? !currencyCode.equals(offer.currencyCode) : offer.currencyCode != null) return false;
-        if (offererNodeAddress != null ? !offererNodeAddress.equals(offer.offererNodeAddress) : offer.offererNodeAddress != null)
+        Offer that = (Offer) o;
+        if (date != that.date) return false;
+        if (fiatPrice != that.fiatPrice) return false;
+        if (Double.compare(that.marketPriceMargin, marketPriceMargin) != 0) return false;
+        if (useMarketBasedPrice != that.useMarketBasedPrice) return false;
+        if (amount != that.amount) return false;
+        if (minAmount != that.minAmount) return false;
+        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
+
+        if (direction != null && that.direction != null && direction.ordinal() != that.direction.ordinal())
             return false;
-        if (pubKeyRing != null ? !pubKeyRing.equals(offer.pubKeyRing) : offer.pubKeyRing != null) return false;
-        if (paymentMethodName != null ? !paymentMethodName.equals(offer.paymentMethodName) : offer.paymentMethodName != null)
+        else if ((direction == null && that.direction != null) || (direction != null && that.direction == null))
             return false;
-        if (countryCode != null ? !countryCode.equals(offer.countryCode) : offer.countryCode != null)
+
+        if (currencyCode != null ? !currencyCode.equals(that.currencyCode) : that.currencyCode != null) return false;
+        if (offererNodeAddress != null ? !offererNodeAddress.equals(that.offererNodeAddress) : that.offererNodeAddress != null)
             return false;
-        if (offererPaymentAccountId != null ? !offererPaymentAccountId.equals(offer.offererPaymentAccountId) : offer.offererPaymentAccountId != null)
+        if (pubKeyRing != null ? !pubKeyRing.equals(that.pubKeyRing) : that.pubKeyRing != null) return false;
+        if (paymentMethodName != null ? !paymentMethodName.equals(that.paymentMethodName) : that.paymentMethodName != null)
             return false;
-        if (acceptedCountryCodes != null ? !acceptedCountryCodes.equals(offer.acceptedCountryCodes) : offer.acceptedCountryCodes != null)
+        if (countryCode != null ? !countryCode.equals(that.countryCode) : that.countryCode != null)
             return false;
-        if (bankId != null ? !bankId.equals(offer.bankId) : offer.bankId != null) return false;
-        if (acceptedBankIds != null ? !acceptedBankIds.equals(offer.acceptedBankIds) : offer.acceptedBankIds != null)
+        if (offererPaymentAccountId != null ? !offererPaymentAccountId.equals(that.offererPaymentAccountId) : that.offererPaymentAccountId != null)
             return false;
-        if (arbitratorNodeAddresses != null ? !arbitratorNodeAddresses.equals(offer.arbitratorNodeAddresses) : offer.arbitratorNodeAddresses != null)
+        if (acceptedCountryCodes != null ? !acceptedCountryCodes.equals(that.acceptedCountryCodes) : that.acceptedCountryCodes != null)
             return false;
-        return !(offerFeePaymentTxID != null ? !offerFeePaymentTxID.equals(offer.offerFeePaymentTxID) : offer.offerFeePaymentTxID != null);
+        if (bankId != null ? !bankId.equals(that.bankId) : that.bankId != null) return false;
+        if (acceptedBankIds != null ? !acceptedBankIds.equals(that.acceptedBankIds) : that.acceptedBankIds != null)
+            return false;
+        if (arbitratorNodeAddresses != null ? !arbitratorNodeAddresses.equals(that.arbitratorNodeAddresses) : that.arbitratorNodeAddresses != null)
+            return false;
+        return !(offerFeePaymentTxID != null ? !offerFeePaymentTxID.equals(that.offerFeePaymentTxID) : that.offerFeePaymentTxID != null);
     }
 
     @Override
     public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (direction != null ? direction.hashCode() : 0);
+        int result = getId() != null ? getId().hashCode() : 0;
+        result = 31 * result + (direction != null ? direction.ordinal() : 0);
         result = 31 * result + (currencyCode != null ? currencyCode.hashCode() : 0);
         result = 31 * result + (int) (date ^ (date >>> 32));
         result = 31 * result + (int) (fiatPrice ^ (fiatPrice >>> 32));
@@ -550,7 +580,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     @Override
     public String toString() {
         return "Offer{" +
-                "\n\tid='" + id + '\'' +
+                "\n\tid='" + getId() + '\'' +
                 "\n\tdirection=" + direction +
                 "\n\tcurrencyCode='" + currencyCode + '\'' +
                 "\n\tdate=" + new Date(date) +
@@ -576,6 +606,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\terrorMessageProperty=" + errorMessageProperty +
                 "\n\tTAC_OFFERER=" + TAC_OFFERER +
                 "\n\tTAC_TAKER=" + TAC_TAKER +
+                "\n\thashCode=" + hashCode() +
                 '}';
     }
 }

@@ -171,7 +171,7 @@ public class WalletService {
 
         final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
         log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
-        
+
         // If seed is non-null it means we are restoring from backup.
         walletAppKit = new WalletAppKitBitSquare(params, socks5Proxy, walletDir, "Bitsquare") {
             @Override
@@ -410,7 +410,7 @@ public class WalletService {
     }
 
     public void backupWallet() {
-        FileUtil.rollingBackup(walletDir, "Bitsquare.wallet");
+        FileUtil.rollingBackup(walletDir, "Bitsquare.wallet", 20);
     }
 
     public void clearBackup() {
@@ -1022,6 +1022,19 @@ public class WalletService {
         sendRequest.changeAddress = addressEntry.get().getAddress();
         sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
         return sendRequest;
+    }
+
+    public int getTransactionSize(Set<String> fromAddresses,
+                                  String toAddress,
+                                  Coin amount) throws
+            AddressFormatException, AddressEntryException, InsufficientMoneyException {
+        Wallet.SendRequest sendRequestForMultipleAddresses = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, aesKey);
+        Transaction tx = sendRequestForMultipleAddresses.tx;
+        wallet.completeTx(sendRequestForMultipleAddresses);
+        log.debug("Nr of inputs: " + tx.getInputs().size());
+        int size = tx.bitcoinSerialize().length;
+        log.debug("Tx size: " + size);
+        return size;
     }
 
     private Wallet.SendRequest getSendRequestForMultipleAddresses(Set<String> fromAddresses,

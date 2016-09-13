@@ -61,14 +61,14 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return formatter.formatFiat(((Trade) tradable).getTradePrice());
+            return formatter.formatPrice(((Trade) tradable).getTradePrice());
         else
-            return formatter.formatFiat(tradable.getOffer().getPrice());
+            return formatter.formatPrice(tradable.getOffer().getPrice());
     }
 
     String getVolume(ClosedTradableListItem item) {
         if (item != null && item.getTradable() instanceof Trade)
-            return formatter.formatFiatWithCode(((Trade) item.getTradable()).getTradeVolume());
+            return formatter.formatVolumeWithCode(((Trade) item.getTradable()).getTradeVolume());
         else if (item != null && item.getTradable() instanceof OpenOffer)
             return "-";
         else
@@ -76,11 +76,18 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     }
 
     String getDirectionLabel(ClosedTradableListItem item) {
-        return (item != null) ? formatter.getDirection(dataModel.getDirection(item.getTradable().getOffer())) : "";
+        return (item != null) ? formatter.getDirectionWithCode(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "";
     }
 
     String getDate(ClosedTradableListItem item) {
         return formatter.formatDateTime(item.getTradable().getDate());
+    }
+
+    String getMarketLabel(ClosedTradableListItem item) {
+        if ((item == null))
+            return "";
+
+        return formatter.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode());
     }
 
     String getState(ClosedTradableListItem item) {

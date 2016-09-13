@@ -37,7 +37,7 @@ public class FiatValidatorTest {
         assertTrue(validator.validate("0.01").isValid);
         assertTrue(validator.validate("1000000.00").isValid);
         assertTrue(validator.validate(String.valueOf(FiatValidator.MIN_FIAT_VALUE)).isValid);
-        assertTrue(validator.validate(String.valueOf(FiatValidator.MAX_FIAT_VALUE)).isValid);
+        assertTrue(validator.validate(String.valueOf(FiatValidator.MAX_VALUE)).isValid);
 
         assertFalse(validator.validate(null).isValid);
         assertFalse(validator.validate("").isValid);
@@ -53,7 +53,7 @@ public class FiatValidatorTest {
         assertFalse(validator.validate("1.000,1").isValid);
         assertFalse(validator.validate("0.009").isValid);
         assertFalse(validator.validate(String.valueOf(FiatValidator.MIN_FIAT_VALUE - 1)).isValid);
-        assertFalse(validator.validate(String.valueOf(FiatValidator.MAX_FIAT_VALUE + 1)).isValid);
+        assertFalse(validator.validate(String.valueOf(FiatValidator.MAX_VALUE + 1)).isValid);
         assertFalse(validator.validate(String.valueOf(Double.MIN_VALUE)).isValid);
         assertFalse(validator.validate(String.valueOf(Double.MAX_VALUE)).isValid);
 

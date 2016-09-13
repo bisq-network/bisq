@@ -89,9 +89,8 @@ public class HttpClient {
                 throw new HttpException(error);
             }
         } catch (Throwable t) {
-            log.error(t.getMessage());
-            t.printStackTrace();
-            return "";
+            log.debug("Error at requestWithGETNoProxy: " + t.getMessage());
+            throw new IOException(t);
         } finally {
             if (connection != null)
                 connection.getInputStream().close();
@@ -139,9 +138,8 @@ public class HttpClient {
                 response.close();
             }
         } catch (Throwable t) {
-            log.error(t.getMessage());
-            t.printStackTrace();
-            return "";
+            log.debug("Error at requestWithGETProxy: " + t.getMessage());
+            throw new IOException(t);
         } finally {
             httpclient.close();
         }

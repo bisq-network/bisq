@@ -30,7 +30,7 @@
         <columns>
             <TableColumn text="Select" fx:id="selectColumn" minWidth="110" maxWidth="110" sortable="false"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="320"/>
-            <TableColumn text="Balance (BTC)" fx:id="balanceColumn" minWidth="150"/>
+            <TableColumn text="Balance in BTC" fx:id="balanceColumn" minWidth="150"/>
             <TableColumn text="Confirmations" fx:id="confidenceColumn" minWidth="150"/>
             <TableColumn text="Usage" fx:id="usageColumn" minWidth="200"/>
         </columns>

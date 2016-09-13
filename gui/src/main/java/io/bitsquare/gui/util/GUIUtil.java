@@ -26,12 +26,14 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
+import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollBar;
@@ -42,6 +44,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -50,8 +53,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class GUIUtil {
     private static final Logger log = LoggerFactory.getLogger(GUIUtil.class);
@@ -175,31 +178,73 @@ public class GUIUtil {
         }
     }
 
-    public static StringConverter<TradeCurrency> getCurrencyListConverter() {
-        return new StringConverter<TradeCurrency>() {
+    public static StringConverter<CurrencyListItem> getCurrencyListItemConverter(String postFix, Preferences preferences) {
+        return new StringConverter<CurrencyListItem>() {
             @Override
-            public String toString(TradeCurrency tradeCurrency) {
+            public String toString(CurrencyListItem item) {
+                TradeCurrency tradeCurrency = item.tradeCurrency;
                 String code = tradeCurrency.getCode();
                 // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
                 if (code.equals(GUIUtil.SHOW_ALL_FLAG))
                     return "▶ Show all";
                 else if (code.equals(GUIUtil.EDIT_FLAG))
                     return "▼ Edit currency list";
-                else if (tradeCurrency instanceof FiatCurrency)
-                    return "★ " + tradeCurrency.getNameAndCode();
-                else if (tradeCurrency instanceof CryptoCurrency)
-                    return "✦ " + tradeCurrency.getNameAndCode();
-                else
-                    return "-";
+                else {
+                    String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
+                    if (preferences.getSortMarketCurrenciesNumerically())
+                        displayString += " - " + item.numTrades + " " + postFix;
+                    if (tradeCurrency instanceof FiatCurrency)
+                        return "★ " + displayString;
+                    else if (tradeCurrency instanceof CryptoCurrency) {
+                        return "✦ " + displayString;
+                    } else
+                        return "-";
+                }
             }
 
             @Override
-            public TradeCurrency fromString(String s) {
+            public CurrencyListItem fromString(String s) {
                 return null;
             }
         };
     }
 
+    public static void fillCurrencyListItems(List<TradeCurrency> tradeCurrencyList, ObservableList<CurrencyListItem> currencyListItems, @Nullable CurrencyListItem showAllCurrencyListItem, Preferences preferences) {
+        Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
+        Map<String, Integer> tradesPerCurrencyMap = new HashMap<>();
+        tradeCurrencyList.stream().forEach(tradeCurrency -> {
+            tradeCurrencySet.add(tradeCurrency);
+            String code = tradeCurrency.getCode();
+            if (tradesPerCurrencyMap.containsKey(code))
+                tradesPerCurrencyMap.put(code, tradesPerCurrencyMap.get(code) + 1);
+            else
+                tradesPerCurrencyMap.put(code, 1);
+        });
+
+        List<CurrencyListItem> list = tradeCurrencySet.stream()
+                .filter(e -> CurrencyUtil.isFiatCurrency(e.getCode()))
+                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
+                .collect(Collectors.toList());
+        List<CurrencyListItem> cryptoList = tradeCurrencySet.stream()
+                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getCode()))
+                .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
+                .collect(Collectors.toList());
+
+        if (preferences.getSortMarketCurrenciesNumerically()) {
+            list.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
+            cryptoList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
+        } else {
+            list.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
+            cryptoList.sort((o1, o2) -> o1.tradeCurrency.compareTo(o2.tradeCurrency));
+        }
+
+        list.addAll(cryptoList);
+
+        if (showAllCurrencyListItem != null)
+            list.add(0, showAllCurrencyListItem);
+
+        currencyListItems.setAll(list);
+    }
 
     public static void openWebPage(String target) {
         String key = "warnOpenURLWhenTorEnabled";

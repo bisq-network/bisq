@@ -149,6 +149,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getTrade() != null ? formatter.formatCoinWithCode(dataModel.getTrade().getPayoutAmount()) : "";
     }
 
+    String getMarketLabel(PendingTradesListItem item) {
+        if ((item == null))
+            return "";
+
+        return formatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
+    }
     // trade period
 
     private long getMaxTradePeriod() {
@@ -206,10 +212,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     String getMyRole(PendingTradesListItem item) {
         Trade trade = item.getTrade();
         Contract contract = trade.getContract();
-        if (contract != null)
-            return formatter.getRole(contract.isBuyerOffererAndSellerTaker(), dataModel.isOfferer(trade.getOffer()));
-        else
+        if (contract != null) {
+            Offer offer = trade.getOffer();
+            return formatter.getRole(contract.isBuyerOffererAndSellerTaker(), dataModel.isOfferer(offer), offer.getCurrencyCode());
+        } else {
             return "";
+        }
     }
 
     String getPaymentMethod(PendingTradesListItem item) {
@@ -246,17 +254,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             return "";
     }
 
-    public String getFiatAmount() {
-        return dataModel.getTrade() != null ? formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume()) : "";
-    }
-
     // summary
     public String getTradeVolume() {
         return dataModel.getTrade() != null ? formatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount()) : "";
     }
 
     public String getFiatVolume() {
-        return dataModel.getTrade() != null ? formatter.formatFiatWithCode(dataModel.getTrade().getTradeVolume()) : "";
+        return dataModel.getTrade() != null ? formatter.formatVolumeWithCode(dataModel.getTrade().getTradeVolume()) : "";
     }
 
     public String getTotalFees() {
@@ -273,8 +277,16 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public int getNumPastTrades(Trade trade) {
         return closedTradableManager.getClosedTrades().stream()
-                .filter(e -> e instanceof Trade && ((Trade) e).getTradingPeerNodeAddress() != null &&
-                        ((Trade) e).getTradingPeerNodeAddress().hostName.equals(trade.getTradingPeerNodeAddress().hostName))
+                .filter(e -> {
+                    if (e instanceof Trade) {
+                        Trade t = (Trade) e;
+                        return t.getTradingPeerNodeAddress() != null &&
+                                trade.getTradingPeerNodeAddress() != null &&
+                                t.getTradingPeerNodeAddress().hostName.equals(trade.getTradingPeerNodeAddress().hostName);
+                    } else
+                        return false;
+
+                })
                 .collect(Collectors.toSet())
                 .size();
     }

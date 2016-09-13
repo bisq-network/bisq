@@ -53,7 +53,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     TableView<ClosedTradableListItem> tableView;
     @FXML
     TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn,
-            directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
+            marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
     Button exportButton;
     private final BSFormatter formatter;
@@ -85,12 +85,15 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
+        setMarketColumnCellFactory();
         setStateColumnCellFactory();
         setAvatarColumnCellFactory();
 
         tradeIdColumn.setComparator((o1, o2) -> o1.getTradable().getId().compareTo(o2.getTradable().getId()));
         dateColumn.setComparator((o1, o2) -> o1.getTradable().getDate().compareTo(o2.getTradable().getDate()));
         directionColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getDirection().compareTo(o2.getTradable().getOffer().getDirection()));
+        marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
+
         priceColumn.setComparator((o1, o2) -> {
             final Tradable tradable1 = o1.getTradable();
             final Tradable tradable2 = o2.getTradable();
@@ -233,6 +236,25 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 });
     }
 
+    private void setMarketColumnCellFactory() {
+        marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        marketColumn.setCellFactory(
+                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
+                        ClosedTradableListItem>>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setText(model.getMarketLabel(item));
+                            }
+                        };
+                    }
+                });
+    }
+
     private void setStateColumnCellFactory() {
         stateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         stateColumn.setCellFactory(
@@ -271,7 +293,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                 if (newItem != null && !empty && newItem.getTradable() instanceof Trade) {
 
                                     int numPastTrades = model.getNumPastTrades(newItem.getTradable());
-                                    String hostName = ((Trade) newItem.getTradable()).getTradingPeerNodeAddress().hostName;
+                                    Trade trade = (Trade) newItem.getTradable();
+                                    String hostName = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress().hostName : "";
                                     Node identIcon = new PeerInfoIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades, privateNotificationManager, newItem.getTradable().getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)

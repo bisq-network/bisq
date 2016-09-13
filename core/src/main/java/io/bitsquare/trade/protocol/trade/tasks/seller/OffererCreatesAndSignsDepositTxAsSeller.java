@@ -70,7 +70,7 @@ public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
                     walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress(),
                     processModel.tradingPeer.getMultiSigPubKey(),
                     sellerMultiSigAddressEntry.getPubKey(),
-                    processModel.getArbitratorPubKey(trade.getArbitratorNodeAddress()));
+                    trade.getArbitratorPubKey());
 
             processModel.setPreparedDepositTx(result.depositTransaction);
             processModel.setRawTransactionInputs(result.rawOffererInputs);

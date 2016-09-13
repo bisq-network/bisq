@@ -28,7 +28,7 @@ import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
-import io.bitsquare.storage.JsonString;
+import io.bitsquare.storage.PlainTextWrapper;
 import io.bitsquare.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ public class OfferBookService {
 
     private final P2PService p2PService;
     private PriceFeedService priceFeedService;
-    private final Storage<JsonString> offersJsonStorage;
+    private final Storage<PlainTextWrapper> offersJsonStorage;
     private final List<OfferBookChangedListener> offerBookChangedListeners = new LinkedList<>();
 
 
@@ -65,7 +65,7 @@ public class OfferBookService {
     @Inject
     public OfferBookService(P2PService p2PService,
                             PriceFeedService priceFeedService,
-                            Storage<JsonString> offersJsonStorage,
+                            Storage<PlainTextWrapper> offersJsonStorage,
                             @Named(CoreOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
@@ -181,11 +181,13 @@ public class OfferBookService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void doDumpStatistics() {
-        final List<FlatOffer> flatOffers = getOffers().stream()
+        // We filter the case that it is a MarketBasedPrice but the price is not available
+        // That should only be possible if the price feed provider is not available
+        final List<OfferForJson> offerForJsonList = getOffers().stream()
                 .filter(offer -> !offer.getUseMarketBasedPrice() || priceFeedService.getMarketPrice(offer.getCurrencyCode()) != null)
                 .map(offer -> {
                     try {
-                        return new FlatOffer(offer.getDirection(),
+                        return new OfferForJson(offer.getDirection(),
                                 offer.getCurrencyCode(),
                                 offer.getMinAmount(),
                                 offer.getAmount(),
@@ -204,7 +206,6 @@ public class OfferBookService {
                 })
                 .filter(e -> e != null)
                 .collect(Collectors.toList());
-        offersJsonStorage.queueUpForSave(new JsonString(Utilities.objectToJson(flatOffers)), 5000);
+        offersJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(offerForJsonList)), 5000);
     }
-
 }

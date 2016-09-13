@@ -68,7 +68,7 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
                     sellerInputs,
                     tradingPeer.getMultiSigPubKey(),
                     sellerMultiSigAddressEntry.getPubKey(),
-                    processModel.getArbitratorPubKey(trade.getArbitratorNodeAddress()),
+                    trade.getArbitratorPubKey(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {

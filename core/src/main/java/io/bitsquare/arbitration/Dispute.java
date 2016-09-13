@@ -286,6 +286,7 @@ public final class Dispute implements Payload {
         return new Date(tradeDate);
     }
 
+    @org.jetbrains.annotations.Nullable
     public String getDisputePayoutTxId() {
         return disputePayoutTxId;
     }

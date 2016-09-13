@@ -22,13 +22,18 @@ import io.bitsquare.locale.BSResources;
 import javax.inject.Inject;
 
 public class FiatValidator extends NumberValidator {
+    public static final double MIN_FIAT_VALUE = 0.01;
+    public static final double MAX_VALUE = 1000000000000D;
 
-    //TODO Find appropriate values - depends on currencies
-    public static final double MIN_FIAT_VALUE = 0.01; // usually a cent is the smallest currency unit
-    public static final double MAX_FIAT_VALUE = 1000000000000D; //TODO just set it super high for now. needs better solution by currency/altcoin
+    public double minValue = MIN_FIAT_VALUE;
+    public double maxValue = MAX_VALUE;
 
     @Inject
     public FiatValidator() {
+    }
+
+    public void setMinValue(double minValue) {
+        this.minValue = minValue;
     }
 
     @Override
@@ -51,7 +56,7 @@ public class FiatValidator extends NumberValidator {
 
     protected ValidationResult validateIfNotExceedsMinFiatValue(String input) {
         double d = Double.parseDouble(input);
-        if (d < MIN_FIAT_VALUE)
+        if (d < minValue)
             return new ValidationResult(false, BSResources.get("validation.fiat.toSmall"));
         else
             return new ValidationResult(true);
@@ -59,7 +64,7 @@ public class FiatValidator extends NumberValidator {
 
     protected ValidationResult validateIfNotExceedsMaxFiatValue(String input) {
         double d = Double.parseDouble(input);
-        if (d > MAX_FIAT_VALUE)
+        if (d > maxValue)
             return new ValidationResult(false, BSResources.get("validation.fiat.toLarge"));
         else
             return new ValidationResult(true);

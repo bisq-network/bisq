@@ -18,12 +18,14 @@
 package io.bitsquare.gui.main.portfolio.openoffer;
 
 import com.google.inject.Inject;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -32,26 +34,32 @@ import java.util.stream.Collectors;
 
 class OpenOffersDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
+    private PriceFeedService priceFeedService;
 
     private final ObservableList<OpenOfferListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<OpenOffer> tradesListChangeListener;
+    private ChangeListener<Number> currenciesUpdateFlagPropertyListener;
 
     @Inject
-    public OpenOffersDataModel(OpenOfferManager openOfferManager) {
+    public OpenOffersDataModel(OpenOfferManager openOfferManager, PriceFeedService priceFeedService) {
         this.openOfferManager = openOfferManager;
+        this.priceFeedService = priceFeedService;
 
         tradesListChangeListener = change -> applyList();
+        currenciesUpdateFlagPropertyListener = (observable, oldValue, newValue) -> applyList();
     }
 
     @Override
     protected void activate() {
-        applyList();
         openOfferManager.getOpenOffers().addListener(tradesListChangeListener);
+        priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdateFlagPropertyListener);
+        applyList();
     }
 
     @Override
     protected void deactivate() {
         openOfferManager.getOpenOffers().removeListener(tradesListChangeListener);
+        priceFeedService.currenciesUpdateFlagProperty().removeListener(currenciesUpdateFlagPropertyListener);
     }
 
     void onCancelOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

@@ -55,7 +55,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> selectColumn, priceColumn, tradeVolumeColumn, tradeAmountColumn, avatarColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
+    TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, tradeVolumeColumn, tradeAmountColumn, avatarColumn, marketColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
     @FXML
 
     private SortedList<PendingTradesListItem> sortedList;
@@ -81,13 +81,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     public void initialize() {
-        setSelectColumnCellFactory();
         setTradeIdColumnCellFactory();
         setDateColumnCellFactory();
         setAmountColumnCellFactory();
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
         setPaymentMethodColumnCellFactory();
+        setMarketColumnCellFactory();
         setRoleColumnCellFactory();
         setAvatarColumnCellFactory();
 
@@ -97,12 +97,28 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         idColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
         dateColumn.setComparator((o1, o2) -> o1.getTrade().getDate().compareTo(o2.getTrade().getDate()));
-        tradeVolumeColumn.setComparator((o1, o2) -> o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume()));
-        tradeAmountColumn.setComparator((o1, o2) -> o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount()));
+        tradeVolumeColumn.setComparator((o1, o2) -> {
+            if (o1.getTrade().getTradeVolume() != null && o2.getTrade().getTradeVolume() != null)
+                return o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume());
+            else
+                return 0;
+        });
+        tradeAmountColumn.setComparator((o1, o2) -> {
+            if (o1.getTrade().getTradeAmount() != null && o2.getTrade().getTradeAmount() != null)
+                return o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount());
+            else
+                return 0;
+        });
         priceColumn.setComparator((o1, o2) -> o1.getPrice().compareTo(o2.getPrice()));
         paymentMethodColumn.setComparator((o1, o2) -> o1.getTrade().getOffer().getPaymentMethod().getId().compareTo(o2.getTrade().getOffer().getPaymentMethod().getId()));
-        avatarColumn.setComparator((o1, o2) -> o1.getTrade().getTradingPeerNodeAddress().hostName.compareTo(o2.getTrade().getTradingPeerNodeAddress().hostName));
+        avatarColumn.setComparator((o1, o2) -> {
+            if (o1.getTrade().getTradingPeerNodeAddress() != null && o2.getTrade().getTradingPeerNodeAddress() != null)
+                return o1.getTrade().getTradingPeerNodeAddress().hostName.compareTo(o2.getTrade().getTradingPeerNodeAddress().hostName);
+            else
+                return 0;
+        });
         roleColumn.setComparator((o1, o2) -> model.getMyRole(o1).compareTo(model.getMyRole(o2)));
+        marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -233,39 +249,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     // CellFactories
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setSelectColumnCellFactory() {
-        selectColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
-        selectColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem, PendingTradesListItem>>() {
-
-                    @Override
-                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem,
-                            PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
-                            Button button;
-
-                            @Override
-                            public void updateItem(final PendingTradesListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    if (button == null) {
-                                        button = new Button("Select");
-                                        button.setOnAction(e -> tableView.getSelectionModel().select(item));
-                                        setGraphic(button);
-                                    }
-                                } else {
-                                    setGraphic(null);
-                                    if (button != null) {
-                                        button.setOnAction(null);
-                                        button = null;
-                                    }
-                                }
-                            }
-                        };
-                    }
-                });
-    }
-
     private void setTradeIdColumnCellFactory() {
         idColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
         idColumn.setCellFactory(
@@ -362,7 +345,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.formatPriceWithCode(item.getPrice()));
+                                    setText(formatter.formatPrice(item.getPrice()));
                                 else
                                     setText(null);
                             }
@@ -384,7 +367,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.formatFiatWithCode(item.getTrade().getTradeVolume()));
+                                    setText(formatter.formatVolumeWithCode(item.getTrade().getTradeVolume()));
                                 else
                                     setText(null);
                             }
@@ -409,6 +392,25 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     setText(model.getPaymentMethod(item));
                                 else
                                     setText(null);
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setMarketColumnCellFactory() {
+        marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        marketColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
+                        PendingTradesListItem>>() {
+                    @Override
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
+                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                            @Override
+                            public void updateItem(final PendingTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setText(model.getMarketLabel(item));
                             }
                         };
                     }

@@ -31,6 +31,8 @@ public class PaymentAccountFactory {
                 return new PerfectMoneyAccount();
             case PaymentMethod.SEPA_ID:
                 return new SepaAccount();
+            case PaymentMethod.FASTER_PAYMENTS_ID:
+                return new FasterPaymentsAccount();
             case PaymentMethod.NATIONAL_BANK_ID:
                 return new NationalBankAccount();
             case PaymentMethod.SAME_BANK_ID:
@@ -41,6 +43,12 @@ public class PaymentAccountFactory {
                 return new AliPayAccount();
             case PaymentMethod.SWISH_ID:
                 return new SwishAccount();
+            case PaymentMethod.CLEAR_X_CHANGE_ID:
+                return new ClearXchangeAccount();
+            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
+                return new USPostalMoneyOrderAccount();
+            case PaymentMethod.CASH_DEPOSIT_ID:
+                return new CashDepositAccount();
             case PaymentMethod.BLOCK_CHAINS_ID:
                 return new CryptoCurrencyAccount();
             default:

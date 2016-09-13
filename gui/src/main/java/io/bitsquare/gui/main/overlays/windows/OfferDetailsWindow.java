@@ -34,7 +34,6 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.BankUtil;
 import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
@@ -48,7 +47,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -161,39 +159,41 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         String fiatDirectionInfo = ":";
         String btcDirectionInfo = ":";
         Offer.Direction direction = offer.getDirection();
+        String currencyCode = offer.getCurrencyCode();
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(direction), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
             fiatDirectionInfo = direction == Offer.Direction.BUY ? " to receive:" : " to spend:";
             btcDirectionInfo = direction == Offer.Direction.SELL ? " to receive:" : " to spend:";
         } else if (placeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(direction), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
             fiatDirectionInfo = direction == Offer.Direction.SELL ? " to receive:" : " to spend:";
             btcDirectionInfo = direction == Offer.Direction.BUY ? " to receive:" : " to spend:";
         } else {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(direction), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
         }
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(tradeAmount));
-            addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, formatter.formatFiatWithCode(offer.getVolumeByAmount(tradeAmount)));
+            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
+                    formatter.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
         } else {
             addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(offer.getAmount()));
             addLabelTextField(gridPane, ++rowIndex, "Min. bitcoin amount:", formatter.formatCoinWithCode(offer.getMinAmount()));
-            String amount = formatter.formatFiatWithCode(offer.getOfferVolume());
+            String volume = formatter.formatVolumeWithCode(offer.getOfferVolume());
             String minVolume = "";
             if (!offer.getAmount().equals(offer.getMinAmount()))
-                minVolume = " (min. " + formatter.formatFiatWithCode(offer.getMinOfferVolume()) + ")";
-            addLabelTextField(gridPane, ++rowIndex, CurrencyUtil.getNameByCode(offer.getCurrencyCode()) + " amount" + fiatDirectionInfo, amount + minVolume);
+                minVolume = " (min. " + formatter.formatVolumeWithCode(offer.getMinOfferVolume()) + ")";
+            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo, volume + minVolume);
         }
 
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatFiat(tradePrice) + " " + offer.getCurrencyCode() + "/" + "BTC");
+            addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPrice(tradePrice));
         } else {
             Fiat price = offer.getPrice();
             if (offer.getUseMarketBasedPrice()) {
-                addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price) +
+                addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPrice(price) +
                         " (distance from market price: " + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")");
             } else {
-                addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPriceWithCode(price));
+                addLabelTextField(gridPane, ++rowIndex, "Price:", formatter.formatPrice(price));
             }
         }
         final PaymentMethod paymentMethod = offer.getPaymentMethod();
@@ -238,8 +238,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes)) {
                 countries = "All Euro countries";
             } else {
-                countries = CountryUtil.getCodesString(acceptedCountryCodes);
-                tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
+                if (acceptedCountryCodes.size() == 1) {
+                    countries = CountryUtil.getNameAndCode(acceptedCountryCodes.get(0));
+                    tooltip = new Tooltip(countries);
+                } else {
+                    countries = CountryUtil.getCodesString(acceptedCountryCodes);
+                    tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
+                }
             }
             TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex, "Accepted taker countries:", countries).second;
             if (tooltip != null) {
@@ -288,7 +293,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         }
     }
 
-    @NotNull
     private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
         boolean isBuyOffer = offer.getDirection() == Offer.Direction.BUY;
         boolean isBuyerRole = isPlaceOffer ? isBuyOffer : !isBuyOffer;

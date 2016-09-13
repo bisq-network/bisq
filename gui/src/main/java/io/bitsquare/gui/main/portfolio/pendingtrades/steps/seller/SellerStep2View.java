@@ -43,7 +43,7 @@ public class SellerStep2View extends TradeStepView {
     @Override
     protected String getInfoText() {
         return "The deposit transaction has at least one blockchain confirmation.\n" +
-                "You need to wait until the bitcoin buyer starts the " + model.dataModel.getCurrencyCode() + " payment.";
+                "You need to wait until the BTC buyer starts the " + model.dataModel.getCurrencyCode() + " payment.";
     }
 
 
@@ -54,7 +54,7 @@ public class SellerStep2View extends TradeStepView {
     @Override
     protected String getWarningText() {
         setInformationHeadline();
-        return "The buyer still has not done the " + model.dataModel.getCurrencyCode() + " payment.\n" +
+        return "The BTC buyer still has not done the " + model.dataModel.getCurrencyCode() + " payment.\n" +
                 "You need to wait until he starts the payment.\n" +
                 "If the trade has not been completed on " +
                 model.getDateForOpenDispute() +
@@ -67,7 +67,7 @@ public class SellerStep2View extends TradeStepView {
 
     @Override
     protected String getOpenForDisputeText() {
-        return "The buyer has not started his payment!\n" +
+        return "The BTC buyer has not started his payment!\n" +
                 "The max. allowed period for the trade has elapsed.\n" +
                 "Please contact the arbitrator for opening a dispute.";
     }

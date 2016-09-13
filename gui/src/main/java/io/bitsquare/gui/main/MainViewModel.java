@@ -63,6 +63,7 @@ import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.payment.CryptoCurrencyAccount;
 import io.bitsquare.payment.OKPayAccount;
+import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -74,6 +75,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.SetChangeListener;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -130,7 +132,6 @@ public class MainViewModel implements ViewModel {
     private MonadicBinding<String> btcInfoBinding;
 
     final StringProperty marketPrice = new SimpleStringProperty("N/A");
-    final StringProperty marketPriceInverted = new SimpleStringProperty("N/A");
 
     // P2P network
     final StringProperty p2PNetworkInfo = new SimpleStringProperty();
@@ -350,7 +351,7 @@ public class MainViewModel implements ViewModel {
                 bootstrapState.set("Tor node created");
                 p2PNetworkIconId.set("image-connection-tor");
 
-                if (preferences.getUseTorForBitcoinJ()) 
+                if (preferences.getUseTorForBitcoinJ())
                     initWalletService();
             }
 
@@ -430,10 +431,10 @@ public class MainViewModel implements ViewModel {
 
         // We only init wallet service here if not using Tor for bitcoinj.        
         // When using Tor, wallet init must be deferred until Tor is ready.
-        if (!preferences.getUseTorForBitcoinJ()) 
+        if (!preferences.getUseTorForBitcoinJ())
             initWalletService();
     }
-    
+
     private void initWalletService() {
         Log.traceCall();
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
@@ -572,6 +573,7 @@ public class MainViewModel implements ViewModel {
             @Override
             public void run() {
                 try {
+                    Thread.currentThread().setName("checkCryptoThread");
                     log.trace("Run crypto test");
                     // just use any simple dummy msg
                     io.bitsquare.p2p.peers.keepalive.messages.Ping payload = new Ping(1, 1);
@@ -611,6 +613,20 @@ public class MainViewModel implements ViewModel {
                     .onClose(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
                     .show();
         }
+
+        String remindPasswordAndBackupKey = "remindPasswordAndBackup";
+        user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
+            if (preferences.showAgain(remindPasswordAndBackupKey) && change.wasAdded()) {
+                new Popup<>().headLine("Important security recommendation")
+                        .information("We would like to remind you to consider using password protection for your wallet if you have not already enabled that.\n\n" +
+                                "It is also highly recommended to write down the wallet seed words. Those seed words are like a master password for recovering your Bitcoin wallet.\n" +
+                                "At the \"Wallet Seed\" section you find more information.\n\n" +
+                                "Additionally you can backup the complete application data folder at the \"Backup\" section.\n" +
+                                "Please note, that this backup is not encrypted!")
+                        .dontShowAgainId(remindPasswordAndBackupKey, preferences)
+                        .show();
+            }
+        });
     }
 
 
@@ -760,22 +776,14 @@ public class MainViewModel implements ViewModel {
             priceFeedService.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
         if (priceFeedService.getType() == null)
             priceFeedService.setType(PriceFeedService.Type.LAST);
-        priceFeedService.init(price -> {
-                    marketPrice.set(formatter.formatMarketPrice(price));
-                    marketPriceInverted.set(price != 0 ? formatter.formatMarketPrice(1 / price, 8) : "");
-                },
-                (errorMessage, throwable) -> {
-                    marketPrice.set("N/A");
-                    marketPriceInverted.set("N/A");
-                });
+        priceFeedService.init(price -> marketPrice.set(formatter.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
+                (errorMessage, throwable) -> marketPrice.set("N/A"));
         marketPriceCurrencyCode.bind(priceFeedService.currencyCodeProperty());
         typeProperty.bind(priceFeedService.typeProperty());
 
         marketPriceBinding = EasyBind.combine(
-                marketPriceCurrencyCode, marketPrice, marketPriceInverted, preferences.useInvertedMarketPriceProperty(),
-                (marketPriceCurrency, marketPrice, marketPriceInverted, useInvertedMarketPrice) ->
-                        (useInvertedMarketPrice ? marketPriceInverted : marketPrice) +
-                                (useInvertedMarketPrice ? " BTC/" + marketPriceCurrency : " " + marketPriceCurrency + "/BTC"));
+                marketPriceCurrencyCode, marketPrice,
+                (currencyCode, price) -> formatter.getCurrencyPair(currencyCode) + ": " + price);
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
@@ -823,14 +831,11 @@ public class MainViewModel implements ViewModel {
         priceFeedComboBoxItems.stream().forEach(item -> {
             String currencyCode = item.currencyCode;
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-            boolean useInvertedMarketPrice = preferences.getUseInvertedMarketPrice();
             String priceString;
-            String currencyPairString = useInvertedMarketPrice ? "BTC/" + currencyCode : currencyCode + "/BTC";
             if (marketPrice != null) {
                 double price = marketPrice.getPrice(priceFeedService.getType());
                 if (price != 0) {
-                    double priceInverted = 1 / price;
-                    priceString = useInvertedMarketPrice ? formatter.formatMarketPrice(priceInverted, 8) : formatter.formatMarketPrice(price);
+                    priceString = formatter.formatMarketPrice(price, currencyCode);
                     item.setIsPriceAvailable(true);
                 } else {
                     priceString = "N/A";
@@ -840,7 +845,7 @@ public class MainViewModel implements ViewModel {
                 priceString = "N/A";
                 item.setIsPriceAvailable(false);
             }
-            item.setDisplayString(priceString + " " + currencyPairString);
+            item.setDisplayString(formatter.getCurrencyPair(currencyCode) + ": " + priceString);
         });
     }
 
@@ -862,15 +867,15 @@ public class MainViewModel implements ViewModel {
                     .ifPresent(item2 -> selectedPriceFeedComboBoxItemProperty.set(item2));
         }
 
-        // Need a delay to next execute cycle as we get item.isPriceAvailable() set after that call. 
+        // Need a delay a bit as we get item.isPriceAvailable() set after that call. 
         // (In case we add a new currency in settings)
-        UserThread.execute(() -> {
+        UserThread.runAfter(() -> {
             if (item != null) {
                 String code = item.currencyCode;
                 isFiatCurrencyPriceFeedSelected.set(CurrencyUtil.isFiatCurrency(code) && CurrencyUtil.getFiatCurrency(code).isPresent() && item.isPriceAvailable());
                 isCryptoCurrencyPriceFeedSelected.set(CurrencyUtil.isCryptoCurrency(code) && CurrencyUtil.getCryptoCurrency(code).isPresent() && item.isPriceAvailable());
             }
-        });
+        }, 100, TimeUnit.MILLISECONDS);
     }
 
     Optional<PriceFeedComboBoxItem> findPriceFeedComboBoxItem(String currencyCode) {

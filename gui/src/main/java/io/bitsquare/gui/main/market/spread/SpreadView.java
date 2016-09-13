@@ -93,7 +93,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         numberOfBuyOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfBuyOffers).compareTo(o2.numberOfBuyOffers));
         numberOfSellOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfSellOffers).compareTo(o2.numberOfSellOffers));
         totalAmountColumn.setComparator((o1, o2) -> o1.totalAmount.compareTo(o2.totalAmount));
-        spreadColumn.setComparator((o1, o2) -> o1.spread != null && o2.spread != null ? formatter.formatFiatWithCode(o1.spread).compareTo(formatter.formatFiatWithCode(o2.spread)) : 0);
+        spreadColumn.setComparator((o1, o2) -> o1.spread != null && o2.spread != null ? formatter.formatVolumeWithCode(o1.spread).compareTo(formatter.formatVolumeWithCode(o2.spread)) : 0);
 
         numberOfOffersColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(numberOfOffersColumn);
@@ -116,10 +116,10 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private void updateHeaders() {
-        numberOfOffersColumn.setText("Total offers (" + sortedList.stream().mapToInt(item -> item.numberOfOffers).sum() + ")");
-        numberOfBuyOffersColumn.setText("Bid offers (" + sortedList.stream().mapToInt(item -> item.numberOfBuyOffers).sum() + ")");
-        numberOfSellOffersColumn.setText("Ask offers (" + sortedList.stream().mapToInt(item -> item.numberOfSellOffers).sum() + ")");
-        totalAmountColumn.setText("Total amount (" + formatter.formatCoinWithCode(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
+        numberOfOffersColumn.setText("All offers (" + sortedList.stream().mapToInt(item -> item.numberOfOffers).sum() + ")");
+        numberOfBuyOffersColumn.setText("Buy BTC offers (" + sortedList.stream().mapToInt(item -> item.numberOfBuyOffers).sum() + ")");
+        numberOfSellOffersColumn.setText("Sell BTC offers (" + sortedList.stream().mapToInt(item -> item.numberOfSellOffers).sum() + ")");
+        totalAmountColumn.setText("Total amount in BTC (" + formatter.formatCoin(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
     }
 
 
@@ -130,7 +130,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getCurrencyColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Currency") {
             {
-                setMinWidth(100);
+                setMinWidth(110);
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -145,7 +145,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(CurrencyUtil.getNameByCode(item.currencyCode));
+                                    setText(CurrencyUtil.getNameAndCode(item.currencyCode));
                                 else
                                     setText("");
                             }
@@ -242,7 +242,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     private TableColumn<SpreadItem, SpreadItem> getTotalAmountColumn() {
         TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Total amount") {
             {
-                setMinWidth(150);
+                setMinWidth(170);
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -286,7 +286,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (item.spread != null)
-                                        setText(formatter.formatFiatWithCode(item.spread));
+                                        setText(formatter.formatVolumeWithCode(item.spread));
                                     else
                                         setText("-");
                                 } else {

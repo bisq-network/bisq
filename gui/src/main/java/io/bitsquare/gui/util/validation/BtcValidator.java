@@ -70,9 +70,14 @@ public class BtcValidator extends NumberValidator {
     }
 
     protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
-        if (maxTradeLimitInBitcoin != null && Coin.parseCoin(input).compareTo(maxTradeLimitInBitcoin) > 0)
-            return new ValidationResult(false, BSResources.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxTradeLimitInBitcoin)));
-        else
-            return new ValidationResult(true);
+        try {
+            final Coin coin = Coin.parseCoin(input);
+            if (maxTradeLimitInBitcoin != null && coin.compareTo(maxTradeLimitInBitcoin) > 0)
+                return new ValidationResult(false, BSResources.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxTradeLimitInBitcoin)));
+            else
+                return new ValidationResult(true);
+        } catch (Throwable t) {
+            return new ValidationResult(false, "Invalid input: " + t.getMessage());
+        }
     }
 }

@@ -59,6 +59,7 @@ public final class Navigation implements Persistable {
     @Inject
     public Navigation(Storage<Navigation> storage) {
         this.storage = storage;
+        storage.setNumMaxBackupFiles(3);
 
         Navigation persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {

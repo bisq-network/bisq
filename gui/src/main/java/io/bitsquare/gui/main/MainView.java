@@ -291,7 +291,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox(String text) {
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
-        priceComboBox.setVisibleRowCount(40);
+        priceComboBox.setVisibleRowCount(20);
         priceComboBox.setMaxWidth(220);
         priceComboBox.setMinWidth(220);
         priceComboBox.setFocusTraversable(false);
@@ -301,22 +301,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
 
-        final ImageView invertIcon = new ImageView();
-        invertIcon.setId("invert");
-        final Button invertIconButton = new Button("", invertIcon);
-        invertIconButton.setPadding(new Insets(0, 0, 0, 0));
-        invertIconButton.setFocusTraversable(false);
-        invertIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(invertIconButton, new Insets(2, 0, 0, 0));
-        invertIconButton.setOnAction(e -> model.preferences.flipUseInvertedMarketPrice());
-
-        HBox hBox1 = new HBox();
-        hBox1.getChildren().setAll(priceComboBox, invertIconButton);
-
         Label label = new Label(text);
         label.setId("nav-balance-label");
-        label.setTextAlignment(TextAlignment.CENTER);
-        label.setPadding(new Insets(0, 25, 0, 0));
+        label.setPadding(new Insets(0, 0, 0, 2));
 
         final ImageView btcAverageIcon = new ImageView();
         btcAverageIcon.setId("btcaverage");
@@ -324,8 +311,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(btcAverageIconButton, new Insets(0, 27, 0, 0));
+        HBox.setMargin(btcAverageIconButton, new Insets(0, 5, 0, 0));
         btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
+        btcAverageIconButton.setVisible(model.isFiatCurrencyPriceFeedSelected.get());
+        btcAverageIconButton.setManaged(model.isFiatCurrencyPriceFeedSelected.get());
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.setTooltip(new Tooltip("Market price is provided by https://bitcoinaverage.com"));
@@ -336,8 +325,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(poloniexIconButton, new Insets(1, 27, 0, 0));
+        HBox.setMargin(poloniexIconButton, new Insets(1, 3, 0, 0));
         poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
+        poloniexIconButton.setVisible(model.isCryptoCurrencyPriceFeedSelected.get());
+        poloniexIconButton.setManaged(model.isCryptoCurrencyPriceFeedSelected.get());
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.setTooltip(new Tooltip("Market price is provided by https://poloniex.com"));
@@ -351,7 +342,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         VBox vBox = new VBox();
         vBox.setSpacing(3);
         vBox.setPadding(new Insets(11, 0, 0, 0));
-        vBox.getChildren().addAll(hBox1, hBox2);
+        vBox.getChildren().addAll(priceComboBox, hBox2);
         return new Tuple3<>(priceComboBox, label, vBox);
     }
 

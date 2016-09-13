@@ -4,6 +4,8 @@ import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 
+import java.util.Set;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, GetDataRequest {
@@ -13,11 +15,13 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
     private final int messageVersion = Version.getP2PMessageVersion();
     private final NodeAddress senderNodeAddress;
     private final int nonce;
+    private final Set<byte[]> excludedKeys;
 
-    public GetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce) {
+    public GetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce, Set<byte[]> excludedKeys) {
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetUpdatedDataRequest");
         this.senderNodeAddress = senderNodeAddress;
         this.nonce = nonce;
+        this.excludedKeys = excludedKeys;
     }
 
     @Override
@@ -31,6 +35,11 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
     }
 
     @Override
+    public Set<byte[]> getExcludedKeys() {
+        return excludedKeys;
+    }
+
+    @Override
     public int getMessageVersion() {
         return messageVersion;
     }
@@ -38,9 +47,9 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
     @Override
     public String toString() {
         return "GetUpdatedDataRequest{" +
-                "messageVersion=" + messageVersion +
-                ", senderNodeAddress=" + senderNodeAddress +
+                "senderNodeAddress=" + senderNodeAddress +
                 ", nonce=" + nonce +
+                ", messageVersion=" + messageVersion +
                 '}';
     }
 }

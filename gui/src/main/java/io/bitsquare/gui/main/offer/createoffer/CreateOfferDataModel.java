@@ -30,6 +30,8 @@ import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.gui.main.offer.createoffer.monetary.Price;
+import io.bitsquare.gui.main.offer.createoffer.monetary.Volume;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
@@ -47,13 +49,12 @@ import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -96,17 +97,17 @@ class CreateOfferDataModel extends ActivatableDataModel {
     //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
 
     // final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
-    final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> minAmount = new SimpleObjectProperty<>();
     // Price is always otherCurrency/BTC, for altcoins we only invert at the display level. 
     // If we would change the price representation in the domain we would not be backward compatible
-    final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
-    final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
+    final ObjectProperty<Price> price = new SimpleObjectProperty<>();
+    final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
     final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
 
-    final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
+    private final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     PaymentAccount paymentAccount;
     boolean isTabSelected;
@@ -176,15 +177,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
             }
         };
 
-        paymentAccountsChangeListener = change -> paymentAccounts.setAll(user.getPaymentAccounts());
+        paymentAccountsChangeListener = change -> fillPaymentAccounts();
     }
 
     @Override
     protected void activate() {
         addBindings();
         addListeners();
-
-        paymentAccounts.setAll(user.getPaymentAccounts());
 
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
@@ -225,17 +224,19 @@ class CreateOfferDataModel extends ActivatableDataModel {
     boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
 
+        fillPaymentAccounts();
+
         PaymentAccount account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
-        if (account != null) {
+        if (account != null && !isUSBankAccount(account)) {
             paymentAccount = account;
             this.tradeCurrency = tradeCurrency;
         } else {
-            Optional<PaymentAccount> paymentAccountOptional = user.getPaymentAccounts().stream().findAny();
+            Optional<PaymentAccount> paymentAccountOptional = paymentAccounts.stream().findAny();
             if (paymentAccountOptional.isPresent()) {
                 paymentAccount = paymentAccountOptional.get();
                 this.tradeCurrency = paymentAccount.getSingleTradeCurrency();
             } else {
-                // Should never get called as in offer view you should not be able to open a create offer view
+                log.warn("PaymentAccount not available. Should never get called as in offer view you should not be able to open a create offer view");
                 return false;
             }
         }
@@ -261,10 +262,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Offer createAndGetOffer() {
-        long fiatPrice = priceAsFiat.get() != null && !useMarketBasedPrice.get() ? priceAsFiat.get().getValue() : 0L;
+        long priceAsLong = price.get() != null && !useMarketBasedPrice.get() ? price.get().getValue() : 0L;
+        // We use precision 8 in AltcoinPrice but in Offer we use Fiat with precision 4. Will be refactored once in a bigger update....
+        if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
+            priceAsLong = priceAsLong / 10000;
+
         double marketPriceMarginParam = useMarketBasedPrice.get() ? marketPriceMargin : 0;
-        long amount = amountAsCoin.get() != null ? amountAsCoin.get().getValue() : 0L;
-        long minAmount = minAmountAsCoin.get() != null ? minAmountAsCoin.get().getValue() : 0L;
+        long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
+        long minAmount = this.minAmount.get() != null ? this.minAmount.get().getValue() : 0L;
 
         ArrayList<String> acceptedCountryCodes = null;
         if (paymentAccount instanceof SepaAccount) {
@@ -289,11 +294,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
+
         return new Offer(offerId,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,
-                fiatPrice,
+                priceAsLong,
                 marketPriceMarginParam,
                 useMarketBasedPrice.get(),
                 amount,
@@ -314,12 +320,25 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        if (paymentAccount != null)
+        if (paymentAccount != null) {
+
+            if (!this.paymentAccount.equals(paymentAccount)) {
+                volume.set(null);
+                price.set(null);
+                marketPriceMargin = 0;
+            }
             this.paymentAccount = paymentAccount;
+        }
     }
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         if (tradeCurrency != null) {
+            if (!this.tradeCurrency.equals(tradeCurrency)) {
+                volume.set(null);
+                price.set(null);
+                marketPriceMargin = 0;
+            }
+
             this.tradeCurrency = tradeCurrency;
             final String code = tradeCurrency.getCode();
             tradeCurrencyCode.set(code);
@@ -354,6 +373,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
         }
     }
 
+    void setMarketPriceMargin(double marketPriceMargin) {
+        this.marketPriceMargin = marketPriceMargin;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -362,8 +385,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
-        if (minAmountAsCoin.get() != null && amountAsCoin.get() != null)
-            return !minAmountAsCoin.get().isGreaterThan(amountAsCoin.get());
+        if (minAmount.get() != null && amount.get() != null)
+            return !minAmount.get().isGreaterThan(amount.get());
         return true;
     }
 
@@ -400,38 +423,52 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return !isMainNet.get() || feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0;
     }*/
 
+    public ObservableList<PaymentAccount> getPaymentAccounts() {
+        return paymentAccounts;
+    }
+
+    double getMarketPriceMargin() {
+        return marketPriceMargin;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void calculateVolume() {
-        if (priceAsFiat.get() != null &&
-                amountAsCoin.get() != null &&
-                !amountAsCoin.get().isZero() &&
-                !priceAsFiat.get().isZero()) {
-            volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+        if (price.get() != null &&
+                amount.get() != null &&
+                !amount.get().isZero() &&
+                !price.get().isZero()) {
+            try {
+                volume.set(new Volume(price.get().getVolumeByAmount(amount.get())));
+            } catch (Throwable t) {
+                log.error(t.toString());
+            }
         }
 
         updateBalance();
     }
 
     void calculateAmount() {
-        if (volumeAsFiat.get() != null &&
-                priceAsFiat.get() != null &&
-                !volumeAsFiat.get().isZero() &&
-                !priceAsFiat.get().isZero()) {
-            // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-            amountAsCoin.set(formatter.reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get())));
-
-            calculateTotalToPay();
+        if (volume.get() != null &&
+                price.get() != null &&
+                !volume.get().isZero() &&
+                !price.get().isZero()) {
+            try {
+                amount.set(formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get().getMonetary())));
+                calculateTotalToPay();
+            } catch (Throwable t) {
+                log.error(t.toString());
+            }
         }
     }
 
     void calculateTotalToPay() {
-        if (direction != null && amountAsCoin.get() != null) {
+        if (direction != null && amount.get() != null) {
             Coin feeAndSecDeposit = offerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin);
-            Coin feeAndSecDepositAndAmount = feeAndSecDeposit.add(amountAsCoin.get());
+            Coin feeAndSecDepositAndAmount = feeAndSecDeposit.add(amount.get());
             Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDepositAndAmount;
             totalToPayAsCoin.set(required);
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
@@ -503,11 +540,16 @@ class CreateOfferDataModel extends ActivatableDataModel {
         walletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 
-    double getMarketPriceMargin() {
-        return marketPriceMargin;
+    private void fillPaymentAccounts() {
+        paymentAccounts.setAll(user.getPaymentAccounts().stream()
+                .filter(e -> !isUSBankAccount(e))
+                .collect(Collectors.toSet()));
     }
 
-    void setMarketPriceMargin(double marketPriceMargin) {
-        this.marketPriceMargin = marketPriceMargin;
+    private boolean isUSBankAccount(PaymentAccount paymentAccount) {
+        if (paymentAccount instanceof SameCountryRestrictedBankAccount && paymentAccount.getContractData() instanceof BankAccountContractData)
+            return ((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
+        else
+            return false;
     }
 }

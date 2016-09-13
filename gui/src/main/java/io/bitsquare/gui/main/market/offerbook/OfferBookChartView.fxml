@@ -21,7 +21,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.main.market.offerbook.OfferBookChartView"
-      spacing="20.0" fillWidth="true"
+      spacing="10.0" fillWidth="true"
       AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
       AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
       xmlns:fx="http://javafx.com/fxml">

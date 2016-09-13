@@ -60,7 +60,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     //  private ComboBox<String> userLanguageComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
-    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, useStickyMarketPriceCheckBox;
+    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox/*, useStickyMarketPriceCheckBox*/;
     private int gridRow = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
@@ -137,7 +137,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeDisplayCurrencies() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 3, "Currencies to get displayed in list");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 3, "Currencies in market price feed list");
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         preferredTradeCurrencyComboBox = addLabelComboBox(root, gridRow, "Preferred currency:", Layout.FIRST_ROW_DISTANCE).second;
@@ -206,7 +206,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             }
         });
 
-        Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, "Display crypto currencies:");
+        Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, "Display altcoins:");
         GridPane.setValignment(cryptoCurrenciesTuple.first, VPos.TOP);
         GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(0, 0, 0, 20));
         cryptoCurrenciesListView = cryptoCurrenciesTuple.second;
@@ -214,7 +214,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         GridPane.setColumnIndex(cryptoCurrenciesListView, 3);
         cryptoCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
         cryptoCurrenciesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
-        placeholder = new Label("There are no crypto currencies selected");
+        placeholder = new Label("There are no altcoins selected");
         placeholder.setWrapText(true);
         cryptoCurrenciesListView.setPlaceholder(placeholder);
         cryptoCurrenciesListView.setCellFactory(new Callback<ListView<CryptoCurrency>, ListCell<CryptoCurrency>>() {
@@ -273,7 +273,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         Tuple2<Label, ComboBox> labelComboBoxTuple2 = addLabelComboBox(root, gridRow);
         cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
-        cryptoCurrenciesComboBox.setPromptText("Add cryptocurrency");
+        cryptoCurrenciesComboBox.setPromptText("Add altcoin");
         cryptoCurrenciesComboBox.setConverter(new StringConverter<CryptoCurrency>() {
             @Override
             public String toString(CryptoCurrency tradeCurrency) {
@@ -342,7 +342,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, "Show my own offers in offer book:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
-        useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
+        // useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
+        sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, "Sort market lists with nr. of offers/trades:", "").second;
         resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all don't show again flags:", "Reset", 0).second;
     }
 
@@ -354,7 +355,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private void activateDisplayCurrencies() {
         preferredTradeCurrencyComboBox.setItems(tradeCurrencies);
         preferredTradeCurrencyComboBox.getSelectionModel().select(preferences.getPreferredTradeCurrency());
-        preferredTradeCurrencyComboBox.setVisibleRowCount(Math.min(preferredTradeCurrencyComboBox.getItems().size(), 25));
+        preferredTradeCurrencyComboBox.setVisibleRowCount(25);
         preferredTradeCurrencyComboBox.setOnAction(e -> {
             TradeCurrency selectedItem = preferredTradeCurrencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null)
@@ -456,8 +457,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         useAnimationsCheckBox.setSelected(preferences.getUseAnimations());
         useAnimationsCheckBox.setOnAction(e -> preferences.setUseAnimations(useAnimationsCheckBox.isSelected()));
 
-        useStickyMarketPriceCheckBox.setSelected(preferences.getUseStickyMarketPrice());
-        useStickyMarketPriceCheckBox.setOnAction(e -> preferences.setUseStickyMarketPrice(useStickyMarketPriceCheckBox.isSelected()));
+        // useStickyMarketPriceCheckBox.setSelected(preferences.getUseStickyMarketPrice());
+        // useStickyMarketPriceCheckBox.setOnAction(e -> preferences.setUseStickyMarketPrice(useStickyMarketPriceCheckBox.isSelected()));
+
+        sortMarketCurrenciesNumericallyCheckBox.setSelected(preferences.getSortMarketCurrenciesNumerically());
+        sortMarketCurrenciesNumericallyCheckBox.setOnAction(e -> preferences.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumericallyCheckBox.isSelected()));
 
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgainForType());
 
@@ -486,7 +490,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     private void deactivateDisplayPreferences() {
         useAnimationsCheckBox.setOnAction(null);
-        useStickyMarketPriceCheckBox.setOnAction(null);
+        // useStickyMarketPriceCheckBox.setOnAction(null);
+        sortMarketCurrenciesNumericallyCheckBox.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);
         autoSelectArbitratorsCheckBox.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);

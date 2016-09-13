@@ -52,7 +52,7 @@ public class BankUtil {
             case "BR":
                 return "Bank name:";
             default:
-                return "Bank name (optional):";
+                return isBankNameRequired(countryCode) ? "Bank name:" : "Bank name (optional):";
         }
     }
 
@@ -83,7 +83,7 @@ public class BankUtil {
             case "HK":
                 return "Bank code:";
             default:
-                return "Bank ID (e.g. BIC or SWIFT) (optional):";
+                return isBankIdRequired(countryCode) ? "Bank ID (e.g. BIC or SWIFT):" : "Bank ID (e.g. BIC or SWIFT) (optional):";
         }
 
     }
@@ -120,7 +120,7 @@ public class BankUtil {
             case "CA":
                 return "Transit Number:";
             default:
-                return "Branch nr. (optional):";
+                return isBranchIdRequired(countryCode) ? "Branch nr.:" : "Branch nr. (optional):";
         }
     }
 

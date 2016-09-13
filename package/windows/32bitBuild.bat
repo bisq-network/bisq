@@ -6,7 +6,7 @@
 :: 64 bit build
 :: Needs Inno Setup 5 or later (http://www.jrsoftware.org/isdl.php)
 
-SET version=0.4.9.2
+SET version=0.4.9.6
 SET jdk=C:\Program Files\Java\jdk1.8.0_92
 SET outdir=\\VBOXSVR\vm_shared_windows_32bit
 

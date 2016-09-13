@@ -43,7 +43,7 @@ public class SellerStep1View extends TradeStepView {
     @Override
     protected String getInfoText() {
         return "Deposit transaction has been published.\n" +
-                "The bitcoin buyer needs to wait for at least one blockchain confirmation before " +
+                "The BTC buyer needs to wait for at least one blockchain confirmation before " +
                 "starting the payment.";
     }
 

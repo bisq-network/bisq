@@ -111,9 +111,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<Boolean> minAmountFocusedListener;
     private ChangeListener<Boolean> priceFocusedListener, priceAsPercentageFocusedListener;
     private ChangeListener<Boolean> volumeFocusedListener;
-    private ChangeListener<Boolean> showWarningInvalidBtcDecimalPlacesListener;
-    private ChangeListener<Boolean> showWarningInvalidFiatDecimalPlacesPlacesListener;
-    private ChangeListener<Boolean> showWarningAdjustedVolumeListener;
     private ChangeListener<String> errorMessageListener;
     private ChangeListener<Boolean> placeOfferCompletedListener;
     // private ChangeListener<Coin> feeFromFundingTxListener;
@@ -201,7 +198,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             addressTextField.setAddress(model.getAddressAsString());
             addressTextField.setPaymentLabel(model.getPaymentLabel());
 
-            paymentAccountsComboBox.setItems(model.getPaymentAccounts());
+            paymentAccountsComboBox.setItems(model.dataModel.getPaymentAccounts());
             paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
 
             onPaymentAccountsComboBoxSelected();
@@ -244,10 +241,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     public void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = model.initWithData(direction, tradeCurrency);
 
-        if (!result) {
-            log.error("Payment account set up. That should not be possible as UI does not support that case.");
+        if (!result) 
             new Popup().warning("You don't have a payment account set up.").onClose(this::close).show();
-        }
 
         if (direction == Offer.Direction.BUY) {
             imageView.setId("image-buy-large");
@@ -444,7 +439,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addBindings() {
         amountBtcLabel.textProperty().bind(model.btcCode);
-        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> formatter.getCurrencyPair(model.tradeCurrencyCode.get()), model.btcCode, model.tradeCurrencyCode));
+        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> formatter.getCounterCurrency(model.tradeCurrencyCode.get()), model.btcCode, model.tradeCurrencyCode));
         fixedPriceTextField.disableProperty().bind(model.dataModel.useMarketBasedPrice);
         priceCurrencyLabel.disableProperty().bind(model.dataModel.useMarketBasedPrice);
         marketBasedPriceTextField.disableProperty().bind(model.dataModel.useMarketBasedPrice.not());
@@ -453,8 +448,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
         minAmountBtcLabel.textProperty().bind(model.btcCode);
         priceDescriptionLabel.textProperty().bind(createStringBinding(() -> {
-            String currencyCode = model.tradeCurrencyCode.get();
-            return BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode);
+            // String currencyCode = model.tradeCurrencyCode.get();
+            return formatter.getPriceWithCurrencyCode(model.tradeCurrencyCode.get());
+            //BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode);
            /* return CurrencyUtil.isCryptoCurrency(currencyCode) ?
                     BSResources.get("createOffer.amountPriceBox.priceDescriptionAltcoin", currencyCode) :
                     BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode);*/
@@ -466,7 +462,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         amountTextField.textProperty().bindBidirectional(model.amount);
         minAmountTextField.textProperty().bindBidirectional(model.minAmount);
         fixedPriceTextField.textProperty().bindBidirectional(model.price);
-        marketBasedPriceTextField.textProperty().bindBidirectional(model.priceAsPercentage);
+        marketBasedPriceTextField.textProperty().bindBidirectional(model.marketPriceMargin);
         volumeTextField.textProperty().bindBidirectional(model.volume);
         volumeTextField.promptTextProperty().bind(model.volumePromptLabel);
         totalToPayTextField.textProperty().bind(model.totalToPay);
@@ -513,7 +509,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         amountTextField.textProperty().unbindBidirectional(model.amount);
         minAmountTextField.textProperty().unbindBidirectional(model.minAmount);
         fixedPriceTextField.textProperty().unbindBidirectional(model.price);
-        marketBasedPriceTextField.textProperty().unbindBidirectional(model.priceAsPercentage);
+        marketBasedPriceTextField.textProperty().unbindBidirectional(model.marketPriceMargin);
         marketBasedPriceLabel.prefWidthProperty().unbind();
         volumeTextField.textProperty().unbindBidirectional(model.volume);
         volumeTextField.promptTextProperty().unbindBidirectional(model.volume);
@@ -581,30 +577,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         };
         priceAsPercentageFocusedListener = (o, oldValue, newValue) -> {
             model.onFocusOutPriceAsPercentageTextField(oldValue, newValue, marketBasedPriceTextField.getText());
-            marketBasedPriceTextField.setText(model.priceAsPercentage.get());
+            marketBasedPriceTextField.setText(model.marketPriceMargin.get());
         };
         volumeFocusedListener = (o, oldValue, newValue) -> {
             model.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
             volumeTextField.setText(model.volume.get());
-        };
-        showWarningInvalidBtcDecimalPlacesListener = (o, oldValue, newValue) -> {
-            if (newValue) {
-                new Popup().warning(BSResources.get("createOffer.amountPriceBox.warning.invalidBtcDecimalPlaces")).show();
-                model.showWarningInvalidBtcDecimalPlaces.set(false);
-            }
-        };
-        showWarningInvalidFiatDecimalPlacesPlacesListener = (o, oldValue, newValue) -> {
-            if (newValue) {
-                new Popup().warning(BSResources.get("createOffer.amountPriceBox.warning.invalidFiatDecimalPlaces")).show();
-                model.showWarningInvalidFiatDecimalPlaces.set(false);
-            }
-        };
-        showWarningAdjustedVolumeListener = (o, oldValue, newValue) -> {
-            if (newValue) {
-                new Popup().warning(BSResources.get("createOffer.amountPriceBox.warning.adjustedVolume")).show();
-                model.showWarningAdjustedVolume.set(false);
-                volumeTextField.setText(model.volume.get());
-            }
         };
         errorMessageListener = (o, oldValue, newValue) -> {
             if (newValue != null)
@@ -684,9 +661,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.focusedProperty().addListener(volumeFocusedListener);
 
         // warnings
-        model.showWarningInvalidBtcDecimalPlaces.addListener(showWarningInvalidBtcDecimalPlacesListener);
-        model.showWarningInvalidFiatDecimalPlaces.addListener(showWarningInvalidFiatDecimalPlacesPlacesListener);
-        model.showWarningAdjustedVolume.addListener(showWarningAdjustedVolumeListener);
         model.errorMessage.addListener(errorMessageListener);
         // model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
 
@@ -708,9 +682,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.focusedProperty().removeListener(volumeFocusedListener);
 
         // warnings
-        model.showWarningInvalidBtcDecimalPlaces.removeListener(showWarningInvalidBtcDecimalPlacesListener);
-        model.showWarningInvalidFiatDecimalPlaces.removeListener(showWarningInvalidFiatDecimalPlacesPlacesListener);
-        model.showWarningAdjustedVolume.removeListener(showWarningAdjustedVolumeListener);
         model.errorMessage.removeListener(errorMessageListener);
         // model.dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
 
@@ -763,6 +734,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, "Payment account:", Layout.FIRST_ROW_DISTANCE).second;
         paymentAccountsComboBox.setPromptText("Select payment account");
+        paymentAccountsComboBox.setMinWidth(300);
         editOfferElements.add(paymentAccountsComboBox);
 
         // we display either currencyComboBox (multi currency account) or currencyTextField (single)

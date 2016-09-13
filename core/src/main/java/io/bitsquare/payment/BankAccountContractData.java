@@ -47,7 +47,7 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
 
     @Override
     public String getPaymentDetails() {
-        return "National Bank transfer - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+        return "Bank account transfer - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override

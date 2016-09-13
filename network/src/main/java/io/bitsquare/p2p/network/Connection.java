@@ -16,6 +16,7 @@ import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.BanList;
+import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
@@ -60,7 +61,8 @@ public class Connection implements MessageListener {
     public enum PeerType {
         SEED_NODE,
         PEER,
-        DIRECT_MSG_PEER
+        DIRECT_MSG_PEER,
+        INITIAL_DATA_REQUEST
     }
 
 
@@ -205,6 +207,8 @@ public class Connection implements MessageListener {
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
                                 peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
+                    } else if (message instanceof GetDataResponse && ((GetDataResponse) message).isGetUpdatedDataResponse) {
+                        setPeerType(Connection.PeerType.PEER);
                     } else {
                         log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
@@ -711,16 +715,16 @@ public class Connection implements MessageListener {
                         Thread.currentThread().setName("InputHandler-" + sharedModel.connection.getPeersNodeAddressOptional().get().getFullAddress());
                         threadNameSet = true;
                     }
-
-                    if (objectInputStream.available() < 0) {
-                        log.warn("Shutdown because objectInputStream.available() < 0. objectInputStream.available()=" + objectInputStream.available());
-                        sharedModel.shutDown(CloseConnectionReason.TERMINATED);
-                        return;
-                    }
-
-                    Connection connection = sharedModel.connection;
-                    log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
                     try {
+                        if (sharedModel.getSocket().isClosed() || objectInputStream.available() < 0) {
+                            log.warn("Shutdown because objectInputStream.available() < 0. objectInputStream.available()=" + objectInputStream.available());
+                            sharedModel.shutDown(CloseConnectionReason.TERMINATED);
+                            return;
+                        }
+
+                        Connection connection = sharedModel.connection;
+                        log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
+
                         Object rawInputObject = objectInputStream.readObject();
 
                         // Throttle inbound messages
@@ -757,12 +761,7 @@ public class Connection implements MessageListener {
                                     Utilities.toTruncatedString(rawInputObject),
                                     size);
                         } else {
-                            log.error("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "Invalid data arrived at inputHandler of connection {}.\n" +
-                                            "Size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    size);
+                            log.error("Invalid data arrived at inputHandler of connection {} Size={}", connection, size);
                             try {
                                 // Don't call toString on rawInputObject
                                 log.error("rawInputObject.className=" + rawInputObject.getClass().getName());
@@ -783,11 +782,12 @@ public class Connection implements MessageListener {
 
                         // First we check the size
                         boolean exceeds;
-                        if (rawInputObject instanceof GetDataResponse)
+                        if (rawInputObject instanceof GetDataResponse) {
                             exceeds = size > MAX_MSG_SIZE_GET_DATA;
-                        else
+                            log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
+                        } else {
                             exceeds = size > MAX_MSG_SIZE;
-
+                        }
                         if (exceeds)
                             log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, message);
 
@@ -849,6 +849,9 @@ public class Connection implements MessageListener {
                             // We don't want to get the activity ts updated by ping/pong msg
                             if (!(message instanceof KeepAliveMessage))
                                 connection.statistic.updateLastActivityTimestamp();
+
+                            if (message instanceof GetDataRequest)
+                                connection.setPeerType(PeerType.INITIAL_DATA_REQUEST);
 
                             // First a seed node gets a message from a peer (PreliminaryDataRequest using
                             // AnonymousMessage interface) which does not have its hidden service

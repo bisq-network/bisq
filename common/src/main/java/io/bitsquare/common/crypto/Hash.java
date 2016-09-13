@@ -37,15 +37,14 @@ public class Hash {
      * @return Hash of data
      */
     public static byte[] getHash(byte[] data) {
-        MessageDigest digest;
         try {
-            digest = MessageDigest.getInstance("SHA-256", "BC");
+            MessageDigest digest = MessageDigest.getInstance("SHA-256", "BC");
+            digest.update(data, 0, data.length);
+            return digest.digest();
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             log.error("Could not create MessageDigest for hash. " + e.getMessage());
             throw new RuntimeException(e);
         }
-        digest.update(data, 0, data.length);
-        return digest.digest();
     }
 
     /**

@@ -30,6 +30,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.*;
 import io.bitsquare.p2p.NodeAddress;
@@ -51,11 +52,15 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 class OfferBookViewModel extends ActivatableViewModel {
@@ -67,6 +72,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     final Preferences preferences;
     private final P2PService p2PService;
     final PriceFeedService priceFeedService;
+    private Set<String> tradeCurrencyCodes = new HashSet<>();
     private ClosedTradableManager closedTradableManager;
     private FilterManager filterManager;
     private Navigation navigation;
@@ -74,10 +80,10 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
-    private final ListChangeListener<TradeCurrency> tradeCurrencyListChangeListener;
     private TradeCurrency selectedTradeCurrency;
-    private final ObservableList<TradeCurrency> allTradeCurrencies = FXCollections.observableArrayList();
-
+    private final ListChangeListener<OfferBookListItem> offerBookListItemsListener;
+    final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
+    private CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1);
     private Offer.Direction direction;
 
     private final StringProperty btcCode = new SimpleStringProperty();
@@ -116,45 +122,39 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.formatter = formatter;
 
         offerBookListItems = offerBook.getOfferBookListItems();
+        offerBookListItemsListener = c -> fillTradeCurrencies();
 
         this.filteredItems = new FilteredList<>(offerBookListItems);
         this.sortedItems = new SortedList<>(filteredItems);
-
-        tradeCurrencyListChangeListener = c -> fillAllTradeCurrencies();
     }
 
     @Override
     protected void activate() {
-        fillAllTradeCurrencies();
+        fillTradeCurrencies();
+        offerBookListItems.addListener(offerBookListItemsListener);
+
+        String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        if (code != null && !code.equals("SHOW_ALL_FLAG") && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
+            showAllTradeCurrenciesProperty.set(false);
+            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
+        } else {
+            showAllTradeCurrenciesProperty.set(true);
+            selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+        }
+        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
+
+        setPriceFeedType();
+
         btcCode.bind(preferences.btcDenominationProperty());
-        preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
         applyFilterPredicate();
         setMarketPriceFeedCurrency();
     }
 
-
     @Override
     protected void deactivate() {
         btcCode.unbind();
-        preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
-    }
-
-    private void fillAllTradeCurrencies() {
-        allTradeCurrencies.clear();
-        // Used for ignoring filter (show all)
-        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG));
-        allTradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
-        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
-    }
-
-    private void setMarketPriceFeedCurrency() {
-        if (!preferences.getUseStickyMarketPrice() && isTabSelected) {
-            if (showAllTradeCurrenciesProperty.get())
-                priceFeedService.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
-            else
-                priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
-        }
+        offerBookListItems.removeListener(offerBookListItemsListener);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -163,16 +163,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     void initWithDirection(Offer.Direction direction) {
         this.direction = direction;
-
-        String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
-        if (code != null && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
-            showAllTradeCurrenciesProperty.set(false);
-            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
-        } else {
-            showAllTradeCurrenciesProperty.set(true);
-            selectedTradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
-        }
-        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
     }
 
     void onTabSelected(boolean isSelected) {
@@ -185,7 +175,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onSetTradeCurrency(TradeCurrency tradeCurrency) {
+    void onSetTradeCurrency(TradeCurrency tradeCurrency) {
         if (tradeCurrency != null) {
             String code = tradeCurrency.getCode();
             boolean showAllEntry = isShowAllEntry(code);
@@ -197,8 +187,8 @@ class OfferBookViewModel extends ActivatableViewModel {
                 tradeCurrencyCode.set(code);
             }
 
+            setPriceFeedType();
             setMarketPriceFeedCurrency();
-
             applyFilterPredicate();
 
             if (direction == Offer.Direction.BUY)
@@ -208,7 +198,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
     }
 
-    public void onSetPaymentMethod(PaymentMethod paymentMethod) {
+    void onSetPaymentMethod(PaymentMethod paymentMethod) {
         showAllPaymentMethods = isShowAllEntry(paymentMethod.getId());
         if (!showAllPaymentMethods)
             this.selectedPaymentMethod = paymentMethod;
@@ -237,28 +227,41 @@ class OfferBookViewModel extends ActivatableViewModel {
         return direction;
     }
 
-    public ObservableList<TradeCurrency> getTradeCurrencies() {
-        return allTradeCurrencies;
-    }
-
     boolean isBootstrapped() {
         return p2PService.isBootstrapped();
     }
 
-    public TradeCurrency getSelectedTradeCurrency() {
+    TradeCurrency getSelectedTradeCurrency() {
         return selectedTradeCurrency;
     }
 
-    public ObservableList<PaymentMethod> getPaymentMethods() {
+    ObservableList<PaymentMethod> getPaymentMethods() {
         ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.ALL_VALUES);
         list.add(0, new PaymentMethod(GUIUtil.SHOW_ALL_FLAG, 0, 0, null));
         return list;
     }
 
+    ObservableList<CurrencyListItem> getCurrencyListItems() {
+        return currencyListItems;
+    }
+
+    Optional<CurrencyListItem> getSelectedCurrencyListItem() {
+        return currencyListItems.stream().filter(e -> tradeCurrencyCode.get() != null && e.tradeCurrency.getCode().equals(tradeCurrencyCode.get())).findAny();
+    }
+
+    CurrencyListItem getShowAllCurrencyListItem() {
+        return showAllCurrencyListItem;
+    }
+
 
     String getAmount(OfferBookListItem item) {
-        return (item != null) ? formatter.formatCoin(item.getOffer().getAmount()) +
-                " (" + formatter.formatCoin(item.getOffer().getMinAmount()) + ")" : "";
+        Offer offer = item.getOffer();
+        Coin amount = offer.getAmount();
+        Coin minAmount = offer.getMinAmount();
+        if (amount.equals(minAmount))
+            return formatter.formatAmount(offer);
+        else
+            return formatter.formatAmountWithMinAmount(offer);
     }
 
     String getPrice(OfferBookListItem item) {
@@ -273,22 +276,24 @@ class OfferBookViewModel extends ActivatableViewModel {
                 postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
             }
             if (showAllTradeCurrenciesProperty.get())
-                return formatter.formatPriceWithCode(price) + postFix;
+                return formatter.formatPrice(price) + postFix;
             else
-                return formatter.formatFiat(price) + postFix;
+                return formatter.formatPrice(price) + postFix;
         } else {
             return "N/A";
         }
     }
 
     String getVolume(OfferBookListItem item) {
-        Fiat offerVolume = item.getOffer().getOfferVolume();
-        Fiat minOfferVolume = item.getOffer().getMinOfferVolume();
+        Offer offer = item.getOffer();
+        Fiat offerVolume = offer.getOfferVolume();
+        Fiat minOfferVolume = offer.getMinOfferVolume();
         if (offerVolume != null && minOfferVolume != null) {
-            if (showAllTradeCurrenciesProperty.get())
-                return formatter.formatFiatWithCode(offerVolume) + " (" + formatter.formatFiatWithCode(minOfferVolume) + ")";
+            String postFix = showAllTradeCurrenciesProperty.get() ? " " + offer.getCurrencyCode() : "";
+            if (offerVolume.equals(minOfferVolume))
+                return formatter.formatVolume(offerVolume) + postFix;
             else
-                return formatter.formatFiat(offerVolume) + " (" + formatter.formatFiat(minOfferVolume) + ")";
+                return formatter.formatMinVolumeAndVolume(offer) + postFix;
         } else {
             return "N/A";
         }
@@ -313,33 +318,87 @@ class OfferBookViewModel extends ActivatableViewModel {
         String result = "";
         if (item != null) {
             Offer offer = item.getOffer();
-            String method = BSResources.get(offer.getPaymentMethod().getId());
+            result = "Payment method: " + BSResources.get(offer.getPaymentMethod().getId());
+            result += "\nCurrency: " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
+
             String methodCountryCode = offer.getCountryCode();
+            if (methodCountryCode != null) {
+                String bankId = offer.getBankId();
+                if (bankId != null && !bankId.equals("null")) {
+                    if (BankUtil.isBankIdRequired(methodCountryCode))
+                        result += "\nOfferers bank ID: " + bankId;
+                    else if (BankUtil.isBankNameRequired(methodCountryCode))
+                        result += "\nOfferers bank name: " + bankId;
+                }
+            }
 
             if (methodCountryCode != null)
-                result = method + "\n\nOfferers seat of bank country:\n" + CountryUtil.getNameByCode(methodCountryCode);
-            else
-                result = method;
+                result += "\nOfferers seat of bank country: " + CountryUtil.getNameByCode(methodCountryCode);
 
             List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
             List<String> acceptedBanks = offer.getAcceptedBankIds();
             if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
                 if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
-                    result += "\n\nAccepted takers seat of bank countries:\nAll Euro countries";
+                    result += "\nAccepted seat of bank countries (taker): All Euro countries";
                 else
-                    result += "\n\nAccepted taker seat of bank countries:\n" + CountryUtil.getNamesByCodesString(acceptedCountryCodes);
+                    result += "\nAccepted seat of bank countries (taker):\n" + CountryUtil.getNamesByCodesString(acceptedCountryCodes);
             } else if (acceptedBanks != null && !acceptedBanks.isEmpty()) {
                 if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK))
-                    result += "\n\nBank name: " + acceptedBanks.get(0);
+                    result += "\nBank name: " + acceptedBanks.get(0);
                 else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS))
-                    result += "\n\nAccepted banks: " + Joiner.on(", ").join(acceptedBanks);
+                    result += "\nAccepted banks: " + Joiner.on(", ").join(acceptedBanks);
             }
         }
         return result;
     }
 
     String getDirectionLabel(Offer offer) {
-        return formatter.getDirection(offer.getMirroredDirection());
+        return formatter.getDirectionWithCode(offer.getMirroredDirection(), offer.getCurrencyCode());
+    }
+
+    String getDirectionLabelTooltip(Offer offer) {
+        return formatter.getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setMarketPriceFeedCurrency() {
+        if (!preferences.getUseStickyMarketPrice() && isTabSelected) {
+            if (showAllTradeCurrenciesProperty.get())
+                priceFeedService.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
+            else
+                priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
+        }
+    }
+
+    private void setPriceFeedType() {
+        if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
+            priceFeedService.setType(direction == Offer.Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
+        else
+            priceFeedService.setType(direction == Offer.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
+    }
+
+    private void fillTradeCurrencies() {
+        // Don't use a set as we need all entries
+        Offer.Direction mirroredDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
+        List<TradeCurrency> tradeCurrencyList = offerBookListItems.stream()
+                .filter(e -> e.getOffer().getDirection() == mirroredDirection)
+                .map(e -> {
+                    Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(e.getOffer().getCurrencyCode());
+                    if (tradeCurrencyOptional.isPresent())
+                        return tradeCurrencyOptional.get();
+                    else
+                        return null;
+
+                })
+                .filter(e -> e != null)
+                .collect(Collectors.toList());
+
+        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, showAllCurrencyListItem, preferences);
+        tradeCurrencyCodes = currencyListItems.stream().map(e -> e.tradeCurrency.getCode()).collect(Collectors.toSet());
     }
 
 
@@ -355,7 +414,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return PaymentAccountUtil.isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
     }
 
-    public boolean hasPaymentAccountForCurrency() {
+    boolean hasPaymentAccountForCurrency() {
         return (showAllTradeCurrenciesProperty.get() && !user.getPaymentAccounts().isEmpty()) || user.hasPaymentAccountForCurrency(selectedTradeCurrency);
     }
 
@@ -371,8 +430,13 @@ class OfferBookViewModel extends ActivatableViewModel {
         filteredItems.setPredicate(offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
             boolean directionResult = offer.getDirection() != direction;
-            boolean currencyResult = showAllTradeCurrenciesProperty.get() ||
-                    offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
+            boolean currencyResult;
+            final String currencyCode = offer.getCurrencyCode();
+            if (showAllTradeCurrenciesProperty.get()) {
+                currencyResult = true;
+            } else
+                currencyResult = currencyCode.equals(selectedTradeCurrency.getCode());
+
             boolean paymentMethodResult = showAllPaymentMethods ||
                     offer.getPaymentMethod().equals(selectedPaymentMethod);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.getShowOwnOffersInOfferBook();
@@ -380,7 +444,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         });
     }
 
-    public boolean hasMatchingArbitrator(Offer offer) {
+    boolean hasMatchingArbitrator(Offer offer) {
         for (NodeAddress offerArbitratorNodeAddress : offer.getArbitratorNodeAddresses()) {
             for (NodeAddress acceptedArbitratorNodeAddress : user.getAcceptedArbitratorAddresses()) {
                 if (offerArbitratorNodeAddress.equals(acceptedArbitratorNodeAddress))

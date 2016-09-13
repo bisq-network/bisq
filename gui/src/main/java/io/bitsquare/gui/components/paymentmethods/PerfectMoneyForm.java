@@ -23,10 +23,12 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PerfectMoneyValidator;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PerfectMoneyAccount;
 import io.bitsquare.payment.PerfectMoneyAccountContractData;
+import javafx.collections.FXCollections;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -65,19 +67,21 @@ public class PerfectMoneyForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", perfectMoneyAccount.getSingleTradeCurrency().getNameAndCode());
+        addTradeCurrencyComboBox();
+        currencyComboBox.setItems(FXCollections.observableArrayList(new FiatCurrency("USD"), new FiatCurrency("EUR")));
+        currencyComboBox.getSelectionModel().select(0);
+
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
-
 
     @Override
     protected void autoFillNameTextField() {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String accountNr = accountNrInputTextField.getText();
-            accountNr = StringUtils.abbreviate(accountNr, 5);
+            accountNr = StringUtils.abbreviate(accountNr, 9);
             String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(", ").concat(accountNr));
+            accountNameTextField.setText(method.concat(": ").concat(accountNr));
         }
     }
 
@@ -88,7 +92,9 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(perfectMoneyAccount.getPaymentMethod().getId()));
         TextField field = addLabelTextField(gridPane, ++gridRow, "Account nr.:", perfectMoneyAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
+
         addLabelTextField(gridPane, ++gridRow, "Currency:", perfectMoneyAccount.getSingleTradeCurrency().getNameAndCode());
+
         addAllowedPeriod();
     }
 

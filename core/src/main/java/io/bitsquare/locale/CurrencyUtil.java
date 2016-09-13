@@ -53,6 +53,8 @@ public class CurrencyUtil {
         list.add(new FiatCurrency("RUB"));
         list.add(new FiatCurrency("INR"));
 
+        list.sort(TradeCurrency::compareTo);
+
         TradeCurrency defaultTradeCurrency = getDefaultTradeCurrency();
         FiatCurrency defaultFiatCurrency = defaultTradeCurrency instanceof FiatCurrency ? (FiatCurrency) defaultTradeCurrency : null;
         if (defaultFiatCurrency != null && list.contains(defaultFiatCurrency)) {
@@ -77,6 +79,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
+        result.add(new CryptoCurrency("STEEMUSD", "Steem Dollars", true));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("XEM", "NEM"));
@@ -86,6 +89,17 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
         result.add(new CryptoCurrency("SDC", "ShadowCash"));
+        result.add(new CryptoCurrency("BTS", "BitShares"));
+        result.add(new CryptoCurrency("BITUSD", "BitUSD", true));
+        result.add(new CryptoCurrency("BITEUR", "BitEUR", true));
+        result.add(new CryptoCurrency("BITCNY", "BitCNY", true));
+        result.add(new CryptoCurrency("BITCHF", "BitCHF", true));
+        result.add(new CryptoCurrency("BITGBP", "BitGBP", true));
+        result.add(new CryptoCurrency("BITNZD", "BitNZD", true));
+        result.add(new CryptoCurrency("BITAUD", "BitAUD", true));
+        result.add(new CryptoCurrency("BITSGD", "BitSGD", true));
+        result.add(new CryptoCurrency("BITHKD", "BitHKD", true));
+        result.add(new CryptoCurrency("BITSEK", "BitSEK", true));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("XPM", "Primecoin"));
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
@@ -94,7 +108,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BLK", "Blackcoin"));
         result.add(new CryptoCurrency("FCT", "Factom"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
-        result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
         result.add(new CryptoCurrency("FAIR", "FairCoin"));
@@ -130,11 +143,25 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("USDT", "USD Tether"));
         result.add(new CryptoCurrency("EURT", "EUR Tether"));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
+        result.add(new CryptoCurrency("SYNX", "Syndicate"));
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
         result.add(new CryptoCurrency("DAO", "DAO", true));
         result.add(new CryptoCurrency("CMT", "Comet"));
         result.add(new CryptoCurrency("SYNQ", "BitSYNQ"));
-        result.add(new CryptoCurrency("ETHC", "EtherClassic (deprecated ticker symbol)"));
+        result.add(new CryptoCurrency("LBC", "LBRY Credits"));
+        result.add(new CryptoCurrency("HNC", "HunCoin"));
+        result.add(new CryptoCurrency("UNO", "Unobtanium"));
+        result.add(new CryptoCurrency("DGB", "Digibyte"));
+        result.add(new CryptoCurrency("VCN", "VCoin"));
+        result.add(new CryptoCurrency("DCR", "Decred"));
+        result.add(new CryptoCurrency("CBX", "Crypto Bullion"));
+        result.add(new CryptoCurrency("1CR", "1CRedit"));
+        result.add(new CryptoCurrency("YACC", "YACCoin"));
+        result.add(new CryptoCurrency("AIB", "Advanced Internet Blocks"));
+        result.add(new CryptoCurrency("OPAL", "Opal"));
+        result.add(new CryptoCurrency("AMP", "Synereo", true));
+        
+        result.sort(TradeCurrency::compareTo);
         return result;
     }
 
@@ -151,9 +178,13 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
+        result.add(new CryptoCurrency("BITUSD", "BitUSD", true));
+        result.add(new CryptoCurrency("STEEMUSD", "Steem Dollars", true));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
+
+        result.sort(TradeCurrency::compareTo);
         return result;
     }
 
@@ -169,7 +200,7 @@ public class CurrencyUtil {
 
     // At OKPay you can exchange internally those currencies
     public static List<TradeCurrency> getAllOKPayCurrencies() {
-        return new ArrayList<>(Arrays.asList(
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("EUR"),
                 new FiatCurrency("USD"),
                 new FiatCurrency("GBP"),
@@ -192,6 +223,8 @@ public class CurrencyUtil {
                 new FiatCurrency("HKD"),
                 new FiatCurrency("CNY")
         ));
+        currencies.sort(TradeCurrency::compareTo);
+        return currencies;
     }
 
     public static boolean isFiatCurrency(String currencyCode) {
@@ -241,9 +274,13 @@ public class CurrencyUtil {
             try {
                 return Currency.getInstance(currencyCode).getDisplayName(Preferences.getDefaultLocale());
             } catch (Throwable t) {
-                log.warn("No currency name available " + t.getMessage());
-                return "N/A (" + currencyCode + ")";
+                log.debug("No currency name available " + t.getMessage());
+                return currencyCode;
             }
+    }
+
+    public static String getNameAndCode(String currencyCode) {
+        return getNameByCode(currencyCode) + " (" + currencyCode + ")";
     }
 
     public static TradeCurrency getDefaultTradeCurrency() {

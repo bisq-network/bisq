@@ -27,10 +27,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.payment.BankAccountContractData;
-import io.bitsquare.payment.CryptoCurrencyAccountContractData;
-import io.bitsquare.payment.PaymentAccountContractData;
-import io.bitsquare.payment.SepaAccountContractData;
+import io.bitsquare.payment.*;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.user.Preferences;
@@ -70,7 +67,7 @@ public class SellerStep3View extends TradeStepView {
                 PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
                 String key = "confirmPayment" + trade.getId();
                 String message;
-                String tradeAmountWithCode = model.formatter.formatFiatWithCode(trade.getTradeVolume());
+                String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
                 String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
                 if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData) {
                     String address = ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress();
@@ -79,20 +76,37 @@ public class SellerStep3View extends TradeStepView {
                             " blockchain explorer if the transaction to your receiving address\n" +
                             "" + address + "\n" +
                             "has already sufficient blockchain confirmations.\n" +
-                            "The payment amount has to be " + tradeAmountWithCode + "\n\n" +
+                            "The payment amount has to be " + tradeVolumeWithCode + "\n\n" +
                             "You can copy & paste your " + currencyName + " address from the main screen after " +
                             "closing that popup.";
                 } else {
-                    message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
-                            "Please go to your online banking web page and check if you have received " +
-                            tradeAmountWithCode + " from the bitcoin buyer.\n\n" +
-                            "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
+                    if (paymentAccountContractData instanceof USPostalMoneyOrderAccountContractData)
+                        message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
+                                "Please check if you have received " +
+                                tradeVolumeWithCode + " with \"US Postal Money Order\" from the BTC buyer.\n\n" +
+                                "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
+                    else
+                        message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
+                                "Please go to your online banking web page and check if you have received " +
+                                tradeVolumeWithCode + " from the BTC buyer.\n\n" +
+                                "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
+
+                    if (paymentAccountContractData instanceof CashDepositAccountContractData)
+                        message += "\n\nBecause the payment is done via Cash Deposit the BTC buyer has to write \"NO REFUND\" " +
+                                "on the paper receipt, tear it in 2 parts and send you a photo by email.\n\n" +
+                                "To avoid chargeback risk, only confirm if you received the email and if you are " +
+                                "sure the paper receipt is valid.\n" +
+                                "If you are not sure, please don't confirm but open a dispute " +
+                                "by entering \"cmd + o\" or \"ctrl + o\".";
+
                     Optional<String> optionalHolderName = getOptionalHolderName();
                     if (optionalHolderName.isPresent()) {
                         message = message + "\n\n" +
-                                "Please also verify that the senders name in your bank statement matches that one from the trade contract:\n" +
+                                "Please also verify that the senders name in your bank statement matches that one from the " +
+                                "trade contract:\n" +
                                 "Senders name: " + optionalHolderName.get() + "\n\n" +
-                                "If the name is not the same as the one displayed here, please don't confirm but open a dispute by entering \"cmd + o\" or \"ctrl + o\".";
+                                "If the name is not the same as the one displayed here, please don't confirm but open a dispute " +
+                                "by entering \"cmd + o\" or \"ctrl + o\".";
                     }
                 }
                 if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
@@ -134,7 +148,7 @@ public class SellerStep3View extends TradeStepView {
         TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, "Confirm payment receipt", Layout.GROUP_DISTANCE);
 
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to receive:",
-                model.getFiatAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                model.getFiatVolume(), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
         String myPaymentDetails = "";
@@ -192,11 +206,11 @@ public class SellerStep3View extends TradeStepView {
     @Override
     protected String getInfoText() {
         if (model.isBlockChainMethod()) {
-            return "The bitcoin buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
-                    "Check for blockchain confirmations at your cryptocurrency wallet or block explorer and " +
+            return "The BTC buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
+                    "Check for blockchain confirmations at your altcoin wallet or block explorer and " +
                     "confirm the payment when you have sufficient blockchain confirmations.";
         } else {
-            return "The bitcoin buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
+            return "The BTC buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
                     "Check at your payment account (e.g. bank account) and confirm when you have " +
                     "received the payment.";
         }
@@ -263,7 +277,7 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += "Please note, that as soon you have confirmed the receipt, the locked trade amount will be released " +
-                        "to the bitcoin buyer and the security deposit will be refunded.";
+                        "to the BTC buyer and the security deposit will be refunded.";
                 new Popup()
                         .headLine("Confirm that you have received the payment")
                         .confirmation(message)

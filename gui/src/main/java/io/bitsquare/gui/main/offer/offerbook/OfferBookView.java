@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.offer.offerbook;
 
 import io.bitsquare.alert.PrivateNotificationManager;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -35,6 +36,7 @@ import io.bitsquare.gui.main.offer.OfferView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
@@ -58,11 +60,14 @@ import javafx.scene.layout.Priority;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.bitcoinj.utils.Fiat;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
-import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {
@@ -72,10 +77,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private BSFormatter formatter;
     private PrivateNotificationManager privateNotificationManager;
 
-    private ComboBox<TradeCurrency> currencyComboBox;
+    private ComboBox<CurrencyListItem> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private Button createOfferButton;
-    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, priceColumn, paymentMethodColumn, avatarColumn;
+    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn, paymentMethodColumn, avatarColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -83,6 +88,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TitledGroupBg offerBookTitle;
     private Label nrOfOffersLabel;
     private ListChangeListener<OfferBookListItem> offerListListener;
+    private MonadicBinding<Void> currencySelectionBinding;
+    private Subscription currencySelectionSubscriber;
+    private ListChangeListener<CurrencyListItem> currencyListItemsListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,14 +111,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     public void initialize() {
         root.setPadding(new Insets(20, 25, 5, 25));
 
-        offerBookTitle = addTitledGroupBg(root, gridRow, 3, "");
+        offerBookTitle = addTitledGroupBg(root, gridRow, 3, "Available offers");
 
         currencyComboBox = addLabelComboBox(root, gridRow, "Filter by currency:", Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListConverter());
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers", model.preferences));
 
         paymentMethodComboBox = addLabelComboBox(root, ++gridRow, "Filter by payment method:").second;
         paymentMethodComboBox.setPromptText("Select payment method");
+        paymentMethodComboBox.setVisibleRowCount(20);
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
@@ -138,10 +147,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
 
-        amountColumn = getAmountColumn();
-        tableView.getColumns().add(amountColumn);
+        marketColumn = getMarketColumn();
+
         priceColumn = getPriceColumn();
         tableView.getColumns().add(priceColumn);
+        amountColumn = getAmountColumn();
+        tableView.getColumns().add(amountColumn);
         volumeColumn = getVolumeColumn();
         tableView.getColumns().add(volumeColumn);
         paymentMethodColumn = getPaymentMethodColumn();
@@ -189,21 +200,27 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setVgrow(createOfferButton, Priority.NEVER);
         GridPane.setValignment(createOfferButton, VPos.TOP);
         offerListListener = c -> nrOfOffersLabel.setText("Nr. of offers: " + model.getOfferList().size());
+        currencyListItemsListener = c -> applyCurrencyComboBoxSelection();
     }
 
     @Override
     protected void activate() {
-        currencyComboBox.setItems(model.getTradeCurrencies());
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
-        currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
+        currencyComboBox.setItems(model.getCurrencyListItems());
+        currencyComboBox.setVisibleRowCount(25);
 
-        if (model.showAllTradeCurrenciesProperty.get())
-            currencyComboBox.getSelectionModel().select(0);
-        else
-            currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
+        model.currencyListItems.addListener(currencyListItemsListener);
+
+        applyCurrencyComboBoxSelection();
+
+        currencyComboBox.setOnAction(e -> {
+            CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
+
+            if (selectedItem != null)
+                model.onSetTradeCurrency(selectedItem.tradeCurrency);
+        });
 
         priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
-        amountColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
+        volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
 
         paymentMethodComboBox.setItems(model.getPaymentMethods());
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
@@ -214,20 +231,29 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         createOfferButton.setOnAction(e -> onCreateOffer());
 
-        volumeColumn.textProperty().bind(createStringBinding(
-                () -> {
+        currencySelectionBinding = EasyBind.combine(
+                model.showAllTradeCurrenciesProperty, model.tradeCurrencyCode,
+                (showAll, code) -> {
                     setDirectionTitles();
-                    String tradeCurrencyCode = model.tradeCurrencyCode.get();
-                    boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
-                    priceColumn.setText(!showAllTradeCurrencies ?
-                            "Price in " + formatter.getCurrencyPair(tradeCurrencyCode) :
-                            "Price");
-                    return !showAllTradeCurrencies ?
-                            "Amount in " + tradeCurrencyCode + " (Min.)" :
-                            "Amount (Min.)";
-                },
-                model.tradeCurrencyCode,
-                model.showAllTradeCurrenciesProperty));
+                    if (showAll) {
+                        volumeColumn.setText("Amount (min - max)");
+                        priceColumn.setText("Price");
+
+                        if (!tableView.getColumns().contains(marketColumn))
+                            tableView.getColumns().add(0, marketColumn);
+                    } else {
+                        volumeColumn.setText("Amount in " + code + " (min - max)");
+                        priceColumn.setText(formatter.getPriceWithCurrencyCode(code));
+
+                        if (tableView.getColumns().contains(marketColumn))
+                            tableView.getColumns().remove(marketColumn);
+                    }
+
+                    return null;
+                });
+
+        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
+        });
 
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
 
@@ -243,12 +269,23 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox.setOnAction(null);
         paymentMethodComboBox.setOnAction(null);
         createOfferButton.setOnAction(null);
-        volumeColumn.textProperty().unbind();
         model.getOfferList().comparatorProperty().unbind();
 
         priceColumn.sortableProperty().unbind();
         amountColumn.sortableProperty().unbind();
         model.getOfferList().removeListener(offerListListener);
+        model.currencyListItems.removeListener(currencyListItemsListener);
+        currencySelectionSubscriber.unsubscribe();
+    }
+
+    private void applyCurrencyComboBoxSelection() {
+        Optional<CurrencyListItem> selectedCurrencyListItem = model.getSelectedCurrencyListItem();
+        UserThread.execute(() -> {
+            if (model.showAllTradeCurrenciesProperty.get() || !selectedCurrencyListItem.isPresent())
+                currencyComboBox.getSelectionModel().select(model.getShowAllCurrencyListItem());
+            else
+                currencyComboBox.getSelectionModel().select(selectedCurrencyListItem.get());
+        });
     }
 
 
@@ -272,16 +309,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void setDirectionTitles() {
-        Offer.Direction direction = model.getDirection();
-        String directionText = direction == Offer.Direction.BUY ? "buying" : "selling";
-        String mirroredDirectionText = direction == Offer.Direction.SELL ? "buying" : "selling";
         TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
-        String postFix = selectedTradeCurrency instanceof FiatCurrency || model.showAllTradeCurrenciesProperty.get() ? "" :
-                " (" + mirroredDirectionText + " " + selectedTradeCurrency.getName() + ")";
-
-        // offerBookTitle.setText("Offers for " + directionText + " bitcoin" + postFix);
-        offerBookTitle.setText("Available offers");
-        createOfferButton.setText("Create new offer for " + directionText + " bitcoin" + postFix);
+        if (selectedTradeCurrency != null) {
+            Offer.Direction direction = model.getDirection();
+            String preFix = "Create new offer for ";
+            String directionText = direction == Offer.Direction.BUY ? "buying" : "selling";
+            String mirroredDirectionText = direction == Offer.Direction.SELL ? "buying" : "selling";
+            String code = selectedTradeCurrency.getCode();
+            if (model.showAllTradeCurrenciesProperty.get())
+                createOfferButton.setText(preFix + directionText + " BTC");
+            else if (selectedTradeCurrency instanceof FiatCurrency)
+                createOfferButton.setText(preFix + directionText + " BTC" + (direction == Offer.Direction.BUY ? " with " : " for ") + code);
+            else
+                createOfferButton.setText(preFix + mirroredDirectionText + " " + code + " (" + directionText + " BTC)");
+        }
     }
 
     public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {
@@ -300,13 +341,23 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void onCreateOffer() {
         if (!model.hasPaymentAccount()) {
             openPopupForMissingAccountSetup("You have not setup a payment account",
-                    "You need to setup a national currency or cryptocurrency account before you can create an offer.\n" +
+                    "You need to setup a national currency or altcoin account before you can create an offer.\n" +
                             "Do you want to setup an account?", FiatAccountsView.class, "\"Account\"");
         } else if (!model.hasPaymentAccountForCurrency()) {
-            openPopupForMissingAccountSetup("No matching payment account",
-                    "You don't have a payment account for the currency required for that offer.\n" +
-                            "You need to setup a payment account for that currency to be able to take this offer.\n" +
-                            "Do you want to do this now?", FiatAccountsView.class, "\"Account\"");
+            new Popup().headLine("No payment account for selected currency")
+                    .instruction("You don't have a payment account for the selected currency.\n" +
+                            "Do you want to create an offer with one of your existing payment accounts?")
+                    .actionButtonText("Yes, create offer")
+                    .onAction(() -> {
+                        createOfferButton.setDisable(true);
+                        offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
+                    })
+                    .closeButtonText("Set up a new payment account")
+                    .onClose(() -> {
+                        navigation.setReturnPath(navigation.getCurrentPath());
+                        navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
+                    })
+                    .show();
         } else if (!model.hasAcceptedArbitrators()) {
             openPopupForMissingAccountSetup("You don't have an arbitrator selected.",
                     "You need to setup at least one arbitrator to be able to trade.\n" +
@@ -410,9 +461,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAmountColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Amount in BTC (Min.)") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Amount in BTC (min - max)") {
             {
-                setMinWidth(130);
+                setMinWidth(150);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -437,8 +488,39 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         return column;
     }
 
+    private TableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Market") {
+            {
+                setMinWidth(130);
+                setMaxWidth(130);
+            }
+        };
+        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
+                        OfferBookListItem>>() {
+                    @Override
+                    public TableCell<OfferBookListItem, OfferBookListItem> call(
+                            TableColumn<OfferBookListItem, OfferBookListItem> column) {
+                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+
+                            @Override
+                            public void updateItem(final OfferBookListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty)
+                                    setText(formatter.getCurrencyPair(item.getOffer().getCurrencyCode()));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        return column;
+    }
+
     private TableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Price") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
             {
                 setMinWidth(130);
             }
@@ -539,7 +621,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Payment method") {
             {
-                setMinWidth(130);
+                setMinWidth(120);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -652,6 +734,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         button.setStyle("-fx-text-fill: white;"); // does not take the font colors sometimes from the style
                                         title = model.getDirectionLabel(offer);
+                                        button.setTooltip(new Tooltip("Take offer for " + model.getDirectionLabelTooltip(offer)));
                                         button.setOnAction(e -> onTakeOffer(offer));
                                     }
 

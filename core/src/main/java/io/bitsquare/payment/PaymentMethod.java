@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 // Don't use Enum as it breaks serialisation when changing entries and we want to stay flexible here
 public final class PaymentMethod implements Persistable, Comparable {
@@ -43,35 +44,46 @@ public final class PaymentMethod implements Persistable, Comparable {
     public static final String OK_PAY_ID = "OK_PAY";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";
     public static final String SEPA_ID = "SEPA";
+    public static final String FASTER_PAYMENTS_ID = "FASTER_PAYMENTS";
     public static final String NATIONAL_BANK_ID = "NATIONAL_BANK";
     public static final String SAME_BANK_ID = "SAME_BANK";
     public static final String SPECIFIC_BANKS_ID = "SPECIFIC_BANKS";
     public static final String SWISH_ID = "SWISH";
     public static final String ALI_PAY_ID = "ALI_PAY";
+    public static final String CLEAR_X_CHANGE_ID = "CLEAR_X_CHANGE";
+    public static final String US_POSTAL_MONEY_ORDER_ID = "US_POSTAL_MONEY_ORDER";
+    public static final String CASH_DEPOSIT_ID = "CASH_DEPOSIT";
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
 
     public static PaymentMethod OK_PAY;
     public static PaymentMethod PERFECT_MONEY;
     public static PaymentMethod SEPA;
+    public static PaymentMethod FASTER_PAYMENTS;
     public static PaymentMethod NATIONAL_BANK;
     public static PaymentMethod SAME_BANK;
     public static PaymentMethod SPECIFIC_BANKS;
     public static PaymentMethod SWISH;
     public static PaymentMethod ALI_PAY;
+    public static PaymentMethod CLEAR_X_CHANGE;
+    public static PaymentMethod US_POSTAL_MONEY_ORDER;
+    public static PaymentMethod CASH_DEPOSIT;
     public static PaymentMethod BLOCK_CHAINS;
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
             OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY, Coin.parseCoin("1.5")), // tx instant so min. wait time 
-            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("0.75")), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
-            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("0.75")),
-            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY, Coin.parseCoin("0.75")),
-            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY, Coin.parseCoin("0.75")),
+            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("1")), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
+            FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, 0, DAY, Coin.parseCoin("1")),
+            CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 0, 8 * DAY, Coin.parseCoin("0.5")),
+            SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("1.5")),
+            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("1")),
+            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY, Coin.parseCoin("1")),
+            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY, Coin.parseCoin("1")),
             PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY, Coin.parseCoin("1")),
-            SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("1")),
-            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("1")),
+            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("1.5")),
+            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 0, 6 * DAY, Coin.parseCoin("0.5")),
+            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, 6 * DAY, Coin.parseCoin("0.5")),
             BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("2"))
     ));
-
 
     private final String id;
     private long lockTime;
@@ -109,7 +121,11 @@ public final class PaymentMethod implements Persistable, Comparable {
     }
 
     public static PaymentMethod getPaymentMethodById(String name) {
-        return ALL_VALUES.stream().filter(e -> e.getId().equals(name)).findFirst().get();
+        Optional<PaymentMethod> paymentMethodOptional = ALL_VALUES.stream().filter(e -> e.getId().equals(name)).findFirst();
+        if (paymentMethodOptional.isPresent())
+            return paymentMethodOptional.get();
+        else
+            return new PaymentMethod("N/A", 1, DAY, Coin.parseCoin("0"));
     }
 
     public String getId() {

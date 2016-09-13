@@ -29,9 +29,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.payment.CryptoCurrencyAccountContractData;
-import io.bitsquare.payment.PaymentAccountContractData;
-import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.payment.*;
 import io.bitsquare.trade.Trade;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -72,23 +70,52 @@ public class BuyerStep2View extends TradeStepView {
                                 "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
                                 "Please transfer from your external " +
                                 CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " wallet\n" +
-                                model.formatter.formatFiatWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
+                                model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the BTC seller.\n\n" +
                                 "Here are the payment account details of the bitcoin seller:\n" +
                                 "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n\n" +
                                 "(You can copy & paste the values from the main screen after closing that popup.)";
                     else if (paymentAccountContractData != null)
-                        message = "Your trade has reached at least one blockchain confirmation.\n" +
-                                "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
-                                "Please go to your online banking web page and pay " +
-                                model.formatter.formatFiatWithCode(trade.getTradeVolume()) + " to the bitcoin seller.\n\n" +
-                                "Here are the payment account details of the bitcoin seller:\n" +
-                                "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
-                                "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
-                                "Please don't forget to add the trade ID \"" + trade.getShortId() +
-                                "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
-                                "DO NOT use any additional notice in the \"reason for payment\" text like " +
-                                "Bitcoin, Btc or Bitsquare.\n\n" +
-                                "If your bank charges fees you have to cover those fees.";
+                        if (paymentAccountContractData instanceof CashDepositAccountContractData)
+                            message = "Your trade has reached at least one blockchain confirmation.\n" +
+                                    "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
+                                    "Please go to a bank and pay " +
+                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the BTC seller.\n\n" +
+                                    "Here are the payment account details of the BTC seller:\n" +
+                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
+                                    "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
+                                    "Please don't forget to add the trade ID \"" + trade.getShortId() +
+                                    "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
+                                    "DO NOT use any additional notice in the \"reason for payment\" text like " +
+                                    "Bitcoin, Btc or Bitsquare.\n\n" +
+                                    "If your bank charges fees you have to cover those fees.\n\n" +
+                                    "IMPORTANT REQUIREMENT:\n" +
+                                    "After you have done the payment write on the paper receipt: NO REFUNDS.\n" +
+                                    "Then tear it in 2 parts, make a photo and send it to the BTC seller's email address.";
+                        else if (paymentAccountContractData instanceof USPostalMoneyOrderAccountContractData)
+                            message = "Your trade has reached at least one blockchain confirmation.\n" +
+                                    "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
+                                    "Please send " +
+                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " by \"US Postal Money Order\" to the BTC seller.\n\n" +
+                                    "Here are the payment account details of the BTC seller:\n" +
+                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
+                                    "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
+                                    "Please don't forget to add the trade ID \"" + trade.getShortId() +
+                                    "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
+                                    "DO NOT use any additional notice in the \"reason for payment\" text like " +
+                                    "Bitcoin, Btc or Bitsquare.";
+                        else
+                            message = "Your trade has reached at least one blockchain confirmation.\n" +
+                                    "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
+                                    "Please go to your online banking web page and pay " +
+                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the BTC seller.\n\n" +
+                                    "Here are the payment account details of the BTC seller:\n" +
+                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
+                                    "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
+                                    "Please don't forget to add the trade ID \"" + trade.getShortId() +
+                                    "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
+                                    "DO NOT use any additional notice in the \"reason for payment\" text like " +
+                                    "Bitcoin, Btc or Bitsquare.\n\n" +
+                                    "If your bank charges fees you have to cover those fees.";
 
                     if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                         preferences.dontShowAgain(key, true);
@@ -128,10 +155,10 @@ public class BuyerStep2View extends TradeStepView {
         PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
         String paymentMethodName = paymentAccountContractData != null ? paymentAccountContractData.getPaymentMethodName() : "";
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
-                "Start payment using " + BSResources.get(paymentAccountContractData.getPaymentMethodName()),
+                "Start payment using " + BSResources.get(paymentMethodName),
                 Layout.GROUP_DISTANCE);
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to transfer:",
-                model.getFiatAmount(),
+                model.getFiatVolume(),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
@@ -144,6 +171,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.SEPA_ID:
                 gridRow = SepaForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
+            case PaymentMethod.FASTER_PAYMENTS_ID:
+                gridRow = FasterPaymentsForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
             case PaymentMethod.NATIONAL_BANK_ID:
                 gridRow = NationalBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
@@ -159,6 +189,15 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.ALI_PAY_ID:
                 gridRow = AliPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
+            case PaymentMethod.CLEAR_X_CHANGE_ID:
+                gridRow = ClearXchangeForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
+            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
+                gridRow = USPostalMoneyOrderForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
+            case PaymentMethod.CASH_DEPOSIT_ID:
+                gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = "Sellers " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " address:";
@@ -220,25 +259,48 @@ public class BuyerStep2View extends TradeStepView {
 
     private void onPaymentStarted() {
         if (model.p2PService.isBootstrapped()) {
-            String key = "confirmPaymentStarted";
-            if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
-                Popup popup = new Popup();
-                popup.headLine("Confirm that you have started the payment")
-                        .confirmation("Did you initiate the " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) +
-                                " payment to your trading partner?")
-                        .width(700)
-                        .actionButtonText("Yes, I have started the payment")
-                        .onAction(this::confirmPaymentStarted)
-                        .closeButtonText("No")
-                        .onClose(popup::hide)
-                        .dontShowAgainId(key, preferences)
-                        .show();
+            if (model.dataModel.getSellersPaymentAccountContractData() instanceof CashDepositAccountContractData) {
+                String key = "confirmPaperReceiptSent";
+                if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+                    Popup popup = new Popup();
+                    popup.headLine("Did you sent the paper receipt to the BTC seller?")
+                            .feedback("Remember:\n" +
+                                    "You need to write on the paper receipt: NO REFUNDS.\n" +
+                                    "Then tear it in 2 parts, make a photo and send it to the BTC seller's email address.")
+                            .actionButtonText("Yes, I have sent the paper receipt")
+                            .onAction(this::showConfirmPaymentStartedPopup)
+                            .closeButtonText("No")
+                            .onClose(popup::hide)
+                            .dontShowAgainId(key, preferences)
+                            .show();
+                } else {
+                    showConfirmPaymentStartedPopup();
+                }
             } else {
-                confirmPaymentStarted();
+                showConfirmPaymentStartedPopup();
             }
         } else {
             new Popup().information("You need to wait until you are fully connected to the network.\n" +
                     "That might take up to about 2 minutes at startup.").show();
+        }
+    }
+
+    private void showConfirmPaymentStartedPopup() {
+        String key = "confirmPaymentStarted";
+        if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+            Popup popup = new Popup();
+            popup.headLine("Confirm that you have started the payment")
+                    .confirmation("Did you initiate the " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) +
+                            " payment to your trading partner?")
+                    .width(700)
+                    .actionButtonText("Yes, I have started the payment")
+                    .onAction(this::confirmPaymentStarted)
+                    .closeButtonText("No")
+                    .onClose(popup::hide)
+                    .dontShowAgainId(key, preferences)
+                    .show();
+        } else {
+            confirmPaymentStarted();
         }
     }
 

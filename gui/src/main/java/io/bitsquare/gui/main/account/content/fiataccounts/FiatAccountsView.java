@@ -56,7 +56,7 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
 
     private ListView<PaymentAccount> paymentAccountsListView;
-    private ComboBox<PaymentMethod> paymentMethodsComboBox;
+    private ComboBox<PaymentMethod> paymentMethodComboBox;
 
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
@@ -65,7 +65,9 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final AliPayValidator aliPayValidator;
     private final PerfectMoneyValidator perfectMoneyValidator;
     private final SwishValidator swishValidator;
-    private final AltCoinAddressValidator altCoinAddressValidator;
+    private final ClearXchangeValidator clearXchangeValidator;
+    private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
+    
     private BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
@@ -83,7 +85,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             AliPayValidator aliPayValidator,
                             PerfectMoneyValidator perfectMoneyValidator,
                             SwishValidator swishValidator,
-                            AltCoinAddressValidator altCoinAddressValidator,
+                            ClearXchangeValidator clearXchangeValidator,
+                            USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
                             BSFormatter formatter) {
         super(model);
 
@@ -94,7 +97,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.aliPayValidator = aliPayValidator;
         this.perfectMoneyValidator = perfectMoneyValidator;
         this.swishValidator = swishValidator;
-        this.altCoinAddressValidator = altCoinAddressValidator;
+        this.clearXchangeValidator = clearXchangeValidator;
+        this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
         this.formatter = formatter;
     }
 
@@ -223,14 +227,15 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", Layout.GROUP_DISTANCE);
-        paymentMethodsComboBox = addLabelComboBox(root, gridRow, "Payment method:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        paymentMethodsComboBox.setPromptText("Select payment method");
-        paymentMethodsComboBox.setPrefWidth(250);
+        paymentMethodComboBox = addLabelComboBox(root, gridRow, "Payment method:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        paymentMethodComboBox.setPromptText("Select payment method");
+        paymentMethodComboBox.setVisibleRowCount(15);
+        paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.ALL_VALUES.stream()
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
                 .collect(Collectors.toList());
-        paymentMethodsComboBox.setItems(FXCollections.observableArrayList(list));
-        paymentMethodsComboBox.setConverter(new StringConverter<PaymentMethod>() {
+        paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
+        paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
                 return paymentMethod != null ? BSResources.get(paymentMethod.getId()) : "";
@@ -241,13 +246,13 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return null;
             }
         });
-        paymentMethodsComboBox.setOnAction(e -> {
+        paymentMethodComboBox.setOnAction(e -> {
             if (paymentMethodForm != null) {
                 FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
                 GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
             }
             gridRow = 2;
-            paymentMethodForm = getPaymentMethodForm(paymentMethodsComboBox.getSelectionModel().getSelectedItem());
+            paymentMethodForm = getPaymentMethodForm(paymentMethodComboBox.getSelectionModel().getSelectedItem());
             if (paymentMethodForm != null) {
                 paymentMethodForm.addFormForAddAccount();
                 gridRow = paymentMethodForm.getGridRow();
@@ -302,16 +307,24 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new PerfectMoneyForm(paymentAccount, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_ID:
                 return new SepaForm(paymentAccount, ibanValidator, bicValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.FASTER_PAYMENTS_ID:
+                return new FasterPaymentsForm(paymentAccount, inputValidator, root, gridRow, formatter);
             case PaymentMethod.NATIONAL_BANK_ID:
-                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow, formatter);
+                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow, formatter, () -> onCancelNewAccount());
             case PaymentMethod.SAME_BANK_ID:
-                return new SameBankForm(paymentAccount, inputValidator, root, gridRow, formatter);
+                return new SameBankForm(paymentAccount, inputValidator, root, gridRow, formatter, () -> onCancelNewAccount());
             case PaymentMethod.SPECIFIC_BANKS_ID:
-                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow, formatter);
+                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow, formatter, () -> onCancelNewAccount());
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayForm(paymentAccount, aliPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWISH_ID:
                 return new SwishForm(paymentAccount, swishValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CLEAR_X_CHANGE_ID:
+                return new ClearXchangeForm(paymentAccount, clearXchangeValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
+                return new USPostalMoneyOrderForm(paymentAccount, usPostalMoneyOrderValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CASH_DEPOSIT_ID:
+                return new CashDepositForm(paymentAccount, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;

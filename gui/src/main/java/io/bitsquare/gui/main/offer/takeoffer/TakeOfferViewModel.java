@@ -27,7 +27,6 @@ import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.deposit.DepositView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
@@ -45,8 +44,6 @@ import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -139,21 +136,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         updateButtonDisableState();
 
         updateSpinnerInfo();
-
-        //TODO remove after AUGUST, 30
-        String key = "ETH-ETC-Warning";
-        if (dataModel.getPreferences().showAgain(key) && new Date().before(new Date(2016 - 1900, Calendar.AUGUST, 30))) {
-            if (dataModel.getCurrencyCode().equals("ETC")) {
-                new Popup().information("The EHT/ETC fork situation carries considerable risks.\n" +
-                        "Be sure you fully understand the situation and check out the information on the \"Ethereum Classic\" and \"Ethereum\" project web pages.\n\n" +
-                        "Please note, that the price is denominated as ETC/BTC not BTC/ETC!")
-                        .closeButtonText("I understand")
-                        .onAction(() -> GUIUtil.openWebPage("https://ethereumclassic.github.io/"))
-                        .actionButtonText("Open Ethereum Classic web page")
-                        .dontShowAgainId(key, dataModel.getPreferences())
-                        .show();
-            }
-        }
     }
 
     @Override
@@ -181,7 +163,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         }
 
         amountRange = formatter.formatCoin(offer.getMinAmount()) + " - " + formatter.formatCoin(offer.getAmount());
-        price = formatter.formatFiat(dataModel.tradePrice);
+        price = formatter.formatPrice(dataModel.tradePrice);
         marketPriceMargin = formatter.formatPercentagePrice(offer.getMarketPriceMargin());
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
 
@@ -417,8 +399,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        volume.bind(createStringBinding(() -> formatter.formatFiat(dataModel.volumeAsFiat.get()), dataModel.volumeAsFiat));
-
+        volume.bind(createStringBinding(() -> formatter.formatVolume(dataModel.volumeAsFiat.get()), dataModel.volumeAsFiat));
 
         if (dataModel.getDirection() == Offer.Direction.SELL) {
             volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));

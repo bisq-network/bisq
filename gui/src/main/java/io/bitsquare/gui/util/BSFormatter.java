@@ -18,6 +18,8 @@
 package io.bitsquare.gui.util;
 
 import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.common.util.MathUtils;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.offer.Offer;
@@ -53,12 +55,13 @@ public class BSFormatter {
     // Input of a group separator (1,123,45) lead to an validation error.
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
-    private MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
+    private MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(4).repeatOptionalDecimals(0, 0);
 
     //  private String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
     // format is like: 1,00  never more then 2 decimals
     private final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
+    private DecimalFormat decimalFormat = new DecimalFormat("#.#");
 
 
     @Inject
@@ -202,7 +205,7 @@ public class BSFormatter {
         }
     }
 
-    public String formatFiatWithCode(Fiat fiat) {
+    private String formatFiatWithCode(Fiat fiat) {
         if (fiat != null) {
             try {
                 return fiatFormat.noCode().format(fiat).toString() + " " + fiat.getCurrencyCode();
@@ -210,14 +213,6 @@ public class BSFormatter {
                 log.warn("Exception at formatFiatWithCode: " + t.toString());
                 return "N/A " + fiat.getCurrencyCode();
             }
-        } else {
-            return "N/A";
-        }
-    }
-
-    public String formatPriceWithCode(Fiat fiat) {
-        if (fiat != null) {
-            return formatFiat(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
         } else {
             return "N/A";
         }
@@ -246,12 +241,12 @@ public class BSFormatter {
      * @return
      */
 
-    public Fiat parseToFiatWith2Decimals(String input, String currencyCode) {
+    public Fiat parseToFiatWithPrecision(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
                 return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(), currencyCode);
             } catch (Throwable t) {
-                log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
+                log.warn("Exception at parseToFiatWithPrecision: " + t.toString());
                 return Fiat.valueOf(currencyCode, 0);
             }
 
@@ -259,44 +254,111 @@ public class BSFormatter {
         return Fiat.valueOf(currencyCode, 0);
     }
 
-    public boolean hasFiatValidDecimals(String input, String currencyCode) {
-        return parseToFiat(input, currencyCode).equals(parseToFiatWith2Decimals(input, currencyCode));
+    public boolean isFiatAlteredWhenPrecisionApplied(String input, String currencyCode) {
+        return parseToFiat(input, currencyCode).equals(parseToFiatWithPrecision(input, currencyCode));
     }
 
-    public String formatMarketPrice(double price) {
-        return formatMarketPrice(price, 3);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Volume
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String formatVolume(Fiat fiat) {
+        return formatFiat(fiat);
     }
 
-    public String formatMarketPrice(double price, int decimals) {
-        DecimalFormat df = new DecimalFormat("#.#");
-        df.setMaximumFractionDigits(decimals);
-        return df.format(price);
+    public String formatVolumeWithCode(Fiat fiat) {
+        return formatFiatWithCode(fiat);
     }
+
+    public String formatVolumeLabel(String currencyCode) {
+        return formatVolumeLabel(currencyCode, "");
+    }
+
+    public String formatVolumeLabel(String currencyCode, String postFix) {
+        return CurrencyUtil.getNameByCode(currencyCode) + " amount" + postFix;
+    }
+
+    public String formatMinVolumeAndVolume(Offer offer) {
+        return formatVolume(offer.getMinOfferVolume()) + " - " + formatVolume(offer.getOfferVolume());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Amount
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String formatAmount(Offer offer) {
+        return formatCoin(offer.getAmount());
+    }
+
+    public String formatAmountWithMinAmount(Offer offer) {
+        return formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount());
+    }
+    
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Price
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String formatPrice(Fiat fiat) {
+        if (fiat != null) {
+            final String currencyCode = fiat.getCurrencyCode();
+            if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                decimalFormat.setMinimumFractionDigits(8);
+                decimalFormat.setMaximumFractionDigits(8);
+                final double value = fiat.value != 0 ? 10000D / fiat.value : 0;
+                return decimalFormat.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
+            } else
+                return formatFiat(fiat);
+        } else {
+            return "N/A";
+        }
+    }
+
+    public String formatPriceWithCode(Fiat fiat) {
+        return formatPrice(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Market price
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String formatMarketPrice(double price, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return formatMarketPrice(price, 2);
+        else
+            return formatMarketPrice(price, 8);
+    }
+
+    public String formatMarketPrice(double price, int precision) {
+        return formatRoundedDoubleWithPrecision(price, precision);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Other
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public String getDirection(Offer.Direction direction) {
-        return getDirection(direction, false) + " bitcoin";
+    public String formatRoundedDoubleWithPrecision(double value, int precision) {
+        decimalFormat.setMinimumFractionDigits(precision);
+        decimalFormat.setMaximumFractionDigits(precision);
+        return decimalFormat.format(MathUtils.roundDouble(value, precision)).replace(",", ".");
     }
 
-    private String getDirection(Offer.Direction direction, boolean allUpperCase) {
-        String result = (direction == Offer.Direction.BUY) ? "Buy" : "Sell";
-        if (allUpperCase) {
-            result = result.toUpperCase();
-        }
-        return result;
+    public String getDirectionWithCode(Offer.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return (direction == Offer.Direction.BUY) ? "Buy BTC" : "Sell BTC";
+        else
+            return (direction == Offer.Direction.SELL) ? "Buy " + currencyCode : "Sell " + currencyCode;
     }
 
-    public String formatAmountWithMinAmount(Offer offer) {
-        return formatCoin(offer.getAmount()) + " (" + formatCoin(offer.getMinAmount()) + ")";
-    }
-
-    public String formatVolumeWithMinVolumeWithCode(Offer offer) {
-        return formatFiatWithCode(offer.getOfferVolume()) +
-                " (" + formatFiatWithCode(offer.getMinOfferVolume()) + ")";
+    public String getDirectionWithCodeDetailed(Offer.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return (direction == Offer.Direction.BUY) ? "buying BTC with " + currencyCode : "selling BTC for " + currencyCode;
+        else
+            return (direction == Offer.Direction.SELL) ? "buying " + currencyCode + " (selling BTC)" : "selling " + currencyCode + " (buying BTC)";
     }
 
     public String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
@@ -335,24 +397,19 @@ public class BSFormatter {
         }
     }
 
+    public String formatToPercentWithSymbol(double value) {
+        return formatToPercent(value) + "%";
+    }
+
+    public String formatPercentagePrice(double value) {
+        return formatToPercentWithSymbol(value);
+    }
+
     public String formatToPercent(double value) {
-        return formatToPercent(value, 1);
-    }
-
-    public String formatToPercent(double value, int digits) {
-        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
-        decimalFormat.setMinimumFractionDigits(digits);
-        decimalFormat.setMaximumFractionDigits(digits);
-        decimalFormat.setGroupingUsed(false);
-        return decimalFormat.format(value * 100.0);
-    }
-
-    public String formatToNumberString(double value, int digits) {
-        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
-        decimalFormat.setMinimumFractionDigits(digits);
-        decimalFormat.setMaximumFractionDigits(digits);
-        decimalFormat.setGroupingUsed(false);
-        return decimalFormat.format(value);
+        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        decimalFormat.setMinimumFractionDigits(2);
+        decimalFormat.setMaximumFractionDigits(2);
+        return decimalFormat.format(MathUtils.roundDouble(value * 100.0, 2)).replace(",", ".");
     }
 
     public double parseNumberStringToDouble(String percentString) throws NumberFormatException {
@@ -365,32 +422,16 @@ public class BSFormatter {
         }
     }
 
-    public String formatToPercentWithSymbol(double value) {
-        return formatToPercent(value) + " %";
-    }
-
-    public String formatPercentagePrice(double value) {
-        return formatToPercent(value, 2) + " %";
-    }
-
     public double parsePercentStringToDouble(String percentString) throws NumberFormatException {
         try {
             String input = percentString.replace("%", "");
             input = input.replace(",", ".");
             input = input.replace(" ", "");
             double value = Double.parseDouble(input);
-            return value / 100;
+            return value / 100d;
         } catch (NumberFormatException e) {
             throw e;
         }
-    }
-
-    public double roundDouble(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
-        long factor = (long) Math.pow(10, places);
-        value = value * factor;
-        long tmp = Math.round(value);
-        return (double) tmp / factor;
     }
 
     private String cleanInput(String input) {
@@ -478,36 +519,64 @@ public class BSFormatter {
         }
     }
 
-    public String getDirectionBothSides(Offer.Direction direction) {
-        return direction == Offer.Direction.BUY ? "Offerer as bitcoin buyer / Taker as bitcoin seller" :
-                "Offerer as bitcoin seller / Taker as bitcoin buyer";
-    }
-
-    public String getDirectionForBuyer(boolean isMyOffer) {
-        return isMyOffer ? "You are buying bitcoin as offerer / Taker is selling bitcoin" :
-                "You are buying bitcoin as taker / Offerer is selling bitcoin";
-    }
-
-    public String getDirectionForSeller(boolean isMyOffer) {
-        return isMyOffer ? "You are selling bitcoin as offerer / Taker is buying bitcoin" :
-                "You are selling bitcoin as taker / Offerer is buying bitcoin";
-    }
-
-    public String getDirectionForTakeOffer(Offer.Direction direction) {
-        return direction == Offer.Direction.BUY ? "You are selling bitcoin (by taking an offer from someone who wants to buy bitcoin)" :
-                "You are buying bitcoin (by taking an offer from someone who wants to sell bitcoin)";
-    }
-
-    public String getOfferDirectionForCreateOffer(Offer.Direction direction) {
-        return direction == Offer.Direction.BUY ? "You are creating an offer for buying bitcoin" :
-                "You are creating an offer for selling bitcoin";
-    }
-
-    public String getRole(boolean isBuyerOffererAndSellerTaker, boolean isOfferer) {
-        if (isBuyerOffererAndSellerTaker)
-            return isOfferer ? "Buyer (offerer)" : "Seller (taker)";
+    public String getDirectionBothSides(Offer.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return direction == Offer.Direction.BUY ? "Offerer as BTC buyer / Taker as BTC seller" :
+                    "Offerer as BTC seller / Taker as BTC buyer";
         else
-            return isOfferer ? "Seller (offerer)" : "Buyer (taker)";
+            return direction == Offer.Direction.SELL ? "Offerer as " + currencyCode + " buyer / Taker as " + currencyCode + " seller" :
+                    "Offerer as " + currencyCode + " seller / Taker as " + currencyCode + " buyer";
+    }
+
+    public String getDirectionForBuyer(boolean isMyOffer, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return isMyOffer ? "You are buying BTC as offerer / Taker is selling BTC" :
+                    "You are buying BTC as taker / Offerer is selling BTC";
+        else
+            return isMyOffer ? "You are selling " + currencyCode + " as offerer / Taker is buying " + currencyCode + "" :
+                    "You are selling " + currencyCode + " as taker / Offerer is buying " + currencyCode + "";
+    }
+
+    public String getDirectionForSeller(boolean isMyOffer, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return isMyOffer ? "You are selling BTC as offerer / Taker is buying BTC" :
+                    "You are selling BTC as taker / Offerer is buying BTC";
+        else
+            return isMyOffer ? "You are buying " + currencyCode + " as offerer / Taker is selling " + currencyCode + "" :
+                    "You are buying " + currencyCode + " as taker / Offerer is selling " + currencyCode + "";
+    }
+
+    public String getDirectionForTakeOffer(Offer.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return direction == Offer.Direction.BUY ? "You are selling BTC (buying " + currencyCode + ")" :
+                    "You are buying BTC (selling " + currencyCode + ")";
+        else
+            return direction == Offer.Direction.SELL ? "You are selling " + currencyCode + " (buying BTC)" :
+                    "You are buying " + currencyCode + " (selling BTC)";
+    }
+
+    public String getOfferDirectionForCreateOffer(Offer.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return direction == Offer.Direction.BUY ? "You are creating an offer for buying BTC" :
+                    "You are creating an offer for selling BTC";
+        else
+            return direction == Offer.Direction.SELL ? "You are creating an offer for buying " + currencyCode + " (selling BTC)" :
+                    "You are creating an offer for selling " + currencyCode + " (buying BTC)";
+    }
+
+    public String getRole(boolean isBuyerOffererAndSellerTaker, boolean isOfferer, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            if (isBuyerOffererAndSellerTaker)
+                return isOfferer ? "BTC buyer as offerer" : "BTC seller as taker";
+            else
+                return isOfferer ? "BTC seller as offerer" : "BTC buyer as taker";
+        } else {
+            if (isBuyerOffererAndSellerTaker)
+                return isOfferer ? currencyCode + " seller as offerer" : currencyCode + " buyer as taker";
+            else
+                return isOfferer ? currencyCode + " buyer as offerer" : currencyCode + " seller as taker";
+        }
+
     }
 
     public String formatBytes(long bytes) {
@@ -523,6 +592,38 @@ public class BSFormatter {
     }
 
     public String getCurrencyPair(String currencyCode) {
-        return currencyCode + "/BTC";
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return "BTC/" + currencyCode;
+        else
+            return currencyCode + "/BTC";
+    }
+
+    public String getCounterCurrency(String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return currencyCode;
+        else
+            return "BTC";
+    }
+
+    public String getBaseCurrency(String currencyCode) {
+        if (CurrencyUtil.isCryptoCurrency(currencyCode))
+            return currencyCode;
+        else
+            return "BTC";
+    }
+
+    public String getCounterCurrencyAndCurrencyPair(String currencyCode) {
+        return getCounterCurrency(currencyCode) + " (" + getCurrencyPair(currencyCode) + ")";
+    }
+
+    public String getCurrencyNameAndCurrencyPair(String currencyCode) {
+        return CurrencyUtil.getNameByCode(currencyCode) + " (" + getCurrencyPair(currencyCode) + ")";
+    }
+
+    public String getPriceWithCurrencyCode(String currencyCode) {
+        if (CurrencyUtil.isCryptoCurrency(currencyCode))
+            return "Price in BTC for 1 " + currencyCode;
+        else
+            return "Price in " + currencyCode + " for 1 BTC";
     }
 }

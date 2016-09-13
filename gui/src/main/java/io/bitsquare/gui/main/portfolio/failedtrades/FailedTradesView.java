@@ -37,7 +37,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     TableView<FailedTradesListItem> tableView;
     @FXML
     TableColumn<FailedTradesListItem, FailedTradesListItem> priceColumn, amountColumn, volumeColumn,
-            directionColumn, dateColumn, tradeIdColumn, stateColumn;
+            marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn;
     private final TradeDetailsWindow tradeDetailsWindow;
     private SortedList<FailedTradesListItem> sortedList;
 
@@ -58,14 +58,28 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
+        setMarketColumnCellFactory();
         setStateColumnCellFactory();
 
         tradeIdColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
         dateColumn.setComparator((o1, o2) -> o1.getTrade().getDate().compareTo(o2.getTrade().getDate()));
         priceColumn.setComparator((o1, o2) -> o1.getTrade().getTradePrice().compareTo(o2.getTrade().getTradePrice()));
-        volumeColumn.setComparator((o1, o2) -> o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume()));
-        amountColumn.setComparator((o1, o2) -> o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount()));
+
+        volumeColumn.setComparator((o1, o2) -> {
+            if (o1.getTrade().getTradeVolume() != null && o2.getTrade().getTradeVolume() != null)
+                return o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume());
+            else
+                return 0;
+        });
+        amountColumn.setComparator((o1, o2) -> {
+            if (o1.getTrade().getTradeAmount() != null && o2.getTrade().getTradeAmount() != null)
+                return o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount());
+            else
+                return 0;
+        });
+        
         stateColumn.setComparator((o1, o2) -> model.getState(o1).compareTo(model.getState(o2)));
+        marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -132,6 +146,25 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                                     setText(model.getDate(item));
                                 else
                                     setText("");
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setMarketColumnCellFactory() {
+        marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        marketColumn.setCellFactory(
+                new Callback<TableColumn<FailedTradesListItem, FailedTradesListItem>, TableCell<FailedTradesListItem,
+                        FailedTradesListItem>>() {
+                    @Override
+                    public TableCell<FailedTradesListItem, FailedTradesListItem> call(
+                            TableColumn<FailedTradesListItem, FailedTradesListItem> column) {
+                        return new TableCell<FailedTradesListItem, FailedTradesListItem>() {
+                            @Override
+                            public void updateItem(final FailedTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setText(model.getMarketLabel(item));
                             }
                         };
                     }

@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.market.trades;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.MainView;
@@ -27,6 +28,7 @@ import io.bitsquare.gui.main.market.trades.charts.CandleData;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.CurrencyUtil;
@@ -76,12 +78,13 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private final SetChangeListener<TradeStatistics> setChangeListener;
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
-
+    private final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
+    private CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1);
     final ObservableList<TradeStatistics> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
 
-    TickUnit tickUnit = TickUnit.MONTH;
+    TickUnit tickUnit = TickUnit.DAY;
     int maxTicks = 30;
     private int selectedTabIndex;
 
@@ -98,7 +101,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
         this.navigation = navigation;
         this.formatter = formatter;
 
-        setChangeListener = change -> updateChartData();
+        setChangeListener = change -> {
+            updateChartData();
+            fillTradeCurrencies();
+        };
 
         Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getTradeChartsScreenCurrencyCode());
         if (tradeCurrencyOptional.isPresent())
@@ -107,6 +113,23 @@ class TradesChartsViewModel extends ActivatableViewModel {
             selectedTradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
 
         tickUnit = TickUnit.values()[preferences.getTradeStatisticsTickUnitIndex()];
+    }
+
+    private void fillTradeCurrencies() {
+        // Don't use a set as we need all entries
+        List<TradeCurrency> tradeCurrencyList = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .map(e -> {
+                    Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(e.currency);
+                    if (tradeCurrencyOptional.isPresent())
+                        return tradeCurrencyOptional.get();
+                    else
+                        return null;
+
+                })
+                .filter(e -> e != null)
+                .collect(Collectors.toList());
+
+        GUIUtil.fillCurrencyListItems(tradeCurrencyList, currencyListItems, showAllCurrencyListItem, preferences);
     }
 
     @VisibleForTesting
@@ -120,6 +143,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     @Override
     protected void activate() {
         tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(setChangeListener);
+        fillTradeCurrencies();
         updateChartData();
         syncPriceFeedCurrency();
         setMarketPriceFeedCurrency();
@@ -182,15 +206,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
         return selectedTradeCurrencyProperty.get().getCode();
     }
 
-    public ObservableList<TradeCurrency> getTradeCurrencies() {
-        final ObservableList<TradeCurrency> list = FXCollections.observableArrayList(preferences.getTradeCurrenciesAsObservable());
-        list.add(0, new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG));
-        list.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
-        return list;
+    public ObservableList<CurrencyListItem> getCurrencyListItems() {
+        return currencyListItems;
     }
 
-    public TradeCurrency getSelectedTradeCurrency() {
-        return selectedTradeCurrencyProperty.get();
+    public Optional<CurrencyListItem> getSelectedCurrencyListItem() {
+        return currencyListItems.stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
 
 
@@ -235,8 +256,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
         // create CandleData for defined time interval
         List<CandleData> candleDataList = itemsPerInterval.entrySet().stream()
+                .filter(entry -> entry.getKey() >= 0)
                 .map(entry -> getCandleData(entry.getKey(), entry.getValue()))
-                .filter(e -> e.tick >= 0)
                 .collect(Collectors.toList());
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
@@ -257,16 +278,24 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long low = 0;
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
+        long numTrades = set.size();
 
         for (TradeStatistics item : set) {
-            final long tradePriceAsLong = item.tradePrice;
-            low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
-            high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
+            long tradePriceAsLong = item.tradePrice;
+            if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
+                low = (low != 0) ? Math.max(low, tradePriceAsLong) : tradePriceAsLong;
+                high = (high != 0) ? Math.min(high, tradePriceAsLong) : tradePriceAsLong;
+            } else {
+                low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
+                high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
+            }
+
             accumulatedVolume += (item.getTradeVolume() != null) ? item.getTradeVolume().value : 0;
             accumulatedAmount += item.tradeAmount;
         }
         // 100000000 -> Coin.COIN.value;
-        long averagePrice = Math.round((double) accumulatedVolume * 100000000d / (double) accumulatedAmount);
+        final double value = MathUtils.scaleUpByPowerOf10(accumulatedVolume, 8);
+        long averagePrice = MathUtils.roundDoubleToLong(value / (double) accumulatedAmount);
 
         List<TradeStatistics> list = new ArrayList<>(set);
         list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? -1 : (o1.tradeDate == o2.tradeDate ? 0 : 1)));
@@ -279,8 +308,19 @@ class TradesChartsViewModel extends ActivatableViewModel {
         String dateString = tickUnit.ordinal() > TickUnit.DAY.ordinal() ?
                 formatter.formatDateTime(date) :
                 formatter.formatDate(date);
-        return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume,
-                isBullish, dateString);
+        if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
+            return new CandleData(tick, getInvertedPrice(open), getInvertedPrice(close), getInvertedPrice(high),
+                    getInvertedPrice(low), getInvertedPrice(averagePrice), accumulatedAmount, accumulatedVolume,
+                    numTrades, isBullish, dateString);
+        } else {
+            return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume,
+                    numTrades, isBullish, dateString);
+        }
+    }
+
+    long getInvertedPrice(long price) {
+        final double value = price != 0 ? 1000000000000D / price : 0;
+        return MathUtils.roundDoubleToLong(value);
     }
 
     long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {

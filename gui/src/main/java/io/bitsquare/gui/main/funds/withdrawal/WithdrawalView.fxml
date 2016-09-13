@@ -30,7 +30,7 @@
         <columns>
             <TableColumn text="Select" fx:id="selectColumn" minWidth="60" maxWidth="60" sortable="false"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="320"/>
-            <TableColumn text="Balance (BTC)" fx:id="balanceColumn" minWidth="310" maxWidth="310"/>
+            <TableColumn text="Balance in BTC" fx:id="balanceColumn" minWidth="310" maxWidth="310"/>
         </columns>
     </TableView>
 
@@ -39,7 +39,7 @@
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
         </padding>
 
-        <Label text="Amount (BTC):" GridPane.rowIndex="0"/>
+        <Label text="Amount in BTC:" GridPane.rowIndex="0"/>
         <TextField fx:id="amountTextField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
         <Label text="Withdraw from address:" GridPane.rowIndex="1"/>

@@ -46,7 +46,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     TableView<OpenOfferListItem> tableView;
     @FXML
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, amountColumn, volumeColumn,
-            directionColumn, dateColumn, offerIdColumn, removeItemColumn;
+            marketColumn, directionColumn, dateColumn, offerIdColumn, removeItemColumn;
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
     private Preferences preferences;
@@ -64,8 +64,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     public void initialize() {
         setOfferIdColumnCellFactory();
         setDirectionColumnCellFactory();
-        setAmountColumnCellFactory();
+        setMarketColumnCellFactory();
         setPriceColumnCellFactory();
+        setAmountColumnCellFactory();
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
         setRemoveColumnCellFactory();
@@ -75,6 +76,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
         offerIdColumn.setComparator((o1, o2) -> o1.getOffer().getId().compareTo(o2.getOffer().getId()));
         directionColumn.setComparator((o1, o2) -> o1.getOffer().getDirection().compareTo(o2.getOffer().getDirection()));
+        marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
         amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
         priceColumn.setComparator((o1, o2) -> {
             Fiat price1 = o1.getOffer().getPrice();
@@ -273,13 +275,31 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 });
     }
 
+    private void setMarketColumnCellFactory() {
+        marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        marketColumn.setCellFactory(
+                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
+                        OpenOfferListItem>>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
+                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setText(model.getMarketLabel(item));
+                            }
+                        };
+                    }
+                });
+    }
+
     private void setRemoveColumnCellFactory() {
         removeItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         removeItemColumn.setCellFactory(
                 new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem, OpenOfferListItem>>() {
                     @Override
-                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem,
-                            OpenOfferListItem> directionColumn) {
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
                         return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
                             final ImageView iconView = new ImageView();
                             final Button button = new Button();

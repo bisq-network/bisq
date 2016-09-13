@@ -28,6 +28,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.Profiler;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.SystemTray;
@@ -83,6 +84,8 @@ import static io.bitsquare.app.CoreOptionKeys.APP_NAME_KEY;
 
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
+
+    private static final long LOG_MEMORY_PERIOD_MIN = 10;
 
     private static Environment env;
 
@@ -238,6 +241,8 @@ public class BitsquareApp extends Application {
                         "Please shut down and re-install the correct version (" + osArchitecture + ").")
                         .show();
             }
+
+            UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
 
         } catch (Throwable throwable) {
             showErrorPopup(throwable, false);
