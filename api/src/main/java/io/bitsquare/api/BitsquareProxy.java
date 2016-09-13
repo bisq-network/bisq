@@ -1,16 +1,21 @@
 package io.bitsquare.api;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import io.bitsquare.api.api.*;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.user.User;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Wallet;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -18,6 +23,7 @@ import java.util.stream.Collectors;
  * <p>
  * No methods/representations used in the interface layers (REST/Socket/...) should be used in this class.
  */
+@Slf4j
 public class BitsquareProxy {
     @Inject
     private WalletService walletService;
@@ -25,10 +31,14 @@ public class BitsquareProxy {
     private User user;
     @Inject
     private TradeManager tradeManager;
+    @Inject
+    private OfferBookService offerBookService;
 
-    public BitsquareProxy(WalletService walletService, TradeManager tradeManager, User user) {
+    public BitsquareProxy(WalletService walletService, TradeManager tradeManager, OfferBookService offerBookService,
+                          User user) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
+        this.offerBookService = offerBookService;
         this.user = user;
     }
 
@@ -80,6 +90,35 @@ public class BitsquareProxy {
         return accountList;
     }
 
+    public boolean offerCancel(String offerId) {
+        if (Strings.isNullOrEmpty(offerId)) {
+            return false;
+        }
+        Optional<Offer> offer = offerBookService.getOffers().stream().filter(offer1 -> offerId.equals(offer1.getId())).findAny();
+        if (!offer.isPresent()) {
+            return false;
+        }
+        // do something more intelligent here, maybe block till handler is called.
+        offerBookService.removeOffer(offer.get(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer" + err));
+        return true;
+    }
+
+    public Optional<OfferData> getOfferDetail(String offerId) {
+        if (Strings.isNullOrEmpty(offerId)) {
+            return Optional.empty();
+        }
+        Optional<Offer> offer = offerBookService.getOffers().stream().filter(offer1 -> offerId.equals(offer1.getId())).findAny();
+        if (!offer.isPresent()) {
+            return Optional.empty();
+        }
+        return Optional.of(new OfferData(offer.get()));
+    }
+
+    public List<OfferData> getOfferList() {
+        List<OfferData> offer = offerBookService.getOffers().stream().map(offer1 -> new OfferData(offer1)).collect(Collectors.toList());
+        return offer;
+
+    }
     public void offerMake() {
 //        offerbookservice. public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
 

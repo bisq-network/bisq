@@ -3,10 +3,13 @@ package io.bitsquare.api.service;
 import com.codahale.metrics.annotation.Timed;
 import io.bitsquare.api.BitsquareProxy;
 import io.bitsquare.api.api.*;
+import io.bitsquare.trade.offer.OfferBookService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Path("/api")
@@ -78,15 +81,20 @@ public class ApiResource {
     @GET
     @Timed
     @Path("/offer_cancel")
-    public void offerCancel(@QueryParam("offer_id") String offerId) {
-        return;
+    public boolean offerCancel(@QueryParam("offer_id") String offerId) {
+        return bitsquareProxy.offerCancel(offerId);
+
     }
 
     @GET
     @Timed
     @Path("/offer_detail")
-    public void offerDetail(@QueryParam("offer_id") String offerId) {
-        return;
+    public OfferData offerDetail(@QueryParam("offer_id") String offerId) {
+        Optional<OfferData> offerDetail = bitsquareProxy.getOfferDetail(offerId);
+        if(offerDetail.isPresent()) {
+            return offerDetail.get();
+        }
+        return null;
     }
 
     /**
@@ -101,14 +109,14 @@ public class ApiResource {
     @GET
     @Timed
     @Path("/offer_list")
-    public void offerList(@DefaultValue("all") @QueryParam("market") String market,
-                          @DefaultValue("all") @QueryParam("status") String status,
-                          @DefaultValue("all") @QueryParam("whose") String whose,
-                          @DefaultValue("0") @QueryParam("start") long start,
-                          @DefaultValue("9223372036854775807") @QueryParam("end") long end,
-                          @DefaultValue("100") @QueryParam("limit") int limit
+    public List<OfferData> offerList(@DefaultValue("all") @QueryParam("market") String market,
+                                     @DefaultValue("all") @QueryParam("status") String status,
+                                     @DefaultValue("all") @QueryParam("whose") String whose,
+                                     @DefaultValue("0") @QueryParam("start") long start,
+                                     @DefaultValue("9223372036854775807") @QueryParam("end") long end,
+                                     @DefaultValue("100") @QueryParam("limit") int limit
                           ) {
-        return;
+        return bitsquareProxy.getOfferList();
     }
 
     /**
