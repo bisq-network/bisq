@@ -41,11 +41,11 @@ public class OfferData {
     @JsonProperty
     String offerer;
     @JsonProperty
-    Coin btc_amount;
+    String btc_amount;
     @JsonProperty
-    Coin min_btc_amount;
+    String min_btc_amount;
     @JsonProperty
-    long other_amount;
+    String other_amount;
     @JsonProperty
     String other_currency;
     @JsonProperty
@@ -62,10 +62,10 @@ public class OfferData {
         this.arbitrators = offer.getArbitratorNodeAddresses().stream()
                 .map(nodeAddress -> nodeAddress.toString()).collect(Collectors.toList());
         this.offerer = offer.getOffererNodeAddress().toString();
-        this.btc_amount = offer.getAmount();
-        this.min_btc_amount = offer.getMinAmount();
+        this.btc_amount = offer.getAmount().toPlainString();
+        this.min_btc_amount = offer.getMinAmount().toPlainString();
         if(offer.getPrice() != null) {
-            this.other_amount = offer.getPrice().getValue();
+            this.other_amount = offer.getPrice().toPlainString();
             this.other_currency = offer.getPrice().getCurrencyCode();
         }
 
