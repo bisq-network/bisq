@@ -38,8 +38,7 @@ public class Api {
     private final WalletService walletService;
     private final ApiModule apiModule;
     private final User user;
-
-    private P2PService p2pService;
+    private final P2PService p2pService;
 
     public static void setEnvironment(Environment env) {
         Api.env = env;

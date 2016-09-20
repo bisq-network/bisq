@@ -3,19 +3,26 @@ package io.bitsquare.api;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import io.bitsquare.api.api.*;
+import io.bitsquare.api.api.Currency;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.P2PService;
+import io.bitsquare.payment.CryptoCurrencyAccount;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.user.User;
+import jersey.repackaged.com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Wallet;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -33,12 +40,21 @@ public class BitsquareProxy {
     private TradeManager tradeManager;
     @Inject
     private OfferBookService offerBookService;
+    @Inject
+    private P2PService p2PService;
+    @Inject
+    private KeyRing keyRing;
+    @Inject
+    private PriceFeedService priceFeedService;
 
     public BitsquareProxy(WalletService walletService, TradeManager tradeManager, OfferBookService offerBookService,
-                          User user) {
+                          P2PService p2PService, KeyRing keyRing, PriceFeedService priceFeedService, User user) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
         this.offerBookService = offerBookService;
+        this.p2PService = p2PService;
+        this.keyRing = keyRing;
+        this.priceFeedService = priceFeedService;
         this.user = user;
     }
 
@@ -62,26 +78,6 @@ public class BitsquareProxy {
         return marketList;
     }
 
-    public WalletDetails getWalletDetails() {
-        Wallet wallet = walletService.getWallet();
-        if (wallet == null) {
-            return null;
-        }
-        Coin availableBalance = wallet.getBalance(Wallet.BalanceType.AVAILABLE);
-        Coin reservedBalance = wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
-        return new WalletDetails(availableBalance.longValue(), reservedBalance.longValue());
-    }
-
-//    public WalletTransactions getWalletTransactions(long start, long end, long limit) {
-//        boolean includeDeadTransactions = false;
-//        Set<org.bitcoinj.core.Transaction> transactions = walletService.getWallet().getTransactions(includeDeadTransactions);
-//        WalletTransactions walletTransactions = new WalletTransactions();
-//        List<io.bitsquare.api.api.WalletTransaction> transactionList = walletTransactions.getTransactions();
-//
-//        for (Transaction t : transactions) {
-//            transactionList.add(new io.bitsquare.api.api.WalletTransaction(t.getValue(walletService.getWallet().getTransactionsByTime())))
-//        }
-//    }
 
     public AccountList getAccountList() {
         AccountList accountList = new AccountList();
@@ -99,7 +95,7 @@ public class BitsquareProxy {
             return false;
         }
         // do something more intelligent here, maybe block till handler is called.
-        offerBookService.removeOffer(offer.get(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer" + err));
+        offerBookService.removeOffer(offer.get(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
         return true;
     }
 
@@ -119,8 +115,60 @@ public class BitsquareProxy {
         return offer;
 
     }
-    public void offerMake() {
-//        offerbookservice. public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
 
+    public void offerMake(String market, String accountId, String direction, BigDecimal amount, BigDecimal minAmount,
+                          String fixed, String price) {
+        // TODO: detect bad direction, bad market, no paymentaccount for user
+
+        Offer offer = new Offer(UUID.randomUUID().toString(),
+                p2PService.getAddress(),
+                keyRing.getPubKeyRing(),
+                Offer.Direction.valueOf(direction),
+                Long.valueOf(price),
+                1, //marketPriceMarginParam,
+                true, //useMarketBasedPrice.get(),
+                amount.longValueExact(),
+                minAmount.longValueExact(),
+                "MR",  // currencycode
+                (ArrayList<NodeAddress>) user.getAcceptedArbitratorAddresses(),
+                getAccountList().getPaymentAccounts().stream().findAny().get().getPayment_method().toString(), //paymentAccount.getPaymentMethod().getId(),
+                getAccountList().getPaymentAccounts().stream().findAny().get().getAccount_id(), //paymentAccount.getId(),
+                null, //countryCode,
+                null, //acceptedCountryCodes,
+                null, //bankId,
+                null, // acceptedBanks,
+                priceFeedService); // priceFeedService);
+
+        offerBookService.addOffer(offer, () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
+    }
+
+    public WalletDetails getWalletDetails() {
+        Wallet wallet = walletService.getWallet();
+        if (wallet == null) {
+            return null;
+        }
+        Coin availableBalance = wallet.getBalance(Wallet.BalanceType.AVAILABLE);
+        Coin reservedBalance = wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
+        return new WalletDetails(availableBalance.toPlainString(), reservedBalance.toPlainString());
+    }
+
+    public WalletTransactions getWalletTransactions(long start, long end, long limit) {
+        boolean includeDeadTransactions = false;
+        Set<Transaction> transactions = walletService.getWallet().getTransactions(includeDeadTransactions);
+        WalletTransactions walletTransactions = new WalletTransactions();
+        List<io.bitsquare.api.api.WalletTransaction> transactionList = walletTransactions.getTransactions();
+
+        for (Transaction t : transactions) {
+//            transactionList.add(new io.bitsquare.api.api.WalletTransaction(t.getValue(walletService.getWallet().getTransactionsByTime())))
+        }
+        return null;
+    }
+
+    public List<WalletAddress> getWalletAddresses() {
+        return user.getPaymentAccounts().stream()
+                .filter(paymentAccount -> paymentAccount instanceof CryptoCurrencyAccount)
+                .map(paymentAccount -> (CryptoCurrencyAccount) paymentAccount)
+                .map(paymentAccount -> new WalletAddress(((CryptoCurrencyAccount) paymentAccount).getId(), paymentAccount.getPaymentMethod().toString(), ((CryptoCurrencyAccount) paymentAccount).getAddress()))
+                .collect(Collectors.toList());
     }
 }

@@ -3,7 +3,6 @@ package io.bitsquare.api.service;
 import com.codahale.metrics.annotation.Timed;
 import io.bitsquare.api.BitsquareProxy;
 import io.bitsquare.api.api.*;
-import io.bitsquare.trade.offer.OfferBookService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -22,7 +21,7 @@ public class ApiResource {
     private final MarketList marketList;
     private final BitsquareProxy bitsquareProxy;
     // "0x7fffffff";
-    private static final String STRING_END_MAX_VALUE = "2147483647";
+    private static final String STRING_END_INT_MAX_VALUE = "2147483647";
 
     public ApiResource(String template, String defaultName, BitsquareProxy bitsquareProxy) {
         this.template = template;
@@ -86,7 +85,7 @@ public class ApiResource {
 
     }
 
-    @GET
+    @DELETE
     @Timed
     @Path("/offer_detail")
     public OfferData offerDetail(@QueryParam("offer_id") String offerId) {
@@ -140,7 +139,7 @@ public class ApiResource {
                           @QueryParam("min_amount") BigDecimal minAmount,
                           @DefaultValue("fixed") @QueryParam("price_type") String fixed,
                           @DefaultValue("100") @QueryParam("price") String price) {
-        return;
+        bitsquareProxy.offerMake(market, accountId, direction, amount, minAmount, fixed, price);
     }
 
    /**
@@ -188,6 +187,22 @@ public class ApiResource {
     }
 
     /**
+     * param	type	desc	required	values	default
+     * status	string	filter by wether each address has a non-zero balance or not		funded | unfunded | both	both
+     * start	int	starting index, zero based			0
+     * limit	int	max number of addresses to return.			100
+     * @return
+     */
+    @GET
+    @Timed
+    @Path("/wallet_addresses")
+    public List<WalletAddress> walletAddresses(@DefaultValue("BOTH") @QueryParam("status") String status,
+                                         @DefaultValue("0") @QueryParam("start") Integer start,
+                                         @DefaultValue("100") @QueryParam("limit") Integer limit) {
+        return bitsquareProxy.getWalletAddresses();
+    }
+
+    /**
      * wallet_tx_list
 
      Returns list of wallet transactions according to criteria
@@ -211,7 +226,7 @@ public class ApiResource {
     @Timed
     @Path("/wallet_tx_list")
     public WalletTransactions walletTransactionList(@DefaultValue("0") @QueryParam("start") Integer start,
-                                                    @DefaultValue(STRING_END_MAX_VALUE) @QueryParam("end") Integer end,
+                                                    @DefaultValue(STRING_END_INT_MAX_VALUE) @QueryParam("end") Integer end,
                                                     @DefaultValue("100") @QueryParam("start") Integer limit
                                                ) {
 //        return bitsquareProxy.getWalletTransactions(start, end, limit);

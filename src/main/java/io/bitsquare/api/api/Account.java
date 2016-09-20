@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
+import lombok.Data;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -64,9 +65,10 @@ import java.util.stream.Collectors;
  * ]
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@Data
 public class Account {
     @JsonProperty
-    String account_id;
+    public String account_id;
     @JsonProperty
     long created;
     @JsonProperty

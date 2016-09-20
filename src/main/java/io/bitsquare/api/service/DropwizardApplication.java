@@ -3,6 +3,9 @@ package io.bitsquare.api.service;
 import com.google.inject.Inject;
 import io.bitsquare.api.BitsquareProxy;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.p2p.P2PService;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.user.User;
@@ -20,6 +23,15 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
 
     @Inject
     OfferBookService offerBookService;
+
+    @Inject
+    P2PService p2PService;
+
+    @Inject
+    KeyRing keyRing;
+
+    @Inject
+    PriceFeedService priceFeedService;
 
     @Inject
     User user;
@@ -43,7 +55,8 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
     public void run(ApiConfiguration configuration,
                     Environment environment) {
 //        environment.getObjectMapper().configure(SerializationFeature.WRAP_ROOT_VALUE, false);
-        BitsquareProxy bitsquareProxy = new BitsquareProxy(walletService, tradeManager, offerBookService, user);
+        BitsquareProxy bitsquareProxy = new BitsquareProxy(walletService, tradeManager, offerBookService,
+                p2PService, keyRing, priceFeedService, user);
         final ApiResource resource = new ApiResource(
                 configuration.getTemplate(),
                 configuration.getDefaultName(),
