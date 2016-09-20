@@ -83,7 +83,7 @@ class BitsquareAppModule extends AppModule {
         install(guiModule());
         install(alertModule());
         install(filterModule());
-        install(apiModule());
+//        install(apiModule());
     }
 
     private TradeModule tradeModule() {

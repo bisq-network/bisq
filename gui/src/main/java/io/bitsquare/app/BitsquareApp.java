@@ -148,7 +148,7 @@ public class BitsquareApp extends Application {
             bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
             injector = Guice.createInjector(bitsquareAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-            injector.getInstance(DropwizardApplication.class).run("server", "bitsquare-api.yml");
+//            injector.getInstance(DropwizardApplication.class).run("server", "bitsquare-api.yml");
 
             Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
 
