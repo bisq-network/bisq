@@ -1,4 +1,4 @@
-Building From Source
+﻿Building From Source
 ====================
 
 This guide will walk you through the process of building Bitsquare from source.
@@ -129,7 +129,7 @@ To run it use:
 Build binaries
 -----------------
 
-If you want to build the binaryies check out the build scripts under the package directory.
+If you want to build the binaries check out the build scripts under the package directory.
 
 Development mode
 -----------------

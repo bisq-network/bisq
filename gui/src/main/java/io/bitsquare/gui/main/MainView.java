@@ -137,7 +137,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Pane disputesButtonHolder = new Pane(disputesButton);
 
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
-            setSpacing(10);
+            setSpacing(5);
             setLeftAnchor(this, 10d);
             setTopAnchor(this, 0d);
         }};
@@ -176,7 +176,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         HBox rightNavPane = new HBox(marketPriceBox.third, availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,
                 settingsButton, accountButton) {{
-            setSpacing(10);
+            setSpacing(5);
             setRightAnchor(this, 10d);
             setTopAnchor(this, 0d);
         }};
