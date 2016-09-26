@@ -19,5 +19,11 @@ build
 .project
 .settings
 *.java.hsp
-@.~ava
-./*.bat
+*.~ava
+build.bat
+package.bat
+push.bat
+/bundles
+Bitsquare.html
+Bitsquare.jnlp
+*.jar
