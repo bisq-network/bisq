@@ -312,9 +312,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
             Offer.Direction direction = model.getDirection();
-            String preFix = "Create new offer for ";
-            String directionText = direction == Offer.Direction.BUY ? "buying" : "selling";
-            String mirroredDirectionText = direction == Offer.Direction.SELL ? "buying" : "selling";
+            String preFix = "Create new offer to ";
+            String directionText = direction == Offer.Direction.BUY ? "buy" : "sell";
+            String mirroredDirectionText = direction == Offer.Direction.SELL ? "buy" : "sell";
             String code = selectedTradeCurrency.getCode();
             if (model.showAllTradeCurrenciesProperty.get())
                 createOfferButton.setText(preFix + directionText + " BTC");

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp spec="1.0" xmlns:jfx="http://javafx.com" href="Bitsquare.jnlp">
+  <information>
+    <title>Bitsquare</title>
+    <vendor>Bitsquare</vendor>
+    <description>Bitsquare</description>
+    <offline-allowed/>
+  </information>
+  <resources>
+    <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
+    <property name="-Djava.net.preferIPv4Stack" value="true"/>
+    <jar href="Bitsquare-0.4.9.6.jar" size="33920532" download="null" />
+  </resources>
+  <jfx:javafx-desc  width="0" height="0" main-class="io.bitsquare.app.BitsquareAppMain"  name="Bitsquare" />
+  <update check="background"/>
+</jnlp>

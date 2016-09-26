@@ -20,3 +20,4 @@ build
 .settings
 *.java.hsp
 @.~ava
+./*.bat
