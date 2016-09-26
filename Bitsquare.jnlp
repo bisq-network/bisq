@@ -9,7 +9,7 @@
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
     <property name="-Djava.net.preferIPv4Stack" value="true"/>
-    <jar href="Bitsquare-0.4.9.6.jar" size="33920532" download="null" />
+    <jar href="Bitsquare-0.4.9.6.jar" size="33920546" download="null" />
   </resources>
   <jfx:javafx-desc  width="0" height="0" main-class="io.bitsquare.app.BitsquareAppMain"  name="Bitsquare" />
   <update check="background"/>

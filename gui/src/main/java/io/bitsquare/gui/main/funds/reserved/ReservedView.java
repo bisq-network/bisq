@@ -246,7 +246,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                                 field.setTooltip(new Tooltip("Open popup for details"));
                                 setGraphic(field);
                             } else if (item.getAddressEntry().getContext() == AddressEntry.Context.ARBITRATOR) {
-                                setGraphic(new Label("Arbitrators fee"));
+                                setGraphic(new Label("Arbitrator's fee"));
                             } else {
                                 setGraphic(new Label("No details available"));
                             }

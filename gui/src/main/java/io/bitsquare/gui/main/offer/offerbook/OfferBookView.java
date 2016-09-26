@@ -376,7 +376,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     "You need to setup at least one arbitrator to be able to trade.\n" +
                             "Do you want to do this now?", ArbitratorSelectionView.class, "\"Arbitrator selection\"");
         } else if (!isPaymentAccountValidForOffer) {
-            openPopupForMissingAccountSetup("No matching payment account",
+            openPopupForMissingAccountSetup("No matching payment account.",
                     "You don't have a payment account with the payment method required for that offer.\n" +
                             "You need to setup a payment account with that payment method if you want to take this offer.\n" +
                             "Do you want to do this now?", FiatAccountsView.class, "\"Account\"");
@@ -432,7 +432,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         String key = "WithdrawFundsAfterRemoveOfferInfo";
         model.onRemoveOpenOffer(offer,
                 () -> {
-                    log.debug("Remove offer was successful");
+                    log.debug("Remove offer was successful.");
                     if (model.preferences.showAgain(key))
                         new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
                                 .actionButtonText("Go to \"Funds/Available for withdrawal\"")
@@ -786,8 +786,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     String hostName = newItem.getOffer().getOwnerNodeAddress().hostName;
                                     int numPastTrades = model.getNumPastTrades(newItem.getOffer());
                                     boolean hasTraded = numPastTrades > 0;
-                                    String tooltipText = hasTraded ? "Offerers onion address: " + hostName + "\n" +
-                                            "You have already traded " + numPastTrades + " times with that offerer." : "Offerers onion address: " + hostName;
+                                    String tooltipText = hasTraded ? "Offerer's onion address: " + hostName + "\n" +
+                                            "You have already traded " + numPastTrades + " times with that offerer." : "Offerer's onion address: " + hostName;
                                     Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)

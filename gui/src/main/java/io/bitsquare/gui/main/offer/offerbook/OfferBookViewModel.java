@@ -326,14 +326,14 @@ class OfferBookViewModel extends ActivatableViewModel {
                 String bankId = offer.getBankId();
                 if (bankId != null && !bankId.equals("null")) {
                     if (BankUtil.isBankIdRequired(methodCountryCode))
-                        result += "\nOfferers bank ID: " + bankId;
+                        result += "\nOfferer's bank ID: " + bankId;
                     else if (BankUtil.isBankNameRequired(methodCountryCode))
-                        result += "\nOfferers bank name: " + bankId;
+                        result += "\nOfferer's bank name: " + bankId;
                 }
             }
 
             if (methodCountryCode != null)
-                result += "\nOfferers seat of bank country: " + CountryUtil.getNameByCode(methodCountryCode);
+                result += "\nOfferer's seat of bank country: " + CountryUtil.getNameByCode(methodCountryCode);
 
             List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
             List<String> acceptedBanks = offer.getAcceptedBankIds();
