@@ -24,3 +24,5 @@ package.bat
 push.bat
 /bundles
 Bitsquare-*.jar
+Bitsquare.html
+Bitsquare.jnlp
