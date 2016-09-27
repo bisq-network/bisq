@@ -11,11 +11,13 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.CryptoCurrencyAccount;
+import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.SameBankAccount;
+import io.bitsquare.payment.SpecificBanksAccount;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.user.User;
-import jersey.repackaged.com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -24,6 +26,8 @@ import org.bitcoinj.core.Wallet;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * This class is a proxy for all bitsquare features the api will use.
@@ -70,9 +74,9 @@ public class BitsquareProxy {
         MarketList marketList = new MarketList();
         CurrencyList currencyList = getCurrencyList(); // we calculate this twice but only at startup
         //currencyList.getCurrencies().stream().flatMap(currency -> marketList.getMarkets().forEach(currency1 -> cur))
-        List<Market> btc = CurrencyUtil.getAllSortedCryptoCurrencies().stream().filter(cryptoCurrency -> !(cryptoCurrency.getCode().equals("BTC"))).map(cryptoCurrency -> new Market(cryptoCurrency.getCode(), "BTC")).collect(Collectors.toList());
+        List<Market> btc = CurrencyUtil.getAllSortedCryptoCurrencies().stream().filter(cryptoCurrency -> !(cryptoCurrency.getCode().equals("BTC"))).map(cryptoCurrency -> new Market(cryptoCurrency.getCode(), "BTC")).collect(toList());
         marketList.markets.addAll(btc);
-        btc = CurrencyUtil.getAllSortedFiatCurrencies().stream().map(cryptoCurrency -> new Market("BTC", cryptoCurrency.getCode())).collect(Collectors.toList());
+        btc = CurrencyUtil.getAllSortedFiatCurrencies().stream().map(cryptoCurrency -> new Market("BTC", cryptoCurrency.getCode())).collect(toList());
         marketList.markets.addAll(btc);
         Collections.sort(currencyList.currencies, (Currency p1, Currency p2) -> p1.name.compareTo(p2.name));
         return marketList;
@@ -111,35 +115,52 @@ public class BitsquareProxy {
     }
 
     public List<OfferData> getOfferList() {
-        List<OfferData> offer = offerBookService.getOffers().stream().map(offer1 -> new OfferData(offer1)).collect(Collectors.toList());
+        List<OfferData> offer = offerBookService.getOffers().stream().map(offer1 -> new OfferData(offer1)).collect(toList());
         return offer;
 
     }
 
-    public void offerMake(String market, String accountId, String direction, BigDecimal amount, BigDecimal minAmount,
-                          String fixed, String price) {
+    public boolean offerMake(String market, String accountId, String direction, BigDecimal amount, BigDecimal minAmount,
+                          boolean marketPriceMargin, double marketPriceMarginParam, String currencyCode, String fiatPrice) {
         // TODO: detect bad direction, bad market, no paymentaccount for user
+        // PaymentAccountUtil.isPaymentAccountValidForOffer
+        Optional<Account> optionalAccount = getAccountList().getPaymentAccounts().stream()
+                .filter(account1 -> account1.getPayment_account_id().equals(accountId)).findFirst();
+        if(!optionalAccount.isPresent()) {
+            // return an error
+            return false;
+        }
+        Account account = optionalAccount.get();
+        PaymentAccount paymentAccount = user.getPaymentAccount(account.getPayment_account_id());
+        ArrayList<String> acceptedBanks = null;
+        if (paymentAccount instanceof SpecificBanksAccount) {
+            acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
+        } else if (paymentAccount instanceof SameBankAccount) {
+            acceptedBanks = new ArrayList<>();
+            acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
+        }
 
         Offer offer = new Offer(UUID.randomUUID().toString(),
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 Offer.Direction.valueOf(direction),
-                Long.valueOf(price),
-                1, //marketPriceMarginParam,
-                true, //useMarketBasedPrice.get(),
+                Long.valueOf(fiatPrice),
+                marketPriceMarginParam, //marketPriceMarginParam,
+                marketPriceMargin, //useMarketBasedPrice.get(),
                 amount.longValueExact(),
                 minAmount.longValueExact(),
-                "MR",  // currencycode
+                currencyCode,  // currencycode
                 (ArrayList<NodeAddress>) user.getAcceptedArbitratorAddresses(),
-                getAccountList().getPaymentAccounts().stream().findAny().get().getPayment_method().toString(), //paymentAccount.getPaymentMethod().getId(),
-                getAccountList().getPaymentAccounts().stream().findAny().get().getAccount_id(), //paymentAccount.getId(),
-                null, //countryCode,
-                null, //acceptedCountryCodes,
-                null, //bankId,
-                null, // acceptedBanks,
+                account.getContract_data().getPayment_method_id(),
+                account.getPayment_account_id(), //paymentAccount.getId(),
+                account.getCountry().toString(), //countryCode,
+                account.getAccepted_country_codes(), //acceptedCountryCodes,
+                account.getBank_id(), //bankId,
+                acceptedBanks, // acceptedBanks,
                 priceFeedService); // priceFeedService);
 
         offerBookService.addOffer(offer, () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
+        return true;
     }
 
     public WalletDetails getWalletDetails() {
@@ -169,6 +190,6 @@ public class BitsquareProxy {
                 .filter(paymentAccount -> paymentAccount instanceof CryptoCurrencyAccount)
                 .map(paymentAccount -> (CryptoCurrencyAccount) paymentAccount)
                 .map(paymentAccount -> new WalletAddress(((CryptoCurrencyAccount) paymentAccount).getId(), paymentAccount.getPaymentMethod().toString(), ((CryptoCurrencyAccount) paymentAccount).getAddress()))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 }
