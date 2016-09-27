@@ -29,13 +29,13 @@ public class BittrexPriceProvider extends PriceProvider {
         // Bittrex requires a captcha if they get connected from a Tor exit node.
         // We can't use Tor for Bittrex for that reason and set the ignoreSocks5Proxy flag to true if no 
         // custom socks5ProxyHttp is set.
-        super(httpClient, preferences, "https://bittrex.com/public", socks5ProxyProvider.getSocks5ProxyHttp() == null);
+        super(httpClient, preferences, "https://bittrex.com/api/v1.1/public/getticker", socks5ProxyProvider.getSocks5ProxyHttp() == null);
     }
 
     @Override
     public Map<String, MarketPrice> getAllPrices() throws IOException, HttpException {
         Map<String, MarketPrice> marketPriceMap = new HashMap<>();
-        String response = httpClient.requestWithGET("?command=returnTicker");
+        String response = httpClient.requestWithGET("?market=");
         LinkedTreeMap<String, Object> treeMap = new Gson().fromJson(response, LinkedTreeMap.class);
         Map<String, String> temp = new HashMap<>();
         Set<String> supported = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
@@ -46,7 +46,7 @@ public class BittrexPriceProvider extends PriceProvider {
             String currencyPair = e.getKey();
             String otherCurrency = null;
             if (currencyPair.startsWith("BTC")) {
-                String[] tokens = currencyPair.split("_");
+                String[] tokens = currencyPair.split("-");
                 if (tokens.length > 1) {
                     otherCurrency = tokens[1];
                     if (supported.contains(otherCurrency)) {

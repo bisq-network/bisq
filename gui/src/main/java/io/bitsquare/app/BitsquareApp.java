@@ -170,12 +170,12 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            scene = new Scene(mainView.getRoot(), 1020, 700); //1200, 740);
+            scene = new Scene(mainView.getRoot(), 1200, 700); //1200, 740);
 
-            Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaItalic.ttf").toExternalForm(), 13);
-            Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 13);
+            Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 12); // 13);
+            Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 12); // 13);
+            Font.loadFont(getClass().getResource("/fonts/VerdanaItalic.ttf").toExternalForm(), 12); // 13);
+            Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 12); // 13);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
                     "/io/bitsquare/gui/images.css",

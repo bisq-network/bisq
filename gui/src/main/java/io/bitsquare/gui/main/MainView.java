@@ -258,7 +258,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple2<TextField, VBox> getBalanceBox(String text) {
         TextField textField = new TextField();
         textField.setEditable(false);
-        textField.setPrefWidth(140);
+        textField.setPrefWidth(110); // (140);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
         textField.setStyle("-fx-alignment: center;  -fx-background-color: white;");
@@ -292,8 +292,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox(String text) {
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
         priceComboBox.setVisibleRowCount(20);
-        priceComboBox.setMaxWidth(220);
-        priceComboBox.setMinWidth(220);
+        priceComboBox.setMaxWidth (220);
+        priceComboBox.setMinWidth (220);
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
         priceComboBox.setCellFactory(p -> getPriceFeedComboBoxListCell());
