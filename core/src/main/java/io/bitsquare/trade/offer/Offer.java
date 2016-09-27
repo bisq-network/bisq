@@ -48,7 +48,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -102,14 +101,14 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     @Nullable
     private final String countryCode;
     @Nullable
-    private final ArrayList<String> acceptedCountryCodes;
+    private final List<String> acceptedCountryCodes;
 
     @Nullable
     private final String bankId;
     @Nullable
-    private final ArrayList<String> acceptedBankIds;
+    private final List<String> acceptedBankIds;
 
-    private final ArrayList<NodeAddress> arbitratorNodeAddresses;
+    private final List<NodeAddress> arbitratorNodeAddresses;
 
 
     private final String id;
@@ -168,13 +167,13 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  long amount,
                  long minAmount,
                  String currencyCode,
-                 ArrayList<NodeAddress> arbitratorNodeAddresses,
+                 List<NodeAddress> arbitratorNodeAddresses,
                  String paymentMethodName,
                  String offererPaymentAccountId,
                  @Nullable String countryCode,
-                 @Nullable ArrayList<String> acceptedCountryCodes,
+                 @Nullable List<String> acceptedCountryCodes,
                  @Nullable String bankId,
-                 @Nullable ArrayList<String> acceptedBankIds,
+                 @Nullable List<String> acceptedBankIds,
                  PriceFeedService priceFeedService) {
         this.id = id;
         this.offererNodeAddress = offererNodeAddress;

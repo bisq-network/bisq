@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * [
  * {
- * "account_id": "c4e4645a-18e6-45be-8853-c7ebac68f0a4",
+ * "payment_account_id": "c4e4645a-18e6-45be-8853-c7ebac68f0a4",
  * "created": 1473010076100,
  * "payment_method": {
  * "payment_method_id": "SEPA",
@@ -68,7 +68,7 @@ import java.util.stream.Collectors;
 @Data
 public class Account {
     @JsonProperty
-    public String account_id;
+    public String payment_account_id;
     @JsonProperty
     long created;
     @JsonProperty
@@ -98,7 +98,7 @@ public class Account {
 
 
     public Account(PaymentAccount bitsquarePaymentAccount) {
-        this.account_id = bitsquarePaymentAccount.getId();
+        this.payment_account_id = bitsquarePaymentAccount.getId();
         this.created = bitsquarePaymentAccount.getCreationDate().toInstant().toEpochMilli();
         this.payment_method = new AccountPaymentMethod(bitsquarePaymentAccount.getPaymentMethod());
         this.account_name = bitsquarePaymentAccount.getAccountName();
@@ -107,5 +107,7 @@ public class Account {
                     .map(tradeCurrency -> tradeCurrency.getCode()).collect(Collectors.toList());
         }
         this.contract_data = new ContractData(bitsquarePaymentAccount);
+        this.bank_id = contract_data.getBank_id();
+
     }
 }

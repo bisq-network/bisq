@@ -19,7 +19,6 @@ package io.bitsquare.app;
 
 import com.google.inject.Singleton;
 import io.bitsquare.alert.AlertModule;
-import io.bitsquare.api.app.ApiModule;
 import io.bitsquare.arbitration.ArbitratorModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.common.Clock;
@@ -119,6 +118,6 @@ class BitsquareAppModule extends AppModule {
     private GuiModule guiModule() {
         return new GuiModule(env, primaryStage);
     }
-    private ApiModule apiModule() { return new ApiModule(env);
-    }
+//    private ApiModule apiModule() { return new ApiModule(env);
+//    }
 }

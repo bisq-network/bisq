@@ -121,7 +121,7 @@ public class ApiResource {
     /**
      * param	    type	desc	                                                                        required	values	            default
      * market	    string	identifies the market this offer will be placed in	                            1
-     * account_id	string	identifies the account to which funds will be received once offer is executed.	1
+     * payment_account_id	string	identifies the account to which funds will be received once offer is executed.	1
      * direction	string	defines if this is an offer to buy or sell	                                    1	        sell | buy
      * amount	    real	amount to buy or sell, in terms of left side of market pair	                    1
      * min_amount	real	minimum amount to buy or sell, in terms of left side of market pair	            1
@@ -132,27 +132,27 @@ public class ApiResource {
     @GET
     @Timed
     @Path("/offer_make")
-    public void offerMake(@QueryParam("market") String market,
-                          @QueryParam("account_id") String accountId,
+    public boolean offerMake(@QueryParam("market") String market,
+                          @QueryParam("payment_account_id") String accountId,
                           @QueryParam("direction") String direction,
                           @QueryParam("amount") BigDecimal amount,
                           @QueryParam("min_amount") BigDecimal minAmount,
                           @DefaultValue("fixed") @QueryParam("price_type") String fixed,
                           @DefaultValue("100") @QueryParam("price") String price) {
-        bitsquareProxy.offerMake(market, accountId, direction, amount, minAmount, fixed, price);
+        return bitsquareProxy.offerMake(market, accountId, direction, amount, minAmount, false, 100, "XMR", price);
     }
 
    /**
     * param	        type	desc	                                                required	values	default
     * offer_id	    string	Identifies the offer to accept	                        1
-    * account_id	string	Identifies the payment account to receive funds into	1
+    * payment_account_id	string	Identifies the payment account to receive funds into	1
     * amount	    string	amount to spend	                                        1
      */
     @GET
     @Timed
     @Path("/offer_take")
     public void offerTake(@QueryParam("offer_id") String offerId,
-                          @QueryParam("account_id") String accountId,
+                          @QueryParam("payment_account_id") String accountId,
                           @QueryParam("amount") String amount) {
         return;
     }
