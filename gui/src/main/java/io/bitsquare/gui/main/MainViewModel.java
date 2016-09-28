@@ -142,7 +142,7 @@ public class MainViewModel implements ViewModel {
     final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();
 
     // software update
-    final String version = "v." + Version.VERSION;
+    final String version = "v" + Version.VERSION;
 
     final BooleanProperty showAppScreen = new SimpleBooleanProperty();
     final StringProperty numPendingTradesAsString = new SimpleStringProperty();
