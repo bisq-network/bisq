@@ -350,14 +350,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     "- Trading fee: " + model.getTakerFee() + "\n" +
                     "- Bitcoin mining fee: " + model.getNetworkFee() + "\n\n" +
 
-                    "For funding you can choose between 2 options:\n" +
-                    "- Transfer fund from your Bitsquare wallet OR\n" +
-                    "- Transfer fund from any external wallet\n\n" +
+                    "You can choose between 2 options when funding your trade:\n" +
+                    "- Use your Bitsquare wallet (convenient, but transactions may be linkable) OR\n" +
+                    "- Transfer from an external wallet (potentially more private)\n\n" +
 
-                    "If you prefer a higher level of privacy you should use for each trade a distinct funding transaction using the external wallet option.\n" +
-                    "If you prefer convenience using the Bitsquare wallet for several trades might be your preferred option.\n\n" +
-
-                    "You can see all the details for funding when you close that popup.")
+                    "You will see all funding options and details after closing this popup.")
                     .dontShowAgainId(key, preferences)
                     .show();
         }
