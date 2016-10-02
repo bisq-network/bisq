@@ -60,7 +60,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class P2PService implements SetupListener, MessageListener, ConnectionListener, RequestDataManager.Listener,
         HashMapChangedListener {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
-    public static final int MAX_CONNECTIONS_DEFAULT = 6;
+    public static final int MAX_CONNECTIONS_DEFAULT = 12;
 
     private final SeedNodesRepository seedNodesRepository;
     private final int port;
