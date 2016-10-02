@@ -77,7 +77,7 @@ Copy the jdkfix-0.4.9.6.jar from the Bitsquare jdkfix/target directory to $JAVA_
 jdkfix-0.4.9.6.jar includes a bugfix of the SortedList class which will be released with the next JDK version. 
 We need to load that class before the default java class. This step will be removed once the bugfix is in the official JDK.
     
-    $ sudo cp bitsquare/jdkfix/target/jdkfix-0.4.9.6.jar $JAVA_HOME/jre/lib/ext/jdkfix-0.4.9.6.jar
+    $ sudo cp jdkfix/target/jdkfix-0.4.9.6.jar $JAVA_HOME/jre/lib/ext/jdkfix-0.4.9.6.jar
 
 ### 5. Copy the BountyCastle provider jar file
 
