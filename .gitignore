@@ -21,7 +21,7 @@ build
 *.java.hsp
 *.~ava
 build.bat
-package.bat
+pack.bat
 push.bat
 /bundles
 Bitsquare-*.jar

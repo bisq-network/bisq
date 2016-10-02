@@ -170,7 +170,7 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            scene = new Scene(mainView.getRoot(), 1200, 700); //1200, 740);
+            scene = new Scene(mainView.getRoot(), 1200, 700); // 740);
 
             Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 12); // 13);
             Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 12); // 13);
@@ -270,7 +270,8 @@ public class BitsquareApp extends Application {
     private void showErrorPopup(Throwable throwable, boolean doShutDown) {
         if (!shutDownRequested) {
             if (scene == null) {
-                log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in guice.");
+                log.warn("Scene not available yet, we create a new scene. The bug " +
+                "might be caused by an exception in a constructor or by a circular dependency in guice.");
                 scene = new Scene(new StackPane(), 1000, 650);
                 scene.getStylesheets().setAll(
                         "/io/bitsquare/gui/bitsquare.css",

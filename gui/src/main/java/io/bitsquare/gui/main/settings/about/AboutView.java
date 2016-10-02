@@ -46,8 +46,9 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
     public void initialize() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 4, "About Bitsquare");
         GridPane.setColumnSpan(titledGroupBg, 2);
-        Label label = addLabel(root, gridRow, "Bitsquare is an open source project and a decentralized network of users who want to " +
-                "exchange Bitcoin with national currencies or alternative crypto currencies in a privacy protecting way.\n" +
+        Label label = addLabel(root, gridRow, "Bitsquare is an open source project " +
+                "and a decentralized network of users who want to exchange Bitcoin " +
+                "with national currencies or alternative crypto currencies in a privacy protecting way.\n" +
                 "Learn more about Bitsquare on our project web page.", Layout.FIRST_ROW_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
@@ -61,7 +62,10 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Support Bitsquare", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        label = addLabel(root, gridRow, "Bitsquare is not a company but a community project and open for participation. If you want to participate or support Bitsquare please follow the links below.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        label = addLabel(root, gridRow, "Bitsquare is not a company but a community " +
+              "project and open for participation.\n" +
+              "If you want to participate or support Bitsquare please follow " +
+              "the links below.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
@@ -72,7 +76,8 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Market price API providers", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        label = addLabel(root, gridRow, "Bitsquare uses market price feed providers for displaying the current exchange rate.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        label = addLabel(root, gridRow, "Bitsquare uses market price feed providers " +
+              "for displaying the current exchange rate.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
