@@ -52,6 +52,7 @@ public class CurrencyUtil {
         list.add(new FiatCurrency("AUD"));
         list.add(new FiatCurrency("RUB"));
         list.add(new FiatCurrency("INR"));
+        list.add(new FiatCurrency("CNY"));
 
         list.sort(TradeCurrency::compareTo);
 
@@ -162,7 +163,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("AMP", "Synereo", true));
         result.add(new CryptoCurrency("PLU", "Plutons", true));
         result.add(new CryptoCurrency("HODL", "HOdlcoin"));
-        result.add(new CryptoCurrency("XVC", "Vcash");
+        result.add(new CryptoCurrency("XVC", "Vcash"));
         
         result.sort(TradeCurrency::compareTo);
         return result;
