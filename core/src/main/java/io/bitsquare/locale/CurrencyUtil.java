@@ -160,6 +160,9 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("AIB", "Advanced Internet Blocks"));
         result.add(new CryptoCurrency("OPAL", "Opal"));
         result.add(new CryptoCurrency("AMP", "Synereo", true));
+        result.add(new CryptoCurrency("PLU", "Plutons", true));
+        result.add(new CryptoCurrency("HODL", "HOdlcoin"));
+        result.add(new CryptoCurrency("XVC", "Vcash");
         
         result.sort(TradeCurrency::compareTo);
         return result;
