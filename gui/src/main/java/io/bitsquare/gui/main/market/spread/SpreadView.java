@@ -117,9 +117,9 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
 
     private void updateHeaders() {
         numberOfOffersColumn.setText("All offers (" + sortedList.stream().mapToInt(item -> item.numberOfOffers).sum() + ")");
-        numberOfBuyOffersColumn.setText("Buy BTC offers (" + sortedList.stream().mapToInt(item -> item.numberOfBuyOffers).sum() + ")");
-        numberOfSellOffersColumn.setText("Sell BTC offers (" + sortedList.stream().mapToInt(item -> item.numberOfSellOffers).sum() + ")");
-        totalAmountColumn.setText("Total amount in BTC (" + formatter.formatCoin(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
+        numberOfBuyOffersColumn.setText("Buy BTC (" + sortedList.stream().mapToInt(item -> item.numberOfBuyOffers).sum() + ")");
+        numberOfSellOffersColumn.setText("Sell BTC (" + sortedList.stream().mapToInt(item -> item.numberOfSellOffers).sum() + ")");
+        totalAmountColumn.setText("Total BTC (" + formatter.formatCoin(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
     }
 
 
