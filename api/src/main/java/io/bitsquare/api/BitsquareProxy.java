@@ -15,11 +15,12 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.user.User;
-import jersey.repackaged.com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Wallet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class BitsquareProxy {
+    private static final Logger log = LoggerFactory.getLogger(BitsquareProxy.class);
     @Inject
     private WalletService walletService;
     @Inject
@@ -147,6 +149,7 @@ public class BitsquareProxy {
         if (wallet == null) {
             return null;
         }
+
         Coin availableBalance = wallet.getBalance(Wallet.BalanceType.AVAILABLE);
         Coin reservedBalance = wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
         return new WalletDetails(availableBalance.toPlainString(), reservedBalance.toPlainString());
