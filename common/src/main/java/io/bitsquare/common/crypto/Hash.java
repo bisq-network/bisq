@@ -19,9 +19,9 @@ package io.bitsquare.common.crypto;
 
 import com.google.common.base.Charsets;
 import io.bitsquare.common.util.Utilities;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -31,20 +31,25 @@ import java.security.NoSuchProviderException;
 
 public class Hash {
     private static final Logger log = LoggerFactory.getLogger(Hash.class);
+    private static MessageDigest digestSha256;
 
     /**
+     * SHA-256 hash of bytearray.
+     * Note that this method is not thread-safe.
      * @param data Data as byte array
      * @return Hash of data
      */
     public static byte[] getHash(byte[] data) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256", "BC");
-            digest.update(data, 0, data.length);
-            return digest.digest();
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
-            log.error("Could not create MessageDigest for hash. " + e.getMessage());
-            throw new RuntimeException(e);
+        if ( digestSha256 == null) {
+            try {
+                digestSha256 = MessageDigest.getInstance("SHA-256", "BC");
+            } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+                log.error("Could not create MessageDigest for hash. " + e.getMessage());
+                throw new RuntimeException(e);
+            }
         }
+        digestSha256.update(data, 0, data.length);
+        return digestSha256.digest();
     }
 
     /**
@@ -76,7 +81,7 @@ public class Hash {
      * @return Hash of data
      */
     public static byte[] getHash(Integer data) {
-        return getHash(ByteBuffer.allocate(4).putInt(data).array());
+        return getHash(ByteBuffer.allocate(Integer.BYTES).putInt(data).array());
     }
 
 }

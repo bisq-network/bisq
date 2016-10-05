@@ -18,9 +18,9 @@
 package io.bitsquare.common.crypto;
 
 import io.bitsquare.common.util.Utilities;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -210,7 +210,7 @@ public class Encryption {
         // Create a symmetric key
         SecretKey secretKey = generateSecretKey();
 
-        // Encrypt secretKey with receivers publicKey 
+        // Encrypt secretKey with receivers publicKey
         byte[] encryptedSecretKey = encryptSecretKey(secretKey, encryptionPublicKey);
 
         // Encrypt with sym key payload with appended hmac
