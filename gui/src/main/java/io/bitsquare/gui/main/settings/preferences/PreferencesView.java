@@ -343,7 +343,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, "Show my own offers in offer book:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
         // useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
-        sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, "Sort market lists with nr. of offers/trades:", "").second;
+        sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, "Sort market lists with no. of offers/trades:", "").second;
         resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all don't show again flags:", "Reset", 0).second;
     }
 

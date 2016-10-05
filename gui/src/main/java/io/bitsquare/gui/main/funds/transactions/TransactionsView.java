@@ -616,7 +616,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         StringBuilder stringBuilder = new StringBuilder();
         map.entrySet().stream().forEach(e -> {
-            stringBuilder.append("Nr. of transactions for amount ").
+            stringBuilder.append("No. of transactions for amount ").
                     append(formatter.formatCoinWithCode(Coin.valueOf(e.getKey()))).
                     append(": ").
                     append(e.getValue().size()).
@@ -649,7 +649,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                     append(tuple4.forth.second).
                     append(")");
         });
-        String message = stringBuilder.toString() + "\nNr. of transactions by day:" + transactionsByDayStringBuilder.toString();
+        String message = stringBuilder.toString() + "\nNo. of transactions by day:" + transactionsByDayStringBuilder.toString();
         new Popup().headLine("Statistical info")
                 .information(message)
                 .actionButtonText("Copy")

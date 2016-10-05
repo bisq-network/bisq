@@ -210,7 +210,7 @@ public class Utilities {
         long free = runtime.freeMemory() / 1024 / 1024;
         long total = runtime.totalMemory() / 1024 / 1024;
         long used = total - free;
-        log.info("System load (nr. threads/used memory (MB)): " + Thread.activeCount() + "/" + used);
+        log.info("System load (no. threads/used memory (MB)): " + Thread.activeCount() + "/" + used);
     }
 
     public static void copyToClipboard(String content) {

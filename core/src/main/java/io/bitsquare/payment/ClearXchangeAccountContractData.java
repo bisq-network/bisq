@@ -48,12 +48,12 @@ public final class ClearXchangeAccountContractData extends PaymentAccountContrac
 
     @Override
     public String getPaymentDetails() {
-        return "ClearXchange - Holder name: " + holderName + ", email or mobile nr.: " + emailOrMobileNr;
+        return "ClearXchange - Holder name: " + holderName + ", email or mobile no.: " + emailOrMobileNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Email or mobile nr.: " + emailOrMobileNr;
+                "Email or mobile no.: " + emailOrMobileNr;
     }
 }

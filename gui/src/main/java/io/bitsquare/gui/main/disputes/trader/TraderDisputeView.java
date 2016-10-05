@@ -220,7 +220,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 });
                 disputeGroups.sort((o1, o2) -> !o1.isEmpty() && !o2.isEmpty() ? o1.get(0).getOpeningDate().compareTo(o2.get(0).getOpeningDate()) : 0);
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("Summary of all disputes (Nr. of disputes: " + disputeGroups.size() + ")\n\n");
+                stringBuilder.append("Summary of all disputes (No. of disputes: " + disputeGroups.size() + ")\n\n");
                 disputeGroups.stream().forEach(disputeGroup -> {
                     Dispute dispute0 = disputeGroup.get(0);
                     stringBuilder.append("##########################################################################################/\n")

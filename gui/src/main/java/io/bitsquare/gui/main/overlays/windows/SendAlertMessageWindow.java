@@ -112,7 +112,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Is update notification:", "").second;
         isUpdateCheckBox.setSelected(true);
 
-        InputTextField versionInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "New version nr.:").second;
+        InputTextField versionInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "New version no.:").second;
         versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
 
         sendButton = new Button("Send notification");

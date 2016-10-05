@@ -45,7 +45,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account nr.:", ((PerfectMoneyAccountContractData) paymentAccountContractData).getAccountNr());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account no.:", ((PerfectMoneyAccountContractData) paymentAccountContractData).getAccountNr());
         return gridRow;
     }
 
@@ -60,7 +60,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account nr.:").second;
+        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account no.:").second;
         accountNrInputTextField.setValidator(perfectMoneyValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             perfectMoneyAccount.setAccountNr(newValue);
@@ -90,7 +90,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", perfectMoneyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(perfectMoneyAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Account nr.:", perfectMoneyAccount.getAccountNr()).second;
+        TextField field = addLabelTextField(gridPane, ++gridRow, "Account no.:", perfectMoneyAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
 
         addLabelTextField(gridPane, ++gridRow, "Currency:", perfectMoneyAccount.getSingleTradeCurrency().getNameAndCode());

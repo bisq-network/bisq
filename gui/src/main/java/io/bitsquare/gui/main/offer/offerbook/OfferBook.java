@@ -59,7 +59,7 @@ public class OfferBook {
                 if (!offerBookListItems.contains(offerBookListItem)) {
                     offerBookListItems.add(offerBookListItem);
 
-                    Log.logIfStressTests("Offer added: Nr. of offers = " + offerBookListItems.size());
+                    Log.logIfStressTests("Offer added: No. of offers = " + offerBookListItems.size());
                 }
             }
 
@@ -77,7 +77,7 @@ public class OfferBook {
                     OfferBookListItem item = candidate.get();
                     if (offerBookListItems.contains(item)) {
                         offerBookListItems.remove(item);
-                        Log.logIfStressTests("Offer removed: Nr. of offers = " + offerBookListItems.size());
+                        Log.logIfStressTests("Offer removed: No. of offers = " + offerBookListItems.size());
                     }
                 }
             }
@@ -99,7 +99,7 @@ public class OfferBook {
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 
-            Log.logIfStressTests("Offer filled: Nr. of offers = " + offerBookListItems.size());
+            Log.logIfStressTests("Offer filled: No. of offers = " + offerBookListItems.size());
 
             log.debug("offerBookListItems " + offerBookListItems.size());
         } catch (Throwable t) {

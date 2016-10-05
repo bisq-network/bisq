@@ -199,7 +199,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setHalignment(createOfferButton, HPos.RIGHT);
         GridPane.setVgrow(createOfferButton, Priority.NEVER);
         GridPane.setValignment(createOfferButton, VPos.TOP);
-        offerListListener = c -> nrOfOffersLabel.setText("Nr. of offers: " + model.getOfferList().size());
+        offerListListener = c -> nrOfOffersLabel.setText("No. of offers: " + model.getOfferList().size());
         currencyListItemsListener = c -> applyCurrencyComboBoxSelection();
     }
 
@@ -242,7 +242,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(0, marketColumn);
                     } else {
-                        volumeColumn.setText("Amount in " + code + " (min - max)");
+                        volumeColumn.setText(code + " (min - max)");
                         priceColumn.setText(formatter.getPriceWithCurrencyCode(code));
 
                         if (tableView.getColumns().contains(marketColumn))
@@ -261,7 +261,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
 
         model.getOfferList().addListener(offerListListener);
-        nrOfOffersLabel.setText("Nr. of offers: " + model.getOfferList().size());
+        nrOfOffersLabel.setText("No. of offers: " + model.getOfferList().size());
     }
 
     @Override
@@ -312,9 +312,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
             Offer.Direction direction = model.getDirection();
-            String preFix = "Create new offer for ";
-            String directionText = direction == Offer.Direction.BUY ? "buying" : "selling";
-            String mirroredDirectionText = direction == Offer.Direction.SELL ? "buying" : "selling";
+            String preFix = "Create new offer to ";
+            String directionText = direction == Offer.Direction.BUY ? "buy" : "sell";
+            String mirroredDirectionText = direction == Offer.Direction.SELL ? "buy" : "sell";
             String code = selectedTradeCurrency.getCode();
             if (model.showAllTradeCurrenciesProperty.get())
                 createOfferButton.setText(preFix + directionText + " BTC");
@@ -376,7 +376,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     "You need to setup at least one arbitrator to be able to trade.\n" +
                             "Do you want to do this now?", ArbitratorSelectionView.class, "\"Arbitrator selection\"");
         } else if (!isPaymentAccountValidForOffer) {
-            openPopupForMissingAccountSetup("No matching payment account",
+            openPopupForMissingAccountSetup("No matching payment account.",
                     "You don't have a payment account with the payment method required for that offer.\n" +
                             "You need to setup a payment account with that payment method if you want to take this offer.\n" +
                             "Do you want to do this now?", FiatAccountsView.class, "\"Account\"");
@@ -432,7 +432,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         String key = "WithdrawFundsAfterRemoveOfferInfo";
         model.onRemoveOpenOffer(offer,
                 () -> {
-                    log.debug("Remove offer was successful");
+                    log.debug("Remove offer was successful.");
                     if (model.preferences.showAgain(key))
                         new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
                                 .actionButtonText("Go to \"Funds/Available for withdrawal\"")
@@ -461,7 +461,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAmountColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Amount in BTC (min - max)") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("BTC (min - max)") {
             {
                 setMinWidth(150);
             }
@@ -491,8 +491,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Market") {
             {
-                setMinWidth(130);
-                setMaxWidth(130);
+                setMinWidth(120); //130
+                // setMaxWidth(130);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -522,7 +522,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
             {
-                setMinWidth(130);
+                setMinWidth(120); //130
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -572,7 +572,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getVolumeColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
             {
-                setMinWidth(130);
+                setMinWidth(125); //130
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -621,7 +621,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Payment method") {
             {
-                setMinWidth(120);
+                setMinWidth(125); //120
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -785,8 +785,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     String hostName = newItem.getOffer().getOwnerNodeAddress().hostName;
                                     int numPastTrades = model.getNumPastTrades(newItem.getOffer());
                                     boolean hasTraded = numPastTrades > 0;
-                                    String tooltipText = hasTraded ? "Offerers onion address: " + hostName + "\n" +
-                                            "You have already traded " + numPastTrades + " times with that offerer." : "Offerers onion address: " + hostName;
+                                    String tooltipText = hasTraded ? "Offerer's onion address: " + hostName + "\n" +
+                                            "You have already traded " + numPastTrades + " times with that offerer." : "Offerer's onion address: " + hostName;
                                     Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     if (identIcon != null)

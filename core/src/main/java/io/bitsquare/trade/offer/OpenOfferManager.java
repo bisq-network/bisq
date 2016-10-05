@@ -458,7 +458,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 () -> {
                     if (!stopped) {
                         log.debug("Successful added offer to P2P network");
-                        // Refresh means we send only the dat needed to refresh the TTL (hash, signature and sequence nr.)
+                        // Refresh means we send only the dat needed to refresh the TTL (hash, signature and sequence no.)
                         if (periodicRefreshOffersTimer == null)
                             startPeriodicRefreshOffersTimer();
                     } else {

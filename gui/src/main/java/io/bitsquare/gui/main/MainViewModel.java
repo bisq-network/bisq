@@ -142,7 +142,7 @@ public class MainViewModel implements ViewModel {
     final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();
 
     // software update
-    final String version = "v." + Version.VERSION;
+    final String version = "v" + Version.VERSION;
 
     final BooleanProperty showAppScreen = new SimpleBooleanProperty();
     final StringProperty numPendingTradesAsString = new SimpleStringProperty();
@@ -193,7 +193,7 @@ public class MainViewModel implements ViewModel {
         this.preferences = preferences;
         this.alertManager = alertManager;
         this.privateNotificationManager = privateNotificationManager;
-        this.filterManager = filterManager; // Needed to be referenced so we get it initialized and get the eventlistener registered
+        this.filterManager = filterManager; // Reference so it's initialized and eventlistener gets registered
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
@@ -298,11 +298,11 @@ public class MainViewModel implements ViewModel {
                         result = warning;
                     } else {
                         if (dataReceived && hiddenService)
-                            result = "Nr. of P2P network peers: " + numPeers;
+                            result = "P2P network peers: " + numPeers;
                         else if (peers == 0)
                             result = state;
                         else
-                            result = state + " / Nr. of P2P network peers: " + numPeers;
+                            result = state + " / P2P network peers: " + numPeers;
                     }
                     return result;
                 });
@@ -444,7 +444,7 @@ public class MainViewModel implements ViewModel {
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
                         int peers = (int) numPeers;
-                        String numPeersString = "Nr. of Bitcoin network peers: " + peers;
+                        String numPeersString = "Bitcoin network peers: " + peers;
 
                         btcSyncProgress.set(percentage);
                         if (percentage == 1) {
@@ -456,14 +456,14 @@ public class MainViewModel implements ViewModel {
                             result = numPeersString + " / connecting to " + btcNetworkAsString;
                         }
                     } else {
-                        result = "Nr. of Bitcoin network peers: " + numBtcPeers + " / connecting to " + btcNetworkAsString + " failed";
+                        result = "Bitcoin network peers: " + numBtcPeers + " / connecting to " + btcNetworkAsString + " failed";
                         if (exception instanceof TimeoutException) {
                             walletServiceErrorMsg.set("Connecting to the bitcoin network failed because of a timeout.");
                         } else if (exception.getCause() instanceof BlockStoreException) {
                             log.error(exception.getMessage());
                             // Ugly, but no other way to cover that specific case
                             if (exception.getMessage().equals("Store file is already locked by another process"))
-                                new Popup().warning("Bitsquare is already running. You cannot run 2 instances of Bitsquare.")
+                                new Popup().warning("Bitsquare is already running. You cannot run two instances of Bitsquare.")
                                         .closeButtonText("Shut down")
                                         .onClose(BitsquareApp.shutDownHandler::run)
                                         .show();

@@ -269,7 +269,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         buildChartAndTableEntries(allSellOffers, Offer.Direction.SELL, sellData, topSellOfferList);
     }
 
-    // If there are more then 3 offers we ignore the offers which are further thn 30% from the best price
+    // If there are more then 3 offers we ignore the offers which are further than 30% from the best price
     private List<Offer> filterOffersWithRelevantPrices(List<Offer> offers) {
         if (offers.size() > 3) {
             Fiat bestPrice = offers.get(0).getPrice();

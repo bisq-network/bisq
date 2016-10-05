@@ -58,13 +58,13 @@ public class DummySeedNode {
     // BitcoinNetworkId: The id for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
     // localhost:3002 2 50 true
     // localhost:3002 2 50 localhost:4442|localhost:4443 true
-    // Usage: -myAddress=<my onion address> -networkId=<networkId (Mainnet = 0, TestNet = 1, Regtest = 2)> -maxConnections=<Nr. of max. connections allowed> -useLocalhost=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
+    // Usage: -myAddress=<my onion address> -networkId=<networkId (Mainnet = 0, TestNet = 1, Regtest = 2)> -maxConnections=<No. of max. connections allowed> -useLocalhost=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
     // Example usage: -myAddress=lmvdenjkyvx2ovga.onion:8001 -networkId=0 -maxConnections=20 -useLocalhost=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
 
     public static final String USAGE = "Usage:\n" +
             "--myAddress=<my onion address>\n" +
             "--networkId=[0|1|2] (Mainnet = 0, TestNet = 1, Regtest = 2)\n" +
-            "--maxConnections=<Nr. of max. connections allowed>\n" +
+            "--maxConnections=<No. of max. connections allowed>\n" +
             "--useLocalhost=[true|false]\n" +
             "--logLevel=Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]\n" +
             "--seedNodes=[onion addresses separated with comma]\n" +
