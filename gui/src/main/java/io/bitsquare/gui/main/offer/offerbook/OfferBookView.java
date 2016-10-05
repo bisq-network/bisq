@@ -684,10 +684,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             public void updateItem(final OfferBookListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
 
+                                TableRow tableRow = getTableRow();
                                 if (newItem != null && !empty) {
                                     final Offer offer = newItem.getOffer();
                                     boolean myOffer = model.isMyOffer(offer);
-                                    TableRow tableRow = getTableRow();
                                     if (tableRow != null) {
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
                                         hasMatchingArbitrator = model.hasMatchingArbitrator(offer);
@@ -706,7 +706,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         if (isTradable) {
                                             // set first row button as default
                                             button.setDefaultButton(getIndex() == 0);
-                                            tableRow.setOnMouseClicked(null);
+                                            tableRow.setOnMousePressed(null);
                                         } else {
                                             button.setDefaultButton(false);
                                             tableRow.setOnMousePressed(e -> {
@@ -749,10 +749,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     setGraphic(null);
                                     if (button != null)
                                         button.setOnAction(null);
-                                    TableRow tableRow = getTableRow();
                                     if (tableRow != null) {
                                         tableRow.setOpacity(1);
-                                        tableRow.setOnMouseClicked(null);
+                                        tableRow.setOnMousePressed(null);
                                     }
                                 }
                             }
