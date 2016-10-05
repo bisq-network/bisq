@@ -75,7 +75,7 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("XMR", "Monero"));
-        result.add(new CryptoCurrency("ZCOIN", "ZCoin"));
+        result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
@@ -182,7 +182,7 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("XMR", "Monero"));
-        result.add(new CryptoCurrency("ZCOIN", "ZCoin"));
+        result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
