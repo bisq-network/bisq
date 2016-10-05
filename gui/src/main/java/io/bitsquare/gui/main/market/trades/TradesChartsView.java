@@ -130,7 +130,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             volumeAxisYWidth = (double) newValue;
             layoutChart();
         };
-        tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText("No. of trades: " + model.tradeStatisticsByCurrency.size());
+        tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText("Trades: " + model.tradeStatisticsByCurrency.size());
     }
 
     @Override
@@ -204,7 +204,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
-        nrOfTradeStatisticsLabel.setText("No. of trades: " + model.tradeStatisticsByCurrency.size());
+        nrOfTradeStatisticsLabel.setText("Trades: " + model.tradeStatisticsByCurrency.size());
 
         UserThread.runAfter(this::updateChartData, 100, TimeUnit.MILLISECONDS);
     }

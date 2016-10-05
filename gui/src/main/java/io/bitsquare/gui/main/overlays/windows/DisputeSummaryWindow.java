@@ -243,7 +243,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             else
                 role = "BTC Seller/taker";
         }
-        addLabelTextField(gridPane, ++rowIndex, "Traders role:", role);
+        addLabelTextField(gridPane, ++rowIndex, "Trader's role:", role);
         addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
         addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatPrice(contract.getTradePrice()));
         addLabelTextField(gridPane, ++rowIndex, "Trade volume:", formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
@@ -494,7 +494,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             "\n" + role + " did screencast or video: " + formatter.booleanToYesNo(disputeResult.screenCastProperty().get()) +
                             "\nPayout amount for BTC buyer: " + formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()) +
                             "\nPayout amount for BTC seller: " + formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()) +
-                            "\nArbitrators dispute fee: " + formatter.formatCoinWithCode(disputeResult.getArbitratorPayoutAmount()) +
+                            "\nArbitrator's dispute fee: " + formatter.formatCoinWithCode(disputeResult.getArbitratorPayoutAmount()) +
                             "\n\nSummary notes:\n" + disputeResult.summaryNotesProperty().get();
 
                     dispute.setIsClosed(true);

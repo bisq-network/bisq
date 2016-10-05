@@ -344,7 +344,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
         // useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
         sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, "Sort market lists with no. of offers/trades:", "").second;
-        resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all don't show again flags:", "Reset", 0).second;
+        resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all 'Don't show again' flags:", "Reset", 0).second;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

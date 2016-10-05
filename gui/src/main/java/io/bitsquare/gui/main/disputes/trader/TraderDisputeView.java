@@ -243,12 +243,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     disputeGroup.stream().forEach(dispute -> {
                         stringBuilder
                                 .append("*******************************************************************************************\n")
-                                .append("** Traders ID: ")
+                                .append("** Trader's ID: ")
                                 .append(dispute.getTraderId())
                                 .append("\n*******************************************************************************************\n")
                                 .append("\n");
                         dispute.getDisputeCommunicationMessagesAsObservableList().stream().forEach(m -> {
-                            String role = m.isSenderIsTrader() ? ">> Traders msg: " : "<< Arbitrators msg: ";
+                            String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
                             stringBuilder.append(role)
                                     .append(m.getMessage())
                                     .append("\n");
@@ -766,7 +766,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         private void showMailboxIcon() {
                             statusIcon.setVisible(true);
                             AwesomeDude.setIcon(statusIcon, AwesomeIcon.ENVELOPE_ALT, "14");
-                            Tooltip.install(statusIcon, new Tooltip("Message saved in receivers mailbox"));
+                            Tooltip.install(statusIcon, new Tooltip("Message saved in receiver's mailbox"));
                             statusIcon.setTextFill(Paint.valueOf("#0f87c3"));
                         }
 
