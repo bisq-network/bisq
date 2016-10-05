@@ -174,6 +174,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("HODL", "HOdlcoin"));
         result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
         result.add(new CryptoCurrency("XVC", "Vcash"));
+        result.add(new CryptoCurrency("ENT", "Eternity"));
         result.add(new CryptoCurrency("PLU", "Pluton", true));
         
         result.sort(TradeCurrency::compareTo);
