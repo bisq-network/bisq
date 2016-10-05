@@ -115,7 +115,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No deposit addresses are generated yet"));
+        tableView.setPlaceholder(new Label("No deposit addresses have been generated yet"));
         tableViewSelectionListener = (observableValue, oldValue, newValue) -> {
             if (newValue != null)
                 fillForm(newValue.getAddressString());

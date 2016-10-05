@@ -248,7 +248,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             imageView.setId("image-buy-large");
 
             placeOfferButton.setId("buy-button-big");
-            placeOfferButton.setText("Review offer for buying bitcoin");
+            placeOfferButton.setText("Review offer to buy bitcoin");
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
@@ -256,7 +256,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             totalToPayTextField.setPromptText(BSResources.get("createOffer.fundsBox.totalsNeeded.prompt"));
 
             placeOfferButton.setId("sell-button-big");
-            placeOfferButton.setText("Review offer for selling bitcoin");
+            placeOfferButton.setText("Review offer to sell bitcoin");
             nextButton.setId("sell-button");
         }
     }
@@ -348,7 +348,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     "- Trading fee: " + model.getOfferFee() + "\n" +
                     "- Bitcoin mining fee: " + model.getNetworkFee() + "\n\n" +
 
-                    "For funding you can choose between 2 options:\n" +
+                    "For funding you can choose between two options:\n" +
                     "- Transfer fund from your Bitsquare wallet OR\n" +
                     "- Transfer fund from any external wallet\n\n" +
 

@@ -170,7 +170,7 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            scene = new Scene(mainView.getRoot(), 1200, 740);
+            scene = new Scene(mainView.getRoot(), 1200, 700);
 
             Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
             Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 13);
@@ -214,7 +214,7 @@ public class BitsquareApp extends Application {
             primaryStage.setMinHeight(620);
 
             // on windows the title icon is also used as task bar icon in a larger size
-            // on Linux no title icon is supported but also a large task bar icon is derived form that title icon
+            // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
             String iconPath;
             if (Utilities.isOSX())
                 iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
@@ -233,8 +233,8 @@ public class BitsquareApp extends Application {
                 String osArchitecture = Utilities.getOSArchitecture();
                 // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
                 // Needs at least more testing on different machines...
-                new Popup<>().warning("You have probably the wrong version installed for the architecture of your computer.\n" +
-                        "Your computers architecture is: " + osArchitecture + ".\n" +
+                new Popup<>().warning("You probably have the wrong Bitsquare version for this computer.\n" +
+                        "Your computer's architecture is: " + osArchitecture + ".\n" +
                         "The Bitsquare binary you installed is: " + Utilities.getJVMArchitecture() + ".\n" +
                         "Please shut down and re-install the correct version (" + osArchitecture + ").")
                         .show();
@@ -356,7 +356,7 @@ public class BitsquareApp extends Application {
         if (!shutDownRequested) {
             new Popup().headLine("Shut down in progress")
                     .backgroundInfo("Shutting down application can take a few seconds.\n" +
-                            "Please don't interrupt that process.")
+                            "Please don't interrupt this process.")
                     .hideCloseButton()
                     .useAnimation(false)
                     .show();

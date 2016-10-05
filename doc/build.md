@@ -129,7 +129,7 @@ To run it use:
 Build binaries
 -----------------
 
-If you want to build the binaryies check out the build scripts under the package directory.
+If you want to build the binaries check out the build scripts under the package directory.
 
 Development mode
 -----------------
