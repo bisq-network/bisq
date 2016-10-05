@@ -170,7 +170,7 @@ public class BitsquareApp extends Application {
                     mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
             });*/
 
-            scene = new Scene(mainView.getRoot(), 1200, 700);
+            scene = new Scene(mainView.getRoot(), 1200, 700); //740
 
             Font.loadFont(getClass().getResource("/fonts/Verdana.ttf").toExternalForm(), 13);
             Font.loadFont(getClass().getResource("/fonts/VerdanaBold.ttf").toExternalForm(), 13);
@@ -210,7 +210,7 @@ public class BitsquareApp extends Application {
             // configure the primary stage
             primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
             primaryStage.setScene(scene);
-            primaryStage.setMinWidth(1190);
+            primaryStage.setMinWidth(1000); // 1190
             primaryStage.setMinHeight(620);
 
             // on windows the title icon is also used as task bar icon in a larger size
