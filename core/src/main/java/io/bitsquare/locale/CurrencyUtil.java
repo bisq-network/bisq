@@ -75,6 +75,7 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("XMR", "Monero"));
+        result.add(new CryptoCurrency("ZCOIN", "ZCoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
@@ -82,6 +83,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("STEEMUSD", "Steem Dollars", true));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
+        result.add(new CryptoCurrency("REP", "Augur", true));
         result.add(new CryptoCurrency("XEM", "NEM"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
@@ -160,6 +162,18 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("AIB", "Advanced Internet Blocks"));
         result.add(new CryptoCurrency("OPAL", "Opal"));
         result.add(new CryptoCurrency("AMP", "Synereo", true));
+
+        //result.add(new CryptoCurrency("SF", "Siafund")); // waiting for answer
+        result.add(new CryptoCurrency("DRS", "Digital Rupees"));
+        result.add(new CryptoCurrency("BURST", "Burstcoin"));
+
+        // result.add(new CryptoCurrency("BATL", "Battlestars")); explorer not working
+        result.add(new CryptoCurrency("TRI", "Triangles"));
+        result.add(new CryptoCurrency("ARG", "Argentum"));
+        result.add(new CryptoCurrency("HODL", "HOdlcoin"));
+        result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
+        result.add(new CryptoCurrency("XVC", "Vcash"));
+        result.add(new CryptoCurrency("PLU", "Pluton", true));
         
         result.sort(TradeCurrency::compareTo);
         return result;
@@ -168,11 +182,13 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("XMR", "Monero"));
+        result.add(new CryptoCurrency("ZCOIN", "ZCoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "EtherClassic"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
+        result.add(new CryptoCurrency("REP", "Augur", true));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
