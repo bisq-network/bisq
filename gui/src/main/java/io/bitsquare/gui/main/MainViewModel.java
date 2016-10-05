@@ -616,7 +616,7 @@ public class MainViewModel implements ViewModel {
 
         String remindPasswordAndBackupKey = "remindPasswordAndBackup";
         user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
-            if (preferences.showAgain(remindPasswordAndBackupKey) && change.wasAdded()) {
+            if (!walletService.getWallet().isEncrypted() && preferences.showAgain(remindPasswordAndBackupKey) && change.wasAdded()) {
                 new Popup<>().headLine("Important security recommendation")
                         .information("We would like to remind you to consider using password protection for your wallet if you have not already enabled that.\n\n" +
                                 "It is also highly recommended to write down the wallet seed words. Those seed words are like a master password for recovering your Bitcoin wallet.\n" +
