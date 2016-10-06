@@ -142,7 +142,7 @@ public class MainViewModel implements ViewModel {
     final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();
 
     // software update
-    final String version = "v" + Version.VERSION;
+    final String version = "v." + Version.VERSION;
 
     final BooleanProperty showAppScreen = new SimpleBooleanProperty();
     final StringProperty numPendingTradesAsString = new SimpleStringProperty();
@@ -463,7 +463,7 @@ public class MainViewModel implements ViewModel {
                             log.error(exception.getMessage());
                             // Ugly, but no other way to cover that specific case
                             if (exception.getMessage().equals("Store file is already locked by another process"))
-                                new Popup().warning("Bitsquare is already running. You cannot run two instances of Bitsquare.")
+                                new Popup().warning("Bitsquare is already running. You cannot run 2 instances of Bitsquare.")
                                         .closeButtonText("Shut down")
                                         .onClose(BitsquareApp.shutDownHandler::run)
                                         .show();

@@ -236,7 +236,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 paymentAccount = paymentAccountOptional.get();
                 this.tradeCurrency = paymentAccount.getSingleTradeCurrency();
             } else {
-                log.warn("PaymentAccount not available. Should never get called as in offer view you should not be able to open a create offer view");
+                log.warn("PaymentAccount not available. Should never get called " +
+                "as in offer view you should not be able to open a create offer view");
                 return false;
             }
         }

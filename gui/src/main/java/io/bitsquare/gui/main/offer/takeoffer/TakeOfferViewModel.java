@@ -443,7 +443,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     offerWarning.set("You lost connection to the offerer.\n" +
                             "He might have gone offline or has closed the connection to you because of too " +
                             "many open connections.\n\n" +
-                            "If you can still see his offer in the offerbook you can try to take the offer again.");
+                            "If you can still see his offer in the offer book you can try to take the offer again.");
                     updateSpinnerInfo();
                 }
             }

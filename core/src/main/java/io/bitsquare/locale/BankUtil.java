@@ -120,7 +120,7 @@ public class BankUtil {
             case "CA":
                 return "Transit Number:";
             default:
-                return isBranchIdRequired(countryCode) ? "Branch nr.:" : "Branch nr. (optional):";
+                return isBranchIdRequired(countryCode) ? "Branch no.:" : "Branch no. (optional):";
         }
     }
 
@@ -148,7 +148,7 @@ public class BankUtil {
             case "MX":
                 return "CLABE:";
             default:
-                return "Account nr. (e.g. IBAN):";
+                return "Account no. (e.g. IBAN):";
         }
     }
 

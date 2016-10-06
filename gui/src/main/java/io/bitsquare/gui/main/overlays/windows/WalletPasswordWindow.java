@@ -215,7 +215,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
                     }
                 });
             } else {
-                log.error("wallet.getKeyCrypter() is null, than must not happen.");
+                log.error("wallet.getKeyCrypter() is null, that must not happen.");
             }
         });
 

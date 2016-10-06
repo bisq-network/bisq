@@ -510,7 +510,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     formatter.formatCoinWithCode(dataModel.totalAvailableBalance) + " in your Bitsquare wallet.\n\n" +
                     "Please fund that trade from an external Bitcoin wallet or fund your Bitsquare " +
                     "wallet at \"Funds/Depost funds\".")
-                    .actionButtonText("Go to \"Funds/Depost funds\"")
+                    .actionButtonText("Go to \"Funds/Deposit funds\"")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
             return false;

@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.pricefeed.providers.BitcoinAveragePriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PoloniexPriceProvider;
+import io.bitsquare.btc.pricefeed.providers.CoinMarketCapPriceProvider;
 import io.bitsquare.btc.pricefeed.providers.PriceProvider;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
@@ -52,7 +53,8 @@ public class PriceFeedService {
 
     private final Map<String, MarketPrice> cache = new HashMap<>();
     private final PriceProvider fiatPriceProvider;
-    private final PriceProvider cryptoCurrenciesPriceProvider;
+    private final PriceProvider cryptoCurrenciesPriceProvider1;
+    private final PriceProvider cryptoCurrenciesPriceProvider2;
     private Consumer<Double> priceConsumer;
     private FaultHandler faultHandler;
     private Type type;
@@ -62,6 +64,7 @@ public class PriceFeedService {
     private final IntegerProperty currenciesUpdateFlag = new SimpleIntegerProperty(0);
     private long bitcoinAveragePriceProviderLastCallAllTs;
     private long poloniexPriceProviderLastCallAllTs;
+    private long coinMarketCapPriceProviderLastCallAllTs;
     private long bitcoinAveragePriceProviderLastCallTs;
     private Timer requestFiatPriceTimer;
 
@@ -71,9 +74,12 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PriceFeedService(BitcoinAveragePriceProvider fiatPriceProvider, PoloniexPriceProvider cryptoCurrenciesPriceProvider) {
+    public PriceFeedService(BitcoinAveragePriceProvider fiatPriceProvider, 
+           PoloniexPriceProvider cryptoCurrenciesPriceProvider1,
+           CoinMarketCapPriceProvider cryptoCurrenciesPriceProvider2) {
         this.fiatPriceProvider = fiatPriceProvider;
-        this.cryptoCurrenciesPriceProvider = cryptoCurrenciesPriceProvider;
+        this.cryptoCurrenciesPriceProvider1 = cryptoCurrenciesPriceProvider1;
+        this.cryptoCurrenciesPriceProvider2 = cryptoCurrenciesPriceProvider2;
     }
 
 
@@ -86,10 +92,16 @@ public class PriceFeedService {
         this.faultHandler = faultHandler;
 
         requestAllPrices(fiatPriceProvider, () -> applyPriceToConsumer());
-        UserThread.runPeriodically(() -> requestAllPrices(fiatPriceProvider, this::applyPriceToConsumer), PERIOD_ALL_FIAT_SEC);
+        UserThread.runPeriodically(() -> requestAllPrices(fiatPriceProvider, 
+                                      this::applyPriceToConsumer), PERIOD_ALL_FIAT_SEC);
 
-        requestAllPrices(cryptoCurrenciesPriceProvider, () -> applyPriceToConsumer());
-        UserThread.runPeriodically(() -> requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPriceToConsumer), PERIOD_ALL_CRYPTO_SEC);
+        requestAllPrices(cryptoCurrenciesPriceProvider1, () -> applyPriceToConsumer());
+        UserThread.runPeriodically(() -> requestAllPrices(cryptoCurrenciesPriceProvider1, 
+                                      this::applyPriceToConsumer), PERIOD_ALL_CRYPTO_SEC);
+
+        requestAllPrices(cryptoCurrenciesPriceProvider2, () -> applyPriceToConsumer());
+        UserThread.runPeriodically(() -> requestAllPrices(cryptoCurrenciesPriceProvider2, 
+                                      this::applyPriceToConsumer), PERIOD_ALL_CRYPTO_SEC);
     }
 
     @Nullable
@@ -119,7 +131,9 @@ public class PriceFeedService {
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                 stopRequestFiatPriceTimer();
                 // Poloniex does not support calls for one currency just for all which is quite a bit of data
-                requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPriceToConsumer);
+                requestAllPrices(cryptoCurrenciesPriceProvider1, this::applyPriceToConsumer);
+                // CoinMarketCap can provide single prices but not implemented yet
+                requestAllPrices(cryptoCurrenciesPriceProvider2, this::applyPriceToConsumer);
             } else {
                 startRequestFiatPriceTimer();
                 requestPrice(fiatPriceProvider);
@@ -160,7 +174,8 @@ public class PriceFeedService {
 
     private void startRequestFiatPriceTimer() {
         stopRequestFiatPriceTimer();
-        requestFiatPriceTimer = UserThread.runPeriodically(() -> requestPrice(fiatPriceProvider), PERIOD_FIAT_SEC);
+        requestFiatPriceTimer = UserThread.runPeriodically(() -> requestPrice(fiatPriceProvider), 
+                              PERIOD_FIAT_SEC);
     }
 
     private void stopRequestFiatPriceTimer() {
@@ -179,7 +194,7 @@ public class PriceFeedService {
                 }
 
             } else {
-                String errorMessage = "We don't have a price for currencyCode " + currencyCode;
+                String errorMessage = "We don't have a price for " + currencyCode;
                 log.debug(errorMessage);
                 faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
             }
@@ -215,7 +230,8 @@ public class PriceFeedService {
                     }
                 });
             } else {
-                log.warn("We tried to call requestPrice with a non fiat currency selected: selectedCurrencyCode=" + currencyCode);
+                log.warn("We tried to call requestPrice with a non fiat currency selected: "
+                             + "selectedCurrencyCode=" + currencyCode);
             }
         } else {
             log.debug("Ignore request. Too many attempt to call the API provider " + provider);
@@ -234,6 +250,11 @@ public class PriceFeedService {
         } else if (provider instanceof PoloniexPriceProvider) {
             if (now - poloniexPriceProviderLastCallAllTs > MIN_PERIOD_BETWEEN_CALLS) {
                 poloniexPriceProviderLastCallAllTs = now;
+                allowed = true;
+            }
+        } else if (provider instanceof CoinMarketCapPriceProvider) {
+            if (now - coinMarketCapPriceProviderLastCallAllTs > MIN_PERIOD_BETWEEN_CALLS) {
+                coinMarketCapPriceProviderLastCallAllTs = now;
                 allowed = true;
             }
         }

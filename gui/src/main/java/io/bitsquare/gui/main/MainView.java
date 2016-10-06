@@ -137,7 +137,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Pane disputesButtonHolder = new Pane(disputesButton);
 
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
-            setSpacing(10);
+            setSpacing(5);
             setLeftAnchor(this, 10d);
             setTopAnchor(this, 0d);
         }};
@@ -176,7 +176,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         HBox rightNavPane = new HBox(marketPriceBox.third, availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,
                 settingsButton, accountButton) {{
-            setSpacing(10);
+            setSpacing(5);
             setRightAnchor(this, 10d);
             setTopAnchor(this, 0d);
         }};
@@ -258,7 +258,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple2<TextField, VBox> getBalanceBox(String text) {
         TextField textField = new TextField();
         textField.setEditable(false);
-        textField.setPrefWidth(140);
+        textField.setPrefWidth(110); // (140);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
         textField.setStyle("-fx-alignment: center;  -fx-background-color: white;");
@@ -292,8 +292,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox(String text) {
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
         priceComboBox.setVisibleRowCount(20);
-        priceComboBox.setMaxWidth(220);
-        priceComboBox.setMinWidth(220);
+        priceComboBox.setMaxWidth (220);
+        priceComboBox.setMinWidth (220);
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
         priceComboBox.setCellFactory(p -> getPriceFeedComboBoxListCell());

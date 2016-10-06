@@ -223,7 +223,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             directionLabel.setId("direction-icon-label-buy");
 
             takeOfferButton.setId("buy-button-big");
-            takeOfferButton.setText("Review offer for buying bitcoin");
+            takeOfferButton.setText("Review offer to buy bitcoin");
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
@@ -231,7 +231,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            takeOfferButton.setText("Review offer for selling bitcoin");
+            takeOfferButton.setText("Review offer to sell bitcoin");
         }
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;

@@ -1,16 +1,15 @@
+:: Invoke from bitsquare home directory
 :: edit iss file -> AppVersion
-
-:: Copy gui/deploy.Bitsquare.jar file from mac build to windows
 :: edit -> -BappVersion and -srcfiles
 
-:: 64 bit build
+:: 32 bit build
 :: Needs Inno Setup 5 or later (http://www.jrsoftware.org/isdl.php)
 
 SET version=0.4.9.6
-SET jdk=C:\Program Files\Java\jdk1.8.0_92
-SET outdir=\\VBOXSVR\vm_shared_windows_32bit
+SET outdir=.
 
-call "%jdk%\bin\javapackager.exe" -deploy ^
+copy gui\target\shaded.jar Bitsquare-%version%.jar
+call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -BappVersion="%version%" ^
 -native exe ^
 -name Bitsquare ^
@@ -20,5 +19,5 @@ call "%jdk%\bin\javapackager.exe" -deploy ^
 -appclass io.bitsquare.app.BitsquareAppMain ^
 -srcfiles %outdir%\Bitsquare-%version%.jar ^
 -outfile Bitsquare ^
--Bruntime="%jdk%\jre" ^
+-Bruntime="%JAVA_HOME%\jre" ^
 -BjvmProperties=-Djava.net.preferIPv4Stack=true
