@@ -164,8 +164,8 @@ public class DisputeManager {
                 openDisputes.put(dispute.getTradeId(), dispute);
         });
 
-        // If we duplicate disputes close the second one (might happen if both traders opened a dispute and arbitrator 
-        // was offline, so could not forward msg to other peer)
+        // If we have duplicate disputes we close the second one (might happen if both traders opened a dispute and arbitrator 
+        // was offline, so could not forward msg to other peer, then the arbitrator might have 4 disputes open for 1 trade)
         openDisputes.entrySet().stream().forEach(openDisputeEntry -> {
             String key = openDisputeEntry.getKey();
             if (closedDisputes.containsKey(key)) {
@@ -567,9 +567,9 @@ public class DisputeManager {
                 boolean isBuyer = keyRing.getPubKeyRing().equals(contract.getBuyerPubKeyRing());
                 DisputeResult.Winner publisher = disputeResult.getWinner();
 
-                // There are cased where the user who receives the trade amount does not come online, so we might want to
-                // let the loser publish the tx.
-                // Default isWinnerIsPublisher is set to true
+                // Sometimes the user who receives the trade amount is never online, so we might want to
+                // let the loser publish the tx. When the winner comes online he gets his funds as it was published by the other peer.
+                // Default isLoserPublisher is set to false
                 if (disputeResult.isLoserPublisher()) {
                     // we invert the logic
                     if (publisher == DisputeResult.Winner.BUYER)

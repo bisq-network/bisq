@@ -246,7 +246,7 @@ public final class DisputeResult implements Payload {
         return winner;
     }
 
-    public void setLoserPublisher(boolean loserPublisher) {
+    public void setLoserIsPublisher(boolean loserPublisher) {
         this.isLoserPublisher = loserPublisher;
     }
 
