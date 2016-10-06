@@ -79,7 +79,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("ETC", "EtherClassic"));
+        result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("STEEMUSD", "Steem Dollars", true));
         result.add(new CryptoCurrency("FLO", "FlorinCoin"));
@@ -175,7 +175,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
         result.add(new CryptoCurrency("XVC", "Vcash"));
         result.add(new CryptoCurrency("ENT", "Eternity"));
-        result.add(new CryptoCurrency("PLU", "Pluton", true));
+        result.add(new CryptoCurrency("PLU", "Plutons", true));
         
         result.sort(TradeCurrency::compareTo);
         return result;
@@ -188,7 +188,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("ETC", "EtherClassic"));
+        result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("REP", "Augur", true));
