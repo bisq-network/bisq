@@ -81,6 +81,7 @@ public final class DisputeResult implements Payload {
     private String arbitratorAddressAsString;
     private byte[] arbitratorPubKey;
     private long closeDate;
+    private boolean winnerIsPublisher;
 
     transient private BooleanProperty tamperProofEvidenceProperty = new SimpleBooleanProperty();
     transient private BooleanProperty idVerificationProperty = new SimpleBooleanProperty();
@@ -243,6 +244,14 @@ public final class DisputeResult implements Payload {
 
     public Winner getWinner() {
         return winner;
+    }
+
+    public void setWinnerIsPublisher(boolean winnerIsPublisher) {
+        this.winnerIsPublisher = winnerIsPublisher;
+    }
+
+    public boolean isWinnerIsPublisher() {
+        return winnerIsPublisher;
     }
 
     @Override

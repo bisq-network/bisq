@@ -163,11 +163,19 @@ public class DisputeManager {
             else
                 openDisputes.put(dispute.getTradeId(), dispute);
         });
-        openDisputes.entrySet().stream().forEach(stringDisputeEntry -> {
-            if (closedDisputes.containsKey(stringDisputeEntry.getKey())) {
-                final Dispute dispute = stringDisputeEntry.getValue();
-                dispute.setIsClosed(true);
-                tradeManager.closeDisputedTrade(dispute.getTradeId());
+
+        // If we duplicate disputes close the second one (might happen if both traders opened a dispute and arbitrator 
+        // was offline, so could not forward msg to other peer)
+        openDisputes.entrySet().stream().forEach(openDisputeEntry -> {
+            String key = openDisputeEntry.getKey();
+            if (closedDisputes.containsKey(key)) {
+                final Dispute closedDispute = closedDisputes.get(key);
+                final Dispute openDispute = openDisputeEntry.getValue();
+                // We need to check if is from the same peer, we don't want to close the peers dispute
+                if (closedDispute.getTraderId() == openDispute.getTraderId()) {
+                    openDispute.setIsClosed(true);
+                    tradeManager.closeDisputedTrade(openDispute.getTradeId());
+                }
             }
         });
     }
@@ -557,10 +565,22 @@ public class DisputeManager {
                 final Contract contract = dispute.getContract();
 
                 boolean isBuyer = keyRing.getPubKeyRing().equals(contract.getBuyerPubKeyRing());
-                if ((isBuyer && disputeResult.getWinner() == DisputeResult.Winner.BUYER)
-                        || (!isBuyer && disputeResult.getWinner() == DisputeResult.Winner.SELLER)
-                        || (isBuyer && disputeResult.getWinner() == DisputeResult.Winner.STALE_MATE)) {
+                DisputeResult.Winner publisher = disputeResult.getWinner();
 
+                // There are cased where the user who receives the trade amount does not come online, so we might want to
+                // let the loser publish the tx.
+                // Default isWinnerIsPublisher is set to true
+                if (!disputeResult.isWinnerIsPublisher()) {
+                    // we invert the logic
+                    if (publisher == DisputeResult.Winner.BUYER)
+                        publisher = DisputeResult.Winner.SELLER;
+                    else if (publisher == DisputeResult.Winner.SELLER)
+                        publisher = DisputeResult.Winner.BUYER;
+                }
+
+                if ((isBuyer && publisher == DisputeResult.Winner.BUYER)
+                        || (!isBuyer && publisher == DisputeResult.Winner.SELLER)
+                        || (isBuyer && publisher == DisputeResult.Winner.STALE_MATE)) {
 
                     final Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
                     Transaction payoutTx = null;
@@ -636,7 +656,7 @@ public class DisputeManager {
             } else {
                 log.debug("We got a dispute result msg but we don't have a matching dispute. " +
                         "That might happen when we get the disputeResultMessage before the dispute was created. " +
-                        "We try again after 1 sec. to apply the disputeResultMessage. TradeId = " + tradeId);
+                        "We try again after 2 sec. to apply the disputeResultMessage. TradeId = " + tradeId);
                 if (!delayMsgMap.containsKey(uid)) {
                     // We delay2 sec. to be sure the comm. msg gets added first
                     Timer timer = UserThread.runAfter(() -> onDisputeResultMessage(disputeResultMessage), 2);
