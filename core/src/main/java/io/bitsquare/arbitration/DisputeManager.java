@@ -570,7 +570,7 @@ public class DisputeManager {
                 // There are cased where the user who receives the trade amount does not come online, so we might want to
                 // let the loser publish the tx.
                 // Default isWinnerIsPublisher is set to true
-                if (!disputeResult.isWinnerIsPublisher()) {
+                if (disputeResult.isLoserPublisher()) {
                     // we invert the logic
                     if (publisher == DisputeResult.Winner.BUYER)
                         publisher = DisputeResult.Winner.SELLER;

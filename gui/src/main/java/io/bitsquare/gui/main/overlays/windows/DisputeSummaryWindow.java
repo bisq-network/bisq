@@ -83,7 +83,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private ChangeListener<Toggle> feeToggleSelectionListener, reasonToggleSelectionListener;
     private InputTextField buyerPayoutAmountInputTextField, sellerPayoutAmountInputTextField, arbitratorPayoutAmountInputTextField;
     private ChangeListener<String> buyerPayoutAmountListener, sellerPayoutAmountListener, arbitratorPayoutAmountListener;
-    private CheckBox winnerIsPublisherCheckBox;
+    private CheckBox isLoserPublisherCheckBox;
     // keep a reference to not get GCed
 
 
@@ -193,7 +193,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setArbitratorPayoutAmount(peersDisputeResult.getArbitratorPayoutAmount());
             disputeResult.setDisputeFeePolicy(peersDisputeResult.getDisputeFeePolicy());
             disputeResult.setWinner(peersDisputeResult.getWinner());
-            disputeResult.setWinnerIsPublisher(peersDisputeResult.isWinnerIsPublisher());
+            disputeResult.setLoserPublisher(peersDisputeResult.isLoserPublisher());
             disputeResult.setReason(peersDisputeResult.getReason());
             disputeResult.setSummaryNotes(peersDisputeResult.summaryNotesProperty().get());
 
@@ -225,8 +225,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             reasonWasScamRadioButton.setDisable(true);
             reasonWasOtherRadioButton.setDisable(true);
 
-            winnerIsPublisherCheckBox.setDisable(true);
-            winnerIsPublisherCheckBox.setSelected(peersDisputeResult.isWinnerIsPublisher());
+            isLoserPublisherCheckBox.setDisable(true);
+            isLoserPublisherCheckBox.setSelected(peersDisputeResult.isLoserPublisher());
 
             calculatePayoutAmounts(disputeResult.getDisputeFeePolicy());
             applyTradeAmountRadioButtonStates();
@@ -239,7 +239,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             feePaymentPolicyListener = (observable, oldValue, newValue) -> applyPayoutAmounts(newValue.first, newValue.second);
             feePaymentPolicyChanged.addListener(feePaymentPolicyListener);
 
-            winnerIsPublisherCheckBox.setSelected(true);
+            isLoserPublisherCheckBox.setSelected(false);
         }
 
         setFeeRadioButtonState();
@@ -461,7 +461,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         arbitratorPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Arbitrators payout amount:").second;
         arbitratorPayoutAmountInputTextField.setEditable(false);
 
-        winnerIsPublisherCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Winner is publisher:").second;
+        isLoserPublisherCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Use loser as publisher:").second;
     }
 
     private void setFeeRadioButtonState() {
@@ -615,7 +615,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     closeTicketButton.disableProperty().unbind();
                     dispute.setDisputeResult(disputeResult);
 
-                    disputeResult.setWinnerIsPublisher(winnerIsPublisherCheckBox.isSelected());
+                    disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
                     disputeResult.setCloseDate(new Date());
                     String text = "Ticket closed on " + formatter.formatDateTime(disputeResult.getCloseDate()) +
                             "\n\nSummary:" +
