@@ -140,6 +140,7 @@ public class BitsquareProxy {
                 priceFeedService); // priceFeedService);
 
         offerBookService.addOffer(offer, () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
+        // use openoffermanager.placeoffer instead
     }
 
     public WalletDetails getWalletDetails() {
