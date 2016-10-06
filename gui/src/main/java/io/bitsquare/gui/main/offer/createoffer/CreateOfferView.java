@@ -348,7 +348,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     "- Trading fee: " + model.getOfferFee() + "\n" +
                     "- Bitcoin mining fee: " + model.getNetworkFee() + "\n\n" +
 
-                    "You can choose between 2 options when funding your trade:\n" +
+                    "You can choose between two options when funding your trade:\n" +
                     "- Use your Bitsquare wallet (convenient, but transactions may be linkable) OR\n" +
                     "- Transfer from an external wallet (potentially more private)\n\n" +
 
