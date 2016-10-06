@@ -35,6 +35,7 @@ import java.util.concurrent.ThreadFactory;
 import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_APP_NAME;
 import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
 
+// TODO: check with seednodeMain because that's more up to date than the one I copied from, and fix in headless as well
 public class ApiMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(ApiMain.class);
     private Api api;

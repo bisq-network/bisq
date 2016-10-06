@@ -21,6 +21,7 @@ public class WalletTransactions {
     }
 }
 
+// TODO see enum in addressentry,
 enum TransactionType {
     SEND, RECEIVE
 }
