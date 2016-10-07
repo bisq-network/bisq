@@ -61,12 +61,15 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum TickUnit {
+        YEAR,
         MONTH,
         WEEK,
         DAY,
         HOUR,
         MINUTE_10,
-        MINUTE
+        // TODO Can be removed after version 4.9.7
+        // Not used anymore but leave it as it might be used in preferences and could cause an exception if not there. 
+        MINUTE 
     }
 
     private final TradeStatisticsManager tradeStatisticsManager;
@@ -325,6 +328,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {
         switch (tickUnit) {
+            case YEAR:
+                return TimeUnit.MILLISECONDS.toDays(tradeDateAsTime) / 365;
             case MONTH:
                 return TimeUnit.MILLISECONDS.toDays(tradeDateAsTime) / 31;
             case WEEK:
@@ -344,6 +349,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     long getTimeFromTick(long tick, TickUnit tickUnit) {
         switch (tickUnit) {
+            case YEAR:
+                return TimeUnit.DAYS.toMillis(tick) * 365;
             case MONTH:
                 return TimeUnit.DAYS.toMillis(tick) * 31;
             case WEEK:
