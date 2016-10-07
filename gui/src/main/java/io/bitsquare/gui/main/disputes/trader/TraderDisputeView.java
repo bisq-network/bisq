@@ -264,6 +264,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         .actionButtonText("Copy")
                         .onAction(() -> Utilities.copyToClipboard(message))
                         .show();
+            } else if (new KeyCodeCombination(KeyCode.U, KeyCombination.SHORTCUT_DOWN).match(event)) {
+                // Hidden shortcut to re-open a dispute.
+                if (selectedDispute != null && !disputeManager.isTrader(selectedDispute)) {
+                    if (selectedDisputeClosedPropertyListener != null)
+                        selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
+                    selectedDispute.setIsClosed(false);
+                }
             }
         };
     }
@@ -1110,9 +1117,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     setText(isClosed ? "Closed" : "Open");
                                     getTableRow().setOpacity(isClosed ? 0.4 : 1);
                                 } else {
-                                    if (closedProperty != null)
+                                    if (closedProperty != null) {
                                         closedProperty.removeListener(listener);
-
+                                        closedProperty = null;
+                                    }
                                     setText("");
                                 }
                             }
