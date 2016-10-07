@@ -94,7 +94,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BITUSD", "BitUSD", true));
         result.add(new CryptoCurrency("BLK", "Blackcoin"));
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
-        result.add(new CryptoCurrency("CLAM", "Clams", true));
+        result.add(new CryptoCurrency("CLAM", "Clams"));
         result.add(new CryptoCurrency("CLOAK", "CloakCoin"));
         result.add(new CryptoCurrency("CMT", "Comet"));
         result.add(new CryptoCurrency("XCP", "Counterparty"));
