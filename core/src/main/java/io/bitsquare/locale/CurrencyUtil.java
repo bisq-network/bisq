@@ -108,6 +108,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DRS", "Digital Rupees"));
         result.add(new CryptoCurrency("DGD", "DigixDAO Tokens", true));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("EMC", "Emercoin"));
         result.add(new CryptoCurrency("EURT", "EUR Tether"));
         result.add(new CryptoCurrency("ESP", "Espers"));
         result.add(new CryptoCurrency("ENT", "Eternity"));
@@ -129,6 +130,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
         result.add(new CryptoCurrency("LSK", "Lisk"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
+        result.add(new CryptoCurrency("STR", "Lumen"));
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
         result.add(new CryptoCurrency("MKR", "Maker", true));
         result.add(new CryptoCurrency("MXT", "MarteXcoin"));
