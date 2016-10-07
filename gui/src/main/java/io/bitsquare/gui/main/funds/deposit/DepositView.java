@@ -137,7 +137,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
         titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, "Fund your wallet");
 
-        qrCodeLabel = addLabel(gridPane, gridRow, "QR-Code:", 0);
+        qrCodeLabel = addLabel(gridPane, gridRow, "", 0);
         //GridPane.setMargin(qrCodeLabel, new Insets(Layout.FIRST_ROW_DISTANCE - 9, 0, 0, 5));
 
         qrCodeImageView = new ImageView();

@@ -208,7 +208,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         final boolean isNationalBanks = paymentMethod.equals(PaymentMethod.NATIONAL_BANK);
         final boolean isSepa = paymentMethod.equals(PaymentMethod.SEPA);
         if (offer.isMyOffer(keyRing) && offererPaymentAccountId != null && paymentAccount != null) {
-            addLabelTextField(gridPane, ++rowIndex, "Payment account:", paymentAccount.getAccountName());
+            addLabelTextField(gridPane, ++rowIndex, "My payment account:", paymentAccount.getAccountName());
         } else {
             final String method = BSResources.get(paymentMethod.getId());
             if (isNationalBanks || isSpecificBanks || isSepa) {
