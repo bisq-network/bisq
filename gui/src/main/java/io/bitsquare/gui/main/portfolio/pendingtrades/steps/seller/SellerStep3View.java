@@ -170,8 +170,8 @@ public class SellerStep3View extends TradeStepView {
             } else {
                 myPaymentDetails = myPaymentAccountContractData.getPaymentDetails();
                 peersPaymentDetails = peersPaymentAccountContractData.getPaymentDetails();
-                myTitle = "Your payment account:";
-                peersTitle = "Buyers payment account:";
+                myTitle = "Your trading account:";
+                peersTitle = "Buyers trading account:";
             }
         }
 
@@ -211,7 +211,7 @@ public class SellerStep3View extends TradeStepView {
                     "confirm the payment when you have sufficient blockchain confirmations.";
         } else {
             return "The BTC buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
-                    "Check at your payment account (e.g. bank account) and confirm when you have " +
+                    "Check at your trading account (e.g. bank account) and confirm when you have " +
                     "received the payment.";
         }
     }

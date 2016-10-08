@@ -340,19 +340,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onCreateOffer() {
         if (!model.hasPaymentAccount()) {
-            openPopupForMissingAccountSetup("You have not setup a payment account",
+            openPopupForMissingAccountSetup("You have not setup a trading account",
                     "You need to setup a national currency or altcoin account before you can create an offer.\n" +
                             "Do you want to setup an account?", FiatAccountsView.class, "\"Account\"");
         } else if (!model.hasPaymentAccountForCurrency()) {
-            new Popup().headLine("No payment account for selected currency")
-                    .instruction("You don't have a payment account for the selected currency.\n" +
-                            "Do you want to create an offer with one of your existing payment accounts?")
+            new Popup().headLine("No trading account for selected currency")
+                    .instruction("You don't have a trading account for the selected currency.\n" +
+                            "Do you want to create an offer with one of your existing trading accounts?")
                     .actionButtonText("Yes, create offer")
                     .onAction(() -> {
                         createOfferButton.setDisable(true);
                         offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
                     })
-                    .closeButtonText("Set up a new payment account")
+                    .closeButtonText("Set up a new trading account")
                     .onClose(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
                         navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
@@ -376,9 +376,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     "You need to setup at least one arbitrator to be able to trade.\n" +
                             "Do you want to do this now?", ArbitratorSelectionView.class, "\"Arbitrator selection\"");
         } else if (!isPaymentAccountValidForOffer) {
-            openPopupForMissingAccountSetup("No matching payment account.",
-                    "You don't have a payment account with the payment method required for that offer.\n" +
-                            "You need to setup a payment account with that payment method if you want to take this offer.\n" +
+            openPopupForMissingAccountSetup("No matching trading account.",
+                    "You don't have a trading account with the payment method required for that offer.\n" +
+                            "You need to setup a trading account with that payment method if you want to take this offer.\n" +
                             "Do you want to do this now?", FiatAccountsView.class, "\"Account\"");
         } else if (!hasSameProtocolVersion) {
             new Popup().warning("That offer requires a different protocol version as the one used in your " +

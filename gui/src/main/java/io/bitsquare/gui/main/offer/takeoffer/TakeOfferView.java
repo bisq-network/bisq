@@ -620,12 +620,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Payment info");
         GridPane.setColumnSpan(titledGroupBg, 3);
 
-        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, "Payment account:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, "Trading account:", Layout.FIRST_ROW_DISTANCE);
         paymentAccountsLabel = tuple.first;
         paymentAccountsLabel.setVisible(false);
         paymentAccountsLabel.setManaged(false);
         paymentAccountsComboBox = tuple.second;
-        paymentAccountsComboBox.setPromptText("Select payment account");
+        paymentAccountsComboBox.setPromptText("Select trading account");
         paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {

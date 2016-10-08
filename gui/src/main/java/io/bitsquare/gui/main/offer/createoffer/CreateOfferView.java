@@ -242,7 +242,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result)
-            new Popup().warning("You don't have a payment account set up.").onClose(this::close).show();
+            new Popup().warning("You don't have a trading account set up.").onClose(this::close).show();
 
         if (direction == Offer.Direction.BUY) {
             imageView.setId("image-buy-large");
@@ -480,7 +480,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
         cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
 
-        // payment account
+        // trading account
         currencyComboBox.prefWidthProperty().bind(paymentAccountsComboBox.widthProperty());
         currencyComboBox.managedProperty().bind(currencyComboBox.visibleProperty());
         currencyComboBoxLabel.visibleProperty().bind(currencyComboBox.visibleProperty());
@@ -528,7 +528,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         placeOfferButton.disableProperty().unbind();
         cancelButton2.disableProperty().unbind();
 
-        // payment account
+        // trading account
         currencyComboBox.managedProperty().unbind();
         currencyComboBox.prefWidthProperty().unbind();
         currencyComboBoxLabel.visibleProperty().unbind();
@@ -726,11 +726,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addPaymentGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Select payment account");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Select trading account");
         GridPane.setColumnSpan(titledGroupBg, 3);
 
-        paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, "Payment account:", Layout.FIRST_ROW_DISTANCE).second;
-        paymentAccountsComboBox.setPromptText("Select payment account");
+        paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, "Trading account:", Layout.FIRST_ROW_DISTANCE).second;
+        paymentAccountsComboBox.setPromptText("Select trading account");
         paymentAccountsComboBox.setMinWidth(300);
         editOfferElements.add(paymentAccountsComboBox);
 

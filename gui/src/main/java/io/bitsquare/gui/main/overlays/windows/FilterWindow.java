@@ -113,7 +113,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Private key to unlock:", 10).second;
         InputTextField offerIdsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Filtered offers (comma sep.):").second;
         InputTextField nodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Filtered onion addresses (comma sep.):").second;
-        InputTextField paymentAccountFilterInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Filtered payment account data:\nFormat: comma sep. list of [payment method id | data field | value]").second;
+        InputTextField paymentAccountFilterInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Filtered trading account data:\nFormat: comma sep. list of [payment method id | data field | value]").second;
         GridPane.setHalignment(paymentAccountFilterInputTextField, HPos.RIGHT);
 
         final Filter filter = filterManager.getDevelopersFilter();

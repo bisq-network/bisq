@@ -121,7 +121,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
         String key = "accountPrivacyInfo";
         if (!DevFlags.DEV_MODE)
-            new Popup().backgroundInfo("In the account screen you can setup your payment accounts for national currencies " +
+            new Popup().backgroundInfo("In the account screen you can setup your trading accounts for national currencies " +
                     "as well as for altcoins.\n\n" +
                     "For Bitcoin you don't need to set up an account.\n" +
                     "You can manage your Bitsquare wallet at the \"Funds\" section.\n\n" +
