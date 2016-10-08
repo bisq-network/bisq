@@ -216,9 +216,9 @@ public class GUIUtil {
                 String code = tradeCurrency.getCode();
                 final String displayString = CurrencyUtil.getNameAndCode(code);
                 // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-                if (code.equals(GUIUtilOld.SHOW_ALL_FLAG))
+                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
                     return "▶ Show all";
-                else if (code.equals(GUIUtilOld.EDIT_FLAG))
+                else if (code.equals(GUIUtil.EDIT_FLAG))
                     return "▼ Edit currency list";
                 else if (tradeCurrency instanceof FiatCurrency)
                     return "★ " + displayString;
