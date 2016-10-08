@@ -132,7 +132,7 @@ public final class Preferences implements Persistable {
     private int tradeStatisticsTickUnitIndex = 0;
 
     private boolean useStickyMarketPrice = false;
-    private boolean sortMarketCurrenciesNumerically = false;
+    private boolean sortMarketCurrenciesNumerically = true;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
     @Nullable

@@ -209,6 +209,32 @@ public class GUIUtil {
         };
     }
 
+    public static StringConverter<TradeCurrency> getTradeCurrencyConverter() {
+        return new StringConverter<TradeCurrency>() {
+            @Override
+            public String toString(TradeCurrency tradeCurrency) {
+                String code = tradeCurrency.getCode();
+                final String displayString = CurrencyUtil.getNameAndCode(code);
+                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+                if (code.equals(GUIUtilOld.SHOW_ALL_FLAG))
+                    return "▶ Show all";
+                else if (code.equals(GUIUtilOld.EDIT_FLAG))
+                    return "▼ Edit currency list";
+                else if (tradeCurrency instanceof FiatCurrency)
+                    return "★ " + displayString;
+                else if (tradeCurrency instanceof CryptoCurrency) {
+                    return "✦ " + displayString;
+                } else
+                    return "-";
+            }
+
+            @Override
+            public TradeCurrency fromString(String s) {
+                return null;
+            }
+        };
+    }
+
     public static void fillCurrencyListItems(List<TradeCurrency> tradeCurrencyList, ObservableList<CurrencyListItem> currencyListItems, @Nullable CurrencyListItem showAllCurrencyListItem, Preferences preferences) {
         Set<TradeCurrency> tradeCurrencySet = new HashSet<>();
         Map<String, Integer> tradesPerCurrencyMap = new HashMap<>();

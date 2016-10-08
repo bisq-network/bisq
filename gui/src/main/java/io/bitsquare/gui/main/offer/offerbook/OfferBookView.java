@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.offer.offerbook;
 
 import io.bitsquare.alert.PrivateNotificationManager;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -36,7 +35,6 @@ import io.bitsquare.gui.main.offer.OfferView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
@@ -65,7 +63,6 @@ import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
 import javax.inject.Inject;
-import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -77,7 +74,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private BSFormatter formatter;
     private PrivateNotificationManager privateNotificationManager;
 
-    private ComboBox<CurrencyListItem> currencyComboBox;
+    private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private Button createOfferButton;
     private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn, paymentMethodColumn, avatarColumn;
@@ -90,7 +87,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private ListChangeListener<OfferBookListItem> offerListListener;
     private MonadicBinding<Void> currencySelectionBinding;
     private Subscription currencySelectionSubscriber;
-    private ListChangeListener<CurrencyListItem> currencyListItemsListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +111,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         currencyComboBox = addLabelComboBox(root, gridRow, "Filter by currency:", Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers", model.preferences));
+        currencyComboBox.setConverter(GUIUtil.getTradeCurrencyConverter());
 
         paymentMethodComboBox = addLabelComboBox(root, ++gridRow, "Filter by payment method:").second;
         paymentMethodComboBox.setPromptText("Select payment method");
@@ -200,24 +196,18 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setVgrow(createOfferButton, Priority.NEVER);
         GridPane.setValignment(createOfferButton, VPos.TOP);
         offerListListener = c -> nrOfOffersLabel.setText("No. of offers: " + model.getOfferList().size());
-        currencyListItemsListener = c -> applyCurrencyComboBoxSelection();
     }
 
     @Override
     protected void activate() {
-        currencyComboBox.setItems(model.getCurrencyListItems());
-        currencyComboBox.setVisibleRowCount(25);
+        currencyComboBox.setItems(model.getTradeCurrencies());
+        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
+        currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
 
-        model.currencyListItems.addListener(currencyListItemsListener);
-
-        applyCurrencyComboBoxSelection();
-
-        currencyComboBox.setOnAction(e -> {
-            CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
-
-            if (selectedItem != null)
-                model.onSetTradeCurrency(selectedItem.tradeCurrency);
-        });
+        if (model.showAllTradeCurrenciesProperty.get())
+            currencyComboBox.getSelectionModel().select(0);
+        else
+            currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
 
         priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
@@ -274,18 +264,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         priceColumn.sortableProperty().unbind();
         amountColumn.sortableProperty().unbind();
         model.getOfferList().removeListener(offerListListener);
-        model.currencyListItems.removeListener(currencyListItemsListener);
-        currencySelectionSubscriber.unsubscribe();
-    }
 
-    private void applyCurrencyComboBoxSelection() {
-        Optional<CurrencyListItem> selectedCurrencyListItem = model.getSelectedCurrencyListItem();
-        UserThread.execute(() -> {
-            if (model.showAllTradeCurrenciesProperty.get() || !selectedCurrencyListItem.isPresent())
-                currencyComboBox.getSelectionModel().select(model.getShowAllCurrencyListItem());
-            else
-                currencyComboBox.getSelectionModel().select(selectedCurrencyListItem.get());
-        });
+        currencySelectionSubscriber.unsubscribe();
     }
 
 
