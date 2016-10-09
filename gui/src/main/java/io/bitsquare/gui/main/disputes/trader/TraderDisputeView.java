@@ -265,8 +265,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         .onAction(() -> Utilities.copyToClipboard(message))
                         .show();
             } else if (new KeyCodeCombination(KeyCode.U, KeyCombination.SHORTCUT_DOWN).match(event)) {
-                // Hidden shortcut to re-open a dispute.
-                if (selectedDispute != null && !disputeManager.isTrader(selectedDispute)) {
+                // Hidden shortcut to re-open a dispute. Allow it also for traders not only arbitrator.
+                if (selectedDispute != null) {
                     if (selectedDisputeClosedPropertyListener != null)
                         selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
                     selectedDispute.setIsClosed(false);
