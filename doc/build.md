@@ -85,7 +85,7 @@ Prepare Bitsquare build
 
 ### 3. Get Bitsquare source code and build a preliminary Bitsquare version
 
-You need to get the Bitsquare dependencies first as we need to copy the BountyCastle jar to the JRE directory as well as the jdkfix jar.
+You need to get the Bitsquare dependencies first as we need to copy the BouncyCastle jar to the JRE directory as well as the jdkfix jar.
 
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bitsquare
@@ -99,9 +99,9 @@ We need to load that class before the default java class. This step will be remo
 
     $ sudo cp jdkfix/target/jdkfix-0.4.9.6.jar $JAVA_HOME/jre/lib/ext/
 
-### 5. Copy the BountyCastle provider jar file
+### 5. Copy the BouncyCastle provider jar file
 
-Copy the BountyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
+Copy the BouncyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
 This prevents a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
 
     $ sudo cp ~/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/
