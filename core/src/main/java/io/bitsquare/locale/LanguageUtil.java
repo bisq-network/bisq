@@ -33,15 +33,15 @@ public class LanguageUtil {
     public static List<String> getAllLanguageCodes() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
 
-        final Set<String> allLocaleCodesAsSet = allLocales.stream()
-                .filter(locale -> !"".equals(locale.getLanguage()) && !"".equals(locale.getDisplayLanguage()))
-                .map(locale -> new Locale(locale.getLanguage(), "").getLanguage())
+        // Filter duplicate locale entries 
+        Set<String> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getLanguage().isEmpty() && !locale.getDisplayLanguage().isEmpty())
+                .map(locale -> locale.getLanguage())
                 .collect(Collectors.toSet());
 
-        List<String> allLocaleCodes = new ArrayList<>();
-        allLocaleCodes.addAll(allLocaleCodesAsSet);
-        allLocaleCodes.sort((o1, o2) -> getDisplayName(o1).compareTo(getDisplayName(o2)));
-        return allLocaleCodes;
+        List<String> allLanguageCodes = new ArrayList<>();
+        allLanguageCodes.addAll(allLocalesAsSet);
+        allLanguageCodes.sort((o1, o2) -> getDisplayName(o1).compareTo(getDisplayName(o2)));
+        return allLanguageCodes;
     }
 
     public static String getDefaultLanguage() {

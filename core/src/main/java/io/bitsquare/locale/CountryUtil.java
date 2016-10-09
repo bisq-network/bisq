@@ -23,10 +23,7 @@ import io.bitsquare.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CountryUtil {
@@ -145,8 +142,15 @@ public class CountryUtil {
 
     private static List<Locale> getAllCountryLocales() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
-        allLocales.sort((locale1, locale2) -> locale1.getDisplayCountry().compareTo(locale2.getDisplayCountry()));
-        return allLocales;
+
+        // Filter duplicate locale entries 
+        Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getCountry().isEmpty())
+                .collect(Collectors.toSet());
+
+        List<Locale> allCountryLocales = new ArrayList<>();
+        allCountryLocales.addAll(allLocalesAsSet);
+        allCountryLocales.sort((locale1, locale2) -> locale1.getDisplayCountry().compareTo(locale2.getDisplayCountry()));
+        return allCountryLocales;
     }
 
     private static List<String> getNamesByCodes(List<String> countryCodes) {
