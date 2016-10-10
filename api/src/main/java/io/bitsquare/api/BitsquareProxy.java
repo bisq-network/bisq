@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Wallet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -161,6 +163,7 @@ public class BitsquareProxy {
 
         offerBookService.addOffer(offer, () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
         return true;
+        // TODO use openoffermanager.placeoffer instead
     }
 
     public WalletDetails getWalletDetails() {
@@ -168,6 +171,7 @@ public class BitsquareProxy {
         if (wallet == null) {
             return null;
         }
+
         Coin availableBalance = wallet.getBalance(Wallet.BalanceType.AVAILABLE);
         Coin reservedBalance = wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
         return new WalletDetails(availableBalance.toPlainString(), reservedBalance.toPlainString());
