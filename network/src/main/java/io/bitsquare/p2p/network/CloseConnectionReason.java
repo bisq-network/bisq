@@ -24,7 +24,8 @@ public enum CloseConnectionReason {
 
     // illegal requests
     RULE_VIOLATION(true, false),
-    PEER_BANNED(true, false);
+    PEER_BANNED(true, false),
+    INVALID_CLASS_RECEIVED(false, false);
 
     public final boolean sendCloseMessage;
     public boolean isIntended;

@@ -591,6 +591,8 @@ public class Connection implements MessageListener {
                 if (ruleViolation == RuleViolation.PEER_BANNED) {
                     log.warn("We detected a connection to a banned peer. We will close that connection. (reportInvalidRequest)");
                     shutDown(CloseConnectionReason.PEER_BANNED);
+                } else if (ruleViolation == RuleViolation.INVALID_CLASS) {
+                    shutDown(CloseConnectionReason.INVALID_CLASS_RECEIVED);
                 } else {
                     shutDown(CloseConnectionReason.RULE_VIOLATION);
                 }
