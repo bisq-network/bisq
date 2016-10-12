@@ -129,7 +129,7 @@ public final class Preferences implements Persistable {
 
     private String buyScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String sellScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
-    private int tradeStatisticsTickUnitIndex = 0;
+    private int tradeStatisticsTickUnitIndex = 3;
 
     private boolean useStickyMarketPrice = false;
     private boolean sortMarketCurrenciesNumerically = true;
