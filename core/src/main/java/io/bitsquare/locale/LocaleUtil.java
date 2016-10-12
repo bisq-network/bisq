@@ -135,6 +135,7 @@ public class LocaleUtil {
         allLocales.add(new Locale("ar", "JO", ""));
         allLocales.add(new Locale("ja", "JP", ""));
         allLocales.add(new Locale("ja", "JP", ""));
+        allLocales.add(new Locale("sw", "KE", ""));
         allLocales.add(new Locale("km", "KH", ""));
         allLocales.add(new Locale("ko", "KR", ""));
         allLocales.add(new Locale("ar", "KW", ""));
