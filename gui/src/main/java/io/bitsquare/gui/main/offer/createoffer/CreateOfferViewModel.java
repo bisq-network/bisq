@@ -160,7 +160,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 amount.set("1");
                 minAmount.set(amount.get());
-                price.set("500");
+                price.set("600");
 
                 setAmountToModel();
                 setMinAmountToModel();
@@ -623,7 +623,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     public boolean isPriceInRange() {
         if (marketPriceMargin.get() != null && !marketPriceMargin.get().isEmpty()) {
-            if (formatter.parsePercentStringToDouble(marketPriceMargin.get()) > preferences.getMaxPriceDistanceInPercent()) {
+            if (Math.abs(formatter.parsePercentStringToDouble(marketPriceMargin.get())) > preferences.getMaxPriceDistanceInPercent()) {
                 displayPriceOutOfRangePopup();
                 return false;
             } else {
