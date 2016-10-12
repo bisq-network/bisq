@@ -79,6 +79,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("ANTI", "Anti"));
         result.add(new CryptoCurrency("ARG", "Argentum"));
         result.add(new CryptoCurrency("REP", "Augur", true));
+        result.add(new CryptoCurrency("BATL", "Battlestars"));
         result.add(new CryptoCurrency("BIGUP", "BigUp"));
         result.add(new CryptoCurrency("BITAUD", "BitAUD", true));
         result.add(new CryptoCurrency("BITCHF", "BitCHF", true));
@@ -138,6 +139,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("XMY", "Myriadcoin"));
+        result.add(new CryptoCurrency("NAV", "Nav Coin"));
         result.add(new CryptoCurrency("XEM", "NEM"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
@@ -156,6 +158,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("SHIFT", "Shift"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
+        result.add(new CryptoCurrency("SF", "Siafund"));
         result.add(new CryptoCurrency("SIB", "Sibcoin"));
         result.add(new CryptoCurrency("SLR", "SolarCoin"));
         result.add(new CryptoCurrency("STEEMUSD", "Steem Dollars", true));
