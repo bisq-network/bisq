@@ -123,6 +123,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("GEMZ", "Gemz"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
         result.add(new CryptoCurrency("GRS", "Groestlcoin"));
+        result.add(new CryptoCurrency("NLG", "Gulden"));
         result.add(new CryptoCurrency("HODL", "HOdlcoin"));
         result.add(new CryptoCurrency("HNC", "HunCoin"));
         result.add(new CryptoCurrency("IOC", "I/O Coin"));
