@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
@@ -137,16 +136,16 @@ public class FilterWindow extends Overlay<FilterWindow> {
         }
         sendButton = new Button("Add filter");
         sendButton.setOnAction(e -> {
-            List<String> offerIds = new ArrayList<>();
-            List<String> nodes = new ArrayList<>();
-            List<PaymentAccountFilter> paymentAccountFilters = new ArrayList<>();
+            ArrayList<String> offerIds = new ArrayList<>();
+            ArrayList<String> nodes = new ArrayList<>();
+            ArrayList<PaymentAccountFilter> paymentAccountFilters = new ArrayList<>();
 
             if (!offerIdsInputTextField.getText().isEmpty())
-                offerIds = Arrays.asList(offerIdsInputTextField.getText().replace(" ", "").replace(", ", ",").split(","));
+                offerIds = new ArrayList<>(Arrays.asList(offerIdsInputTextField.getText().replace(" ", "").replace(", ", ",").split(",")));
             if (!nodesInputTextField.getText().isEmpty())
-                nodes = Arrays.asList(nodesInputTextField.getText().replace(":9999", "").replace(".onion", "").replace(" ", "").replace(", ", ",").split(","));
+                nodes = new ArrayList<>(Arrays.asList(nodesInputTextField.getText().replace(":9999", "").replace(".onion", "").replace(" ", "").replace(", ", ",").split(",")));
             if (!paymentAccountFilterInputTextField.getText().isEmpty())
-                paymentAccountFilters = Arrays.asList(paymentAccountFilterInputTextField.getText().replace(", ", ",").split(","))
+                paymentAccountFilters = new ArrayList<>(Arrays.asList(paymentAccountFilterInputTextField.getText().replace(", ", ",").split(","))
                         .stream().map(item -> {
                             String[] list = item.split("\\|");
                             if (list.length == 3)
@@ -154,7 +153,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             else
                                 return new PaymentAccountFilter("", "", "");
                         })
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList()));
 
             if (sendFilterMessageHandler.handle(new Filter(offerIds, nodes, paymentAccountFilters), keyInputTextField.getText()))
                 hide();

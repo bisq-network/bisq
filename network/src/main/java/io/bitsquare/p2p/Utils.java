@@ -69,7 +69,7 @@ public class Utils {
         return bos.toByteArray();
     }
 
-    public static Serializable decompress(byte[] compressedData) {
+    public static Serializable decompress(byte[] compressedData) throws IOException, ClassNotFoundException {
         return (Serializable) ByteArrayUtils.byteArrayToObject(decompress(compressedData, compressedData.length));
     }
 
