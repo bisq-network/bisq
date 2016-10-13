@@ -69,14 +69,14 @@ public class TradeStatisticsManager {
 
         HashSet<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
         if (persisted != null)
-            persisted.stream().forEach(this::add);
+            persisted.stream().forEach(e -> add(e, false));
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
                 final StoragePayload storagePayload = data.getStoragePayload();
                 if (storagePayload instanceof TradeStatistics)
-                    add((TradeStatistics) storagePayload);
+                    add((TradeStatistics) storagePayload, true);
             }
 
             @Override
@@ -89,17 +89,19 @@ public class TradeStatisticsManager {
         p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
             final StoragePayload storagePayload = e.getStoragePayload();
             if (storagePayload instanceof TradeStatistics)
-                add((TradeStatistics) storagePayload);
+                add((TradeStatistics) storagePayload, false);
         });
     }
 
-    public void add(TradeStatistics tradeStatistics) {
+    public void add(TradeStatistics tradeStatistics, boolean storeLocally) {
         if (!tradeStatisticsSet.contains(tradeStatistics)) {
             boolean itemAlreadyAdded = tradeStatisticsSet.stream().filter(e -> (e.getOfferId().equals(tradeStatistics.getOfferId()))).findAny().isPresent();
             if (!itemAlreadyAdded) {
                 tradeStatisticsSet.add(tradeStatistics);
                 observableTradeStatisticsSet.add(tradeStatistics);
-                statisticsStorage.queueUpForSave(new HashSet<>(tradeStatisticsSet), 2000);
+
+                if (storeLocally)
+                    statisticsStorage.queueUpForSave(new HashSet<>(tradeStatisticsSet), 2000);
 
                 dump();
             } else {

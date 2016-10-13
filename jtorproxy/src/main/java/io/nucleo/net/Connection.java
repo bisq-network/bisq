@@ -35,6 +35,7 @@ public abstract class Connection implements Closeable {
     private final AtomicBoolean heartBeating;
 
     public Connection(String peer, Socket socket) throws IOException {
+        // LookAheadObjectInputStream not needed here as the class it not used in Bitsquare (used to test the library)
         this(peer, socket, Node.prepareOOSForSocket(socket), new ObjectInputStream(socket.getInputStream()));
     }
 

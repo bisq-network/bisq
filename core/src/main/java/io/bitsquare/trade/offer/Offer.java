@@ -422,7 +422,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
         double factor = (double) takersTradePrice / (double) offerPriceAsFiat.value;
         // We allow max. 2 % difference between own offer price calculation and takers calculation.
-        // Market price might be different at offerers and takers side so we need a bit of tolerance.
+        // Market price might be different at offerer's and takers side so we need a bit of tolerance.
         // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations 
         // from one provider.
         if (Math.abs(1 - factor) > 0.02) {

@@ -102,9 +102,10 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         restoreButton = addButtonAfterGroup(root, ++gridRow, "Restore wallet");
 
         addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
-        addMultilineLabel(root, gridRow, "Please write down you wallet seed words.\n" +
+        addMultilineLabel(root, gridRow, "Please write down you wallet seed words. " +
                         "You can recover your wallet with those seed words.\n\n" +
-                        "If you are restoring your wallet you need to use the wallet date of the wallet into which you want to restore.\n" +
+                        "If you are restoring your wallet you need to use the wallet date " +
+                        "of the wallet into which you want to restore. " +
                         "So in case you restore to a new wallet it is the today's date.",
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 

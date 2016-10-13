@@ -451,8 +451,8 @@ public class PeerServiceTest {
         log.debug("total authentications " + authentications);
         Profiler.printSystemLoad(log);
         // total authentications at 8 nodes = 56
-        // total authentications at com nodes = 90, System load (nr. threads/used memory (MB)): 170/20
-        // total authentications at 20 nodes = 380, System load (nr. threads/used memory (MB)): 525/46
+        // total authentications at com nodes = 90, System load (no. threads/used memory (MB)): 170/20
+        // total authentications at 20 nodes = 380, System load (no. threads/used memory (MB)): 525/46
         for (int i = 0; i < length; i++) {
             nodes[i].getP2PService().getPeerGroup().printAuthenticatedPeers();
             nodes[i].getP2PService().getPeerGroup().printReportedPeers();

@@ -242,13 +242,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result)
-            new Popup().warning("You don't have a payment account set up.").onClose(this::close).show();
+            new Popup().warning("You don't have a trading account set up.").onClose(this::close).show();
 
         if (direction == Offer.Direction.BUY) {
             imageView.setId("image-buy-large");
 
             placeOfferButton.setId("buy-button-big");
-            placeOfferButton.setText("Review offer for buying bitcoin");
+            placeOfferButton.setText("Review offer to buy bitcoin");
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
@@ -256,7 +256,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             totalToPayTextField.setPromptText(BSResources.get("createOffer.fundsBox.totalsNeeded.prompt"));
 
             placeOfferButton.setId("sell-button-big");
-            placeOfferButton.setText("Review offer for selling bitcoin");
+            placeOfferButton.setText("Review offer to sell bitcoin");
             nextButton.setId("sell-button");
         }
     }
@@ -348,7 +348,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     "- Trading fee: " + model.getOfferFee() + "\n" +
                     "- Bitcoin mining fee: " + model.getNetworkFee() + "\n\n" +
 
-                    "You can choose between 2 options when funding your trade:\n" +
+                    "You can choose between two options when funding your trade:\n" +
                     "- Use your Bitsquare wallet (convenient, but transactions may be linkable) OR\n" +
                     "- Transfer from an external wallet (potentially more private)\n\n" +
 
@@ -480,7 +480,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
         cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
 
-        // payment account
+        // trading account
         currencyComboBox.prefWidthProperty().bind(paymentAccountsComboBox.widthProperty());
         currencyComboBox.managedProperty().bind(currencyComboBox.visibleProperty());
         currencyComboBoxLabel.visibleProperty().bind(currencyComboBox.visibleProperty());
@@ -528,7 +528,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         placeOfferButton.disableProperty().unbind();
         cancelButton2.disableProperty().unbind();
 
-        // payment account
+        // trading account
         currencyComboBox.managedProperty().unbind();
         currencyComboBox.prefWidthProperty().unbind();
         currencyComboBoxLabel.visibleProperty().unbind();
@@ -726,11 +726,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addPaymentGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Select payment account");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Select trading account");
         GridPane.setColumnSpan(titledGroupBg, 3);
 
-        paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, "Payment account:", Layout.FIRST_ROW_DISTANCE).second;
-        paymentAccountsComboBox.setPromptText("Select payment account");
+        paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, "Trading account:", Layout.FIRST_ROW_DISTANCE).second;
+        paymentAccountsComboBox.setPromptText("Select trading account");
         paymentAccountsComboBox.setMinWidth(300);
         editOfferElements.add(paymentAccountsComboBox);
 

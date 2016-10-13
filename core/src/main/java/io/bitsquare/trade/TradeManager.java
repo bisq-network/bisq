@@ -239,7 +239,7 @@ public class TradeManager {
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
                     keyRing.getPubKeyRing());
-            tradeStatisticsManager.add(tradeStatistics);
+            tradeStatisticsManager.add(tradeStatistics, true);
 
             // We only republish trades from last 10 days
             // TODO check if needed at all. Don't want to remove it atm to not risk anything.

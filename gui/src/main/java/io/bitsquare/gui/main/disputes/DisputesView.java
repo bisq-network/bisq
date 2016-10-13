@@ -97,10 +97,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                 .findAny().isPresent();
 
         if (arbitratorsDisputesTab == null && isArbitrator) {
-            arbitratorsDisputesTab = new Tab("Arbitrators support tickets");
+            arbitratorsDisputesTab = new Tab("Arbitrator's support tickets");
             arbitratorsDisputesTab.setClosable(false);
             root.getTabs().add(arbitratorsDisputesTab);
-            tradersDisputesTab.setText("Traders support tickets");
+            tradersDisputesTab.setText("Trader's support tickets");
         }
     }
 

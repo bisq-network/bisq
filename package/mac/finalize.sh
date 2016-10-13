@@ -33,13 +33,16 @@ cp "/Users/mk/vm_shared_windows/bundles/$exe" "/Users/mk/vm_shared_win10/$win64"
 
 cd "$target_dir"
 
-#shasum -a 256 "$mac" "$deb64" "$deb32" "$rpm64" "$rpm32" "$win64" "$win32" > sha256_hashes.txt
-shasum -a 256 "$mac" "$deb64" "$deb32" "$win64" "$win32" > sha256_hashes.txt
+gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $mac.asc --detach-sig --armor $mac
+gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $deb64.asc --detach-sig --armor $deb64
+gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $deb32.asc --detach-sig --armor $deb32
+gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $win64.asc --detach-sig --armor $win64
+gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $win32.asc --detach-sig --armor $win32
 
-gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output signed_sha256_hashes.txt --clearsign sha256_hashes.txt
-
-gpg --digest-algo SHA256 --verify signed_sha256_hashes.txt
-
-rm "$target_dir/sha256_hashes.txt"
+gpg --digest-algo SHA256 --verify $mac{.asc*,}
+gpg --digest-algo SHA256 --verify $deb64{.asc*,}
+gpg --digest-algo SHA256 --verify $deb32{.asc*,}
+gpg --digest-algo SHA256 --verify $win64{.asc*,}
+gpg --digest-algo SHA256 --verify $win32{.asc*,}
 
 open "$target_dir"

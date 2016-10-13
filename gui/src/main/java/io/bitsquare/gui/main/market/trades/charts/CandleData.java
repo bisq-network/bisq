@@ -26,10 +26,11 @@ public class CandleData {
     public final long average;
     public final long accumulatedAmount;
     public final long accumulatedVolume;
+    public final long numTrades;
     public final boolean isBullish;
     public final String date;
 
-    public CandleData(long tick, long open, long close, long high, long low, long average, long accumulatedAmount, long accumulatedVolume, boolean isBullish, String date) {
+    public CandleData(long tick, long open, long close, long high, long low, long average, long accumulatedAmount, long accumulatedVolume, long numTrades, boolean isBullish, String date) {
         this.tick = tick;
         this.open = open;
         this.close = close;
@@ -38,6 +39,7 @@ public class CandleData {
         this.average = average;
         this.accumulatedAmount = accumulatedAmount;
         this.accumulatedVolume = accumulatedVolume;
+        this.numTrades = numTrades;
         this.isBullish = isBullish;
         this.date = date;
     }

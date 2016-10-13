@@ -39,7 +39,7 @@ public final class AliPayAccountContractData extends PaymentAccountContractData 
 
     @Override
     public String getPaymentDetails() {
-        return "AliPay - Account nr.: " + accountNr;
+        return "AliPay - Account no.: " + accountNr;
     }
 
     @Override

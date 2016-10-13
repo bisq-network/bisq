@@ -9,6 +9,7 @@ import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.io.LookAheadObjectInputStream;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
@@ -146,24 +147,24 @@ public class Connection implements MessageListener {
             // the associated ObjectOutputStream on the other end of the connection has written.
             // It will not return until that header has been read. 
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-
+            ObjectInputStream objectInputStream = new LookAheadObjectInputStream(socket.getInputStream(), true);
             // We create a thread for handling inputStream data
             inputHandler = new InputHandler(sharedModel, objectInputStream, portInfo, this);
             singleThreadExecutor.submit(inputHandler);
-        } catch (IOException e) {
+
+            // Use Peer as default, in case of other types they will set it as soon as possible.
+            peerType = PeerType.PEER;
+
+            if (peersNodeAddress != null)
+                setPeersNodeAddress(peersNodeAddress);
+
+            log.trace("New connection created: " + this.toString());
+
+            UserThread.execute(() -> connectionListener.onConnection(this));
+
+        } catch (Throwable e) {
             sharedModel.handleConnectionException(e);
         }
-
-        // Use Peer as default, in case of other types they will set it as soon as possible.
-        peerType = PeerType.PEER;
-
-        if (peersNodeAddress != null)
-            setPeersNodeAddress(peersNodeAddress);
-
-        log.trace("New connection created: " + this.toString());
-
-        UserThread.execute(() -> connectionListener.onConnection(this));
     }
 
 
@@ -590,6 +591,8 @@ public class Connection implements MessageListener {
                 if (ruleViolation == RuleViolation.PEER_BANNED) {
                     log.warn("We detected a connection to a banned peer. We will close that connection. (reportInvalidRequest)");
                     shutDown(CloseConnectionReason.PEER_BANNED);
+                } else if (ruleViolation == RuleViolation.INVALID_CLASS) {
+                    shutDown(CloseConnectionReason.INVALID_CLASS_RECEIVED);
                 } else {
                     shutDown(CloseConnectionReason.RULE_VIOLATION);
                 }
@@ -888,6 +891,11 @@ public class Connection implements MessageListener {
 
                             messageListener.onMessage(message, connection);
                         }
+                    } catch (InvalidClassException e) {
+                        log.error(e.getMessage());
+                        e.printStackTrace();
+                        reportInvalidRequest(RuleViolation.INVALID_CLASS);
+                        return;
                     } catch (ClassNotFoundException | NoClassDefFoundError e) {
                         log.warn(e.getMessage());
                         e.printStackTrace();

@@ -39,7 +39,7 @@ public final class PerfectMoneyAccountContractData extends PaymentAccountContrac
 
     @Override
     public String getPaymentDetails() {
-        return "PerfectMoney - Account nr.: " + accountNr;
+        return "PerfectMoney - Account no.: " + accountNr;
     }
 
     @Override
