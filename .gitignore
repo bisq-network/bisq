@@ -20,11 +20,8 @@ build
 .settings
 *.java.hsp
 *.~ava
-build.bat
-pack.bat
-push.bat
 /bundles
-Bitsquare-*.jar
-Bitsquare.html
-Bitsquare.jnlp
+/Bitsquare*
 desktop.ini
+*.bat
+!package/windows/*bit*.bat
