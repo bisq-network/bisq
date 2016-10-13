@@ -109,6 +109,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DRS", "Digital Rupees"));
         result.add(new CryptoCurrency("DGD", "DigixDAO Tokens", true));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
+        result.add(new CryptoCurrency("DMC", "DynamicCoin"));
         result.add(new CryptoCurrency("EMC", "Emercoin"));
         result.add(new CryptoCurrency("EURT", "EUR Tether"));
         result.add(new CryptoCurrency("ESP", "Espers"));
