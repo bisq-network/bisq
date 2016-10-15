@@ -280,7 +280,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
-        priceChart.setMinHeight(250);
+        priceChart.setMinHeight(200);
         priceChart.setMaxHeight(300);
         priceChart.setLegendVisible(false);
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
