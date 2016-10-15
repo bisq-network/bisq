@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.openoffer;
 
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -111,7 +112,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             String key = "RemoveOfferWarning";
             if (preferences.showAgain(key))
                 new Popup().warning("Are you sure you want to remove that offer?\n" +
-                        "The offer fee of 0.0005 BTC will be lost if you remove that offer.")
+                        "The offer fee of " + model.formatter.formatCoinWithCode(FeePolicy.getCreateOfferFee()) + " will be lost if you remove that offer.")
                         .actionButtonText("Remove offer")
                         .onAction(() -> doRemoveOpenOffer(openOffer))
                         .closeButtonText("Don't remove the offer")

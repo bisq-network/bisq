@@ -31,17 +31,16 @@ import org.bitcoinj.utils.Fiat;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
     private final P2PService p2PService;
-    private final BSFormatter formatter;
+    final BSFormatter formatter;
 
 
     @Inject
     public OpenOffersViewModel(OpenOffersDataModel dataModel, P2PService p2PService, BSFormatter formatter) {
         super(dataModel);
-        this.p2PService = p2PService;
 
+        this.p2PService = p2PService;
         this.formatter = formatter;
     }
-
 
     void onCancelOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         dataModel.onCancelOpenOffer(openOffer, resultHandler, errorMessageHandler);
