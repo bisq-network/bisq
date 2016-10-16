@@ -96,9 +96,9 @@ public class GUIUtil {
             Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
             paymentAccountsStorage.initAndGetPersisted(accounts, fileName);
             paymentAccountsStorage.queueUpForSave();
-            new Popup<>().feedback("Payment accounts saved to path:\n" + Paths.get(directory, fileName).toAbsolutePath()).show();
+            new Popup<>().feedback("Trading accounts saved to path:\n" + Paths.get(directory, fileName).toAbsolutePath()).show();
         } else {
-            new Popup<>().warning("You don't have payment accounts set up for exporting.").show();
+            new Popup<>().warning("You don't have trading accounts set up for exporting.").show();
         }
     }
 
@@ -120,15 +120,15 @@ public class GUIUtil {
                         final String id = paymentAccount.getId();
                         if (user.getPaymentAccount(id) == null) {
                             user.addPaymentAccount(paymentAccount);
-                            msg.append("Payment account with id ").append(id).append("\n");
+                            msg.append("Trading account with id ").append(id).append("\n");
                         } else {
-                            msg.append("We did not import payment account with id ").append(id).append(" because it exists already.\n");
+                            msg.append("We did not import trading account with id ").append(id).append(" because it exists already.\n");
                         }
                     });
-                    new Popup<>().feedback("Payment account imported from path:\n" + path + "\n\nImported accounts:\n" + msg).show();
+                    new Popup<>().feedback("Trading account imported from path:\n" + path + "\n\nImported accounts:\n" + msg).show();
 
                 } else {
-                    new Popup<>().warning("No exported payment accounts has been found at path: " + path + ".\n" + "File name is " + fileName + ".").show();
+                    new Popup<>().warning("No exported trading accounts has been found at path: " + path + ".\n" + "File name is " + fileName + ".").show();
                 }
             } else {
                 new Popup<>().warning("The selected file is not the expected file for import. The expected file name is: " + fileName + ".").show();
@@ -204,6 +204,32 @@ public class GUIUtil {
 
             @Override
             public CurrencyListItem fromString(String s) {
+                return null;
+            }
+        };
+    }
+
+    public static StringConverter<TradeCurrency> getTradeCurrencyConverter() {
+        return new StringConverter<TradeCurrency>() {
+            @Override
+            public String toString(TradeCurrency tradeCurrency) {
+                String code = tradeCurrency.getCode();
+                final String displayString = CurrencyUtil.getNameAndCode(code);
+                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
+                    return "▶ Show all";
+                else if (code.equals(GUIUtil.EDIT_FLAG))
+                    return "▼ Edit currency list";
+                else if (tradeCurrency instanceof FiatCurrency)
+                    return "★ " + displayString;
+                else if (tradeCurrency instanceof CryptoCurrency) {
+                    return "✦ " + displayString;
+                } else
+                    return "-";
+            }
+
+            @Override
+            public TradeCurrency fromString(String s) {
                 return null;
             }
         };

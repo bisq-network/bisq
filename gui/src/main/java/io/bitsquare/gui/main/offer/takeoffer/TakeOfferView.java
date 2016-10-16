@@ -223,7 +223,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             directionLabel.setId("direction-icon-label-buy");
 
             takeOfferButton.setId("buy-button-big");
-            takeOfferButton.setText("Review offer for buying bitcoin");
+            takeOfferButton.setText("Review offer to buy bitcoin");
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
@@ -231,7 +231,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            takeOfferButton.setText("Review offer for selling bitcoin");
+            takeOfferButton.setText("Review offer to sell bitcoin");
         }
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
@@ -350,14 +350,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     "- Trading fee: " + model.getTakerFee() + "\n" +
                     "- Bitcoin mining fee: " + model.getNetworkFee() + "\n\n" +
 
-                    "For funding you can choose between 2 options:\n" +
-                    "- Transfer fund from your Bitsquare wallet OR\n" +
-                    "- Transfer fund from any external wallet\n\n" +
+                    "You can choose between two options when funding your trade:\n" +
+                    "- Use your Bitsquare wallet (convenient, but transactions may be linkable) OR\n" +
+                    "- Transfer from an external wallet (potentially more private)\n\n" +
 
-                    "If you prefer a higher level of privacy you should use for each trade a distinct funding transaction using the external wallet option.\n" +
-                    "If you prefer convenience using the Bitsquare wallet for several trades might be your preferred option.\n\n" +
-
-                    "You can see all the details for funding when you close that popup.")
+                    "You will see all funding options and details after closing this popup.")
                     .dontShowAgainId(key, preferences)
                     .show();
         }
@@ -623,12 +620,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Payment info");
         GridPane.setColumnSpan(titledGroupBg, 3);
 
-        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, "Payment account:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, "Trading account:", Layout.FIRST_ROW_DISTANCE);
         paymentAccountsLabel = tuple.first;
         paymentAccountsLabel.setVisible(false);
         paymentAccountsLabel.setManaged(false);
         paymentAccountsComboBox = tuple.second;
-        paymentAccountsComboBox.setPromptText("Select payment account");
+        paymentAccountsComboBox.setPromptText("Select trading account");
         paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {

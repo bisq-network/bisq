@@ -59,7 +59,7 @@ bg color of non edit textFields: fafafa
     -bs-buy: -bs-yellow;
     -bs-buy-focus: derive(-bs-buy, -50%);
     -bs-buy-hover: derive(-bs-buy, -10%);
-    -bs-buy-transparent: derive(-bs-buy, 95%);
+    -bs-buy-transparent: derive(-bs-buy, 75%);
 
     -bs-sell: -bs-turquoise;
     -bs-sell-focus: derive(-bs-sell, -50%);

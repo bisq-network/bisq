@@ -43,7 +43,7 @@ public class AliPayForm extends PaymentMethodForm {
     private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account nr.:", ((AliPayAccountContractData) paymentAccountContractData).getAccountNr());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account no.:", ((AliPayAccountContractData) paymentAccountContractData).getAccountNr());
         return gridRow;
     }
 
@@ -57,7 +57,7 @@ public class AliPayForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account nr.:").second;
+        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account no.:").second;
         accountNrInputTextField.setValidator(aliPayValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             aliPayAccount.setAccountNr(newValue);
@@ -84,7 +84,7 @@ public class AliPayForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", aliPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(aliPayAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Account nr.:", aliPayAccount.getAccountNr()).second;
+        TextField field = addLabelTextField(gridPane, ++gridRow, "Account no.:", aliPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Currency:", aliPayAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();

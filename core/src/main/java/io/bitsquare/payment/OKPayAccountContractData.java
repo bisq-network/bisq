@@ -39,7 +39,7 @@ public final class OKPayAccountContractData extends PaymentAccountContractData {
 
     @Override
     public String getPaymentDetails() {
-        return "OKPay - Account nr.: " + accountNr;
+        return "OKPay - Account no.: " + accountNr;
     }
 
     @Override

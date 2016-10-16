@@ -19,3 +19,9 @@ build
 .project
 .settings
 *.java.hsp
+*.~ava
+/bundles
+/Bitsquare*
+desktop.ini
+*.bat
+!package/windows/*bit*.bat

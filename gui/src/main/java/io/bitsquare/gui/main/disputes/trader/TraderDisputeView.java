@@ -220,7 +220,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 });
                 disputeGroups.sort((o1, o2) -> !o1.isEmpty() && !o2.isEmpty() ? o1.get(0).getOpeningDate().compareTo(o2.get(0).getOpeningDate()) : 0);
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("Summary of all disputes (Nr. of disputes: " + disputeGroups.size() + ")\n\n");
+                stringBuilder.append("Summary of all disputes (No. of disputes: " + disputeGroups.size() + ")\n\n");
                 disputeGroups.stream().forEach(disputeGroup -> {
                     Dispute dispute0 = disputeGroup.get(0);
                     stringBuilder.append("##########################################################################################/\n")
@@ -243,12 +243,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     disputeGroup.stream().forEach(dispute -> {
                         stringBuilder
                                 .append("*******************************************************************************************\n")
-                                .append("** Traders ID: ")
+                                .append("** Trader's ID: ")
                                 .append(dispute.getTraderId())
                                 .append("\n*******************************************************************************************\n")
                                 .append("\n");
                         dispute.getDisputeCommunicationMessagesAsObservableList().stream().forEach(m -> {
-                            String role = m.isSenderIsTrader() ? ">> Traders msg: " : "<< Arbitrators msg: ";
+                            String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
                             stringBuilder.append(role)
                                     .append(m.getMessage())
                                     .append("\n");
@@ -264,6 +264,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         .actionButtonText("Copy")
                         .onAction(() -> Utilities.copyToClipboard(message))
                         .show();
+            } else if (new KeyCodeCombination(KeyCode.U, KeyCombination.SHORTCUT_DOWN).match(event)) {
+                // Hidden shortcut to re-open a dispute. Allow it also for traders not only arbitrator.
+                if (selectedDispute != null) {
+                    if (selectedDisputeClosedPropertyListener != null)
+                        selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
+                    selectedDispute.setIsClosed(false);
+                }
             }
         };
     }
@@ -766,7 +773,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         private void showMailboxIcon() {
                             statusIcon.setVisible(true);
                             AwesomeDude.setIcon(statusIcon, AwesomeIcon.ENVELOPE_ALT, "14");
-                            Tooltip.install(statusIcon, new Tooltip("Message saved in receivers mailbox"));
+                            Tooltip.install(statusIcon, new Tooltip("Message saved in receiver's mailbox"));
                             statusIcon.setTextFill(Paint.valueOf("#0f87c3"));
                         }
 
@@ -1110,9 +1117,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     setText(isClosed ? "Closed" : "Open");
                                     getTableRow().setOpacity(isClosed ? 0.4 : 1);
                                 } else {
-                                    if (closedProperty != null)
+                                    if (closedProperty != null) {
                                         closedProperty.removeListener(listener);
-
+                                        closedProperty = null;
+                                    }
                                     setText("");
                                 }
                             }

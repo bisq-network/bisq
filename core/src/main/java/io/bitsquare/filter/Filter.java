@@ -29,7 +29,6 @@ import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public final class Filter implements StoragePayload {
@@ -38,21 +37,18 @@ public final class Filter implements StoragePayload {
     private static final Logger log = LoggerFactory.getLogger(Filter.class);
     private static final long TTL = TimeUnit.DAYS.toMillis(21);
 
-    public final List<String> bannedNodeAddress;
-    public final List<String> bannedOfferIds;
-    public final List<PaymentAccountFilter> bannedPaymentAccounts;
+    public final ArrayList<String> bannedNodeAddress;
+    public final ArrayList<String> bannedOfferIds;
+    public final ArrayList<PaymentAccountFilter> bannedPaymentAccounts;
     private String signatureAsBase64;
-    private transient PublicKey publicKey;
     private byte[] publicKeyBytes;
 
-    public Filter(List<String> bannedOfferIds, List<String> bannedNodeAddress, List<PaymentAccountFilter> bannedPaymentAccounts) {
+    private transient PublicKey publicKey;
+
+    public Filter(ArrayList<String> bannedOfferIds, ArrayList<String> bannedNodeAddress, ArrayList<PaymentAccountFilter> bannedPaymentAccounts) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
-    }
-
-    public Filter() {
-        this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {

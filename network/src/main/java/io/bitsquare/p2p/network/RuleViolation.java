@@ -6,7 +6,8 @@ public enum RuleViolation {
     MAX_MSG_SIZE_EXCEEDED(2),
     THROTTLE_LIMIT_EXCEEDED(2),
     TOO_MANY_REPORTED_PEERS_SENT(2),
-    PEER_BANNED(0);
+    PEER_BANNED(0),
+    INVALID_CLASS(0);
 
     public final int maxTolerance;
 

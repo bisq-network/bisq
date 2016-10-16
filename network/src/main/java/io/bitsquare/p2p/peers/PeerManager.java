@@ -157,7 +157,7 @@ public class PeerManager implements ConnectionListener {
     public void onConnection(Connection connection) {
         Log.logIfStressTests("onConnection to peer " +
                 (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown") +
-                " / Nr. of connections: " + networkNode.getAllConnections().size());
+                " / No. of connections: " + networkNode.getAllConnections().size());
 
         final boolean seedNode = isSeedNode(connection);
 
@@ -182,7 +182,7 @@ public class PeerManager implements ConnectionListener {
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         Log.logIfStressTests("onDisconnect of peer " +
                 (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown") +
-                " / Nr. of connections: " + networkNode.getAllConnections().size() +
+                " / No. of connections: " + networkNode.getAllConnections().size() +
                 " / closeConnectionReason: " + closeConnectionReason);
 
         final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
