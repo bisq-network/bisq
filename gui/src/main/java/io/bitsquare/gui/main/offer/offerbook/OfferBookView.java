@@ -395,7 +395,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             String key = "RemoveOfferWarning";
             if (model.preferences.showAgain(key))
                 new Popup().warning("Are you sure you want to remove that offer?\n" +
-                        "The offer fee you " + model.formatter.formatCoinWithCode(FeePolicy.getCreateOfferFee()) + " will be lost if you remove that offer.")
+                        "The offer fee of " + model.formatter.formatCoinWithCode(FeePolicy.getCreateOfferFee()) + " will be lost if you remove that offer.")
                         .actionButtonText("Remove offer")
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText("Don't remove the offer")
