@@ -64,7 +64,13 @@ Reload the file in your shell:
 
 #### 1.2 Other systems
 
-[Download and install the latest Oracle JDK]( http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
+[Download and install the latest Oracle JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) for your platform.
+
+For Mac OSX, you will need to set JAVA_HOME as:
+
+    $ echo 'export JAVA_HOME=$(/usr/libexec/java_home)' >> ~/.bashrc
+    $ . ~/.bashrc
+
 
 Build bitcoinj
 -----------------
@@ -74,8 +80,9 @@ Bitcoinj versions later than 0.13.1 has removed support for Java serialisation.
 Version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details).
 We removed usage of Cartographer/HttpDiscovery and fixed privacy issues with Bloom Filters in our [fork of version 0.13.1.5](https://github.com/bitsquare/bitcoinj/tree/FixBloomFilters).
 Beside the Java serialisation issues there are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer.
-Here is a Github issue with background and open tasks regarding [Bloom Filters](https://github.com/bitsquare/bitsquare/issues/414)._
+Here is a Github issue with background and open tasks regarding [Bloom Filters](https://github.com/bitsquare/bitsquare/issues/414)._  Note: use a fresh directory, this should not be done inside the bitsquare folder.
 
+    $ cd ..
     $ git clone -b FixBloomFilters https://github.com/bitsquare/bitcoinj.git
     $ cd bitcoinj
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
@@ -93,15 +100,15 @@ You need to get the Bitsquare dependencies first as we need to copy the BouncyCa
 
 ### 4. Copy the jdkfix jar file
 
-Copy the jdkfix-0.4.9.6.jar from the Bitsquare jdkfix/target directory to $JAVA_HOME/jre/lib/ext/.
-jdkfix-0.4.9.6.jar includes a [bugfix of the SortedList class](https://github.com/jonathancross/bitsquare/blob/master/jdkfix/src/main/java/javafx/collections/transformation/SortedList.java#L2) which will be released with the next JDK version.
-We need to load that class before the default java class. This step will be removed once the bugfix is in the official JDK.
+You will need to apply this bug fix manually by copying the jar file into your java installation:
 
     $ sudo cp jdkfix/target/jdkfix-0.4.9.6.jar $JAVA_HOME/jre/lib/ext/
 
+This step will be not be necessary once [the SortedList bug](https://bugs.openjdk.java.net/browse/JDK-8134655) is fixed in JDK 8 (scheduled for version `8u112`) and tested.
+
 ### 5. Copy the BouncyCastle provider jar file
 
-Copy the BouncyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
+Copy the BountyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
 This prevents a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
 
     $ sudo cp ~/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/
@@ -115,22 +122,10 @@ security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider
     $ sudo gedit $JAVA_HOME/jre/lib/security/java.security
     ... edit and save
 
-### 7. Enable unlimited Strength for cryptographic keys (if Oracle JDK is used)
+### 7. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
 
-If you are using Oracle JDK you need to follow the following step. If you use OpenJDK + OpenJFX you can skip that step.
-Bitsquare uses 256 bit length keys which are still not permitted by default.
-Get around that ridiculous fact by adding the missing [jars from Oracle](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html).
-Please follow the steps described in the Readme file in the downloaded package.
-You will get an error when building Bitsquare package if you don't have these.
+If you are using Oracle JDK 8 you must **[enable strong cryptographic cyphers](https://github.com/jonathancross/jc-docs/blob/master/java-strong-crypto-test/README.md)**. If you use OpenJDK + OpenJFX you can skip this step.
 
-    $ wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip
-    $ unzip jce_policy-8.zip
-    $ sudo cp UnlimitedJCEPolicyJDK8/US_export_policy.jar $JAVA_HOME/jre/lib/security/US_export_policy.jar
-    $ sudo cp UnlimitedJCEPolicyJDK8/local_policy.jar $JAVA_HOME/jre/lib/security/local_policy.jar
-    $ sudo chmod 777 /usr/lib/jvm/java-8-oracle/jre/lib/security/US_export_policy.jar
-    $ sudo chmod 777 /usr/lib/jvm/java-8-oracle/jre/lib/security/local_policy.jar
-    $ sudo rm -r UnlimitedJCEPolicyJDK8
-    $ sudo rm jce_policy-8.zip
 
 Build Bitsquare
 -----------------
