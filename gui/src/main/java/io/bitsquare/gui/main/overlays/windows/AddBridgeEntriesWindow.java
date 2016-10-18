@@ -145,10 +145,8 @@ public class AddBridgeEntriesWindow extends Overlay<AddBridgeEntriesWindow> {
     }
 
     private void save() {
-        if (!alertMessageTextArea.getText().isEmpty()) {
-            Preferences.INSTANCE.setBridgeAddressesAsString(alertMessageTextArea.getText());
-            actionHandlerOptional.ifPresent(Runnable::run);
-            hide();
-        }
+        Preferences.INSTANCE.setBridgeAddressesAsString(alertMessageTextArea.getText());
+        actionHandlerOptional.ifPresent(Runnable::run);
+        hide();
     }
 }
