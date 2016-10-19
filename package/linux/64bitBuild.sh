@@ -9,12 +9,10 @@ set -e
 version=0.4.9.6
 
 jarFile="/media/sf_vm_shared_ubuntu/Bitsquare-$version.jar"
-jdkfixFile="/media/sf_vm_shared_ubuntu/jdkfix-$version.jar"
 
 # Note: fakeroot needs to be installed on linux
 $JAVA_HOME/bin/javapackager \
     -deploy \
-    -BjvmOptions=-Xbootclasspath/a:"jdkfix-$version.jar":"../runtime/lib/ext/jfxrt.jar" \
     -Bruntime="$JAVA_HOME/jre" \
     -BappVersion=$version \
     -Bcategory=Internet \

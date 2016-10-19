@@ -92,28 +92,20 @@ Prepare Bitsquare build
 
 ### 3. Get Bitsquare source code and build a preliminary Bitsquare version
 
-You need to get the Bitsquare dependencies first as we need to copy the BouncyCastle jar to the JRE directory as well as the jdkfix jar.
+You need to get the Bitsquare dependencies first as we need to copy the BouncyCastle jar to the JRE directory.
 
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bitsquare
     $ mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
-### 4. Copy the jdkfix jar file
-
-You will need to apply this bug fix manually by copying the jar file into your java installation:
-
-    $ sudo cp jdkfix/target/jdkfix-0.4.9.6.jar $JAVA_HOME/jre/lib/ext/
-
-This step will be not be necessary once [the SortedList bug](https://bugs.openjdk.java.net/browse/JDK-8134655) is fixed in JDK 8 (scheduled for version `8u112`) and tested.
-
-### 5. Copy the BouncyCastle provider jar file
+### 4. Copy the BouncyCastle provider jar file
 
 Copy the BountyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
 This prevents a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
 
     $ sudo cp ~/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/
 
-### 6. Edit the java.security file and add BouncyCastleProvider
+###5. Edit the java.security file and add BouncyCastleProvider
 
 Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
 E.g.:
@@ -122,7 +114,7 @@ security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider
     $ sudo gedit $JAVA_HOME/jre/lib/security/java.security
     ... edit and save
 
-### 7. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
+### 6. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
 
 If you are using Oracle JDK 8 you must **[enable strong cryptographic cyphers](https://github.com/jonathancross/jc-docs/blob/master/java-strong-crypto-test/README.md)**. If you use OpenJDK + OpenJFX you can skip this step.
 
@@ -132,7 +124,7 @@ In Windows the new crypto files need to be copied to `Java/jdk1.8.0_xxx/jre/lib/
 Build Bitsquare
 -----------------
 
-### 8. Build final Bitsquare jar
+### 7. Build final Bitsquare jar
 
 Now we have all prepared to build the correct Bitsquare jar.
 
