@@ -107,7 +107,7 @@ public final class AddressEntry implements Persistable {
         } else {
             this.offerId = null;
         }
-        
+
         paramId = params.getId();
 
         checkNotNull(keyPair);
