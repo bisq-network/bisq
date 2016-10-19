@@ -26,6 +26,7 @@ public final class InteracETransferAccountContractData extends PaymentAccountCon
     private String email;
     private String holderName;
     private String question;
+    private String answer;
 
     public InteracETransferAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
@@ -55,15 +56,24 @@ public final class InteracETransferAccountContractData extends PaymentAccountCon
         this.question = question;
     }
 
+    public String getAnswer() {
+        return answer;
+    }
+
+    public void setAnswer(String answer) {
+        this.answer = answer;
+    }
+
     @Override
     public String getPaymentDetails() {
-        return "Interac e-Transfer - Holder name: " + holderName + ", email: " + email + ", secret question: " + question;
+        return "Interac e-Transfer - Holder name: " + holderName + ", email: " + email + ", secret question: " + question + ", answer: " + answer;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Email: " + email + "\n" +
-                "Secret question: " + question;
+                "Secret question: " + question + "\n" +
+                "Answer: " + answer;
     }
 }

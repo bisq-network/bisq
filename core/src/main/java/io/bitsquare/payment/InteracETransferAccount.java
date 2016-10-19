@@ -42,6 +42,14 @@ public final class InteracETransferAccount extends PaymentAccount {
         return ((InteracETransferAccountContractData) contractData).getEmail();
     }
 
+    public void setAnswer(String answer) {
+        ((InteracETransferAccountContractData) contractData).setAnswer(answer);
+    }
+
+    public String getAnswer() {
+        return ((InteracETransferAccountContractData) contractData).getAnswer();
+    }
+
     public void setQuestion(String question) {
         ((InteracETransferAccountContractData) contractData).setQuestion(question);
     }

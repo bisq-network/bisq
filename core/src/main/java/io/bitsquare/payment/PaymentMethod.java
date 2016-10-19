@@ -67,7 +67,7 @@ public final class PaymentMethod implements Persistable, Comparable {
     public static PaymentMethod SWISH;
     public static PaymentMethod ALI_PAY;
     public static PaymentMethod CLEAR_X_CHANGE;
-    public static PaymentMethod CHASE_QUICK_PAY;
+    public static PaymentMethod CHASE_QUICK_PAY; 
     public static PaymentMethod INTERAC_E_TRANSFER; 
     public static PaymentMethod US_POSTAL_MONEY_ORDER;
     public static PaymentMethod CASH_DEPOSIT;
