@@ -45,6 +45,10 @@ public class PaymentAccountFactory {
                 return new SwishAccount();
             case PaymentMethod.CLEAR_X_CHANGE_ID:
                 return new ClearXchangeAccount();
+            case PaymentMethod.CHASE_QUICK_PAY_ID:
+                return new ChaseQuickPayAccount();
+            case PaymentMethod.INTERAC_E_TRANSFER_ID:
+                return new InteracETransferAccount();
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 return new USPostalMoneyOrderAccount();
             case PaymentMethod.CASH_DEPOSIT_ID:

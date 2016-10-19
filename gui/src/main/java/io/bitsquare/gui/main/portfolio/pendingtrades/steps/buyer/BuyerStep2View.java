@@ -193,6 +193,12 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.CLEAR_X_CHANGE_ID:
                 gridRow = ClearXchangeForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
+            case PaymentMethod.CHASE_QUICK_PAY_ID:
+                gridRow = ChaseQuickPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
+            case PaymentMethod.INTERAC_E_TRANSFER_ID:
+                gridRow = InteracETransferForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                break;
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 gridRow = USPostalMoneyOrderForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
