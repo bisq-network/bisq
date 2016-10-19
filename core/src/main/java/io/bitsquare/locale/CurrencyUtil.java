@@ -76,6 +76,7 @@ public class CurrencyUtil {
         final List<CryptoCurrency> result = new ArrayList<>();
 
         result.add(new CryptoCurrency("AIB", "Advanced Internet Blocks"));
+        result.add(new CryptoCurrency("ANC", "Anoncoin"));
         result.add(new CryptoCurrency("ANTI", "Anti"));
         result.add(new CryptoCurrency("ARG", "Argentum"));
         result.add(new CryptoCurrency("REP", "Augur", true));
@@ -102,6 +103,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("CRBIT", "Creditbit"));
         result.add(new CryptoCurrency("CBX", "Crypto Bullion"));
         result.add(new CryptoCurrency("DAO", "DAO", true));
+        result.add(new CryptoCurrency("DNET", "DarkNet"));
         result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
