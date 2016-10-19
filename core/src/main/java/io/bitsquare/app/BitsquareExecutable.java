@@ -95,7 +95,7 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(NetworkOptionKeys.USE_TOR_FOR_HTTP, description("If set to true all http traffic (expect Poloniex) is routed over tor (socks 5 proxy)", ""))
                 .withRequiredArg();
-        
+
         parser.accepts(CoreOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(CoreOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
