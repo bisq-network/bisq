@@ -14,7 +14,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Cloned from Fiat class and altered SMALLEST_UNIT_EXPONENT as Fiat is final.
- * 
+ * <p>
  * Represents a monetary fiat value. It was decided to not fold this into {@link org.bitcoinj.core.Coin} because of type
  * safety. Volume values always come with an attached currency code.
  * <p>
