@@ -1,4 +1,4 @@
-Building From Source
+﻿Building From Source
 ====================
 
 This guide will walk you through the process of building Bitsquare from source.
@@ -125,6 +125,8 @@ security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider
 ### 7. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
 
 If you are using Oracle JDK 8 you must **[enable strong cryptographic cyphers](https://github.com/jonathancross/jc-docs/blob/master/java-strong-crypto-test/README.md)**. If you use OpenJDK + OpenJFX you can skip this step.
+
+In Windows the new crypto files need to be copied to `Java/jdk1.8.0_xxx/jre/lib/security` AND `Java/jre1.8.0_xxx/jre/lib/security` otherwise the test in the above page will fail.
 
 
 Build Bitsquare
