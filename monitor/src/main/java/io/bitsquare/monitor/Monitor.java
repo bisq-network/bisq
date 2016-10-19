@@ -124,7 +124,7 @@ public class Monitor {
 
             }
         });
-        
+
         gateway = new Gateway(offerBookService);
     }
 

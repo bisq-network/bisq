@@ -43,7 +43,7 @@ public class PlaceOfferModel implements Model {
 
     public PlaceOfferModel(Offer offer,
                            Coin reservedFundsForOffer,
-                           boolean useSavingsWallet, 
+                           boolean useSavingsWallet,
                            WalletService walletService,
                            TradeWalletService tradeWalletService,
                            OfferBookService offerBookService,

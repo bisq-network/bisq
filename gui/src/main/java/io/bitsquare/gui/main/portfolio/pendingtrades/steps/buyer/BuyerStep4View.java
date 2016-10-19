@@ -114,7 +114,7 @@ public class BuyerStep4View extends TradeStepView {
         if (model.getLockTime() > 0)
             return "Wait until payout lock time is over";
         else
-            return "Sending payout transaction to peer"; 
+            return "Sending payout transaction to peer";
     }
 
     @Override

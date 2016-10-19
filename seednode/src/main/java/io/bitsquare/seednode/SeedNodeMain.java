@@ -120,7 +120,7 @@ public class SeedNodeMain extends BitsquareExecutable {
                 log.error(t.getMessage());
             }
         }
-        
+
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad(log);
             long usedMemoryInMB = Profiler.getUsedMemoryInMB();

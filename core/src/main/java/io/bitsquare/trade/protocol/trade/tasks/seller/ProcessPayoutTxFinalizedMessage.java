@@ -45,7 +45,7 @@ public class ProcessPayoutTxFinalizedMessage extends TradeTask {
             checkNotNull(message);
             checkArgument(message.payoutTx != null);
             trade.setPayoutTx(processModel.getTradeWalletService().addTransactionToWallet(message.payoutTx));
-            
+
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

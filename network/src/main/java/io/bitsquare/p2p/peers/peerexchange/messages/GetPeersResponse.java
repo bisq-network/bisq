@@ -18,6 +18,7 @@ public final class GetPeersResponse extends PeerExchangeMessage implements Suppo
 
     @Nullable
     private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
+
     public GetPeersResponse(int requestNonce, HashSet<Peer> reportedPeers) {
         this.requestNonce = requestNonce;
         this.reportedPeers = reportedPeers;

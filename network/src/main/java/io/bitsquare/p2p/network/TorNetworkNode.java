@@ -100,7 +100,7 @@ public class TorNetworkNode extends NetworkNode {
 
         return torNetworkNode.connectToHiddenService(peerNodeAddress.hostName, peerNodeAddress.port);
     }
-    
+
     public Socks5Proxy getSocksProxy() {
         return torNetworkNode != null ? torNetworkNode.getSocksProxy() : null;
     }

@@ -267,7 +267,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private void doRestore() {
         long date = restoreDatePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(restoreSeedWordsTextArea.getText()), null, "", date);
-        walletService.restoreSeedWords(seed,    
+        walletService.restoreSeedWords(seed,
                 () -> UserThread.execute(() -> {
                     log.info("Wallet restored with seed words");
 

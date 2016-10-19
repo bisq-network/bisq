@@ -52,7 +52,7 @@ public class ProcessFiatTransferStartedMessage extends TradeTask {
             removeMailboxMessageAfterProcessing();
 
             trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);
-            
+
             complete();
         } catch (Throwable t) {
             failed(t);

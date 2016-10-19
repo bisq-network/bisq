@@ -81,7 +81,7 @@ public class TxIdTextField extends AnchorPane {
         AnchorPane.setRightAnchor(copyIcon, 30.0);
 
         Tooltip tooltip = new Tooltip("Open a blockchain explorer with that transactions ID");
-        
+
         blockExplorerIcon = new Label();
         blockExplorerIcon.getStyleClass().add("external-link-icon");
         blockExplorerIcon.setTooltip(tooltip);
