@@ -77,7 +77,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             else
                 return 0;
         });
-        
+
         stateColumn.setComparator((o1, o2) -> model.getState(o1).compareTo(model.getState(o2)));
         marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
 

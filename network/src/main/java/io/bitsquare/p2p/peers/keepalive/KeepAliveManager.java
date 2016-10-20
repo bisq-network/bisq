@@ -169,7 +169,7 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                 keepAlive();
             }, INTERVAL_SEC);
     }
-    
+
     private void keepAlive() {
         if (!stopped) {
             Log.traceCall();

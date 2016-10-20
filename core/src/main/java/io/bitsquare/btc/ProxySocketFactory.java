@@ -1,30 +1,25 @@
-
 /**
  * Copyright (C) 2010-2014 Leon Blakey <lord.quackstar at gmail.com>
- *
+ * <p>
  * This file is part of PircBotX.
- *
+ * <p>
  * PircBotX is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or (at your option) any later
  * version.
- *
+ * <p>
  * PircBotX is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with
  * PircBotX. If not, see <http://www.gnu.org/licenses/>.
  */
 package io.bitsquare.btc;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import javax.net.SocketFactory;
+import java.io.IOException;
+import java.net.*;
 
 /**
  * A basic SocketFactory for creating sockets that connect through the specified
@@ -49,8 +44,8 @@ public class ProxySocketFactory extends SocketFactory {
      * and port.
      *
      * @param proxyType The type of proxy were connecting to
-     * @param hostname The hostname of the proxy server
-     * @param port The port of the proxy server
+     * @param hostname  The hostname of the proxy server
+     * @param port      The port of the proxy server
      */
     public ProxySocketFactory(Proxy.Type proxyType, String hostname, int port) {
         this.proxy = new Proxy(proxyType, new InetSocketAddress(hostname, port));
@@ -60,8 +55,8 @@ public class ProxySocketFactory extends SocketFactory {
     public Socket createSocket() throws IOException {
         Socket socket = new Socket(proxy);
         return socket;
-    }    
-    
+    }
+
     @Override
     public Socket createSocket(String string, int i) throws IOException, UnknownHostException {
         Socket socket = new Socket(proxy);

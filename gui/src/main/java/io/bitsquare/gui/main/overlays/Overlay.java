@@ -137,7 +137,7 @@ public abstract class Overlay<T extends Overlay> {
     protected boolean hideCloseButton;
     protected boolean useAnimation = true;
     private String headlineStyle;
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -357,7 +357,7 @@ public abstract class Overlay<T extends Overlay> {
         this.headlineStyle = headlineStyle;
         return (T) this;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -629,7 +629,7 @@ public abstract class Overlay<T extends Overlay> {
 
             if (headlineStyle != null)
                 headLineLabel.setStyle(headlineStyle);
-            
+
             GridPane.setHalignment(headLineLabel, HPos.LEFT);
             GridPane.setRowIndex(headLineLabel, rowIndex);
             GridPane.setColumnSpan(headLineLabel, 2);

@@ -17,7 +17,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage {
     public final HashSet<ProtectedStorageEntry> dataSet;
     public final int requestNonce;
     public final boolean isGetUpdatedDataResponse;
-    
+
     @Nullable
     private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 

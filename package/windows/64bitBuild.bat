@@ -5,9 +5,7 @@
 :: 64 bit build
 :: Needs Inno Setup 5 or later (http://www.jrsoftware.org/isdl.php)
 
-:: Did not get -BjvmOptions=-Xbootclasspath working on windows, but if the jdkfix jar is copied into the jdk/jre dir it will override the default classes
-
-SET version=0.4.9.6
+SET version=0.4.9.7
 
 :: Private setup
 SET outdir=\\VBOXSVR\vm_shared_windows

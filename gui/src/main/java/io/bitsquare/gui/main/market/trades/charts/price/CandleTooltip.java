@@ -58,7 +58,7 @@ public class CandleTooltip extends GridPane {
         setHgap(Layout.GRID_GAP);
 
         setVgap(2);
-        
+
         Label open = new Label("Open:");
         Label close = new Label("Close:");
         Label high = new Label("High:");

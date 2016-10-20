@@ -1,7 +1,5 @@
 <img src="https://bitsquare.io/images/logo.png" width="240"/>
 
-[![Build Status](https://travis-ci.org/bitsquare/bitsquare.svg?branch=master)](https://travis-ci.org/bitsquare/bitsquare)
-
 
 What is Bitsquare?
 ------------------
@@ -14,11 +12,11 @@ There are no central points of control or failure in the Bitsquare network. Ther
 
 Because the national currency portion of any trade must be transferred via traditional means such as a wire transfer, Bitsquare incorporates first-class support for human arbitration to resolve any errors or disputes.
 
-You can read about all of this and more in the [whitepaper](https://bitsquare.io/bitsquare.pdf), [arbitration](https://bitsquare.io/arbitration_system.pdf) and [risk analysis](https://bitsquare.io/risk_analysis.pdf) documents. Several [videos](https://bitsquare.io/blog/category/video) are available as well.
+You can read about all of this and more in the [whitepaper](https://bitsquare.io/bitsquare.pdf) and [arbitration](https://bitsquare.io/arbitration_system.pdf) documents. Several [videos](https://bitsquare.io/blog/category/video) are available as well.
 
 Status
 ------
-Bitsquare has releases the beta version on the 27th of April 2016 after 3 months testing on mainnet.  
+Bitsquare has releases the beta version on the 27th of April 2016 after 3 months testing on mainnet.
 For the latest version checkout our [releases page](https://github.com/bitsquare/bitsquare/releases) at Github.
 
 Building from source
@@ -35,11 +33,12 @@ Staying in Touch
 Contact the team and keep up to date using any of the following:
 
  - The [Bitsquare Website](https://bitsquare.io)
+ - GitHub [Issues](https://github.com/bitsquare/bitsquare/issues)
+ - The [Bitsquare Forum]( https://forum.bitsquare.io)
  - The [#bitsquare](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare)) 
  - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)
  - [@bitsquare_](https://twitter.com/bitsquare_) on Twitter
  - Get in [contact](https://bitsquare.io/contact/) with us
- - GitHub [Issues](https://github.com/bitsquare/bitsquare/issues)
 
 
 License

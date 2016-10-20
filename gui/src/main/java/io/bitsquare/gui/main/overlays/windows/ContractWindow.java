@@ -136,7 +136,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second.setMouseTransparent(false);
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Selected arbitrator:", contract.arbitratorNodeAddress.getFullAddress());
-        
+
         if (showAcceptedCountryCodes) {
             String countries;
             Tooltip tooltip = null;

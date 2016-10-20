@@ -66,8 +66,10 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final PerfectMoneyValidator perfectMoneyValidator;
     private final SwishValidator swishValidator;
     private final ClearXchangeValidator clearXchangeValidator;
+    private final ChaseQuickPayValidator chaseQuickPayValidator;
+    private final InteracETransferValidator interacETransferValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
-    
+
     private BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
@@ -86,6 +88,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             PerfectMoneyValidator perfectMoneyValidator,
                             SwishValidator swishValidator,
                             ClearXchangeValidator clearXchangeValidator,
+                            ChaseQuickPayValidator chaseQuickPayValidator,
+                            InteracETransferValidator interacETransferValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
                             BSFormatter formatter) {
         super(model);
@@ -98,6 +102,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.perfectMoneyValidator = perfectMoneyValidator;
         this.swishValidator = swishValidator;
         this.clearXchangeValidator = clearXchangeValidator;
+        this.chaseQuickPayValidator = chaseQuickPayValidator;
+        this.interacETransferValidator = interacETransferValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
         this.formatter = formatter;
     }
@@ -321,6 +327,10 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new SwishForm(paymentAccount, swishValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CLEAR_X_CHANGE_ID:
                 return new ClearXchangeForm(paymentAccount, clearXchangeValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CHASE_QUICK_PAY_ID:
+                return new ChaseQuickPayForm(paymentAccount, chaseQuickPayValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.INTERAC_E_TRANSFER_ID:
+                return new InteracETransferForm(paymentAccount, interacETransferValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 return new USPostalMoneyOrderForm(paymentAccount, usPostalMoneyOrderValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_DEPOSIT_ID:

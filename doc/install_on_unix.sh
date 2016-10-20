@@ -35,9 +35,6 @@ git clone https://github.com/bitsquare/bitsquare.git
 cd bitsquare
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
-echo "Copy the jdkfix jar file"
-cp bitsquare/jdkfix/target/jdkfix-0.4.9.6.jar $JAVA_HOME/jre/lib/ext/jdkfix-0.4.9.6.jar
-
 echo "Add BountyCastle.jar"
 cd ~
 cp /root/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/bcprov-jdk15on-1.53.jar

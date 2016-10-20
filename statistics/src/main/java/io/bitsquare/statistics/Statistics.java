@@ -13,6 +13,7 @@ import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.LimitedKeyStrengthException;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.BootstrapListener;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 
 public class Statistics {
@@ -70,8 +72,12 @@ public class Statistics {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
-        if (Utilities.isRestrictedCryptography())
-            Utilities.removeCryptographyRestrictions();
+        try {
+            Utilities.checkCryptoPolicySetup();
+        } catch (NoSuchAlgorithmException | LimitedKeyStrengthException e) {
+            e.printStackTrace();
+            UserThread.execute(this::shutDown);
+        }
         Security.addProvider(new BouncyCastleProvider());
 
 

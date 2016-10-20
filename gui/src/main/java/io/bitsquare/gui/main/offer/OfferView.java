@@ -120,7 +120,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         else {
             tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
         }
-        
+
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         root.getTabs().addListener(tabListChangeListener);
         navigation.addListener(navigationListener);

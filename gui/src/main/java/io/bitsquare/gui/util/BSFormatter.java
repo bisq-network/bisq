@@ -295,7 +295,7 @@ public class BSFormatter {
     public String formatAmountWithMinAmount(Offer offer) {
         return formatCoin(offer.getMinAmount()) + " - " + formatCoin(offer.getAmount());
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Price
@@ -374,6 +374,16 @@ public class BSFormatter {
             DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
             DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
             return dateFormatter.format(date) + " " + timeFormatter.format(date);
+        } else {
+            return "";
+        }
+    }
+
+    public String formatDateTimeSpan(Date dateFrom, Date dateTo) {
+        if (dateFrom != null && dateTo != null) {
+            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
+            DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
+            return dateFormatter.format(dateFrom) + " " + timeFormatter.format(dateFrom) + " - " + timeFormatter.format(dateTo);
         } else {
             return "";
         }

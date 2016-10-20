@@ -6,15 +6,13 @@ mkdir -p gui/deploy
 set -e
 
 # Edit version
-version=0.4.9.6
+version=0.4.9.7
 
 jarFile="/media/sf_vm_shared_ubuntu14_32bit/Bitsquare-$version.jar"
-jdkfixFile="/media/sf_vm_shared_ubuntu14_32bit/jdkfix-$version.jar"
 
 # Note: fakeroot needs to be installed on linux
 $JAVA_HOME/bin/javapackager \
     -deploy \
-    -BjvmOptions=-Xbootclasspath/a:"jdkfix-$version.jar":"../runtime/lib/ext/jfxrt.jar" \
     -Bruntime="$JAVA_HOME/jre" \
     -BappVersion=$version \
     -Bcategory=Internet \

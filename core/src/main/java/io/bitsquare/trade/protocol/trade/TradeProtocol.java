@@ -63,8 +63,8 @@ public abstract class TradeProtocol {
                         doHandleDecryptedMessage(tradeMessage, peersNodeAddress);
                 }
             } //else {
-                //TODO not clear anymore what case is handled here
-                // it might be that we received a msg from the arbitrator, we don't handle that here but we don't want to log an error
+            //TODO not clear anymore what case is handled here
+            // it might be that we received a msg from the arbitrator, we don't handle that here but we don't want to log an error
                 /*Optional<Arbitrator> arbitratorOptional = processModel.getArbitratorManager().getArbitratorsObservableMap().values().stream()
                         .filter(e -> e.getArbitratorAddress().equals(trade.getArbitratorAddress())).findFirst();
                 PubKeyRing arbitratorPubKeyRing = null;

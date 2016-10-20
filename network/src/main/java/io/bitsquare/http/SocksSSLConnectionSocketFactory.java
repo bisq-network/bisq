@@ -1,13 +1,14 @@
 package io.bitsquare.http;
 
+import org.apache.http.HttpHost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.protocol.HttpContext;
+
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
-import javax.net.ssl.SSLContext;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.HttpHost;
-import org.apache.http.protocol.HttpContext;
 
 // This class is adapted from
 //   http://stackoverflow.com/a/25203021/5616248
@@ -16,10 +17,10 @@ import org.apache.http.protocol.HttpContext;
 class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
 
     public SocksSSLConnectionSocketFactory(final SSLContext sslContext) {
-        
+
         // Only allow connection's to site's with valid certs.
         super(sslContext, STRICT_HOSTNAME_VERIFIER);
-        
+
         // Or to allow "insecure" (eg self-signed certs)
         // super(sslContext, ALLOW_ALL_HOSTNAME_VERIFIER);
     }
@@ -39,7 +40,7 @@ class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
      */
     @Override
     public Socket connectSocket(int connectTimeout, Socket socket, HttpHost host, InetSocketAddress remoteAddress,
-            InetSocketAddress localAddress, HttpContext context) throws IOException {
+                                InetSocketAddress localAddress, HttpContext context) throws IOException {
         // Convert address to unresolved
         InetSocketAddress unresolvedRemote = InetSocketAddress
                 .createUnresolved(host.getHostName(), remoteAddress.getPort());

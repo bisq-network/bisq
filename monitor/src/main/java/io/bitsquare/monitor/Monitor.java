@@ -12,6 +12,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.LimitedKeyStrengthException;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 
 public class Monitor {
@@ -67,8 +69,12 @@ public class Monitor {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
-        if (Utilities.isRestrictedCryptography())
-            Utilities.removeCryptographyRestrictions();
+        try {
+            Utilities.checkCryptoPolicySetup();
+        } catch (NoSuchAlgorithmException | LimitedKeyStrengthException e) {
+            e.printStackTrace();
+            UserThread.execute(this::shutDown);
+        }
         Security.addProvider(new BouncyCastleProvider());
 
 
@@ -124,7 +130,7 @@ public class Monitor {
 
             }
         });
-        
+
         gateway = new Gateway(offerBookService);
     }
 

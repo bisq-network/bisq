@@ -144,7 +144,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
         maxMemory = commandLineProperties.containsProperty(CoreOptionKeys.MAX_MEMORY) ?
                 (String) commandLineProperties.getProperty(CoreOptionKeys.MAX_MEMORY) :
                 "";
-        
+
         seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
                 "";
