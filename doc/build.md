@@ -10,14 +10,14 @@ There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, Bitsq
 System requirements
 -------------
 
-The prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u122 or better (as well as maven and git).
+The prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u112 or better (as well as maven and git).
 In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
 ### 1. Check the version of Java you currently have installed
 
     $ java -version
 
-If `java` is not found, or your version is anything less than `1.8.0_122`, then follow the next steps, otherwise you can skip to step 2:
+If `java` is not found, or your version is anything less than `1.8.0_112`, then follow the next steps, otherwise you can skip to step 2:
 
 #### 1.1 Debian based systems (Ubuntu)
 
