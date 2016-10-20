@@ -208,14 +208,14 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         final boolean isNationalBanks = paymentMethod.equals(PaymentMethod.NATIONAL_BANK);
         final boolean isSepa = paymentMethod.equals(PaymentMethod.SEPA);
         if (offer.isMyOffer(keyRing) && offererPaymentAccountId != null && paymentAccount != null) {
-            addLabelTextField(gridPane, ++rowIndex, "Payment account:", paymentAccount.getAccountName());
+            addLabelTextField(gridPane, ++rowIndex, "My trading account:", paymentAccount.getAccountName());
         } else {
             final String method = BSResources.get(paymentMethod.getId());
             if (isNationalBanks || isSpecificBanks || isSepa) {
                 if (BankUtil.isBankIdRequired(offer.getCountryCode()))
-                    addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank ID):", method + bankId);
+                    addLabelTextField(gridPane, ++rowIndex, "Payment method (offerer's bank ID):", method + bankId);
                 else if (BankUtil.isBankNameRequired(offer.getCountryCode()))
-                    addLabelTextField(gridPane, ++rowIndex, "Payment method (offerers bank name):", method + bankId);
+                    addLabelTextField(gridPane, ++rowIndex, "Payment method (offerer's bank name):", method + bankId);
             } else {
                 addLabelTextField(gridPane, ++rowIndex, "Payment method:", method);
             }
@@ -262,12 +262,12 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Offerers onion address:", offer.getOffererNodeAddress().getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Offerer's onion address:", offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit()));
 
         if (paymentMethodCountryCode != null)
-            addLabelTextField(gridPane, ++rowIndex, "Offerers country of bank:",
+            addLabelTextField(gridPane, ++rowIndex, "Offerer's country of bank:",
                     CountryUtil.getNameAndCode(paymentMethodCountryCode));
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Accepted arbitrators:", formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
@@ -297,8 +297,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         boolean isBuyOffer = offer.getDirection() == Offer.Direction.BUY;
         boolean isBuyerRole = isPlaceOffer ? isBuyOffer : !isBuyOffer;
 
-        String placeOfferButtonText = isBuyerRole ? "Confirm offer for buying bitcoin" : "Confirm offer for selling bitcoin";
-        String takeOfferButtonText = isBuyerRole ? "Confirm offer for buying bitcoin" : "Confirm offer for selling bitcoin";
+        String placeOfferButtonText = isBuyerRole ? "Confirm offer to buy bitcoin" : "Confirm offer to sell bitcoin";
+        String takeOfferButtonText = isBuyerRole ? "Confirm offer to buy bitcoin" : "Confirm offer to sell bitcoin";
 
         ImageView iconView = new ImageView();
         iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");

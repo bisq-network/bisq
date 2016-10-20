@@ -210,7 +210,7 @@ public class Encryption {
         // Create a symmetric key
         SecretKey secretKey = generateSecretKey();
 
-        // Encrypt secretKey with receivers publicKey 
+        // Encrypt secretKey with receiver's publicKey 
         byte[] encryptedSecretKey = encryptSecretKey(secretKey, encryptionPublicKey);
 
         // Encrypt with sym key payload with appended hmac

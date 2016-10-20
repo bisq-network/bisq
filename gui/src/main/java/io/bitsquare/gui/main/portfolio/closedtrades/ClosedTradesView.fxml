@@ -35,7 +35,7 @@
             <TableColumn text="Amount in BTC" fx:id="amountColumn" minWidth="130"/>
             <TableColumn text="Amount" fx:id="volumeColumn" minWidth="130"/>
             <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80"/>
-            <TableColumn text="State" fx:id="stateColumn" minWidth="80"/>
+            <TableColumn text="Status" fx:id="stateColumn" minWidth="80"/>
             <TableColumn text="" fx:id="avatarColumn" minWidth="40" maxWidth="40"/>
         </columns>
     </TableView>

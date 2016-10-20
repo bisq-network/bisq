@@ -19,6 +19,7 @@ package io.bitsquare.storage;
 
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.io.LookAheadObjectInputStream;
 import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +104,7 @@ public class FileManager<T> {
     public synchronized T read(File file) throws IOException, ClassNotFoundException {
         log.debug("read" + file);
         try (final FileInputStream fileInputStream = new FileInputStream(file);
-             final ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
+             final ObjectInputStream objectInputStream = new LookAheadObjectInputStream(fileInputStream, false)) {
             return (T) objectInputStream.readObject();
         } catch (Throwable t) {
             log.error("Exception at read: " + t.getMessage());

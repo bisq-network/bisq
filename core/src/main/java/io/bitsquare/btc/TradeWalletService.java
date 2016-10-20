@@ -275,7 +275,7 @@ public class TradeWalletService {
      * @param takerRawTransactionInputs Raw data for the connected outputs for all inputs of the taker (normally 1 input)
      * @param takerChangeOutputValue    Optional taker change output value
      * @param takerChangeAddressString  Optional taker change address
-     * @param offererAddressEntry       The offerers address entry.
+     * @param offererAddressEntry       The offerer's address entry.
      * @param buyerPubKey               The public key of the buyer.
      * @param sellerPubKey              The public key of the seller.
      * @param arbitratorPubKey          The public key of the arbitrator.
@@ -452,10 +452,10 @@ public class TradeWalletService {
         checkArgument(!buyerInputs.isEmpty());
         checkArgument(!sellerInputs.isEmpty());
 
-        // Check if offerers Multisig script is identical to the takers
+        // Check if offerer's Multisig script is identical to the takers
         Script p2SHMultiSigOutputScript = getP2SHMultiSigOutputScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         if (!offerersDepositTx.getOutput(0).getScriptPubKey().equals(p2SHMultiSigOutputScript))
-            throw new TransactionVerificationException("Offerers p2SHMultiSigOutputScript does not match to takers p2SHMultiSigOutputScript");
+            throw new TransactionVerificationException("Offerer's p2SHMultiSigOutputScript does not match to takers p2SHMultiSigOutputScript");
 
         // The outpoints are not available from the serialized offerersDepositTx, so we cannot use that tx directly, but we use it to construct a new 
         // depositTx
@@ -489,7 +489,7 @@ public class TradeWalletService {
         TransactionOutput offerersContractHashOutput = offerersDepositTx.getOutputs().get(1);
         log.debug("offerersContractHashOutput " + offerersContractHashOutput);
         if (!offerersContractHashOutput.getScriptPubKey().equals(contractHashOutput.getScriptPubKey()))
-            throw new TransactionVerificationException("Offerers transaction output for the contract hash is not matching takers version.");
+            throw new TransactionVerificationException("Offerer's transaction output for the contract hash is not matching takers version.");
 
         // Add all outputs from offerersDepositTx to depositTx
         offerersDepositTx.getOutputs().forEach(depositTx::addOutput);

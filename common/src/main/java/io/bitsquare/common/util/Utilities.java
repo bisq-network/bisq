@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
+import io.bitsquare.io.LookAheadObjectInputStream;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import org.apache.commons.lang3.StringUtils;
@@ -210,7 +211,7 @@ public class Utilities {
         long free = runtime.freeMemory() / 1024 / 1024;
         long total = runtime.totalMemory() / 1024 / 1024;
         long used = total - free;
-        log.info("System load (nr. threads/used memory (MB)): " + Thread.activeCount() + "/" + used);
+        log.info("System load (no. threads/used memory (MB)): " + Thread.activeCount() + "/" + used);
     }
 
     public static void copyToClipboard(String content) {
@@ -254,8 +255,8 @@ public class Utilities {
         try {
             ByteArrayInputStream byteInputStream =
                     new ByteArrayInputStream(org.bitcoinj.core.Utils.parseAsHexOrBase58(serializedHexString));
-
-            try (ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream)) {
+                    
+            try (ObjectInputStream objectInputStream = new LookAheadObjectInputStream(byteInputStream)) {
                 result = objectInputStream.readObject();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
@@ -293,7 +294,7 @@ public class Utilities {
         ObjectInput in = null;
         Object result = null;
         try {
-            in = new ObjectInputStream(bis);
+            in = new LookAheadObjectInputStream(bis, true);
             result = in.readObject();
             if (!(result instanceof Serializable))
                 throw new RuntimeException("Object not of type Serializable");
@@ -356,8 +357,7 @@ public class Utilities {
     }
 
 
-    public static Object copy(Serializable orig) {
-        Object obj = null;
+    public static Object copy(Serializable orig) throws IOException, ClassNotFoundException {
         try {
             // Write the object out to a byte array
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -368,12 +368,13 @@ public class Utilities {
 
             // Make an input stream from the byte array and read
             // a copy of the object back in.
-            ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
-            obj = in.readObject();
+            ObjectInputStream in = new LookAheadObjectInputStream(new ByteArrayInputStream(bos.toByteArray()), true);
+            Object obj = in.readObject();
+            return obj;
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+            throw e;
         }
-        return obj;
     }
 
     public static String readTextFileFromServer(String url, String userAgent) throws IOException {

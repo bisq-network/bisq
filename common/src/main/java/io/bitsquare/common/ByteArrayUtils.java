@@ -17,6 +17,7 @@
 
 package io.bitsquare.common;
 
+import io.bitsquare.io.LookAheadObjectInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,15 +27,16 @@ public class ByteArrayUtils {
     private static final Logger log = LoggerFactory.getLogger(ByteArrayUtils.class);
     private static long lastTimeStamp = System.currentTimeMillis();
 
-    public static <T> T byteArrayToObject(byte[] data) {
+    public static <T> T byteArrayToObject(byte[] data) throws IOException, ClassNotFoundException {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         ObjectInput in = null;
         Object result = null;
         try {
-            in = new ObjectInputStream(bis);
+            in = new LookAheadObjectInputStream(bis, true);
             result = in.readObject();
         } catch (Exception e) {
             e.printStackTrace();
+            throw e;
         } finally {
             try {
                 bis.close();

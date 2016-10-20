@@ -128,7 +128,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 contract.getBuyerPayoutAddressString() + " / " + contract.getSellerPayoutAddressString()).second.setMouseTransparent(false);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Network address BTC buyer / BTC seller:", contract.getBuyerNodeAddress().getFullAddress() + " / " + contract.getSellerNodeAddress().getFullAddress());
 
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Nr. of disputes BTC buyer / BTC seller:", disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "No. of disputes BTC buyer / BTC seller:", disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC buyer payment details:",
                 BSResources.get(contract.getBuyerPaymentAccountContractData().getPaymentDetails())).second.setMouseTransparent(false);

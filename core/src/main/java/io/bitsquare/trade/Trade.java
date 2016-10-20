@@ -144,7 +144,7 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     transient private Storage<? extends TradableList> storage;
     transient protected TradeProtocol tradeProtocol;
-    private transient Date maxTradePeriodDate, halfTradePeriodDate;
+    transient private Date maxTradePeriodDate, halfTradePeriodDate;
 
     // Immutable
     private final Offer offer;

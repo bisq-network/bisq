@@ -79,7 +79,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     // If we would change the price representation in the domain we would not be backward compatible
     final StringProperty price = new SimpleStringProperty();
 
-    // Positive % value means always a better price form the offerers perspective: 
+    // Positive % value means always a better price form the offerer's perspective: 
     // Buyer (with fiat): lower price as market
     // Buyer (with altcoin): higher (display) price as market (display price is inverted)
     final StringProperty marketPriceMargin = new SimpleStringProperty();
@@ -160,7 +160,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 amount.set("1");
                 minAmount.set(amount.get());
-                price.set("500");
+                price.set("600");
 
                 setAmountToModel();
                 setMinAmountToModel();
@@ -510,7 +510,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     formatter.formatCoinWithCode(dataModel.totalAvailableBalance) + " in your Bitsquare wallet.\n\n" +
                     "Please fund that trade from an external Bitcoin wallet or fund your Bitsquare " +
                     "wallet at \"Funds/Depost funds\".")
-                    .actionButtonText("Go to \"Funds/Depost funds\"")
+                    .actionButtonText("Go to \"Funds/Deposit funds\"")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
             return false;
@@ -623,7 +623,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     public boolean isPriceInRange() {
         if (marketPriceMargin.get() != null && !marketPriceMargin.get().isEmpty()) {
-            if (formatter.parsePercentStringToDouble(marketPriceMargin.get()) > preferences.getMaxPriceDistanceInPercent()) {
+            if (Math.abs(formatter.parsePercentStringToDouble(marketPriceMargin.get())) > preferences.getMaxPriceDistanceInPercent()) {
                 displayPriceOutOfRangePopup();
                 return false;
             } else {

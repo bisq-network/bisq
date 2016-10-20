@@ -50,7 +50,7 @@ public class ProcessPublishDepositTxRequest extends TradeTask {
             PaymentAccountContractData paymentAccountContractData = checkNotNull(publishDepositTxRequest.offererPaymentAccountContractData);
             final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
             if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountContractData, appliedPaymentAccountFilter)) {
-                failed("Other trader is banned by his payment account data.\n" +
+                failed("Other trader is banned by his trading account data.\n" +
                         "paymentAccountContractData=" + paymentAccountContractData.getPaymentDetails() + "\n" +
                         "banFilter=" + appliedPaymentAccountFilter[0].toString());
                 return;

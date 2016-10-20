@@ -179,7 +179,7 @@ public class PriceFeedService {
                 }
 
             } else {
-                String errorMessage = "We don't have a price for currencyCode " + currencyCode;
+                String errorMessage = "We don't have a price for " + currencyCode;
                 log.debug(errorMessage);
                 faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
             }

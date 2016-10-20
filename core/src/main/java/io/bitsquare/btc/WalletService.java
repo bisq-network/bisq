@@ -257,9 +257,9 @@ public class WalletService {
         walletAppKit.setLookaheadSize(500);
 
         // Calculation is derived from: https://www.reddit.com/r/Bitcoin/comments/2vrx6n/privacy_in_bitcoinj_android_wallet_multibit_hive/coknjuz
-        // Nr of false positives (56M keys in the blockchain): 
+        // No. of false positives (56M keys in the blockchain): 
         // First attempt for FP rate:
-        // FP rate = 0,0001;  Nr of false positives: 0,0001 * 56 000 000  = 5600
+        // FP rate = 0,0001;  No. of false positives: 0,0001 * 56 000 000  = 5600
         // We have 1333keys: 1333 / (5600 + 1333) = 0.19 -> 19 % probability that a pub key is in our wallet
         // After tests I found out that the bandwidth consumption varies widely related to the generated filter.
         // About 20- 40 MB for upload and 30-130 MB for download at first start up (spv chain).
@@ -270,7 +270,7 @@ public class WalletService {
         // consumption.
 
         // For now to reduce risks with high bandwidth consumption we reduce the FP rate by half.
-        // FP rate = 0,00005;  Nr of false positives: 0,00005 * 56 000 000  = 2800
+        // FP rate = 0,00005;  No. of false positives: 0,00005 * 56 000 000  = 2800
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
@@ -714,7 +714,7 @@ public class WalletService {
     public void doubleSpendTransaction(Transaction txToDoubleSpend, Address toAddress, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException, AddressFormatException, AddressEntryException {
         final TransactionConfidence.ConfidenceType confidenceType = txToDoubleSpend.getConfidence().getConfidenceType();
         if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
-            log.debug("txToDoubleSpend nr. of inputs " + txToDoubleSpend.getInputs().size());
+            log.debug("txToDoubleSpend no. of inputs " + txToDoubleSpend.getInputs().size());
 
             Transaction newTransaction = new Transaction(params);
             txToDoubleSpend.getInputs().stream().forEach(input -> {
@@ -739,7 +739,7 @@ public class WalletService {
                     }
             );
 
-            log.debug("newTransaction nr. of inputs " + newTransaction.getInputs().size());
+            log.debug("newTransaction no. of inputs " + newTransaction.getInputs().size());
             log.debug("newTransaction size in kB " + newTransaction.bitcoinSerialize().length / 1024);
 
             if (!newTransaction.getInputs().isEmpty()) {
@@ -1031,7 +1031,7 @@ public class WalletService {
         Wallet.SendRequest sendRequestForMultipleAddresses = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, aesKey);
         Transaction tx = sendRequestForMultipleAddresses.tx;
         wallet.completeTx(sendRequestForMultipleAddresses);
-        log.debug("Nr of inputs: " + tx.getInputs().size());
+        log.debug("No. of inputs: " + tx.getInputs().size());
         int size = tx.bitcoinSerialize().length;
         log.debug("Tx size: " + size);
         return size;

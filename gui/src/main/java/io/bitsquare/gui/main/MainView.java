@@ -137,10 +137,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Pane disputesButtonHolder = new Pane(disputesButton);
 
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
-            setSpacing(10);
             setLeftAnchor(this, 10d);
             setTopAnchor(this, 0d);
         }};
+
 
         Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> marketPriceBox = getMarketPriceBox("Market price");
         ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
@@ -176,10 +176,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         HBox rightNavPane = new HBox(marketPriceBox.third, availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,
                 settingsButton, accountButton) {{
-            setSpacing(10);
             setRightAnchor(this, 10d);
             setTopAnchor(this, 0d);
         }};
+
+        root.widthProperty().addListener((observable, oldValue, newValue) -> {
+            double w = (double) newValue;
+            if (w > 0) {
+                leftNavPane.setSpacing(w >= 1080 ? 10 : 5);
+                rightNavPane.setSpacing(w >= 1080 ? 10 : 5);
+            }
+        });
 
         AnchorPane contentContainer = new AnchorPane() {{
             setId("content-pane");
@@ -258,7 +265,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple2<TextField, VBox> getBalanceBox(String text) {
         TextField textField = new TextField();
         textField.setEditable(false);
-        textField.setPrefWidth(140);
+        textField.setPrefWidth(110); //140
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
         textField.setStyle("-fx-alignment: center;  -fx-background-color: white;");

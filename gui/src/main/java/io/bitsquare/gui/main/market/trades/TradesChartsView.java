@@ -130,7 +130,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             volumeAxisYWidth = (double) newValue;
             layoutChart();
         };
-        tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText("Nr. of trades: " + model.tradeStatisticsByCurrency.size());
+        tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText("Trades: " + model.tradeStatisticsByCurrency.size());
     }
 
     @Override
@@ -204,7 +204,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
-        nrOfTradeStatisticsLabel.setText("Nr. of trades: " + model.tradeStatisticsByCurrency.size());
+        nrOfTradeStatisticsLabel.setText("Trades: " + model.tradeStatisticsByCurrency.size());
 
         UserThread.runAfter(this::updateChartData, 100, TimeUnit.MILLISECONDS);
     }
@@ -280,7 +280,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
-        priceChart.setMinHeight(250);
+        priceChart.setMinHeight(200);
         priceChart.setMaxHeight(300);
         priceChart.setLegendVisible(false);
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
@@ -391,18 +391,18 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         label.setPadding(new Insets(0, 4, 0, 0));
 
         toggleGroup = new ToggleGroup();
+        ToggleButton year = getToggleButton("Year", TradesChartsViewModel.TickUnit.YEAR, toggleGroup, "toggle-left");
         ToggleButton month = getToggleButton("Month", TradesChartsViewModel.TickUnit.MONTH, toggleGroup, "toggle-left");
         ToggleButton week = getToggleButton("Week", TradesChartsViewModel.TickUnit.WEEK, toggleGroup, "toggle-center");
         ToggleButton day = getToggleButton("Day", TradesChartsViewModel.TickUnit.DAY, toggleGroup, "toggle-center");
         ToggleButton hour = getToggleButton("Hour", TradesChartsViewModel.TickUnit.HOUR, toggleGroup, "toggle-center");
         ToggleButton minute10 = getToggleButton("10 Minutes", TradesChartsViewModel.TickUnit.MINUTE_10, toggleGroup, "toggle-center");
-        ToggleButton minute = getToggleButton("Minute", TradesChartsViewModel.TickUnit.MINUTE, toggleGroup, "toggle-right");
 
         HBox hBox = new HBox();
         hBox.setSpacing(0);
         hBox.setPadding(new Insets(5, 9, -10, 10));
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(currencyLabel, currencyComboBox, spacer, label, month, week, day, hour, minute10, minute);
+        hBox.getChildren().addAll(currencyLabel, currencyComboBox, spacer, label, year, month, week, day, hour, minute10);
         return hBox;
     }
 

@@ -668,7 +668,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 // does not arrive.
                                 // We could use onBroadcastCompleted instead but it might take too long if one peer
                                 // is very badly connected.
-                                // TODO We could check for a certain threshold of nr. of incoming messages of the same msg 
+                                // TODO We could check for a certain threshold of no. of incoming messages of the same msg 
                                 // to see how well it is propagated. BitcoinJ uses such an approach for tx propagation.
                                 UserThread.runAfter(() -> {
                                     log.info("Broadcasted to first peer (with 3 sec. delayed):  Message = {}", Utilities.toTruncatedString(message));

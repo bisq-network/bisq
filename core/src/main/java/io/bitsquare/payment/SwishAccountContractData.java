@@ -48,12 +48,12 @@ public final class SwishAccountContractData extends PaymentAccountContractData {
 
     @Override
     public String getPaymentDetails() {
-        return "Swish - Holder name: " + holderName + ", mobile nr.: " + mobileNr;
+        return "Swish - Holder name: " + holderName + ", mobile no.: " + mobileNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Mobile nr.: " + mobileNr;
+                "Mobile no.: " + mobileNr;
     }
 }
