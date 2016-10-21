@@ -180,7 +180,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("VCN", "VCoin"));
         result.add(new CryptoCurrency("VPN", "VPNCoin"));
-        result.add(new CryptoCurrency("XVC", "Vcash"));
         result.add(new CryptoCurrency("XVG", "Verge"));
         result.add(new CryptoCurrency("VRC", "VeriCoin"));
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
