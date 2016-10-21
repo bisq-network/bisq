@@ -198,11 +198,11 @@ public class SepaForm extends PaymentMethodForm {
     }
 
     private void addEuroCountriesGrid(boolean isEditable) {
-        addCountriesGrid(isEditable, "Accept trades from those Euro countries:", euroCountryCheckBoxes, CountryUtil.getAllSepaEuroCountries());
+        addCountriesGrid(isEditable, "Accept trades from these Euro countries:", euroCountryCheckBoxes, CountryUtil.getAllSepaEuroCountries());
     }
 
     private void addNonEuroCountriesGrid(boolean isEditable) {
-        addCountriesGrid(isEditable, "Accept trades from those non-Euro countries:", nonEuroCountryCheckBoxes, CountryUtil.getAllSepaNonEuroCountries());
+        addCountriesGrid(isEditable, "Accept trades from these non-Euro countries:", nonEuroCountryCheckBoxes, CountryUtil.getAllSepaNonEuroCountries());
     }
 
     private void addCountriesGrid(boolean isEditable, String title, List<CheckBox> checkBoxList, List<Country> dataProvider) {

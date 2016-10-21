@@ -369,7 +369,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     "Users cannot trade with an incompatible trade protocol version.")
                     .show();
         } else if (isIgnored) {
-            new Popup().warning("You have added that users onion address to your ignore list.")
+            new Popup().warning("You have added that user's onion address to your ignore list.")
                     .show();
         } else if (isOfferBanned) {
             new Popup().warning("That offer was blocked by the Bitsquare developers.\n" +
@@ -395,10 +395,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             String key = "RemoveOfferWarning";
             if (model.preferences.showAgain(key))
                 new Popup().warning("Are you sure you want to remove that offer?\n" +
-                        "The offer fee of " + model.formatter.formatCoinWithCode(FeePolicy.getCreateOfferFee()) + " will be lost if you remove that offer.")
+                        "The offer fee of " + model.formatter.formatCoinWithCode(FeePolicy.getCreateOfferFee()) +
+                                " will be lost if you remove that offer.")
                         .actionButtonText("Remove offer")
                         .onAction(() -> doRemoveOffer(offer))
-                        .closeButtonText("Don't remove the offer")
+                        .closeButtonText("Don't remove offer")
                         .dontShowAgainId(key, model.preferences)
                         .show();
             else
@@ -472,7 +473,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Market") {
             {
-                setMinWidth(120); //130
+                setMinWidth(120);
                 // setMaxWidth(130);
             }
         };
@@ -503,7 +504,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
             {
-                setMinWidth(120); //130
+                setMinWidth(120);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -553,7 +554,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getVolumeColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>() {
             {
-                setMinWidth(125); //130
+                setMinWidth(125);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -602,7 +603,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Payment method") {
             {
-                setMinWidth(125); //120
+                setMinWidth(125);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
