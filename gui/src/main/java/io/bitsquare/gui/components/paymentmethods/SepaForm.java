@@ -101,7 +101,7 @@ public class SepaForm extends PaymentMethodForm {
         });
 
 
-        addLabel(gridPane, ++gridRow, "Country of your Bank:");
+        addLabel(gridPane, ++gridRow, "Country of bank:");
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         ComboBox<Country> countryComboBox = new ComboBox<>();
@@ -123,7 +123,7 @@ public class SepaForm extends PaymentMethodForm {
         gridPane.getChildren().add(hBox);
 
 
-        countryComboBox.setPromptText("Select country of your Bank");
+        countryComboBox.setPromptText("Select country of bank");
         countryComboBox.setConverter(new StringConverter<Country>() {
             @Override
             public String toString(Country country) {
@@ -309,7 +309,7 @@ public class SepaForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", sepaAccount.getHolderName());
         addLabelTextField(gridPane, ++gridRow, "IBAN:", sepaAccount.getIban()).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "BIC/SWIFT:", sepaAccount.getBic()).second.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Location of Bank:",
+        addLabelTextField(gridPane, ++gridRow, "Country of Bank:",
                 sepaAccount.getCountry() != null ? sepaAccount.getCountry().name : "");
         addLabelTextField(gridPane, ++gridRow, "Currency:", sepaAccount.getSingleTradeCurrency().getNameAndCode());
         String countries;
