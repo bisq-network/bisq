@@ -83,7 +83,7 @@ public class BankUtil {
             case "HK":
                 return "Bank code:";
             default:
-                return isBankIdRequired(countryCode) ? "Bank ID (e.g. BIC or SWIFT):" : "Bank ID (e.g. BIC or SWIFT) (optional):";
+                return isBankIdRequired(countryCode) ? "Bank ID (BIC/SWIFT):" : "Bank ID (BIC/SWIFT) (optional):";
         }
 
     }
@@ -110,7 +110,7 @@ public class BankUtil {
     public static String getBranchIdLabel(String countryCode) {
         switch (countryCode) {
             case "GB":
-                return "UK Sort code:";
+                return "UK sort code:";
             case "US":
                 return "Routing Number:";
             case "BR":
@@ -148,7 +148,7 @@ public class BankUtil {
             case "MX":
                 return "CLABE:";
             default:
-                return "Account no. (e.g. IBAN):";
+                return "Account no. (IBAN):";
         }
     }
 

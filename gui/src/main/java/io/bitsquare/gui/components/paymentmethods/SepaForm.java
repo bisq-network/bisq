@@ -61,8 +61,8 @@ public class SepaForm extends PaymentMethodForm {
         SepaAccountContractData sepaAccountContractData = (SepaAccountContractData) paymentAccountContractData;
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", sepaAccountContractData.getHolderName());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameAndCode(sepaAccountContractData.getCountryCode()));
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", sepaAccountContractData.getIban());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC/SWIFT:", sepaAccountContractData.getBic());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account no. (IBAN):", sepaAccountContractData.getIban());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Bank ID (BIC/SWIFT):", sepaAccountContractData.getBic());
         return gridRow;
     }
 
@@ -85,14 +85,14 @@ public class SepaForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        ibanInputTextField = addLabelInputTextField(gridPane, ++gridRow, "IBAN:").second;
+        ibanInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account no. (IBAN):").second;
         ibanInputTextField.setValidator(ibanValidator);
         ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setIban(newValue);
             updateFromInputs();
 
         });
-        bicInputTextField = addLabelInputTextField(gridPane, ++gridRow, "BIC/SWIFT:").second;
+        bicInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Bank ID (BIC/SWIFT):").second;
         bicInputTextField.setValidator(bicValidator);
         bicInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setBic(newValue);
