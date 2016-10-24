@@ -22,6 +22,7 @@ build
 *.~ava
 /bundles
 /Bitsquare*
+/xchange
 desktop.ini
 *.bat
 !package/windows/*bit*.bat
