@@ -121,14 +121,13 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
         String key = "accountPrivacyInfo";
         if (!DevFlags.DEV_MODE)
-            new Popup().backgroundInfo("In the account screen you can setup your trading accounts for national currencies " +
-                    "as well as for altcoins.\n\n" +
-                    "For Bitcoin you don't need to set up an account.\n" +
-                    "You can manage your Bitsquare wallet at the \"Funds\" section.\n\n" +
-                    "Please note, that any account data is only stored locally on your computer. Bitsquare does not operate servers " +
-                    "and has no access to users data!\n\n" +
-                    "When you are trading you will exchange in the trade process with your trading partner the " +
-                    "required account data for that trade (e.g. bank account data or altcoin address).")
+            new Popup()
+                    .headLine("Welcome to your Bitsquare Account")
+                    .backgroundInfo(
+                        "Here you can setup trading accounts for national currencies & altcoins, select arbitrators and backup your wallet & account data.\n\n" +
+                        "An empty Bitcoin wallet was created the first time you started Bitsquare.  For Bitcoin trading, you are not required to set up any additional accounts.  We recommend you write down your Bitcoin wallet seed words (see button on the left) and consider adding a password before funding.  Bitcoin deposits and withdrawals are managed in the \"Funds\" section.\n\n" +
+                        "Privacy & Security:\n" +
+                        "Bitsquare is a decentralized exchange – meaning all of your data is kept on your computer, there are no servers and we have no access to your personal info, your funds or even your IP address.  Data such as bank account numbers, altcoin & Bitcoin addresses, etc are only shared with your trading partner and the arbitrator as needed to fulfill trades you initiate.")
                     .dontShowAgainId(key, preferences)
                     .show();
     }
