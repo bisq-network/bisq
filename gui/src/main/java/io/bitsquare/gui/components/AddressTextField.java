@@ -56,7 +56,6 @@ public class AddressTextField extends AnchorPane {
         textField.textProperty().bind(address);
         String tooltipText = "Open your default bitcoin wallet";
         Tooltip.install(textField, new Tooltip(tooltipText));
-        textField.setOnMouseClicked(mouseEvent -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
         //TODO app wide focus
         //focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
