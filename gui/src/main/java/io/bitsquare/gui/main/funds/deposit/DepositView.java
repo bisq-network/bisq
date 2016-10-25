@@ -187,8 +187,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         generateNewAddressButton.setOnAction(event -> {
             boolean hasUnUsedAddress = observableList.stream().filter(e -> e.getNumTxOutputs() == 0).findAny().isPresent();
             if (hasUnUsedAddress) {
-                new Popup().warning("You have already at least one address which is not used yet in any transaction.\n" +
-                        "Please select in the address table an unused address.").show();
+                new Popup().warning("Please select an unused address from the table above rather than generating a new one.").show();
             } else {
                 AddressEntry newSavingsAddressEntry = walletService.getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
                 updateList();
@@ -196,7 +195,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
                         .filter(depositListItem -> depositListItem.getAddressString().equals(newSavingsAddressEntry.getAddressString()))
                         .findAny()
                         .ifPresent(depositListItem -> tableView.getSelectionModel().select(depositListItem));
-
             }
         });
 
