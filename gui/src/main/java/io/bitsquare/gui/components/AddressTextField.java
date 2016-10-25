@@ -43,6 +43,7 @@ public class AddressTextField extends AnchorPane {
     private final StringProperty address = new SimpleStringProperty();
     private final StringProperty paymentLabel = new SimpleStringProperty();
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>(Coin.ZERO);
+    private boolean wasPrimaryButtonDown;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +57,15 @@ public class AddressTextField extends AnchorPane {
         textField.textProperty().bind(address);
         String tooltipText = "Open your default bitcoin wallet";
         Tooltip.install(textField, new Tooltip(tooltipText));
-        textField.setOnMouseClicked(mouseEvent -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
+
+        textField.setOnMousePressed(event -> wasPrimaryButtonDown = event.isPrimaryButtonDown());
+        textField.setOnMouseReleased(event -> {
+            if (wasPrimaryButtonDown)
+                GUIUtil.showFeeInfoBeforeExecute(AddressTextField.this::openWallet);
+
+            wasPrimaryButtonDown = false;
+        });
+
         textField.focusTraversableProperty().set(focusTraversableProperty().get());
         //TODO app wide focus
         //focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
