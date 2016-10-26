@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import io.bitsquare.api.api.*;
 import io.bitsquare.api.api.Currency;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.crypto.KeyRing;
@@ -17,6 +18,7 @@ import io.bitsquare.payment.SpecificBanksAccount;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
+import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.User;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
@@ -45,6 +47,8 @@ public class BitsquareProxy {
     @Inject
     private TradeManager tradeManager;
     @Inject
+    private OpenOfferManager openOfferManager;
+    @Inject
     private OfferBookService offerBookService;
     @Inject
     private P2PService p2PService;
@@ -53,10 +57,12 @@ public class BitsquareProxy {
     @Inject
     private PriceFeedService priceFeedService;
 
-    public BitsquareProxy(WalletService walletService, TradeManager tradeManager, OfferBookService offerBookService,
-                          P2PService p2PService, KeyRing keyRing, PriceFeedService priceFeedService, User user) {
+    public BitsquareProxy(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
+                          OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing,
+                          PriceFeedService priceFeedService, User user) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
+        this.openOfferManager = openOfferManager;
         this.offerBookService = offerBookService;
         this.p2PService = p2PService;
         this.keyRing = keyRing;
@@ -161,8 +167,11 @@ public class BitsquareProxy {
                 acceptedBanks, // acceptedBanks,
                 priceFeedService); // priceFeedService);
 
-        offerBookService.addOffer(offer, () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
+//        offerBookService.addOffer(offer, () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
+        openOfferManager.placeOffer(offer, Coin.valueOf(amount.longValue()).subtract(FeePolicy.getCreateOfferFee()),
+                true, (transaction) -> log.info("Result is "+transaction));
         return true;
+
         // TODO use openoffermanager.placeoffer instead
     }
 

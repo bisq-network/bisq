@@ -21,8 +21,19 @@ public class WalletTransactions {
     }
 }
 
-// TODO see enum in addressentry,
+// Copied from AddressEntry
 enum TransactionType {
-    SEND, RECEIVE
+    ARBITRATOR,
+
+    AVAILABLE,
+
+    OFFER_FUNDING,
+    RESERVED_FOR_TRADE, //reserved
+    MULTI_SIG, //locked
+    TRADE_PAYOUT,
+
+    DAO_SHARE,
+    DAO_DIVIDEND
 }
+
 

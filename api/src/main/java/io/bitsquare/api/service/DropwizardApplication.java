@@ -8,6 +8,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OfferBookService;
+import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.user.User;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
@@ -20,6 +21,9 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
 
     @Inject
     TradeManager tradeManager;
+
+    @Inject
+    OpenOfferManager openOfferManager;
 
     @Inject
     OfferBookService offerBookService;
@@ -55,8 +59,8 @@ public class DropwizardApplication extends Application<ApiConfiguration> {
     public void run(ApiConfiguration configuration,
                     Environment environment) {
 //        environment.getObjectMapper().configure(SerializationFeature.WRAP_ROOT_VALUE, false);
-        BitsquareProxy bitsquareProxy = new BitsquareProxy(walletService, tradeManager, offerBookService,
-                p2PService, keyRing, priceFeedService, user);
+        BitsquareProxy bitsquareProxy = new BitsquareProxy(walletService, tradeManager, openOfferManager,
+                offerBookService, p2PService, keyRing, priceFeedService, user);
         final ApiResource resource = new ApiResource(
                 configuration.getTemplate(),
                 configuration.getDefaultName(),
