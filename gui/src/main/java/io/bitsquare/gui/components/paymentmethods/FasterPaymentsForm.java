@@ -45,7 +45,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     private InputTextField sortCodeInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextField(gridPane, ++gridRow, "UK Sort code:", ((FasterPaymentsAccountContractData) paymentAccountContractData).getSortCode());
+        addLabelTextField(gridPane, ++gridRow, "UK sort code:", ((FasterPaymentsAccountContractData) paymentAccountContractData).getSortCode());
         addLabelTextField(gridPane, ++gridRow, "Account number:", ((FasterPaymentsAccountContractData) paymentAccountContractData).getAccountNr());
         return gridRow;
     }
@@ -60,7 +60,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        sortCodeInputTextField = addLabelInputTextField(gridPane, ++gridRow, "UK Sort code:").second;
+        sortCodeInputTextField = addLabelInputTextField(gridPane, ++gridRow, "UK sort code:").second;
         sortCodeInputTextField.setValidator(inputValidator);
         sortCodeInputTextField.setValidator(new BranchIdValidator("GB"));
         sortCodeInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {

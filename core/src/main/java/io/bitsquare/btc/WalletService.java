@@ -247,8 +247,7 @@ public class WalletService {
         walletAppKit.setBloomFilterTweak(bloomFilterTweak);
 
         // Avoid the simple attack (see: https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj/) due to the 
-        // default implementation using both pubkey and hash of pubkey
-        walletAppKit.setInsertPubKey(false);
+        // default implementation using both pubkey and hash of pubkey. We have set a insertPubKey flag in BasicKeyChain to default false.
 
         // Default only 266 keys are generated (2 * 100+33). That would trigger new bloom filters when we are reaching 
         // the threshold. To avoid reaching the threshold we create much more keys which are unlikely to cause update of the
