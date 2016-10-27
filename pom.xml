@@ -101,7 +101,7 @@
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.13.1.5</version>
+            <version>0.13.1.6</version>
         </dependency>
 
         <!--guice-->
