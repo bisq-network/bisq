@@ -10,6 +10,11 @@ add-apt-repository ppa:webupd8team/java
 apt-get update
 apt-get -y install oracle-java8-installer git maven unzip
 
+# Alternatively you can download the latest jdk and extract it to /usr/lib/jvm/jdk1.8.0_112
+# Then set the new java version as default by those commands:
+# update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk1.8.0_112/bin/java 100
+# update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk1.8.0_112/bin/javac 100
+
 
 echo "Enable unlimited Strength for cryptographic keys"
 wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip
