@@ -269,7 +269,7 @@ abstract class BankForm extends PaymentMethodForm {
             if (selectedItem != null) {
                 if (selectedItem.code.equals("US")) {
                     new Popup<>().information("Bank transfer with WIRE or ACH is not supported for the US because WIRE is too expensive and ACH has a high chargeback risk.\n\n" +
-                            "Please use payment methods \"ClearXchange\", \"US Postal Money Order\" or \"Cash Deposit\" instead.")
+                            "Please use payment methods \"ClearXchange\", \"US Postal Money Order\" or \"Cash/ATM Deposit\" instead.")
                             .onClose(() -> closeHandler.run())
                             .show();
                 } else {

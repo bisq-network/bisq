@@ -92,7 +92,7 @@ public class SellerStep3View extends TradeStepView {
                                 "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
 
                     if (paymentAccountContractData instanceof CashDepositAccountContractData)
-                        message += "\n\nBecause the payment is done via Cash Deposit the BTC buyer has to write \"NO REFUND\" " +
+                        message += "\n\nBecause the payment is done via Cash/ATM Deposit the BTC buyer has to write \"NO REFUND\" " +
                                 "on the paper receipt, tear it in 2 parts and send you a photo by email.\n\n" +
                                 "To avoid chargeback risk, only confirm if you received the email and if you are " +
                                 "sure the paper receipt is valid.\n" +
