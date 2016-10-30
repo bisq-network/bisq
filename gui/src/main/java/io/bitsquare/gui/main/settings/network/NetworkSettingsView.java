@@ -29,6 +29,9 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Statistic;
 import io.bitsquare.user.Preferences;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -38,14 +41,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javax.inject.Inject;
 import org.bitcoinj.core.Peer;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import javax.inject.Inject;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @FxmlView
 public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
@@ -173,7 +172,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                     "also for Poloniex but you " +
                     "have to make sure to use a non-Tor proxy (I2P, VPN,...) as otherwise you would get the " +
                     "same problems with Cloudflare.\n\n" +
-                    "All other http traffic will be using Tor.")
+                                            "All other http traffic is routed via Tor.")
                     .onClose(() -> preferences.dontShowAgain(key2, true))
                     .show();
 
