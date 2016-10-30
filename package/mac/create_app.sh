@@ -10,10 +10,10 @@ version="0.4.9.7"
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
 cp gui/target/shaded.jar "gui/deploy/Bitsquare-$version.jar"
-cp gui/target/shaded.jar "/Users/mk/vm_shared_ubuntu/Bitsquare-$version.jar"
-cp gui/target/shaded.jar "/Users/mk/vm_shared_windows/Bitsquare-$version.jar"
-cp gui/target/shaded.jar "/Users/mk/vm_shared_ubuntu14_32bit/Bitsquare-$version.jar"
-cp gui/target/shaded.jar "/Users/mk/vm_shared_windows_32bit/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/dev/vm_shared_ubuntu/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/dev/vm_shared_windows/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/dev/vm_shared_ubuntu14_32bit/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/dev/vm_shared_windows_32bit/Bitsquare-$version.jar"
 
 cp seednode/target/SeedNode.jar "gui/deploy/SeedNode-$version.jar"
 
