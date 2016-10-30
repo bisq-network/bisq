@@ -29,6 +29,8 @@ import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.trade.statistics.TradeStatistics;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -47,6 +49,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import javax.inject.Inject;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.fxmisc.easybind.EasyBind;
@@ -55,10 +58,6 @@ import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
@@ -426,7 +425,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
         // date
-        TableColumn<TradeStatistics, TradeStatistics> dateColumn = new TableColumn<>("Date/Time");
+        TableColumn<TradeStatistics, TradeStatistics> dateColumn = new TableColumn<TradeStatistics, TradeStatistics>("Date/Time") {
+            {
+                setMinWidth(190);
+                setMaxWidth(190);
+            }
+        };
         dateColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         dateColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
