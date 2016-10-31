@@ -1,0 +1,8 @@
+language: java
+jdk: oraclejdk8
+sudo: required
+dist: trusty
+
+script:
+  - mvn clean package -DskipTests -Dmaven.javadoc.skip=true
+

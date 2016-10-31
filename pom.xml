@@ -38,6 +38,7 @@
     </properties>
 
     <modules>
+        <module>bitcoinj</module>
         <module>common</module>
         <module>core</module>
         <module>jsocks</module>

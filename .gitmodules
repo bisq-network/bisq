@@ -1,0 +1,3 @@
+[submodule "bitcoinj"]
+	path = bitcoinj
+	url = https://github.com/bitsquare/bitcoinj.git
