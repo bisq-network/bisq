@@ -20,10 +20,7 @@ package io.bitsquare.gui.main.funds.withdrawal;
 import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.AddressEntryException;
-import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.*;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
@@ -214,6 +211,15 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 try {
                     requiredFee = walletService.getRequiredFeeForMultipleAddresses(fromAddresses,
                             withdrawToTextField.getText(), amountOfSelectedItems);
+                } catch (InsufficientFundsException e) {
+                    try {
+                        int txSize = walletService.getTransactionSize(fromAddresses,
+                                withdrawToTextField.getText(), senderAmountAsCoinProperty.get().subtract(FeePolicy.getNonTradeFeePerKb()));
+                        new Popup<>().warning(e.getMessage() + "\n" +
+                                "Transaction size: " + (txSize / 1000d) + " Kb").show();
+                    } catch (InsufficientMoneyException e2) {
+                        new Popup<>().warning(e.getMessage()).show();
+                    }
                 } catch (Throwable t) {
                     try {
                         // TODO Using amountOfSelectedItems caused problems if it exceeds the max size (in case of arbitrator)

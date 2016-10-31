@@ -876,7 +876,7 @@ public class WalletService {
     public Coin getRequiredFeeForMultipleAddresses(Set<String> fromAddresses,
                                                    String toAddress,
                                                    Coin amount)
-            throws AddressFormatException, AddressEntryException {
+            throws AddressFormatException, AddressEntryException, InsufficientFundsException {
         Set<AddressEntry> addressEntries = fromAddresses.stream()
                 .map(address -> {
                     Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
@@ -926,7 +926,7 @@ public class WalletService {
     private Coin getFeeForMultipleAddresses(Set<String> fromAddresses,
                                             String toAddress,
                                             Coin amount,
-                                            Coin fee) throws AddressEntryException, AddressFormatException {
+                                            Coin fee) throws AddressEntryException, AddressFormatException, InsufficientFundsException {
         try {
             wallet.completeTx(getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, aesKey));
         } catch (InsufficientMoneyException e) {
@@ -934,10 +934,16 @@ public class WalletService {
                 log.trace("missing fee " + e.missing.toFriendlyString());
                 fee = fee.add(e.missing);
                 amount = amount.subtract(fee);
-                return getFeeForMultipleAddresses(fromAddresses,
-                        toAddress,
-                        amount,
-                        fee);
+                if (amount.isGreaterThan(Transaction.MIN_NONDUST_OUTPUT)) {
+                    return getFeeForMultipleAddresses(fromAddresses,
+                            toAddress,
+                            amount,
+                            fee);
+                } else {
+                    throw new InsufficientFundsException("The fees for that transaction exceed the available funds " +
+                            "or the resulting output value is below the min. dust value:\n" +
+                            "Missing " + e.missing.toFriendlyString());
+                }
             }
         }
         log.trace("result fee " + fee.toFriendlyString());
