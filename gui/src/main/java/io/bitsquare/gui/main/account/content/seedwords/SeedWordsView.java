@@ -137,9 +137,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                 restoreDatePicker.getStyleClass().add("validation_error");
         };
 
-        dateChangeListener = (observable, oldValue, newValue) -> {
-            dateValid.set(walletCreationDate.equals(newValue));
-        };
+        dateChangeListener = (observable, oldValue, newValue) -> dateValid.set(true);
     }
 
     @Override
