@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.disputes.arbitrator;
 
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.crypto.KeyRing;
@@ -39,10 +40,10 @@ public class ArbitratorDisputeView extends TraderDisputeView {
 
     @Inject
     public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
-                                 BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
+                                 BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow, PrivateNotificationManager privateNotificationManager,
                                  ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow, P2PService p2PService) {
         super(disputeManager, keyRing, tradeManager, stage, formatter,
-                disputeSummaryWindow, contractWindow, tradeDetailsWindow, p2PService);
+                disputeSummaryWindow, privateNotificationManager, contractWindow, tradeDetailsWindow, p2PService);
     }
 
     @Override

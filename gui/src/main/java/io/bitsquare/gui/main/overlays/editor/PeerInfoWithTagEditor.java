@@ -148,12 +148,11 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
         keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN).match(event)) {
-                new SendPrivateNotificationWindow(offer)
+                new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getOffererNodeAddress())
                         .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                         .show();
             }
         };
-
     }
 
     @Override

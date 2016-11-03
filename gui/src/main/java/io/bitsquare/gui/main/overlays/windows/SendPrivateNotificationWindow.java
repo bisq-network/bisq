@@ -18,12 +18,13 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.alert.PrivateNotification;
+import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
-import io.bitsquare.trade.offer.Offer;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -40,16 +41,19 @@ import static io.bitsquare.gui.util.FormBuilder.addLabelTextArea;
 
 public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificationWindow> {
     private static final Logger log = LoggerFactory.getLogger(SendPrivateNotificationWindow.class);
+
+    private final PubKeyRing pubKeyRing;
+    private final NodeAddress nodeAddress;
     private Button sendButton;
     private SendPrivateNotificationHandler sendPrivateNotificationHandler;
-    private Offer offer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface
     ///////////////////////////////////////////////////////////////////////////////////////////
+
     public interface SendPrivateNotificationHandler {
-        boolean handle(PrivateNotification privateNotification, Offer offer, String privKey, SendMailboxMessageListener sendMailboxMessageListener);
+        boolean handle(PrivateNotification privateNotification, PubKeyRing pubKeyRing, NodeAddress nodeAddress, String privKey, SendMailboxMessageListener sendMailboxMessageListener);
     }
 
 
@@ -57,8 +61,10 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SendPrivateNotificationWindow(Offer offer) {
-        this.offer = offer;
+
+    public SendPrivateNotificationWindow(PubKeyRing pubKeyRing, NodeAddress nodeAddress) {
+        this.pubKeyRing = pubKeyRing;
+        this.nodeAddress = nodeAddress;
         type = Type.Attention;
     }
 
@@ -109,7 +115,8 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (!sendPrivateNotificationHandler.handle(
                         new PrivateNotification(alertMessageTextArea.getText()),
-                        offer,
+                        pubKeyRing,
+                        nodeAddress,
                         keyInputTextField.getText(),
                         new SendMailboxMessageListener() {
                             @Override

@@ -21,12 +21,12 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
-import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -93,13 +93,13 @@ public class PrivateNotificationManager {
         return privateNotificationMessageProperty;
     }
 
-    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotification privateNotification, Offer offer,
+    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotification privateNotification, PubKeyRing pubKeyRing, NodeAddress nodeAddress,
                                                               String privKeyString, SendMailboxMessageListener sendMailboxMessageListener) {
         boolean isKeyValid = isKeyValid(privKeyString);
         if (isKeyValid) {
             signAndAddSignatureToPrivateNotificationMessage(privateNotification);
-            p2PService.sendEncryptedMailboxMessage(offer.getOffererNodeAddress(),
-                    offer.getPubKeyRing(),
+            p2PService.sendEncryptedMailboxMessage(nodeAddress,
+                    pubKeyRing,
                     new PrivateNotificationMessage(privateNotification, p2PService.getNetworkNode().getNodeAddress()),
                     sendMailboxMessageListener);
         }
