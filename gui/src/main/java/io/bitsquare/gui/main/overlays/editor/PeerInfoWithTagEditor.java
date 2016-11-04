@@ -139,7 +139,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     }
 
     protected void addContent() {
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, "Onion address:", hostName);
+        FormBuilder.addLabelTextField(gridPane, ++rowIndex, "Onion address:", hostName).second.setMouseTransparent(false);
         FormBuilder.addLabelTextField(gridPane, ++rowIndex, "Number of completed trades:", String.valueOf(numTrades));
         inputTextField = FormBuilder.addLabelInputTextField(gridPane, ++rowIndex, "Set tag for that peer:").second;
         Map<String, String> peerTagMap = Preferences.INSTANCE.getPeerTagMap();
