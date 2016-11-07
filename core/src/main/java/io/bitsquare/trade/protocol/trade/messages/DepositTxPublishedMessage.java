@@ -54,7 +54,7 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DepositTxPublishedMessage)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
         DepositTxPublishedMessage that = (DepositTxPublishedMessage) o;

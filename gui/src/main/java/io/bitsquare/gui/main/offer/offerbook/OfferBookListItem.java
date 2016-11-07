@@ -29,7 +29,7 @@ public class OfferBookListItem {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OfferBookListItem)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         OfferBookListItem that = (OfferBookListItem) o;
 

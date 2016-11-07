@@ -16,7 +16,7 @@ public final class RemoveDataMessage extends BroadcastMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RemoveDataMessage)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         RemoveDataMessage that = (RemoveDataMessage) o;
 

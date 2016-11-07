@@ -143,7 +143,7 @@ public abstract class PaymentAccount implements Persistable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PaymentAccount)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         PaymentAccount that = (PaymentAccount) o;
 

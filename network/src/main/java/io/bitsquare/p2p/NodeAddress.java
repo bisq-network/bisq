@@ -45,7 +45,7 @@ public final class NodeAddress implements Persistable, Payload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof NodeAddress)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         NodeAddress nodeAddress = (NodeAddress) o;
 

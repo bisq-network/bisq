@@ -58,7 +58,7 @@ public abstract class CountryBasedPaymentAccountContractData extends PaymentAcco
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CountryBasedPaymentAccountContractData)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
         CountryBasedPaymentAccountContractData that = (CountryBasedPaymentAccountContractData) o;

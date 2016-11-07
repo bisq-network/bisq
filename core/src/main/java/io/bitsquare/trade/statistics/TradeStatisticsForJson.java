@@ -114,7 +114,7 @@ public final class TradeStatisticsForJson {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TradeStatisticsForJson)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         TradeStatisticsForJson that = (TradeStatisticsForJson) o;
 

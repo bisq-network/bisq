@@ -115,7 +115,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TradeStatistics)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         TradeStatistics that = (TradeStatistics) o;
 

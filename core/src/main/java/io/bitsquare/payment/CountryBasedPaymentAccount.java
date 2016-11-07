@@ -63,7 +63,7 @@ public abstract class CountryBasedPaymentAccount extends PaymentAccount {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CountryBasedPaymentAccount)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
         CountryBasedPaymentAccount that = (CountryBasedPaymentAccount) o;

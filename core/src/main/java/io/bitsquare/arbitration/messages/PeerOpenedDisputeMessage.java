@@ -36,7 +36,7 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PeerOpenedDisputeMessage)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         PeerOpenedDisputeMessage that = (PeerOpenedDisputeMessage) o;
 

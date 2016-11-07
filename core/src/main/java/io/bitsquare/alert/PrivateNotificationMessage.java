@@ -40,7 +40,7 @@ public class PrivateNotificationMessage implements MailboxMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PrivateNotificationMessage)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         PrivateNotificationMessage that = (PrivateNotificationMessage) o;
 

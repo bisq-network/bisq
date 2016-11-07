@@ -174,7 +174,7 @@ public final class Contract implements Payload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Contract)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         Contract contract = (Contract) o;
 

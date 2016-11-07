@@ -77,7 +77,7 @@ public final class PubKeyRing implements Payload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PubKeyRing)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         PubKeyRing that = (PubKeyRing) o;
 

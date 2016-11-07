@@ -517,7 +517,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Offer)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
         Offer that = (Offer) o;
         if (date != that.date) return false;
         if (fiatPrice != that.fiatPrice) return false;

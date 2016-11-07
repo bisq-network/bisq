@@ -113,7 +113,7 @@ public final class Arbitrator implements StoragePayload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Arbitrator)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         Arbitrator that = (Arbitrator) o;
 
