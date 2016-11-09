@@ -191,7 +191,8 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("YBC", "YbCoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
-
+        result.add(new CryptoCurrency("ZCL", "Zclassic"));
+        
         result.sort(TradeCurrency::compareTo);
         return result;
     }
