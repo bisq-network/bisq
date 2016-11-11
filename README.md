@@ -16,7 +16,7 @@ You can read about all of this and more in the [whitepaper](https://bitsquare.io
 
 Status
 ------
-Bitsquare has releases the beta version on the 27th of April 2016 after 3 months testing on mainnet.
+Bitsquare has released the beta version on the 27th of April 2016 after 3 months testing on mainnet.
 For the latest version checkout our [releases page](https://github.com/bitsquare/bitsquare/releases) at Github.
 
 Building from source
