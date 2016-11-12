@@ -11,9 +11,13 @@ apt-get update
 apt-get -y install oracle-java8-installer git maven unzip
 
 # Alternatively you can download the latest jdk and extract it to /usr/lib/jvm/jdk1.8.0_112
-# Then set the new java version as default by those commands:
-# update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk1.8.0_112/bin/java 100
-# update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk1.8.0_112/bin/javac 100
+# wget http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.tar.gz --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
+# If you had an older java version installed set the new java version as default by those commands:
+# update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk1.8.0_112/bin/java 2000
+# update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk1.8.0_112/bin/javac 2000
+# Test with java -version and javac- version if the version is correct. Otherwise check here:
+# sudo update-alternatives --config java
+# sudo update-alternatives --config javac
 
 
 echo "Enable unlimited Strength for cryptographic keys"
