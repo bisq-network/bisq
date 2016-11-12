@@ -41,6 +41,11 @@ public final class FiatCurrency extends TradeCurrency {
     public Currency getCurrency() {
         return currency;
     }
+    
+    @Override
+    public String getGUISymbol() {
+    	return "★ ";
+    }
 
     @Override
     public String toString() {
