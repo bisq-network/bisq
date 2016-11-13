@@ -48,7 +48,7 @@ public class PriceFeedService {
         }
     }
 
-    private static final long PERIOD_SEC = 2;
+    private static final long PERIOD_SEC = 60;
 
     private final Map<String, MarketPrice> cache = new HashMap<>();
     private PriceProvider priceProvider;
