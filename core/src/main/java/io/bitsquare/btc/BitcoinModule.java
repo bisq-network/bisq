@@ -19,13 +19,12 @@ package io.bitsquare.btc;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
+import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.blockchain.providers.BlockTrailProvider;
 import io.bitsquare.btc.blockchain.providers.BlockrIOProvider;
 import io.bitsquare.btc.blockchain.providers.TradeBlockProvider;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
-import io.bitsquare.btc.pricefeed.providers.BitcoinAveragePriceProvider;
-import io.bitsquare.btc.pricefeed.providers.PoloniexPriceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -55,15 +54,14 @@ public class BitcoinModule extends AppModule {
 
         bindConstant().annotatedWith(named(BtcOptionKeys.BTC_SEED_NODES)).to(env.getRequiredProperty(BtcOptionKeys.BTC_SEED_NODES));
         bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(env.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
-
+        bindConstant().annotatedWith(named(CoreOptionKeys.PRICE_FEED_PROVIDERS)).to(env.getRequiredProperty(CoreOptionKeys.PRICE_FEED_PROVIDERS));
+        
         bind(AddressEntryList.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);
         bind(WalletService.class).in(Singleton.class);
         bind(BlockchainService.class).in(Singleton.class);
 
         bind(PriceFeedService.class).in(Singleton.class);
-        bind(BitcoinAveragePriceProvider.class).in(Singleton.class);
-        bind(PoloniexPriceProvider.class).in(Singleton.class);
 
         bind(BlockrIOProvider.class).in(Singleton.class);
         bind(BlockTrailProvider.class).in(Singleton.class);

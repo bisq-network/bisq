@@ -292,7 +292,7 @@ public class NetworkStressTest {
             //noinspection ConstantConditions
             peerPKRings.add(peer.getKeyRing().getPubKeyRing());
             peerNodes.add(peer);
-            peer.start(false, new PeerServiceListener(
+            peer.start(new PeerServiceListener(
                     localServicesLatch, localServicesFailed, prelimDataLatch, bootstrapLatch));
         }
         print("created peer nodes");
@@ -408,14 +408,6 @@ public class NetworkStressTest {
             localServicesFailed.set(true);
             localServicesLatch.countDown();
         }
-
-        @Override
-        public void onUseDefaultBridges() {
-        }
-
-        @Override
-        public void onRequestCustomBridges(Runnable resultHandler) {
-        }
     }
 
     private class SeedServiceListener extends TestSetupListener implements P2PServiceListener {
@@ -441,14 +433,6 @@ public class NetworkStressTest {
         @Override
         public void onBootstrapComplete() {
             // not used in single seed node
-        }
-
-        @Override
-        public void onUseDefaultBridges() {
-        }
-
-        @Override
-        public void onRequestCustomBridges(Runnable resultHandler) {
         }
     }
 
@@ -726,7 +710,7 @@ public class NetworkStressTest {
             final P2PService startedPeer = createPeerNode(firstOffline, peerPorts.get(firstOffline));
             addMailboxListeners(startedPeer, receivedMailboxLatch);
             peerNodes.set(firstOffline, startedPeer);
-            startedPeer.start(false, new MailboxStartListener(startLatch));
+            startedPeer.start(new MailboxStartListener(startLatch));
             assertLatch("timed out while starting peer " + firstOffline,
                     startLatch,
                     // this assumes some delay per received mailbox message
@@ -809,14 +793,6 @@ public class NetworkStressTest {
 
         @Override
         public void onSetupFailed(Throwable throwable) {
-        }
-
-        @Override
-        public void onUseDefaultBridges() {
-        }
-
-        @Override
-        public void onRequestCustomBridges(Runnable resultHandler) {
         }
     }
 }

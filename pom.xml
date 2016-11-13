@@ -49,6 +49,7 @@
         <module>seednode</module>
         <module>monitor</module>
         <module>statistics</module>
+        <module>pricefeed</module>
     </modules>
 
     <build>

@@ -29,10 +29,8 @@ See the Apache 2 License for the specific language governing permissions and lim
 
 package com.msopentech.thali.toronionproxy;
 
-import com.google.common.base.Preconditions;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.HiddenServiceReadyListener;
-import io.nucleo.net.bridge.BridgeProvider;
 import net.freehaven.tor.control.ConfigEntry;
 import net.freehaven.tor.control.TorControlConnection;
 import org.slf4j.Logger;
@@ -108,7 +106,7 @@ public abstract class OnionProxyManager {
      * @throws java.lang.InterruptedException - You know, if we are interrupted
      * @throws java.io.IOException            - IO Exceptions
      */
-    public synchronized boolean startWithRepeat(int secondsBeforeTimeOut, int numberOfRetries, boolean useBridges)
+    public synchronized boolean startWithRepeat(int secondsBeforeTimeOut, int numberOfRetries)
             throws InterruptedException, IOException {
 
         if (secondsBeforeTimeOut <= 0 || numberOfRetries < 0) {
@@ -117,7 +115,7 @@ public abstract class OnionProxyManager {
 
         try {
             for (int retryCount = 0; retryCount < numberOfRetries; ++retryCount) {
-                if (installAndStartTorOp(useBridges) == false) {
+                if (installAndStartTorOp() == false) {
                     return false;
                 }
                 enableNetwork(true);
@@ -384,7 +382,7 @@ public abstract class OnionProxyManager {
      * @throws java.io.IOException            - IO Exceptions
      * @throws java.lang.InterruptedException - If we are, well, interrupted
      */
-    public synchronized boolean installAndStartTorOp(boolean useBridges) throws IOException, InterruptedException {
+    public synchronized boolean installAndStartTorOp() throws IOException, InterruptedException {
         // The Tor OP will die if it looses the connection to its socket so if
         // there is no controlSocket defined
         // then Tor is dead. This assumes, of course, that takeOwnership works
@@ -399,7 +397,7 @@ public abstract class OnionProxyManager {
         // as the result would be a mess of screwed up files and connections.
         log.debug("Tor is not running");
 
-        installAndConfigureFiles(useBridges);
+        installAndConfigureFiles();
 
         log.debug("Starting Tor");
         File cookieFile = onionProxyContext.getCookieFile();
@@ -552,7 +550,7 @@ public abstract class OnionProxyManager {
         }.start();
     }
 
-    protected synchronized void installAndConfigureFiles(boolean useBridges) throws IOException, InterruptedException {
+    protected synchronized void installAndConfigureFiles() throws IOException, InterruptedException {
         onionProxyContext.installFiles();
 
         if (!setExecutable(onionProxyContext.getTorExecutableFile())) {
@@ -576,16 +574,6 @@ public abstract class OnionProxyManager {
             printWriter.println("DataDirectory " + onionProxyContext.getWorkingDirectory().getAbsolutePath());
             printWriter.println("GeoIPFile " + onionProxyContext.getGeoIpFile().getName());
             printWriter.println("GeoIPv6File " + onionProxyContext.getGeoIpv6File().getName());
-
-            if (useBridges) {
-                List<String> bridges = BridgeProvider.getBridges();
-                Preconditions.checkNotNull(bridges, "Bridges must not be null");
-                Preconditions.checkArgument(!bridges.isEmpty(), "Bridges must not be empty");
-
-                printWriter.println("UseBridges 1");
-                for (String bridgeLine : bridges)
-                    printWriter.println(bridgeLine);
-            }
         } finally {
             if (printWriter != null) {
                 printWriter.close();

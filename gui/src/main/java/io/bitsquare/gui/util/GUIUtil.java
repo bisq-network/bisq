@@ -275,8 +275,8 @@ public class GUIUtil {
     public static void openWebPage(String target) {
         String key = "warnOpenURLWhenTorEnabled";
         final Preferences preferences = Preferences.INSTANCE;
-        if (preferences.getUseTorForHttpRequests() && preferences.showAgain(key)) {
-            new Popup<>().information("You have Tor enabled for Http requests and are going to open a web page " +
+        if (preferences.showAgain(key)) {
+            new Popup<>().information("You are going to open a web page " +
                     "in your system web browser.\n" +
                     "Do you want to open the web page now?\n\n" +
                     "If you are not using the \"Tor Browser\" as your default system web browser you " +

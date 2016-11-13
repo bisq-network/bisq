@@ -93,8 +93,6 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, description("A proxy address to be used for Http requests (should be non-Tor). [host:port]", ""))
                 .withRequiredArg();
-        parser.accepts(NetworkOptionKeys.USE_TOR_FOR_HTTP, description("If set to true all http traffic (expect Poloniex) is routed over tor (socks 5 proxy)", ""))
-                .withRequiredArg();
 
         parser.accepts(CoreOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
@@ -111,6 +109,8 @@ public abstract class BitsquareExecutable {
         parser.accepts(CoreOptionKeys.DUMP_STATISTICS, description("If set to true the trade statistics are stored as json file in the data dir.", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
+        parser.accepts(CoreOptionKeys.PRICE_FEED_PROVIDERS, description("Custom price feed providers (comma separated)", false))
+                .withRequiredArg();
 
         parser.accepts(BtcOptionKeys.BTC_NETWORK, description("Bitcoin network", BitcoinNetwork.DEFAULT))
                 .withRequiredArg()

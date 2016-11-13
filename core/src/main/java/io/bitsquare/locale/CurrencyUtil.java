@@ -192,7 +192,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("YBC", "YbCoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
-        result.add(new CryptoCurrency("ZCL", "Zclassic"));
         
         result.sort(TradeCurrency::compareTo);
         return result;
@@ -202,7 +201,6 @@ public class CurrencyUtil {
         final List<CryptoCurrency> result = new ArrayList<>();
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
-        result.add(new CryptoCurrency("XZC", "Zcoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
@@ -214,8 +212,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
-        result.add(new CryptoCurrency("BITUSD", "BitUSD", true));
-        result.add(new CryptoCurrency("STEEMUSD", "Steem Dollars", true));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
         result.add(new CryptoCurrency("BTS", "BitShares"));

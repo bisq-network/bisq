@@ -84,7 +84,7 @@ public class Monitor {
         p2pService = injector.getInstance(P2PService.class);
         offerBookService = injector.getInstance(OfferBookService.class);
         openOfferManager = injector.getInstance(OpenOfferManager.class);
-        p2pService.start(false, new P2PServiceListener() {
+        p2pService.start(new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 openOfferManager.onAllServicesInitialized();
@@ -117,16 +117,6 @@ public class Monitor {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
-
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
 
             }
         });

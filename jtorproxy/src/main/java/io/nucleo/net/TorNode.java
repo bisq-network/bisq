@@ -25,10 +25,10 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     private final OnionProxyManager tor;
     private final Socks5Proxy proxy;
 
-    public TorNode(M mgr, boolean useBridges) throws IOException {
+    public TorNode(M mgr) throws IOException {
         OnionProxyContext ctx = mgr.getOnionProxyContext();
         log.debug("Running Tornode with " + mgr.getClass().getSimpleName() + " and  " + ctx.getClass().getSimpleName());
-        tor = initTor(mgr, ctx, useBridges);
+        tor = initTor(mgr, ctx);
         int proxyPort = tor.getIPv4LocalHostSocksPort();
         log.debug("TorSocks running on port " + proxyPort);
         this.proxy = setupSocksProxy(proxyPort);
@@ -107,13 +107,13 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
         tor.stop();
     }
 
-    static <M extends OnionProxyManager, C extends OnionProxyContext> OnionProxyManager initTor(final M mgr, C ctx, boolean useBridges)
+    static <M extends OnionProxyManager, C extends OnionProxyContext> OnionProxyManager initTor(final M mgr, C ctx)
             throws IOException {
 
         log.debug("Trying to start tor in directory {}", mgr.getWorkingDirectory());
 
         try {
-            if (!mgr.startWithRepeat(TOTAL_SEC_PER_STARTUP, TRIES_PER_STARTUP, useBridges)) {
+            if (!mgr.startWithRepeat(TOTAL_SEC_PER_STARTUP, TRIES_PER_STARTUP)) {
                 throw new IOException("Could not Start Tor.");
             } else {
                 Runtime.getRuntime().addShutdownHook(new Thread() {

@@ -85,7 +85,7 @@ public class Statistics {
         injector = Guice.createInjector(statisticsModule);
         Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
         p2pService = injector.getInstance(P2PService.class);
-        p2pService.start(false, new BootstrapListener() {
+        p2pService.start(new BootstrapListener() {
             @Override
             public void onBootstrapComplete() {
             }

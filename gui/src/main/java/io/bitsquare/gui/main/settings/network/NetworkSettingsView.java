@@ -29,10 +29,6 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Statistic;
 import io.bitsquare.user.Preferences;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -41,10 +37,14 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javax.inject.Inject;
 import org.bitcoinj.core.Peer;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import javax.inject.Inject;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @FxmlView
 public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
@@ -59,13 +59,11 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     TextField onionAddress, totalTraffic;
     @FXML
-    CheckBox useBridgesCheckBox;
+    TextArea bitcoinPeersTextArea;
     @FXML
-    TextArea bitcoinPeersTextArea, bridgesTextArea;
+    Label bitcoinPeersLabel, p2PPeersLabel;
     @FXML
-    Label bitcoinPeersLabel, p2PPeersLabel, bridgesLabel;
-    @FXML
-    CheckBox useTorForBtcJCheckBox, useTorForHttpCheckBox;
+    CheckBox useTorForBtcJCheckBox;
     @FXML
     TableView<P2pNetworkListItem> tableView;
     @FXML
@@ -76,7 +74,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private Subscription nodeAddressSubscription;
     private ObservableList<P2pNetworkListItem> networkListItems = FXCollections.observableArrayList();
     private final SortedList<P2pNetworkListItem> sortedList = new SortedList<>(networkListItems);
-    private ChangeListener<String> bridgesTextAreaListener;
 
     @Inject
     public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences, Clock clock,
@@ -111,18 +108,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 ((Integer) o1.statistic.getSentBytes()).compareTo(((Integer) o2.statistic.getSentBytes())));
         receivedBytesColumn.setComparator((o1, o2) ->
                 ((Integer) o1.statistic.getReceivedBytes()).compareTo(((Integer) o2.statistic.getReceivedBytes())));*/
-
-        GridPane.setMargin(bridgesLabel, new Insets(4, 0, 0, 0));
-        GridPane.setValignment(bridgesLabel, VPos.TOP);
-        boolean useBridges = preferences.getBridgeAddresses() != null && !preferences.getBridgeAddresses().isEmpty();
-        bridgesTextArea.setVisible(useBridges);
-        bridgesTextArea.setManaged(useBridges);
-        bridgesLabel.setVisible(useBridges);
-        bridgesLabel.setManaged(useBridges);
-        useBridgesCheckBox.setSelected(useBridges);
-        bridgesTextAreaListener = (observable, oldValue, newValue) -> preferences.setBridgeAddressesAsString(newValue);
-        if (preferences.getBridgeAddresses() != null)
-            bridgesTextArea.setText(preferences.getBridgeAddresses().stream().map(e -> e.replace("bridge ", "")).collect(Collectors.joining("\n")));
     }
 
     @Override
@@ -144,38 +129,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                         .show();
             }
         });
-        String key = "noTorForPoloniexWarning";
-        useTorForHttpCheckBox.setSelected(preferences.getUseTorForHttpRequests());
-        useTorForHttpCheckBox.setOnAction(event -> {
-            final boolean selected = useTorForHttpCheckBox.isSelected();
-
-            if (selected && preferences.showAgain(key))
-                new Popup().information("Http requests to Poloniex (used to get altcoin market price feed) cannot be routed via Tor because they use Cloudflare " +
-                        "and they require a Captcha.\n\n" +
-                        "If you provide program arguments for connection to a local socks 5 proxy Tor will be used " +
-                        "also for Poloniex but you " +
-                        "have to make sure to use a non-Tor proxy (I2P, VPN,...) as otherwise you would get the " +
-                        "same problems with Cloudflare.\n\n" +
-                        "All other http traffic will be using Tor.")
-                        .dontShowAgainId(key, preferences)
-                        .show();
-
-            preferences.setUseTorForHttpRequests(selected);
-        });
-        // only display once at startup
-        String key2 = "initalNoTorForPoloniexWarning";
-        if (preferences.getUseTorForHttpRequests() && preferences.showAgain(key2) && preferences.showAgain(key2))
-            new Popup().information("Tor is by default used for Http requests.\n\n" +
-                    "Though http requests to Poloniex (used to get altcoin market price feed) cannot be routed via Tor because they use Cloudflare " +
-                    "and they require a Captcha.\n\n" +
-                    "If you provide program arguments for connection to a local socks 5 proxy Tor will be used " +
-                    "also for Poloniex but you " +
-                    "have to make sure to use a non-Tor proxy (I2P, VPN,...) as otherwise you would get the " +
-                    "same problems with Cloudflare.\n\n" +
-                                            "All other http traffic is routed via Tor.")
-                    .onClose(() -> preferences.dontShowAgain(key2, true))
-                    .show();
-
 
         bitcoinPeersSubscription = EasyBind.subscribe(walletService.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
 
@@ -187,24 +140,11 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
-
-        bridgesTextArea.textProperty().addListener(bridgesTextAreaListener);
-        useBridgesCheckBox.setOnAction(e -> {
-            boolean useBridges = useBridgesCheckBox.isSelected();
-            bridgesTextArea.setVisible(useBridges);
-            bridgesTextArea.setManaged(useBridges);
-            bridgesLabel.setVisible(useBridges);
-            bridgesLabel.setManaged(useBridges);
-
-            if (!useBridges)
-                bridgesTextArea.setText("");
-        });
     }
 
     @Override
     public void deactivate() {
         useTorForBtcJCheckBox.setOnAction(null);
-        useTorForHttpCheckBox.setOnAction(null);
 
         if (nodeAddressSubscription != null)
             nodeAddressSubscription.unsubscribe();
@@ -219,8 +159,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         sortedList.comparatorProperty().unbind();
         tableView.getItems().forEach(P2pNetworkListItem::cleanup);
-        bridgesTextArea.textProperty().removeListener(bridgesTextAreaListener);
-        useBridgesCheckBox.setOnAction(null);
     }
 
     private void updateP2PTable() {

@@ -4,30 +4,32 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
+import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.app.Log;
-import io.bitsquare.btc.pricefeed.providers.BitcoinAveragePriceProvider;
-import io.bitsquare.btc.pricefeed.providers.PoloniexPriceProvider;
-import io.bitsquare.btc.pricefeed.providers.PriceProvider;
-import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
-import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.http.HttpClient;
+import io.bitsquare.network.NetworkOptionKeys;
 import javafx.beans.property.*;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.inject.Named;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Consumer;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 // TODO use https://github.com/timmolter/XChange
 public class PriceFeedService {
     private static final Logger log = LoggerFactory.getLogger(PriceFeedService.class);
-
-    private static final long MIN_PERIOD_BETWEEN_CALLS = 5000;
+    private HttpClient httpClient;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,13 +48,10 @@ public class PriceFeedService {
         }
     }
 
-    private static final long PERIOD_FIAT_SEC = new Random().nextInt(5) + 70;
-    private static final long PERIOD_ALL_FIAT_SEC = new Random().nextInt(5) + 180;
-    private static final long PERIOD_ALL_CRYPTO_SEC = new Random().nextInt(5) + 180;
+    private static final long PERIOD_SEC = 2;
 
     private final Map<String, MarketPrice> cache = new HashMap<>();
-    private final PriceProvider fiatPriceProvider;
-    private final PriceProvider cryptoCurrenciesPriceProvider;
+    private PriceProvider priceProvider;
     private Consumer<Double> priceConsumer;
     private FaultHandler faultHandler;
     private Type type;
@@ -60,10 +59,10 @@ public class PriceFeedService {
     private final StringProperty currencyCodeProperty = new SimpleStringProperty();
     private final ObjectProperty<Type> typeProperty = new SimpleObjectProperty<>();
     private final IntegerProperty currenciesUpdateFlag = new SimpleIntegerProperty(0);
-    private long bitcoinAveragePriceProviderLastCallAllTs;
-    private long poloniexPriceProviderLastCallAllTs;
-    private long bitcoinAveragePriceProviderLastCallTs;
-    private Timer requestFiatPriceTimer;
+    private long epochInSecondAtLastRequest;
+    private Map<String, Long> timeStampMap = new HashMap<>();
+    private String baseUrl;
+    private final String[] priceFeedProviderArray;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,9 +70,26 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PriceFeedService(BitcoinAveragePriceProvider fiatPriceProvider, PoloniexPriceProvider cryptoCurrenciesPriceProvider) {
-        this.fiatPriceProvider = fiatPriceProvider;
-        this.cryptoCurrenciesPriceProvider = cryptoCurrenciesPriceProvider;
+    public PriceFeedService(HttpClient httpClient,
+                            @Named(CoreOptionKeys.PRICE_FEED_PROVIDERS) String priceFeedProviders,
+                            @Named(NetworkOptionKeys.USE_LOCALHOST) boolean useLocalhost) {
+        this.httpClient = httpClient;
+        if (priceFeedProviders.isEmpty()) {
+            if (useLocalhost) {
+                // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
+                priceFeedProviders = "http://95.85.11.205:8080/";
+
+                // Use localhost for using a locally running priceprovider
+                // priceFeedProviders = "http://localhost:8080/"; 
+            } else {
+                priceFeedProviders = "http://t4wlzy7l6k4hnolg.onion/, http://g27szt7aw2vrtowe.onion/";
+            }
+        }
+        priceFeedProviderArray = priceFeedProviders.replace(" ", "").split(",");
+        int index = new Random().nextInt(priceFeedProviderArray.length);
+        baseUrl = priceFeedProviderArray[index];
+        log.info("baseUrl for PriceFeedService: " + baseUrl);
+        this.priceProvider = new PriceProvider(httpClient, baseUrl);
     }
 
 
@@ -85,11 +101,37 @@ public class PriceFeedService {
         this.priceConsumer = resultHandler;
         this.faultHandler = faultHandler;
 
-        requestAllPrices(fiatPriceProvider, () -> applyPriceToConsumer());
-        UserThread.runPeriodically(() -> requestAllPrices(fiatPriceProvider, this::applyPriceToConsumer), PERIOD_ALL_FIAT_SEC);
+        request();
+    }
 
-        requestAllPrices(cryptoCurrenciesPriceProvider, () -> applyPriceToConsumer());
-        UserThread.runPeriodically(() -> requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPriceToConsumer), PERIOD_ALL_CRYPTO_SEC);
+    private void request() {
+        requestAllPrices(priceProvider, () -> {
+            applyPriceToConsumer();
+            // after first response we know the providers timestamp and want to request quickly after next expected update
+            long delay = Math.max(40, Math.min(90, PERIOD_SEC - (Instant.now().getEpochSecond() - epochInSecondAtLastRequest) + 2 + new Random().nextInt(5)));
+            UserThread.runAfter(this::request, delay);
+        }, (errorMessage, throwable) -> {
+
+            // Try other provider if more then 1 is available
+            if (priceFeedProviderArray.length > 1) {
+                String newBaseUrl;
+                do {
+                    int index = new Random().nextInt(priceFeedProviderArray.length);
+                    log.error(index + "");
+                    newBaseUrl = priceFeedProviderArray[index];
+                    log.error(newBaseUrl);
+                }
+                while (baseUrl.equals(newBaseUrl));
+                baseUrl = newBaseUrl;
+
+                log.info("Try new baseUrl after error: " + baseUrl);
+                this.priceProvider = new PriceProvider(httpClient, baseUrl);
+                request();
+            } else {
+                UserThread.runAfter(this::request, 120);
+            }
+            this.faultHandler.handleFault(errorMessage, throwable);
+        });
     }
 
     @Nullable
@@ -115,15 +157,6 @@ public class PriceFeedService {
             this.currencyCode = currencyCode;
             currencyCodeProperty.set(currencyCode);
             applyPriceToConsumer();
-
-            if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                stopRequestFiatPriceTimer();
-                // Poloniex does not support calls for one currency just for all which is quite a bit of data
-                requestAllPrices(cryptoCurrenciesPriceProvider, this::applyPriceToConsumer);
-            } else {
-                startRequestFiatPriceTimer();
-                requestPrice(fiatPriceProvider);
-            }
         }
     }
 
@@ -152,21 +185,32 @@ public class PriceFeedService {
         return currenciesUpdateFlag;
     }
 
+    public Date getLastRequestTimeStampBtcAverage() {
+        return new Date(epochInSecondAtLastRequest * 1000);
+    }
+
+    public Date getLastRequestTimeStampPoloniex() {
+        Long ts = timeStampMap.get("btcAverageTs");
+        if (ts != null) {
+            Date date = new Date(ts * 1000);
+            return date;
+        } else
+            return new Date();
+    }
+
+    public Date getLastRequestTimeStampCoinmarketcap() {
+        Long ts = timeStampMap.get("coinmarketcapTs");
+        if (ts != null) {
+            Date date = new Date(ts * 1000);
+            return date;
+        } else
+            return new Date();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    private void startRequestFiatPriceTimer() {
-        stopRequestFiatPriceTimer();
-        requestFiatPriceTimer = UserThread.runPeriodically(() -> requestPrice(fiatPriceProvider), PERIOD_FIAT_SEC);
-    }
-
-    private void stopRequestFiatPriceTimer() {
-        if (requestFiatPriceTimer != null)
-            requestFiatPriceTimer.stop();
-    }
 
     private void applyPriceToConsumer() {
         if (priceConsumer != null && currencyCode != null && type != null) {
@@ -187,74 +231,26 @@ public class PriceFeedService {
         currenciesUpdateFlag.setValue(currenciesUpdateFlag.get() + 1);
     }
 
-    private void requestPrice(PriceProvider provider) {
+    private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {
         Log.traceCall();
-        long now = System.currentTimeMillis();
-        boolean allowed = false;
-        if (now - bitcoinAveragePriceProviderLastCallTs > MIN_PERIOD_BETWEEN_CALLS) {
-            bitcoinAveragePriceProviderLastCallTs = now;
-            allowed = true;
-        }
-
-        if (allowed) {
-            GetPriceRequest getPriceRequest = new GetPriceRequest();
-            if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-                SettableFuture<MarketPrice> future = getPriceRequest.requestPrice(currencyCode, provider);
-                Futures.addCallback(future, new FutureCallback<MarketPrice>() {
-                    public void onSuccess(MarketPrice marketPrice) {
-                        UserThread.execute(() -> {
-                            if (marketPrice != null && priceConsumer != null) {
-                                cache.put(marketPrice.currencyCode, marketPrice);
-                                priceConsumer.accept(marketPrice.getPrice(type));
-                            }
-                        });
-                    }
-
-                    public void onFailure(@NotNull Throwable throwable) {
-                        log.debug("Could not load marketPrice\n" + throwable.getMessage());
-                    }
+        PriceRequest priceRequest = new PriceRequest();
+        SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = priceRequest.requestAllPrices(provider);
+        Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, Map<String, MarketPrice>>>() {
+            @Override
+            public void onSuccess(@Nullable Tuple2<Map<String, Long>, Map<String, MarketPrice>> result) {
+                UserThread.execute(() -> {
+                    checkNotNull(result, "Result must not be null at requestAllPrices");
+                    timeStampMap = result.first;
+                    epochInSecondAtLastRequest = timeStampMap.get("btcAverageTs");
+                    cache.putAll(result.second);
+                    resultHandler.run();
                 });
-            } else {
-                log.warn("We tried to call requestPrice with a non fiat currency selected: selectedCurrencyCode=" + currencyCode);
             }
-        } else {
-            log.debug("Ignore request. Too many attempt to call the API provider " + provider);
-        }
-    }
 
-    private void requestAllPrices(PriceProvider provider, @Nullable Runnable resultHandler) {
-        Log.traceCall();
-        long now = System.currentTimeMillis();
-        boolean allowed = false;
-        if (provider instanceof BitcoinAveragePriceProvider) {
-            if (now - bitcoinAveragePriceProviderLastCallAllTs > MIN_PERIOD_BETWEEN_CALLS) {
-                bitcoinAveragePriceProviderLastCallAllTs = now;
-                allowed = true;
+            @Override
+            public void onFailure(Throwable throwable) {
+                UserThread.execute(() -> faultHandler.handleFault("Could not load marketPrices", throwable));
             }
-        } else if (provider instanceof PoloniexPriceProvider) {
-            if (now - poloniexPriceProviderLastCallAllTs > MIN_PERIOD_BETWEEN_CALLS) {
-                poloniexPriceProviderLastCallAllTs = now;
-                allowed = true;
-            }
-        }
-        if (allowed) {
-            GetPriceRequest getPriceRequest = new GetPriceRequest();
-            SettableFuture<Map<String, MarketPrice>> future = getPriceRequest.requestAllPrices(provider);
-            Futures.addCallback(future, new FutureCallback<Map<String, MarketPrice>>() {
-                public void onSuccess(Map<String, MarketPrice> marketPriceMap) {
-                    UserThread.execute(() -> {
-                        cache.putAll(marketPriceMap);
-                        if (resultHandler != null)
-                            resultHandler.run();
-                    });
-                }
-
-                public void onFailure(@NotNull Throwable throwable) {
-                    UserThread.execute(() -> faultHandler.handleFault("Could not load marketPrices", throwable));
-                }
-            });
-        } else {
-            log.debug("Ignore request. Too many attempt to call the API provider " + provider);
-        }
+        });
     }
 }

@@ -78,7 +78,9 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
         addLabelHyperlinkWithIcon(root, ++gridRow, "Market price API provider for fiat: ", "BitcoinAverage", "https://bitcoinaverage.com");
-        addLabelHyperlinkWithIcon(root, ++gridRow, "Market price API provider for altcoins: ", "Poloniex", "http://poloniex.com");
+        label = addLabel(root, ++gridRow, "Market price API providers for altcoins: Poloniex (http://poloniex.com) / Coinmarketcap (https://coinmarketcap.com) as fallback");
+        GridPane.setColumnSpan(label, 2);
+        GridPane.setHalignment(label, HPos.LEFT);
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, "Version details", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);

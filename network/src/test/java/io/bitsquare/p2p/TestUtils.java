@@ -111,14 +111,6 @@ public class TestUtils {
                     @Override
                     public void onSetupFailed(Throwable throwable) {
                     }
-
-                    @Override
-                    public void onUseDefaultBridges() {
-                    }
-
-                    @Override
-                    public void onRequestCustomBridges(Runnable resultHandler) {
-                    }
                 });
         latch.await();
         Thread.sleep(sleepTime);
@@ -139,7 +131,7 @@ public class TestUtils {
 
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost,
                 2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), null, null, null, new Clock(), null, encryptionService, keyRing);
-        p2PService.start(false, new P2PServiceListener() {
+        p2PService.start(new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
             }
@@ -167,14 +159,6 @@ public class TestUtils {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();

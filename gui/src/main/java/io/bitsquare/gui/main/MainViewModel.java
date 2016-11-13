@@ -47,7 +47,6 @@ import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.main.overlays.notifications.NotificationCenter;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.gui.main.overlays.windows.AddBridgeEntriesWindow;
 import io.bitsquare.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bitsquare.gui.main.overlays.windows.TacWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
@@ -344,8 +343,7 @@ public class MainViewModel implements ViewModel {
         });
 
         final BooleanProperty p2pNetworkInitialized = new SimpleBooleanProperty();
-        boolean useBridges = preferences.getBridgeAddresses() != null && !preferences.getBridgeAddresses().isEmpty();
-        p2PService.start(useBridges, new P2PServiceListener() {
+        p2PService.start(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
                 bootstrapState.set("Tor node created");
@@ -409,17 +407,6 @@ public class MainViewModel implements ViewModel {
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapWarning.set("Bootstrapping to P2P network failed");
                 p2pNetworkLabelId.set("splash-error-state-msg");
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
-                new AddBridgeEntriesWindow()
-                        .onAction(resultHandler::run)
-                        .show();
             }
         });
 

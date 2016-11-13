@@ -48,7 +48,7 @@ public class LocalhostNetworkNode extends NetworkNode {
     }
 
     @Override
-    public void start(boolean useBridges, @Nullable SetupListener setupListener) {
+    public void start(@Nullable SetupListener setupListener) {
         if (setupListener != null)
             addSetupListener(setupListener);
 

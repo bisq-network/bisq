@@ -5,7 +5,6 @@ import com.google.gson.JsonParser;
 import io.bitsquare.app.Log;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
-import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +16,8 @@ public class BlockrIOProvider extends FeeProvider {
     private static final Logger log = LoggerFactory.getLogger(BlockrIOProvider.class);
 
     @Inject
-    public BlockrIOProvider(HttpClient httpClient, Preferences preferences) {
-        super(httpClient, preferences, "https://btc.blockr.io/api/v1/tx/info/");
+    public BlockrIOProvider(HttpClient httpClient) {
+        super(httpClient, "https://btc.blockr.io/api/v1/tx/info/");
     }
 
     @Override
@@ -26,7 +25,7 @@ public class BlockrIOProvider extends FeeProvider {
         Log.traceCall("transactionId=" + transactionId);
         try {
             JsonObject data = new JsonParser()
-                    .parse(httpClient.requestWithGET(transactionId))
+                    .parse(httpClient.requestWithGET(transactionId, "User-Agent", ""))
                     .getAsJsonObject()
                     .get("data")
                     .getAsJsonObject();
