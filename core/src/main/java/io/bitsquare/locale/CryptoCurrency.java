@@ -40,4 +40,9 @@ public final class CryptoCurrency extends TradeCurrency {
     public boolean isAsset() {
         return isAsset;
     }
+    
+    @Override
+    public String getGUISymbol() {
+    	return "✦ ";
+    }
 }

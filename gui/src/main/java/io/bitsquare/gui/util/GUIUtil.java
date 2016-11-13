@@ -193,12 +193,7 @@ public class GUIUtil {
                     String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
                     if (preferences.getSortMarketCurrenciesNumerically())
                         displayString += " - " + item.numTrades + " " + postFix;
-                    if (tradeCurrency instanceof FiatCurrency)
-                        return "★ " + displayString;
-                    else if (tradeCurrency instanceof CryptoCurrency) {
-                        return "✦ " + displayString;
-                    } else
-                        return "-";
+                    return tradeCurrency.getGUISymbol() + displayString;
                 }
             }
 
@@ -220,12 +215,7 @@ public class GUIUtil {
                     return "▶ Show all";
                 else if (code.equals(GUIUtil.EDIT_FLAG))
                     return "▼ Edit currency list";
-                else if (tradeCurrency instanceof FiatCurrency)
-                    return "★ " + displayString;
-                else if (tradeCurrency instanceof CryptoCurrency) {
-                    return "✦ " + displayString;
-                } else
-                    return "-";
+                return tradeCurrency.getGUISymbol() + displayString;
             }
 
             @Override

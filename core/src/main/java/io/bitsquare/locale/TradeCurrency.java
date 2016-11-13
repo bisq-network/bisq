@@ -57,6 +57,10 @@ public abstract class TradeCurrency implements Persistable, Comparable<TradeCurr
     public String getSymbol() {
         return symbol;
     }
+    
+    public String getGUISymbol() {
+    	return "-";
+    }
 
     public String getNameAndCode() {
         return name + " (" + code + ")";
