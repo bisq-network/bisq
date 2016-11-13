@@ -26,6 +26,9 @@ public final class FiatCurrency extends TradeCurrency {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
+    // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+    private final static String PREFIX = "★ ";
+
     private final Currency currency;
 
     public FiatCurrency(String currencyCode) {
@@ -40,6 +43,11 @@ public final class FiatCurrency extends TradeCurrency {
 
     public Currency getCurrency() {
         return currency;
+    }
+
+    @Override
+    public String getDisplayPrefix() {
+        return PREFIX;
     }
 
     @Override

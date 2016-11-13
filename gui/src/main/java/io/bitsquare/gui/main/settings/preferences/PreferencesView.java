@@ -145,12 +145,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             @Override
             public String toString(TradeCurrency tradeCurrency) {
                 // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-                if (tradeCurrency instanceof FiatCurrency)
-                    return "★ " + tradeCurrency.getNameAndCode();
-                else if (tradeCurrency instanceof CryptoCurrency)
-                    return "✦ " + tradeCurrency.getNameAndCode();
-                else
-                    return "-";
+                return tradeCurrency.getDisplayPrefix() + tradeCurrency.getNameAndCode();
             }
 
             @Override
