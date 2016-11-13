@@ -18,6 +18,7 @@
 package io.bitsquare.arbitration.messages;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.payload.Attachment;
 import io.bitsquare.p2p.NodeAddress;
 import javafx.beans.property.BooleanProperty;
@@ -73,6 +74,11 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     @Override
     public NodeAddress getSenderNodeAddress() {
         return myNodeAddress;
+    }
+    
+    @Override
+    public void dispatch(DisputeManager disputeManager) {
+    	disputeManager.onDisputeDirectMessage(this);
     }
 
     public void addAttachment(Attachment attachment) {

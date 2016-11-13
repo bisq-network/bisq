@@ -19,6 +19,7 @@ package io.bitsquare.arbitration.messages;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Dispute;
+import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.p2p.NodeAddress;
 
 public final class OpenNewDisputeMessage extends DisputeMessage {
@@ -31,6 +32,11 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
     public OpenNewDisputeMessage(Dispute dispute, NodeAddress myNodeAddress) {
         this.dispute = dispute;
         this.myNodeAddress = myNodeAddress;
+    }
+    
+    @Override
+    public void dispatch(DisputeManager disputeManager) {
+    	disputeManager.onOpenNewDisputeMessage(this);
     }
 
     @Override
@@ -56,4 +62,5 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
     public NodeAddress getSenderNodeAddress() {
         return myNodeAddress;
     }
+    
 }

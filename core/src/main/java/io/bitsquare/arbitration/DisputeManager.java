@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DisputeManager {
-    private static final Logger log = LoggerFactory.getLogger(DisputeManager.class);
+    public static final Logger log = LoggerFactory.getLogger(DisputeManager.class);
 
     private final TradeWalletService tradeWalletService;
     private final WalletService walletService;
@@ -184,7 +184,7 @@ public class DisputeManager {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             Message message = decryptedMessageWithPubKey.message;
             if (message instanceof DisputeMessage)
-                dispatchMessage((DisputeMessage) message);
+                ((DisputeMessage)message).dispatch(this);
         });
         decryptedDirectMessageWithPubKeys.clear();
 
@@ -192,26 +192,11 @@ public class DisputeManager {
             Message message = decryptedMessageWithPubKey.message;
             log.debug("decryptedMessageWithPubKey.message " + message);
             if (message instanceof DisputeMessage) {
-                dispatchMessage((DisputeMessage) message);
+            	((DisputeMessage)message).dispatch(this);
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             }
         });
         decryptedMailboxMessageWithPubKeys.clear();
-    }
-
-    private void dispatchMessage(DisputeMessage message) {
-        if (message instanceof OpenNewDisputeMessage)
-            onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
-        else if (message instanceof PeerOpenedDisputeMessage)
-            onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-        else if (message instanceof DisputeCommunicationMessage)
-            onDisputeDirectMessage((DisputeCommunicationMessage) message);
-        else if (message instanceof DisputeResultMessage)
-            onDisputeResultMessage((DisputeResultMessage) message);
-        else if (message instanceof PeerPublishedPayoutTxMessage)
-            onDisputedPayoutTxMessage((PeerPublishedPayoutTxMessage) message);
-        else
-            log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
     }
 
     public void sendOpenNewDisputeMessage(Dispute dispute, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
@@ -459,7 +444,7 @@ public class DisputeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // arbitrator receives that from trader who opens dispute
-    private void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
+    public void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
         Dispute dispute = openNewDisputeMessage.dispute;
         if (isArbitrator(dispute)) {
             if (!disputes.contains(dispute)) {
@@ -482,7 +467,7 @@ public class DisputeManager {
     }
 
     // not dispute requester receives that from arbitrator
-    private void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+    public void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         Dispute dispute = peerOpenedDisputeMessage.dispute;
         if (!isArbitrator(dispute)) {
             if (!disputes.contains(dispute)) {
@@ -508,7 +493,7 @@ public class DisputeManager {
     }
 
     // a trader can receive a msg from the arbitrator or the arbitrator form a trader. Trader to trader is not allowed.
-    private void onDisputeDirectMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
+    public void onDisputeDirectMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
         Log.traceCall("disputeCommunicationMessage " + disputeCommunicationMessage);
         final String tradeId = disputeCommunicationMessage.getTradeId();
         Optional<Dispute> disputeOptional = findDispute(tradeId, disputeCommunicationMessage.getTraderId());
@@ -533,7 +518,7 @@ public class DisputeManager {
     }
 
     // We get that message at both peers. The dispute object is in context of the trader
-    private void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
+    public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
         DisputeResult disputeResult = disputeResultMessage.disputeResult;
         if (!isArbitrator(disputeResult)) {
             final String tradeId = disputeResult.tradeId;
@@ -679,7 +664,7 @@ public class DisputeManager {
     }
 
     // losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
-    private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
+    public void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
         final String uid = peerPublishedPayoutTxMessage.getUID();
         final String tradeId = peerPublishedPayoutTxMessage.tradeId;
         Optional<Dispute> disputeOptional = findOwnDispute(tradeId);

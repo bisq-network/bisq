@@ -18,6 +18,7 @@
 package io.bitsquare.arbitration.messages;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.DisputeResult;
 import io.bitsquare.p2p.NodeAddress;
 
@@ -33,6 +34,11 @@ public final class DisputeResultMessage extends DisputeMessage {
         this.myNodeAddress = myNodeAddress;
     }
 
+    @Override
+    public void dispatch(DisputeManager disputeManager) {
+    	disputeManager.onDisputeResultMessage(this);
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
