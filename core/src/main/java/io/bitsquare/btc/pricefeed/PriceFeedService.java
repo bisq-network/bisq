@@ -26,7 +26,6 @@ import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// TODO use https://github.com/timmolter/XChange
 public class PriceFeedService {
     private static final Logger log = LoggerFactory.getLogger(PriceFeedService.class);
     private HttpClient httpClient;
