@@ -89,7 +89,7 @@ public class WalletService {
     private final AddressEntryList addressEntryList;
     private final Preferences preferences;
     private final Socks5ProxyProvider socks5ProxyProvider;
-    private final String seedNodes;
+    private final String btcNodes;
     private final NetworkParameters params;
     private final File walletDir;
     private final UserAgent userAgent;
@@ -117,14 +117,14 @@ public class WalletService {
                          Preferences preferences,
                          Socks5ProxyProvider socks5ProxyProvider,
                          @Named(BtcOptionKeys.WALLET_DIR) File appDir,
-                         @Named(BtcOptionKeys.BTC_SEED_NODES) String seedNodes,
+                         @Named(BtcOptionKeys.BTC_NODES) String btcNodes,
                          @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
-        this.seedNodes = seedNodes;
+        this.btcNodes = btcNodes;
         this.params = preferences.getBitcoinNetwork().getParameters();
         this.walletDir = new File(appDir, "bitcoin");
         this.userAgent = userAgent;
@@ -273,15 +273,15 @@ public class WalletService {
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
-        log.debug("seedNodes: " + seedNodes);
+        log.debug("btcNodes: " + btcNodes);
         boolean usePeerNodes = false;
 
         // Pass custom seed nodes if set in options
-        if (!seedNodes.isEmpty()) {
+        if (!btcNodes.isEmpty()) {
 
             // TODO: this parsing should be more robust,
             // give validation error if needed.
-            String[] nodes = seedNodes.replace(", ", ",").split(",");
+            String[] nodes = btcNodes.replace(", ", ",").split(",");
             List<PeerAddress> peerAddressList = new ArrayList<>();
             for (String node : nodes) {
                 String[] parts = node.split(":");
@@ -309,7 +309,7 @@ public class WalletService {
             }
             if (peerAddressList.size() > 0) {
                 PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
-                log.debug("seedNodes parsed: " + Arrays.toString(peerAddressListFixed));
+                log.debug("btcNodes parsed: " + Arrays.toString(peerAddressListFixed));
 
                 walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
                 usePeerNodes = true;
