@@ -43,6 +43,9 @@ public class SeedNodesRepository {
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("hbma455xxbqhcuqh.onion:8000"),
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("2zxtnprnx5wqr7a3.onion:8000"),
 
+            // local dev test
+            // DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("23bnormzh2mvkz3z.onion:8000"),
+
             // testnet
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),
 
