@@ -23,7 +23,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 class GetPeersRequestHandler {
     private static final Logger log = LoggerFactory.getLogger(GetPeersRequestHandler.class);
 
-    private static final long TIME_OUT_SEC = 20;
+    private static final long TIME_OUT_SEC = 40;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

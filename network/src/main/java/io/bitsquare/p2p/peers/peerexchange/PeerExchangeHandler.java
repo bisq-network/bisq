@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 class PeerExchangeHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(PeerExchangeHandler.class);
 
-    private static final long TIME_OUT_SEC = 20;
+    private static final long TIME_OUT_SEC = 40;
     private static int DELAY_MS = 1000;
 
 

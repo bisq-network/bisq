@@ -219,7 +219,8 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
-        String key = "showAddBitcoinNodesWindowKey";
+        // TODO need more though how to improve privacy without annoying first time users.
+       /* String key = "showAddBitcoinNodesWindowKey";
         if (preferences.showAgain(key))
             addBitcoinNodesWindow.dontShowAgainId(key, preferences)
                     .onClose(() -> {
@@ -235,7 +236,8 @@ public class MainViewModel implements ViewModel {
             initializeAllServices();
     }
 
-    private void initializeAllServices() {
+    private void initializeAllServices() {*/
+        
         log.error("initializeAllServices");
         Log.traceCall();
 
