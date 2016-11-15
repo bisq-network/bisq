@@ -33,10 +33,10 @@ public class FeePolicy {
     // Our trade transactions have a fixed set of inputs and outputs making the size very predictable 
     // (as long the user does not do multiple funding transactions)
     // 
-    // trade fee tx: 226 bytes
-    // deposit tx: 336 bytes
-    // payout tx: 371 bytes
-    // disputed payout tx: 408 bytes
+    // trade fee tx: 226 bytes          // 88 satoshi/byte
+    // deposit tx: 336 bytes            // 59 satoshi/byte
+    // payout tx: 371 bytes             // 53 satoshi/byte
+    // disputed payout tx: 408 bytes    // 49 satoshi/byte
 
     // We set a fixed fee to make the needed amounts in the trade predictable.
     // We use 0.0002 BTC (0.08 EUR @ 400 EUR/BTC) which is for our tx sizes about 50-90 satoshi/byte
