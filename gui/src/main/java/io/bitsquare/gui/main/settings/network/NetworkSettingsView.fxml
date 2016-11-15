@@ -17,6 +17,7 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
+<?import io.bitsquare.gui.components.InputTextField?>
 <?import io.bitsquare.gui.components.TitledGroupBg?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.cell.*?>
@@ -32,7 +33,7 @@
         <Insets bottom="10.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
-    <TitledGroupBg text="Bitcoin network" GridPane.rowSpan="2"/>
+    <TitledGroupBg text="Bitcoin network" GridPane.rowSpan="3"/>
 
     <Label fx:id="bitcoinPeersLabel" text="Connected peers:" GridPane.rowIndex="0"/>
     <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
@@ -41,7 +42,10 @@
     <Label text="Use Tor for Bitcoin network:" GridPane.rowIndex="1"/>
     <CheckBox fx:id="useTorForBtcJCheckBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-    <TitledGroupBg text="P2P network" GridPane.rowIndex="2" GridPane.rowSpan="3">
+    <Label text="Use custom Bitcoin network peers:" GridPane.rowIndex="2"/>
+    <InputTextField fx:id="btcNodes" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+    <TitledGroupBg text="P2P network" GridPane.rowIndex="3" GridPane.rowSpan="3">
         <padding>
             <Insets top="50.0"/>
         </padding>
@@ -50,20 +54,20 @@
         </GridPane.margin>
     </TitledGroupBg>
 
-    <Label text="My onion address:" GridPane.rowIndex="2">
+    <Label text="My onion address:" GridPane.rowIndex="3">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
     </Label>
-    <TextField fx:id="onionAddress" GridPane.rowIndex="2" GridPane.columnIndex="1"
+    <TextField fx:id="onionAddress" GridPane.rowIndex="3" GridPane.columnIndex="1"
                editable="false" focusTraversable="false">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
     </TextField>
 
-    <Label fx:id="p2PPeersLabel" text="Connected peers:" GridPane.rowIndex="3"/>
-    <TableView fx:id="tableView" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+    <Label fx:id="p2PPeersLabel" text="Connected peers:" GridPane.rowIndex="4"/>
+    <TableView fx:id="tableView" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
                GridPane.vgrow="ALWAYS">
         <columns>
             <TableColumn text="Onion address" fx:id="onionAddressColumn" minWidth="220">
@@ -109,8 +113,8 @@
         </columns>
     </TableView>
 
-    <Label text="Total traffic:" GridPane.rowIndex="4"/>
-    <TextField fx:id="totalTraffic" GridPane.rowIndex="4" GridPane.columnIndex="1" editable="false"
+    <Label text="Total traffic:" GridPane.rowIndex="5"/>
+    <TextField fx:id="totalTraffic" GridPane.rowIndex="5" GridPane.columnIndex="1" editable="false"
                focusTraversable="false"/>
 
     <columnConstraints>

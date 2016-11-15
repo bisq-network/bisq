@@ -4,7 +4,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
-import io.bitsquare.app.CoreOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
@@ -70,7 +70,7 @@ public class PriceFeedService {
 
     @Inject
     public PriceFeedService(HttpClient httpClient,
-                            @Named(CoreOptionKeys.PRICE_FEED_PROVIDERS) String priceFeedProviders,
+                            @Named(AppOptionKeys.PRICE_FEED_PROVIDERS) String priceFeedProviders,
                             @Named(NetworkOptionKeys.USE_LOCALHOST) boolean useLocalhost) {
         this.httpClient = httpClient;
         if (priceFeedProviders.isEmpty()) {

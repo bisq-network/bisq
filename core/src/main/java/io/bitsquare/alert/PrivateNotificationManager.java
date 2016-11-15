@@ -19,7 +19,7 @@ package io.bitsquare.alert;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.bitsquare.app.CoreOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
@@ -58,7 +58,7 @@ public class PrivateNotificationManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PrivateNotificationManager(P2PService p2PService, KeyRing keyRing, @Named(CoreOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+    public PrivateNotificationManager(P2PService p2PService, KeyRing keyRing, @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
 

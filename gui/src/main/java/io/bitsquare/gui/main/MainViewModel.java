@@ -47,6 +47,7 @@ import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.main.overlays.notifications.NotificationCenter;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.overlays.windows.AddBitcoinNodesWindow;
 import io.bitsquare.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bitsquare.gui.main.overlays.windows.TacWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
@@ -108,6 +109,7 @@ public class MainViewModel implements ViewModel {
     private PrivateNotificationManager privateNotificationManager;
     private FilterManager filterManager;
     private final WalletPasswordWindow walletPasswordWindow;
+    private AddBitcoinNodesWindow addBitcoinNodesWindow;
     private final NotificationCenter notificationCenter;
     private final TacWindow tacWindow;
     private Clock clock;
@@ -177,7 +179,7 @@ public class MainViewModel implements ViewModel {
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
-                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow,
+                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, AddBitcoinNodesWindow addBitcoinNodesWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.priceFeedService = priceFeedService;
@@ -194,6 +196,7 @@ public class MainViewModel implements ViewModel {
         this.privateNotificationManager = privateNotificationManager;
         this.filterManager = filterManager; // Reference so it's initialized and eventlistener gets registered
         this.walletPasswordWindow = walletPasswordWindow;
+        this.addBitcoinNodesWindow = addBitcoinNodesWindow;
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
         this.clock = clock;
@@ -215,10 +218,29 @@ public class MainViewModel implements ViewModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initializeAllServices() {
+    public void start() {
+        String key = "showAddBitcoinNodesWindowKey";
+        if (preferences.showAgain(key))
+            addBitcoinNodesWindow.dontShowAgainId(key, preferences)
+                    .onClose(() -> {
+                        preferences.dontShowAgain(key, true);
+                        initializeAllServices();
+                    })
+                    .onAction(() -> {
+                        preferences.dontShowAgain(key, true);
+                        initializeAllServices();
+                    })
+                    .show();
+        else
+            initializeAllServices();
+    }
+
+    private void initializeAllServices() {
+        log.error("initializeAllServices");
         Log.traceCall();
 
         UserThread.runAfter(tacWindow::showIfNeeded, 2);
+
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())

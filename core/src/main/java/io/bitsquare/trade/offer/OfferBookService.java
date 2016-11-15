@@ -18,7 +18,7 @@
 package io.bitsquare.trade.offer;
 
 import com.google.inject.name.Named;
-import io.bitsquare.app.CoreOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
@@ -66,7 +66,7 @@ public class OfferBookService {
     public OfferBookService(P2PService p2PService,
                             PriceFeedService priceFeedService,
                             Storage<PlainTextWrapper> offersJsonStorage,
-                            @Named(CoreOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
+                            @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.offersJsonStorage = offersJsonStorage;

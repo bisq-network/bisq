@@ -89,11 +89,9 @@ public class WalletService {
     private final AddressEntryList addressEntryList;
     private final Preferences preferences;
     private final Socks5ProxyProvider socks5ProxyProvider;
-    private final String btcNodes;
     private final NetworkParameters params;
     private final File walletDir;
     private final UserAgent userAgent;
-    private final boolean useTor;
 
     private WalletAppKitBitSquare walletAppKit;
     private Wallet wallet;
@@ -116,28 +114,15 @@ public class WalletService {
                          UserAgent userAgent,
                          Preferences preferences,
                          Socks5ProxyProvider socks5ProxyProvider,
-                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
-                         @Named(BtcOptionKeys.BTC_NODES) String btcNodes,
-                         @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
+                         @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
-        this.btcNodes = btcNodes;
         this.params = preferences.getBitcoinNetwork().getParameters();
         this.walletDir = new File(appDir, "bitcoin");
         this.userAgent = userAgent;
-
-        // We support a checkbox in the settings to set the use tor flag.
-        // If we get the options set we override that setting. 
-        if (useTorFlagFromOptions != null && !useTorFlagFromOptions.isEmpty()) {
-            if (useTorFlagFromOptions.equals("false"))
-                preferences.setUseTorForBitcoinJ(false);
-            else if (useTorFlagFromOptions.equals("true"))
-                preferences.setUseTorForBitcoinJ(true);
-        }
-        useTor = preferences.getUseTorForBitcoinJ();
 
         storage = new Storage<>(walletDir);
         Long persisted = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
@@ -273,6 +258,7 @@ public class WalletService {
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
+        String btcNodes = preferences.getBitcoinNodes();
         log.debug("btcNodes: " + btcNodes);
         boolean usePeerNodes = false;
 

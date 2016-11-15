@@ -19,7 +19,7 @@ package io.bitsquare.btc;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
-import io.bitsquare.app.CoreOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.blockchain.providers.BlockTrailProvider;
 import io.bitsquare.btc.blockchain.providers.BlockrIOProvider;
@@ -52,9 +52,9 @@ public class BitcoinModule extends AppModule {
         File walletDir = new File(env.getRequiredProperty(BtcOptionKeys.WALLET_DIR));
         bind(File.class).annotatedWith(named(BtcOptionKeys.WALLET_DIR)).toInstance(walletDir);
 
-        bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(env.getRequiredProperty(BtcOptionKeys.BTC_NODES));
-        bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(env.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
-        bindConstant().annotatedWith(named(CoreOptionKeys.PRICE_FEED_PROVIDERS)).to(env.getRequiredProperty(CoreOptionKeys.PRICE_FEED_PROVIDERS));
+        bindConstant().annotatedWith(named(AppOptionKeys.BTC_NODES)).to(env.getRequiredProperty(AppOptionKeys.BTC_NODES));
+        bindConstant().annotatedWith(named(AppOptionKeys.USE_TOR_FOR_BTC)).to(env.getRequiredProperty(AppOptionKeys.USE_TOR_FOR_BTC));
+        bindConstant().annotatedWith(named(AppOptionKeys.PRICE_FEED_PROVIDERS)).to(env.getRequiredProperty(AppOptionKeys.PRICE_FEED_PROVIDERS));
         
         bind(AddressEntryList.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);

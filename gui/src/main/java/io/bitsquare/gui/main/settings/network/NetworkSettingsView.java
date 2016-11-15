@@ -24,11 +24,13 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Statistic;
 import io.bitsquare.user.Preferences;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -49,13 +51,8 @@ import java.util.stream.Collectors;
 @FxmlView
 public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
 
-    private final WalletService walletService;
-    private final Preferences preferences;
-    private Clock clock;
-    private final BSFormatter formatter;
-    private final P2PService p2PService;
-
-
+    @FXML
+    InputTextField btcNodes;
     @FXML
     TextField onionAddress, totalTraffic;
     @FXML
@@ -68,12 +65,20 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     TableView<P2pNetworkListItem> tableView;
     @FXML
     TableColumn<P2pNetworkListItem, String> onionAddressColumn, connectionTypeColumn, creationDateColumn,
-    /*lastActivityColumn,*/ roundTripTimeColumn, sentBytesColumn, receivedBytesColumn, peerTypeColumn;
+            roundTripTimeColumn, sentBytesColumn, receivedBytesColumn, peerTypeColumn;
+
+    private final WalletService walletService;
+    private final Preferences preferences;
+    private Clock clock;
+    private final BSFormatter formatter;
+    private final P2PService p2PService;
     private Subscription numP2PPeersSubscription;
     private Subscription bitcoinPeersSubscription;
     private Subscription nodeAddressSubscription;
     private ObservableList<P2pNetworkListItem> networkListItems = FXCollections.observableArrayList();
     private final SortedList<P2pNetworkListItem> sortedList = new SortedList<>(networkListItems);
+    private ChangeListener<Boolean> btcNodesFocusListener;
+    private String btcNodesPreFocusText;
 
     @Inject
     public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences, Clock clock,
@@ -116,8 +121,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         useTorForBtcJCheckBox.setOnAction(event -> {
             boolean selected = useTorForBtcJCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
-                new Popup().information("Tor support for the Bitcoin network is experimental at the current state.\n\n" +
-                        "You need to restart the application to apply that change.\n" +
+                new Popup().information("You need to restart the application to apply that change.\n" +
                         "Do you want to do that now?")
                         .actionButtonText("Apply and shut down")
                         .onAction(() -> {
@@ -140,6 +144,31 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        btcNodes.setText(preferences.getBitcoinNodes());
+        btcNodes.setPromptText("Add comma separated IP addresses");
+        btcNodesFocusListener = (observable, oldValue, newValue) -> {
+            if (newValue) {
+                btcNodesPreFocusText = btcNodes.getText();
+            }
+            if (oldValue && !newValue && !btcNodesPreFocusText.equals(btcNodes.getText())) {
+                new Popup().information("You need to restart the application to apply that change.\n" +
+                        "Do you want to do that now?")
+                        .actionButtonText("Apply and shut down")
+                        .onAction(() -> {
+                            if (btcNodes.getText().isEmpty()) {
+                                preferences.setBitcoinNodes("");
+                            } else {
+                                preferences.setBitcoinNodes(btcNodes.getText());
+                            }
+                            UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
+                        })
+                        .closeButtonText("Cancel")
+                        .onClose(() -> btcNodes.setText(btcNodesPreFocusText))
+                        .show();
+            }
+        };
+        btcNodes.focusedProperty().addListener(btcNodesFocusListener);
     }
 
     @Override
@@ -159,6 +188,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         sortedList.comparatorProperty().unbind();
         tableView.getItems().forEach(P2pNetworkListItem::cleanup);
+        btcNodes.focusedProperty().removeListener(btcNodesFocusListener);
     }
 
     private void updateP2PTable() {

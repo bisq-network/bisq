@@ -259,7 +259,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
         // Delay a bit to give time for rendering the splash screen
-        UserThread.execute(model::initializeAllServices);
+        UserThread.execute(model::start);
     }
 
     private Tuple2<TextField, VBox> getBalanceBox(String text) {

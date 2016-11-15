@@ -17,6 +17,7 @@
 
 package io.bitsquare.user;
 
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
@@ -40,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.*;
 
 public final class Preferences implements Persistable {
@@ -131,6 +133,7 @@ public final class Preferences implements Persistable {
     private boolean sortMarketCurrenciesNumerically = true;
     private boolean usePercentageBasedPrice = false;
     private Map<String, String> peerTagMap = new HashMap<>();
+    private String bitcoinNodes = "";
 
     private List<String> ignoreTradersList = new ArrayList<>();
     private String defaultPath;
@@ -156,8 +159,9 @@ public final class Preferences implements Persistable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment) {
-        log.debug("Preferences " + this);
+    public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment,
+                       @Named(AppOptionKeys.BTC_NODES) String btcNodesFromOptions,
+                       @Named(AppOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
         INSTANCE = this;
         this.storage = storage;
         this.bitsquareEnvironment = bitsquareEnvironment;
@@ -226,6 +230,10 @@ public final class Preferences implements Persistable {
             showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
             maxPriceDistanceInPercent = persisted.getMaxPriceDistanceInPercent();
 
+            bitcoinNodes = persisted.getBitcoinNodes();
+            if (bitcoinNodes == null)
+                bitcoinNodes = "";
+
             try {
                 setNonTradeTxFeePerKB(persisted.getNonTradeTxFeePerKB());
             } catch (Exception e) {
@@ -267,6 +275,20 @@ public final class Preferences implements Persistable {
         cryptoCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
         tradeCurrenciesAsObservable.addAll(fiatCurrencies);
         tradeCurrenciesAsObservable.addAll(cryptoCurrencies);
+
+        // Override settings with options if set
+        if (useTorFlagFromOptions != null && !useTorFlagFromOptions.isEmpty()) {
+            if (useTorFlagFromOptions.equals("false"))
+                setUseTorForBitcoinJ(false);
+            else if (useTorFlagFromOptions.equals("true"))
+                setUseTorForBitcoinJ(true);
+        }
+
+        if (btcNodesFromOptions != null && !btcNodesFromOptions.isEmpty())
+            setBitcoinNodes(btcNodesFromOptions);
+
+        if (bitcoinNodes.equals("127.0.0.1") || bitcoinNodes.equals("localhost"))
+            setUseTorForBitcoinJ(false);
     }
 
     public void dontShowAgain(String key, boolean dontShowAgain) {
@@ -453,6 +475,11 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setBitcoinNodes(String bitcoinNodes) {
+        this.bitcoinNodes = bitcoinNodes;
+        storage.queueUpForSave(50);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -605,6 +632,9 @@ public final class Preferences implements Persistable {
         return sortMarketCurrenciesNumerically;
     }
 
+    public String getBitcoinNodes() {
+        return bitcoinNodes;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
