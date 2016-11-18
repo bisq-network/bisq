@@ -130,14 +130,16 @@ public class CountryUtil {
     }
 
     public static List<Country> getAllCountries() {
-        final List<Country> allCountries = new ArrayList<>();
+        final Set<Country> allCountries = new HashSet<>();
         for (final Locale locale : getAllCountryLocales()) {
             String regionCode = getRegionCode(locale.getCountry());
             final Region region = new Region(regionCode, getRegionName(regionCode));
             final Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);
             allCountries.add(country);
         }
-        return allCountries;
+        final List<Country> allCountriesList = new ArrayList<>(allCountries);
+        allCountriesList.sort((locale1, locale2) -> locale1.name.compareTo(locale2.name));
+        return allCountriesList;
     }
 
     private static List<Locale> getAllCountryLocales() {
