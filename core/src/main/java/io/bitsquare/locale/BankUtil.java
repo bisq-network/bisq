@@ -38,7 +38,10 @@ public class BankUtil {
             case "CA":
             case "SE":
             case "HK":
-                return false;
+                // We show always the bank name as it is needed in specific banks. 
+                // Though that handling should be optimized in futures.
+                return true;
+            // return false;
             case "MX":
             case "BR":
                 return true;
