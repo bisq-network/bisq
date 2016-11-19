@@ -48,14 +48,12 @@ public class BSFormatter {
     private boolean useMilliBit;
     private int scale = 3;
 
-    // Format use 2 min decimal places and 2 more optional: 1.00 or 1.0010
-    // There are not more then 4 decimals allowed.
     // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
     // Input of "," as decimal mark (like in german locale) will be replaced with ".".
     // Input of a group separator (1,123,45) lead to an validation error.
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
-    private MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(4).repeatOptionalDecimals(0, 0);
+    private MonetaryFormat coinFormat = MonetaryFormat.BTC;
 
     //  private String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
