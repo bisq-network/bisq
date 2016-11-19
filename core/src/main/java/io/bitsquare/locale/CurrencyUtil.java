@@ -187,7 +187,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XVG", "Verge"));
         result.add(new CryptoCurrency("VRC", "VeriCoin"));
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
-        result.add(new CryptoCurrency("VRC", "VeriCoin"));
         result.add(new CryptoCurrency("WAVES", "Waves"));
         result.add(new CryptoCurrency("YACC", "YACCoin"));
         result.add(new CryptoCurrency("YBC", "YbCoin"));
