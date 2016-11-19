@@ -291,6 +291,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             isOfferer = tradeManager.isMyOffer(trade.getOffer());
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
+            else
+                txId.set("");
             notificationCenter.setSelectedTradeId(trade.getId());
         } else {
             notificationCenter.setSelectedTradeId(null);

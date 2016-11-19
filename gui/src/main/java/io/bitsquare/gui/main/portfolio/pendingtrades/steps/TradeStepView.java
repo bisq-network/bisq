@@ -95,7 +95,12 @@ public abstract class TradeStepView extends AnchorPane {
             if (txIdSubscription != null)
                 txIdSubscription.unsubscribe();
 
-            txIdSubscription = EasyBind.subscribe(model.dataModel.txId, id -> txIdTextField.setup(id));
+            txIdSubscription = EasyBind.subscribe(model.dataModel.txId, id -> {
+                if (!id.isEmpty())
+                    txIdTextField.setup(id);
+                else
+                    txIdTextField.cleanup();
+            });
         }
         trade.errorMessageProperty().addListener(errorMessageListener);
 
@@ -162,8 +167,11 @@ public abstract class TradeStepView extends AnchorPane {
     protected void addTradeInfoBlock() {
         tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, "Trade information");
         txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).second;
-        if (model.dataModel.txId.get() != null)
-            txIdTextField.setup(model.dataModel.txId.get());
+        String id = model.dataModel.txId.get();
+        if (!id.isEmpty())
+            txIdTextField.setup(id);
+        else
+            txIdTextField.cleanup();
 
         PaymentMethodForm.addAllowedPeriod(gridPane, ++gridRow, model.dataModel.getSellersPaymentAccountContractData(),
                 model.getDateForOpenDispute());
