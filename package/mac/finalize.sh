@@ -7,9 +7,13 @@ src_dir="/Users/dev/Documents/intellij/bitsquare"
 
 mkdir -p $target_dir
 
+cp "$target_dir/../F379A1C6.asc" "$target_dir/"
+
 mac="Bitsquare-$version.dmg"
 cp "$src_dir/gui/deploy/$mac" "$target_dir/"
-cp "$src_dir/gui/deploy/SeedNode-$version.jar" "$target_dir/"
+
+cp "$src_dir/seednode/target/SeedNode.jar" "$target_dir/SeedNode-$version.jar"
+cp "$src_dir/pricefeed/target/Pricefeed.jar" "$target_dir/Pricefeed-$version.jar"
 
 deb32="Bitsquare-32bit-$version.deb"
 cp "/Users/dev/vm_shared_ubuntu14_32bit/$deb32" "$target_dir/"
