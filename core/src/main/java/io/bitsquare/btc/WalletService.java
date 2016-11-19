@@ -379,6 +379,15 @@ public class WalletService {
         }
     }
 
+    public String exportWalletData(boolean includePrivKeys) {
+        StringBuilder addressEntryListData = new StringBuilder();
+        getAddressEntryListAsImmutableList().stream().forEach(e -> addressEntryListData.append(e.toString()).append("\n"));
+        return "BitcoinJ wallet:\n" +
+                wallet.toString(includePrivKeys, true, true, walletAppKit.chain()) + "\n\n" +
+                "Bitsquare address entry list:\n" +
+                addressEntryListData.toString();
+    }
+
     public void restoreSeedWords(DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         Context ctx = Context.get();
         new Thread(() -> {

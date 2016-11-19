@@ -44,6 +44,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.EmptyWalletWindow;
 import io.bitsquare.gui.main.overlays.windows.FilterWindow;
 import io.bitsquare.gui.main.overlays.windows.SendAlertMessageWindow;
+import io.bitsquare.gui.main.overlays.windows.ShowWalletDataWindow;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
@@ -146,7 +147,7 @@ public class BitsquareApp extends Application {
             e.printStackTrace();
             UserThread.execute(() -> showErrorPopup(e, true));
         }
-        
+
         Security.addProvider(new BouncyCastleProvider());
 
         try {
@@ -206,9 +207,15 @@ public class BitsquareApp extends Application {
                     showSendAlertMessagePopup();
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showFilterPopup();
-                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showFPSWindow();
-                else if (DevFlags.DEV_MODE) {
+                } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                    WalletService walletService = injector.getInstance(WalletService.class);
+                    if (walletService.getWallet() != null)
+                        new ShowWalletDataWindow(walletService).information("Wallet raw data").show();
+                    else
+                        new Popup<>().warning("The wallet is not initialized yet").show();
+                } else if (DevFlags.DEV_MODE) {
                     if (new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
                         showDebugWindow();
                 }
