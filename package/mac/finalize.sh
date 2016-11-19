@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="0.4.9.7"
+version="0.4.9.8"
 
 target_dir="/Users/mk/Documents/__bitsquare/_releases/$version"
 src_dir="/Users/mk/Documents/_intellij/bitsquare"

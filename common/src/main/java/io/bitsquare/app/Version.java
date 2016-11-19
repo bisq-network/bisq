@@ -24,7 +24,7 @@ public class Version {
     private static final Logger log = LoggerFactory.getLogger(Version.class);
 
     // The application versions
-    public static final String VERSION = "0.4.9.7"; 
+    public static final String VERSION = "0.4.9.8"; 
 
     // The version no. for the objects sent over the network. A change will break the serialization of old objects.
     // If objects are used for both network and database the network version is applied.
