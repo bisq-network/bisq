@@ -444,7 +444,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 final long maxDelay = (i + 2) * delay;
                 final OpenOffer openOffer = openOffersList.get(i);
                 UserThread.runAfterRandomDelay(() -> {
-                    if (openOffers.contains(openOffer))
+                    if (openOffers.contains(openOffer) && openOffer.getId() != null)
                         republishOffer(openOffer);
                 }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
             }
