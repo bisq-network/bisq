@@ -78,7 +78,7 @@ Build bitcoinj
 > _**NOTE:**
 Bitcoinj versions later than 0.13.1 has removed support for Java serialisation.
 Version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details).
-We removed usage of Cartographer/HttpDiscovery and fixed privacy issues with Bloom Filters in our [fork of version 0.13.1.6](https://github.com/bitsquare/bitcoinj/tree/FixBloomFilters).
+We removed usage of Cartographer/HttpDiscovery in our [fork of version 0.13.1.7](https://github.com/bitsquare/bitcoinj/tree/FixBloomFilters).
 Beside the Java serialisation issues there are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer.
 Here is a Github issue with background and open tasks regarding [Bloom Filters](https://github.com/bitsquare/bitsquare/issues/414)._  Note: use a fresh directory, this should not be done inside the bitsquare folder.
 
