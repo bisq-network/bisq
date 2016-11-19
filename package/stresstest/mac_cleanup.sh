@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dir=/Users/mk/Desktop/10_offers
+dir=/Users/dev/Desktop/10_offers
 
 for i in `seq 1 20`;
   do
