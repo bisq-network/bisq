@@ -78,6 +78,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("AIB", "Advanced Internet Blocks"));
         result.add(new CryptoCurrency("ANC", "Anoncoin"));
         result.add(new CryptoCurrency("ANTI", "Anti"));
+        result.add(new CryptoCurrency("ARCO", "AquariusCoin"));
         result.add(new CryptoCurrency("ARG", "Argentum"));
         result.add(new CryptoCurrency("REP", "Augur", true));
         result.add(new CryptoCurrency("BATL", "Battlestars"));
