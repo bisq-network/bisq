@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -106,16 +107,17 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         InputTextField buyerPubKeysInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "buyerPubKeys:").second;
         InputTextField sellerPubKeysInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "sellerPubKeys:").second;
 
-        List<String> buyerPubKeys = Arrays.asList(buyerPubKeysInputTextField.getText().split(","));
-        List<String> sellerPubKeys = Arrays.asList(sellerPubKeysInputTextField.getText().split(","));
-        
-        /*
+        List<String> buyerPubKeys = !buyerPubKeysInputTextField.getText().isEmpty() ? Arrays.asList(buyerPubKeysInputTextField.getText().split(",")) : new ArrayList<>();
+        List<String> sellerPubKeys = !sellerPubKeysInputTextField.getText().isEmpty() ? Arrays.asList(sellerPubKeysInputTextField.getText().split(",")) : new ArrayList<>();
+
+
+        /* 
         depositTxHex.setText("");
 
-        buyerPayoutAmount.setText("1.01");
+        buyerPayoutAmount.setText("0.01");
         sellerPayoutAmount.setText("0.01");
         arbitratorPayoutAmount.setText("0");
-        
+
         buyerAddressString.setText("");
         buyerPubKeyAsHex.setText("");
         buyerPrivateKeyAsHex.setText("");
@@ -123,22 +125,26 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         sellerAddressString.setText("");
         sellerPubKeyAsHex.setText("");
         sellerPrivateKeyAsHex.setText("");
-        
-        arbitratorAddressString.setText("19xdeiQM2Hn2M2wbpT5imcYWzqhiSDHPy4");
-        arbitratorPubKeyAsHex.setText("02c62e794fe67f3a2115e2de4757143ff7f27bdf38aa4ae58a3595baa6d676875b");
-        
-        arbitratorAddressString.setText("1FdFzBazmHQxbUbdCUJwuCtR37DrZrEobu");
-        arbitratorPubKeyAsHex.setText("030fdc2ebc297df4047442f6079f1ce3b7d1938a41f88bd11497545cc94fcfd315");
-        
+
+        //4.9
+        // arbitratorAddressString.setText("19xdeiQM2Hn2M2wbpT5imcYWzqhiSDHPy4");
+        // arbitratorPubKeyAsHex.setText("02c62e794fe67f3a2115e2de4757143ff7f27bdf38aa4ae58a3595baa6d676875b");
+
+        // 4.2
+         arbitratorAddressString.setText("1FdFzBazmHQxbUbdCUJwuCtR37DrZrEobu");
+         arbitratorPubKeyAsHex.setText("030fdc2ebc297df4047442f6079f1ce3b7d1938a41f88bd11497545cc94fcfd315");
+
         P2SHMultiSigOutputScript.setText("");
 
         sellerPubKeys = Arrays.asList();
+                
+        buyerPubKeys = Arrays.asList();
         */
-
 
         actionButtonText("Sign and publish transaction");
 
         final List<String> finalSellerPubKeys = sellerPubKeys;
+        final List<String> finalBuyerPubKeys = buyerPubKeys;
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@Nullable Transaction result) {
@@ -174,7 +180,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
                         sellerPubKeyAsHex.getText(),
                         arbitratorPubKeyAsHex.getText(),
                         P2SHMultiSigOutputScript.getText(),
-                        buyerPubKeys,
+                        finalBuyerPubKeys,
                         finalSellerPubKeys,
                         callback);
             } catch (AddressFormatException | WalletException | TransactionVerificationException e) {

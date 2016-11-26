@@ -683,16 +683,16 @@ public class TradeWalletService {
      * @throws AddressFormatException
      * @throws TransactionVerificationException
      */
-    public byte[] signDisputedPayoutTx(byte[] depositTxSerialized,
-                                       Coin buyerPayoutAmount,
-                                       Coin sellerPayoutAmount,
-                                       Coin arbitratorPayoutAmount,
-                                       String buyerAddressString,
-                                       String sellerAddressString,
-                                       AddressEntry arbitratorAddressEntry,
-                                       byte[] buyerPubKey,
-                                       byte[] sellerPubKey,
-                                       byte[] arbitratorPubKey)
+    public byte[] arbitratorSignsDisputedPayoutTx(byte[] depositTxSerialized,
+                                                  Coin buyerPayoutAmount,
+                                                  Coin sellerPayoutAmount,
+                                                  Coin arbitratorPayoutAmount,
+                                                  String buyerAddressString,
+                                                  String sellerAddressString,
+                                                  AddressEntry arbitratorAddressEntry,
+                                                  byte[] buyerPubKey,
+                                                  byte[] sellerPubKey,
+                                                  byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException {
         Transaction depositTx = new Transaction(params, depositTxSerialized);
         log.trace("signDisputedPayoutTx called");
@@ -847,24 +847,23 @@ public class TradeWalletService {
                                                        List<String> sellerPubKeys,
                                                        FutureCallback<Transaction> callback)
             throws AddressFormatException, TransactionVerificationException, WalletException {
-        log.trace("signAndPublishPayoutTx called");
-        log.trace("depositTxHex " + depositTxHex);
-        log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
-        log.trace("arbitratorPayoutAmount " + arbitratorPayoutAmount.toFriendlyString());
-        log.trace("buyerAddressString " + buyerAddressString);
-        log.trace("sellerAddressString " + sellerAddressString);
-        log.trace("arbitratorAddressString " + arbitratorAddressString);
-        log.trace("buyerPrivateKeyAsHex " + buyerPrivateKeyAsHex);
-        log.trace("sellerPrivateKeyAsHex " + sellerPrivateKeyAsHex);
-        log.trace("arbitratorPrivateKeyAsHex " + arbitratorPrivateKeyAsHex);
-        log.trace("buyerPubKeyAsHex " + buyerPubKeyAsHex);
-        log.trace("sellerPubKeyAsHex " + sellerPubKeyAsHex);
-        log.trace("arbitratorPubKeyAsHex " + arbitratorPubKeyAsHex);
-
-        log.trace("P2SHMultiSigOutputScript " + P2SHMultiSigOutputScript);
-        log.trace("buyerPubKeys " + buyerPubKeys);
-        log.trace("sellerPubKeys " + sellerPubKeys);
+        log.info("signAndPublishPayoutTx called");
+        log.info("depositTxHex " + depositTxHex);
+        log.info("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
+        log.info("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
+        log.info("arbitratorPayoutAmount " + arbitratorPayoutAmount.toFriendlyString());
+        log.info("buyerAddressString " + buyerAddressString);
+        log.info("sellerAddressString " + sellerAddressString);
+        log.info("arbitratorAddressString " + arbitratorAddressString);
+        log.info("buyerPrivateKeyAsHex " + buyerPrivateKeyAsHex);
+        log.info("sellerPrivateKeyAsHex " + sellerPrivateKeyAsHex);
+        log.info("arbitratorPrivateKeyAsHex " + arbitratorPrivateKeyAsHex);
+        log.info("buyerPubKeyAsHex " + buyerPubKeyAsHex);
+        log.info("sellerPubKeyAsHex " + sellerPubKeyAsHex);
+        log.info("arbitratorPubKeyAsHex " + arbitratorPubKeyAsHex);
+        log.info("P2SHMultiSigOutputScript " + P2SHMultiSigOutputScript);
+        log.info("buyerPubKeys " + buyerPubKeys);
+        log.info("sellerPubKeys " + sellerPubKeys);
 
         checkNotNull((buyerPrivateKeyAsHex != null || sellerPrivateKeyAsHex != null), "either buyerPrivateKeyAsHex or sellerPrivateKeyAsHex must not be null");
 
@@ -889,8 +888,8 @@ public class TradeWalletService {
                     byte[] sk = ECKey.fromPublicOnly(Utils.HEX.decode(s)).getPubKey();
                     p2SHMultiSigOutputScript = getP2SHMultiSigOutputScript(bk, sk, arbitratorPubKey);
                     if (p2SHMultiSigOutputScript.toString().contains(P2SHMultiSigOutputScript)) {
-                        log.trace("Found buyers pub key " + b);
-                        log.trace("Found sellers pub key " + s);
+                        log.info("Found buyers pub key " + b);
+                        log.info("Found sellers pub key " + s);
                         buyerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(b)).getPubKey();
                         sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(s)).getPubKey();
                         found = true;
