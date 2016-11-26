@@ -147,6 +147,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XMY", "Myriadcoin"));
         result.add(new CryptoCurrency("NAV", "Nav Coin"));
         result.add(new CryptoCurrency("XEM", "NEM"));
+        result.add(new CryptoCurrency("NEVA", "Nevacoin"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
