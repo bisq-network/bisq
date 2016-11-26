@@ -172,6 +172,7 @@ public class WalletService {
 
                 addressEntryList.onWalletReady(wallet);
 
+
                 walletAppKit.peerGroup().addEventListener(new PeerEventListener() {
                     @Override
                     public void onPeersDiscovered(Set<PeerAddress> peerAddresses) {
@@ -385,7 +386,9 @@ public class WalletService {
         return "BitcoinJ wallet:\n" +
                 wallet.toString(includePrivKeys, true, true, walletAppKit.chain()) + "\n\n" +
                 "Bitsquare address entry list:\n" +
-                addressEntryListData.toString();
+                addressEntryListData.toString() +
+                "All pubkeys as hex:\n" +
+                wallet.printAllPubKeysAsHex();
     }
 
     public void restoreSeedWords(DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
