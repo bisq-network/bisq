@@ -88,7 +88,6 @@ public final class AccountNrValidator extends BankValidator {
 		if (input2.length() != length || !StringUtils.isNumeric(input2))
                     return new ValidationResult(false, BSResources.get("validation.sortCodeNumber", getLabel(), length));
 		int lastDigit = Character.getNumericValue(input.charAt(input2.length() - 1));
-		System.out.println(lastDigit + " " + getMod11ControlDigit(input2));
 		if (getMod11ControlDigit(input2) != lastDigit)
                     return new ValidationResult(false, "Kontonummer har feil sjekksum");
 		return super.validate(input);
@@ -112,7 +111,6 @@ public final class AccountNrValidator extends BankValidator {
 
 	for(int i = knr.length-2; i >= 0; i--) {
 	    sumForMod += (Character.getNumericValue(knr[i]) * controlNumber);
-	    System.out.println(Character.getNumericValue(knr[i]) + " * " + controlNumber);
 	    controlNumber++;
 
 	    if(controlNumber > 7) {
