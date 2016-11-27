@@ -73,6 +73,8 @@ public class BankUtil {
             case "MX":
             case "HK":
                 return true;
+            case "NO":
+		return false;
             default:
                 return true;
         }
@@ -105,6 +107,8 @@ public class BankUtil {
             case "HK":
             case "SE":
                 return false;
+	    case "NO":
+		return false;
             default:
                 return true;
         }
@@ -150,6 +154,8 @@ public class BankUtil {
                 return "Bankgiro number:";
             case "MX":
                 return "CLABE:";
+	    case "NO":
+		return "Kontonummer:";
             default:
                 return "Account no. (IBAN):";
         }
@@ -225,6 +231,8 @@ public class BankUtil {
             case "HK":
             case "SE":
                 return true;
+	    case "NO":
+		return true;
             default:
                 return false;
         }
