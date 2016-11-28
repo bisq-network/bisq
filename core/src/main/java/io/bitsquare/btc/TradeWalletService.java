@@ -428,7 +428,7 @@ public class TradeWalletService {
      * @throws TransactionVerificationException
      * @throws WalletException
      */
-    public void takerSignsAndPublishesDepositTx(boolean takerIsSeller,
+    public Transaction takerSignsAndPublishesDepositTx(boolean takerIsSeller,
                                                 byte[] contractHash,
                                                 byte[] offerersDepositTxSerialized,
                                                 List<RawTransactionInput> buyerInputs,
@@ -513,6 +513,8 @@ public class TradeWalletService {
         checkNotNull(walletAppKit);
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(depositTx).future();
         Futures.addCallback(broadcastComplete, callback);
+
+        return depositTx;
     }
 
 
