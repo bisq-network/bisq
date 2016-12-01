@@ -164,6 +164,16 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     "If you are not sure about that process visit the Monero forum (https://forum.getmonero.org) to find more information.")
                     .closeButtonText("I understand")
                     .show();
+        } else if (code.equals("ZEC")) {
+            new Popup().information("When using ZEC you can only use the transparent addresses (starting with t) not " +
+                    "the z-addresses, because the arbitrator would not be able to verify the transaction with z-addresses.")
+                    .closeButtonText("I understand")
+                    .show();
+        } else if (code.equals("XZC")) {
+            new Popup().information("When using XZC you can only use the transparent transactions not " +
+                    "the private transactions, because the arbitrator would not be able to verify the private transactions.")
+                    .closeButtonText("I understand")
+                    .show();
         }
 
         if (!model.getPaymentAccounts().stream().filter(e -> {

@@ -20,14 +20,31 @@ package io.bitsquare.gui.util.validation;
 
 public final class AltCoinAddressValidator extends InputValidator {
 
+    private String currencyCode;
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void setCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
+    }
+
     @Override
     public ValidationResult validate(String input) {
-        // TODO
-        return super.validate(input);
+        if (currencyCode != null) {
+            switch (currencyCode) {
+                case "ZEC":
+                    if (input != null && input.startsWith("t"))
+                        return super.validate(input);
+                    else
+                        return new ValidationResult(false, "ZEC address need to start with t. Addresses starting with z are not supported.");
+                default:
+                    return super.validate(input);
+            }
+        } else {
+            return super.validate(input);
+        }
     }
 
 

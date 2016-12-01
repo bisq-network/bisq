@@ -119,6 +119,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
     @Override
     public void updateAllInputsValid() {
+        altCoinAddressValidator.setCurrencyCode(cryptoCurrencyAccount.getSelectedTradeCurrency().getCode());
         allInputsValid.set(isAccountNameValid()
                 && altCoinAddressValidator.validate(cryptoCurrencyAccount.getAddress()).isValid
                 && cryptoCurrencyAccount.getSingleTradeCurrency() != null);
