@@ -104,7 +104,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("CRBIT", "Creditbit"));
         result.add(new CryptoCurrency("CRW", "Crown"));
         result.add(new CryptoCurrency("CBX", "Crypto Bullion"));
-        result.add(new CryptoCurrency("DAO", "DAO", true));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
         result.add(new CryptoCurrency("DASH", "Dash"));
