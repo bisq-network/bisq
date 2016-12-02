@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.funds.deposit;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.FeeService;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -84,6 +85,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private InputTextField amountTextField;
 
     private final WalletService walletService;
+    private FeeService feeService;
     private final BSFormatter formatter;
     private final Preferences preferences;
     private final String paymentLabelString;
@@ -100,9 +102,11 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Inject
     private DepositView(WalletService walletService,
+                        FeeService feeService,
                         BSFormatter formatter,
                         Preferences preferences) {
         this.walletService = walletService;
+        this.feeService = feeService;
         this.formatter = formatter;
         this.preferences = preferences;
 
@@ -296,12 +300,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private Coin getAmountAsCoin() {
         Coin senderAmount = formatter.parseToCoin(amountTextField.getText());
-        if (!Restrictions.isAboveFixedTxFeeForTradesAndDust(senderAmount)) {
+        if (!Restrictions.isAboveFixedTxFeeForTradesAndDust(senderAmount, feeService.getTxFeeForWithdrawal()))
             senderAmount = Coin.ZERO;
-           /* new Popup()
-                    .warning("The amount is lower than the transaction fee and the min. possible tx value (dust).")
-                    .show();*/
-        }
         return senderAmount;
     }
 

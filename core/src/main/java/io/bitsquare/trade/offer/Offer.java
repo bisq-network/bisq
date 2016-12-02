@@ -549,12 +549,12 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return Coin.valueOf(txFee);
     }
 
-    public long getCreateOfferFee() {
-        return createOfferFee;
+    public Coin getCreateOfferFee() {
+        return Coin.valueOf(createOfferFee);
     }
 
-    public long getTakerFee() {
-        return takerFee;
+    public Coin getTakerFee() {
+        return Coin.valueOf(takerFee);
     }
 
     public long getSecurityDeposit() {

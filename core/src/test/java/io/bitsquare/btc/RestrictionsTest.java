@@ -28,22 +28,22 @@ public class RestrictionsTest {
     @Test
     public void testIsMinSpendableAmount() {
         Coin amount = null;
-        assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
+        Coin txFee = new FeeService().getTxFee();
+        assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount, txFee));
 
         amount = Coin.ZERO;
-        assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
+        assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount, txFee));
 
-        Coin txFee = new FeeService().getTxFee();
         amount = txFee;
-        assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
+        assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount, txFee));
 
         amount = Transaction.MIN_NONDUST_OUTPUT;
-        assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
+        assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount, txFee));
 
         amount = txFee.add(Transaction.MIN_NONDUST_OUTPUT);
-        assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
+        assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount, txFee));
 
         amount = txFee.add(Transaction.MIN_NONDUST_OUTPUT).add(Coin.valueOf(1));
-        assertTrue("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
+        assertTrue("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount, txFee));
     }
 }

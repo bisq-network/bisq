@@ -145,7 +145,7 @@ public class TradeWalletService {
                                           boolean useSavingsWallet, Coin tradingFee, Coin txFee, String feeReceiverAddresses)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction tradingFeeTx = new Transaction(params);
-        Preconditions.checkArgument(Restrictions.isAboveFixedTxFeeForTradesAndDust(tradingFee),
+        Preconditions.checkArgument(Restrictions.isAboveFixedTxFeeForTradesAndDust(tradingFee, txFee),
                 "You cannot send an amount which are smaller than the fee + dust output.");
         Coin outPutAmount = tradingFee.subtract(txFee);
         tradingFeeTx.addOutput(outPutAmount, new Address(params, feeReceiverAddresses));

@@ -183,7 +183,7 @@ public class BuyerStep5View extends TradeStepView {
             } else {
                 if (toAddresses.isEmpty()) {
                     validateWithdrawAddress();
-                } else if (Restrictions.isAboveFixedTxFeeForTradesAndDust(senderAmount)) {
+                } else if (Restrictions.isAboveFixedTxFeeForTradesAndDust(senderAmount, model.dataModel.getTxFeeForWithdrawal())) {
 
                     if (DevFlags.DEV_MODE) {
                         doWithdrawal(receiverAmount);

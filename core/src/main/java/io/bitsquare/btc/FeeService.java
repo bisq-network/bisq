@@ -31,19 +31,26 @@ public class FeeService {
 
     @Inject
     public FeeService() {
-        Restrictions.setFeeService(this);
     }
 
+    int counter = 0;
+
     public Coin getTxFee() {
+        counter += 100;
+        log.error("getTxFee " + (20_000 + counter));
+        return Coin.valueOf(20_000 + counter);
+    }
+
+    public Coin getTxFeeForWithdrawal() {
         return Coin.valueOf(20_000);
     }
 
     public Coin getCreateOfferFee() {
-        return FeePolicy.getCreateOfferFee();
+        return Coin.valueOf(50_000);
     }
 
     public Coin getTakeOfferFee() {
-        return FeePolicy.getTakeOfferFee();
+        return Coin.valueOf(100_000);
     }
 
 }

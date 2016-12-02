@@ -64,7 +64,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final BlockchainService blockchainService;
     private final BSFormatter formatter;
 
-    private final Coin takerFeeAsCoin;
+    private Coin takerFeeAsCoin;
     private final Coin txFeeAsCoin;
     private final Coin securityDepositAsCoin;
     // Coin feeFromFundingTx = Coin.NEGATIVE_SATOSHI;
@@ -110,7 +110,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
-        takerFeeAsCoin = feeService.getTakeOfferFee();
         txFeeAsCoin = feeService.getTxFee();
         //TODO
         securityDepositAsCoin = FeePolicy.getSecurityDeposit();
@@ -160,6 +159,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void initWithData(Offer offer) {
         this.offer = offer;
         tradePrice = offer.getPrice();
+        takerFeeAsCoin = offer.getTakerFee();
         addressEntry = walletService.getOrCreateAddressEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
         checkNotNull(addressEntry, "addressEntry must not be null");
 

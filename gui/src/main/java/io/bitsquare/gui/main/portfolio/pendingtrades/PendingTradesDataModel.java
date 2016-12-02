@@ -397,5 +397,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             log.warn("trade is null at doOpenDispute");
         }
     }
+
+    public Coin getTxFeeForWithdrawal() {
+        return feeService.getTxFeeForWithdrawal();
+    }
 }
 
