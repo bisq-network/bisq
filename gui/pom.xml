@@ -150,7 +150,7 @@
         <dependency>
             <groupId>io.bitsquare</groupId>
             <artifactId>api</artifactId>
-            <version>0.4.9.6</version>
+            <version>0.4.9.7</version>
         </dependency>
 
     </dependencies>
