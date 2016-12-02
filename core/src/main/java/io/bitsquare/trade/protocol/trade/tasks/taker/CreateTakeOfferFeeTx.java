@@ -19,7 +19,6 @@ package io.bitsquare.trade.protocol.trade.tasks.taker;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.NodeAddress;
@@ -58,7 +57,8 @@ public class CreateTakeOfferFeeTx extends TradeTask {
                     walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress(),
                     processModel.getFundsNeededForTrade(),
                     processModel.getUseSavingsWallet(),
-                    FeePolicy.getTakeOfferFee(),
+                    trade.getTakeOfferFee(),
+                    trade.getTxFee(),
                     selectedArbitrator.getBtcAddress());
 
             processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);

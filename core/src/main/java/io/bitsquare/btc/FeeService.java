@@ -17,24 +17,33 @@
 
 package io.bitsquare.btc;
 
+import com.google.inject.Inject;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class Restrictions {
+public class FeeService {
+    private static final Logger log = LoggerFactory.getLogger(FeeService.class);
 
-    public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001"); // 4 cent @ 400 EUR/BTC 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static FeeService feeService;
-
-    public static void setFeeService(FeeService feeService) {
-        Restrictions.feeService = feeService;
+    @Inject
+    public FeeService() {
+        Restrictions.setFeeService(this);
     }
-    
-    public static boolean isAboveFixedTxFeeForTradesAndDust(Coin amount) {
-        return amount != null && amount.compareTo(feeService.getTxFee().add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
+
+    public Coin getTxFee() {
+        return Coin.valueOf(20_000);
     }
 
-    public static boolean isAboveDust(Coin amount) {
-        return amount != null && amount.compareTo(Transaction.MIN_NONDUST_OUTPUT) > 0;
+    public Coin getCreateOfferFee() {
+        return FeePolicy.getCreateOfferFee();
     }
+
+    public Coin getTakeOfferFee() {
+        return FeePolicy.getTakeOfferFee();
+    }
+
 }

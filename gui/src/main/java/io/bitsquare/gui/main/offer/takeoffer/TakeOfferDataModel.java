@@ -20,10 +20,7 @@ package io.bitsquare.gui.main.offer.takeoffer;
 import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.*;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
@@ -68,7 +65,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final BSFormatter formatter;
 
     private final Coin takerFeeAsCoin;
-    private final Coin networkFeeAsCoin;
+    private final Coin txFeeAsCoin;
     private final Coin securityDepositAsCoin;
     // Coin feeFromFundingTx = Coin.NEGATIVE_SATOSHI;
 
@@ -101,7 +98,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     @Inject
     TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
-                       WalletService walletService, User user,
+                       WalletService walletService, User user, FeeService feeService,
                        Preferences preferences, PriceFeedService priceFeedService, BlockchainService blockchainService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
@@ -113,8 +110,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
-        takerFeeAsCoin = FeePolicy.getTakeOfferFee();
-        networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();
+        takerFeeAsCoin = feeService.getTakeOfferFee();
+        txFeeAsCoin = feeService.getTxFee();
+        //TODO
         securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
         // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
@@ -230,6 +228,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
         tradeManager.onTakeOffer(amountAsCoin.get(),
+                txFeeAsCoin,
+                takerFeeAsCoin,
                 tradePrice.getValue(),
                 totalToPayAsCoin.get().subtract(takerFeeAsCoin),
                 offer,
@@ -320,9 +320,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void calculateTotalToPay() {
         if (offer != null && amountAsCoin.get() != null) {
             if (getDirection() == Offer.Direction.SELL)
-                totalToPayAsCoin.set(takerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin));
+                totalToPayAsCoin.set(takerFeeAsCoin.add(txFeeAsCoin).add(securityDepositAsCoin));
             else
-                totalToPayAsCoin.set(takerFeeAsCoin.add(networkFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
+                totalToPayAsCoin.set(takerFeeAsCoin.add(txFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
 
             updateBalance();
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
@@ -394,7 +394,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection SimplifiableIfStatement
         if (amountAsCoin.get() != null && offer != null) {
             Coin customAmount = offer.getAmount().subtract(amountAsCoin.get());
-            Coin dustAndFee = FeePolicy.getFixedTxFeeForTrades().add(Transaction.MIN_NONDUST_OUTPUT);
+            Coin dustAndFee = txFeeAsCoin.add(Transaction.MIN_NONDUST_OUTPUT);
             return customAmount.isPositive() && customAmount.isLessThan(dustAndFee);
         } else {
             return true;
@@ -421,8 +421,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return takerFeeAsCoin;
     }
 
-    public Coin getNetworkFeeAsCoin() {
-        return networkFeeAsCoin;
+    public Coin getTxFeeAsCoin() {
+        return txFeeAsCoin;
     }
 
     public AddressEntry getAddressEntry() {

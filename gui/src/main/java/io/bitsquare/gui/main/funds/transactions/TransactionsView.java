@@ -67,6 +67,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {
 
@@ -560,9 +562,10 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private void revertTransaction(String txId, @Nullable Tradable tradable) {
         try {
-            walletService.doubleSpendTransaction(txId, () -> {
-                if (tradable != null)
-                    walletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
+            checkArgument(tradable instanceof Trade, "Tradeable object is not instance of Trade (revertTransaction). That must not happen.");
+            Coin txFee = ((Trade) tradable).getTxFee();
+            walletService.doubleSpendTransaction(txId, txFee, () -> {
+                walletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
                 new Popup().information("Transaction successfully sent to a new address in the local Bitsquare wallet.").show();
             }, errorMessage -> {
@@ -591,12 +594,15 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.US);
             String day = dateFormatter.format(item.getDate());
 
+            // TODO fee is dynamic now
+            Coin txFee = Coin.valueOf(20_000);
+            
             if (!dataByDayMap.containsKey(day)) {
                 int numOffers = 0;
                 int numTrades = 0;
-                if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(txFee)) == 0)
                     numOffers++;
-                else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(txFee)) == 0)
                     numTrades++;
 
                 dataByDayMap.put(day, new Tuple4<>(item.getDate(), 1, numOffers, numTrades));
@@ -605,9 +611,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 int prev = tuple.second;
                 int numOffers = tuple.third;
                 int numTrades = tuple.forth;
-                if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(txFee)) == 0)
                     numOffers++;
-                else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(txFee)) == 0)
                     numTrades++;
 
                 dataByDayMap.put(day, new Tuple4<>(tuple.first, ++prev, numOffers, numTrades));

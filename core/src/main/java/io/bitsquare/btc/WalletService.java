@@ -698,17 +698,18 @@ public class WalletService {
     // Double spend unconfirmed transaction (unlock in case we got into a tx with a too low mining fee)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void doubleSpendTransaction(String txId, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException, AddressFormatException, AddressEntryException {
+    public void doubleSpendTransaction(String txId, Coin txFee, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException, AddressFormatException, AddressEntryException {
         AddressEntry addressEntry = getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
         checkNotNull(addressEntry.getAddress(), "addressEntry.getAddress() must not be null");
         Optional<Transaction> transactionOptional = wallet.getTransactions(true).stream()
                 .filter(t -> t.getHashAsString().equals(txId))
                 .findAny();
         if (transactionOptional.isPresent())
-            doubleSpendTransaction(transactionOptional.get(), addressEntry.getAddress(), resultHandler, errorMessageHandler);
+            doubleSpendTransaction(transactionOptional.get(), addressEntry.getAddress(), txFee, resultHandler, errorMessageHandler);
     }
 
-    public void doubleSpendTransaction(Transaction txToDoubleSpend, Address toAddress, Runnable resultHandler, ErrorMessageHandler errorMessageHandler) throws InsufficientMoneyException, AddressFormatException, AddressEntryException {
+    public void doubleSpendTransaction(Transaction txToDoubleSpend, Address toAddress, Coin txFee, Runnable resultHandler, ErrorMessageHandler errorMessageHandler)
+            throws InsufficientMoneyException, AddressFormatException, AddressEntryException {
         final TransactionConfidence.ConfidenceType confidenceType = txToDoubleSpend.getConfidence().getConfidenceType();
         if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
             log.debug("txToDoubleSpend no. of inputs " + txToDoubleSpend.getInputs().size());
@@ -754,9 +755,9 @@ public class WalletService {
                 Coin requiredFee = getFeeForDoubleSpend(sendRequest,
                         toAddress,
                         amount,
-                        FeePolicy.getFixedTxFeeForTrades());
+                        txFee);
 
-                amount = (amount.subtract(requiredFee)).subtract(FeePolicy.getFixedTxFeeForTrades());
+                amount = (amount.subtract(requiredFee)).subtract(txFee);
                 newTransaction.clearOutputs();
                 newTransaction.addOutput(amount, toAddress);
 

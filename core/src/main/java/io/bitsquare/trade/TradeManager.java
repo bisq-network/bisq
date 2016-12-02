@@ -73,6 +73,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public class TradeManager {
@@ -271,11 +272,13 @@ public class TradeManager {
             Offer offer = openOfferOptional.get().getOffer();
             openOfferManager.reserveOpenOffer(openOfferOptional.get());
 
+            checkArgument(message instanceof PayDepositRequest, "message must be PayDepositRequest");
+            PayDepositRequest payDepositRequest = (PayDepositRequest) message;
             Trade trade;
             if (offer.getDirection() == Offer.Direction.BUY)
-                trade = new BuyerAsOffererTrade(offer, tradableListStorage);
+                trade = new BuyerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
             else
-                trade = new SellerAsOffererTrade(offer, tradableListStorage);
+                trade = new SellerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
 
             trade.setStorage(tradableListStorage);
             initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
@@ -329,6 +332,8 @@ public class TradeManager {
 
     // First we check if offer is still available then we create the trade with the protocol
     public void onTakeOffer(Coin amount,
+                            Coin txFee,
+                            Coin takeOfferFee,
                             long tradePrice,
                             Coin fundsNeededForTrade,
                             Offer offer,
@@ -340,12 +345,14 @@ public class TradeManager {
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE)
-                        createTrade(amount, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
+                        createTrade(amount, txFee, takeOfferFee, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
                 },
                 errorMessageHandler::handleErrorMessage);
     }
 
     private void createTrade(Coin amount,
+                             Coin txFee,
+                             Coin takeOfferFee,
                              long tradePrice,
                              Coin fundsNeededForTrade,
                              Offer offer,
@@ -355,9 +362,9 @@ public class TradeManager {
                              TradeResultHandler tradeResultHandler) {
         Trade trade;
         if (offer.getDirection() == Offer.Direction.BUY)
-            trade = new SellerAsTakerTrade(offer, amount, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new SellerAsTakerTrade(offer, amount, txFee, takeOfferFee, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
         else
-            trade = new BuyerAsTakerTrade(offer, amount, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new BuyerAsTakerTrade(offer, amount, txFee, takeOfferFee, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
 
         trade.setTakerPaymentAccountId(paymentAccountId);
 

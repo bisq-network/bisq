@@ -142,12 +142,12 @@ public class TradeWalletService {
      * @throws AddressFormatException
      */
     public Transaction createTradingFeeTx(Address fundingAddress, Address reservedForTradeAddress, Address changeAddress, Coin reservedFundsForOffer,
-                                          boolean useSavingsWallet, Coin tradingFee, String feeReceiverAddresses)
+                                          boolean useSavingsWallet, Coin tradingFee, Coin txFee, String feeReceiverAddresses)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction tradingFeeTx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveFixedTxFeeForTradesAndDust(tradingFee),
                 "You cannot send an amount which are smaller than the fee + dust output.");
-        Coin outPutAmount = tradingFee.subtract(FeePolicy.getFixedTxFeeForTrades());
+        Coin outPutAmount = tradingFee.subtract(txFee);
         tradingFeeTx.addOutput(outPutAmount, new Address(params, feeReceiverAddresses));
         // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
         tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
@@ -164,7 +164,7 @@ public class TradeWalletService {
             sendRequest.coinSelector = new TradeWalletCoinSelector(params, fundingAddress);
         // We use a fixed fee
         sendRequest.feePerKb = Coin.ZERO;
-        sendRequest.fee = FeePolicy.getFixedTxFeeForTrades();
+        sendRequest.fee = txFee;
 
         // Change is optional in case of overpay or use of funds from savings wallet
         sendRequest.changeAddress = changeAddress;
@@ -197,7 +197,7 @@ public class TradeWalletService {
      * @throws TransactionVerificationException
      * @throws WalletException
      */
-    public InputsAndChangeOutput takerCreatesDepositsTxInputs(Coin inputAmount, AddressEntry takersAddressEntry, Address takersChangeAddress) throws
+    public InputsAndChangeOutput takerCreatesDepositsTxInputs(Coin inputAmount, Coin txFee, AddressEntry takersAddressEntry, Address takersChangeAddress) throws
             TransactionVerificationException, WalletException, AddressFormatException {
         log.trace("takerCreatesDepositsTxInputs called");
         log.trace("inputAmount " + inputAmount.toFriendlyString());
@@ -220,7 +220,7 @@ public class TradeWalletService {
          */
 
         // inputAmount includes the tx fee. So we subtract the fee to get the dummyOutputAmount.
-        Coin dummyOutputAmount = inputAmount.subtract(FeePolicy.getFixedTxFeeForTrades());
+        Coin dummyOutputAmount = inputAmount.subtract(txFee);
 
         Transaction dummyTX = new Transaction(params);
         // The output is just used to get the right inputs and change outputs, so we use an anonymous ECKey, as it will never be used for anything.
@@ -231,7 +231,7 @@ public class TradeWalletService {
         // Find the needed inputs to pay the output, optionally add 1 change output.
         // Normally only 1 input and no change output is used, but we support multiple inputs and 1 change output. 
         // Our spending transaction output is from the create offer fee payment. 
-        addAvailableInputsAndChangeOutputs(dummyTX, takersAddressEntry, takersChangeAddress);
+        addAvailableInputsAndChangeOutputs(dummyTX, takersAddressEntry, takersChangeAddress, txFee);
 
         // The completeTx() call signs the input, but we don't want to pass over signed tx inputs so we remove the signature
         removeSignatures(dummyTX);
@@ -288,6 +288,7 @@ public class TradeWalletService {
                                                                              byte[] contractHash,
                                                                              Coin offererInputAmount,
                                                                              Coin msOutputAmount,
+                                                                             Coin txFee,
                                                                              List<RawTransactionInput> takerRawTransactionInputs,
                                                                              long takerChangeOutputValue,
                                                                              @Nullable String takerChangeAddressString,
@@ -313,10 +314,10 @@ public class TradeWalletService {
         // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx. 
         // Similar to the way we did in the createTakerDepositTxInputs method.
         Transaction dummyTx = new Transaction(params);
-        Coin dummyOutputAmount = offererInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades());
+        Coin dummyOutputAmount = offererInputAmount.subtract(txFee);
         TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, dummyOutputAmount, new ECKey().toAddress(params));
         dummyTx.addOutput(dummyOutput);
-        addAvailableInputsAndChangeOutputs(dummyTx, offererAddressEntry, offererChangeAddress);
+        addAvailableInputsAndChangeOutputs(dummyTx, offererAddressEntry, offererChangeAddress, txFee);
         // Normally we have only 1 input but we support multiple inputs if the user has paid in with several transactions.
         List<TransactionInput> offererInputs = dummyTx.getInputs();
         TransactionOutput offererOutput = null;
@@ -429,14 +430,14 @@ public class TradeWalletService {
      * @throws WalletException
      */
     public Transaction takerSignsAndPublishesDepositTx(boolean takerIsSeller,
-                                                byte[] contractHash,
-                                                byte[] offerersDepositTxSerialized,
-                                                List<RawTransactionInput> buyerInputs,
-                                                List<RawTransactionInput> sellerInputs,
-                                                byte[] buyerPubKey,
-                                                byte[] sellerPubKey,
-                                                byte[] arbitratorPubKey,
-                                                FutureCallback<Transaction> callback) throws SigningException, TransactionVerificationException,
+                                                       byte[] contractHash,
+                                                       byte[] offerersDepositTxSerialized,
+                                                       List<RawTransactionInput> buyerInputs,
+                                                       List<RawTransactionInput> sellerInputs,
+                                                       byte[] buyerPubKey,
+                                                       byte[] sellerPubKey,
+                                                       byte[] arbitratorPubKey,
+                                                       FutureCallback<Transaction> callback) throws SigningException, TransactionVerificationException,
             WalletException {
         Transaction offerersDepositTx = new Transaction(params, offerersDepositTxSerialized);
 
@@ -835,6 +836,7 @@ public class TradeWalletService {
                                                        Coin buyerPayoutAmount,
                                                        Coin sellerPayoutAmount,
                                                        Coin arbitratorPayoutAmount,
+                                                       Coin txFee,
                                                        String buyerAddressString,
                                                        String sellerAddressString,
                                                        String arbitratorAddressString,
@@ -903,7 +905,7 @@ public class TradeWalletService {
                 log.warn("We did not find any matching pub keys for generating the required p2SHMultiSigOutputScript");
         }
 
-        Coin msOutput = buyerPayoutAmount.add(sellerPayoutAmount).add(arbitratorPayoutAmount).add(FeePolicy.getFixedTxFeeForTrades());
+        Coin msOutput = buyerPayoutAmount.add(sellerPayoutAmount).add(arbitratorPayoutAmount).add(txFee);
         TransactionOutput p2SHMultiSigOutput = new TransactionOutput(params, null, msOutput, p2SHMultiSigOutputScript.getProgram());
         Transaction depositTx = new Transaction(params);
         depositTx.addOutput(p2SHMultiSigOutput);
@@ -1192,7 +1194,7 @@ public class TradeWalletService {
         }
     }
 
-    private void addAvailableInputsAndChangeOutputs(Transaction transaction, AddressEntry addressEntry, Address changeAddress) throws WalletException {
+    private void addAvailableInputsAndChangeOutputs(Transaction transaction, AddressEntry addressEntry, Address changeAddress, Coin txFee) throws WalletException {
         try {
             // Lets let the framework do the work to find the right inputs
             Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
@@ -1200,7 +1202,7 @@ public class TradeWalletService {
             sendRequest.aesKey = aesKey;
             // We use a fixed fee
             sendRequest.feePerKb = Coin.ZERO;
-            sendRequest.fee = FeePolicy.getFixedTxFeeForTrades();
+            sendRequest.fee = txFee;
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
             sendRequest.coinSelector = new TradeWalletCoinSelector(params, addressEntry.getAddress());
             // We use always the same address in a trade for all transactions

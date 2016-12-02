@@ -57,6 +57,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
                     model.reservedFundsForOffer,
                     model.useSavingsWallet,
                     FeePolicy.getCreateOfferFee(),
+                    model.offer.getTxFee(),
                     selectedArbitrator.getBtcAddress());
 
             // We assume there will be no tx malleability. We add a check later in case the published offer has a different hash.

@@ -42,10 +42,6 @@ public class FeePolicy {
     // We use 0.0002 BTC (0.08 EUR @ 400 EUR/BTC) which is for our tx sizes about 50-90 satoshi/byte
     // We cannot make that user defined as it need to be the same for both users, so we can only change that in 
     // software updates 
-    // TODO before Beta we should get a good future proof guess as a change causes incompatible versions
-    public static Coin getFixedTxFeeForTrades() {
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(20_000);
-    }
 
     // For non trade transactions (withdrawal) we use the default fee calculation 
     // To avoid issues with not getting into full blocks, we increase the fee/kb to 30 satoshi/byte

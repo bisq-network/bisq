@@ -6,8 +6,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.blockchain.providers.BlockTrailProvider;
+import io.bitsquare.btc.blockchain.providers.BlockchainTxProvider;
 import io.bitsquare.btc.blockchain.providers.BlockrIOProvider;
-import io.bitsquare.btc.blockchain.providers.FeeProvider;
 import io.bitsquare.btc.blockchain.providers.TradeBlockProvider;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
@@ -20,11 +20,11 @@ import java.util.Arrays;
 public class BlockchainService {
     private static final Logger log = LoggerFactory.getLogger(BlockchainService.class);
 
-    private final ArrayList<FeeProvider> feeProviders;
+    private final ArrayList<BlockchainTxProvider> blockchainTxProviders;
 
     @Inject
     public BlockchainService(BlockrIOProvider blockrIOProvider, BlockTrailProvider blockTrailProvider, TradeBlockProvider tradeBlockProvider) {
-        feeProviders = new ArrayList<>(Arrays.asList(blockrIOProvider, blockTrailProvider, tradeBlockProvider));
+        blockchainTxProviders = new ArrayList<>(Arrays.asList(blockrIOProvider, blockTrailProvider, tradeBlockProvider));
     }
 
     public SettableFuture<Coin> requestFee(String transactionId) {
@@ -32,7 +32,7 @@ public class BlockchainService {
         long startTime = System.currentTimeMillis();
         final SettableFuture<Coin> resultFuture = SettableFuture.create();
 
-        for (FeeProvider provider : feeProviders) {
+        for (BlockchainTxProvider provider : blockchainTxProviders) {
             GetFeeRequest getFeeRequest = new GetFeeRequest();
             SettableFuture<Coin> future = getFeeRequest.request(transactionId, provider);
             Futures.addCallback(future, new FutureCallback<Coin>() {

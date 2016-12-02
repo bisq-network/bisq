@@ -37,12 +37,12 @@ public abstract class SellerTrade extends Trade {
 
     private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerTrade.class);
 
-    SellerTrade(Offer offer, Coin tradeAmount, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradePrice, tradingPeerNodeAddress, storage);
+    SellerTrade(Offer offer, Coin tradeAmount, Coin txFee, Coin takeOfferFee, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, txFee, takeOfferFee, tradePrice, tradingPeerNodeAddress, storage);
     }
 
-    SellerTrade(Offer offer, Storage<? extends TradableList> storage) {
-        super(offer, storage);
+    SellerTrade(Offer offer, Coin txFee, Coin takeOfferFee, Storage<? extends TradableList> storage) {
+        super(offer, txFee, takeOfferFee, storage);
     }
 
     @Override

@@ -43,7 +43,7 @@ public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin sellerInputAmount = FeePolicy.getSecurityDeposit().add(FeePolicy.getFixedTxFeeForTrades()).add(trade.getTradeAmount());
+            Coin sellerInputAmount = FeePolicy.getSecurityDeposit().add(trade.getTxFee()).add(trade.getTradeAmount());
             Coin msOutputAmount = sellerInputAmount.add(FeePolicy.getSecurityDeposit());
 
             log.debug("\n\n------------------------------------------------------------\n"
@@ -56,13 +56,14 @@ public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
             WalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry sellerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            sellerMultiSigAddressEntry.setLockedTradeAmount(sellerInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades()));
+            sellerMultiSigAddressEntry.setLockedTradeAmount(sellerInputAmount.subtract(trade.getTxFee()));
             walletService.saveAddressEntryList();
             PreparedDepositTxAndOffererInputs result = processModel.getTradeWalletService().offererCreatesAndSignsDepositTx(
                     false,
                     contractHash,
                     sellerInputAmount,
                     msOutputAmount,
+                    trade.getOffer().getTxFee(),
                     processModel.tradingPeer.getRawTransactionInputs(),
                     processModel.tradingPeer.getChangeOutputValue(),
                     processModel.tradingPeer.getChangeOutputAddress(),

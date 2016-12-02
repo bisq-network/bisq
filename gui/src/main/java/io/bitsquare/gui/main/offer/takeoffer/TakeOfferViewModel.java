@@ -578,7 +578,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     String getNetworkFee() {
-        return formatter.formatCoinWithCode(dataModel.getNetworkFeeAsCoin());
+        return formatter.formatCoinWithCode(dataModel.getTxFeeAsCoin());
     }
 
     public String getSecurityDeposit() {

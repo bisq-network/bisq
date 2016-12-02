@@ -66,6 +66,8 @@ public class BitcoinModule extends AppModule {
         bind(BlockrIOProvider.class).in(Singleton.class);
         bind(BlockTrailProvider.class).in(Singleton.class);
         bind(TradeBlockProvider.class).in(Singleton.class);
+
+        bind(FeeService.class).in(Singleton.class);
     }
 }
 

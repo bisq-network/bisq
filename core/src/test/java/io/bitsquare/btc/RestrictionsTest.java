@@ -33,16 +33,17 @@ public class RestrictionsTest {
         amount = Coin.ZERO;
         assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
 
-        amount = FeePolicy.getFixedTxFeeForTrades();
+        Coin txFee = new FeeService().getTxFee();
+        amount = txFee;
         assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
 
         amount = Transaction.MIN_NONDUST_OUTPUT;
         assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
 
-        amount = FeePolicy.getFixedTxFeeForTrades().add(Transaction.MIN_NONDUST_OUTPUT);
+        amount = txFee.add(Transaction.MIN_NONDUST_OUTPUT);
         assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
 
-        amount = FeePolicy.getFixedTxFeeForTrades().add(Transaction.MIN_NONDUST_OUTPUT).add(Coin.valueOf(1));
+        amount = txFee.add(Transaction.MIN_NONDUST_OUTPUT).add(Coin.valueOf(1));
         assertTrue("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount));
     }
 }

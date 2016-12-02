@@ -660,11 +660,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     public String getOfferFee() {
-        return formatter.formatCoinWithCode(dataModel.getOfferFeeAsCoin());
+        return formatter.formatCoinWithCode(dataModel.getCreateOfferFeeAsCoin());
     }
 
     public String getNetworkFee() {
-        return formatter.formatCoinWithCode(dataModel.getNetworkFeeAsCoin());
+        return formatter.formatCoinWithCode(dataModel.getTxFeeAsCoin());
     }
 
     public String getSecurityDeposit() {

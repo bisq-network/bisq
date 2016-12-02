@@ -7,8 +7,8 @@ import org.bitcoinj.core.Coin;
 
 import java.io.IOException;
 
-public abstract class FeeProvider extends HttpClientProvider {
-    public FeeProvider(HttpClient httpClient, String baseUrl) {
+public abstract class BlockchainTxProvider extends HttpClientProvider {
+    public BlockchainTxProvider(HttpClient httpClient, String baseUrl) {
         super(httpClient, baseUrl);
     }
 

@@ -50,6 +50,7 @@ import java.security.PublicKey;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -137,6 +138,24 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
     private String offerFeePaymentTxID;
 
+    // New properties from v. 0.5.0.0
+    private final String versionNr;
+    private final long txFee;
+    private final long createOfferFee;
+    private final long takerFee;
+    private final long securityDeposit;
+    private final long maxTradeLimit;
+    private final long maxTradePeriod;
+
+    // Reserved for possible future use to support private trades where the taker need to have an accessKey
+    private final boolean isPrivateOffer;
+    @Nullable
+    private final String hashOfChallenge;
+
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility.
+    @Nullable
+    private HashMap<String, String> extraDataMap;
+
     @JsonExclude
     transient private State state = State.UNDEFINED;
     // Those state properties are transient and only used at runtime! 
@@ -175,7 +194,17 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  @Nullable ArrayList<String> acceptedCountryCodes,
                  @Nullable String bankId,
                  @Nullable ArrayList<String> acceptedBankIds,
-                 PriceFeedService priceFeedService) {
+                 PriceFeedService priceFeedService,
+                 String versionNr,
+                 long txFee,
+                 long createOfferFee,
+                 long takerFee,
+                 long securityDeposit,
+                 long maxTradeLimit,
+                 long maxTradePeriod,
+                 boolean isPrivateOffer,
+                 @Nullable String hashOfChallenge,
+                 @Nullable HashMap<String, String> extraDataMap) {
         this.id = id;
         this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;
@@ -194,6 +223,16 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.bankId = bankId;
         this.acceptedBankIds = acceptedBankIds;
         this.priceFeedService = priceFeedService;
+        this.versionNr = versionNr;
+        this.txFee = txFee;
+        this.createOfferFee = createOfferFee;
+        this.takerFee = takerFee;
+        this.securityDeposit = securityDeposit;
+        this.maxTradeLimit = maxTradeLimit;
+        this.maxTradePeriod = maxTradePeriod;
+        this.isPrivateOffer = isPrivateOffer;
+        this.hashOfChallenge = hashOfChallenge;
+        this.extraDataMap = extraDataMap;
 
         protocolVersion = Version.TRADE_PROTOCOL_VERSION;
 
@@ -502,66 +541,131 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return errorMessageProperty;
     }
 
+    public String getVersionNr() {
+        return versionNr;
+    }
+
+    public Coin getTxFee() {
+        return Coin.valueOf(txFee);
+    }
+
+    public long getCreateOfferFee() {
+        return createOfferFee;
+    }
+
+    public long getTakerFee() {
+        return takerFee;
+    }
+
+    public long getSecurityDeposit() {
+        return securityDeposit;
+    }
+
+    public long getMaxTradeLimit() {
+        return maxTradeLimit;
+    }
+
+    public long getMaxTradePeriod() {
+        return maxTradePeriod;
+    }
+
+    public boolean isPrivateOffer() {
+        return isPrivateOffer;
+    }
+
+    @Nullable
+    public String getHashOfChallenge() {
+        return hashOfChallenge;
+    }
+
+    @Nullable
+    public HashMap<String, String> getExtraDataMap() {
+        return extraDataMap;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Offer)) return false;
-        Offer that = (Offer) o;
-        if (date != that.date) return false;
-        if (fiatPrice != that.fiatPrice) return false;
-        if (Double.compare(that.marketPriceMargin, marketPriceMargin) != 0) return false;
-        if (useMarketBasedPrice != that.useMarketBasedPrice) return false;
-        if (amount != that.amount) return false;
-        if (minAmount != that.minAmount) return false;
-        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        if (direction != null && that.direction != null && direction.ordinal() != that.direction.ordinal())
-            return false;
-        else if ((direction == null && that.direction != null) || (direction != null && that.direction == null))
-            return false;
+        Offer offer = (Offer) o;
 
-        if (currencyCode != null ? !currencyCode.equals(that.currencyCode) : that.currencyCode != null) return false;
-        if (offererNodeAddress != null ? !offererNodeAddress.equals(that.offererNodeAddress) : that.offererNodeAddress != null)
+        if (date != offer.date) return false;
+        if (protocolVersion != offer.protocolVersion) return false;
+        if (useMarketBasedPrice != offer.useMarketBasedPrice) return false;
+        if (fiatPrice != offer.fiatPrice) return false;
+        if (Double.compare(offer.marketPriceMargin, marketPriceMargin) != 0) return false;
+        if (amount != offer.amount) return false;
+        if (minAmount != offer.minAmount) return false;
+        if (txFee != offer.txFee) return false;
+        if (createOfferFee != offer.createOfferFee) return false;
+        if (takerFee != offer.takerFee) return false;
+        if (securityDeposit != offer.securityDeposit) return false;
+        if (maxTradePeriod != offer.maxTradePeriod) return false;
+        if (maxTradeLimit != offer.maxTradeLimit) return false;
+        if (isPrivateOffer != offer.isPrivateOffer) return false;
+        if (direction != offer.direction) return false;
+        if (currencyCode != null ? !currencyCode.equals(offer.currencyCode) : offer.currencyCode != null) return false;
+        if (paymentMethodName != null ? !paymentMethodName.equals(offer.paymentMethodName) : offer.paymentMethodName != null)
             return false;
-        if (pubKeyRing != null ? !pubKeyRing.equals(that.pubKeyRing) : that.pubKeyRing != null) return false;
-        if (paymentMethodName != null ? !paymentMethodName.equals(that.paymentMethodName) : that.paymentMethodName != null)
+        if (countryCode != null ? !countryCode.equals(offer.countryCode) : offer.countryCode != null) return false;
+        if (acceptedCountryCodes != null ? !acceptedCountryCodes.equals(offer.acceptedCountryCodes) : offer.acceptedCountryCodes != null)
             return false;
-        if (countryCode != null ? !countryCode.equals(that.countryCode) : that.countryCode != null)
+        if (bankId != null ? !bankId.equals(offer.bankId) : offer.bankId != null) return false;
+        if (acceptedBankIds != null ? !acceptedBankIds.equals(offer.acceptedBankIds) : offer.acceptedBankIds != null)
             return false;
-        if (offererPaymentAccountId != null ? !offererPaymentAccountId.equals(that.offererPaymentAccountId) : that.offererPaymentAccountId != null)
+        if (arbitratorNodeAddresses != null ? !arbitratorNodeAddresses.equals(offer.arbitratorNodeAddresses) : offer.arbitratorNodeAddresses != null)
             return false;
-        if (acceptedCountryCodes != null ? !acceptedCountryCodes.equals(that.acceptedCountryCodes) : that.acceptedCountryCodes != null)
+        if (id != null ? !id.equals(offer.id) : offer.id != null) return false;
+        if (offererNodeAddress != null ? !offererNodeAddress.equals(offer.offererNodeAddress) : offer.offererNodeAddress != null)
             return false;
-        if (bankId != null ? !bankId.equals(that.bankId) : that.bankId != null) return false;
-        if (acceptedBankIds != null ? !acceptedBankIds.equals(that.acceptedBankIds) : that.acceptedBankIds != null)
+        if (pubKeyRing != null ? !pubKeyRing.equals(offer.pubKeyRing) : offer.pubKeyRing != null) return false;
+        if (offererPaymentAccountId != null ? !offererPaymentAccountId.equals(offer.offererPaymentAccountId) : offer.offererPaymentAccountId != null)
             return false;
-        if (arbitratorNodeAddresses != null ? !arbitratorNodeAddresses.equals(that.arbitratorNodeAddresses) : that.arbitratorNodeAddresses != null)
+        if (offerFeePaymentTxID != null ? !offerFeePaymentTxID.equals(offer.offerFeePaymentTxID) : offer.offerFeePaymentTxID != null)
             return false;
-        return !(offerFeePaymentTxID != null ? !offerFeePaymentTxID.equals(that.offerFeePaymentTxID) : that.offerFeePaymentTxID != null);
+        if (versionNr != null ? !versionNr.equals(offer.versionNr) : offer.versionNr != null) return false;
+        if (hashOfChallenge != null ? !hashOfChallenge.equals(offer.hashOfChallenge) : offer.hashOfChallenge != null)
+            return false;
+        return !(extraDataMap != null ? !extraDataMap.equals(offer.extraDataMap) : offer.extraDataMap != null);
+
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (direction != null ? direction.ordinal() : 0);
+        int result;
+        long temp;
+        result = direction != null ? direction.hashCode() : 0;
         result = 31 * result + (currencyCode != null ? currencyCode.hashCode() : 0);
+        result = 31 * result + (paymentMethodName != null ? paymentMethodName.hashCode() : 0);
+        result = 31 * result + (countryCode != null ? countryCode.hashCode() : 0);
+        result = 31 * result + (acceptedCountryCodes != null ? acceptedCountryCodes.hashCode() : 0);
+        result = 31 * result + (bankId != null ? bankId.hashCode() : 0);
+        result = 31 * result + (acceptedBankIds != null ? acceptedBankIds.hashCode() : 0);
+        result = 31 * result + (arbitratorNodeAddresses != null ? arbitratorNodeAddresses.hashCode() : 0);
+        result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (int) (date ^ (date >>> 32));
-        result = 31 * result + (int) (fiatPrice ^ (fiatPrice >>> 32));
-        long temp = Double.doubleToLongBits(marketPriceMargin);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (int) (protocolVersion ^ (protocolVersion >>> 32));
         result = 31 * result + (useMarketBasedPrice ? 1 : 0);
+        result = 31 * result + (int) (fiatPrice ^ (fiatPrice >>> 32));
+        temp = Double.doubleToLongBits(marketPriceMargin);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (int) (amount ^ (amount >>> 32));
         result = 31 * result + (int) (minAmount ^ (minAmount >>> 32));
         result = 31 * result + (offererNodeAddress != null ? offererNodeAddress.hashCode() : 0);
         result = 31 * result + (pubKeyRing != null ? pubKeyRing.hashCode() : 0);
-        result = 31 * result + (paymentMethodName != null ? paymentMethodName.hashCode() : 0);
-        result = 31 * result + (countryCode != null ? countryCode.hashCode() : 0);
-        result = 31 * result + (bankId != null ? bankId.hashCode() : 0);
         result = 31 * result + (offererPaymentAccountId != null ? offererPaymentAccountId.hashCode() : 0);
-        result = 31 * result + (acceptedCountryCodes != null ? acceptedCountryCodes.hashCode() : 0);
-        result = 31 * result + (acceptedBankIds != null ? acceptedBankIds.hashCode() : 0);
-        result = 31 * result + (arbitratorNodeAddresses != null ? arbitratorNodeAddresses.hashCode() : 0);
         result = 31 * result + (offerFeePaymentTxID != null ? offerFeePaymentTxID.hashCode() : 0);
+        result = 31 * result + (versionNr != null ? versionNr.hashCode() : 0);
+        result = 31 * result + (int) (txFee ^ (txFee >>> 32));
+        result = 31 * result + (int) (createOfferFee ^ (createOfferFee >>> 32));
+        result = 31 * result + (int) (takerFee ^ (takerFee >>> 32));
+        result = 31 * result + (int) (securityDeposit ^ (securityDeposit >>> 32));
+        result = 31 * result + (int) (maxTradePeriod ^ (maxTradePeriod >>> 32));
+        result = 31 * result + (int) (maxTradeLimit ^ (maxTradeLimit >>> 32));
+        result = 31 * result + (isPrivateOffer ? 1 : 0);
+        result = 31 * result + (hashOfChallenge != null ? hashOfChallenge.hashCode() : 0);
+        result = 31 * result + (extraDataMap != null ? extraDataMap.hashCode() : 0);
         return result;
     }
 
@@ -569,6 +673,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     public String toString() {
         return "Offer{" +
                 "\n\tid='" + getId() + '\'' +
+                "\n\tversionNr=" + versionNr +
                 "\n\tdirection=" + direction +
                 "\n\tcurrencyCode='" + currencyCode + '\'' +
                 "\n\tdate=" + new Date(date) +
@@ -578,6 +683,17 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 "\n\tuseMarketBasedPrice=" + useMarketBasedPrice +
                 "\n\tamount=" + amount +
                 "\n\tminAmount=" + minAmount +
+
+                "\n\ttxFee=" + txFee +
+                "\n\tcreateOfferFee=" + createOfferFee +
+                "\n\ttakerFee=" + takerFee +
+                "\n\tsecurityDeposit=" + securityDeposit +
+                "\n\tmaxTradePeriod=" + maxTradePeriod +
+                "\n\tmaxTradeLimit=" + maxTradeLimit +
+                "\n\tisPrivateOffer=" + isPrivateOffer +
+                "\n\thashOfChallenge=" + hashOfChallenge +
+                "\n\textraDataMap=" + (extraDataMap != null ? extraDataMap.toString() : "null") +
+
                 "\n\toffererAddress=" + offererNodeAddress +
                 "\n\tpubKeyRing=" + pubKeyRing +
                 "\n\tpaymentMethodName='" + paymentMethodName + '\'' +

@@ -1,7 +1,7 @@
 package io.bitsquare.btc.blockchain;
 
 import com.google.common.util.concurrent.*;
-import io.bitsquare.btc.blockchain.providers.FeeProvider;
+import io.bitsquare.btc.blockchain.providers.BlockchainTxProvider;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
@@ -22,12 +22,12 @@ class GetFeeRequest {
     public GetFeeRequest() {
     }
 
-    public SettableFuture<Coin> request(String transactionId, FeeProvider provider) {
+    public SettableFuture<Coin> request(String transactionId, BlockchainTxProvider provider) {
         final SettableFuture<Coin> resultFuture = SettableFuture.create();
         return request(transactionId, provider, resultFuture);
     }
 
-    private SettableFuture<Coin> request(String transactionId, FeeProvider provider, SettableFuture<Coin> resultFuture) {
+    private SettableFuture<Coin> request(String transactionId, BlockchainTxProvider provider, SettableFuture<Coin> resultFuture) {
         ListenableFuture<Coin> future = executorService.submit(() -> {
             Thread.currentThread().setName("requestFee-" + provider.toString());
             try {
