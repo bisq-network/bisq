@@ -98,15 +98,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     }
 
     public String getOfferId() {
-        // We got some issues that users created offers with a dev version where we added the version nr after 
-        // the id, but we reverted that as it caused issues. To avoid ongoing issues with those dangling offers
-        // we add that check.
-        // TODO remove after version 0.4.9.7 (if no offers with that invalid id are online anymore)
-        String[] tokens = offerId.split("_");
-        if (tokens.length > 1)
-            return tokens[0];
-        else
-            return offerId;
+        return offerId;
     }
 
     // We don't include the pubKeyRing as both traders might publish it if the offerer uses an old 

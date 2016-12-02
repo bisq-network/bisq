@@ -8,8 +8,8 @@ import java.io.IOException;
 
 public class JavaTorNode extends TorNode<JavaOnionProxyManager, JavaOnionProxyContext> {
 
-    public JavaTorNode(File torDirectory, boolean useBridges) throws IOException {
-        super(new JavaOnionProxyManager(new JavaOnionProxyContext(torDirectory)), useBridges);
+    public JavaTorNode(File torDirectory) throws IOException {
+        super(new JavaOnionProxyManager(new JavaOnionProxyContext(torDirectory)));
     }
 
 }

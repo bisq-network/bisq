@@ -6,7 +6,7 @@ mkdir -p gui/deploy
 set -e
 
 # Edit version
-version=0.4.9.7
+version=0.4.9.8
 
 jarFile="/media/sf_vm_shared_ubuntu/Bitsquare-$version.jar"
 

@@ -37,7 +37,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(1);
         int port = 9001;
         TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port));
-        node1.start(false, new SetupListener() {
+        node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onReadyForSendingMessages");
@@ -51,14 +51,6 @@ public class TorNetworkNodeTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();
@@ -66,7 +58,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(1);
         int port2 = 9002;
         TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port2));
-        node2.start(false, new SetupListener() {
+        node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onReadyForSendingMessages");
@@ -81,14 +73,6 @@ public class TorNetworkNodeTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();
@@ -133,7 +117,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(2);
         int port = 9001;
         TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port));
-        node1.start(false, new SetupListener() {
+        node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onReadyForSendingMessages");
@@ -148,20 +132,12 @@ public class TorNetworkNodeTest {
             @Override
             public void onSetupFailed(Throwable throwable) {
 
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
 
         int port2 = 9002;
         TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port));
-        node2.start(false, new SetupListener() {
+        node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onReadyForSendingMessages");
@@ -175,14 +151,6 @@ public class TorNetworkNodeTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
 

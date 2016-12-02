@@ -29,13 +29,13 @@
     <TableView fx:id="tableView" VBox.vgrow="SOMETIMES">
         <columns>
             <TableColumn text="Trade ID" fx:id="idColumn" minWidth="100"/>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="130"/>
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180"/>
             <TableColumn text="Market" fx:id="marketColumn" minWidth="90"/>
-            <TableColumn text="Price" fx:id="priceColumn" minWidth="100"/>
-            <TableColumn text="Amount in BTC" fx:id="tradeAmountColumn" minWidth="150"/>
+            <TableColumn text="Price" fx:id="priceColumn" minWidth="90"/>
+            <TableColumn text="Amount in BTC" fx:id="tradeAmountColumn" minWidth="130"/>
             <TableColumn text="Amount" fx:id="tradeVolumeColumn" minWidth="130"/>
             <TableColumn text="Payment method" fx:id="paymentMethodColumn" minWidth="130"/>
-            <TableColumn text="My role" fx:id="roleColumn" minWidth="130"/>
+            <TableColumn text="My role" fx:id="roleColumn" minWidth="150"/>
             <TableColumn text="" fx:id="avatarColumn" minWidth="40" maxWidth="40"/>
         </columns>
     </TableView>

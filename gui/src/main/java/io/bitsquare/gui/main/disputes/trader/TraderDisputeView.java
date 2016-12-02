@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.disputes.trader;
 import com.google.common.io.ByteStreams;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
@@ -27,6 +28,7 @@ import io.bitsquare.arbitration.payload.Attachment;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -36,6 +38,7 @@ import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.ContractWindow;
 import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
+import io.bitsquare.gui.main.overlays.windows.SendPrivateNotificationWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
@@ -91,6 +94,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final Stage stage;
     private final BSFormatter formatter;
     private final DisputeSummaryWindow disputeSummaryWindow;
+    private PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
     private P2PService p2PService;
@@ -128,7 +132,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Inject
     public TraderDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
-                             BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
+                             BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow, PrivateNotificationManager privateNotificationManager,
                              ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow, P2PService p2PService) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
@@ -136,6 +140,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         this.stage = stage;
         this.formatter = formatter;
         this.disputeSummaryWindow = disputeSummaryWindow;
+        this.privateNotificationManager = privateNotificationManager;
         this.contractWindow = contractWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.p2PService = p2PService;
@@ -203,7 +208,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         disputeDirectMessageListListener = c -> scrollToBottom();
 
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.L, KeyCombination.SHORTCUT_DOWN).match(event)) {
+            if (new KeyCodeCombination(KeyCode.L, KeyCombination.ALT_DOWN).match(event)) {
                 Map<String, List<Dispute>> map = new HashMap<>();
                 disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> {
                     String tradeId = dispute.getTradeId();
@@ -264,12 +269,25 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         .actionButtonText("Copy")
                         .onAction(() -> Utilities.copyToClipboard(message))
                         .show();
-            } else if (new KeyCodeCombination(KeyCode.U, KeyCombination.SHORTCUT_DOWN).match(event)) {
+            } else if (new KeyCodeCombination(KeyCode.U, KeyCombination.ALT_DOWN).match(event)) {
                 // Hidden shortcut to re-open a dispute. Allow it also for traders not only arbitrator.
                 if (selectedDispute != null) {
                     if (selectedDisputeClosedPropertyListener != null)
                         selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
                     selectedDispute.setIsClosed(false);
+                }
+            } else if (new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN).match(event)) {
+                if (selectedDispute != null) {
+                    PubKeyRing pubKeyRing = selectedDispute.getTraderPubKeyRing();
+                    NodeAddress nodeAddress;
+                    if (pubKeyRing.equals(selectedDispute.getContract().getBuyerPubKeyRing()))
+                        nodeAddress = selectedDispute.getContract().getBuyerNodeAddress();
+                    else
+                        nodeAddress = selectedDispute.getContract().getSellerNodeAddress();
+
+                    new SendPrivateNotificationWindow(pubKeyRing, nodeAddress)
+                            .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
+                            .show();
                 }
             }
         };

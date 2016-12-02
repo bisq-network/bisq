@@ -62,7 +62,7 @@ public class SepaForm extends PaymentMethodForm {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", sepaAccountContractData.getHolderName());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Country of bank:", CountryUtil.getNameAndCode(sepaAccountContractData.getCountryCode()));
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", sepaAccountContractData.getIban());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC/SWIFT:", sepaAccountContractData.getBic());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC:", sepaAccountContractData.getBic());
         return gridRow;
     }
 
@@ -92,7 +92,7 @@ public class SepaForm extends PaymentMethodForm {
             updateFromInputs();
 
         });
-        bicInputTextField = addLabelInputTextField(gridPane, ++gridRow, "BIC/SWIFT:").second;
+        bicInputTextField = addLabelInputTextField(gridPane, ++gridRow, "BIC:").second;
         bicInputTextField.setValidator(bicValidator);
         bicInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setBic(newValue);
@@ -101,7 +101,7 @@ public class SepaForm extends PaymentMethodForm {
         });
 
 
-        addLabel(gridPane, ++gridRow, "Country of your Bank:");
+        addLabel(gridPane, ++gridRow, "Country of bank:");
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         ComboBox<Country> countryComboBox = new ComboBox<>();
@@ -123,7 +123,7 @@ public class SepaForm extends PaymentMethodForm {
         gridPane.getChildren().add(hBox);
 
 
-        countryComboBox.setPromptText("Select country of your Bank");
+        countryComboBox.setPromptText("Select country of bank");
         countryComboBox.setConverter(new StringConverter<Country>() {
             @Override
             public String toString(Country country) {
@@ -198,11 +198,11 @@ public class SepaForm extends PaymentMethodForm {
     }
 
     private void addEuroCountriesGrid(boolean isEditable) {
-        addCountriesGrid(isEditable, "Accept trades from those Euro countries:", euroCountryCheckBoxes, CountryUtil.getAllSepaEuroCountries());
+        addCountriesGrid(isEditable, "Accept trades from these Euro countries:", euroCountryCheckBoxes, CountryUtil.getAllSepaEuroCountries());
     }
 
     private void addNonEuroCountriesGrid(boolean isEditable) {
-        addCountriesGrid(isEditable, "Accept trades from those non-Euro countries:", nonEuroCountryCheckBoxes, CountryUtil.getAllSepaNonEuroCountries());
+        addCountriesGrid(isEditable, "Accept trades from these non-Euro countries:", nonEuroCountryCheckBoxes, CountryUtil.getAllSepaNonEuroCountries());
     }
 
     private void addCountriesGrid(boolean isEditable, String title, List<CheckBox> checkBoxList, List<Country> dataProvider) {
@@ -308,8 +308,8 @@ public class SepaForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(sepaAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", sepaAccount.getHolderName());
         addLabelTextField(gridPane, ++gridRow, "IBAN:", sepaAccount.getIban()).second.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "BIC/SWIFT:", sepaAccount.getBic()).second.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Location of Bank:",
+        addLabelTextField(gridPane, ++gridRow, "BIC:", sepaAccount.getBic()).second.setMouseTransparent(false);
+        addLabelTextField(gridPane, ++gridRow, "Country of Bank:",
                 sepaAccount.getCountry() != null ? sepaAccount.getCountry().name : "");
         addLabelTextField(gridPane, ++gridRow, "Currency:", sepaAccount.getSingleTradeCurrency().getNameAndCode());
         String countries;

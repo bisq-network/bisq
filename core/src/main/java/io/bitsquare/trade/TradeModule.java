@@ -19,7 +19,7 @@ package io.bitsquare.trade;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
-import io.bitsquare.app.CoreOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
 import io.bitsquare.trade.statistics.TradeStatisticsManager;
@@ -42,6 +42,6 @@ public class TradeModule extends AppModule {
         bind(TradeStatisticsManager.class).in(Singleton.class);
         bind(ClosedTradableManager.class).in(Singleton.class);
         bind(FailedTradesManager.class).in(Singleton.class);
-        bindConstant().annotatedWith(named(CoreOptionKeys.DUMP_STATISTICS)).to(env.getRequiredProperty(CoreOptionKeys.DUMP_STATISTICS));
+        bindConstant().annotatedWith(named(AppOptionKeys.DUMP_STATISTICS)).to(env.getRequiredProperty(AppOptionKeys.DUMP_STATISTICS));
     }
 }

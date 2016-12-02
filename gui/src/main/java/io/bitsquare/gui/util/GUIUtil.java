@@ -25,9 +25,7 @@ import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.locale.CryptoCurrency;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.FiatCurrency;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.storage.Storage;
@@ -78,7 +76,7 @@ public class GUIUtil {
             new Popup<>().information("Please be sure that the mining fee used at your external wallet is " +
                     "sufficiently high so that the funding transaction will be accepted by the miners.\n" +
                     "Otherwise the trade transactions cannot be confirmed and a trade would end up in a dispute.\n\n" +
-                    "The recommended fee is about 0.0001 - 0.0002 BTC.\n\n" +
+                    "The recommended fee is about 50 Satoshi/Byte which is for an average transaction about 0.0002 BTC.\n\n" +
                     "You can view typically used fees at: https://tradeblock.com/blockchain")
                     .dontShowAgainId(key, Preferences.INSTANCE)
                     .onClose(runnable::run)
@@ -184,7 +182,6 @@ public class GUIUtil {
             public String toString(CurrencyListItem item) {
                 TradeCurrency tradeCurrency = item.tradeCurrency;
                 String code = tradeCurrency.getCode();
-                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
                 if (code.equals(GUIUtil.SHOW_ALL_FLAG))
                     return "▶ Show all";
                 else if (code.equals(GUIUtil.EDIT_FLAG))
@@ -193,12 +190,7 @@ public class GUIUtil {
                     String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
                     if (preferences.getSortMarketCurrenciesNumerically())
                         displayString += " - " + item.numTrades + " " + postFix;
-                    if (tradeCurrency instanceof FiatCurrency)
-                        return "★ " + displayString;
-                    else if (tradeCurrency instanceof CryptoCurrency) {
-                        return "✦ " + displayString;
-                    } else
-                        return "-";
+                    return tradeCurrency.getDisplayPrefix() + displayString;
                 }
             }
 
@@ -220,12 +212,7 @@ public class GUIUtil {
                     return "▶ Show all";
                 else if (code.equals(GUIUtil.EDIT_FLAG))
                     return "▼ Edit currency list";
-                else if (tradeCurrency instanceof FiatCurrency)
-                    return "★ " + displayString;
-                else if (tradeCurrency instanceof CryptoCurrency) {
-                    return "✦ " + displayString;
-                } else
-                    return "-";
+                return tradeCurrency.getDisplayPrefix() + displayString;
             }
 
             @Override
@@ -275,8 +262,8 @@ public class GUIUtil {
     public static void openWebPage(String target) {
         String key = "warnOpenURLWhenTorEnabled";
         final Preferences preferences = Preferences.INSTANCE;
-        if (preferences.getUseTorForHttpRequests() && preferences.showAgain(key)) {
-            new Popup<>().information("You have Tor enabled for Http requests and are going to open a web page " +
+        if (preferences.showAgain(key)) {
+            new Popup<>().information("You are going to open a web page " +
                     "in your system web browser.\n" +
                     "Do you want to open the web page now?\n\n" +
                     "If you are not using the \"Tor Browser\" as your default system web browser you " +

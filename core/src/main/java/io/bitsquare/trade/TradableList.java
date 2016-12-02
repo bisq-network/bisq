@@ -48,7 +48,7 @@ public final class TradableList<T extends Tradable> extends ArrayList<T> impleme
     public TradableList(Storage<TradableList<T>> storage, String fileName) {
         this.storage = storage;
 
-        TradableList persisted = storage.initAndGetPersisted(this, fileName);
+        TradableList<T> persisted = storage.initAndGetPersisted(this, fileName);
         if (persisted != null) {
             this.addAll(persisted);
         }

@@ -47,7 +47,7 @@ import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.main.overlays.notifications.NotificationCenter;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.gui.main.overlays.windows.AddBridgeEntriesWindow;
+import io.bitsquare.gui.main.overlays.windows.AddBitcoinNodesWindow;
 import io.bitsquare.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bitsquare.gui.main.overlays.windows.TacWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
@@ -109,6 +109,7 @@ public class MainViewModel implements ViewModel {
     private PrivateNotificationManager privateNotificationManager;
     private FilterManager filterManager;
     private final WalletPasswordWindow walletPasswordWindow;
+    private AddBitcoinNodesWindow addBitcoinNodesWindow;
     private final NotificationCenter notificationCenter;
     private final TacWindow tacWindow;
     private Clock clock;
@@ -178,7 +179,7 @@ public class MainViewModel implements ViewModel {
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
-                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow,
+                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, AddBitcoinNodesWindow addBitcoinNodesWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.priceFeedService = priceFeedService;
@@ -195,6 +196,7 @@ public class MainViewModel implements ViewModel {
         this.privateNotificationManager = privateNotificationManager;
         this.filterManager = filterManager; // Reference so it's initialized and eventlistener gets registered
         this.walletPasswordWindow = walletPasswordWindow;
+        this.addBitcoinNodesWindow = addBitcoinNodesWindow;
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
         this.clock = clock;
@@ -216,10 +218,31 @@ public class MainViewModel implements ViewModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initializeAllServices() {
+    public void start() {
+        // TODO need more though how to improve privacy without annoying first time users.
+       /* String key = "showAddBitcoinNodesWindowKey";
+        if (preferences.showAgain(key))
+            addBitcoinNodesWindow.dontShowAgainId(key, preferences)
+                    .onClose(() -> {
+                        preferences.dontShowAgain(key, true);
+                        initializeAllServices();
+                    })
+                    .onAction(() -> {
+                        preferences.dontShowAgain(key, true);
+                        initializeAllServices();
+                    })
+                    .show();
+        else
+            initializeAllServices();
+    }
+
+    private void initializeAllServices() {*/
+        
+        log.error("initializeAllServices");
         Log.traceCall();
 
         UserThread.runAfter(tacWindow::showIfNeeded, 2);
+
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
@@ -344,8 +367,7 @@ public class MainViewModel implements ViewModel {
         });
 
         final BooleanProperty p2pNetworkInitialized = new SimpleBooleanProperty();
-        boolean useBridges = preferences.getBridgeAddresses() != null && !preferences.getBridgeAddresses().isEmpty();
-        p2PService.start(useBridges, new P2PServiceListener() {
+        p2PService.start(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
                 bootstrapState.set("Tor node created");
@@ -409,17 +431,6 @@ public class MainViewModel implements ViewModel {
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapWarning.set("Bootstrapping to P2P network failed");
                 p2pNetworkLabelId.set("splash-error-state-msg");
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
-                new AddBridgeEntriesWindow()
-                        .onAction(resultHandler::run)
-                        .show();
             }
         });
 

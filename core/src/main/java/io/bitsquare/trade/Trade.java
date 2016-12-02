@@ -320,6 +320,7 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
+        log.info("Trade.setState: " + state);
         boolean changed = this.state != state;
         this.state = state;
         stateProperty.set(state);

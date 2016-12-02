@@ -23,6 +23,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
@@ -41,9 +42,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.MainViewModel;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.gui.main.overlays.windows.EmptyWalletWindow;
-import io.bitsquare.gui.main.overlays.windows.FilterWindow;
-import io.bitsquare.gui.main.overlays.windows.SendAlertMessageWindow;
+import io.bitsquare.gui.main.overlays.windows.*;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
@@ -81,7 +80,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static io.bitsquare.app.CoreOptionKeys.APP_NAME_KEY;
+import static io.bitsquare.app.AppOptionKeys.APP_NAME_KEY;
 
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
@@ -110,7 +109,7 @@ public class BitsquareApp extends Application {
     public void start(Stage stage) throws IOException {
         BitsquareApp.primaryStage = stage;
 
-        String logPath = Paths.get(env.getProperty(CoreOptionKeys.APP_DATA_DIR_KEY), "bitsquare").toString();
+        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bitsquare").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Version.printVersion();
@@ -146,7 +145,7 @@ public class BitsquareApp extends Application {
             e.printStackTrace();
             UserThread.execute(() -> showErrorPopup(e, true));
         }
-        
+
         Security.addProvider(new BouncyCastleProvider());
 
         try {
@@ -197,21 +196,33 @@ public class BitsquareApp extends Application {
                 stop();
             });
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.W, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     stop();
-                } else if (new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     stop();
-                } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     showEmptyWalletPopup();
-                } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showSendAlertMessagePopup();
-                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFilterPopup();
-                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFPSWindow();
-                else if (DevFlags.DEV_MODE) {
-                    if (new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
-                        showDebugWindow();
+                } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                    WalletService walletService = injector.getInstance(WalletService.class);
+                    if (walletService.getWallet() != null)
+                        new ShowWalletDataWindow(walletService).information("Wallet raw data").show();
+                    else
+                        new Popup<>().warning("The wallet is not initialized yet").show();
+                } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                    TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
+                    WalletService walletService = injector.getInstance(WalletService.class);
+                    if (walletService.getWallet() != null)
+                        new SpendFromDepositTxWindow(tradeWalletService).information("Emergency wallet tool").show();
+                    else
+                        new Popup<>().warning("The wallet is not initialized yet").show();
+                } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                    showDebugWindow();
                 }
             });
 
@@ -250,9 +261,14 @@ public class BitsquareApp extends Application {
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
 
-        } catch (Throwable throwable) {
+        } catch (
+                Throwable throwable
+                )
+
+        {
             showErrorPopup(throwable, false);
         }
+
     }
 
     private void showSendAlertMessagePopup() {

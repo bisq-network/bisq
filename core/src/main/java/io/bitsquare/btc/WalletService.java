@@ -89,11 +89,9 @@ public class WalletService {
     private final AddressEntryList addressEntryList;
     private final Preferences preferences;
     private final Socks5ProxyProvider socks5ProxyProvider;
-    private final String seedNodes;
     private final NetworkParameters params;
     private final File walletDir;
     private final UserAgent userAgent;
-    private final boolean useTor;
 
     private WalletAppKitBitSquare walletAppKit;
     private Wallet wallet;
@@ -116,28 +114,15 @@ public class WalletService {
                          UserAgent userAgent,
                          Preferences preferences,
                          Socks5ProxyProvider socks5ProxyProvider,
-                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
-                         @Named(BtcOptionKeys.BTC_SEED_NODES) String seedNodes,
-                         @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
+                         @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
-        this.seedNodes = seedNodes;
         this.params = preferences.getBitcoinNetwork().getParameters();
         this.walletDir = new File(appDir, "bitcoin");
         this.userAgent = userAgent;
-
-        // We support a checkbox in the settings to set the use tor flag.
-        // If we get the options set we override that setting. 
-        if (useTorFlagFromOptions != null && !useTorFlagFromOptions.isEmpty()) {
-            if (useTorFlagFromOptions.equals("false"))
-                preferences.setUseTorForBitcoinJ(false);
-            else if (useTorFlagFromOptions.equals("true"))
-                preferences.setUseTorForBitcoinJ(true);
-        }
-        useTor = preferences.getUseTorForBitcoinJ();
 
         storage = new Storage<>(walletDir);
         Long persisted = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
@@ -186,6 +171,7 @@ public class WalletService {
                 wallet.addEventListener(walletEventListener);
 
                 addressEntryList.onWalletReady(wallet);
+
 
                 walletAppKit.peerGroup().addEventListener(new PeerEventListener() {
                     @Override
@@ -247,8 +233,7 @@ public class WalletService {
         walletAppKit.setBloomFilterTweak(bloomFilterTweak);
 
         // Avoid the simple attack (see: https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj/) due to the 
-        // default implementation using both pubkey and hash of pubkey
-        walletAppKit.setInsertPubKey(false);
+        // default implementation using both pubkey and hash of pubkey. We have set a insertPubKey flag in BasicKeyChain to default false.
 
         // Default only 266 keys are generated (2 * 100+33). That would trigger new bloom filters when we are reaching 
         // the threshold. To avoid reaching the threshold we create much more keys which are unlikely to cause update of the
@@ -274,15 +259,16 @@ public class WalletService {
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
         walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
 
-        log.debug("seedNodes: " + seedNodes);
+        String btcNodes = preferences.getBitcoinNodes();
+        log.debug("btcNodes: " + btcNodes);
         boolean usePeerNodes = false;
 
         // Pass custom seed nodes if set in options
-        if (!seedNodes.isEmpty()) {
+        if (!btcNodes.isEmpty()) {
 
             // TODO: this parsing should be more robust,
             // give validation error if needed.
-            String[] nodes = seedNodes.replace(", ", ",").split(",");
+            String[] nodes = btcNodes.replace(", ", ",").split(",");
             List<PeerAddress> peerAddressList = new ArrayList<>();
             for (String node : nodes) {
                 String[] parts = node.split(":");
@@ -310,7 +296,7 @@ public class WalletService {
             }
             if (peerAddressList.size() > 0) {
                 PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
-                log.debug("seedNodes parsed: " + Arrays.toString(peerAddressListFixed));
+                log.debug("btcNodes parsed: " + Arrays.toString(peerAddressListFixed));
 
                 walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
                 usePeerNodes = true;
@@ -392,6 +378,17 @@ public class WalletService {
             }
             shutDownDone.set(true);
         }
+    }
+
+    public String exportWalletData(boolean includePrivKeys) {
+        StringBuilder addressEntryListData = new StringBuilder();
+        getAddressEntryListAsImmutableList().stream().forEach(e -> addressEntryListData.append(e.toString()).append("\n"));
+        return "BitcoinJ wallet:\n" +
+                wallet.toString(includePrivKeys, true, true, walletAppKit.chain()) + "\n\n" +
+                "Bitsquare address entry list:\n" +
+                addressEntryListData.toString() +
+                "All pubkeys as hex:\n" +
+                wallet.printAllPubKeysAsHex();
     }
 
     public void restoreSeedWords(DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
@@ -877,7 +874,7 @@ public class WalletService {
     public Coin getRequiredFeeForMultipleAddresses(Set<String> fromAddresses,
                                                    String toAddress,
                                                    Coin amount)
-            throws AddressFormatException, AddressEntryException {
+            throws AddressFormatException, AddressEntryException, InsufficientFundsException {
         Set<AddressEntry> addressEntries = fromAddresses.stream()
                 .map(address -> {
                     Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
@@ -927,7 +924,7 @@ public class WalletService {
     private Coin getFeeForMultipleAddresses(Set<String> fromAddresses,
                                             String toAddress,
                                             Coin amount,
-                                            Coin fee) throws AddressEntryException, AddressFormatException {
+                                            Coin fee) throws AddressEntryException, AddressFormatException, InsufficientFundsException {
         try {
             wallet.completeTx(getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, null, aesKey));
         } catch (InsufficientMoneyException e) {
@@ -935,10 +932,16 @@ public class WalletService {
                 log.trace("missing fee " + e.missing.toFriendlyString());
                 fee = fee.add(e.missing);
                 amount = amount.subtract(fee);
-                return getFeeForMultipleAddresses(fromAddresses,
-                        toAddress,
-                        amount,
-                        fee);
+                if (amount.isGreaterThan(Transaction.MIN_NONDUST_OUTPUT)) {
+                    return getFeeForMultipleAddresses(fromAddresses,
+                            toAddress,
+                            amount,
+                            fee);
+                } else {
+                    throw new InsufficientFundsException("The fees for that transaction exceed the available funds " +
+                            "or the resulting output value is below the min. dust value:\n" +
+                            "Missing " + e.missing.toFriendlyString());
+                }
             }
         }
         log.trace("result fee " + fee.toFriendlyString());

@@ -62,7 +62,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
     public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
 
-    public static final String LOG_LEVEL_DEFAULT = (DevFlags.STRESS_TEST_MODE || DevFlags.DEV_MODE) ? Level.TRACE.levelStr : Level.INFO.levelStr;
+    //public static final String LOG_LEVEL_DEFAULT = (DevFlags.STRESS_TEST_MODE || DevFlags.DEV_MODE) ? Level.TRACE.levelStr : Level.INFO.levelStr;
+    public static final String LOG_LEVEL_DEFAULT = Level.INFO.levelStr;
 
     static final String BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME = "bitsquareCommandLineProperties";
     static final String BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME = "bitsquareAppDirProperties";
@@ -76,9 +77,9 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String userDataDir;
     private final String appDataDir;
     private final String btcNetworkDir;
-    private final String logLevel;
+    private final String logLevel, priceFeedProviders;
     private BitcoinNetwork bitcoinNetwork;
-    private final String btcSeedNodes, seedNodes, ignoreDevMsg, useTorForBtc, useTorForHttp,
+    private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress, socks5ProxyHttpAddress;
 
     public BitsquareEnvironment(OptionSet options) {
@@ -124,25 +125,28 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(CommonOptionKeys.LOG_LEVEL_KEY) :
                 LOG_LEVEL_DEFAULT;
 
-        userDataDir = commandLineProperties.containsProperty(CoreOptionKeys.USER_DATA_DIR_KEY) ?
-                (String) commandLineProperties.getProperty(CoreOptionKeys.USER_DATA_DIR_KEY) :
+        userDataDir = commandLineProperties.containsProperty(AppOptionKeys.USER_DATA_DIR_KEY) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.USER_DATA_DIR_KEY) :
                 DEFAULT_USER_DATA_DIR;
 
-        appName = commandLineProperties.containsProperty(CoreOptionKeys.APP_NAME_KEY) ?
-                (String) commandLineProperties.getProperty(CoreOptionKeys.APP_NAME_KEY) :
+        appName = commandLineProperties.containsProperty(AppOptionKeys.APP_NAME_KEY) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.APP_NAME_KEY) :
                 DEFAULT_APP_NAME;
 
-        appDataDir = commandLineProperties.containsProperty(CoreOptionKeys.APP_DATA_DIR_KEY) ?
-                (String) commandLineProperties.getProperty(CoreOptionKeys.APP_DATA_DIR_KEY) :
+        appDataDir = commandLineProperties.containsProperty(AppOptionKeys.APP_DATA_DIR_KEY) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.APP_DATA_DIR_KEY) :
                 appDataDir(userDataDir, appName);
-        ignoreDevMsg = commandLineProperties.containsProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY) ?
-                (String) commandLineProperties.getProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY) :
+        ignoreDevMsg = commandLineProperties.containsProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) :
                 "";
-        dumpStatistics = commandLineProperties.containsProperty(CoreOptionKeys.DUMP_STATISTICS) ?
-                (String) commandLineProperties.getProperty(CoreOptionKeys.DUMP_STATISTICS) :
+        dumpStatistics = commandLineProperties.containsProperty(AppOptionKeys.DUMP_STATISTICS) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.DUMP_STATISTICS) :
                 "";
-        maxMemory = commandLineProperties.containsProperty(CoreOptionKeys.MAX_MEMORY) ?
-                (String) commandLineProperties.getProperty(CoreOptionKeys.MAX_MEMORY) :
+        maxMemory = commandLineProperties.containsProperty(AppOptionKeys.MAX_MEMORY) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.MAX_MEMORY) :
+                "";
+        priceFeedProviders = commandLineProperties.containsProperty(AppOptionKeys.PRICE_FEED_PROVIDERS) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.PRICE_FEED_PROVIDERS) :
                 "";
 
         seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
@@ -161,16 +165,13 @@ public class BitsquareEnvironment extends StandardEnvironment {
         socks5ProxyHttpAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
                 "";
-        useTorForHttp = commandLineProperties.containsProperty(NetworkOptionKeys.USE_TOR_FOR_HTTP) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.USE_TOR_FOR_HTTP) :
+
+        btcNodes = commandLineProperties.containsProperty(AppOptionKeys.BTC_NODES) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.BTC_NODES) :
                 "";
 
-        btcSeedNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_SEED_NODES) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_SEED_NODES) :
-                "";
-
-        useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
+        useTorForBtc = commandLineProperties.containsProperty(AppOptionKeys.USE_TOR_FOR_BTC) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.USE_TOR_FOR_BTC) :
                 "";
 
         MutablePropertySources propertySources = this.getPropertySources();
@@ -236,17 +237,17 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(bitcoinNetwork.ordinal()));
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, socks5ProxyBtcAddress);
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);
-                setProperty(NetworkOptionKeys.USE_TOR_FOR_HTTP, useTorForHttp);
 
-                setProperty(CoreOptionKeys.APP_DATA_DIR_KEY, appDataDir);
-                setProperty(CoreOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
-                setProperty(CoreOptionKeys.DUMP_STATISTICS, dumpStatistics);
-                setProperty(CoreOptionKeys.APP_NAME_KEY, appName);
-                setProperty(CoreOptionKeys.MAX_MEMORY, maxMemory);
-                setProperty(CoreOptionKeys.USER_DATA_DIR_KEY, userDataDir);
+                setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
+                setProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY, ignoreDevMsg);
+                setProperty(AppOptionKeys.DUMP_STATISTICS, dumpStatistics);
+                setProperty(AppOptionKeys.APP_NAME_KEY, appName);
+                setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
+                setProperty(AppOptionKeys.USER_DATA_DIR_KEY, userDataDir);
+                setProperty(AppOptionKeys.PRICE_FEED_PROVIDERS, priceFeedProviders);
 
-                setProperty(BtcOptionKeys.BTC_SEED_NODES, btcSeedNodes);
-                setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
+                setProperty(AppOptionKeys.BTC_NODES, btcNodes);
+                setProperty(AppOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);

@@ -2,7 +2,7 @@ package io.bitsquare.trade.statistics;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.bitsquare.app.CoreOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.CurrencyTuple;
 import io.bitsquare.locale.CurrencyUtil;
@@ -42,7 +42,7 @@ public class TradeStatisticsManager {
                                   Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage,
                                   Storage<PlainTextWrapper> statisticsJsonStorage,
                                   P2PService p2PService,
-                                  @Named(CoreOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
+                                  @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.statisticsStorage = statisticsStorage;
         this.fiatCurrencyListJsonStorage = fiatCurrencyListJsonStorage;
         this.cryptoCurrencyListJsonStorage = cryptoCurrencyListJsonStorage;

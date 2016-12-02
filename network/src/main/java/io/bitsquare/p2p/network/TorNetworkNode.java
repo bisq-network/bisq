@@ -16,7 +16,6 @@ import io.bitsquare.p2p.Utils;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.JavaTorNode;
 import io.nucleo.net.TorNode;
-import io.nucleo.net.bridge.BridgeProvider;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.fxmisc.easybind.EasyBind;
@@ -38,8 +37,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class TorNetworkNode extends NetworkNode {
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNode.class);
 
-    private static final int MAX_RESTART_ATTEMPTS = 3;
-    private static final int WAIT_BEFORE_RESTART = 2000;
+    private static final int MAX_RESTART_ATTEMPTS = 5;
     private static final long SHUT_DOWN_TIMEOUT_SEC = 5;
 
     private final File torDir;
@@ -65,7 +63,7 @@ public class TorNetworkNode extends NetworkNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void start(boolean useBridges, @Nullable SetupListener setupListener) {
+    public void start(@Nullable SetupListener setupListener) {
         if (setupListener != null)
             addSetupListener(setupListener);
 
@@ -73,7 +71,6 @@ public class TorNetworkNode extends NetworkNode {
 
         // Create the tor node (takes about 6 sec.)
         createTorNode(torDir,
-                useBridges,
                 torNode -> {
                     Log.traceCall("torNode created");
                     TorNetworkNode.this.torNetworkNode = torNode;
@@ -176,30 +173,7 @@ public class TorNetworkNode extends NetworkNode {
     private void restartTor(String errorMessage) {
         Log.traceCall();
         restartCounter++;
-        if (restartCounter <= MAX_RESTART_ATTEMPTS) {
-            // If we failed we try with our default bridges
-            if (restartCounter == 1) {
-                setupListeners.stream().forEach(SetupListener::onUseDefaultBridges);
-                shutDown(() -> UserThread.runAfter(() -> {
-                    log.warn("Bridges: " + BridgeProvider.getBridges());
-                    log.warn("We restart tor using default bridges.");
-                    start(true, null);
-                }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
-            } else if (restartCounter == 2) {
-                setupListeners.stream().forEach(e -> e.onRequestCustomBridges(() -> {
-                    log.warn("Bridges: " + BridgeProvider.getBridges());
-                    start(true, null);
-                }));
-                log.warn("We stop tor as starting tor with the default bridges failed. We request user to add custom bridges.");
-                shutDown(null);
-            } else {
-                shutDown(() -> UserThread.runAfter(() -> {
-                    log.warn("We restart tor using custom bridges.");
-                    log.warn("Bridges: " + BridgeProvider.getBridges());
-                    start(true, null);
-                }, WAIT_BEFORE_RESTART, TimeUnit.MILLISECONDS));
-            }
-        } else {
+        if (restartCounter > MAX_RESTART_ATTEMPTS) {
             String msg = "We tried to restart Tor " + restartCounter +
                     " times, but it continued to fail with error message:\n" +
                     errorMessage + "\n\n" +
@@ -213,14 +187,14 @@ public class TorNetworkNode extends NetworkNode {
     // create tor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createTorNode(final File torDir, boolean useBridges, final Consumer<TorNode> resultHandler) {
+    private void createTorNode(final File torDir, final Consumer<TorNode> resultHandler) {
         Log.traceCall();
         ListenableFuture<TorNode<JavaOnionProxyManager, JavaOnionProxyContext>> future = executorService.submit(() -> {
             Utilities.setThreadName("TorNetworkNode:CreateTorNode");
             long ts = System.currentTimeMillis();
             if (torDir.mkdirs())
                 log.trace("Created directory for tor at {}", torDir.getAbsolutePath());
-            TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode = new JavaTorNode(torDir, useBridges);
+            TorNode<JavaOnionProxyManager, JavaOnionProxyContext> torNode = new JavaTorNode(torDir);
             log.debug("\n\n############################################################\n" +
                     "TorNode created:" +
                     "\nTook " + (System.currentTimeMillis() - ts) + " ms"

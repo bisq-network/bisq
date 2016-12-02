@@ -652,6 +652,13 @@ public class DisputeManager {
                         dispute.setDisputePayoutTxId(payoutTx.getHashAsString());
                         sendPeerPublishedPayoutTxMessage(payoutTx, dispute, contract);
                     }
+                } else {
+                    log.trace("We don't publish the tx as we are not the winning party.");
+                    // Clean up tangling trades
+                    if (dispute.disputeResultProperty().get() != null &&
+                            dispute.isClosed() &&
+                            tradeManager.getTradeById(dispute.getTradeId()).isPresent())
+                        tradeManager.closeDisputedTrade(dispute.getTradeId());
                 }
             } else {
                 log.debug("We got a dispute result msg but we don't have a matching dispute. " +

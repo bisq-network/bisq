@@ -33,10 +33,10 @@ import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.market.MarketView;
 import io.bitsquare.gui.main.offer.BuyOfferView;
 import io.bitsquare.gui.main.offer.SellOfferView;
-import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.settings.SettingsView;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Transitions;
 import javafx.beans.value.ChangeListener;
@@ -97,6 +97,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private static Transitions transitions;
+    private BSFormatter formatter;
     private ChangeListener<String> walletServiceErrorMsgListener;
     private ChangeListener<String> btcSyncIconIdListener;
     private ChangeListener<String> splashP2PNetworkErrorMsgListener;
@@ -107,17 +108,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ProgressBar btcSyncIndicator;
     private Label btcSplashInfo;
     private List<String> persistedFilesCorrupted;
-    private BorderPane baseApplicationContainer;
-    private Overlay<Popup> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
+    private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
     private static StackPane rootContainer;
-    private ChangeListener<PriceFeedComboBoxItem> selectedPriceFeedItemListender;
 
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
-                    @Named(MainView.TITLE_KEY) String title) {
+                    BSFormatter formatter, @Named(MainView.TITLE_KEY) String title) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.formatter = formatter;
         MainView.transitions = transitions;
     }
 
@@ -148,7 +148,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         priceComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             model.setPriceFeedComboBoxItem(newValue);
         });
-        selectedPriceFeedItemListender = (observable, oldValue, newValue) -> {
+        ChangeListener<PriceFeedComboBoxItem> selectedPriceFeedItemListender = (observable, oldValue, newValue) -> {
             if (newValue != null)
                 priceComboBox.getSelectionModel().select(newValue);
 
@@ -200,7 +200,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             setId("content-pane");
         }};
 
-        baseApplicationContainer = new BorderPane(applicationContainer) {{
+        BorderPane baseApplicationContainer = new BorderPane(applicationContainer) {{
             setId("base-content-container");
         }};
         baseApplicationContainer.setBottom(createFooter());
@@ -259,7 +259,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
         // Delay a bit to give time for rendering the splash screen
-        UserThread.execute(model::initializeAllServices);
+        UserThread.execute(model::start);
     }
 
     private Tuple2<TextField, VBox> getBalanceBox(String text) {
@@ -278,7 +278,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         vBox.setSpacing(3);
         vBox.setPadding(new Insets(11, 0, 0, 0));
         vBox.getChildren().addAll(textField, label);
-        return new Tuple2(textField, vBox);
+        return new Tuple2<>(textField, vBox);
     }
 
     private ListCell<PriceFeedComboBoxItem> getPriceFeedComboBoxListCell() {
@@ -324,7 +324,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.setManaged(model.isFiatCurrencyPriceFeedSelected.get());
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
-        btcAverageIconButton.setTooltip(new Tooltip("Market price is provided by https://bitcoinaverage.com"));
+        btcAverageIconButton.setOnMouseEntered(e -> {
+            btcAverageIconButton.setTooltip(new Tooltip("Market price is provided by https://bitcoinaverage.com\n" +
+                    "Last update: " + formatter.formatTime(model.priceFeedService.getLastRequestTimeStampBtcAverage())));
+        });
 
         final ImageView poloniexIcon = new ImageView();
         poloniexIcon.setId("poloniex");
@@ -338,8 +341,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.setManaged(model.isCryptoCurrencyPriceFeedSelected.get());
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
-        poloniexIconButton.setTooltip(new Tooltip("Market price is provided by https://poloniex.com"));
-
+        poloniexIconButton.setOnMouseEntered(e -> {
+            poloniexIconButton.setTooltip(new Tooltip("Market price is provided by https://poloniex.com.\n" +
+                    "If the altcoin is not available at Poloniex we use https://coinmarketcap.com\n" +
+                    "Last update: " + formatter.formatTime(model.priceFeedService.getLastRequestTimeStampPoloniex())));
+        });
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
@@ -488,7 +494,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             if (newValue != null) {
                 btcInfoLabel.setId("splash-error-state-msg");
                 if (btcNetworkWarnMsgPopup == null) {
-                    btcNetworkWarnMsgPopup = new Popup().warning(newValue);
+                    btcNetworkWarnMsgPopup = new Popup<>().warning(newValue);
                     btcNetworkWarnMsgPopup.show();
                 }
             } else {
@@ -539,7 +545,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         p2PNetworkLabel.idProperty().bind(model.p2pNetworkLabelId);
         model.p2pNetworkWarnMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                p2PNetworkWarnMsgPopup = new Popup().warning(newValue);
+                p2PNetworkWarnMsgPopup = new Popup<>().warning(newValue);
                 p2PNetworkWarnMsgPopup.show();
             } else if (p2PNetworkWarnMsgPopup != null) {
                 p2PNetworkWarnMsgPopup.hide();

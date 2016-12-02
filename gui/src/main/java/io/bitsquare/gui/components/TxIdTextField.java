@@ -126,6 +126,7 @@ public class TxIdTextField extends AnchorPane {
         textField.setOnMouseClicked(null);
         blockExplorerIcon.setOnMouseClicked(null);
         copyIcon.setOnMouseClicked(null);
+        textField.setText("");
     }
 
 

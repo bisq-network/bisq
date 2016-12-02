@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class RequestDataHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(RequestDataHandler.class);
 
-    private static final long TIME_OUT_SEC = 20;
+    private static final long TIME_OUT_SEC = 40;
     private NodeAddress peersNodeAddress;
 
 

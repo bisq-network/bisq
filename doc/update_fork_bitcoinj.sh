@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /Users/mk/Documents/_intellij/bitcoinj-fork
+cd /Users/dev/Documents/_intellij/bitcoinj-fork
 git reset --hard
 git remote add upstream https://github.com/bitcoinj/bitcoinj.git
 git checkout master

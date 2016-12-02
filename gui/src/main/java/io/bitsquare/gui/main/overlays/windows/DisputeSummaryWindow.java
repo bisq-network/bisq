@@ -598,7 +598,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     byte[] sellerPubKey,
                     byte[] arbitratorPubKey)
                     */
-                    byte[] arbitratorSignature = tradeWalletService.signDisputedPayoutTx(
+                    byte[] arbitratorSignature = tradeWalletService.arbitratorSignsDisputedPayoutTx(
                             dispute.getDepositTxSerialized(),
                             disputeResult.getBuyerPayoutAmount(),
                             disputeResult.getSellerPayoutAmount(),

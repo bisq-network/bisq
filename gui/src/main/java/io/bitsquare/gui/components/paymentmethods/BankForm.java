@@ -269,7 +269,7 @@ abstract class BankForm extends PaymentMethodForm {
             if (selectedItem != null) {
                 if (selectedItem.code.equals("US")) {
                     new Popup<>().information("Bank transfer with WIRE or ACH is not supported for the US because WIRE is too expensive and ACH has a high chargeback risk.\n\n" +
-                            "Please use payment methods \"ClearXchange\", \"US Postal Money Order\" or \"Cash Deposit\" instead.")
+                            "Please use payment methods \"ClearXchange\", \"US Postal Money Order\" or \"Cash/ATM Deposit\" instead.")
                             .onClose(() -> closeHandler.run())
                             .show();
                 } else {
@@ -389,7 +389,7 @@ abstract class BankForm extends PaymentMethodForm {
             TradeCurrency selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
             FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code);
             if (!defaultCurrency.equals(selectedItem)) {
-                new Popup<>().warning("Are you sure you want to choose a currency other than the countries default currency?")
+                new Popup<>().warning("Are you sure you want to choose a currency other than the country's default currency?")
                         .actionButtonText("Yes")
                         .onAction(() -> {
                             paymentAccount.setSingleTradeCurrency(selectedItem);

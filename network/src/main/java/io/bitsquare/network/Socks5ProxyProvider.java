@@ -14,13 +14,10 @@ import java.net.UnknownHostException;
  * <p>
  * By default there is only used the Bitsquare internal Tor proxy, which is used for the P2P network, Btc network
  * (if Tor for btc is enabled) and http requests (if Tor for http requests is enabled).
- * Because Poloniex uses Cloudflare and requires a captcha we cannot use Tor for Poloniex. So http requests to
- * Poloniex are clear net.
- * If the user provides a socks5ProxyHttpAddress it will be used for http requests (should be e.g. VNP but not Tor
- * as that would cause the same issue with CloudFlare, maybe I2P works as well...).
+ * If the user provides a socks5ProxyHttpAddress it will be used for http requests.
  * If the user provides a socks5ProxyBtcAddress, this will be used for the btc network.
  * If socks5ProxyBtcAddress is present but no socks5ProxyHttpAddress the socks5ProxyBtcAddress will be used for http
- * requests (as that is probably a Tor proxy we use again clear net for Poloniex).
+ * requests.
  * If no socks5ProxyBtcAddress and no socks5ProxyHttpAddress is defined (default) we use socks5ProxyInternal.
  */
 public class Socks5ProxyProvider {

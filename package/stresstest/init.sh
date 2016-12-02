@@ -2,8 +2,8 @@
 
 cd ../../seednode/target
 
-logpath=/Users/mk/Documents/_intellij/bitsquare/logs
-datapath="/Users/mk/Library/Application Support"
+logpath=/Users/dev/Documents/_intellij/bitsquare/logs
+datapath="/Users/dev/Library/Application Support"
 mkdir -p $logpath
 
 # rm "$datapath/Bitsquare_seed_node_hlitt7z4bec4kdh4.onion_8000/db/SequenceNumberMap"

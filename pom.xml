@@ -6,7 +6,7 @@
     <groupId>io.bitsquare</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.9.7</version>
+    <version>0.4.9.8</version>
     <description>Bitsquare - The decentralized bitcoin exchange</description>
     <url>https://bitsquare.io</url>
 
@@ -50,6 +50,7 @@
         <module>seednode</module>
         <module>monitor</module>
         <module>statistics</module>
+        <module>pricefeed</module>
     </modules>
 
     <build>
@@ -102,7 +103,7 @@
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.13.1.5</version>
+            <version>0.13.1.7</version>
         </dependency>
 
         <!--guice-->

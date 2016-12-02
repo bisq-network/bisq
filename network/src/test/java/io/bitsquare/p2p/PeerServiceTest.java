@@ -84,7 +84,7 @@ public class PeerServiceTest {
             seedNodes.add(seedNode);
             seedNode.createAndStartP2PService(true);
 
-            seedNode.getSeedNodeP2PService().start(false, new P2PServiceListener() {
+            seedNode.getSeedNodeP2PService().start(new P2PServiceListener() {
                 @Override
                 public void onRequestingDataCompleted() {
                 }
@@ -111,14 +111,6 @@ public class PeerServiceTest {
 
                 @Override
                 public void onSetupFailed(Throwable throwable) {
-                }
-
-                @Override
-                public void onUseDefaultBridges() {
-                }
-
-                @Override
-                public void onRequestCustomBridges(Runnable resultHandler) {
                 }
             });
         }
@@ -211,14 +203,6 @@ public class PeerServiceTest {
             @Override
             public void onSetupFailed(Throwable throwable) {
             }
-
-            @Override
-            public void onUseDefaultBridges() {
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
-            }
         });
         P2PService p2PService1 = seedNode1.getSeedNodeP2PService();
 
@@ -255,14 +239,6 @@ public class PeerServiceTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         P2PService p2PService2 = seedNode2.getSeedNodeP2PService();
@@ -497,14 +473,6 @@ public class PeerServiceTest {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
-            }
-
-            @Override
-            public void onUseDefaultBridges() {
-            }
-
-            @Override
-            public void onRequestCustomBridges(Runnable resultHandler) {
             }
         });
         latch.await();

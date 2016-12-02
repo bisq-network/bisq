@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /Users/mk/Library/Application\ Support
+cd /Users/dev/Library/Application\ Support
 
 for i in `seq 101 500`;
 	do

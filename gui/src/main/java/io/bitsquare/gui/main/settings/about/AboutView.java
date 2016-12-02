@@ -47,7 +47,7 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 4, "About Bitsquare");
         GridPane.setColumnSpan(titledGroupBg, 2);
         Label label = addLabel(root, gridRow, "Bitsquare is an open source project and a decentralized network of users who want to " +
-                "exchange Bitcoin with national currencies or alternative crypto currencies in a privacy protecting way.\n" +
+                "exchange Bitcoin with national currencies or alternative crypto currencies in a privacy protecting way. " +
                 "Learn more about Bitsquare on our project web page.", Layout.FIRST_ROW_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
@@ -61,7 +61,7 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Support Bitsquare", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        label = addLabel(root, gridRow, "Bitsquare is not a company but a community project and open for participation.\n" +
+        label = addLabel(root, gridRow, "Bitsquare is not a company but a community project and open for participation. " +
                 "If you want to participate or support Bitsquare please follow the links below.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
@@ -78,7 +78,9 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
         addLabelHyperlinkWithIcon(root, ++gridRow, "Market price API provider for fiat: ", "BitcoinAverage", "https://bitcoinaverage.com");
-        addLabelHyperlinkWithIcon(root, ++gridRow, "Market price API provider for altcoins: ", "Poloniex", "http://poloniex.com");
+        label = addLabel(root, ++gridRow, "Market price API providers for altcoins: Poloniex (http://poloniex.com) / Coinmarketcap (https://coinmarketcap.com) as fallback");
+        GridPane.setColumnSpan(label, 2);
+        GridPane.setHalignment(label, HPos.LEFT);
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, "Version details", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);

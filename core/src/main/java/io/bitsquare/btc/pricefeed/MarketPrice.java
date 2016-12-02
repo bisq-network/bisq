@@ -3,20 +3,18 @@ package io.bitsquare.btc.pricefeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.lang.Double.parseDouble;
-
 public class MarketPrice {
     private static final Logger log = LoggerFactory.getLogger(MarketPrice.class);
     public final String currencyCode;
-    private final double ask;
-    private final double bid;
-    private final double last;
+    public final double ask;
+    public final double bid;
+    public final double last;
 
-    public MarketPrice(String currencyCode, String ask, String bid, String last) {
+    public MarketPrice(String currencyCode, double ask, double bid, double last) {
         this.currencyCode = currencyCode;
-        this.ask = parseDouble(ask);
-        this.bid = parseDouble(bid);
-        this.last = parseDouble(last);
+        this.ask = ask;
+        this.bid = bid;
+        this.last = last;
     }
 
     public double getPrice(PriceFeedService.Type type) {

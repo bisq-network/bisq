@@ -18,9 +18,9 @@
 package io.bitsquare.seednode;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
-import io.bitsquare.app.CoreOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Profiler;
 import io.bitsquare.common.util.RestartUtil;
@@ -59,9 +59,9 @@ public class SeedNodeMain extends BitsquareExecutable {
         BitsquareEnvironment.setDefaultAppName("Bitsquare_seednode");
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
-        parser.accepts(CoreOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
+        parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
-        parser.accepts(CoreOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
+        parser.accepts(AppOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
                 .withRequiredArg();
 
         OptionSet options;
@@ -77,7 +77,7 @@ public class SeedNodeMain extends BitsquareExecutable {
         BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
 
         // need to call that before BitsquareAppMain().execute(args)
-        BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(CoreOptionKeys.APP_DATA_DIR_KEY));
+        BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
 
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
@@ -112,7 +112,7 @@ public class SeedNodeMain extends BitsquareExecutable {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
-        String maxMemoryOption = environment.getProperty(CoreOptionKeys.MAX_MEMORY);
+        String maxMemoryOption = environment.getProperty(AppOptionKeys.MAX_MEMORY);
         if (maxMemoryOption != null && !maxMemoryOption.isEmpty()) {
             try {
                 maxMemory = Integer.parseInt(maxMemoryOption);

@@ -96,7 +96,7 @@ public final class PaymentMethod implements Persistable, Comparable {
             // US
             CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 0, 4 * DAY, Coin.parseCoin("1")),
             CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, 0, DAY, Coin.parseCoin("1")),
-            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, 4 * DAY, Coin.parseCoin("1")),
+            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, 8 * DAY, Coin.parseCoin("1")),
 
             // Sweden
             SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("2")),

@@ -35,7 +35,7 @@ public class SeedNodesRepository {
             new NodeAddress("b66vnevaljo6xt5a.onion:8000"),*/
 
             // v0.4.2
-            // ...128
+            // ...83
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("uadzuib66jupaept.onion:8000"),
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("wgthuiqn3aoiovbm.onion:8000"),
 
@@ -43,12 +43,15 @@ public class SeedNodesRepository {
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("hbma455xxbqhcuqh.onion:8000"),
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("2zxtnprnx5wqr7a3.onion:8000"),
 
+            // local dev test
+            // DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("23bnormzh2mvkz3z.onion:8000"),
+
             // testnet
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),
 
             // regtest
             // For development you need to change that to your local onion addresses
-            // 1. Run a seed node with prog args: rxdkppp3vicnbgqt.onion:8002 2 50
+            // 1. Run a seed node with prog args: --bitcoinNetwork=regtest --nodePort=8002 --myAddress=rxdkppp3vicnbgqt:8002 --appName=Bitsquare_seed_node_rxdkppp3vicnbgqt.onion_8002
             // 2. Find your local onion address in Bitsquare_seed_node_rxdkppp3vicnbgqt.onion_8002/tor/hiddenservice/hostname
             // 3. Shut down the seed node
             // 4. Rename the directory with your local onion address    

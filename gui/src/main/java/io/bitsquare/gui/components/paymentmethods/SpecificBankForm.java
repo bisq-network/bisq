@@ -55,7 +55,7 @@ public class SpecificBankForm extends BankForm {
 
     @Override
     protected void addAcceptedBanksForAddAccount() {
-        Tuple3<Label, InputTextField, Button> addBankTuple = addLabelInputTextFieldButton(gridPane, ++gridRow, "Add name of accepted bank:", "Add accepted bank");
+        Tuple3<Label, InputTextField, Button> addBankTuple = addLabelInputTextFieldButton(gridPane, ++gridRow, "Name of accepted bank:", "Add accepted bank");
         InputTextField addBankInputTextField = addBankTuple.second;
         Button addButton = addBankTuple.third;
         addButton.setMinWidth(200);

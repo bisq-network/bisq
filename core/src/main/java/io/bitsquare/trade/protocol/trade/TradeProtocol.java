@@ -110,7 +110,7 @@ public abstract class TradeProtocol {
         stopTimeout();
 
         timeoutTimer = UserThread.runAfter(() -> {
-            log.error("Timeout reached");
+            log.error("Timeout reached. TradeID=" + trade.getId());
             trade.setErrorMessage("A timeout occurred.");
             cleanupTradable();
             cleanup();

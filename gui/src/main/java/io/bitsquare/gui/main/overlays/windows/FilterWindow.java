@@ -70,7 +70,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
     public void show() {
         if (headLine == null)
-            headLine = "Edit ban list";
+            headLine = "Edit filter list";
 
         width = 900;
         createGridPane();

@@ -22,6 +22,10 @@ import io.bitsquare.app.Version;
 public final class CryptoCurrency extends TradeCurrency {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+
+    // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+    private final static String PREFIX = "✦ ";
+   
     private boolean isAsset;
 
     public CryptoCurrency(String currencyCode, String name) {
@@ -39,5 +43,10 @@ public final class CryptoCurrency extends TradeCurrency {
 
     public boolean isAsset() {
         return isAsset;
+    }
+    
+    @Override
+    public String getDisplayPrefix() {
+        return PREFIX;
     }
 }
