@@ -482,6 +482,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void calculateTotalToPay() {
+        // Offerer does not pay the tx fee for the trade txs because the mining fee might be different when offerer 
+        // created the offer and reserved his funds, so that would not work well with dynamic fees.
+        // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (direction != null && amount.get() != null) {
             Coin feeAndSecDeposit = createOfferFeeAsCoin.add(securityDepositAsCoin);
             Coin feeAndSecDepositAndAmount = feeAndSecDeposit.add(amount.get());

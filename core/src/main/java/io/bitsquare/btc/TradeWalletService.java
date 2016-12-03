@@ -201,6 +201,7 @@ public class TradeWalletService {
             TransactionVerificationException, WalletException, AddressFormatException {
         log.trace("takerCreatesDepositsTxInputs called");
         log.trace("inputAmount " + inputAmount.toFriendlyString());
+        log.trace("txFee " + txFee.toFriendlyString());
         log.trace("takersAddressEntry " + takersAddressEntry.toString());
 
         // We add the mining fee 2 times to the deposit tx:
@@ -288,7 +289,6 @@ public class TradeWalletService {
                                                                              byte[] contractHash,
                                                                              Coin offererInputAmount,
                                                                              Coin msOutputAmount,
-                                                                             Coin txFee,
                                                                              List<RawTransactionInput> takerRawTransactionInputs,
                                                                              long takerChangeOutputValue,
                                                                              @Nullable String takerChangeAddressString,
@@ -314,10 +314,9 @@ public class TradeWalletService {
         // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx. 
         // Similar to the way we did in the createTakerDepositTxInputs method.
         Transaction dummyTx = new Transaction(params);
-        Coin dummyOutputAmount = offererInputAmount.subtract(txFee);
-        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, dummyOutputAmount, new ECKey().toAddress(params));
+        TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, offererInputAmount, new ECKey().toAddress(params));
         dummyTx.addOutput(dummyOutput);
-        addAvailableInputsAndChangeOutputs(dummyTx, offererAddressEntry, offererChangeAddress, txFee);
+        addAvailableInputsAndChangeOutputs(dummyTx, offererAddressEntry, offererChangeAddress, Coin.ZERO);
         // Normally we have only 1 input but we support multiple inputs if the user has paid in with several transactions.
         List<TransactionInput> offererInputs = dummyTx.getInputs();
         TransactionOutput offererOutput = null;

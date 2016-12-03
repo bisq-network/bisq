@@ -66,6 +66,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     private Coin takerFeeAsCoin;
     private final Coin txFeeAsCoin;
+    private final Coin doubleTxFeeAsCoin;
     private final Coin securityDepositAsCoin;
     // Coin feeFromFundingTx = Coin.NEGATIVE_SATOSHI;
 
@@ -110,7 +111,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
+        // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer 
+        // and reserved his funds, so that would not work well with dynamic fees.
+        // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
         txFeeAsCoin = feeService.getTxFee();
+        doubleTxFeeAsCoin = txFeeAsCoin.add(txFeeAsCoin);
         //TODO
         securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
@@ -318,11 +323,15 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     void calculateTotalToPay() {
+        // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer 
+        // and reserved his funds, so that would not work well with dynamic fees.
+        // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (offer != null && amountAsCoin.get() != null) {
+            Coin value = takerFeeAsCoin.add(doubleTxFeeAsCoin).add(securityDepositAsCoin);
             if (getDirection() == Offer.Direction.SELL)
-                totalToPayAsCoin.set(takerFeeAsCoin.add(txFeeAsCoin).add(securityDepositAsCoin));
+                totalToPayAsCoin.set(value);
             else
-                totalToPayAsCoin.set(takerFeeAsCoin.add(txFeeAsCoin).add(securityDepositAsCoin).add(amountAsCoin.get()));
+                totalToPayAsCoin.set(value.add(amountAsCoin.get()));
 
             updateBalance();
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
@@ -394,7 +403,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection SimplifiableIfStatement
         if (amountAsCoin.get() != null && offer != null) {
             Coin customAmount = offer.getAmount().subtract(amountAsCoin.get());
-            Coin dustAndFee = txFeeAsCoin.add(Transaction.MIN_NONDUST_OUTPUT);
+            Coin dustAndFee = doubleTxFeeAsCoin.add(Transaction.MIN_NONDUST_OUTPUT);
             return customAmount.isPositive() && customAmount.isLessThan(dustAndFee);
         } else {
             return true;
@@ -422,7 +431,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     public Coin getTxFeeAsCoin() {
-        return txFeeAsCoin;
+        return doubleTxFeeAsCoin;
     }
 
     public AddressEntry getAddressEntry() {

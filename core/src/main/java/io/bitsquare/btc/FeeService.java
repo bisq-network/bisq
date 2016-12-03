@@ -37,8 +37,9 @@ public class FeeService {
 
     public Coin getTxFee() {
         counter += 100;
-        log.error("getTxFee " + (20_000 + counter));
-        return Coin.valueOf(20_000 + counter);
+        // log.error("getTxFee " + (20_000 + counter));
+        //return Coin.valueOf(20_000 + counter);
+        return Coin.valueOf(20_000);
     }
 
     public Coin getTxFeeForWithdrawal() {
