@@ -345,8 +345,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     "The amount is the sum of:\n" +
                     tradeAmountText +
                     "- Security deposit: " + model.getSecurityDeposit() + "\n" +
-                    "- Trading fee: " + model.getOfferFee() + "\n" +
-                    "- Bitcoin mining fee: " + model.getNetworkFee() + "\n\n" +
+                    "- Trading fee: " + model.getOfferFee() + "\n\n" +
 
                     "You can choose between two options when funding your trade:\n" +
                     "- Use your Bitsquare wallet (convenient, but transactions may be linkable) OR\n" +
@@ -1079,7 +1078,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.securityDeposit"), model.getSecurityDeposit());
         addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.offerFee"), model.getOfferFee());
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.networkFee"), model.getNetworkFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");

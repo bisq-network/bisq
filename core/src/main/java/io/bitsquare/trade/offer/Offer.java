@@ -271,6 +271,13 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         checkNotNull(getPubKeyRing(), "pubKeyRing is null");
         checkNotNull(getMinAmount(), "MinAmount is null");
         checkNotNull(getPrice(), "Price is null");
+        checkNotNull(getTxFee(), "txFee is null");
+        checkNotNull(getCreateOfferFee(), "CreateOfferFee is null");
+        checkNotNull(getTakerFee(), "TakerFee is null");
+        checkNotNull(getVersionNr(), "VersionNr is null");
+        checkNotNull(getSecurityDeposit(), "SecurityDeposit is null");
+        checkNotNull(getMaxTradeLimit(), "MaxTradeLimit is null");
+        checkArgument(getMaxTradePeriod() > 0, "maxTradePeriod is 0 or negative. maxTradePeriod=" + getMaxTradePeriod());
 
         checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then "
                 + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
@@ -557,12 +564,12 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return Coin.valueOf(takerFee);
     }
 
-    public long getSecurityDeposit() {
-        return securityDeposit;
+    public Coin getSecurityDeposit() {
+        return Coin.valueOf(securityDeposit);
     }
 
-    public long getMaxTradeLimit() {
-        return maxTradeLimit;
+    public Coin getMaxTradeLimit() {
+        return Coin.valueOf(maxTradeLimit);
     }
 
     public long getMaxTradePeriod() {

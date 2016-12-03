@@ -483,7 +483,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void calculateTotalToPay() {
         if (direction != null && amount.get() != null) {
-            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(securityDepositAsCoin);
+            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(securityDepositAsCoin);
             Coin feeAndSecDepositAndAmount = feeAndSecDeposit.add(amount.get());
             Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDepositAndAmount;
             totalToPayAsCoin.set(required);
@@ -533,10 +533,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     public Coin getCreateOfferFeeAsCoin() {
         return createOfferFeeAsCoin;
-    }
-
-    public Coin getTxFeeAsCoin() {
-        return txFeeAsCoin;
     }
 
     public Coin getSecurityDepositAsCoin() {
