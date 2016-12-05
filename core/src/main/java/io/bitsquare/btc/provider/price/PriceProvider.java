@@ -11,21 +11,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class PriceProvider extends HttpClientProvider {
     private static final Logger log = LoggerFactory.getLogger(PriceProvider.class);
-    private final String uid;
 
     public PriceProvider(HttpClient httpClient, String baseUrl) {
         super(httpClient, baseUrl, false);
-
-        uid = UUID.randomUUID().toString();
     }
 
     public Tuple2<Map<String, Long>, Map<String, MarketPrice>> getAll() throws IOException, HttpException {
         Map<String, MarketPrice> marketPriceMap = new HashMap<>();
-        String json = httpClient.requestWithGET("getAllMarketPrices", "User-Agent", "Bitsquare/" + Version.VERSION + ", uid:" + uid);
+        String json = httpClient.requestWithGET("getAllMarketPrices", "User-Agent", "Bitsquare/" + Version.VERSION + ", uid:" + httpClient.getUid());
         LinkedTreeMap<String, Object> map = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();
         tsMap.put("btcAverageTs", ((Double) map.get("btcAverageTs")).longValue());

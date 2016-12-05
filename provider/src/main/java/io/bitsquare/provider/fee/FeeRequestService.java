@@ -59,7 +59,7 @@ public class FeeRequestService {
             @Override
             public void run() {
                 try {
-                    requestBitcoinFeesLocalPrices();
+                    requestBitcoinFees();
                 } catch (HttpException | IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
@@ -69,17 +69,17 @@ public class FeeRequestService {
 
 
         try {
-            requestBitcoinFeesLocalPrices();
+            requestBitcoinFees();
         } catch (HttpException e) {
             log.warn(e.toString());
             e.printStackTrace();
         }
     }
 
-    private void requestBitcoinFeesLocalPrices() throws IOException, HttpException {
+    private void requestBitcoinFees() throws IOException, HttpException {
         long ts = System.currentTimeMillis();
         long result = btcFeesProvider.getFee();
-        // log.info("requestBitcoinFeesLocalPrices took {} ms.", (System.currentTimeMillis() - ts));
+        log.info("requestBitcoinFees took {} ms.", (System.currentTimeMillis() - ts));
         if (result < FeeService.MIN_TX_FEE) {
             log.warn("Response for fee is lower as min fee. Fee=" + result);
         } else if (result > FeeService.MAX_TX_FEE) {

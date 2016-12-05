@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URL;
+import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,18 +33,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class HttpClient {
     private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
 
+
     @Nullable
     private Socks5ProxyProvider socks5ProxyProvider;
     private String baseUrl;
     private boolean ignoreSocks5Proxy;
+    private final String uid;
 
     @Inject
     public HttpClient(@Nullable Socks5ProxyProvider socks5ProxyProvider) {
         this.socks5ProxyProvider = socks5ProxyProvider;
+        uid = UUID.randomUUID().toString();
     }
 
     public HttpClient(String baseUrl) {
         this.baseUrl = baseUrl;
+        uid = UUID.randomUUID().toString();
     }
 
     public void setBaseUrl(String baseUrl) {
@@ -111,6 +116,11 @@ public class HttpClient {
                 connection.getInputStream().close();
         }
     }
+
+    public String getUid() {
+        return uid;
+    }
+
 
     /**
      * Make an HTTP Get request routed over socks5 proxy.

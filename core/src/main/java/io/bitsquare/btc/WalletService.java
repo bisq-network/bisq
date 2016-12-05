@@ -27,6 +27,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
+import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
@@ -88,6 +89,7 @@ public class WalletService {
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
     private final Preferences preferences;
+    private FeeService feeService;
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final NetworkParameters params;
     private final File walletDir;
@@ -113,13 +115,14 @@ public class WalletService {
                          AddressEntryList addressEntryList,
                          UserAgent userAgent,
                          Preferences preferences,
-
+                         FeeService feeService,
                          Socks5ProxyProvider socks5ProxyProvider,
                          @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.preferences = preferences;
+        this.feeService = feeService;
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.params = preferences.getBitcoinNetwork().getParameters();
         this.walletDir = new File(appDir, "bitcoin");

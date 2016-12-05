@@ -13,20 +13,16 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class FeeProvider extends HttpClientProvider {
     private static final Logger log = LoggerFactory.getLogger(FeeProvider.class);
-    private final String uid;
 
     public FeeProvider(HttpClient httpClient, String baseUrl) {
         super(httpClient, baseUrl, false);
-
-        uid = UUID.randomUUID().toString();
     }
 
     public Tuple2<Map<String, Long>, FeeData> getFees() throws IOException, HttpException {
-        String json = httpClient.requestWithGET("getFees", "User-Agent", "Bitsquare/" + Version.VERSION + ", uid:" + uid);
+        String json = httpClient.requestWithGET("getFees", "User-Agent", "Bitsquare/" + Version.VERSION + ", uid:" + httpClient.getUid());
         LinkedTreeMap<String, Object> linkedTreeMap = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();
         tsMap.put("bitcoinFeesTs", ((Double) linkedTreeMap.get("bitcoinFeesTs")).longValue());
