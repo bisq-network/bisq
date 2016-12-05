@@ -18,6 +18,7 @@
 package io.bitsquare.gui.util.validation;
 
 
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.NetworkParameters;
