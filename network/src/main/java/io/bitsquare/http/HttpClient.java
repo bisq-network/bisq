@@ -47,13 +47,13 @@ public class HttpClient {
     }
 
     public void setBaseUrl(String baseUrl) {
+        log.info("baseUrl for HttpClient: " + baseUrl);
         this.baseUrl = baseUrl;
     }
 
     public void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy) {
         this.ignoreSocks5Proxy = ignoreSocks5Proxy;
     }
-
 
     public String requestWithGET(String param, @Nullable String headerKey, @Nullable String headerValue) throws IOException, HttpException {
         checkNotNull(baseUrl, "baseUrl must be set before calling requestWithGET");

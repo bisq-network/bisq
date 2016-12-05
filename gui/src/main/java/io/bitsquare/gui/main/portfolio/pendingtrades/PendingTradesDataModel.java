@@ -22,10 +22,9 @@ import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.FeeService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.FaultHandler;
@@ -218,7 +217,18 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     Coin getTotalFees() {
-        return feeService.getTxFee().add(isOfferer() ? FeePolicy.getCreateOfferFee() : FeePolicy.getTakeOfferFee());
+        Trade trade = getTrade();
+        if (trade != null) {
+            if (isOfferer()) {
+                Offer offer = trade.getOffer();
+                return offer.getCreateOfferFee().add(offer.getTxFee());
+            } else {
+                return trade.getTakeOfferFee().add(trade.getTxFee().multiply(3));
+            }
+        } else {
+            log.error("Trade is null at getTotalFees");
+            return Coin.ZERO;
+        }
     }
 
     public String getCurrencyCode() {

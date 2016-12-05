@@ -1,9 +1,9 @@
-package io.bitsquare.btc.pricefeed;
+package io.bitsquare.btc.provider.price;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.HttpClientProvider;
+import io.bitsquare.btc.provider.HttpClientProvider;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
@@ -25,7 +25,7 @@ public class PriceProvider extends HttpClientProvider {
 
     public Tuple2<Map<String, Long>, Map<String, MarketPrice>> getAll() throws IOException, HttpException {
         Map<String, MarketPrice> marketPriceMap = new HashMap<>();
-        String json = httpClient.requestWithGET("all", "User-Agent", "Bitsquare/" + Version.VERSION + ", uid:" + uid);
+        String json = httpClient.requestWithGET("getAllMarketPrices", "User-Agent", "Bitsquare/" + Version.VERSION + ", uid:" + uid);
         LinkedTreeMap<String, Object> map = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();
         tsMap.put("btcAverageTs", ((Double) map.get("btcAverageTs")).longValue());

@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.offer.offerbook;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.filter.FilterManager;

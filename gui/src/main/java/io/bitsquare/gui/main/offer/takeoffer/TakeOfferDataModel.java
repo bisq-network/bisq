@@ -20,10 +20,14 @@ package io.bitsquare.gui.main.offer.takeoffer;
 import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
@@ -59,15 +63,16 @@ class TakeOfferDataModel extends ActivatableDataModel {
     final TradeWalletService tradeWalletService;
     final WalletService walletService;
     private final User user;
+    private final FeeService feeService;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final BlockchainService blockchainService;
     private final BSFormatter formatter;
 
     private Coin takerFeeAsCoin;
-    private final Coin txFeeAsCoin;
-    private final Coin doubleTxFeeAsCoin;
-    private final Coin securityDepositAsCoin;
+    private Coin txFeeAsCoin;
+    private Coin totalTxFeeAsCoin;
+    private Coin securityDepositAsCoin;
     // Coin feeFromFundingTx = Coin.NEGATIVE_SATOSHI;
 
     private Offer offer;
@@ -106,18 +111,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
         this.user = user;
+        this.feeService = feeService;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.blockchainService = blockchainService;
         this.formatter = formatter;
-
-        // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer 
-        // and reserved his funds, so that would not work well with dynamic fees.
-        // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
-        txFeeAsCoin = feeService.getTxFee();
-        doubleTxFeeAsCoin = txFeeAsCoin.add(txFeeAsCoin);
-        //TODO
-        securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
         // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
     }
@@ -176,6 +174,24 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         if (DevFlags.DEV_MODE)
             amountAsCoin.set(offer.getAmount());
+
+        // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer 
+        // and reserved his funds, so that would not work well with dynamic fees.
+        // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
+        feeService.requestFees(() -> {
+            //TODO update  doubleTxFeeAsCoin and txFeeAsCoin in view with binding
+            takerFeeAsCoin = feeService.getTakeOfferFee();
+            txFeeAsCoin = feeService.getTxFee();
+            totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
+            calculateTotalToPay();
+        }, (errorMessage, throwable) -> new Popup<>().warning(errorMessage).show());
+
+        takerFeeAsCoin = feeService.getTakeOfferFee();
+        txFeeAsCoin = feeService.getTxFee();
+        totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
+
+        //TODO
+        securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
         calculateVolume();
         calculateTotalToPay();
@@ -236,7 +252,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 txFeeAsCoin,
                 takerFeeAsCoin,
                 tradePrice.getValue(),
-                totalToPayAsCoin.get().subtract(takerFeeAsCoin),
+                totalToPayAsCoin.get().subtract(takerFeeAsCoin).subtract(txFeeAsCoin),
                 offer,
                 paymentAccount.getId(),
                 useSavingsWallet,
@@ -327,7 +343,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (offer != null && amountAsCoin.get() != null) {
-            Coin value = takerFeeAsCoin.add(doubleTxFeeAsCoin).add(securityDepositAsCoin);
+            Coin value = takerFeeAsCoin.add(totalTxFeeAsCoin).add(securityDepositAsCoin);
             if (getDirection() == Offer.Direction.SELL)
                 totalToPayAsCoin.set(value);
             else
@@ -403,7 +419,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection SimplifiableIfStatement
         if (amountAsCoin.get() != null && offer != null) {
             Coin customAmount = offer.getAmount().subtract(amountAsCoin.get());
-            Coin dustAndFee = doubleTxFeeAsCoin.add(Transaction.MIN_NONDUST_OUTPUT);
+            Coin dustAndFee = totalTxFeeAsCoin.add(Transaction.MIN_NONDUST_OUTPUT);
             return customAmount.isPositive() && customAmount.isLessThan(dustAndFee);
         } else {
             return true;
@@ -430,8 +446,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return takerFeeAsCoin;
     }
 
-    public Coin getTxFeeAsCoin() {
-        return doubleTxFeeAsCoin;
+    public Coin getTotalTxFeeAsCoin() {
+        return totalTxFeeAsCoin;
     }
 
     public AddressEntry getAddressEntry() {

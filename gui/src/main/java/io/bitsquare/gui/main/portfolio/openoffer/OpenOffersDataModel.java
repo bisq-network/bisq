@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.portfolio.openoffer;
 
 import com.google.inject.Inject;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableDataModel;

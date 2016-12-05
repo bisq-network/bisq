@@ -28,7 +28,7 @@ public class RestrictionsTest {
     @Test
     public void testIsMinSpendableAmount() {
         Coin amount = null;
-        Coin txFee = new FeeService().getTxFee();
+        Coin txFee = Coin.valueOf(20000);
         assertFalse("tx unfunded, pending", Restrictions.isAboveFixedTxFeeForTradesAndDust(amount, txFee));
 
         amount = Coin.ZERO;

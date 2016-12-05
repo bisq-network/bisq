@@ -1,4 +1,4 @@
-package io.bitsquare.btc;
+package io.bitsquare.btc.provider;
 
 import io.bitsquare.http.HttpClient;
 

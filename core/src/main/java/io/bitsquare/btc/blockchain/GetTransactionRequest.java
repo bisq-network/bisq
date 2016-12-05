@@ -13,13 +13,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-class GetFeeRequest {
-    private static final Logger log = LoggerFactory.getLogger(GetFeeRequest.class);
+class GetTransactionRequest {
+    private static final Logger log = LoggerFactory.getLogger(GetTransactionRequest.class);
     private static final ListeningExecutorService executorService = Utilities.getListeningExecutorService("GetFeeRequest", 3, 5, 10 * 60);
     private Timer timer;
     private int faults;
 
-    public GetFeeRequest() {
+    public GetTransactionRequest() {
     }
 
     public SettableFuture<Coin> request(String transactionId, BlockchainTxProvider provider) {

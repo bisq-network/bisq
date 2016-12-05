@@ -1,4 +1,4 @@
-package io.bitsquare.btc.pricefeed;
+package io.bitsquare.btc.provider.price;
 
 import com.google.common.util.concurrent.*;
 import io.bitsquare.common.util.Tuple2;
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-class PriceRequest {
+public class PriceRequest {
     private static final Logger log = LoggerFactory.getLogger(PriceRequest.class);
 
     private static final ListeningExecutorService executorService = Utilities.getListeningExecutorService("PriceRequest", 3, 5, 10 * 60);

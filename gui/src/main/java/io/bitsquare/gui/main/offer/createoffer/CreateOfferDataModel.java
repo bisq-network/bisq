@@ -21,16 +21,21 @@ import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Price;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Volume;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -68,14 +73,15 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     final String shortOfferId;
-    private Navigation navigation;
+    private final FeeService feeService;
+    private final Navigation navigation;
     private final BlockchainService blockchainService;
     private final BSFormatter formatter;
     private final String offerId;
     private final AddressEntry addressEntry;
-    private final Coin createOfferFeeAsCoin, takeOfferAsCoin;
-    private final Coin txFeeAsCoin;
-    private final Coin securityDepositAsCoin;
+    private Coin createOfferFeeAsCoin, takerFeeAsCoin;
+    private Coin txFeeAsCoin;
+    private Coin securityDepositAsCoin;
     private final BalanceListener balanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
@@ -128,6 +134,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
+        this.feeService = feeService;
         this.navigation = navigation;
         this.blockchainService = blockchainService;
         this.formatter = formatter;
@@ -137,11 +144,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         offerId = UUID.randomUUID().toString();
         shortOfferId = offerId.substring(0, Math.min(8, offerId.length()));
         addressEntry = walletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
-        createOfferFeeAsCoin = feeService.getCreateOfferFee();
-        takeOfferAsCoin = feeService.getTakeOfferFee();
-        txFeeAsCoin = feeService.getTxFee();
-        // TODO
-        securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
         useMarketBasedPrice.set(preferences.getUsePercentageBasedPrice());
 
@@ -181,6 +183,21 @@ class CreateOfferDataModel extends ActivatableDataModel {
     protected void activate() {
         addBindings();
         addListeners();
+
+        feeService.requestFees(() -> {
+            //TODO update  doubleTxFeeAsCoin and txFeeAsCoin in view with binding
+            createOfferFeeAsCoin = feeService.getCreateOfferFee();
+            takerFeeAsCoin = feeService.getTakeOfferFee();
+            txFeeAsCoin = feeService.getTxFee();
+            calculateTotalToPay();
+        }, (errorMessage, throwable) -> new Popup<>().warning(errorMessage).show());
+
+        createOfferFeeAsCoin = feeService.getCreateOfferFee();
+        takerFeeAsCoin = feeService.getTakeOfferFee();
+        txFeeAsCoin = feeService.getTxFee();
+
+        // TODO
+        securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
@@ -322,7 +339,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 Version.VERSION,
                 txFeeAsCoin.value,
                 createOfferFeeAsCoin.value,
-                takeOfferAsCoin.value,
+                takerFeeAsCoin.value,
                 securityDepositAsCoin.value,
                 maxTradeLimit,
                 maxTradePeriod,
@@ -332,7 +349,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        openOfferManager.placeOffer(offer, totalToPayAsCoin.get().subtract(createOfferFeeAsCoin), useSavingsWallet, resultHandler);
+        openOfferManager.placeOffer(offer, totalToPayAsCoin.get().subtract(txFeeAsCoin).subtract(createOfferFeeAsCoin), useSavingsWallet, resultHandler);
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
@@ -486,9 +503,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (direction != null && amount.get() != null) {
-            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(securityDepositAsCoin);
-            Coin feeAndSecDepositAndAmount = feeAndSecDeposit.add(amount.get());
-            Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDepositAndAmount;
+            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(securityDepositAsCoin);
+            Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(required);
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
             updateBalance();
@@ -536,6 +552,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     public Coin getCreateOfferFeeAsCoin() {
         return createOfferFeeAsCoin;
+    }
+
+    public Coin getTxFeeAsCoin() {
+        return txFeeAsCoin;
     }
 
     public Coin getSecurityDepositAsCoin() {

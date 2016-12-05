@@ -145,10 +145,7 @@ public class TradeWalletService {
                                           boolean useSavingsWallet, Coin tradingFee, Coin txFee, String feeReceiverAddresses)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction tradingFeeTx = new Transaction(params);
-        Preconditions.checkArgument(Restrictions.isAboveFixedTxFeeForTradesAndDust(tradingFee, txFee),
-                "You cannot send an amount which are smaller than the fee + dust output.");
-        Coin outPutAmount = tradingFee.subtract(txFee);
-        tradingFeeTx.addOutput(outPutAmount, new Address(params, feeReceiverAddresses));
+        tradingFeeTx.addOutput(tradingFee, new Address(params, feeReceiverAddresses));
         // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
         tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
 
@@ -1123,12 +1120,12 @@ public class TradeWalletService {
     }
 
     private static void printTxWithInputs(String tracePrefix, Transaction tx) {
-        log.trace(tracePrefix + ": " + tx.toString());
+        log.info(tracePrefix + ": " + tx.toString());
         for (TransactionInput input : tx.getInputs()) {
             if (input.getConnectedOutput() != null)
-                log.trace(tracePrefix + " input value: " + input.getConnectedOutput().getValue().toFriendlyString());
+                log.info(tracePrefix + " input value: " + input.getConnectedOutput().getValue().toFriendlyString());
             else
-                log.trace(tracePrefix + ": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
+                log.info(tracePrefix + ": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
         }
     }
 

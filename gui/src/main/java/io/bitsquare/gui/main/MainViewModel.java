@@ -33,8 +33,9 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.pricefeed.MarketPrice;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.btc.provider.price.MarketPrice;
+import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
@@ -106,14 +107,15 @@ public class MainViewModel implements ViewModel {
     private final DisputeManager disputeManager;
     final Preferences preferences;
     private final AlertManager alertManager;
-    private PrivateNotificationManager privateNotificationManager;
-    private FilterManager filterManager;
+    private final PrivateNotificationManager privateNotificationManager;
+    private final FilterManager filterManager;
     private final WalletPasswordWindow walletPasswordWindow;
-    private AddBitcoinNodesWindow addBitcoinNodesWindow;
+    private final AddBitcoinNodesWindow addBitcoinNodesWindow;
     private final NotificationCenter notificationCenter;
     private final TacWindow tacWindow;
-    private Clock clock;
-    private KeyRing keyRing;
+    private final Clock clock;
+    private final FeeService feeService;
+    private final KeyRing keyRing;
     private final Navigation navigation;
     private final BSFormatter formatter;
 
@@ -180,7 +182,7 @@ public class MainViewModel implements ViewModel {
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, AddBitcoinNodesWindow addBitcoinNodesWindow,
-                         NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
+                         NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.priceFeedService = priceFeedService;
         this.user = user;
@@ -200,6 +202,7 @@ public class MainViewModel implements ViewModel {
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
         this.clock = clock;
+        this.feeService = feeService;
         this.keyRing = keyRing;
         this.navigation = navigation;
         this.formatter = formatter;
@@ -559,6 +562,8 @@ public class MainViewModel implements ViewModel {
         displayAlertIfPresent(alertManager.alertMessageProperty().get());
 
         p2PService.onAllServicesInitialized();
+
+        feeService.onAllServicesInitialized();
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();

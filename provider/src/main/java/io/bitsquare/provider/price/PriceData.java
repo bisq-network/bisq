@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.pricefeed;
+package io.bitsquare.provider.price;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class PriceData {

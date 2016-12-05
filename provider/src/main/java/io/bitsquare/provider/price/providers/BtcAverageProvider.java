@@ -15,13 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.pricefeed.providers;
+package io.bitsquare.provider.price.providers;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
-import io.bitsquare.pricefeed.PriceData;
+import io.bitsquare.provider.price.PriceData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;

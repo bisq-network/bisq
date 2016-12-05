@@ -109,7 +109,7 @@ public abstract class BitsquareExecutable {
         parser.accepts(AppOptionKeys.DUMP_STATISTICS, description("If set to true the trade statistics are stored as json file in the data dir.", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
-        parser.accepts(AppOptionKeys.PRICE_FEED_PROVIDERS, description("Custom price feed providers (comma separated)", false))
+        parser.accepts(AppOptionKeys.PROVIDERS, description("Custom providers (comma separated)", false))
                 .withRequiredArg();
 
         parser.accepts(BtcOptionKeys.BTC_NETWORK, description("Bitcoin network", BitcoinNetwork.DEFAULT))

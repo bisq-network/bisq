@@ -19,7 +19,7 @@ package io.bitsquare.trade.offer;
 
 import com.google.inject.name.Named;
 import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
