@@ -20,7 +20,7 @@ package io.bitsquare.provider.fee;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.http.HttpException;
-import io.bitsquare.provider.fee.providers.BitcoinFeesProvider;
+import io.bitsquare.provider.fee.providers.BtcFeesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,13 +39,13 @@ public class FeeRequestService {
 
     private final Timer timerBitcoinFeesLocal = new Timer();
 
-    private final BitcoinFeesProvider bitcoinFeesProvider;
+    private final BtcFeesProvider btcFeesProvider;
     private final Map<String, Long> allFeesMap = new ConcurrentHashMap<>();
     private long bitcoinFeesTs;
     private String json;
 
     public FeeRequestService() throws IOException {
-        bitcoinFeesProvider = new BitcoinFeesProvider();
+        btcFeesProvider = new BtcFeesProvider();
 
         allFeesMap.put("txFee", FeeService.DEFAULT_TX_FEE);
         allFeesMap.put("createOfferFee", FeeService.DEFAULT_CREATE_OFFER_FEE);
@@ -78,7 +78,7 @@ public class FeeRequestService {
 
     private void requestBitcoinFeesLocalPrices() throws IOException, HttpException {
         long ts = System.currentTimeMillis();
-        long result = bitcoinFeesProvider.getFee();
+        long result = btcFeesProvider.getFee();
         // log.info("requestBitcoinFeesLocalPrices took {} ms.", (System.currentTimeMillis() - ts));
         if (result < FeeService.MIN_TX_FEE) {
             log.warn("Response for fee is lower as min fee. Fee=" + result);
