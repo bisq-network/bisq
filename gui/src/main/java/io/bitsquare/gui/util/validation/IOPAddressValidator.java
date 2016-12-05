@@ -18,13 +18,19 @@
 package io.bitsquare.gui.util.validation;
 
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.NetworkParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.bitsquare.gui.util.validation.ioputils.IoP_MainNetParams;
 
 public final class IOPAddressValidator extends InputValidator {
 	
     private static final Logger log = LoggerFactory.getLogger(IOPAddressValidator.class);
    // private static final NetworkParameters params = MainNetParams.get();
+    private static  final 	NetworkParameters p = IoP_MainNetParams.get();
     
     @Override
     public ValidationResult validate(String input) {
@@ -35,11 +41,12 @@ public final class IOPAddressValidator extends InputValidator {
         	return new ValidationResult(false);
         }else{
         	
-    	  //new Address(params, input);
-    	  if (input.matches("[p][A-Za-z1-9]{25,34}$"))
-        	 return new ValidationResult(true);
-          else
-             return new ValidationResult(false, "Invalid format of the IOP address.");
+        	try {
+                new Address(p, input);
+                return new ValidationResult(true);
+            } catch (AddressFormatException e) {
+            	return new ValidationResult(false);
+            }
         	
         }
         
