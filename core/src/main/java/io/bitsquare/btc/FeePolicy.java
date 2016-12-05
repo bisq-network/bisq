@@ -17,7 +17,6 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.app.DevFlags;
 import org.bitcoinj.core.Coin;
 
 public class FeePolicy {
@@ -60,10 +59,4 @@ public class FeePolicy {
         return NON_TRADE_FEE_PER_KB;
     }
 
-
-    // TODO will be increased once we get higher limits
-    // 0.01 BTC; about 4 EUR @ 400 EUR/BTC
-    public static Coin getSecurityDeposit() {
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(1_000_000);
-    }
 }

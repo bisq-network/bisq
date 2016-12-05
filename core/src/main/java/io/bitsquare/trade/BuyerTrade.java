@@ -18,7 +18,6 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.NodeAddress;
@@ -61,7 +60,7 @@ public abstract class BuyerTrade extends Trade {
     public Coin getPayoutAmount() {
         checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
 
-        return FeePolicy.getSecurityDeposit().add(getTradeAmount());
+        return getOffer().getSecurityDeposit().add(getTradeAmount());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

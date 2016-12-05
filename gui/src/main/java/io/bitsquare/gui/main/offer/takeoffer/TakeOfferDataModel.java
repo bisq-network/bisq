@@ -21,7 +21,6 @@ import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
@@ -162,7 +161,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void initWithData(Offer offer) {
         this.offer = offer;
         tradePrice = offer.getPrice();
-        takerFeeAsCoin = offer.getTakerFee();
         addressEntry = walletService.getOrCreateAddressEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
         checkNotNull(addressEntry, "addressEntry must not be null");
 
@@ -175,23 +173,38 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (DevFlags.DEV_MODE)
             amountAsCoin.set(offer.getAmount());
 
+        securityDepositAsCoin = offer.getSecurityDeposit();
+
         // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer 
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
+
+        // The taker pays the mining fee for the trade fee tx and the trade txs. 
+        // A typical trade fee tx has about 226 bytes (if one input). The trade txs has about 336-414 bytes. 
+        // We use 400 as a safe value.
+        // We cannot use tx size calculation as we do not know initially how the input is funded. And we require the
+        // fee for getting the funds needed.
+        // So we use an estimated average size and risk that in some cases we might get a bit of delay if the actual required 
+        // fee would be larger. 
+        // As we use the best fee estimation (for 1 confirmation) that risk should not be too critical as long there are
+        // not too many inputs. The trade txs have no risks as there cannot be more than about 414 bytes. 
+        // Only the trade fee tx carries a risk that it might be larger.
+
+        // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs)   
+        // deposit tx: 336 bytes (1 MS output+ OP_RETURN) - 414 bytes (1 MS output + OP_RETURN + change in case of smaller trade amount)          
+        // payout tx: 371 bytes            
+        // disputed payout tx: 408 bytes  
         feeService.requestFees(() -> {
             //TODO update  doubleTxFeeAsCoin and txFeeAsCoin in view with binding
             takerFeeAsCoin = feeService.getTakeOfferFee();
-            txFeeAsCoin = feeService.getTxFee();
+            txFeeAsCoin = feeService.getTxFee(400);
             totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
             calculateTotalToPay();
-        }, (errorMessage, throwable) -> new Popup<>().warning(errorMessage).show());
+        }, null);
 
         takerFeeAsCoin = feeService.getTakeOfferFee();
-        txFeeAsCoin = feeService.getTxFee();
+        txFeeAsCoin = feeService.getTxFee(400);
         totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
-
-        //TODO
-        securityDepositAsCoin = FeePolicy.getSecurityDeposit();
 
         calculateVolume();
         calculateTotalToPay();

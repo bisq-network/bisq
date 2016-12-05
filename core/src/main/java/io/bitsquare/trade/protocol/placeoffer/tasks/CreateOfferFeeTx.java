@@ -23,6 +23,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.trade.ArbitrationSelectionRule;
 import org.bitcoinj.core.Transaction;
@@ -40,6 +41,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
 
     @Override
     protected void run() {
+        Offer offer = model.offer;
         try {
             runInterceptHook();
 
@@ -48,26 +50,26 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
             Arbitrator selectedArbitrator = model.user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateOfferFeeTx");
             WalletService walletService = model.walletService;
-            String id = model.offer.getId();
+            String id = offer.getId();
             Transaction transaction = model.tradeWalletService.createTradingFeeTx(
                     walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress(),
                     walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress(),
                     walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress(),
                     model.reservedFundsForOffer,
                     model.useSavingsWallet,
-                    model.offer.getCreateOfferFee(),
-                    model.offer.getTxFee(),
+                    offer.getCreateOfferFee(),
+                    offer.getTxFee(),
                     selectedArbitrator.getBtcAddress());
 
             // We assume there will be no tx malleability. We add a check later in case the published offer has a different hash.
             // As the txId is part of the offer and therefore change the hash data we need to be sure to have no
             // tx malleability
-            model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
+            offer.setOfferFeePaymentTxID(transaction.getHashAsString());
             model.setTransaction(transaction);
 
             complete();
         } catch (Throwable t) {
-            model.offer.setErrorMessage("An error occurred.\n" +
+            offer.setErrorMessage("An error occurred.\n" +
                     "Error message:\n"
                     + t.getMessage());
             failed(t);

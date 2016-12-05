@@ -18,7 +18,6 @@
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
@@ -42,7 +41,7 @@ public class SignPayoutTx extends TradeTask {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
             checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
-            Coin sellerPayoutAmount = FeePolicy.getSecurityDeposit();
+            Coin sellerPayoutAmount = trade.getOffer().getSecurityDeposit();
             Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
 
             // We use the sellers LastBlockSeenHeight, which might be different to the buyers one.

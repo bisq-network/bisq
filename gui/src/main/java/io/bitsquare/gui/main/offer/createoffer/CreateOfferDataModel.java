@@ -22,7 +22,6 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
@@ -35,7 +34,6 @@ import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Price;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Volume;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
-import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -79,7 +77,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final BSFormatter formatter;
     private final String offerId;
     private final AddressEntry addressEntry;
-    private Coin createOfferFeeAsCoin, takerFeeAsCoin;
+    private Coin createOfferFeeAsCoin;
     private Coin txFeeAsCoin;
     private Coin securityDepositAsCoin;
     private final BalanceListener balanceListener;
@@ -147,6 +145,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         useMarketBasedPrice.set(preferences.getUsePercentageBasedPrice());
 
+        // TODO add ui for editing
+        securityDepositAsCoin = Coin.valueOf(1_000_000);
+
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
@@ -184,21 +185,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         addBindings();
         addListeners();
 
-        feeService.requestFees(() -> {
-            //TODO update  doubleTxFeeAsCoin and txFeeAsCoin in view with binding
-            createOfferFeeAsCoin = feeService.getCreateOfferFee();
-            takerFeeAsCoin = feeService.getTakeOfferFee();
-            txFeeAsCoin = feeService.getTxFee();
-            calculateTotalToPay();
-        }, (errorMessage, throwable) -> new Popup<>().warning(errorMessage).show());
-
-        createOfferFeeAsCoin = feeService.getCreateOfferFee();
-        takerFeeAsCoin = feeService.getTakeOfferFee();
-        txFeeAsCoin = feeService.getTxFee();
-
-        // TODO
-        securityDepositAsCoin = FeePolicy.getSecurityDeposit();
-
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
@@ -235,6 +221,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // called before activate()
     boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
 
@@ -260,6 +247,25 @@ class CreateOfferDataModel extends ActivatableDataModel {
         if (!preferences.getUseStickyMarketPrice())
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
+        // The offerer only pays the mining fee for the trade fee tx (not the mining fee for other trade txs). 
+        // A typical trade fee tx has about 226 bytes (if one input). We use 400 as a safe value.
+        // We cannot use tx size calculation as we do not know initially how the input is funded. And we require the
+        // fee for getting the funds needed.
+        // So we use an estimated average size and risk that in some cases we might get a bit of delay if the actual required 
+        // fee would be larger. 
+        // As we use the best fee estimation (for 1 confirmation) that risk should not be too critical as long there are
+        // not too many inputs.
+
+        // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs)         
+        feeService.requestFees(() -> {
+            createOfferFeeAsCoin = feeService.getCreateOfferFee();
+            txFeeAsCoin = feeService.getTxFee(400);
+            calculateTotalToPay();
+        }, null);
+
+        createOfferFeeAsCoin = feeService.getCreateOfferFee();
+        txFeeAsCoin = feeService.getTxFee(400);
+       
         calculateVolume();
         calculateTotalToPay();
         return true;
@@ -278,6 +284,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     Offer createAndGetOffer() {
         long priceAsLong = price.get() != null && !useMarketBasedPrice.get() ? price.get().getValue() : 0L;
         // We use precision 8 in AltcoinPrice but in Offer we use Fiat with precision 4. Will be refactored once in a bigger update....
+        // TODO use same precision for both in next release
         if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
             priceAsLong = priceAsLong / 10000;
 
@@ -312,10 +319,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimit().value;
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
 
+        // reserved for future use cases
         boolean isPrivateOffer = false;
         String hashOfChallenge = null;
         HashMap<String, String> extraDataMap = null;
-
+        boolean useAutoClose = false;
+        boolean useReOpenAfterAutoClose = false;
+        long lowerClosePrice = 0;
+        long upperClosePrice = 0;
 
         return new Offer(offerId,
                 p2PService.getAddress(),
@@ -337,12 +348,16 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 priceFeedService,
 
                 Version.VERSION,
+                walletService.getWallet().getLastBlockSeenHeight(),
                 txFeeAsCoin.value,
                 createOfferFeeAsCoin.value,
-                takerFeeAsCoin.value,
                 securityDepositAsCoin.value,
                 maxTradeLimit,
                 maxTradePeriod,
+                useAutoClose,
+                useReOpenAfterAutoClose,
+                upperClosePrice,
+                lowerClosePrice,
                 isPrivateOffer,
                 hashOfChallenge,
                 extraDataMap);

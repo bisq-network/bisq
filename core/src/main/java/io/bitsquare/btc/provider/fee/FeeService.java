@@ -44,13 +44,13 @@ public class FeeService {
     public static final long MAX_TX_FEE = 200;
     public static final long DEFAULT_TX_FEE = 60;
 
-    public static final long MIN_CREATE_OFFER_FEE = 50_000;
+    public static final long MIN_CREATE_OFFER_FEE = 10_000;
     public static final long MAX_CREATE_OFFER_FEE = 500_000;
-    public static final long DEFAULT_CREATE_OFFER_FEE = 50_000;
+    public static final long DEFAULT_CREATE_OFFER_FEE = 30_000;
 
-    public static final long MIN_TAKE_OFFER_FEE = 100_000;
+    public static final long MIN_TAKE_OFFER_FEE = 10_000;
     public static final long MAX_TAKE_OFFER_FEE = 1000_000;
-    public static final long DEFAULT_TAKE_OFFER_FEE = 100_000;
+    public static final long DEFAULT_TAKE_OFFER_FEE = 80_000;
 
     private final FeeProvider feeProvider;
     private final ProvidersRepository providersRepository;
@@ -104,15 +104,18 @@ public class FeeService {
         });
     }
 
-    public Coin getTxFee() {
-        // feeData.txFee is sat/byte but we want satoshi / kb
-        log.debug("getTxFee " + (feeData.txFee * 1000));
-        return Coin.valueOf(feeData.txFee * 1000);
+    public Coin getTxFee(int sizeInBytes) {
+        return getTxFeePerByte().multiply(sizeInBytes);
+    }
+
+    public Coin getTxFeePerByte() {
+        log.debug("getTxFee " + (feeData.txFeePerByte));
+        return Coin.valueOf(feeData.txFeePerByte);
     }
 
     // TODO needed?
     public Coin getTxFeeForWithdrawal() {
-        return getTxFee();
+        return getTxFeePerByte();
     }
 
     public Coin getCreateOfferFee() {

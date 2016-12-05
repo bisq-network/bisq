@@ -120,7 +120,10 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     // We use 2 type of prices: fixed price or price based on distance from market price
     private final boolean useMarketBasedPrice;
     // fiatPrice if fixed price is used (usePercentageBasedPrice = false), otherwise 0
+
+    //TODO add support for altcoin price or fix precision issue
     private final long fiatPrice;
+
     // Distance form market price if percentage based price is used (usePercentageBasedPrice = true), otherwise 0. 
     // E.g. 0.1 -> 10%. Can be negative as well. Depending on direction the marketPriceMargin is above or below the market price.
     // Positive values is always the usual case where you want a better price as the market. 
@@ -140,12 +143,16 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
     // New properties from v. 0.5.0.0
     private final String versionNr;
+    private final long blockHeightAtOfferCreation;
     private final long txFee;
     private final long createOfferFee;
-    private final long takerFee;
     private final long securityDeposit;
     private final long maxTradeLimit;
     private final long maxTradePeriod;
+    private final boolean useAutoClose;
+    private final boolean useReOpenAfterAutoClose;
+    private final long lowerClosePrice;
+    private final long upperClosePrice;
 
     // Reserved for possible future use to support private trades where the taker need to have an accessKey
     private final boolean isPrivateOffer;
@@ -196,15 +203,20 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                  @Nullable ArrayList<String> acceptedBankIds,
                  PriceFeedService priceFeedService,
                  String versionNr,
+                 long blockHeightAtOfferCreation,
                  long txFee,
                  long createOfferFee,
-                 long takerFee,
                  long securityDeposit,
                  long maxTradeLimit,
                  long maxTradePeriod,
+                 boolean useAutoClose,
+                 boolean useReOpenAfterAutoClose,
+                 long lowerClosePrice,
+                 long upperClosePrice,
                  boolean isPrivateOffer,
                  @Nullable String hashOfChallenge,
                  @Nullable HashMap<String, String> extraDataMap) {
+
         this.id = id;
         this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;
@@ -224,12 +236,16 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.acceptedBankIds = acceptedBankIds;
         this.priceFeedService = priceFeedService;
         this.versionNr = versionNr;
+        this.blockHeightAtOfferCreation = blockHeightAtOfferCreation;
         this.txFee = txFee;
         this.createOfferFee = createOfferFee;
-        this.takerFee = takerFee;
         this.securityDeposit = securityDeposit;
         this.maxTradeLimit = maxTradeLimit;
         this.maxTradePeriod = maxTradePeriod;
+        this.useAutoClose = useAutoClose;
+        this.useReOpenAfterAutoClose = useReOpenAfterAutoClose;
+        this.lowerClosePrice = lowerClosePrice;
+        this.upperClosePrice = upperClosePrice;
         this.isPrivateOffer = isPrivateOffer;
         this.hashOfChallenge = hashOfChallenge;
         this.extraDataMap = extraDataMap;
@@ -261,6 +277,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return offererNodeAddress;
     }
 
+    //TODO update with new properties
     public void validate() {
         checkNotNull(getAmount(), "Amount is null");
         checkNotNull(getArbitratorNodeAddresses(), "Arbitrator is null");
@@ -273,7 +290,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         checkNotNull(getPrice(), "Price is null");
         checkNotNull(getTxFee(), "txFee is null");
         checkNotNull(getCreateOfferFee(), "CreateOfferFee is null");
-        checkNotNull(getTakerFee(), "TakerFee is null");
         checkNotNull(getVersionNr(), "VersionNr is null");
         checkNotNull(getSecurityDeposit(), "SecurityDeposit is null");
         checkNotNull(getMaxTradeLimit(), "MaxTradeLimit is null");
@@ -560,10 +576,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return Coin.valueOf(createOfferFee);
     }
 
-    public Coin getTakerFee() {
-        return Coin.valueOf(takerFee);
-    }
-
     public Coin getSecurityDeposit() {
         return Coin.valueOf(securityDeposit);
     }
@@ -574,6 +586,26 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
     public long getMaxTradePeriod() {
         return maxTradePeriod;
+    }
+
+    public long getBlockHeightAtOfferCreation() {
+        return blockHeightAtOfferCreation;
+    }
+
+    public boolean isUseAutoClose() {
+        return useAutoClose;
+    }
+
+    public boolean isUseReOpenAfterAutoClose() {
+        return useReOpenAfterAutoClose;
+    }
+
+    public long getLowerClosePrice() {
+        return lowerClosePrice;
+    }
+
+    public long getUpperClosePrice() {
+        return upperClosePrice;
     }
 
     public boolean isPrivateOffer() {
@@ -590,6 +622,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return extraDataMap;
     }
 
+    //TODO update with new properties
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -606,7 +639,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         if (minAmount != offer.minAmount) return false;
         if (txFee != offer.txFee) return false;
         if (createOfferFee != offer.createOfferFee) return false;
-        if (takerFee != offer.takerFee) return false;
         if (securityDeposit != offer.securityDeposit) return false;
         if (maxTradePeriod != offer.maxTradePeriod) return false;
         if (maxTradeLimit != offer.maxTradeLimit) return false;
@@ -638,6 +670,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
     }
 
+    //TODO update with new properties
     @Override
     public int hashCode() {
         int result;
@@ -666,7 +699,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         result = 31 * result + (versionNr != null ? versionNr.hashCode() : 0);
         result = 31 * result + (int) (txFee ^ (txFee >>> 32));
         result = 31 * result + (int) (createOfferFee ^ (createOfferFee >>> 32));
-        result = 31 * result + (int) (takerFee ^ (takerFee >>> 32));
         result = 31 * result + (int) (securityDeposit ^ (securityDeposit >>> 32));
         result = 31 * result + (int) (maxTradePeriod ^ (maxTradePeriod >>> 32));
         result = 31 * result + (int) (maxTradeLimit ^ (maxTradeLimit >>> 32));
@@ -676,6 +708,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return result;
     }
 
+    //TODO update with new properties
     @Override
     public String toString() {
         return "Offer{" +
@@ -693,7 +726,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
                 "\n\ttxFee=" + txFee +
                 "\n\tcreateOfferFee=" + createOfferFee +
-                "\n\ttakerFee=" + takerFee +
                 "\n\tsecurityDeposit=" + securityDeposit +
                 "\n\tmaxTradePeriod=" + maxTradePeriod +
                 "\n\tmaxTradeLimit=" + maxTradeLimit +

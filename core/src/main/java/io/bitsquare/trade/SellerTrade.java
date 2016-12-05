@@ -18,7 +18,6 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.NodeAddress;
@@ -58,7 +57,7 @@ public abstract class SellerTrade extends Trade {
 
     @Override
     public Coin getPayoutAmount() {
-        return FeePolicy.getSecurityDeposit();
+        return getOffer().getSecurityDeposit();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

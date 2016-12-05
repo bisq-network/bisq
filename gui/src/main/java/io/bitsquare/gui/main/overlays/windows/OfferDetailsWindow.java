@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.Navigation;
@@ -264,7 +263,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Offerer's onion address:", offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
-        addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit()));
+        addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(offer.getSecurityDeposit()));
 
         if (paymentMethodCountryCode != null)
             addLabelTextField(gridPane, ++rowIndex, "Offerer's country of bank:",

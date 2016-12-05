@@ -1120,13 +1120,16 @@ public class TradeWalletService {
     }
 
     private static void printTxWithInputs(String tracePrefix, Transaction tx) {
-        log.info(tracePrefix + ": " + tx.toString());
+        StringBuilder sb = new StringBuilder();
+        sb.append(tracePrefix).append(": ").append(tx.toString()).append("\n").append(tracePrefix);
         for (TransactionInput input : tx.getInputs()) {
             if (input.getConnectedOutput() != null)
-                log.info(tracePrefix + " input value: " + input.getConnectedOutput().getValue().toFriendlyString());
+                sb.append(" input value: ").append(input.getConnectedOutput().getValue().toFriendlyString());
             else
-                log.info(tracePrefix + ": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
+                sb.append(": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
         }
+        sb.append("\n").append("Size: " + tx.bitcoinSerialize().length);
+        log.info(sb.toString());
     }
 
     private void signInput(Transaction transaction, TransactionInput input, int inputIndex) throws SigningException {

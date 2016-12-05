@@ -60,6 +60,10 @@ public class TradesChartsViewModelTest {
                 0,
                 0,
                 false,
+                false,
+                0,
+                0,
+                false,
                 null,
                 null
         );

@@ -113,6 +113,7 @@ public class WalletService {
                          AddressEntryList addressEntryList,
                          UserAgent userAgent,
                          Preferences preferences,
+
                          Socks5ProxyProvider socks5ProxyProvider,
                          @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
         this.regTestHost = regTestHost;

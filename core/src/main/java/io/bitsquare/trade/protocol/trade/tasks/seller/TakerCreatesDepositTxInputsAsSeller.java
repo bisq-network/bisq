@@ -18,7 +18,6 @@
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.data.InputsAndChangeOutput;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
@@ -41,7 +40,7 @@ public class TakerCreatesDepositTxInputsAsSeller extends TradeTask {
             if (trade.getTradeAmount() != null) {
                 Coin txFee = trade.getTxFee();
                 Coin doubleTxFee = txFee.add(txFee);
-                Coin takerInputAmount = FeePolicy.getSecurityDeposit().add(doubleTxFee).add(trade.getTradeAmount());
+                Coin takerInputAmount = trade.getOffer().getSecurityDeposit().add(doubleTxFee).add(trade.getTradeAmount());
 
                 InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(takerInputAmount,
                         txFee,
