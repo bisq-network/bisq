@@ -132,6 +132,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("HODL", "HOdlcoin"));
         result.add(new CryptoCurrency("HNC", "HunCoin"));
         result.add(new CryptoCurrency("IOC", "I/O Coin"));
+        result.add(new CryptoCurrency("IOP", "Fermat"));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
         result.add(new CryptoCurrency("JBS", "Jumbucks"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
