@@ -102,9 +102,10 @@
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.13.1.7</version>
+           <!-- <version>0.13.1.7</version>-->
+            <version>0.13.1</version>
         </dependency>
-
+        
         <!--guice-->
         <dependency>
             <groupId>com.google.inject</groupId>
