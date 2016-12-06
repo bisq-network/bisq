@@ -66,8 +66,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {
 
@@ -561,10 +559,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private void revertTransaction(String txId, @Nullable Tradable tradable) {
         try {
-            checkArgument(tradable instanceof Trade, "Tradeable object is not instance of Trade (revertTransaction). That must not happen.");
-            Coin txFee = ((Trade) tradable).getTxFee();
-            walletService.doubleSpendTransaction(txId, txFee, () -> {
-                walletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
+            walletService.doubleSpendTransaction(txId, () -> {
+                if (tradable != null)
+                    walletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
                 new Popup().information("Transaction successfully sent to a new address in the local Bitsquare wallet.").show();
             }, errorMessage -> {
@@ -597,7 +594,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             Coin txFee = Coin.valueOf(20_000);
             Coin createOfferFee = Coin.valueOf(50_000);
             Coin takeOfferFee = Coin.valueOf(100_000);
-            
+
             if (!dataByDayMap.containsKey(day)) {
                 int numOffers = 0;
                 int numTrades = 0;

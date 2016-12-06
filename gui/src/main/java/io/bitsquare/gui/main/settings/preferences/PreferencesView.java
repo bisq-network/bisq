@@ -319,6 +319,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         useCustomFeeCheckbox = tuple.third;
 
         useCustomFeeCheckboxListener = (observable, oldValue, newValue) -> {
+            preferences.setUseCustomWithdrawalTxFee(newValue);
             transactionFeeInputTextField.setEditable(newValue);
             if (!newValue) {
                 transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));

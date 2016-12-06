@@ -168,7 +168,7 @@ public class TradeWalletService {
 
         checkNotNull(wallet, "Wallet must not be null");
         wallet.completeTx(sendRequest);
-        printTxWithInputs("tradingFeeTx", tradingFeeTx);
+        WalletService.printTxWithInputs("tradingFeeTx", tradingFeeTx);
 
         return tradingFeeTx;
     }
@@ -236,7 +236,7 @@ public class TradeWalletService {
 
         verifyTransaction(dummyTX);
 
-        printTxWithInputs("dummyTX", dummyTX);
+        WalletService.printTxWithInputs("dummyTX", dummyTX);
 
         List<RawTransactionInput> rawTransactionInputList = dummyTX.getInputs().stream()
                 .map(e -> {
@@ -404,7 +404,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedDepositTx);
 
-        printTxWithInputs("preparedDepositTx", preparedDepositTx);
+        WalletService.printTxWithInputs("preparedDepositTx", preparedDepositTx);
 
         return new PreparedDepositTxAndOffererInputs(offererRawTransactionInputs, preparedDepositTx.bitcoinSerialize());
     }
@@ -490,7 +490,7 @@ public class TradeWalletService {
 
         // Add all outputs from offerersDepositTx to depositTx
         offerersDepositTx.getOutputs().forEach(depositTx::addOutput);
-        printTxWithInputs("offerersDepositTx", offerersDepositTx);
+        WalletService.printTxWithInputs("offerersDepositTx", offerersDepositTx);
 
         // Sign inputs 
         int start = takerIsSeller ? buyerInputs.size() : 0;
@@ -504,7 +504,7 @@ public class TradeWalletService {
         verifyTransaction(depositTx);
         checkWalletConsistency();
 
-        printTxWithInputs("depositTx", depositTx);
+        WalletService.printTxWithInputs("depositTx", depositTx);
 
         // Broadcast depositTx
         checkNotNull(walletAppKit);
@@ -574,7 +574,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedPayoutTx);
 
-        printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
+        WalletService.printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
 
         return sellerSignature.encodeToDER();
     }
@@ -648,7 +648,7 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
-        printTxWithInputs("payoutTx", payoutTx);
+        WalletService.printTxWithInputs("payoutTx", payoutTx);
 
         verifyTransaction(payoutTx);
         checkWalletConsistency();
@@ -729,7 +729,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedPayoutTx);
 
-        printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
+        WalletService.printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
 
         return arbitratorSignature.encodeToDER();
     }
@@ -818,7 +818,7 @@ public class TradeWalletService {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         input.verify(input.getConnectedOutput());
 
-        printTxWithInputs("disputed payoutTx", payoutTx);
+        WalletService.printTxWithInputs("disputed payoutTx", payoutTx);
 
         // As we use lockTime the tx will not be relayed as it is not considered standard.
         // We need to broadcast on our own when we reached the block height. Both peers will do the broadcast.
@@ -943,7 +943,7 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
-        printTxWithInputs("payoutTx", payoutTx);
+        WalletService.printTxWithInputs("payoutTx", payoutTx);
 
         verifyTransaction(payoutTx);
         checkWalletConsistency();
@@ -1117,19 +1117,6 @@ public class TradeWalletService {
             transaction.setLockTime(lockTime);
         }
         return transaction;
-    }
-
-    private static void printTxWithInputs(String tracePrefix, Transaction tx) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(tracePrefix).append(": ").append(tx.toString()).append("\n").append(tracePrefix);
-        for (TransactionInput input : tx.getInputs()) {
-            if (input.getConnectedOutput() != null)
-                sb.append(" input value: ").append(input.getConnectedOutput().getValue().toFriendlyString());
-            else
-                sb.append(": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
-        }
-        sb.append("\n").append("Size: " + tx.bitcoinSerialize().length);
-        log.info(sb.toString());
     }
 
     private void signInput(Transaction transaction, TransactionInput input, int inputIndex) throws SigningException {

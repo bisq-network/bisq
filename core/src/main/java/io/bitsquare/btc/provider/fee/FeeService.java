@@ -118,6 +118,10 @@ public class FeeService {
         return (fixedFeePerBytes > 0) ? Coin.valueOf(fixedFeePerBytes * 1000) : getTxFeePerByte().multiply(1000);
     }
 
+    public Coin getTxFeeForWithdrawalPerByte() {
+        return (fixedFeePerBytes > 0) ? Coin.valueOf(fixedFeePerBytes) : getTxFeePerByte();
+    }
+
     public Coin getCreateOfferFee() {
         return Coin.valueOf(feeData.createOfferFee);
     }

@@ -154,13 +154,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
     }
 
-    public void onWithdrawRequest(String toAddress, Coin receiverAmount, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
         checkNotNull(getTrade(), "trade must not be null");
 
         if (toAddress != null && toAddress.length() > 0) {
             tradeManager.onWithdrawRequest(
                     toAddress,
-                    receiverAmount,
+                    amount,
+                    fee,
                     aesKey,
                     getTrade(),
                     () -> {

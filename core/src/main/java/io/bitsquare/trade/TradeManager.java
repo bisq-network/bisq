@@ -387,7 +387,7 @@ public class TradeManager {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onWithdrawRequest(String toAddress, Coin receiverAmount, KeyParameter aesKey, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
         String fromAddress = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString();
 
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
@@ -409,7 +409,7 @@ public class TradeManager {
             }
         };
         try {
-            walletService.sendFunds(fromAddress, toAddress, receiverAmount, aesKey, AddressEntry.Context.TRADE_PAYOUT, callback);
+            walletService.sendFunds(fromAddress, toAddress, amount, fee, aesKey, AddressEntry.Context.TRADE_PAYOUT, callback);
         } catch (AddressFormatException | InsufficientMoneyException | AddressEntryException e) {
             e.printStackTrace();
             log.error(e.getMessage());
