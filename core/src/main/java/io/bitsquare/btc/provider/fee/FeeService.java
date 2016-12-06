@@ -53,12 +53,9 @@ public class FeeService {
     public static final long DEFAULT_TAKE_OFFER_FEE = 80_000;
 
     private final FeeProvider feeProvider;
-    private final ProvidersRepository providersRepository;
-    private final HttpClient httpClient;
     private FeeData feeData;
     private Map<String, Long> timeStampMap;
     private long epochInSecondAtLastRequest;
-    private long fixedFeePerBytes = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -67,12 +64,9 @@ public class FeeService {
     @Inject
     public FeeService(HttpClient httpClient,
                       ProvidersRepository providersRepository) {
-        this.httpClient = httpClient;
-        this.providersRepository = providersRepository;
         this.feeProvider = new FeeProvider(httpClient, providersRepository.getBaseUrl());
         feeData = new FeeData(DEFAULT_TX_FEE, DEFAULT_CREATE_OFFER_FEE, DEFAULT_TAKE_OFFER_FEE);
     }
-
 
     public void onAllServicesInitialized() {
         requestFees(null, null);
@@ -110,16 +104,8 @@ public class FeeService {
     }
 
     public Coin getTxFeePerByte() {
-        log.info("getTxFee " + (feeData.txFeePerByte));
+        log.info("txFeePerByte = " + feeData.txFeePerByte);
         return Coin.valueOf(feeData.txFeePerByte);
-    }
-
-    public Coin getTxFeeForWithdrawalPerKB() {
-        return (fixedFeePerBytes > 0) ? Coin.valueOf(fixedFeePerBytes * 1000) : getTxFeePerByte().multiply(1000);
-    }
-
-    public Coin getTxFeeForWithdrawalPerByte() {
-        return (fixedFeePerBytes > 0) ? Coin.valueOf(fixedFeePerBytes) : getTxFeePerByte();
     }
 
     public Coin getCreateOfferFee() {
@@ -130,7 +116,4 @@ public class FeeService {
         return Coin.valueOf(feeData.takeOfferFee);
     }
 
-    public void setFixedFeePerBytes(long fixedFeePerBytes) {
-        this.fixedFeePerBytes = fixedFeePerBytes;
-    }
 }

@@ -724,17 +724,17 @@ public class WalletService {
                                     connectedOutput.getParentTransaction() != null &&
                                     connectedOutput.getParentTransaction().getConfidence() != null &&
                                     input.getValue() != null) {
-                                if (connectedOutput.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+                                //if (connectedOutput.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
                                     newTransaction.addInput(new TransactionInput(params,
                                             newTransaction,
                                             new byte[]{},
                                             new TransactionOutPoint(params, input.getOutpoint().getIndex(),
                                                     new Transaction(params, connectedOutput.getParentTransaction().bitcoinSerialize())),
                                             Coin.valueOf(input.getValue().value)));
-                                } else {
+                               /* } else {
                                     log.warn("Confidence of parent tx is not of type BUILDING: ConfidenceType=" +
                                             connectedOutput.getParentTransaction().getConfidence().getConfidenceType());
-                                }
+                                }*/
                             }
                         }
                 );
@@ -754,7 +754,7 @@ public class WalletService {
                         int txSize = 0;
                         Transaction tx;
                         Wallet.SendRequest sendRequest;
-                        Coin txFeeForWithdrawalPerByte = feeService.getTxFeeForWithdrawalPerByte();
+                        Coin txFeeForWithdrawalPerByte = getTxFeeForWithdrawalPerByte();
                         do {
                             counter++;
                             fee = txFeeForWithdrawalPerByte.multiply(txSize);
@@ -783,6 +783,12 @@ public class WalletService {
 
                         Wallet.SendResult sendResult = null;
                         try {
+                            sendRequest = Wallet.SendRequest.forTx(newTransaction);
+                            sendRequest.fee = fee;
+                            sendRequest.feePerKb = Coin.ZERO;
+                            sendRequest.aesKey = aesKey;
+                            sendRequest.coinSelector = new TradeWalletCoinSelector(params, toAddress);
+                            sendRequest.changeAddress = toAddress;
                             sendResult = wallet.sendCoins(sendRequest);
                         } catch (InsufficientMoneyException e) {
                             // in some cases getFee did not calculate correctly and we still get an InsufficientMoneyException
@@ -801,6 +807,7 @@ public class WalletService {
 
                             try {
                                 sendResult = wallet.sendCoins(sendRequest);
+                                printTxWithInputs("FeeEstimationTransaction", newTransaction);
                             } catch (InsufficientMoneyException e2) {
                                 errorMessageHandler.handleErrorMessage("We did not get the correct fee calculated. " + (e2.missing != null ? e2.missing.toFriendlyString() : ""));
                             }
@@ -838,6 +845,14 @@ public class WalletService {
         }
     }
 
+    private Coin getTxFeeForWithdrawalPerByte() {
+        Coin fee = (preferences.getUseCustomWithdrawalTxFee()) ?
+                Coin.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
+                feeService.getTxFeePerByte();
+        log.info("tx fee = " + fee.toFriendlyString());
+        return fee;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Withdrawal Fee calculation
@@ -860,7 +875,7 @@ public class WalletService {
             int counter = 0;
             int txSize = 0;
             Transaction tx;
-            Coin txFeeForWithdrawalPerByte = feeService.getTxFeeForWithdrawalPerByte();
+            Coin txFeeForWithdrawalPerByte = getTxFeeForWithdrawalPerByte();
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
@@ -871,10 +886,6 @@ public class WalletService {
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txSize = tx.bitcoinSerialize().length;
-                log.error("txSize " + txSize);
-                log.error("txFeeForWithdrawalPerByte " + txFeeForWithdrawalPerByte.toFriendlyString());
-                log.error("fee " + fee.toFriendlyString());
-                log.error("tx " + tx);
                 printTxWithInputs("FeeEstimationTransaction", tx);
             }
             while (counter < 10 && Math.abs(tx.getFee().value - txFeeForWithdrawalPerByte.multiply(txSize).value) > 1000);
@@ -915,7 +926,7 @@ public class WalletService {
             int counter = 0;
             int txSize = 0;
             Transaction tx;
-            Coin txFeeForWithdrawalPerByte = feeService.getTxFeeForWithdrawalPerByte();
+            Coin txFeeForWithdrawalPerByte = getTxFeeForWithdrawalPerByte();
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
@@ -925,10 +936,6 @@ public class WalletService {
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txSize = tx.bitcoinSerialize().length;
-                log.error("txSize " + txSize);
-                log.error("txFeeForWithdrawalPerByte " + txFeeForWithdrawalPerByte.toFriendlyString());
-                log.error("fee " + fee.toFriendlyString());
-                log.error("tx " + tx);
                 printTxWithInputs("FeeEstimationTransactionForMultipleAddresses", tx);
             }
             while (counter < 10 && Math.abs(tx.getFee().value - txFeeForWithdrawalPerByte.multiply(txSize).value) > 1000);
@@ -984,10 +991,10 @@ public class WalletService {
     public void emptyWallet(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {
         Wallet.SendRequest sendRequest = Wallet.SendRequest.emptyWallet(new Address(params, toAddress));
-        sendRequest.fee = getTxFeeForWithdrawalPerKB();
-        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
+        printTxWithInputs("emptyWallet", sendResult.tx);
         Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(Transaction result) {
@@ -1079,10 +1086,6 @@ public class WalletService {
         checkNotNull(changeAddressAddressEntry, "change address must not be null");
         sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
         return sendRequest;
-    }
-
-    private Coin getTxFeeForWithdrawalPerKB() {
-        return feeService.getTxFeeForWithdrawalPerKB();
     }
 
 

@@ -44,6 +44,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 import java.util.Arrays;
@@ -337,8 +338,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             if (oldValue && !newValue) {
                 String estimatedFee = String.valueOf(feeService.getTxFeePerByte().value);
                 try {
-                    int val = Integer.parseInt(transactionFeeInputTextField.getText());
-                    preferences.setWithdrawalTxFeeInBytes(val);
+                    int withdrawalTxFeeInBytes = Integer.parseInt(transactionFeeInputTextField.getText());
+                    if (withdrawalTxFeeInBytes * 1000 < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value) {
+                        new Popup().warning("Transaction fee must be at least 5 satoshi/byte").show();
+                        transactionFeeInputTextField.setText(estimatedFee);
+                    } else if (withdrawalTxFeeInBytes > 5000) {
+                        new Popup().warning("Your input is above any reasonable value (>5000 satoshi/byte). Transaction fee is usually in the range of 10-200 satoshi/byte. ").show();
+                        transactionFeeInputTextField.setText(estimatedFee);
+                    } else {
+                        preferences.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes);
+                    }
                 } catch (NumberFormatException t) {
                     new Popup().warning("Please enter integer numbers only.").show();
                     transactionFeeInputTextField.setText(estimatedFee);

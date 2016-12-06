@@ -27,14 +27,10 @@ import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.*;
 import io.bitsquare.storage.Storage;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +98,6 @@ public final class Preferences implements Persistable {
     transient private final BitsquareEnvironment bitsquareEnvironment;
 
     transient private BitcoinNetwork bitcoinNetwork;
-    transient private FeeService feeService;
 
     // Persisted fields
     private String btcDenomination = MonetaryFormat.CODE_BTC;
@@ -143,6 +138,8 @@ public final class Preferences implements Persistable {
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
     transient private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(useAnimations);
+    transient private final BooleanProperty useCustomWithdrawalTxFeeProperty = new SimpleBooleanProperty(useCustomWithdrawalTxFee);
+    transient private final LongProperty withdrawalTxFeeInBytesProperty = new SimpleLongProperty(withdrawalTxFeeInBytes);
     transient private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
@@ -169,7 +166,6 @@ public final class Preferences implements Persistable {
         INSTANCE = this;
         this.storage = storage;
         this.bitsquareEnvironment = bitsquareEnvironment;
-        this.feeService = feeService;
 
         if (Utilities.isWindows())
             defaultPath = System.getenv("USERPROFILE");
@@ -201,6 +197,16 @@ public final class Preferences implements Persistable {
             storage.queueUpForSave();
         });
 
+        useCustomWithdrawalTxFeeProperty.addListener((ov) -> {
+            useCustomWithdrawalTxFee = useCustomWithdrawalTxFeeProperty.get();
+            storage.queueUpForSave();
+        });
+
+        withdrawalTxFeeInBytesProperty.addListener((ov) -> {
+            withdrawalTxFeeInBytes = withdrawalTxFeeInBytesProperty.get();
+            storage.queueUpForSave();
+        });
+
         Preferences persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             setBtcDenomination(persisted.btcDenomination);
@@ -211,6 +217,10 @@ public final class Preferences implements Persistable {
 
             setBlockChainExplorerTestNet(persisted.getBlockChainExplorerTestNet());
             setBlockChainExplorerMainNet(persisted.getBlockChainExplorerMainNet());
+
+            setUseCustomWithdrawalTxFee(persisted.useCustomWithdrawalTxFee);
+            setWithdrawalTxFeeInBytes(persisted.withdrawalTxFeeInBytes);
+
             // In case of an older version without that data we set it to defaults
             if (blockChainExplorerTestNet == null)
                 setBlockChainExplorerTestNet(blockChainExplorersTestNet.get(0));
@@ -238,12 +248,6 @@ public final class Preferences implements Persistable {
             bitcoinNodes = persisted.getBitcoinNodes();
             if (bitcoinNodes == null)
                 bitcoinNodes = "";
-
-            try {
-                setWithdrawalTxFeeInBytes(persisted.getWithdrawalTxFeeInBytes());
-            } catch (Exception e) {
-                // leave default value
-            }
 
             if (persisted.getPeerTagMap() != null)
                 peerTagMap = persisted.getPeerTagMap();
@@ -388,18 +392,6 @@ public final class Preferences implements Persistable {
         }
     }
 
-    public void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes) throws Exception {
-        if (withdrawalTxFeeInBytes * 1000 < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value)
-            throw new Exception("Transaction fee must be at least 5 satoshi/byte");
-
-        if (withdrawalTxFeeInBytes > 5000)
-            throw new Exception("Transaction fee is in the range of 10-200 satoshi/byte. Your input is above any reasonable value (>5000 satoshi/byte).");
-
-        this.withdrawalTxFeeInBytes = withdrawalTxFeeInBytes;
-        feeService.setFixedFeePerBytes(withdrawalTxFeeInBytes);
-        storage.queueUpForSave();
-    }
-
     public void setUseTorForBitcoinJ(boolean useTorForBitcoinJ) {
         this.useTorForBitcoinJ = useTorForBitcoinJ;
         storage.queueUpForSave();
@@ -422,11 +414,6 @@ public final class Preferences implements Persistable {
 
     public void setAutoSelectArbitrators(boolean autoSelectArbitrators) {
         this.autoSelectArbitrators = autoSelectArbitrators;
-        storage.queueUpForSave();
-    }
-
-    public void setUseStickyMarketPrice(boolean useStickyMarketPrice) {
-        this.useStickyMarketPrice = useStickyMarketPrice;
         storage.queueUpForSave();
     }
 
@@ -486,8 +473,11 @@ public final class Preferences implements Persistable {
     }
 
     public void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee) {
-        this.useCustomWithdrawalTxFee = useCustomWithdrawalTxFee;
-        storage.queueUpForSave();
+        useCustomWithdrawalTxFeeProperty.set(useCustomWithdrawalTxFee);
+    }
+
+    public void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes) {
+        withdrawalTxFeeInBytesProperty.set(withdrawalTxFeeInBytes);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -581,10 +571,6 @@ public final class Preferences implements Persistable {
         return preferredTradeCurrency;
     }
 
-    public long getWithdrawalTxFeeInBytes() {
-        return withdrawalTxFeeInBytes;
-    }
-
     public boolean getUseTorForBitcoinJ() {
         return useTorForBitcoinJ;
     }
@@ -646,7 +632,19 @@ public final class Preferences implements Persistable {
     }
 
     public boolean getUseCustomWithdrawalTxFee() {
-        return useCustomWithdrawalTxFee;
+        return useCustomWithdrawalTxFeeProperty.get();
+    }
+
+    public BooleanProperty useCustomWithdrawalTxFeeProperty() {
+        return useCustomWithdrawalTxFeeProperty;
+    }
+
+    public LongProperty withdrawalTxFeeInBytesProperty() {
+        return withdrawalTxFeeInBytesProperty;
+    }
+
+    public long getWithdrawalTxFeeInBytes() {
+        return withdrawalTxFeeInBytesProperty.get();
     }
 
 
