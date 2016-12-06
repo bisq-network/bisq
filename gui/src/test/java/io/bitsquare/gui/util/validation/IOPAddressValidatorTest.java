@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 public class IOPAddressValidatorTest {
 
     @Test
-    public void testBTC() {
+    public void testIOP() {
     	
     	IOPAddressValidator validator = new IOPAddressValidator();
 

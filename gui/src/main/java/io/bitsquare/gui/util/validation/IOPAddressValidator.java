@@ -76,7 +76,6 @@ public final class IOPAddressValidator extends InputValidator {
 
 
 
-
 /* IoP_MainNetParams */
 
 class IoP_MainNetParams extends IOPNetworkParameters{
