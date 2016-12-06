@@ -5,8 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Ignore
-public class BlockchainServiceTest {
-    private static final Logger log = LoggerFactory.getLogger(BlockchainServiceTest.class);
+public class BlockchainTxserviceTest {
+    private static final Logger log = LoggerFactory.getLogger(BlockchainTxserviceTest.class);
 
    /* @Test
     public void testGetFee() throws InterruptedException {
