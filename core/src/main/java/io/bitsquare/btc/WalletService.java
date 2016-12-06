@@ -754,7 +754,7 @@ public class WalletService {
                 sendRequest.aesKey = aesKey;
                 sendRequest.coinSelector = new TradeWalletCoinSelector(params, toAddress, false);
                 sendRequest.changeAddress = toAddress;
-                sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+                sendRequest.feePerKb = getTxFeeForWithdrawalPerKB();
 
                 Coin requiredFee = getFeeForDoubleSpend(sendRequest,
                         toAddress,
@@ -770,7 +770,7 @@ public class WalletService {
                 sendRequest.coinSelector = new TradeWalletCoinSelector(params, toAddress, false);
                 // We don't expect change but set it just in case
                 sendRequest.changeAddress = toAddress;
-                sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+                sendRequest.feePerKb = getTxFeeForWithdrawalPerKB();
 
                 Wallet.SendResult sendResult = null;
                 try {
@@ -788,7 +788,7 @@ public class WalletService {
                     sendRequest.aesKey = aesKey;
                     sendRequest.coinSelector = new TradeWalletCoinSelector(params, toAddress, false);
                     sendRequest.changeAddress = toAddress;
-                    sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+                    sendRequest.feePerKb = getTxFeeForWithdrawalPerKB();
 
                     try {
                         sendResult = wallet.sendCoins(sendRequest);
@@ -834,7 +834,7 @@ public class WalletService {
             newSendRequest.aesKey = aesKey;
             newSendRequest.coinSelector = new TradeWalletCoinSelector(params, toAddress);
             newSendRequest.changeAddress = toAddress;
-            newSendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+            newSendRequest.feePerKb = getTxFeeForWithdrawalPerKB();
             wallet.completeTx(newSendRequest);
 
             log.debug("After fee check: amount  " + amount.toFriendlyString());
@@ -992,7 +992,7 @@ public class WalletService {
         Wallet.SendRequest sendRequest = Wallet.SendRequest.emptyWallet(new Address(params, toAddress));
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+        sendRequest.feePerKb = getTxFeeForWithdrawalPerKB();
         Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(Transaction result) {
@@ -1028,7 +1028,7 @@ public class WalletService {
         checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must not be null");
         sendRequest.coinSelector = new TradeWalletCoinSelector(params, addressEntry.get().getAddress());
         sendRequest.changeAddress = addressEntry.get().getAddress();
-        sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+        sendRequest.feePerKb = getTxFeeForWithdrawalPerKB();
         return sendRequest;
     }
 
@@ -1091,8 +1091,12 @@ public class WalletService {
         }
         checkNotNull(changeAddressAddressEntry, "change address must not be null");
         sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
-        sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+        sendRequest.feePerKb = getTxFeeForWithdrawalPerKB();
         return sendRequest;
+    }
+
+    private Coin getTxFeeForWithdrawalPerKB() {
+        return Coin.valueOf(feeService.getTxFeeForWithdrawalPerKB().value);
     }
 
 

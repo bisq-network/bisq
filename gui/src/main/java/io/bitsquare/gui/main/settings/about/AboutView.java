@@ -71,16 +71,14 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, "Donate", "https://bitsquare.io/contribute/#donation");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Market price API providers", Layout.GROUP_DISTANCE);
+        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Data providers", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        label = addLabel(root, gridRow, "Bitsquare uses market price feed providers for displaying the current exchange rate.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        label = addLabel(root, gridRow, "Bitsquare uses 3rd party APIs for Fiat and Altcoin market prices as well as for mining fee estimation.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
-        addLabelHyperlinkWithIcon(root, ++gridRow, "Market price API provider for fiat: ", "BitcoinAverage", "https://bitcoinaverage.com");
-        label = addLabel(root, ++gridRow, "Market price API providers for altcoins: Poloniex (http://poloniex.com) / Coinmarketcap (https://coinmarketcap.com) as fallback");
-        GridPane.setColumnSpan(label, 2);
-        GridPane.setHalignment(label, HPos.LEFT);
+        addLabelTextField(root, ++gridRow, "Market prices provided by: ", "BitcoinAverage (https://bitcoinaverage.com), Poloniex (https://poloniex.com) and Coinmarketcap (https://coinmarketcap.com)");
+        addLabelTextField(root, ++gridRow, "Mining fee estimation provided by: 21 (https://bitcoinfees.21.co)");
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, "Version details", Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);

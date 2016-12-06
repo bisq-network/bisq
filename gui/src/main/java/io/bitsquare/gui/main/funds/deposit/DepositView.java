@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.funds.deposit;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
@@ -299,10 +298,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     }
 
     private Coin getAmountAsCoin() {
-        Coin senderAmount = formatter.parseToCoin(amountTextField.getText());
-        if (!Restrictions.isAboveFixedTxFeeForTradesAndDust(senderAmount, feeService.getTxFeeForWithdrawal()))
-            senderAmount = Coin.ZERO;
-        return senderAmount;
+        return formatter.parseToCoin(amountTextField.getText());
     }
 
     @NotNull

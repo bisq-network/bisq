@@ -58,6 +58,7 @@ public class FeeService {
     private FeeData feeData;
     private Map<String, Long> timeStampMap;
     private long epochInSecondAtLastRequest;
+    private long fixedFeePerBytes = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -109,13 +110,12 @@ public class FeeService {
     }
 
     public Coin getTxFeePerByte() {
-        log.debug("getTxFee " + (feeData.txFeePerByte));
+        log.info("getTxFee " + (feeData.txFeePerByte));
         return Coin.valueOf(feeData.txFeePerByte);
     }
 
-    // TODO needed?
-    public Coin getTxFeeForWithdrawal() {
-        return getTxFeePerByte();
+    public Coin getTxFeeForWithdrawalPerKB() {
+        return (fixedFeePerBytes > 0) ? Coin.valueOf(fixedFeePerBytes * 1000) : getTxFeePerByte().multiply(1000);
     }
 
     public Coin getCreateOfferFee() {
@@ -126,4 +126,7 @@ public class FeeService {
         return Coin.valueOf(feeData.takeOfferFee);
     }
 
+    public void setFixedFeePerBytes(long fixedFeePerBytes) {
+        this.fixedFeePerBytes = fixedFeePerBytes;
+    }
 }

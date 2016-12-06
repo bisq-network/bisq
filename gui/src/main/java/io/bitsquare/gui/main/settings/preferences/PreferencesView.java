@@ -17,8 +17,10 @@
 
 package io.bitsquare.gui.main.settings.preferences;
 
+import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
+import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -42,7 +44,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.util.Arrays;
@@ -60,11 +61,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     //  private ComboBox<String> userLanguageComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
-    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox/*, useStickyMarketPriceCheckBox*/;
+    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
     private int gridRow = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
+    private FeeService feeService;
     private BSFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
@@ -84,6 +86,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private InputTextField deviationInputTextField;
     private ChangeListener<String> deviationListener, ignoreTradersListListener;
     private ChangeListener<Boolean> deviationFocusedListener;
+    private ChangeListener<Boolean> useCustomFeeCheckboxListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -91,9 +94,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PreferencesView(Preferences preferences, BSFormatter formatter) {
+    public PreferencesView(Preferences preferences, FeeService feeService, BSFormatter formatter) {
         super();
         this.preferences = preferences;
+        this.feeService = feeService;
         this.formatter = formatter;
 
         blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
@@ -310,18 +314,36 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
         };
 
-        transactionFeeInputTextField = addLabelInputTextField(root, ++gridRow, "Withdrawal transaction fee (satoshi/byte):").second;
+        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(root, ++gridRow, "Withdrawal transaction fee (satoshi/byte):", "Use custom value");
+        transactionFeeInputTextField = tuple.second;
+        useCustomFeeCheckbox = tuple.third;
+
+        useCustomFeeCheckboxListener = (observable, oldValue, newValue) -> {
+            transactionFeeInputTextField.setEditable(newValue);
+            if (!newValue) {
+                transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
+                try {
+                    preferences.setWithdrawalTxFeeInBytes(feeService.getTxFeePerByte().value);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            preferences.setUseCustomWithdrawalTxFee(newValue);
+        };
+
         transactionFeeFocusedListener = (o, oldValue, newValue) -> {
             if (oldValue && !newValue) {
+                String estimatedFee = String.valueOf(feeService.getTxFeePerByte().value);
                 try {
                     int val = Integer.parseInt(transactionFeeInputTextField.getText());
-                    preferences.setNonTradeTxFeePerKB(val * 1000);
+                    preferences.setWithdrawalTxFeeInBytes(val);
                 } catch (NumberFormatException t) {
                     new Popup().warning("Please enter integer numbers only.").show();
-                    transactionFeeInputTextField.setText(getNonTradeTxFeePerKB());
+                    transactionFeeInputTextField.setText(estimatedFee);
                 } catch (Throwable t) {
                     new Popup().warning("Your input was not accepted.\n" + t.getMessage()).show();
-                    transactionFeeInputTextField.setText(getNonTradeTxFeePerKB());
+                    transactionFeeInputTextField.setText(estimatedFee);
                 }
             }
         };
@@ -345,7 +367,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Activate
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     private void activateDisplayCurrencies() {
         preferredTradeCurrencyComboBox.setItems(tradeCurrencies);
@@ -390,7 +411,15 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void activateOtherOptions() {
-        transactionFeeInputTextField.setText(getNonTradeTxFeePerKB());
+        boolean useCustomWithdrawalTxFee = preferences.getUseCustomWithdrawalTxFee();
+        useCustomFeeCheckbox.setSelected(useCustomWithdrawalTxFee);
+
+        transactionFeeInputTextField.setEditable(useCustomWithdrawalTxFee);
+        if (!useCustomWithdrawalTxFee)
+            transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
+
+
+        transactionFeeInputTextField.setText(getNonTradeTxFeePerBytes());
         ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
         
     /* btcDenominationComboBox.setDisable(true);
@@ -438,11 +467,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
         ignoreTradersListInputTextField.textProperty().addListener(ignoreTradersListListener);
+        useCustomFeeCheckbox.selectedProperty().addListener(useCustomFeeCheckboxListener);
     }
 
-    @NotNull
-    private String getNonTradeTxFeePerKB() {
-        return String.valueOf(preferences.getNonTradeTxFeePerKB() / 1000);
+    private String getNonTradeTxFeePerBytes() {
+        return preferences.getUseCustomWithdrawalTxFee() ?
+                String.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
+                String.valueOf(feeService.getTxFeePerByte().value);
     }
 
     private void activateDisplayPreferences() {
@@ -480,6 +511,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
         transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);
         ignoreTradersListInputTextField.textProperty().removeListener(ignoreTradersListListener);
+        useCustomFeeCheckbox.selectedProperty().removeListener(useCustomFeeCheckboxListener);
     }
 
 

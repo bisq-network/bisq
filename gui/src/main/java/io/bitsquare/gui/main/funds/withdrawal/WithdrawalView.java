@@ -20,8 +20,12 @@ package io.bitsquare.gui.main.funds.withdrawal;
 import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.AddressEntryException;
+import io.bitsquare.btc.InsufficientFundsException;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -77,6 +81,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final FailedTradesManager failedTradesManager;
     private final BSFormatter formatter;
     private final Preferences preferences;
+    private final FeeService feeService;
     private final BtcAddressValidator btcAddressValidator;
     private final WalletPasswordWindow walletPasswordWindow;
     private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
@@ -99,6 +104,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            ClosedTradableManager closedTradableManager,
                            FailedTradesManager failedTradesManager,
                            BSFormatter formatter, Preferences preferences,
+                           FeeService feeService,
                            BtcAddressValidator btcAddressValidator, WalletPasswordWindow walletPasswordWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
@@ -106,6 +112,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         this.failedTradesManager = failedTradesManager;
         this.formatter = formatter;
         this.preferences = preferences;
+        this.feeService = feeService;
         this.btcAddressValidator = btcAddressValidator;
         this.walletPasswordWindow = walletPasswordWindow;
     }
@@ -203,18 +210,21 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     log.error("onWithdraw onFailure");
                 }
             };
+
+
             try {
                 // We need to use the max. amount (amountOfSelectedItems) as the senderAmount might be less then
                 // we have available and then the fee calculation would return 0
                 // TODO Get a proper fee calculation from BitcoinJ directly
                 Coin requiredFee = null;
+                Coin txFeeForWithdrawalPerKB = feeService.getTxFeeForWithdrawalPerKB();
                 try {
                     requiredFee = walletService.getRequiredFeeForMultipleAddresses(fromAddresses,
                             withdrawToTextField.getText(), amountOfSelectedItems);
                 } catch (InsufficientFundsException e) {
                     try {
                         int txSize = walletService.getTransactionSize(fromAddresses,
-                                withdrawToTextField.getText(), senderAmountAsCoinProperty.get().subtract(FeePolicy.getNonTradeFeePerKb()));
+                                withdrawToTextField.getText(), senderAmountAsCoinProperty.get().subtract(txFeeForWithdrawalPerKB));
                         new Popup<>().warning(e.getMessage() + "\n" +
                                 "Transaction size: " + (txSize / 1000d) + " Kb").show();
                     } catch (InsufficientMoneyException e2) {
@@ -226,8 +236,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         log.warn("Error at getRequiredFeeForMultipleAddresses: " + t.toString() + "\n" +
                                 "We use the default fee instead to estimate tx size and then re-calculate fee.");
                         int tempTxSize = walletService.getTransactionSize(fromAddresses,
-                                withdrawToTextField.getText(), senderAmountAsCoinProperty.get().subtract(FeePolicy.getNonTradeFeePerKb()));
-                        requiredFee = Coin.valueOf(FeePolicy.getNonTradeFeePerKb().value * tempTxSize / 1000);
+                                withdrawToTextField.getText(), senderAmountAsCoinProperty.get().subtract(txFeeForWithdrawalPerKB));
+                        requiredFee = Coin.valueOf(txFeeForWithdrawalPerKB.value * tempTxSize / 1000);
                     } catch (Throwable t2) {
                         t2.printStackTrace();
                         log.error(t2.toString());

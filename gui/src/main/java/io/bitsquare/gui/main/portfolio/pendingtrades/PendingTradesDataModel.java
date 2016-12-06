@@ -409,7 +409,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public Coin getTxFeeForWithdrawal() {
-        return feeService.getTxFeeForWithdrawal();
+        return feeService.getTxFeeForWithdrawalPerKB();
     }
 }
 

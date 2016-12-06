@@ -22,7 +22,7 @@ import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.*;
@@ -34,7 +34,6 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
@@ -103,6 +102,7 @@ public final class Preferences implements Persistable {
     transient private final BitsquareEnvironment bitsquareEnvironment;
 
     transient private BitcoinNetwork bitcoinNetwork;
+    transient private FeeService feeService;
 
     // Persisted fields
     private String btcDenomination = MonetaryFormat.CODE_BTC;
@@ -120,7 +120,9 @@ public final class Preferences implements Persistable {
     private boolean showOwnOffersInOfferBook = true;
     private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
-    private long nonTradeTxFeePerKB = FeePolicy.getNonTradeFeePerKb().value;
+    private long withdrawalTxFeeInBytes = 100;
+    private boolean useCustomWithdrawalTxFee = false;
+
     private double maxPriceDistanceInPercent;
     private String offerBookChartScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
     private String tradeChartsScreenCurrencyCode = CurrencyUtil.getDefaultTradeCurrency().getCode();
@@ -152,7 +154,8 @@ public final class Preferences implements Persistable {
     private boolean useTorForHttpRequests = true;
     @Deprecated
     private List<String> bridgeAddresses;
-
+    @Deprecated
+    private long nonTradeTxFeePerKB;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -160,11 +163,13 @@ public final class Preferences implements Persistable {
 
     @Inject
     public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment,
+                       FeeService feeService,
                        @Named(AppOptionKeys.BTC_NODES) String btcNodesFromOptions,
                        @Named(AppOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
         INSTANCE = this;
         this.storage = storage;
         this.bitsquareEnvironment = bitsquareEnvironment;
+        this.feeService = feeService;
 
         if (Utilities.isWindows())
             defaultPath = System.getenv("USERPROFILE");
@@ -235,7 +240,7 @@ public final class Preferences implements Persistable {
                 bitcoinNodes = "";
 
             try {
-                setNonTradeTxFeePerKB(persisted.getNonTradeTxFeePerKB());
+                setWithdrawalTxFeeInBytes(persisted.getWithdrawalTxFeeInBytes());
             } catch (Exception e) {
                 // leave default value
             }
@@ -383,15 +388,15 @@ public final class Preferences implements Persistable {
         }
     }
 
-    public void setNonTradeTxFeePerKB(long nonTradeTxFeePerKB) throws Exception {
-        if (nonTradeTxFeePerKB < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value)
+    public void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes) throws Exception {
+        if (withdrawalTxFeeInBytes * 1000 < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value)
             throw new Exception("Transaction fee must be at least 5 satoshi/byte");
 
-        if (nonTradeTxFeePerKB > 500_000)
-            throw new Exception("Transaction fee is in the range of 10-100 satoshi/byte. Your input is above any reasonable value (>500 satoshi/byte).");
+        if (withdrawalTxFeeInBytes > 5000)
+            throw new Exception("Transaction fee is in the range of 10-200 satoshi/byte. Your input is above any reasonable value (>5000 satoshi/byte).");
 
-        this.nonTradeTxFeePerKB = nonTradeTxFeePerKB;
-        FeePolicy.setNonTradeFeePerKb(Coin.valueOf(nonTradeTxFeePerKB));
+        this.withdrawalTxFeeInBytes = withdrawalTxFeeInBytes;
+        feeService.setFixedFeePerBytes(withdrawalTxFeeInBytes);
         storage.queueUpForSave();
     }
 
@@ -480,6 +485,10 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave(50);
     }
 
+    public void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee) {
+        this.useCustomWithdrawalTxFee = useCustomWithdrawalTxFee;
+        storage.queueUpForSave();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -572,8 +581,8 @@ public final class Preferences implements Persistable {
         return preferredTradeCurrency;
     }
 
-    public long getNonTradeTxFeePerKB() {
-        return Math.max(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value, nonTradeTxFeePerKB);
+    public long getWithdrawalTxFeeInBytes() {
+        return withdrawalTxFeeInBytes;
     }
 
     public boolean getUseTorForBitcoinJ() {
@@ -635,6 +644,11 @@ public final class Preferences implements Persistable {
     public String getBitcoinNodes() {
         return bitcoinNodes;
     }
+
+    public boolean getUseCustomWithdrawalTxFee() {
+        return useCustomWithdrawalTxFee;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
