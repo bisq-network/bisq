@@ -44,6 +44,8 @@ public class TransactionParserTest {
     private TxInput input2;
     private TxOutput output2_1;
     private TxInput genesisInput;
+    private TxOutput output2_2;
+    private TxOutput output2_3;
 
     @Before
     public void setup() {
@@ -82,7 +84,8 @@ public class TransactionParserTest {
         assertTrue(transactionParser.isValidOutput(output1_1));
         assertFalse(transactionParser.isValidOutput(output2));
         assertTrue(transactionParser.isValidOutput(output2_1));
-
+        assertTrue(transactionParser.isValidOutput(output2_2));
+        assertFalse(transactionParser.isValidOutput(output2_3));
     }
 
     @Test
@@ -106,13 +109,12 @@ public class TransactionParserTest {
 
         transactionParser.applyIsTokenForAllOutputs(createTx2());
         allUTXOs = transactionParser.getAllUTXOs(genesisTx);
-        assertEquals(2, allUTXOs.size());
+        assertEquals(3, allUTXOs.size());
         allUTXOs.stream().forEach(output -> {
             log.debug("output " + output);
             assertTrue(transactionParser.isValidOutput(output));
         });
     }
-
 
     @Test
     public void testInvalidTxs() {
@@ -125,7 +127,7 @@ public class TransactionParserTest {
         assertFalse(transactionParser.isValidOutput(output1_1)); // to high value
         assertTrue(transactionParser.isValidOutput(output2));
 
-
+        // TODO a double spend could be applied, though once confirmed the btc tx is invalid even in our mock its valid...
         transactionParser.applyIsTokenForAllOutputs(createTx1());
         assertTrue(transactionParser.isValidInput(input1));
         assertFalse(transactionParser.isValidOutput(output1));
@@ -175,8 +177,12 @@ public class TransactionParserTest {
         TxInput feeInput = new TxInput(new Tx("id_fee_2", null, null), null);
         tx.addInput(feeInput);
 
-        output2_1 = new TxOutput("addr_2_1", 1000);
+        output2_1 = new TxOutput("addr_2_1", 500);
         tx.addOutput(output2_1);
+        output2_2 = new TxOutput("addr_2_2", 1500);
+        tx.addOutput(output2_2);
+        output2_3 = new TxOutput("addr_2_3", 200); // this will be invalid as w spent all token balance in the first 2 outputs
+        tx.addOutput(output2_3);
 
         txService.addTx(tx);
         return tx;
