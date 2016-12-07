@@ -95,7 +95,7 @@ public class WalletService {
     private final File walletDir;
     private final UserAgent userAgent;
 
-    private WalletAppKitBitSquare walletAppKit;
+    private BitSquareWalletAppKit walletAppKit;
     private Wallet wallet;
     private Wallet tokenWallet;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
@@ -165,7 +165,7 @@ public class WalletService {
         log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKitBitSquare(params, socks5Proxy, walletDir, walletFileName, tokenWalletFileName) {
+        walletAppKit = new BitSquareWalletAppKit(params, socks5Proxy, walletDir, walletFileName, tokenWalletFileName) {
             @Override
             protected void onSetupCompleted() {
                 wallet = walletAppKit.wallet();

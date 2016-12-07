@@ -97,7 +97,7 @@ public class TradeWalletService {
     @Nullable
     private Wallet wallet;
     @Nullable
-    private WalletAppKitBitSquare walletAppKit;
+    private BitSquareWalletAppKit walletAppKit;
     @Nullable
     private KeyParameter aesKey;
     private AddressEntryList addressEntryList;
@@ -113,7 +113,7 @@ public class TradeWalletService {
     }
 
     // After WalletService is initialized we get the walletAppKit set
-    public void setWalletAppKit(WalletAppKitBitSquare walletAppKit) {
+    public void setWalletAppKit(BitSquareWalletAppKit walletAppKit) {
         this.walletAppKit = walletAppKit;
         wallet = walletAppKit.wallet();
     }

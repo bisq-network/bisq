@@ -52,8 +52,8 @@ import java.util.concurrent.TimeoutException;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-public class WalletAppKitBitSquare extends AbstractIdleService {
-    private static final Logger log = LoggerFactory.getLogger(WalletAppKitBitSquare.class);
+public class BitSquareWalletAppKit extends AbstractIdleService {
+    private static final Logger log = LoggerFactory.getLogger(BitSquareWalletAppKit.class);
 
     protected final String walletFilePrefix;
     protected final String tokenWalletFilePrefix;
@@ -94,7 +94,7 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
     /**
      * Creates a new WalletAppKitBitSquare, with a newly created {@link Context}. Files will be stored in the given directory.
      */
-    public WalletAppKitBitSquare(NetworkParameters params, Socks5Proxy socks5Proxy, File directory, String walletFilePrefix, String tokenWalletFilePrefix) {
+    public BitSquareWalletAppKit(NetworkParameters params, Socks5Proxy socks5Proxy, File directory, String walletFilePrefix, String tokenWalletFilePrefix) {
         this(new Context(params), directory, walletFilePrefix, tokenWalletFilePrefix);
         this.socks5Proxy = socks5Proxy;
     }
@@ -102,21 +102,21 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
     /**
      * Creates a new WalletAppKitBitSquare, with a newly created {@link Context}. Files will be stored in the given directory.
      */
-    public WalletAppKitBitSquare(NetworkParameters params, File directory, String walletFilePrefix, String tokenWalletFilePrefix) {
+    public BitSquareWalletAppKit(NetworkParameters params, File directory, String walletFilePrefix, String tokenWalletFilePrefix) {
         this(new Context(params), directory, walletFilePrefix, tokenWalletFilePrefix);
     }
 
     /**
      * Creates a new WalletAppKitBitSquare, with the given {@link Context}. Files will be stored in the given directory.
      */
-    public WalletAppKitBitSquare(Context context, File directory, String walletFilePrefix, String tokenWalletFilePrefix) {
+    public BitSquareWalletAppKit(Context context, File directory, String walletFilePrefix, String tokenWalletFilePrefix) {
         this.context = context;
         this.params = checkNotNull(context.getParams());
         this.directory = checkNotNull(directory);
         this.walletFilePrefix = checkNotNull(walletFilePrefix);
         this.tokenWalletFilePrefix = tokenWalletFilePrefix;
         if (!Utils.isAndroidRuntime()) {
-            InputStream stream = WalletAppKitBitSquare.class.getResourceAsStream("/" + params.getId() + ".checkpoints");
+            InputStream stream = BitSquareWalletAppKit.class.getResourceAsStream("/" + params.getId() + ".checkpoints");
             if (stream != null)
                 setCheckpoints(stream);
         }
@@ -157,7 +157,7 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
     /**
      * Will only connect to the given addresses. Cannot be called after startup.
      */
-    public WalletAppKitBitSquare setPeerNodes(PeerAddress... addresses) {
+    public BitSquareWalletAppKit setPeerNodes(PeerAddress... addresses) {
         checkState(state() == State.NEW, "Cannot call after startup");
         this.peerAddresses = addresses;
         return this;
@@ -166,7 +166,7 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
     /**
      * Will only connect to localhost. Cannot be called after startup.
      */
-    public WalletAppKitBitSquare connectToLocalHost() {
+    public BitSquareWalletAppKit connectToLocalHost() {
         try {
             final InetAddress localHost = InetAddress.getLocalHost();
             return setPeerNodes(new PeerAddress(localHost, params.getPort()));
@@ -179,7 +179,7 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
     /**
      * If true, the wallet will save itself to disk automatically whenever it changes.
      */
-    public WalletAppKitBitSquare setAutoSave(boolean value) {
+    public BitSquareWalletAppKit setAutoSave(boolean value) {
         checkState(state() == State.NEW, "Cannot call after startup");
         useAutoSave = value;
         return this;
@@ -190,7 +190,7 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
      * {@link org.bitcoinj.core.DownloadProgressTracker} is a good choice. This has no effect unless setBlockingStartup(false) has been called
      * too, due to some missing implementation code.
      */
-    public WalletAppKitBitSquare setDownloadListener(PeerEventListener listener) {
+    public BitSquareWalletAppKit setDownloadListener(PeerEventListener listener) {
         this.downloadListener = listener;
         return this;
     }
@@ -198,7 +198,7 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
     /**
      * If true, will register a shutdown hook to stop the library. Defaults to true.
      */
-    public WalletAppKitBitSquare setAutoStop(boolean autoStop) {
+    public BitSquareWalletAppKit setAutoStop(boolean autoStop) {
         this.autoStop = autoStop;
         return this;
     }
@@ -207,7 +207,7 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
      * If set, the file is expected to contain a checkpoints file calculated with BuildCheckpoints. It makes initial
      * block sync faster for new users - please refer to the documentation on the bitcoinj website for further details.
      */
-    public WalletAppKitBitSquare setCheckpoints(InputStream checkpoints) {
+    public BitSquareWalletAppKit setCheckpoints(InputStream checkpoints) {
         if (this.checkpoints != null)
             Utils.closeUnchecked(this.checkpoints);
         this.checkpoints = checkNotNull(checkpoints);
@@ -220,7 +220,7 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
      * potentially take a very long time. If false, then startup is considered complete once the network activity
      * begins and peer connections/block chain sync will continue in the background.
      */
-    public WalletAppKitBitSquare setBlockingStartup(boolean blockingStartup) {
+    public BitSquareWalletAppKit setBlockingStartup(boolean blockingStartup) {
         this.blockingStartup = blockingStartup;
         return this;
     }
@@ -231,7 +231,7 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
      * @param userAgent A short string that should be the name of your app, e.g. "My Wallet"
      * @param version   A short string that contains the version number, e.g. "1.0-BETA"
      */
-    public WalletAppKitBitSquare setUserAgent(String userAgent, String version) {
+    public BitSquareWalletAppKit setUserAgent(String userAgent, String version) {
         this.userAgent = checkNotNull(userAgent);
         this.version = checkNotNull(version);
         return this;
@@ -241,7 +241,7 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
      * If called, then an embedded Tor client library will be used to connect to the P2P network. The user does not need
      * any additional software for this: it's all pure Java. As of April 2014 <b>this mode is experimental</b>.
      */
-    public WalletAppKitBitSquare useTor() {
+    public BitSquareWalletAppKit useTor() {
         this.useTor = true;
         return this;
     }
@@ -254,12 +254,12 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
      * up the new kit. The next time your app starts it should work as normal (that is, don't keep calling this each
      * time).
      */
-    public WalletAppKitBitSquare restoreWalletFromSeed(DeterministicSeed seed) {
+    public BitSquareWalletAppKit restoreWalletFromSeed(DeterministicSeed seed) {
         this.restoreWalletFromSeed = seed;
         return this;
     }
 
-    public WalletAppKitBitSquare restoreTokenWalletFromSeed(DeterministicSeed seed) {
+    public BitSquareWalletAppKit restoreTokenWalletFromSeed(DeterministicSeed seed) {
         this.restoreTokenWalletFromSeed = seed;
         return this;
     }
@@ -267,22 +267,22 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
     /**
      * Sets the peer discovery class to use. If none is provided then DNS is used, which is a reasonable default.
      */
-    public WalletAppKitBitSquare setDiscovery(@Nullable PeerDiscovery discovery) {
+    public BitSquareWalletAppKit setDiscovery(@Nullable PeerDiscovery discovery) {
         this.discovery = discovery;
         return this;
     }
 
-    public WalletAppKitBitSquare setBloomFilterFalsePositiveRate(double bloomFilterFPRate) {
+    public BitSquareWalletAppKit setBloomFilterFalsePositiveRate(double bloomFilterFPRate) {
         this.bloomFilterFPRate = bloomFilterFPRate;
         return this;
     }
 
-    public WalletAppKitBitSquare setBloomFilterTweak(long bloomFilterTweak) {
+    public BitSquareWalletAppKit setBloomFilterTweak(long bloomFilterTweak) {
         this.bloomFilterTweak = bloomFilterTweak;
         return this;
     }
 
-    public WalletAppKitBitSquare setLookaheadSize(int lookaheadSize) {
+    public BitSquareWalletAppKit setLookaheadSize(int lookaheadSize) {
         this.lookaheadSize = lookaheadSize;
         return this;
     }
@@ -533,8 +533,8 @@ public class WalletAppKitBitSquare extends AbstractIdleService {
             @Override
             public void run() {
                 try {
-                    WalletAppKitBitSquare.this.stopAsync();
-                    WalletAppKitBitSquare.this.awaitTerminated();
+                    BitSquareWalletAppKit.this.stopAsync();
+                    BitSquareWalletAppKit.this.awaitTerminated();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
