@@ -21,15 +21,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 class MockTxService extends TxService {
-    private final Tx genesisTx;
     private Map<String, Tx> txMap = new HashMap<>();
 
-    public MockTxService(Tx genesisTx) {
-        txMap.put(genesisTx.id, genesisTx);
-        this.genesisTx = genesisTx;
+    public MockTxService() {
     }
 
     public Tx getTx(String txId) {
         return txMap.get(txId);
+    }
+
+    public void addTx(Tx tx) {
+        txMap.put(tx.id, tx);
+    }
+
+    public void cleanup() {
+        txMap = new HashMap<>();
     }
 }

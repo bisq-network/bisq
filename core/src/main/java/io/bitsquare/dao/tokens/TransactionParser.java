@@ -27,7 +27,7 @@ import java.util.List;
 public class TransactionParser {
     private static final Logger log = LoggerFactory.getLogger(TransactionParser.class);
 
-    private String genesisTxId = "83a4454747e5c972f2eb20d587538a330dd30b5cf468f8faea32eae640cebe79";
+    private String genesisTxId;
     private TxService txService;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -44,45 +44,52 @@ public class TransactionParser {
         return txService.getTx(txId);
     }
 
-
-    public void start() {
-        Tx genesisTx = getTx(genesisTxId);
-        List<TxOutput> allUTXOs = findAllUTXOs(genesisTx);
+    public void applyIsTokenForAllOutputs(Tx parentTx) {
+        if (parentTx.id.equals(genesisTxId)) {
+            // direct output from genesisTx 
+            parentTx.outputs.stream().forEach(e -> e.isToken = true);
+        } else {
+            // we are not a direct output so we check if our inputs are valid and sufficiently funded with tokens
+            int accumulatedTokenInputValue = 0;
+            for (TxInput input : parentTx.inputs) {
+                if (isValidInput(input)) {
+                    accumulatedTokenInputValue += input.value;
+                }
+            }
+            log.debug("accumulatedTokenInputValue " + accumulatedTokenInputValue);
+            List<TxOutput> outputs = parentTx.outputs;
+            for (int i = 0; i < outputs.size(); i++) {
+                TxOutput out = outputs.get(i);
+                log.debug("index {}, out.value {}, available input value {}", i, out.value, accumulatedTokenInputValue);
+                accumulatedTokenInputValue -= out.value;
+                // If we had enough token funds for our output we are a valid token output
+                out.isToken = accumulatedTokenInputValue >= 0;
+            }
+        }
     }
 
-    public List<TxOutput> findAllUTXOs(Tx tx) {
+    public List<TxOutput> getAllUTXOs(Tx tx) {
         List<TxOutput> allUTXOs = new ArrayList<>();
-        getOutputs(tx).stream().forEach(txOutput -> {
-            if (txOutput.isSpent) {
-                allUTXOs.addAll(findAllUTXOs(txOutput.spentByTxInput.parentTx));
-            } else if (isValidOutput(txOutput)) {
-                allUTXOs.add(txOutput);
-            } else {
-                log.warn("invalid output " + txOutput);
-            }
-        });
+        tx.outputs.stream()
+                .filter(e -> e.isToken)
+                .forEach(output -> {
+                    if (!output.isSpent) {
+                        allUTXOs.add(output);
+                    } else {
+                        allUTXOs.addAll(getAllUTXOs(output.inputOfSpendingTx.tx));
+                    }
+                });
 
         return allUTXOs;
     }
 
     public boolean isValidOutput(TxOutput output) {
-        output.parentTx.inputs.forEach(input -> {
-            if (isValidInput(input)) {
-
-            }
-        });
-        return true;
+        return !output.isSpent && output.isToken;
     }
+
 
     public boolean isValidInput(TxInput input) {
-        input.parentTx.outputs.forEach(output -> {
-
-        });
-        return true;
-    }
-
-    private List<TxOutput> getOutputs(Tx tx) {
-        return new ArrayList<>();
+        return input.isToken || input.tx.id.equals(genesisTxId) || (input.output != null && input.output.isToken);
     }
 
 

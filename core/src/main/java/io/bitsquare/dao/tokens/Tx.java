@@ -36,14 +36,21 @@ public class Tx {
     public List<TxOutput> outputs = new ArrayList<>();
 
     public void addOutput(TxOutput output) {
-        output.parentTx = this;
+        output.tx = this;
         output.index = outputs.size();
         outputs.add(output);
     }
 
     public void addInput(TxInput input) {
-        input.parentTx = this;
+        input.tx = this;
         input.index = inputs.size();
+
+        // TODO our mocks have null values, might be not null in production
+        if (input.output != null) {
+            input.output.isSpent = true;
+            input.output.inputOfSpendingTx = input;
+            input.value = input.output.value;
+        }
         inputs.add(input);
     }
 
@@ -66,5 +73,14 @@ public class Tx {
         result = 31 * result + (outputs != null ? outputs.hashCode() : 0);
         result = 31 * result + (inputs != null ? inputs.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Tx{" +
+                "id='" + id + '\'' +
+                ", inputs=" + inputs +
+                ", outputs=" + outputs +
+                '}';
     }
 }

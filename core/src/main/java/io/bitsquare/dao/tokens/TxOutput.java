@@ -17,18 +17,34 @@
 
 package io.bitsquare.dao.tokens;
 
-public class TxOutput {
-    public TxOutput(String address, long value) {
-        this.address = address;
-        this.value = value;
-    }
+import java.util.UUID;
 
-    public Tx parentTx;
+public class TxOutput {
+    public final String id;
+    public Tx tx;
+    public TxInput inputOfSpendingTx;
     public boolean isSpent;
-    public TxInput spentByTxInput;
     public String address;
     public long value;
     public int index;
-    public boolean isValid;
+    public boolean isToken;
 
+    public TxOutput(String address, long value) {
+        this.address = address;
+        this.value = value;
+        id = UUID.randomUUID().toString();
+    }
+
+    @Override
+    public String toString() {
+        return "TxOutput{" +
+                "tx.id=" + (tx != null ? tx.id : "null") +
+                ", inputOfSpendingTx.id=" + (inputOfSpendingTx != null ? inputOfSpendingTx.id : "null") +
+                ", isSpent=" + isSpent +
+                ", address='" + address + '\'' +
+                ", value=" + value +
+                ", index=" + index +
+                ", isToken=" + isToken +
+                '}';
+    }
 }
