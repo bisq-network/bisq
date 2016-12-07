@@ -95,12 +95,15 @@ public class WalletService {
 
     private WalletAppKitBitSquare walletAppKit;
     private Wallet wallet;
+    private Wallet tokenWallet;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
     private final Storage<Long> storage;
     private final Long bloomFilterTweak;
     private KeyParameter aesKey;
+    private String walletFileName = "Bitsquare";
+    private String tokenWalletFileName = "SQU";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +124,7 @@ public class WalletService {
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.params = preferences.getBitcoinNetwork().getParameters();
-        this.walletDir = new File(appDir, "bitcoin");
+        walletDir = new File(appDir, "bitcoin");
         this.userAgent = userAgent;
 
         storage = new Storage<>(walletDir);
@@ -158,16 +161,20 @@ public class WalletService {
         log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKitBitSquare(params, socks5Proxy, walletDir, "Bitsquare") {
+        walletAppKit = new WalletAppKitBitSquare(params, socks5Proxy, walletDir, walletFileName, tokenWalletFileName) {
             @Override
             protected void onSetupCompleted() {
+                wallet = walletAppKit.wallet();
+                tokenWallet = walletAppKit.tokenWallet();
+
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
                 // their own money!
-                walletAppKit.wallet().allowSpendingUnconfirmedTransactions();
+                wallet.allowSpendingUnconfirmedTransactions();
+                tokenWallet.allowSpendingUnconfirmedTransactions();
+
                 if (params != RegTestParams.get())
                     walletAppKit.peerGroup().setMaxConnections(11);
 
-                wallet = walletAppKit.wallet();
                 wallet.addEventListener(walletEventListener);
 
                 addressEntryList.onWalletReady(wallet);
@@ -391,6 +398,17 @@ public class WalletService {
                 wallet.printAllPubKeysAsHex();
     }
 
+    public String exportTokenWalletData(boolean includePrivKeys) {
+        StringBuilder addressEntryListData = new StringBuilder();
+        getAddressEntryListAsImmutableList().stream().forEach(e -> addressEntryListData.append(e.toString()).append("\n"));
+        return "BitcoinJ SQU wallet:\n" +
+                tokenWallet.toString(includePrivKeys, true, true, walletAppKit.chain()) + "\n\n" +
+                "SQU address entry list:\n" +
+                addressEntryListData.toString() +
+                "All pubkeys as hex:\n" +
+                tokenWallet.printAllPubKeysAsHex();
+    }
+
     public void restoreSeedWords(DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         Context ctx = Context.get();
         new Thread(() -> {
@@ -407,7 +425,8 @@ public class WalletService {
     }
 
     public void backupWallet() {
-        FileUtil.rollingBackup(walletDir, "Bitsquare.wallet", 20);
+        FileUtil.rollingBackup(walletDir, walletFileName + ".wallet", 20);
+        FileUtil.rollingBackup(walletDir, tokenWalletFileName + ".wallet", 20);
     }
 
     public void clearBackup() {
@@ -425,8 +444,9 @@ public class WalletService {
 
     public void decryptWallet(@NotNull KeyParameter key) {
         wallet.decrypt(key);
-        addressEntryList.stream().forEach(e -> {
+        tokenWallet.decrypt(key);
 
+        addressEntryList.stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair != null && keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.decrypt(key));
@@ -444,6 +464,8 @@ public class WalletService {
         }
 
         wallet.encrypt(keyCrypterScrypt, key);
+        tokenWallet.encrypt(keyCrypterScrypt, key);
+
         addressEntryList.stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair != null && keyPair.isEncrypted())
@@ -774,8 +796,7 @@ public class WalletService {
                     // in some cases getFee did not calculate correctly and we still get an InsufficientMoneyException
                     log.warn("We still have a missing fee " + (e.missing != null ? e.missing.toFriendlyString() : ""));
 
-                    if (e != null)
-                        amount = amount.subtract(e.missing);
+                    amount = amount.subtract(e.missing);
                     newTransaction.clearOutputs();
                     newTransaction.addOutput(amount, toAddress);
 
@@ -1101,6 +1122,10 @@ public class WalletService {
 
     public Wallet getWallet() {
         return wallet;
+    }
+
+    public Wallet getTokenWallet() {
+        return tokenWallet;
     }
 
     public Transaction getTransactionFromSerializedTx(byte[] tx) {

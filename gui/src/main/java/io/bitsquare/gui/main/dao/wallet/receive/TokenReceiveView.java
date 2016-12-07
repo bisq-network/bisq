@@ -15,14 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.dao.tokenwallet;
+package io.bitsquare.gui.main.dao.wallet.receive;
 
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.TokenWalletService;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.util.Tuple2;
-import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.InputTextField;
@@ -31,7 +29,6 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -39,7 +36,10 @@ import javafx.scene.layout.GridPane;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Wallet;
 import org.bitcoinj.uri.BitcoinURI;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -49,27 +49,23 @@ import java.util.concurrent.TimeUnit;
 import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
-public class TokenWalletView extends ActivatableViewAndModel<GridPane, Activatable> {
-
+public class TokenReceiveView extends ActivatableView<GridPane, Void> {
+    private final Wallet tokenWallet;
+    private final BSFormatter formatter;
     private int gridRow = 0;
     private ImageView qrCodeImageView;
     private AddressTextField addressTextField;
-    private Label addressLabel, amountLabel;
-    private Label qrCodeLabel;
     private InputTextField amountTextField;
     private final String paymentLabelString;
-    private final TokenWalletService tokenWalletService;
-    private final BSFormatter formatter;
-
+    private Subscription amountTextFieldSubscription;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, initialisation
+    // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TokenWalletView(TokenWalletService tokenWalletService, BSFormatter formatter) {
-        super();
-        this.tokenWalletService = tokenWalletService;
+    private TokenReceiveView(WalletService walletService, BSFormatter formatter) {
+        tokenWallet = walletService.getTokenWallet();
         this.formatter = formatter;
         paymentLabelString = "Fund Bitsquare token wallet";
     }
@@ -78,47 +74,42 @@ public class TokenWalletView extends ActivatableViewAndModel<GridPane, Activatab
     public void initialize() {
         addTitledGroupBg(root, gridRow, 3, "Fund your token wallet");
 
-        qrCodeLabel = addLabel(root, gridRow, "", 0);
-        //GridPane.setMargin(qrCodeLabel, new Insets(Layout.FIRST_ROW_DISTANCE - 9, 0, 0, 5));
-
         qrCodeImageView = new ImageView();
         qrCodeImageView.setStyle("-fx-cursor: hand;");
         Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
-        qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
-                () -> UserThread.runAfter(
-                        () -> new QRCodeWindow(getBitcoinURI()).show(),
-                        200, TimeUnit.MILLISECONDS)
-        ));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 1);
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
         root.getChildren().add(qrCodeImageView);
 
-        Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(root, ++gridRow, "Address:");
-        addressLabel = addressTuple.first;
-        addressTextField = addressTuple.second;
+        addressTextField = addLabelAddressTextField(root, ++gridRow, "Address:").second;
         addressTextField.setPaymentLabel(paymentLabelString);
 
-
-        Tuple2<Label, InputTextField> amountTuple = addLabelInputTextField(root, ++gridRow, "Amount (optional):");
-        amountLabel = amountTuple.first;
-        amountTextField = amountTuple.second;
+        amountTextField = addLabelInputTextField(root, ++gridRow, "Amount (optional):").second;
         if (DevFlags.DEV_MODE)
             amountTextField.setText("10");
     }
 
-
     @Override
     protected void activate() {
-        //TODO
-        addressTextField.setAddress(tokenWalletService.getWallet().freshReceiveAddress().toString());
+        amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> {
+            addressTextField.setAmountAsCoin(formatter.parseToCoin(t));
+            updateQRCode();
+        });
+        qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
+                () -> UserThread.runAfter(
+                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        200, TimeUnit.MILLISECONDS)
+        ));
+        addressTextField.setAddress(tokenWallet.freshReceiveAddress().toString());
         updateQRCode();
     }
 
     @Override
     protected void deactivate() {
+        qrCodeImageView.setOnMouseClicked(null);
+        amountTextFieldSubscription.unsubscribe();
     }
-
 
     private void updateQRCode() {
         if (addressTextField.getAddress() != null && !addressTextField.getAddress().isEmpty()) {
@@ -145,3 +136,4 @@ public class TokenWalletView extends ActivatableViewAndModel<GridPane, Activatab
                 null);
     }
 }
+

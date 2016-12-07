@@ -30,7 +30,6 @@ import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.TokenWalletService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -156,7 +155,6 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2pNetworkLabelId = new SimpleStringProperty("footer-pane");
 
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
-    private TokenWalletService tokenWalletService;
     final PriceFeedService priceFeedService;
     private final User user;
     private int numBtcPeers = 0;
@@ -169,8 +167,6 @@ public class MainViewModel implements ViewModel {
     private Popup startupTimeoutPopup;
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
-    private final BooleanProperty tokenWalletInitialized = new SimpleBooleanProperty();
-    private Timer walletStartupTimeout;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -179,14 +175,13 @@ public class MainViewModel implements ViewModel {
 
     @Inject
     public MainViewModel(WalletService walletService, TradeWalletService tradeWalletService,
-                         TokenWalletService tokenWalletService, PriceFeedService priceFeedService,
+                         PriceFeedService priceFeedService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, AddBitcoinNodesWindow addBitcoinNodesWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
-        this.tokenWalletService = tokenWalletService;
         this.priceFeedService = priceFeedService;
         this.user = user;
         this.walletService = walletService;
@@ -213,8 +208,6 @@ public class MainViewModel implements ViewModel {
                 (preferences.getUseTorForBitcoinJ() ? " (using Tor)" : "");
 
         TxIdTextField.setPreferences(preferences);
-
-        // TODO use instance setter instead of static as we need it for tokenWalletService as well
         TxIdTextField.setWalletService(walletService);
         BalanceTextField.setWalletService(walletService);
         BalanceWithConfirmationTextField.setWalletService(walletService);
@@ -226,61 +219,35 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
-        log.debug("initializeAllServices");
+        log.error("initializeAllServices");
         Log.traceCall();
 
         UserThread.runAfter(tacWindow::showIfNeeded, 2);
 
-        // btc wallet
+
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
-            if (newValue) {
-                walletStartupTimeout.stop();
-
-                // we load token wallet after main wallet is done
-                initTokenWalletService();
-
-                if (!p2pNetWorkReady.get())
-                    showStartupTimeoutPopup();
-            }
-        };
-        walletInitialized.addListener(walletInitializedListener);
-
-        walletStartupTimeout = UserThread.runAfter(() -> {
-            log.warn("startupTimeout called");
-            Wallet wallet = walletService.getWallet();
-            if (wallet == null || !wallet.isEncrypted())
-                showStartupTimeoutPopup();
-        }, 4, TimeUnit.MINUTES);
-        initBitcoinWallet();
-
-        // token wallet
-        ChangeListener<Boolean> tokenWalletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
                 showStartupTimeoutPopup();
         };
 
-        Timer tokenWalletStartupTimeout = UserThread.runAfter(() -> {
-            log.warn("tokenWalletStartupTimeout called");
-            Wallet tokenWallet = tokenWalletService.getWallet();
-            if (tokenWallet != null && tokenWallet.isEncrypted())
-                tokenWalletInitialized.addListener(tokenWalletInitializedListener);
+        Timer startupTimeout = UserThread.runAfter(() -> {
+            log.warn("startupTimeout called");
+            Wallet wallet = walletService.getWallet();
+            if (wallet != null && wallet.isEncrypted())
+                walletInitialized.addListener(walletInitializedListener);
             else
                 showStartupTimeoutPopup();
         }, 4, TimeUnit.MINUTES);
 
-
-        // p2p network
         p2pNetWorkReady = initP2PNetwork();
-
+        initBitcoinWallet();
 
         // need to store it to not get garbage collected
-        allServicesDone = EasyBind.combine(walletInitialized, tokenWalletInitialized, p2pNetWorkReady, (a, b, c) -> a && b && c);
+        allServicesDone = EasyBind.combine(walletInitialized, p2pNetWorkReady, (a, b) -> a && b);
         allServicesDone.subscribe((observable, oldValue, newValue) -> {
             if (newValue) {
-                walletStartupTimeout.stop();
-                tokenWalletStartupTimeout.stop();
+                startupTimeout.stop();
                 walletInitialized.removeListener(walletInitializedListener);
-                tokenWalletInitialized.removeListener(tokenWalletInitializedListener);
                 onAllServicesInitialized();
                 if (startupTimeoutPopup != null)
                     startupTimeoutPopup.hide();
@@ -293,10 +260,6 @@ public class MainViewModel implements ViewModel {
         String details;
         if (!walletInitialized.get()) {
             details = "You still did not get connected to the bitcoin network.\n" +
-                    "If you use Tor for Bitcoin it might be that you got an unstable Tor path.\n" +
-                    "You can wait longer or try to restart.";
-        } else if (!tokenWalletInitialized.get()) {
-            details = "You still did not get connected to the bitcoin network (SQU).\n" +
                     "If you use Tor for Bitcoin it might be that you got an unstable Tor path.\n" +
                     "You can wait longer or try to restart.";
         } else if (!p2pNetWorkReady.get()) {
@@ -533,11 +496,6 @@ public class MainViewModel implements ViewModel {
                     }
                 },
                 walletServiceException::set);
-    }
-
-    private void initTokenWalletService() {
-        Log.traceCall();
-        tokenWalletService.initialize(null, () -> tokenWalletInitialized.set(true), throwable -> log.error(throwable.toString()));
     }
 
     private void onAllServicesInitialized() {

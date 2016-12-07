@@ -15,46 +15,38 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.dao.voting;
+package io.bitsquare.gui.main.dao.wallet.tx;
 
-import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.layout.GridPane;
 
 import javax.inject.Inject;
 
 @FxmlView
-public class VotingView extends ActivatableView<GridPane, Activatable> {
+public class TokenTransactionsView extends ActivatableView<GridPane, Void> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, initialisation
+    // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public VotingView(BSFormatter formatter) {
-        super();
+    private TokenTransactionsView() {
     }
 
     @Override
     public void initialize() {
     }
 
-
     @Override
     protected void activate() {
+
     }
 
     @Override
     protected void deactivate() {
+
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Initialize
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
 }
+

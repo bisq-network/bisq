@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.dao.proposals;
 
 import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.view.ActivatableViewAndModel;
+import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.layout.GridPane;
@@ -26,7 +26,7 @@ import javafx.scene.layout.GridPane;
 import javax.inject.Inject;
 
 @FxmlView
-public class ProposalsView extends ActivatableViewAndModel<GridPane, Activatable> {
+public class ProposalsView extends ActivatableView<GridPane, Activatable> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

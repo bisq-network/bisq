@@ -143,6 +143,10 @@ public class FormBuilder {
         return addLabelTextField(gridPane, rowIndex, title, value, 0);
     }
 
+    public static Tuple2<Label, TextField> addLabelTextField(GridPane gridPane, int rowIndex, String title, double top) {
+        return addLabelTextField(gridPane, rowIndex, title, "", top);
+    }
+
     public static Tuple2<Label, TextField> addLabelTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
 

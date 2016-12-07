@@ -79,7 +79,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private Button generateNewAddressButton;
     private TitledGroupBg titledGroupBg;
     private Label addressLabel, amountLabel;
-    private Label qrCodeLabel;
     private InputTextField amountTextField;
 
     private final WalletService walletService;
@@ -136,9 +135,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
         titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, "Fund your wallet");
 
-        qrCodeLabel = addLabel(gridPane, gridRow, "", 0);
-        //GridPane.setMargin(qrCodeLabel, new Insets(Layout.FIRST_ROW_DISTANCE - 9, 0, 0, 5));
-
         qrCodeImageView = new ImageView();
         qrCodeImageView.setStyle("-fx-cursor: hand;");
         Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
@@ -168,8 +164,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
         titledGroupBg.setVisible(false);
         titledGroupBg.setManaged(false);
-        qrCodeLabel.setVisible(false);
-        qrCodeLabel.setManaged(false);
         qrCodeImageView.setVisible(false);
         qrCodeImageView.setManaged(false);
         addressLabel.setVisible(false);
@@ -240,8 +234,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private void fillForm(String address) {
         titledGroupBg.setVisible(true);
         titledGroupBg.setManaged(true);
-        qrCodeLabel.setVisible(true);
-        qrCodeLabel.setManaged(true);
         qrCodeImageView.setVisible(true);
         qrCodeImageView.setManaged(true);
         addressLabel.setVisible(true);

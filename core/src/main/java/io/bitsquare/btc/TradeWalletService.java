@@ -33,7 +33,6 @@ import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
-import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -98,7 +97,7 @@ public class TradeWalletService {
     @Nullable
     private Wallet wallet;
     @Nullable
-    private WalletAppKit walletAppKit;
+    private WalletAppKitBitSquare walletAppKit;
     @Nullable
     private KeyParameter aesKey;
     private AddressEntryList addressEntryList;
@@ -114,7 +113,7 @@ public class TradeWalletService {
     }
 
     // After WalletService is initialized we get the walletAppKit set
-    public void setWalletAppKit(WalletAppKit walletAppKit) {
+    public void setWalletAppKit(WalletAppKitBitSquare walletAppKit) {
         this.walletAppKit = walletAppKit;
         wallet = walletAppKit.wallet();
     }

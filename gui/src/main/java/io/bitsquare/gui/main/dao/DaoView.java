@@ -22,8 +22,10 @@ import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.dao.proposals.ProposalsView;
-import io.bitsquare.gui.main.dao.tokenwallet.TokenWalletView;
 import io.bitsquare.gui.main.dao.voting.VotingView;
+import io.bitsquare.gui.main.dao.wallet.TokenWalletView;
+import io.bitsquare.gui.main.dao.wallet.dashboard.TokenDashboardView;
+import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
@@ -33,67 +35,88 @@ import javax.inject.Inject;
 
 @FxmlView
 public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
+
     @FXML
     Tab tokenWalletTab, proposalsTab, votingTab;
-    private final ViewLoader viewLoader;
-    private final Navigation navigation;
+
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
+    private final ViewLoader viewLoader;
+    private final Navigation navigation;
+    private Preferences preferences;
+    private Tab selectedTab;
+    private TokenWalletView tokenWalletView;
+
+
     @Inject
-    public DaoView(CachingViewLoader viewLoader, Navigation navigation) {
+    private DaoView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.preferences = preferences;
     }
 
     @Override
     public void initialize() {
         navigationListener = viewPath -> {
-            if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1)
-                loadView(viewPath.tip());
+            if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {
+                if (proposalsTab == null && viewPath.get(2).equals(ProposalsView.class))
+                    navigation.navigateTo(MainView.class, DaoView.class, TokenWalletView.class, TokenDashboardView.class);
+                else
+                    loadView(viewPath.tip());
+            }
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == tokenWalletTab)
-                navigation.navigateTo(MainView.class, DaoView.class, TokenWalletView.class);
-            else if (newValue == proposalsTab)
+            if (newValue == tokenWalletTab) {
+                Class<? extends View> selectedViewClass = tokenWalletView.getSelectedViewClass();
+                if (selectedViewClass == null)
+                    navigation.navigateTo(MainView.class, DaoView.class, TokenWalletView.class, TokenDashboardView.class);
+                else
+                    navigation.navigateTo(MainView.class, DaoView.class, TokenWalletView.class, selectedViewClass);
+            } else if (newValue == proposalsTab) {
                 navigation.navigateTo(MainView.class, DaoView.class, ProposalsView.class);
-            else if (newValue == votingTab)
+            } else if (newValue == votingTab) {
                 navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
+            }
         };
     }
 
     @Override
     protected void activate() {
-        root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
+        root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
-        Tab selectedItem = root.getSelectionModel().getSelectedItem();
-        if (selectedItem == tokenWalletTab)
-            navigation.navigateTo(MainView.class, DaoView.class, TokenWalletView.class);
-        else if (selectedItem == proposalsTab)
-            navigation.navigateTo(MainView.class, DaoView.class, ProposalsView.class);
-        else if (selectedItem == votingTab)
-            navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
+        if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
+            Tab selectedItem = root.getSelectionModel().getSelectedItem();
+            if (selectedItem == tokenWalletTab)
+                navigation.navigateTo(MainView.class, DaoView.class, TokenWalletView.class);
+            else if (selectedItem == proposalsTab)
+                navigation.navigateTo(MainView.class, DaoView.class, ProposalsView.class);
+            else if (selectedItem == votingTab)
+                navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
+        }
     }
 
     @Override
     protected void deactivate() {
-        root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
+        root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
     }
 
     private void loadView(Class<? extends View> viewClass) {
-        final Tab tab;
         View view = viewLoader.load(viewClass);
+        if (view instanceof TokenWalletView) {
+            selectedTab = tokenWalletTab;
+            tokenWalletView = (TokenWalletView) view;
+        } else if (view instanceof ProposalsView) {
+            selectedTab = proposalsTab;
+        } else if (view instanceof VotingView) {
+            selectedTab = votingTab;
+        }
 
-        if (view instanceof TokenWalletView) tab = tokenWalletTab;
-        else if (view instanceof ProposalsView) tab = proposalsTab;
-        else if (view instanceof VotingView) tab = votingTab;
-        else throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");
-
-        tab.setContent(view.getRoot());
-        root.getSelectionModel().select(tab);
+        selectedTab.setContent(view.getRoot());
+        root.getSelectionModel().select(selectedTab);
     }
 }
 
