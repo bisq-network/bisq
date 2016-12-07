@@ -22,6 +22,7 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -82,6 +83,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private InputTextField amountTextField;
 
     private final WalletService walletService;
+    private FeeService feeService;
     private final BSFormatter formatter;
     private final Preferences preferences;
     private final String paymentLabelString;
@@ -98,9 +100,11 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Inject
     private DepositView(WalletService walletService,
+                        FeeService feeService,
                         BSFormatter formatter,
                         Preferences preferences) {
         this.walletService = walletService;
+        this.feeService = feeService;
         this.formatter = formatter;
         this.preferences = preferences;
 

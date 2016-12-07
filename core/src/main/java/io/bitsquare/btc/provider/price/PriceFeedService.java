@@ -1,22 +1,20 @@
-package io.bitsquare.btc.pricefeed;
+package io.bitsquare.btc.provider.price;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
-import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.app.Log;
+import io.bitsquare.btc.provider.ProvidersRepository;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.http.HttpClient;
-import io.bitsquare.network.NetworkOptionKeys;
 import javafx.beans.property.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import javax.inject.Named;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,7 +26,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PriceFeedService {
     private static final Logger log = LoggerFactory.getLogger(PriceFeedService.class);
-    private HttpClient httpClient;
+
+    private final HttpClient httpClient;
+    private final ProvidersRepository providersRepository;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,8 +60,6 @@ public class PriceFeedService {
     private final IntegerProperty currenciesUpdateFlag = new SimpleIntegerProperty(0);
     private long epochInSecondAtLastRequest;
     private Map<String, Long> timeStampMap = new HashMap<>();
-    private String baseUrl;
-    private final String[] priceFeedProviderArray;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,26 +67,10 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PriceFeedService(HttpClient httpClient,
-                            @Named(AppOptionKeys.PRICE_FEED_PROVIDERS) String priceFeedProviders,
-                            @Named(NetworkOptionKeys.USE_LOCALHOST) boolean useLocalhost) {
+    public PriceFeedService(HttpClient httpClient, ProvidersRepository providersRepository) {
         this.httpClient = httpClient;
-        if (priceFeedProviders.isEmpty()) {
-            if (useLocalhost) {
-                // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
-                priceFeedProviders = "http://95.85.11.205:8080/";
-
-                // Use localhost for using a locally running priceprovider
-                // priceFeedProviders = "http://localhost:8080/"; 
-            } else {
-                priceFeedProviders = "http://t4wlzy7l6k4hnolg.onion/, http://g27szt7aw2vrtowe.onion/";
-            }
-        }
-        priceFeedProviderArray = priceFeedProviders.replace(" ", "").split(",");
-        int index = new Random().nextInt(priceFeedProviderArray.length);
-        baseUrl = priceFeedProviderArray[index];
-        log.info("baseUrl for PriceFeedService: " + baseUrl);
-        this.priceProvider = new PriceProvider(httpClient, baseUrl);
+        this.providersRepository = providersRepository;
+        this.priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
     }
 
 
@@ -112,19 +94,9 @@ public class PriceFeedService {
         }, (errorMessage, throwable) -> {
 
             // Try other provider if more then 1 is available
-            if (priceFeedProviderArray.length > 1) {
-                String newBaseUrl;
-                do {
-                    int index = new Random().nextInt(priceFeedProviderArray.length);
-                    log.error(index + "");
-                    newBaseUrl = priceFeedProviderArray[index];
-                    log.error(newBaseUrl);
-                }
-                while (baseUrl.equals(newBaseUrl));
-                baseUrl = newBaseUrl;
-
-                log.info("Try new baseUrl after error: " + baseUrl);
-                this.priceProvider = new PriceProvider(httpClient, baseUrl);
+            if (providersRepository.hasMoreProviders()) {
+                providersRepository.setNewRandomBaseUrl();
+                priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
                 request();
             } else {
                 UserThread.runAfter(this::request, 120);

@@ -1,22 +1,14 @@
 package io.bitsquare.btc.blockchain;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
-import org.bitcoinj.core.Coin;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static junit.framework.TestCase.assertTrue;
-
 @Ignore
-public class BlockchainServiceTest {
-    private static final Logger log = LoggerFactory.getLogger(BlockchainServiceTest.class);
+public class BlockchainTxserviceTest {
+    private static final Logger log = LoggerFactory.getLogger(BlockchainTxserviceTest.class);
 
-    @Test
+   /* @Test
     public void testGetFee() throws InterruptedException {
         BlockchainService blockchainService = new BlockchainService(null, null, null);
 
@@ -35,5 +27,5 @@ public class BlockchainServiceTest {
             }
         });
         Thread.sleep(5000);
-    }
+    }*/
 }

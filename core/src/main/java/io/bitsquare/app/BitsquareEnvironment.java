@@ -77,7 +77,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String userDataDir;
     private final String appDataDir;
     private final String btcNetworkDir;
-    private final String logLevel, priceFeedProviders;
+    private final String logLevel, providers;
     private BitcoinNetwork bitcoinNetwork;
     private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress, socks5ProxyHttpAddress;
@@ -145,8 +145,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
         maxMemory = commandLineProperties.containsProperty(AppOptionKeys.MAX_MEMORY) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.MAX_MEMORY) :
                 "";
-        priceFeedProviders = commandLineProperties.containsProperty(AppOptionKeys.PRICE_FEED_PROVIDERS) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.PRICE_FEED_PROVIDERS) :
+        providers = commandLineProperties.containsProperty(AppOptionKeys.PROVIDERS) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.PROVIDERS) :
                 "";
 
         seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
@@ -244,7 +244,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(AppOptionKeys.APP_NAME_KEY, appName);
                 setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
                 setProperty(AppOptionKeys.USER_DATA_DIR_KEY, userDataDir);
-                setProperty(AppOptionKeys.PRICE_FEED_PROVIDERS, priceFeedProviders);
+                setProperty(AppOptionKeys.PROVIDERS, providers);
 
                 setProperty(AppOptionKeys.BTC_NODES, btcNodes);
                 setProperty(AppOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);

@@ -1,4 +1,4 @@
-package io.bitsquare.btc.pricefeed;
+package io.bitsquare.btc.provider.price;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

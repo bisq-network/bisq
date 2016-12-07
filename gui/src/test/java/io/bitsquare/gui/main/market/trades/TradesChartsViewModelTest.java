@@ -50,7 +50,24 @@ public class TradesChartsViewModelTest {
                 null,
                 null,
                 null,
-                null);
+                null,
+
+                null,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                false,
+                false,
+                0,
+                0,
+                false,
+                null,
+                null
+        );
+
         set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "520"), Coin.parseCoin("1"), new Date(now.getTime()), null, null));
         set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "500"), Coin.parseCoin("1"), new Date(now.getTime() + 100), null, null));
         set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "600"), Coin.parseCoin("1"), new Date(now.getTime() + 200), null, null));

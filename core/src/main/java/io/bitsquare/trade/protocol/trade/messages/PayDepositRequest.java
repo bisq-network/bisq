@@ -23,6 +23,7 @@ import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.payment.PaymentAccountContractData;
+import org.bitcoinj.core.Coin;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
@@ -37,6 +38,8 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public final long tradeAmount;
     public final long tradePrice;
     public final byte[] takerMultiSigPubKey;
+    public final Coin txFee;
+    public final Coin takeOfferFee;
     public final ArrayList<RawTransactionInput> rawTransactionInputs;
     public final long changeOutputValue;
     public final String changeOutputAddress;
@@ -54,6 +57,8 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                              String tradeId,
                              long tradeAmount,
                              long tradePrice,
+                             Coin txFee,
+                             Coin takeOfferFee, 
                              ArrayList<RawTransactionInput> rawTransactionInputs,
                              long changeOutputValue,
                              String changeOutputAddress,
@@ -69,6 +74,8 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
+        this.txFee = txFee;
+        this.takeOfferFee = takeOfferFee;
         this.rawTransactionInputs = rawTransactionInputs;
         this.changeOutputValue = changeOutputValue;
         this.changeOutputAddress = changeOutputAddress;

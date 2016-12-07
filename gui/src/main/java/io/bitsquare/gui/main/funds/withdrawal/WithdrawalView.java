@@ -20,8 +20,12 @@ package io.bitsquare.gui.main.funds.withdrawal;
 import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.AddressEntryException;
+import io.bitsquare.btc.InsufficientFundsException;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -77,6 +81,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final FailedTradesManager failedTradesManager;
     private final BSFormatter formatter;
     private final Preferences preferences;
+    private final FeeService feeService;
     private final BtcAddressValidator btcAddressValidator;
     private final WalletPasswordWindow walletPasswordWindow;
     private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
@@ -99,6 +104,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            ClosedTradableManager closedTradableManager,
                            FailedTradesManager failedTradesManager,
                            BSFormatter formatter, Preferences preferences,
+                           FeeService feeService,
                            BtcAddressValidator btcAddressValidator, WalletPasswordWindow walletPasswordWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
@@ -106,6 +112,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         this.failedTradesManager = failedTradesManager;
         this.formatter = formatter;
         this.preferences = preferences;
+        this.feeService = feeService;
         this.btcAddressValidator = btcAddressValidator;
         this.walletPasswordWindow = walletPasswordWindow;
     }
@@ -203,58 +210,42 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     log.error("onWithdraw onFailure");
                 }
             };
+
+
             try {
                 // We need to use the max. amount (amountOfSelectedItems) as the senderAmount might be less then
                 // we have available and then the fee calculation would return 0
                 // TODO Get a proper fee calculation from BitcoinJ directly
-                Coin requiredFee = null;
+                Transaction feeEstimationTransaction = null;
                 try {
-                    requiredFee = walletService.getRequiredFeeForMultipleAddresses(fromAddresses,
+                    feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
                             withdrawToTextField.getText(), amountOfSelectedItems);
                 } catch (InsufficientFundsException e) {
-                    try {
-                        int txSize = walletService.getTransactionSize(fromAddresses,
-                                withdrawToTextField.getText(), senderAmountAsCoinProperty.get().subtract(FeePolicy.getNonTradeFeePerKb()));
-                        new Popup<>().warning(e.getMessage() + "\n" +
-                                "Transaction size: " + (txSize / 1000d) + " Kb").show();
-                    } catch (InsufficientMoneyException e2) {
-                        new Popup<>().warning(e.getMessage()).show();
-                    }
+                    new Popup<>().warning(e.getMessage()).show();
                 } catch (Throwable t) {
-                    try {
-                        // TODO Using amountOfSelectedItems caused problems if it exceeds the max size (in case of arbitrator)
-                        log.warn("Error at getRequiredFeeForMultipleAddresses: " + t.toString() + "\n" +
-                                "We use the default fee instead to estimate tx size and then re-calculate fee.");
-                        int tempTxSize = walletService.getTransactionSize(fromAddresses,
-                                withdrawToTextField.getText(), senderAmountAsCoinProperty.get().subtract(FeePolicy.getNonTradeFeePerKb()));
-                        requiredFee = Coin.valueOf(FeePolicy.getNonTradeFeePerKb().value * tempTxSize / 1000);
-                    } catch (Throwable t2) {
-                        t2.printStackTrace();
-                        log.error(t2.toString());
-                        new Popup<>().error("Error at creating transaction: " + t2.toString()).show();
-                    }
+                    new Popup<>().error("Error at creating transaction: " + t.toString()).show();
                 }
-                if (requiredFee != null) {
-                    Coin receiverAmount = senderAmountAsCoinProperty.get().subtract(requiredFee);
-                    int txSize = walletService.getTransactionSize(fromAddresses,
-                            withdrawToTextField.getText(), receiverAmount);
-                    log.info("Fee for tx with size {}: {} BTC", txSize, requiredFee.toPlainString());
+                if (feeEstimationTransaction != null) {
+                    Coin fee = feeEstimationTransaction.getFee();
+                    Coin amount = senderAmountAsCoinProperty.get();
+                    Coin receiverAmount = amount.subtract(fee);
+                    int txSize = feeEstimationTransaction.bitcoinSerialize().length;
+                    log.info("Fee for tx with size {}: {} BTC", txSize, fee.toPlainString());
 
                     if (receiverAmount.isPositive()) {
                         if (DevFlags.DEV_MODE) {
-                            doWithdraw(receiverAmount, callback);
+                            doWithdraw(amount, fee, callback);
                         } else {
-                            double satPerByte = (double) requiredFee.value / (double) txSize;
                             new Popup().headLine("Confirm withdrawal request")
                                     .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmountAsCoinProperty.get()) + "\n" +
                                             "From address: " + withdrawFromTextField.getText() + "\n" +
                                             "To receiving address: " + withdrawToTextField.getText() + ".\n" +
-                                            "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + " (" + MathUtils.roundDouble(satPerByte, 2) + " Satoshis/byte)\n" +
+                                            "Required transaction fee is: " + formatter.formatCoinWithCode(fee) + " (" + MathUtils.roundDouble(((double) fee.value / (double) txSize), 2) + " Satoshis/byte)\n" +
                                             "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
                                             "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
                                             "Are you sure you want to withdraw that amount?")
                                     .actionButtonText("Yes")
-                                    .onAction(() -> doWithdraw(receiverAmount, callback))
+                                    .onAction(() -> doWithdraw(amount, fee, callback))
                                     .closeButtonText("Cancel")
                                     .show();
                         }
@@ -339,19 +330,19 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 .collect(Collectors.toList()));
     }
 
-    private void doWithdraw(Coin amount, FutureCallback<Transaction> callback) {
+    private void doWithdraw(Coin amount, Coin fee, FutureCallback<Transaction> callback) {
         if (walletService.getWallet().isEncrypted()) {
             UserThread.runAfter(() -> walletPasswordWindow.onAesKey(aesKey ->
-                    sendFunds(amount, aesKey, callback))
+                    sendFunds(amount, fee, aesKey, callback))
                     .show(), 300, TimeUnit.MILLISECONDS);
         } else {
-            sendFunds(amount, null, callback);
+            sendFunds(amount, fee, null, callback);
         }
     }
 
-    private void sendFunds(Coin amount, KeyParameter aesKey, FutureCallback<Transaction> callback) {
+    private void sendFunds(Coin amount, Coin fee, KeyParameter aesKey, FutureCallback<Transaction> callback) {
         try {
-            walletService.sendFundsForMultipleAddresses(fromAddresses, withdrawToTextField.getText(), amount, null, aesKey, callback);
+            walletService.sendFundsForMultipleAddresses(fromAddresses, withdrawToTextField.getText(), amount, fee, null, aesKey, callback);
             reset();
             updateList();
         } catch (AddressFormatException e) {

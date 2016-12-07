@@ -278,6 +278,21 @@ public class OfferBookViewModelTest {
                 acceptedCountryCodes,
                 bankId,
                 acceptedBanks,
+                null,
+
+                null,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                false,
+                false,
+                0,
+                0,
+                false,
+                null,
                 null);
     }
 }

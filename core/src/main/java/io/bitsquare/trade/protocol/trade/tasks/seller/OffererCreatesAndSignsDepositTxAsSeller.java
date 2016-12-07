@@ -18,7 +18,6 @@
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
 import io.bitsquare.common.crypto.Hash;
@@ -43,8 +42,9 @@ public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin sellerInputAmount = FeePolicy.getSecurityDeposit().add(FeePolicy.getFixedTxFeeForTrades()).add(trade.getTradeAmount());
-            Coin msOutputAmount = sellerInputAmount.add(FeePolicy.getSecurityDeposit());
+            Coin securityDeposit = trade.getOffer().getSecurityDeposit();
+            Coin sellerInputAmount = securityDeposit.add(trade.getTradeAmount());
+            Coin msOutputAmount = sellerInputAmount.add(trade.getTxFee()).add(securityDeposit);
 
             log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"
@@ -56,7 +56,7 @@ public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
             WalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry sellerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            sellerMultiSigAddressEntry.setLockedTradeAmount(sellerInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades()));
+            sellerMultiSigAddressEntry.setLockedTradeAmount(sellerInputAmount.subtract(trade.getTxFee()));
             walletService.saveAddressEntryList();
             PreparedDepositTxAndOffererInputs result = processModel.getTradeWalletService().offererCreatesAndSignsDepositTx(
                     false,

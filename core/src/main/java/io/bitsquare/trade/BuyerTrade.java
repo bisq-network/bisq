@@ -18,7 +18,6 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.NodeAddress;
@@ -38,12 +37,12 @@ public abstract class BuyerTrade extends Trade {
 
     private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTrade.class);
 
-    BuyerTrade(Offer offer, Coin tradeAmount, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, tradePrice, tradingPeerNodeAddress, storage);
+    BuyerTrade(Offer offer, Coin tradeAmount, Coin txFee, Coin takeOfferFee, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, txFee, takeOfferFee, tradePrice, tradingPeerNodeAddress, storage);
     }
 
-    BuyerTrade(Offer offer, Storage<? extends TradableList> storage) {
-        super(offer, storage);
+    BuyerTrade(Offer offer, Coin txFee, Coin takeOfferFee, Storage<? extends TradableList> storage) {
+        super(offer, txFee, takeOfferFee, storage);
     }
 
     @Override
@@ -61,7 +60,7 @@ public abstract class BuyerTrade extends Trade {
     public Coin getPayoutAmount() {
         checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
 
-        return FeePolicy.getSecurityDeposit().add(getTradeAmount());
+        return getOffer().getSecurityDeposit().add(getTradeAmount());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

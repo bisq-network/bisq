@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.funds.transactions;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple4;
@@ -591,12 +590,17 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.US);
             String day = dateFormatter.format(item.getDate());
 
+            // TODO fee is dynamic now
+            Coin txFee = Coin.valueOf(20_000);
+            Coin createOfferFee = Coin.valueOf(50_000);
+            Coin takeOfferFee = Coin.valueOf(100_000);
+
             if (!dataByDayMap.containsKey(day)) {
                 int numOffers = 0;
                 int numTrades = 0;
-                if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                if (amountAsCoin.compareTo(createOfferFee.subtract(txFee)) == 0)
                     numOffers++;
-                else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                else if (amountAsCoin.compareTo(takeOfferFee.subtract(txFee)) == 0)
                     numTrades++;
 
                 dataByDayMap.put(day, new Tuple4<>(item.getDate(), 1, numOffers, numTrades));
@@ -605,9 +609,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 int prev = tuple.second;
                 int numOffers = tuple.third;
                 int numTrades = tuple.forth;
-                if (amountAsCoin.compareTo(FeePolicy.getCreateOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                if (amountAsCoin.compareTo(createOfferFee.subtract(txFee)) == 0)
                     numOffers++;
-                else if (amountAsCoin.compareTo(FeePolicy.getTakeOfferFee().subtract(FeePolicy.getFixedTxFeeForTrades())) == 0)
+                else if (amountAsCoin.compareTo(takeOfferFee.subtract(txFee)) == 0)
                     numTrades++;
 
                 dataByDayMap.put(day, new Tuple4<>(tuple.first, ++prev, numOffers, numTrades));

@@ -15,13 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.pricefeed;
+package io.bitsquare.provider.price;
 
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.http.HttpException;
-import io.bitsquare.pricefeed.providers.BtcAverageProvider;
-import io.bitsquare.pricefeed.providers.CoinmarketcapProvider;
-import io.bitsquare.pricefeed.providers.PoloniexProvider;
+import io.bitsquare.provider.price.providers.BtcAverageProvider;
+import io.bitsquare.provider.price.providers.CoinmarketcapProvider;
+import io.bitsquare.provider.price.providers.PoloniexProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
-class PriceRequestService {
+public class PriceRequestService {
     private static final Logger log = LoggerFactory.getLogger(PriceRequestService.class);
 
     private static final long INTERVAL_BTC_AV_LOCAL_MS = 60_000;      // 60 sec 
@@ -142,7 +142,9 @@ class PriceRequestService {
 
 
     private void requestCoinmarketcapPrices() throws IOException, HttpException {
+        long ts = System.currentTimeMillis();
         Map<String, PriceData> map = coinmarketcapProvider.request();
+        log.info("requestCoinmarketcapPrices took {} ms.", (System.currentTimeMillis() - ts));
         // we don't replace prices which we got form the Poloniex request, just in case the Coinmarketcap data are 
         // received earlier at startup we allow them but Poloniex will overwrite them.
         map.entrySet().stream()
@@ -154,21 +156,27 @@ class PriceRequestService {
 
 
     private void requestPoloniexPrices() throws IOException, HttpException {
+        long ts = System.currentTimeMillis();
         poloniexMap = poloniexProvider.request();
+        log.info("requestPoloniexPrices took {} ms.", (System.currentTimeMillis() - ts));
         allPricesMap.putAll(poloniexMap);
         poloniexTs = Instant.now().getEpochSecond();
         writeToJson();
     }
 
     private void requestBtcAverageLocalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
+        long ts = System.currentTimeMillis();
         btcAverageLocalMap = btcAverageProvider.getLocal();
+        log.info("requestBtcAverageLocalPrices took {} ms.", (System.currentTimeMillis() - ts));
         allPricesMap.putAll(btcAverageLocalMap);
         btcAverageTs = Instant.now().getEpochSecond();
         writeToJson();
     }
 
     private void requestBtcAverageGlobalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
+        long ts = System.currentTimeMillis();
         Map<String, PriceData> map = btcAverageProvider.getGlobal();
+        log.info("requestBtcAverageGlobalPrices took {} ms.", (System.currentTimeMillis() - ts));
         // we don't replace prices which we got form the local request, just in case the global data are received 
         // earlier at startup we allow them but the local request will overwrite them.
         map.entrySet().stream()

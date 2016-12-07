@@ -21,7 +21,6 @@ import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.DisputeResult;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
@@ -370,16 +369,18 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
         Coin arbitratorAmount = formatter.parseToCoin(arbitratorPayoutAmountInputTextField.getText());
-        Coin securityDeposit = FeePolicy.getSecurityDeposit();
-        Coin tradeAmount = dispute.getContract().getTradeAmount();
+        Contract contract = dispute.getContract();
+        Coin securityDeposit = contract.offer.getSecurityDeposit();
+        Coin tradeAmount = contract.getTradeAmount();
         Coin available = tradeAmount.add(securityDeposit).add(securityDeposit);
         Coin totalAmount = buyerAmount.add(sellerAmount).add(arbitratorAmount);
         return (totalAmount.compareTo(available) == 0);
     }
 
     private void applyCustomAmounts(InputTextField inputTextField) {
-        Coin securityDeposit = FeePolicy.getSecurityDeposit();
-        Coin tradeAmount = dispute.getContract().getTradeAmount();
+        Contract contract = dispute.getContract();
+        Coin securityDeposit = contract.offer.getSecurityDeposit();
+        Coin tradeAmount = contract.getTradeAmount();
 
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
@@ -669,7 +670,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void calculatePayoutAmounts(DisputeResult.DisputeFeePolicy feePayment) {
         Contract contract = dispute.getContract();
-        Coin refund = FeePolicy.getSecurityDeposit();
+        Coin refund = contract.offer.getSecurityDeposit();
         Coin winnerRefund;
         Coin loserRefund;
         switch (feePayment) {

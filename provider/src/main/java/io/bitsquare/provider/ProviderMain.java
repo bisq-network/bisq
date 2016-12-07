@@ -15,9 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.pricefeed;
+package io.bitsquare.provider;
 
 import io.bitsquare.http.HttpException;
+import io.bitsquare.provider.fee.FeeRequestService;
+import io.bitsquare.provider.price.PriceRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,22 +32,39 @@ import java.security.spec.InvalidKeySpecException;
 import static spark.Spark.get;
 import static spark.Spark.port;
 
-public class PriceFeedMain {
-    private static final Logger log = LoggerFactory.getLogger(PriceFeedMain.class);
+public class ProviderMain {
+    private static final Logger log = LoggerFactory.getLogger(ProviderMain.class);
+
+    public ProviderMain() {
+    }
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, InvalidKeyException, HttpException {
+        port(8080);
+
+        handleGetAllMarketPrices(args);
+        handleGetFees();
+    }
+
+    private static void handleGetAllMarketPrices(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
         if (args.length == 2) {
             String bitcoinAveragePrivKey = args[0];
             String bitcoinAveragePubKey = args[1];
 
             PriceRequestService priceRequestService = new PriceRequestService(bitcoinAveragePrivKey, bitcoinAveragePubKey);
-            port(8080);
-            get("/all", (req, res) -> {
-                log.info("Incoming request from: " + req.userAgent());
+            get("/getAllMarketPrices", (req, res) -> {
+                log.info("Incoming getAllMarketPrices request from: " + req.userAgent());
                 return priceRequestService.getJson();
             });
         } else {
             throw new IllegalArgumentException("You need to provide the BitcoinAverage API keys. Private key as first argument, public key as second argument.");
         }
+    }
+
+    private static void handleGetFees() throws IOException {
+        FeeRequestService feeRequestService = new FeeRequestService();
+        get("/getFees", (req, res) -> {
+            log.info("Incoming getFees request from: " + req.userAgent());
+            return feeRequestService.getJson();
+        });
     }
 }

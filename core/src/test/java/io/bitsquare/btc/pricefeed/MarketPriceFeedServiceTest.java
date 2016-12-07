@@ -1,5 +1,6 @@
 package io.bitsquare.btc.pricefeed;
 
+import io.bitsquare.btc.provider.price.PriceFeedService;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -13,7 +14,7 @@ public class MarketPriceFeedServiceTest {
 
     @Test
     public void testGetPrice() throws InterruptedException {
-        PriceFeedService priceFeedService = new PriceFeedService(null, null, true);
+        PriceFeedService priceFeedService = new PriceFeedService(null, null);
         priceFeedService.setCurrencyCode("EUR");
         priceFeedService.init(tradeCurrency -> {
                     log.debug(tradeCurrency.toString());

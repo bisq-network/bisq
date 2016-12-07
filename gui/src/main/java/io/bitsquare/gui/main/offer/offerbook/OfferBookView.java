@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.offer.offerbook;
 
 import io.bitsquare.alert.PrivateNotificationManager;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -395,7 +394,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             String key = "RemoveOfferWarning";
             if (model.preferences.showAgain(key))
                 new Popup().warning("Are you sure you want to remove that offer?\n" +
-                        "The offer fee of " + model.formatter.formatCoinWithCode(FeePolicy.getCreateOfferFee()) +
+                        "The offer fee of " + model.formatter.formatCoinWithCode(offer.getCreateOfferFee()) +
                                 " will be lost if you remove that offer.")
                         .actionButtonText("Remove offer")
                         .onAction(() -> doRemoveOffer(offer))

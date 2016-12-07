@@ -18,7 +18,6 @@
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
@@ -41,7 +40,7 @@ public class SignAndFinalizePayoutTx extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin sellerPayoutAmount = FeePolicy.getSecurityDeposit();
+            Coin sellerPayoutAmount = trade.getOffer().getSecurityDeposit();
             Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
 
             Transaction transaction = processModel.getTradeWalletService().buyerSignsAndFinalizesPayoutTx(

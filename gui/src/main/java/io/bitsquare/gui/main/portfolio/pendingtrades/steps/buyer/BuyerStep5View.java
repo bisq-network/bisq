@@ -19,13 +19,11 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
-import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.AddressEntryException;
-import io.bitsquare.btc.Restrictions;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.*;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.MainView;
@@ -46,6 +44,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.concurrent.TimeUnit;
@@ -164,51 +163,53 @@ public class BuyerStep5View extends TradeStepView {
     }
 
     private void reviewWithdrawal() {
-        Coin senderAmount = trade.getPayoutAmount();
+        Coin amount = trade.getPayoutAmount();
         WalletService walletService = model.dataModel.walletService;
 
         AddressEntry fromAddressesEntry = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         String fromAddresses = fromAddressesEntry.getAddressString();
         String toAddresses = withdrawAddressTextField.getText();
 
-        // TODO at some error situation it can be tha the funds are already paid out and we get stuck here
+        // TODO at some error situation it can be that the funds are already paid out and we get stuck here
         // need handling to remove the trade (planned for next release)
         Coin balance = walletService.getBalanceForAddress(fromAddressesEntry.getAddress());
         try {
-            Coin requiredFee = walletService.getRequiredFee(fromAddresses, toAddresses, senderAmount, AddressEntry.Context.TRADE_PAYOUT);
-            Coin receiverAmount = senderAmount.subtract(requiredFee);
+            Transaction feeEstimationTransaction = walletService.getFeeEstimationTransaction(fromAddresses, toAddresses, amount, AddressEntry.Context.TRADE_PAYOUT);
+            Coin fee = feeEstimationTransaction.getFee();
+            Coin receiverAmount = amount.subtract(fee);
             if (balance.isZero()) {
                 new Popup().warning("Your funds have already been withdrawn.\nPlease check the transaction history.").show();
                 model.dataModel.tradeManager.addTradeToClosedTrades(trade);
             } else {
                 if (toAddresses.isEmpty()) {
                     validateWithdrawAddress();
-                } else if (Restrictions.isAboveFixedTxFeeForTradesAndDust(senderAmount)) {
-
+                } else if (Restrictions.isAboveDust(amount, fee)) {
                     if (DevFlags.DEV_MODE) {
-                        doWithdrawal(receiverAmount);
+                        doWithdrawal(amount, fee);
                     } else {
                         BSFormatter formatter = model.formatter;
                         String key = "reviewWithdrawalAtTradeComplete";
                         if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+                            int txSize = feeEstimationTransaction.bitcoinSerialize().length;
                             new Popup().headLine("Confirm withdrawal request")
-                                    .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmount) + "\n" +
+                                    .confirmation("Sending: " + formatter.formatCoinWithCode(amount) + "\n" +
                                             "From address: " + fromAddresses + "\n" +
                                             "To receiving address: " + toAddresses + ".\n" +
-                                            "Required transaction fee is: " + formatter.formatCoinWithCode(requiredFee) + "\n\n" +
+                                            "Required transaction fee is: " + formatter.formatCoinWithCode(fee) + " (" + MathUtils.roundDouble(((double) fee.value / (double) txSize), 2) + " Satoshis/byte)\n" +
+                                            "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
                                             "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
-                                            "Are you sure you want to proceed with the withdrawal?")
+                                            "Are you sure you want to withdraw that amount?")
+                                    .actionButtonText("Yes")
+                                    .onAction(() -> doWithdrawal(amount, fee))
                                     .closeButtonText("Cancel")
                                     .onClose(() -> {
                                         useSavingsWalletButton.setDisable(false);
                                         withdrawToExternalWalletButton.setDisable(false);
                                     })
-                                    .actionButtonText("Yes")
-                                    .onAction(() -> doWithdrawal(receiverAmount))
                                     .dontShowAgainId(key, preferences)
                                     .show();
                         } else {
-                            doWithdrawal(receiverAmount);
+                            doWithdrawal(amount, fee);
                         }
                     }
 
@@ -222,10 +223,14 @@ public class BuyerStep5View extends TradeStepView {
             validateWithdrawAddress();
         } catch (AddressEntryException e) {
             log.error(e.getMessage());
+        } catch (InsufficientFundsException e) {
+            log.error(e.getMessage());
+            e.printStackTrace();
+            new Popup().warning(e.getMessage()).show();
         }
     }
 
-    private void doWithdrawal(Coin receiverAmount) {
+    private void doWithdrawal(Coin amount, Coin fee) {
         String toAddress = withdrawAddressTextField.getText();
         ResultHandler resultHandler = this::handleTradeCompleted;
         FaultHandler faultHandler = (errorMessage, throwable) -> {
@@ -238,17 +243,18 @@ public class BuyerStep5View extends TradeStepView {
         };
         if (model.dataModel.walletService.getWallet().isEncrypted()) {
             UserThread.runAfter(() -> model.dataModel.walletPasswordWindow.onAesKey(aesKey ->
-                    doWithdrawRequest(toAddress, receiverAmount, aesKey, resultHandler, faultHandler))
+                    doWithdrawRequest(toAddress, amount, fee, aesKey, resultHandler, faultHandler))
                     .show(), 300, TimeUnit.MILLISECONDS);
         } else
-            doWithdrawRequest(toAddress, receiverAmount, null, resultHandler, faultHandler);
+            doWithdrawRequest(toAddress, amount, fee, null, resultHandler, faultHandler);
     }
 
-    private void doWithdrawRequest(String toAddress, Coin receiverAmount, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
+    private void doWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);
         model.dataModel.onWithdrawRequest(toAddress,
-                receiverAmount,
+                amount,
+                fee,
                 aesKey,
                 resultHandler,
                 faultHandler);

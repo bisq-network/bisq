@@ -7,7 +7,7 @@ public class AppOptionKeys {
     public static final String APP_NAME_KEY = "appName";
     public static final String APP_DATA_DIR_KEY = "appDataDir";
     public static final String MAX_MEMORY = "maxMemory";
-    public static final String PRICE_FEED_PROVIDERS = "priceFeedProviders";
+    public static final String PROVIDERS = "providers";
     public static final String BTC_NODES = "btcNodes";
     public static final String USE_TOR_FOR_BTC = "useTorForBtc";
 }

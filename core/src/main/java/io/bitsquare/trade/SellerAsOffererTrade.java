@@ -24,6 +24,7 @@ import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.OffererProtocol;
 import io.bitsquare.trade.protocol.trade.SellerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +42,8 @@ public final class SellerAsOffererTrade extends SellerTrade implements OffererTr
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerAsOffererTrade(Offer offer, Storage<? extends TradableList> storage) {
-        super(offer, storage);
+    public SellerAsOffererTrade(Offer offer, Coin txFee, Coin takeOfferFee, Storage<? extends TradableList> storage) {
+        super(offer, txFee, takeOfferFee, storage);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {

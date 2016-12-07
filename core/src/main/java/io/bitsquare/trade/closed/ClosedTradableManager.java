@@ -18,7 +18,7 @@
 package io.bitsquare.trade.closed;
 
 import com.google.inject.Inject;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Tradable;

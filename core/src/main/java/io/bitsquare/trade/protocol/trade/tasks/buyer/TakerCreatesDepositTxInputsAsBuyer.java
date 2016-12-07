@@ -18,7 +18,6 @@
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.data.InputsAndChangeOutput;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
@@ -38,9 +37,12 @@ public class TakerCreatesDepositTxInputsAsBuyer extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Coin takerInputAmount = FeePolicy.getSecurityDeposit().add(FeePolicy.getFixedTxFeeForTrades());
+            Coin txFee = trade.getTxFee();
+            Coin doubleTxFee = txFee.add(txFee);
+            Coin takerInputAmount = trade.getOffer().getSecurityDeposit().add(doubleTxFee);
             InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(
                     takerInputAmount,
+                    txFee,
                     processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE),
                     processModel.getWalletService().getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress());
             processModel.setRawTransactionInputs(result.rawTransactionInputs);

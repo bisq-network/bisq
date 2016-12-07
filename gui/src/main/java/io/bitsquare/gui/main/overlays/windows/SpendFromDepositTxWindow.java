@@ -90,7 +90,8 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         InputTextField buyerPayoutAmount = addLabelInputTextField(gridPane, ++rowIndex, "buyerPayoutAmount:").second;
         InputTextField sellerPayoutAmount = addLabelInputTextField(gridPane, ++rowIndex, "sellerPayoutAmount:").second;
         InputTextField arbitratorPayoutAmount = addLabelInputTextField(gridPane, ++rowIndex, "arbitratorPayoutAmount:").second;
-
+        InputTextField txFee = addLabelInputTextField(gridPane, ++rowIndex, "Tx fee:").second;
+        
         InputTextField buyerAddressString = addLabelInputTextField(gridPane, ++rowIndex, "buyerAddressString:").second;
         InputTextField sellerAddressString = addLabelInputTextField(gridPane, ++rowIndex, "sellerAddressString:").second;
         InputTextField arbitratorAddressString = addLabelInputTextField(gridPane, ++rowIndex, "arbitratorAddressString:").second;
@@ -170,6 +171,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
                         Coin.parseCoin(buyerPayoutAmount.getText()),
                         Coin.parseCoin(sellerPayoutAmount.getText()),
                         Coin.parseCoin(arbitratorPayoutAmount.getText()),
+                        Coin.parseCoin(txFee.getText()),
                         buyerAddressString.getText(),
                         sellerAddressString.getText(),
                         arbitratorAddressString.getText(),

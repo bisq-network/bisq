@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.offer.createoffer;
 
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.pricefeed.MarketPrice;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.btc.provider.price.MarketPrice;
+import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
@@ -660,11 +660,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     public String getOfferFee() {
-        return formatter.formatCoinWithCode(dataModel.getOfferFeeAsCoin());
+        return formatter.formatCoinWithCode(dataModel.getCreateOfferFeeAsCoin());
     }
 
-    public String getNetworkFee() {
-        return formatter.formatCoinWithCode(dataModel.getNetworkFeeAsCoin());
+    public String getTxFee() {
+        return formatter.formatCoinWithCode(dataModel.getTxFeeAsCoin());
     }
 
     public String getSecurityDeposit() {

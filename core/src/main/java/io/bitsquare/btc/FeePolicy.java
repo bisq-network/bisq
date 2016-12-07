@@ -17,7 +17,6 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.app.DevFlags;
 import org.bitcoinj.core.Coin;
 
 public class FeePolicy {
@@ -28,6 +27,7 @@ public class FeePolicy {
     // http://www.cointape.com
     // http://p2sh.info/dashboard/db/fee-estimation
     // https://bitcoinfees.github.io/#1d
+    // https://estimatefee.appspot.com/
     // Average values are 10-100 satoshis/byte in january 2016
     // 
     // Our trade transactions have a fixed set of inputs and outputs making the size very predictable 
@@ -42,10 +42,6 @@ public class FeePolicy {
     // We use 0.0002 BTC (0.08 EUR @ 400 EUR/BTC) which is for our tx sizes about 50-90 satoshi/byte
     // We cannot make that user defined as it need to be the same for both users, so we can only change that in 
     // software updates 
-    // TODO before Beta we should get a good future proof guess as a change causes incompatible versions
-    public static Coin getFixedTxFeeForTrades() {
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(20_000);
-    }
 
     // For non trade transactions (withdrawal) we use the default fee calculation 
     // To avoid issues with not getting into full blocks, we increase the fee/kb to 30 satoshi/byte
@@ -53,7 +49,7 @@ public class FeePolicy {
     // The BitcoinJ fee calculation use kb so a tx size  < 1kb will still pay the fee for a kb tx.
     // Our payout tx has about 370 bytes so we get a fee/kb value of about 90 satoshi/byte making it high priority
     // Other payout transactions (E.g. arbitrators many collected transactions) will go with 30 satoshi/byte if > 1kb
-    private static Coin NON_TRADE_FEE_PER_KB = DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(20_000); // 0.0002 BTC about 0.08 EUR @ 400 EUR/BTC 
+    private static Coin NON_TRADE_FEE_PER_KB = Coin.valueOf(40_000); // 0.0004 BTC about 0.16 EUR @ 400 EUR/BTC 
 
     public static void setNonTradeFeePerKb(Coin nonTradeFeePerKb) {
         NON_TRADE_FEE_PER_KB = nonTradeFeePerKb;
@@ -63,22 +59,4 @@ public class FeePolicy {
         return NON_TRADE_FEE_PER_KB;
     }
 
-    // 0.0005 BTC  0.05% of 1 BTC about 0.2 EUR @ 400 EUR/BTC
-    public static Coin getCreateOfferFee() {
-        // We need to pay the quite high miner fee of 30_000 from the trading fee tx so 30_000 us our lower limit
-        // The arbitrator receive only 0.0002 BTC - less than the miners
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(10_000) : Coin.valueOf(50_000);
-    }
-
-    // 0.001 BTC  0.1% of 1 BTC about 0.4 EUR @ 400 EUR/BTC
-    public static Coin getTakeOfferFee() {
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(10_000) : Coin.valueOf(100_000);
-    }
-
-
-    // TODO will be increased once we get higher limits
-    // 0.01 BTC; about 4 EUR @ 400 EUR/BTC
-    public static Coin getSecurityDeposit() {
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(1_000_000);
-    }
 }

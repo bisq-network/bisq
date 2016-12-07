@@ -1,7 +1,7 @@
 package io.bitsquare.btc.blockchain;
 
 import com.google.common.util.concurrent.*;
-import io.bitsquare.btc.blockchain.providers.FeeProvider;
+import io.bitsquare.btc.blockchain.providers.BlockchainTxProvider;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
@@ -13,21 +13,21 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-class GetFeeRequest {
-    private static final Logger log = LoggerFactory.getLogger(GetFeeRequest.class);
+class GetTransactionRequest {
+    private static final Logger log = LoggerFactory.getLogger(GetTransactionRequest.class);
     private static final ListeningExecutorService executorService = Utilities.getListeningExecutorService("GetFeeRequest", 3, 5, 10 * 60);
     private Timer timer;
     private int faults;
 
-    public GetFeeRequest() {
+    public GetTransactionRequest() {
     }
 
-    public SettableFuture<Coin> request(String transactionId, FeeProvider provider) {
+    public SettableFuture<Coin> request(String transactionId, BlockchainTxProvider provider) {
         final SettableFuture<Coin> resultFuture = SettableFuture.create();
         return request(transactionId, provider, resultFuture);
     }
 
-    private SettableFuture<Coin> request(String transactionId, FeeProvider provider, SettableFuture<Coin> resultFuture) {
+    private SettableFuture<Coin> request(String transactionId, BlockchainTxProvider provider, SettableFuture<Coin> resultFuture) {
         ListenableFuture<Coin> future = executorService.submit(() -> {
             Thread.currentThread().setName("requestFee-" + provider.toString());
             try {

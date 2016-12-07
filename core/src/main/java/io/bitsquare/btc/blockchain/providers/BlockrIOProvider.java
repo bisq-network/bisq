@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 
-public class BlockrIOProvider extends FeeProvider {
+public class BlockrIOProvider extends BlockchainTxProvider {
     private static final Logger log = LoggerFactory.getLogger(BlockrIOProvider.class);
 
     @Inject
