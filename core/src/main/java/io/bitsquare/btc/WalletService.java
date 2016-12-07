@@ -89,7 +89,7 @@ public class WalletService {
     private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
     private final Preferences preferences;
-    private FeeService feeService;
+    private final FeeService feeService;
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final NetworkParameters params;
     private final File walletDir;
@@ -97,6 +97,7 @@ public class WalletService {
 
     private WalletAppKitBitSquare walletAppKit;
     private Wallet wallet;
+    private Wallet tokenWallet;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
@@ -746,12 +747,12 @@ public class WalletService {
                                     connectedOutput.getParentTransaction().getConfidence() != null &&
                                     input.getValue() != null) {
                                 //if (connectedOutput.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-                                    newTransaction.addInput(new TransactionInput(params,
-                                            newTransaction,
-                                            new byte[]{},
-                                            new TransactionOutPoint(params, input.getOutpoint().getIndex(),
-                                                    new Transaction(params, connectedOutput.getParentTransaction().bitcoinSerialize())),
-                                            Coin.valueOf(input.getValue().value)));
+                                newTransaction.addInput(new TransactionInput(params,
+                                        newTransaction,
+                                        new byte[]{},
+                                        new TransactionOutPoint(params, input.getOutpoint().getIndex(),
+                                                new Transaction(params, connectedOutput.getParentTransaction().bitcoinSerialize())),
+                                        Coin.valueOf(input.getValue().value)));
                                /* } else {
                                     log.warn("Confidence of parent tx is not of type BUILDING: ConfidenceType=" +
                                             connectedOutput.getParentTransaction().getConfidence().getConfidenceType());
@@ -815,10 +816,10 @@ public class WalletService {
                             // in some cases getFee did not calculate correctly and we still get an InsufficientMoneyException
                             log.warn("We still have a missing fee " + (e.missing != null ? e.missing.toFriendlyString() : ""));
 
-                    if (e != null)
-                        amount = amount.subtract(e.missing);
-                    newTransaction.clearOutputs();
-                    newTransaction.addOutput(amount, toAddress);
+                            if (e != null)
+                                amount = amount.subtract(e.missing);
+                            newTransaction.clearOutputs();
+                            newTransaction.addOutput(amount, toAddress);
 
                             sendRequest = Wallet.SendRequest.forTx(newTransaction);
                             sendRequest.fee = fee;

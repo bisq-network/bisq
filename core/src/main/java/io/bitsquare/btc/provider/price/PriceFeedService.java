@@ -60,6 +60,8 @@ public class PriceFeedService {
     private final IntegerProperty currenciesUpdateFlag = new SimpleIntegerProperty(0);
     private long epochInSecondAtLastRequest;
     private Map<String, Long> timeStampMap = new HashMap<>();
+    private int retryCounter = 0;
+    private int retryDelay = 1;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -85,22 +87,26 @@ public class PriceFeedService {
         request();
     }
 
+
     private void request() {
         requestAllPrices(priceProvider, () -> {
             applyPriceToConsumer();
             // after first response we know the providers timestamp and want to request quickly after next expected update
             long delay = Math.max(40, Math.min(90, PERIOD_SEC - (Instant.now().getEpochSecond() - epochInSecondAtLastRequest) + 2 + new Random().nextInt(5)));
             UserThread.runAfter(this::request, delay);
+            retryDelay = 1;
         }, (errorMessage, throwable) -> {
-
             // Try other provider if more then 1 is available
             if (providersRepository.hasMoreProviders()) {
                 providersRepository.setNewRandomBaseUrl();
                 priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
-                request();
-            } else {
-                UserThread.runAfter(this::request, 120);
             }
+            UserThread.runAfter(() -> {
+                retryCounter++;
+                retryDelay *= retryCounter;
+                request();
+            }, retryDelay);
+
             this.faultHandler.handleFault(errorMessage, throwable);
         });
     }
