@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -44,7 +44,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     private final ArbitratorManager arbitratorManager;
     private User user;
     private final P2PService p2PService;
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final KeyRing keyRing;
 
     final BooleanProperty registrationEditDisabled = new SimpleBooleanProperty(true);
@@ -67,7 +67,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     public ArbitratorRegistrationViewModel(ArbitratorManager arbitratorManager,
                                            User user,
                                            P2PService p2PService,
-                                           WalletService walletService,
+                                           BitcoinWalletService walletService,
                                            KeyRing keyRing) {
         this.arbitratorManager = arbitratorManager;
         this.user = user;

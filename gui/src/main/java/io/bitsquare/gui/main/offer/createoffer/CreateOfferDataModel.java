@@ -22,8 +22,8 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
@@ -63,7 +63,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class CreateOfferDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
-    final WalletService walletService;
+    final BitcoinWalletService walletService;
     final TradeWalletService tradeWalletService;
     private final Preferences preferences;
     private final User user;
@@ -121,7 +121,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    CreateOfferDataModel(OpenOfferManager openOfferManager, WalletService walletService, TradeWalletService tradeWalletService,
+    CreateOfferDataModel(OpenOfferManager openOfferManager, BitcoinWalletService walletService, TradeWalletService tradeWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService,
                          FeeService feeService, Navigation navigation, BlockchainService blockchainService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;

@@ -8,7 +8,7 @@ import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -138,12 +138,12 @@ public class Monitor {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletService.class).shutDownDone.addListener((ov, o, n) -> {
+                        injector.getInstance(BitcoinWalletService.class).shutDownDone.addListener((ov, o, n) -> {
                             monitorModule.close(injector);
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
-                        injector.getInstance(WalletService.class).shutDown();
+                        injector.getInstance(BitcoinWalletService.class).shutDown();
                     });
                 });
                 // we wait max 5 sec.

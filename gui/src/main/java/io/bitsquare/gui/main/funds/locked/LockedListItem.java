@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.funds.locked;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
@@ -40,12 +40,12 @@ public class LockedListItem {
     private final Label balanceLabel;
     private final Trade trade;
     private final AddressEntry addressEntry;
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final BSFormatter formatter;
     private final String addressString;
     private Coin balance;
 
-    public LockedListItem(Trade trade, AddressEntry addressEntry, WalletService walletService, BSFormatter formatter) {
+    public LockedListItem(Trade trade, AddressEntry addressEntry, BitcoinWalletService walletService, BSFormatter formatter) {
         this.trade = trade;
         this.addressEntry = addressEntry;
         this.walletService = walletService;

@@ -21,8 +21,8 @@ import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
@@ -78,7 +78,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final KeyRing keyRing;
     private final User user;
     private final P2PService p2PService;
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final OfferBookService offerBookService;
     private final ClosedTradableManager closedTradableManager;
@@ -98,7 +98,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public OpenOfferManager(KeyRing keyRing,
                             User user,
                             P2PService p2PService,
-                            WalletService walletService,
+                            BitcoinWalletService walletService,
                             TradeWalletService tradeWalletService,
                             OfferBookService offerBookService,
                             ClosedTradableManager closedTradableManager,

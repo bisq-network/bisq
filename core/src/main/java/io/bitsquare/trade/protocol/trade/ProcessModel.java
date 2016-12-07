@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
@@ -60,7 +60,7 @@ public class ProcessModel implements Model, Serializable {
     // Transient/Immutable
     transient private TradeManager tradeManager;
     transient private OpenOfferManager openOfferManager;
-    transient private WalletService walletService;
+    transient private BitcoinWalletService walletService;
     transient private TradeWalletService tradeWalletService;
     transient private ArbitratorManager arbitratorManager;
     transient private Offer offer;
@@ -104,7 +104,7 @@ public class ProcessModel implements Model, Serializable {
                                          TradeManager tradeManager,
                                          OpenOfferManager openOfferManager,
                                          P2PService p2PService,
-                                         WalletService walletService,
+                                         BitcoinWalletService walletService,
                                          TradeWalletService tradeWalletService,
                                          ArbitratorManager arbitratorManager,
                                          User user,
@@ -139,7 +139,7 @@ public class ProcessModel implements Model, Serializable {
         return openOfferManager;
     }
 
-    public WalletService getWalletService() {
+    public BitcoinWalletService getWalletService() {
         return walletService;
     }
 

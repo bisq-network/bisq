@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.Overlay;
@@ -34,14 +34,14 @@ import static io.bitsquare.gui.util.FormBuilder.addLabelTextArea;
 
 public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
     private static final Logger log = LoggerFactory.getLogger(ShowWalletDataWindow.class);
-    private WalletService walletService;
+    private BitcoinWalletService walletService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ShowWalletDataWindow(WalletService walletService) {
+    public ShowWalletDataWindow(BitcoinWalletService walletService) {
         this.walletService = walletService;
         type = Type.Attention;
     }

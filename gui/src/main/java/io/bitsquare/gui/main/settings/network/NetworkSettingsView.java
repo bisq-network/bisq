@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.settings.network;
 
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.Activatable;
@@ -67,7 +67,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     TableColumn<P2pNetworkListItem, String> onionAddressColumn, connectionTypeColumn, creationDateColumn,
             roundTripTimeColumn, sentBytesColumn, receivedBytesColumn, peerTypeColumn;
 
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final Preferences preferences;
     private Clock clock;
     private final BSFormatter formatter;
@@ -81,7 +81,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private String btcNodesPreFocusText;
 
     @Inject
-    public NetworkSettingsView(WalletService walletService, P2PService p2PService, Preferences preferences, Clock clock,
+    public NetworkSettingsView(BitcoinWalletService walletService, P2PService p2PService, Preferences preferences, Clock clock,
                                BSFormatter formatter) {
         super();
         this.walletService = walletService;

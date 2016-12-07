@@ -164,7 +164,7 @@ public class BuyerStep5View extends TradeStepView {
 
     private void reviewWithdrawal() {
         Coin amount = trade.getPayoutAmount();
-        WalletService walletService = model.dataModel.walletService;
+        BitcoinWalletService walletService = model.dataModel.walletService;
 
         AddressEntry fromAddressesEntry = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         String fromAddresses = fromAddressesEntry.getAddressString();

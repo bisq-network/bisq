@@ -22,8 +22,8 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.InsufficientFundsException;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.UserThread;
@@ -75,7 +75,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     TableColumn<WithdrawalListItem, WithdrawalListItem> addressColumn, balanceColumn, selectColumn;
 
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
@@ -100,7 +100,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private WithdrawalView(WalletService walletService, TradeManager tradeManager,
+    private WithdrawalView(BitcoinWalletService walletService, TradeManager tradeManager,
                            ClosedTradableManager closedTradableManager,
                            FailedTradesManager failedTradesManager,
                            BSFormatter formatter, Preferences preferences,

@@ -21,8 +21,8 @@ import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.DisputeResult;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
@@ -63,7 +63,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private final BSFormatter formatter;
     private final DisputeManager disputeManager;
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private Dispute dispute;
     private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.empty();
@@ -93,7 +93,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DisputeSummaryWindow(BSFormatter formatter, DisputeManager disputeManager, WalletService walletService, TradeWalletService tradeWalletService) {
+    public DisputeSummaryWindow(BSFormatter formatter, DisputeManager disputeManager, BitcoinWalletService walletService, TradeWalletService tradeWalletService) {
         this.formatter = formatter;
         this.disputeManager = disputeManager;
         this.walletService = walletService;

@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.account.content.password;
 
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.crypto.ScryptUtil;
@@ -47,7 +47,7 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 public class PasswordView extends ActivatableView<GridPane, Void> {
 
     private final PasswordValidator passwordValidator;
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final TradeWalletService tradeWalletService;
 
     private PasswordTextField passwordField;
@@ -65,7 +65,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PasswordView(PasswordValidator passwordValidator, WalletService walletService, TradeWalletService tradeWalletService) {
+    private PasswordView(PasswordValidator passwordValidator, BitcoinWalletService walletService, TradeWalletService tradeWalletService) {
         this.passwordValidator = passwordValidator;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;

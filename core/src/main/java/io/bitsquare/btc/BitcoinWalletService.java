@@ -73,8 +73,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * WalletService handles all non trade specific wallet and bitcoin related services.
  * It startup the wallet app kit and initialized the wallet.
  */
-public class WalletService {
-    private static final Logger log = LoggerFactory.getLogger(WalletService.class);
+public class BitcoinWalletService {
+    private static final Logger log = LoggerFactory.getLogger(BitcoinWalletService.class);
 
     private static final long STARTUP_TIMEOUT_SEC = 60;
 
@@ -113,14 +113,14 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(RegTestHost regTestHost,
-                         TradeWalletService tradeWalletService,
-                         AddressEntryList addressEntryList,
-                         UserAgent userAgent,
-                         Preferences preferences,
-                         FeeService feeService,
-                         Socks5ProxyProvider socks5ProxyProvider,
-                         @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
+    public BitcoinWalletService(RegTestHost regTestHost,
+                                TradeWalletService tradeWalletService,
+                                AddressEntryList addressEntryList,
+                                UserAgent userAgent,
+                                Preferences preferences,
+                                FeeService feeService,
+                                Socks5ProxyProvider socks5ProxyProvider,
+                                @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;

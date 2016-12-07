@@ -167,7 +167,7 @@ public class TradeWalletService {
 
         checkNotNull(wallet, "Wallet must not be null");
         wallet.completeTx(sendRequest);
-        WalletService.printTxWithInputs("tradingFeeTx", tradingFeeTx);
+        BitcoinWalletService.printTxWithInputs("tradingFeeTx", tradingFeeTx);
 
         return tradingFeeTx;
     }
@@ -235,7 +235,7 @@ public class TradeWalletService {
 
         verifyTransaction(dummyTX);
 
-        WalletService.printTxWithInputs("dummyTX", dummyTX);
+        BitcoinWalletService.printTxWithInputs("dummyTX", dummyTX);
 
         List<RawTransactionInput> rawTransactionInputList = dummyTX.getInputs().stream()
                 .map(e -> {
@@ -403,7 +403,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedDepositTx);
 
-        WalletService.printTxWithInputs("preparedDepositTx", preparedDepositTx);
+        BitcoinWalletService.printTxWithInputs("preparedDepositTx", preparedDepositTx);
 
         return new PreparedDepositTxAndOffererInputs(offererRawTransactionInputs, preparedDepositTx.bitcoinSerialize());
     }
@@ -489,7 +489,7 @@ public class TradeWalletService {
 
         // Add all outputs from offerersDepositTx to depositTx
         offerersDepositTx.getOutputs().forEach(depositTx::addOutput);
-        WalletService.printTxWithInputs("offerersDepositTx", offerersDepositTx);
+        BitcoinWalletService.printTxWithInputs("offerersDepositTx", offerersDepositTx);
 
         // Sign inputs 
         int start = takerIsSeller ? buyerInputs.size() : 0;
@@ -503,7 +503,7 @@ public class TradeWalletService {
         verifyTransaction(depositTx);
         checkWalletConsistency();
 
-        WalletService.printTxWithInputs("depositTx", depositTx);
+        BitcoinWalletService.printTxWithInputs("depositTx", depositTx);
 
         // Broadcast depositTx
         checkNotNull(walletAppKit);
@@ -573,7 +573,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedPayoutTx);
 
-        WalletService.printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
+        BitcoinWalletService.printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
 
         return sellerSignature.encodeToDER();
     }
@@ -647,7 +647,7 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
-        WalletService.printTxWithInputs("payoutTx", payoutTx);
+        BitcoinWalletService.printTxWithInputs("payoutTx", payoutTx);
 
         verifyTransaction(payoutTx);
         checkWalletConsistency();
@@ -728,7 +728,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedPayoutTx);
 
-        WalletService.printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
+        BitcoinWalletService.printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
 
         return arbitratorSignature.encodeToDER();
     }
@@ -817,7 +817,7 @@ public class TradeWalletService {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         input.verify(input.getConnectedOutput());
 
-        WalletService.printTxWithInputs("disputed payoutTx", payoutTx);
+        BitcoinWalletService.printTxWithInputs("disputed payoutTx", payoutTx);
 
         // As we use lockTime the tx will not be relayed as it is not considered standard.
         // We need to broadcast on our own when we reached the block height. Both peers will do the broadcast.
@@ -942,7 +942,7 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
-        WalletService.printTxWithInputs("payoutTx", payoutTx);
+        BitcoinWalletService.printTxWithInputs("payoutTx", payoutTx);
 
         verifyTransaction(payoutTx);
         checkWalletConsistency();

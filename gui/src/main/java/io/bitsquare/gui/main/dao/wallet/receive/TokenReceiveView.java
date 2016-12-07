@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.dao.wallet.receive;
 
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -64,7 +64,7 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TokenReceiveView(WalletService walletService, BSFormatter formatter) {
+    private TokenReceiveView(BitcoinWalletService walletService, BSFormatter formatter) {
         tokenWallet = walletService.getTokenWallet();
         this.formatter = formatter;
         paymentLabelString = "Fund Bitsquare token wallet";

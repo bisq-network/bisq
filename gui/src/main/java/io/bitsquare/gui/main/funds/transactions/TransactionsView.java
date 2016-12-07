@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.funds.transactions;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple4;
 import io.bitsquare.common.util.Utilities;
@@ -79,7 +79,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final ObservableList<TransactionsListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<TransactionsListItem> sortedList = new SortedList<>(observableList);
 
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
@@ -99,7 +99,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TransactionsView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
+    private TransactionsView(BitcoinWalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                              ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager,
                              BSFormatter formatter, Preferences preferences, TradeDetailsWindow tradeDetailsWindow,
                              DisputeManager disputeManager, Stage stage,

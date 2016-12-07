@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.funds.transactions;
 
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.BSFormatter;
@@ -39,7 +39,7 @@ public class TransactionsListItem {
     private String dateString;
     private final Date date;
     private final String txId;
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final TxConfidenceIndicator txConfidenceIndicator;
     private final Tooltip tooltip;
     @Nullable
@@ -62,7 +62,7 @@ public class TransactionsListItem {
         txId = null;
     }
 
-    public TransactionsListItem(Transaction transaction, WalletService walletService, Optional<Tradable> tradableOptional, BSFormatter formatter) {
+    public TransactionsListItem(Transaction transaction, BitcoinWalletService walletService, Optional<Tradable> tradableOptional, BSFormatter formatter) {
         this.formatter = formatter;
         txId = transaction.getHashAsString();
         this.walletService = walletService;

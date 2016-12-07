@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.funds.reserved;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -58,7 +58,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @FXML
     TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn, confidenceColumn;
 
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final Preferences preferences;
@@ -77,7 +77,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ReservedView(WalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
+    private ReservedView(BitcoinWalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
                          BSFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;

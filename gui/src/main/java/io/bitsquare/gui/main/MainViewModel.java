@@ -30,8 +30,8 @@ import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.MarketPrice;
@@ -98,7 +98,7 @@ import java.util.stream.Collectors;
 public class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
 
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final ArbitratorManager arbitratorManager;
     private final P2PService p2PService;
@@ -176,7 +176,7 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MainViewModel(WalletService walletService, TradeWalletService tradeWalletService,
+    public MainViewModel(BitcoinWalletService walletService, TradeWalletService tradeWalletService,
                          PriceFeedService priceFeedService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,

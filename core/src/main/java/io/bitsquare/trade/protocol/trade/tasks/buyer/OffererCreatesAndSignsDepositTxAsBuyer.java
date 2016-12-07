@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
@@ -53,7 +53,7 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
 
             byte[] contractHash = Hash.getHash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
-            WalletService walletService = processModel.getWalletService();
+            BitcoinWalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry buyerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             buyerMultiSigAddressEntry.setLockedTradeAmount(buyerInputAmount.subtract(trade.getTxFee()));

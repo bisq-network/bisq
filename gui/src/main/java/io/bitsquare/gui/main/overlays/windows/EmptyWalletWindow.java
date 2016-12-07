@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.app.DevFlags;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.Restrictions;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
@@ -50,7 +50,7 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private static final Logger log = LoggerFactory.getLogger(EmptyWalletWindow.class);
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final WalletPasswordWindow walletPasswordWindow;
     private OpenOfferManager openOfferManager;
     private final BSFormatter formatter;
@@ -64,7 +64,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public EmptyWalletWindow(WalletService walletService, WalletPasswordWindow walletPasswordWindow,
+    public EmptyWalletWindow(BitcoinWalletService walletService, WalletPasswordWindow walletPasswordWindow,
                              OpenOfferManager openOfferManager, BSFormatter formatter) {
         this.walletService = walletService;
         this.walletPasswordWindow = walletPasswordWindow;

@@ -23,8 +23,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -208,14 +208,14 @@ public class BitsquareApp extends Application {
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFPSWindow();
                 } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    WalletService walletService = injector.getInstance(WalletService.class);
+                    BitcoinWalletService walletService = injector.getInstance(BitcoinWalletService.class);
                     if (walletService.getWallet() != null)
                         new ShowWalletDataWindow(walletService).information("Wallet raw data").show();
                     else
                         new Popup<>().warning("The wallet is not initialized yet").show();
                 } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
-                    WalletService walletService = injector.getInstance(WalletService.class);
+                    BitcoinWalletService walletService = injector.getInstance(BitcoinWalletService.class);
                     if (walletService.getWallet() != null)
                         new SpendFromDepositTxWindow(tradeWalletService).information("Emergency wallet tool").show();
                     else
@@ -402,12 +402,12 @@ public class BitsquareApp extends Application {
                 injector.getInstance(TradeManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletService.class).shutDownDone.addListener((ov, o, n) -> {
+                        injector.getInstance(BitcoinWalletService.class).shutDownDone.addListener((ov, o, n) -> {
                             bitsquareAppModule.close(injector);
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
-                        injector.getInstance(WalletService.class).shutDown();
+                        injector.getInstance(BitcoinWalletService.class).shutDown();
                     });
                 });
                 // we wait max 20 sec.

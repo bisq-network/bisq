@@ -22,8 +22,8 @@ import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
@@ -68,7 +68,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PendingTradesDataModel extends ActivatableDataModel {
     public final TradeManager tradeManager;
-    public final WalletService walletService;
+    public final BitcoinWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private FeeService feeService;
     private final User user;
@@ -94,7 +94,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, TradeWalletService tradeWalletService, FeeService feeService,
+    public PendingTradesDataModel(TradeManager tradeManager, BitcoinWalletService walletService, TradeWalletService tradeWalletService, FeeService feeService,
                                   User user, KeyRing keyRing, DisputeManager disputeManager, Preferences preferences, P2PService p2PService,
                                   Navigation navigation, WalletPasswordWindow walletPasswordWindow, NotificationCenter notificationCenter) {
         this.tradeManager = tradeManager;

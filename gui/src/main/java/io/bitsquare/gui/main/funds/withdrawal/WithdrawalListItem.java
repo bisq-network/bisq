@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.funds.withdrawal;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.control.Label;
@@ -30,12 +30,12 @@ public class WithdrawalListItem {
     private final BalanceListener balanceListener;
     private final Label balanceLabel;
     private final AddressEntry addressEntry;
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final BSFormatter formatter;
     private Coin balance;
     private final String addressString;
 
-    public WithdrawalListItem(AddressEntry addressEntry, WalletService walletService,
+    public WithdrawalListItem(AddressEntry addressEntry, BitcoinWalletService walletService,
                               BSFormatter formatter) {
         this.addressEntry = addressEntry;
         this.walletService = walletService;

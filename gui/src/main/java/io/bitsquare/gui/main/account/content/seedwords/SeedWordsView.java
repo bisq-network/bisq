@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.account.content.seedwords;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -54,7 +54,7 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 @FxmlView
 public class SeedWordsView extends ActivatableView<GridPane, Void> {
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final WalletPasswordWindow walletPasswordWindow;
     private Preferences preferences;
 
@@ -80,7 +80,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsView(WalletService walletService, WalletPasswordWindow walletPasswordWindow, Preferences preferences) {
+    private SeedWordsView(BitcoinWalletService walletService, WalletPasswordWindow walletPasswordWindow, Preferences preferences) {
         this.walletService = walletService;
         this.walletPasswordWindow = walletPasswordWindow;
         this.preferences = preferences;

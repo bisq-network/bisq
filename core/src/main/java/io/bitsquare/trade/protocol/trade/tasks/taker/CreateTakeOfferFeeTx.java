@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.tasks.taker;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.Trade;
@@ -49,7 +49,7 @@ public class CreateTakeOfferFeeTx extends TradeTask {
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
             Arbitrator selectedArbitrator = user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateTakeOfferFeeTx");
-            WalletService walletService = processModel.getWalletService();
+            BitcoinWalletService walletService = processModel.getWalletService();
             String id = model.getOffer().getId();
             Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createTradingFeeTx(
                     walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress(),

@@ -23,8 +23,8 @@ import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.messages.*;
 import io.bitsquare.arbitration.payload.Attachment;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.common.Timer;
@@ -69,7 +69,7 @@ public class DisputeManager {
     private static final Logger log = LoggerFactory.getLogger(DisputeManager.class);
 
     private final TradeWalletService tradeWalletService;
-    private final WalletService walletService;
+    private final BitcoinWalletService walletService;
     private final TradeManager tradeManager;
     private ClosedTradableManager closedTradableManager;
     private final OpenOfferManager openOfferManager;
@@ -93,7 +93,7 @@ public class DisputeManager {
     @Inject
     public DisputeManager(P2PService p2PService,
                           TradeWalletService tradeWalletService,
-                          WalletService walletService,
+                          BitcoinWalletService walletService,
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,

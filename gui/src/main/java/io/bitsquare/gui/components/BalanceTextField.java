@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.BlurType;
@@ -29,10 +29,10 @@ import org.bitcoinj.core.Coin;
 
 public class BalanceTextField extends AnchorPane {
 
-    private static WalletService walletService;
+    private static BitcoinWalletService walletService;
     private Coin targetAmount;
 
-    public static void setWalletService(WalletService walletService) {
+    public static void setWalletService(BitcoinWalletService walletService) {
         BalanceTextField.walletService = walletService;
     }
 

@@ -17,8 +17,8 @@
 
 package io.bitsquare.trade.protocol.placeoffer;
 
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
@@ -34,7 +34,7 @@ public class PlaceOfferModel implements Model {
     public final Offer offer;
     public final Coin reservedFundsForOffer;
     public final boolean useSavingsWallet;
-    public final WalletService walletService;
+    public final BitcoinWalletService walletService;
     public final TradeWalletService tradeWalletService;
     public final OfferBookService offerBookService;
     public final User user;
@@ -44,7 +44,7 @@ public class PlaceOfferModel implements Model {
     public PlaceOfferModel(Offer offer,
                            Coin reservedFundsForOffer,
                            boolean useSavingsWallet,
-                           WalletService walletService,
+                           BitcoinWalletService walletService,
                            TradeWalletService tradeWalletService,
                            OfferBookService offerBookService,
                            User user) {

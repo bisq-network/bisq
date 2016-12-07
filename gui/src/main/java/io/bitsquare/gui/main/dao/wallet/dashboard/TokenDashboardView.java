@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.dao.wallet.dashboard;
 
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.util.BSFormatter;
@@ -47,7 +47,7 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TokenDashboardView(WalletService walletService, BSFormatter formatter) {
+    private TokenDashboardView(BitcoinWalletService walletService, BSFormatter formatter) {
         tokenWallet = walletService.getTokenWallet();
         this.formatter = formatter;
     }
