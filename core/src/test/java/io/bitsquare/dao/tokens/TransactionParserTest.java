@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.util.Set;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
@@ -46,6 +46,15 @@ public class TransactionParserTest {
     private TxInput genesisInput;
     private TxOutput output2_2;
     private TxOutput output2_3;
+    private TxInput input3;
+    private TxOutput output3_1;
+    private TxOutput output3;
+    private TxOutput output4;
+    private TxInput input4;
+    private TxOutput output5_1;
+    private TxOutput output5_2;
+    private TxOutput output5;
+    private TxInput input5;
 
     @Before
     public void setup() {
@@ -69,47 +78,111 @@ public class TransactionParserTest {
         transactionParser.applyIsTokenForAllOutputs(createGenesisTx());
         assertTrue(transactionParser.isValidInput(genesisInput));
         assertTrue(transactionParser.isValidOutput(output1));
-        assertTrue(transactionParser.isValidOutput(output1));
-
-        transactionParser.applyIsTokenForAllOutputs(createTx1());
-        assertTrue(transactionParser.isValidInput(input1));
-        assertFalse(transactionParser.isValidOutput(output1));
-        assertTrue(transactionParser.isValidOutput(output1_1));
         assertTrue(transactionParser.isValidOutput(output2));
+        assertTrue(transactionParser.isValidOutput(output3));
+        assertTrue(transactionParser.isValidOutput(output4));
+        assertTrue(transactionParser.isValidOutput(output5));
 
-        transactionParser.applyIsTokenForAllOutputs(createTx2());
-        assertTrue(transactionParser.isValidInput(input1));
-        assertTrue(transactionParser.isValidInput(input2));
+        // output1 -> output1_1
+        transactionParser.applyIsTokenForAllOutputs(createTx1());
         assertFalse(transactionParser.isValidOutput(output1));
+        assertTrue(transactionParser.isValidOutput(output2));
+        assertTrue(transactionParser.isValidOutput(output3));
+        assertTrue(transactionParser.isValidOutput(output4));
+        assertTrue(transactionParser.isValidOutput(output5));
+        assertTrue(transactionParser.isValidInput(input1));
         assertTrue(transactionParser.isValidOutput(output1_1));
+
+
+        // output2 -> output2_1, output2_2, output2_3 (invalid)
+        transactionParser.applyIsTokenForAllOutputs(createTx2());
+        assertFalse(transactionParser.isValidOutput(output1));
         assertFalse(transactionParser.isValidOutput(output2));
+        assertTrue(transactionParser.isValidOutput(output3));
+        assertTrue(transactionParser.isValidOutput(output4));
+        assertTrue(transactionParser.isValidOutput(output5));
+        assertTrue(transactionParser.isValidInput(input1));
+        assertTrue(transactionParser.isValidOutput(output1_1));
+        assertTrue(transactionParser.isValidInput(input2));
         assertTrue(transactionParser.isValidOutput(output2_1));
         assertTrue(transactionParser.isValidOutput(output2_2));
         assertFalse(transactionParser.isValidOutput(output2_3));
+
+        // output3 + output4 -> output3_1
+        transactionParser.applyIsTokenForAllOutputs(createTx3());
+        assertFalse(transactionParser.isValidOutput(output1));
+        assertFalse(transactionParser.isValidOutput(output2));
+        assertFalse(transactionParser.isValidOutput(output3));
+        assertFalse(transactionParser.isValidOutput(output4));
+        assertTrue(transactionParser.isValidOutput(output5));
+        assertTrue(transactionParser.isValidInput(input1));
+        assertTrue(transactionParser.isValidOutput(output1_1));
+        assertTrue(transactionParser.isValidInput(input2));
+        assertTrue(transactionParser.isValidOutput(output2_1));
+        assertTrue(transactionParser.isValidOutput(output2_2));
+        assertFalse(transactionParser.isValidOutput(output2_3));
+        assertTrue(transactionParser.isValidOutput(output3_1));
+
+        // output5 -> output5_1, output5_2 (both invalid)
+        transactionParser.applyIsTokenForAllOutputs(createTx5());
+        assertFalse(transactionParser.isValidOutput(output1));
+        assertFalse(transactionParser.isValidOutput(output2));
+        assertFalse(transactionParser.isValidOutput(output3));
+        assertFalse(transactionParser.isValidOutput(output4));
+        assertFalse(transactionParser.isValidOutput(output5));
+        assertTrue(transactionParser.isValidInput(input1));
+        assertTrue(transactionParser.isValidOutput(output1_1));
+        assertTrue(transactionParser.isValidInput(input2));
+        assertTrue(transactionParser.isValidOutput(output2_1));
+        assertTrue(transactionParser.isValidOutput(output2_2));
+        assertFalse(transactionParser.isValidOutput(output2_3));
+        assertTrue(transactionParser.isValidOutput(output3_1));
+        assertFalse(transactionParser.isValidOutput(output5_1));
+        assertFalse(transactionParser.isValidOutput(output5_2));
     }
 
     @Test
     public void testGetAllUTXOs() {
         Tx genesisTx = createGenesisTx();
         transactionParser.applyIsTokenForAllOutputs(genesisTx);
-        List<TxOutput> allUTXOs = transactionParser.getAllUTXOs(genesisTx);
-        assertEquals(2, allUTXOs.size());
+        Set<TxOutput> allUTXOs = transactionParser.getAllUTXOs(genesisTx);
+        assertEquals(5, allUTXOs.size());
         allUTXOs.stream().forEach(output -> {
             log.debug("output " + output);
             assertTrue(transactionParser.isValidOutput(output));
         });
 
+        // output1 -> output1_1
         transactionParser.applyIsTokenForAllOutputs(createTx1());
         allUTXOs = transactionParser.getAllUTXOs(genesisTx);
-        assertEquals(2, allUTXOs.size());
+        assertEquals(5, allUTXOs.size());
         allUTXOs.stream().forEach(output -> {
             log.debug("output " + output);
             assertTrue(transactionParser.isValidOutput(output));
         });
 
+        // output2 -> output2_1, output2_2, output2_3 (invalid)
         transactionParser.applyIsTokenForAllOutputs(createTx2());
         allUTXOs = transactionParser.getAllUTXOs(genesisTx);
-        assertEquals(3, allUTXOs.size());
+        assertEquals(6, allUTXOs.size());
+        allUTXOs.stream().forEach(output -> {
+            log.debug("output " + output);
+            assertTrue(transactionParser.isValidOutput(output));
+        });
+
+        // output3 + output4 -> output3_1
+        transactionParser.applyIsTokenForAllOutputs(createTx3());
+        allUTXOs = transactionParser.getAllUTXOs(genesisTx);
+        assertEquals(5, allUTXOs.size());
+        allUTXOs.stream().forEach(output -> {
+            log.debug("output " + output);
+            assertTrue(transactionParser.isValidOutput(output));
+        });
+
+        // output5 -> output5_1, output5_2 (both invalid) renders output5 invalid as well (burned)
+        transactionParser.applyIsTokenForAllOutputs(createTx5());
+        allUTXOs = transactionParser.getAllUTXOs(genesisTx);
+        assertEquals(4, allUTXOs.size());
         allUTXOs.stream().forEach(output -> {
             log.debug("output " + output);
             assertTrue(transactionParser.isValidOutput(output));
@@ -148,6 +221,13 @@ public class TransactionParserTest {
         output2 = new TxOutput("addr_2", 2000);
         tx.addOutput(output2);
 
+        output3 = new TxOutput("addr_3", 300);
+        tx.addOutput(output3);
+        output4 = new TxOutput("addr_4", 500);
+        tx.addOutput(output4);
+        output5 = new TxOutput("addr_5", 333);
+        tx.addOutput(output5);
+
         txService.addTx(tx);
         return tx;
     }
@@ -181,8 +261,44 @@ public class TransactionParserTest {
         tx.addOutput(output2_1);
         output2_2 = new TxOutput("addr_2_2", 1500);
         tx.addOutput(output2_2);
-        output2_3 = new TxOutput("addr_2_3", 200); // this will be invalid as w spent all token balance in the first 2 outputs
+        output2_3 = new TxOutput("addr_2_3", 5000); // this will be invalid as we spent the token balance in the first 2 outputs, remaining 3000 is not enough
         tx.addOutput(output2_3);
+
+        txService.addTx(tx);
+        return tx;
+    }
+
+    private Tx createTx3() {
+        Tx tx = new Tx("id_tx2");
+
+        input3 = new TxInput(genesisTx, output3);
+        tx.addInput(input3);
+        input4 = new TxInput(genesisTx, output4);
+        tx.addInput(input4);
+
+        TxInput feeInput = new TxInput(new Tx("id_fee_3", null, null), null);
+        tx.addInput(feeInput);
+
+        output3_1 = new TxOutput("addr_3_1", 800);
+        tx.addOutput(output3_1);
+
+        txService.addTx(tx);
+        return tx;
+    }
+
+    private Tx createTx5() {
+        Tx tx = new Tx("id_tx5");
+
+        input5 = new TxInput(genesisTx, output5);
+        tx.addInput(input5);
+
+        TxInput feeInput = new TxInput(new Tx("id_fee_5", null, null), null);
+        tx.addInput(feeInput);
+
+        output5_1 = new TxOutput("addr_5_1", 5000); // invalid as only 333 available
+        tx.addOutput(output5_1);
+        output5_2 = new TxOutput("addr_5_2", 333); // would match value but invalid because it is not first token output
+        tx.addOutput(output5_2);
 
         txService.addTx(tx);
         return tx;

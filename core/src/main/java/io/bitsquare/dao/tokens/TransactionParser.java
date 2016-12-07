@@ -21,8 +21,9 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TransactionParser {
     private static final Logger log = LoggerFactory.getLogger(TransactionParser.class);
@@ -68,8 +69,8 @@ public class TransactionParser {
         }
     }
 
-    public List<TxOutput> getAllUTXOs(Tx tx) {
-        List<TxOutput> allUTXOs = new ArrayList<>();
+    public Set<TxOutput> getAllUTXOs(Tx tx) {
+        Set<TxOutput> allUTXOs = new HashSet<>();
         tx.outputs.stream()
                 .filter(e -> e.isToken)
                 .forEach(output -> {
