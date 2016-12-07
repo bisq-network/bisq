@@ -131,6 +131,14 @@
     -fx-image: url("../../../images/nav/account_active.png");
 }
 
+#image-nav-dao {
+    -fx-image: url("../../../images/nav/dao.png");
+}
+
+#image-nav-dao-active {
+    -fx-image: url("../../../images/nav/dao_active.png");
+}
+
 /* account*/
 #image-tick {
     -fx-image: url("../../../images/tick.png");

@@ -28,6 +28,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.main.account.AccountView;
+import io.bitsquare.gui.main.dao.DaoView;
 import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.market.MarketView;
@@ -133,6 +134,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         ToggleButton disputesButton = new NavButton(DisputesView.class, "Support");
         ToggleButton settingsButton = new NavButton(SettingsView.class, "Settings");
         ToggleButton accountButton = new NavButton(AccountView.class, "Account");
+        ToggleButton daoButton = new NavButton(DaoView.class, "DAO");
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane disputesButtonHolder = new Pane(disputesButton);
 
@@ -175,7 +177,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         lockedBalanceBox.first.textProperty().bind(model.lockedBalance);
 
         HBox rightNavPane = new HBox(marketPriceBox.third, availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,
-                settingsButton, accountButton) {{
+                settingsButton, accountButton, daoButton) {{
             setRightAnchor(this, 10d);
             setTopAnchor(this, 0d);
         }};
