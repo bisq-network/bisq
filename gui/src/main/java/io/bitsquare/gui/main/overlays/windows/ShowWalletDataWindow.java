@@ -34,15 +34,15 @@ import static io.bitsquare.gui.util.FormBuilder.addLabelTextArea;
 
 public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
     private static final Logger log = LoggerFactory.getLogger(ShowWalletDataWindow.class);
-    private BitcoinWalletService walletService;
+    private BitcoinWalletService bitcoinWalletService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ShowWalletDataWindow(BitcoinWalletService walletService) {
-        this.walletService = walletService;
+    public ShowWalletDataWindow(BitcoinWalletService bitcoinWalletService) {
+        this.bitcoinWalletService = bitcoinWalletService;
         type = Type.Attention;
     }
 
@@ -86,10 +86,10 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         isUpdateCheckBox.setSelected(false);
 
         isUpdateCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            textArea.setText(walletService.exportWalletData(isUpdateCheckBox.isSelected()));
+            textArea.setText(bitcoinWalletService.exportWalletData(isUpdateCheckBox.isSelected()));
         });
 
-        textArea.setText(walletService.exportWalletData(isUpdateCheckBox.isSelected()));
+        textArea.setText(bitcoinWalletService.exportWalletData(isUpdateCheckBox.isSelected()));
 
         actionButtonText("Copy to clipboard");
         onAction(() -> Utilities.copyToClipboard(textArea.getText()));

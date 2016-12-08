@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.account.content.password;
 
 import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletSetup;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.crypto.ScryptUtil;
@@ -47,6 +48,7 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 public class PasswordView extends ActivatableView<GridPane, Void> {
 
     private final PasswordValidator passwordValidator;
+    private final WalletSetup walletSetup;
     private final BitcoinWalletService walletService;
     private final TradeWalletService tradeWalletService;
 
@@ -65,8 +67,9 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PasswordView(PasswordValidator passwordValidator, BitcoinWalletService walletService, TradeWalletService tradeWalletService) {
+    private PasswordView(PasswordValidator passwordValidator, WalletSetup walletSetup, BitcoinWalletService walletService, TradeWalletService tradeWalletService) {
         this.passwordValidator = passwordValidator;
+        this.walletSetup = walletSetup;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
     }
@@ -113,6 +116,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
                 if (wallet.isEncrypted()) {
                     if (wallet.checkAESKey(aesKey)) {
+                        walletSetup.decryptWallets(aesKey);
                         walletService.decryptWallet(aesKey);
                         tradeWalletService.setAesKey(null);
                         new Popup()
@@ -120,7 +124,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                                 .show();
                         passwordField.setText("");
                         repeatedPasswordField.setText("");
-                        walletService.backupWallet();
+                        walletSetup.backupWallets();
                     } else {
                         pwButton.setDisable(false);
                         new Popup()
@@ -130,6 +134,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                     }
                 } else {
                     // we save the key for the trade wallet as we don't require passwords here
+                    walletSetup.encryptWallets(keyCrypterScrypt, aesKey);
                     walletService.encryptWallet(keyCrypterScrypt, aesKey);
                     tradeWalletService.setAesKey(aesKey);
                     new Popup()
@@ -137,8 +142,8 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                             .show();
                     passwordField.setText("");
                     repeatedPasswordField.setText("");
-                    walletService.clearBackup();
-                    walletService.backupWallet();
+                    walletSetup.clearBackup();
+                    walletSetup.backupWallets();
                 }
                 setText();
             });

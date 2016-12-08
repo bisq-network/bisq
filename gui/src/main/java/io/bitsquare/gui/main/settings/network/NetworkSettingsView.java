@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.settings.network;
 
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.WalletSetup;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.Activatable;
@@ -71,6 +72,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private final Preferences preferences;
     private Clock clock;
     private final BSFormatter formatter;
+    private final WalletSetup walletSetup;
     private final P2PService p2PService;
     private Subscription numP2PPeersSubscription;
     private Subscription bitcoinPeersSubscription;
@@ -81,10 +83,11 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private String btcNodesPreFocusText;
 
     @Inject
-    public NetworkSettingsView(BitcoinWalletService walletService, P2PService p2PService, Preferences preferences, Clock clock,
+    public NetworkSettingsView(BitcoinWalletService walletService, WalletSetup walletSetup, P2PService p2PService, Preferences preferences, Clock clock,
                                BSFormatter formatter) {
         super();
         this.walletService = walletService;
+        this.walletSetup = walletSetup;
         this.p2PService = p2PService;
         this.preferences = preferences;
         this.clock = clock;
@@ -134,7 +137,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             }
         });
 
-        bitcoinPeersSubscription = EasyBind.subscribe(walletService.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
+        bitcoinPeersSubscription = EasyBind.subscribe(walletSetup.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
 
         nodeAddressSubscription = EasyBind.subscribe(p2PService.getNetworkNode().nodeAddressProperty(),
                 nodeAddress -> onionAddress.setText(nodeAddress == null ? "Not known yet..." : p2PService.getAddress().getFullAddress()));
@@ -201,7 +204,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     private void updateBitcoinPeersTextArea() {
         bitcoinPeersTextArea.clear();
-        List<Peer> peerList = walletService.connectedPeersProperty().get();
+        List<Peer> peerList = walletSetup.connectedPeersProperty().get();
         if (peerList != null) {
             peerList.stream().forEach(e -> {
                 if (bitcoinPeersTextArea.getText().length() > 0)

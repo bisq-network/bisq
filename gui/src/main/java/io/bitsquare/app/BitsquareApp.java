@@ -25,6 +25,7 @@ import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletSetup;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -407,6 +408,7 @@ public class BitsquareApp extends Application {
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
+                        injector.getInstance(WalletSetup.class).shutDown();
                         injector.getInstance(BitcoinWalletService.class).shutDown();
                     });
                 });

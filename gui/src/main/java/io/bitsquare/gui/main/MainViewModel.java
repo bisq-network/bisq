@@ -32,6 +32,7 @@ import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BitcoinWalletService;
 import io.bitsquare.btc.TradeWalletService;
+import io.bitsquare.btc.WalletSetup;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.MarketPrice;
@@ -157,6 +158,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2pNetworkLabelId = new SimpleStringProperty("footer-pane");
 
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
+    private WalletSetup walletSetup;
     final PriceFeedService priceFeedService;
     private final User user;
     private int numBtcPeers = 0;
@@ -176,7 +178,7 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MainViewModel(BitcoinWalletService walletService, TradeWalletService tradeWalletService,
+    public MainViewModel(WalletSetup walletSetup, BitcoinWalletService walletService, TradeWalletService tradeWalletService,
                          PriceFeedService priceFeedService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
@@ -184,6 +186,7 @@ public class MainViewModel implements ViewModel {
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, AddBitcoinNodesWindow addBitcoinNodesWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
+        this.walletSetup = walletSetup;
         this.priceFeedService = priceFeedService;
         this.user = user;
         this.walletService = walletService;
@@ -433,7 +436,7 @@ public class MainViewModel implements ViewModel {
     private void initWalletService() {
         Log.traceCall();
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
-        btcInfoBinding = EasyBind.combine(walletService.downloadPercentageProperty(), walletService.numPeersProperty(), walletServiceException,
+        btcInfoBinding = EasyBind.combine(walletSetup.downloadPercentageProperty(), walletSetup.numPeersProperty(), walletServiceException,
                 (downloadPercentage, numPeers, exception) -> {
                     String result = "";
                     if (exception == null) {
@@ -478,9 +481,9 @@ public class MainViewModel implements ViewModel {
             btcInfo.set(newValue);
         });
 
-        walletService.initialize(null,
+        walletSetup.initialize(null,
                 () -> {
-                    numBtcPeers = walletService.numPeersProperty().get();
+                    numBtcPeers = walletSetup.numPeersProperty().get();
 
                     if (walletService.getWallet().isEncrypted()) {
                         if (p2pNetWorkReady.get())
@@ -488,7 +491,7 @@ public class MainViewModel implements ViewModel {
 
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {
-                                    walletService.setAesKey(aesKey);
+                                    walletSetup.setAesKey(aesKey);
                                     tradeWalletService.setAesKey(aesKey);
                                     walletInitialized.set(true);
                                 })
@@ -745,7 +748,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void setupBtcNumPeersWatcher() {
-        walletService.numPeersProperty().addListener((observable, oldValue, newValue) -> {
+        walletSetup.numPeersProperty().addListener((observable, oldValue, newValue) -> {
             int numPeers = (int) newValue;
             if ((int) oldValue > 0 && numPeers == 0) {
                 if (checkNumberOfBtcPeersTimer != null)
@@ -753,7 +756,7 @@ public class MainViewModel implements ViewModel {
 
                 checkNumberOfBtcPeersTimer = UserThread.runAfter(() -> {
                     // check again numPeers
-                    if (walletService.numPeersProperty().get() == 0) {
+                    if (walletSetup.numPeersProperty().get() == 0) {
                         walletServiceErrorMsg.set("You lost the connection to all bitcoin network peers.\n" +
                                 "Maybe you lost your internet connection or your computer was in standby mode.");
                     } else {
