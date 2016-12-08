@@ -57,7 +57,7 @@ public class BitcoinModule extends AppModule {
 
         bind(AddressEntryList.class).in(Singleton.class);
         bind(WalletSetup.class).in(Singleton.class);
-        bind(BitcoinWalletService.class).in(Singleton.class);
+        bind(BtcWalletService.class).in(Singleton.class);
         bind(SquWalletService.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);
         bind(BlockchainService.class).in(Singleton.class);

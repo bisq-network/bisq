@@ -19,7 +19,7 @@ package io.bitsquare.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
@@ -43,9 +43,9 @@ public class TxIdTextField extends AnchorPane {
         TxIdTextField.preferences = preferences;
     }
 
-    private static BitcoinWalletService walletService;
+    private static BtcWalletService walletService;
 
-    public static void setWalletService(BitcoinWalletService walletService) {
+    public static void setWalletService(BtcWalletService walletService) {
         TxIdTextField.walletService = walletService;
     }
 

@@ -96,7 +96,7 @@ import java.util.stream.Collectors;
 public class MainViewModel implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
 
-    private final BitcoinWalletService walletService;
+    private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final ArbitratorManager arbitratorManager;
     private final P2PService p2PService;
@@ -176,7 +176,7 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MainViewModel(WalletSetup walletSetup, BitcoinWalletService walletService, TradeWalletService tradeWalletService,
+    public MainViewModel(WalletSetup walletSetup, BtcWalletService walletService, TradeWalletService tradeWalletService,
                          SquWalletService squWalletService, PriceFeedService priceFeedService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,

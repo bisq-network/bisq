@@ -25,7 +25,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.taskrunner.Model;
@@ -228,7 +228,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void init(P2PService p2PService,
-                     BitcoinWalletService walletService,
+                     BtcWalletService walletService,
                      TradeWalletService tradeWalletService,
                      ArbitratorManager arbitratorManager,
                      TradeManager tradeManager,

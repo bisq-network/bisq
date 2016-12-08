@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.funds.deposit;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.UserThread;
@@ -82,7 +82,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private Label addressLabel, amountLabel;
     private InputTextField amountTextField;
 
-    private final BitcoinWalletService walletService;
+    private final BtcWalletService walletService;
     private FeeService feeService;
     private final BSFormatter formatter;
     private final Preferences preferences;
@@ -99,7 +99,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private DepositView(BitcoinWalletService walletService,
+    private DepositView(BtcWalletService walletService,
                         FeeService feeService,
                         BSFormatter formatter,
                         Preferences preferences) {

@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Splitter;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.crypto.ScryptUtil;
@@ -67,7 +67,7 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private static final Logger log = LoggerFactory.getLogger(WalletPasswordWindow.class);
-    private final BitcoinWalletService walletService;
+    private final BtcWalletService walletService;
     private Button unlockButton;
     private AesKeyHandler aesKeyHandler;
     private PasswordTextField passwordTextField;
@@ -95,7 +95,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     @Inject
-    public WalletPasswordWindow(BitcoinWalletService walletService) {
+    public WalletPasswordWindow(BtcWalletService walletService) {
         this.walletService = walletService;
         type = Type.Attention;
         width = 800;

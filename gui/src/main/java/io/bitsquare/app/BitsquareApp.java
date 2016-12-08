@@ -23,7 +23,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.SquWalletService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletSetup;
@@ -210,14 +210,14 @@ public class BitsquareApp extends Application {
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFPSWindow();
                 } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    BitcoinWalletService walletService = injector.getInstance(BitcoinWalletService.class);
+                    BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
                     if (walletService.getWallet() != null)
                         new ShowWalletDataWindow(walletService).information("Wallet raw data").show();
                     else
                         new Popup<>().warning("The wallet is not initialized yet").show();
                 } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
-                    BitcoinWalletService walletService = injector.getInstance(BitcoinWalletService.class);
+                    BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
                     if (walletService.getWallet() != null)
                         new SpendFromDepositTxWindow(tradeWalletService).information("Emergency wallet tool").show();
                     else
@@ -410,7 +410,7 @@ public class BitsquareApp extends Application {
                             resultHandler.handleResult();
                         });
                         injector.getInstance(WalletSetup.class).shutDown();
-                        injector.getInstance(BitcoinWalletService.class).shutDown();
+                        injector.getInstance(BtcWalletService.class).shutDown();
                         injector.getInstance(SquWalletService.class).shutDown();
                     });
                 });

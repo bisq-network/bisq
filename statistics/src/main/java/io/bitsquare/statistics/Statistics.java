@@ -8,7 +8,7 @@ import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.SquWalletService;
 import io.bitsquare.btc.WalletSetup;
 import io.bitsquare.btc.provider.price.PriceFeedService;
@@ -125,7 +125,7 @@ public class Statistics {
                             resultHandler.handleResult();
                         });
                         injector.getInstance(WalletSetup.class).shutDown();
-                        injector.getInstance(BitcoinWalletService.class).shutDown();
+                        injector.getInstance(BtcWalletService.class).shutDown();
                         injector.getInstance(SquWalletService.class).shutDown();
                     });
                 });

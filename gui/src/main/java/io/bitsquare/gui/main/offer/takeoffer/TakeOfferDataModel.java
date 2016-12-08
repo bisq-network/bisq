@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -60,7 +60,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class TakeOfferDataModel extends ActivatableDataModel {
     private final TradeManager tradeManager;
     final TradeWalletService tradeWalletService;
-    final BitcoinWalletService walletService;
+    final BtcWalletService walletService;
     private final User user;
     private final FeeService feeService;
     private final Preferences preferences;
@@ -103,7 +103,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     @Inject
     TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
-                       BitcoinWalletService walletService, User user, FeeService feeService,
+                       BtcWalletService walletService, User user, FeeService feeService,
                        Preferences preferences, PriceFeedService priceFeedService, BlockchainService blockchainService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;

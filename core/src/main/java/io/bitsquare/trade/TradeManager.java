@@ -22,7 +22,7 @@ import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.common.UserThread;
@@ -81,7 +81,7 @@ public class TradeManager {
 
     private final User user;
     private final KeyRing keyRing;
-    private final BitcoinWalletService walletService;
+    private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
@@ -105,7 +105,7 @@ public class TradeManager {
     @Inject
     public TradeManager(User user,
                         KeyRing keyRing,
-                        BitcoinWalletService walletService,
+                        BtcWalletService walletService,
                         TradeWalletService tradeWalletService,
                         OpenOfferManager openOfferManager,
                         ClosedTradableManager closedTradableManager,

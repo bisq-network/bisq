@@ -49,8 +49,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * WalletService handles all non trade specific wallet and bitcoin related services.
  * It startup the wallet app kit and initialized the wallet.
  */
-public class BitcoinWalletService extends WalletService {
-    private static final Logger log = LoggerFactory.getLogger(BitcoinWalletService.class);
+public class BtcWalletService extends WalletService {
+    private static final Logger log = LoggerFactory.getLogger(BtcWalletService.class);
 
     private final AddressEntryList addressEntryList;
 
@@ -60,10 +60,10 @@ public class BitcoinWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BitcoinWalletService(WalletSetup walletSetup,
-                                AddressEntryList addressEntryList,
-                                Preferences preferences,
-                                FeeService feeService) {
+    public BtcWalletService(WalletSetup walletSetup,
+                            AddressEntryList addressEntryList,
+                            Preferences preferences,
+                            FeeService feeService) {
         super(walletSetup,
                 preferences,
                 feeService);

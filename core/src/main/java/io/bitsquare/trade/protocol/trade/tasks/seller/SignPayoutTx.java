@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
@@ -54,7 +54,7 @@ public class SignPayoutTx extends TradeTask {
                 lockTimeAsBlockHeight = processModel.getTradeWalletService().getLastBlockSeenHeight() + lockTime;
             trade.setLockTimeAsBlockHeight(lockTimeAsBlockHeight);
 
-            BitcoinWalletService walletService = processModel.getWalletService();
+            BtcWalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
             byte[] payoutTxSignature = processModel.getTradeWalletService().sellerSignsPayoutTx(
                     trade.getDepositTx(),

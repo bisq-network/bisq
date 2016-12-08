@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.funds.reserved;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
@@ -40,12 +40,12 @@ public class ReservedListItem {
     private final Label balanceLabel;
     private final OpenOffer openOffer;
     private final AddressEntry addressEntry;
-    private final BitcoinWalletService walletService;
+    private final BtcWalletService walletService;
     private final BSFormatter formatter;
     private final String addressString;
     private Coin balance;
 
-    public ReservedListItem(OpenOffer openOffer, AddressEntry addressEntry, BitcoinWalletService walletService, BSFormatter formatter) {
+    public ReservedListItem(OpenOffer openOffer, AddressEntry addressEntry, BtcWalletService walletService, BSFormatter formatter) {
         this.openOffer = openOffer;
         this.addressEntry = addressEntry;
         this.walletService = walletService;

@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.taskrunner.TaskRunner;
@@ -51,7 +51,7 @@ public class SetupDepositBalanceListener extends TradeTask {
         try {
             runInterceptHook();
 
-            BitcoinWalletService walletService = processModel.getWalletService();
+            BtcWalletService walletService = processModel.getWalletService();
             Address address = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             balanceListener = new BalanceListener(address) {
                 @Override
