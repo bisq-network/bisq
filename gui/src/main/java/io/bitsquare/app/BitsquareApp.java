@@ -24,6 +24,7 @@ import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.SquWalletService;
 import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletSetup;
 import io.bitsquare.common.CommonOptionKeys;
@@ -403,13 +404,14 @@ public class BitsquareApp extends Application {
                 injector.getInstance(TradeManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(BitcoinWalletService.class).shutDownDone.addListener((ov, o, n) -> {
+                        injector.getInstance(WalletSetup.class).shutDownDone.addListener((ov, o, n) -> {
                             bitsquareAppModule.close(injector);
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
                         injector.getInstance(WalletSetup.class).shutDown();
                         injector.getInstance(BitcoinWalletService.class).shutDown();
+                        injector.getInstance(SquWalletService.class).shutDown();
                     });
                 });
                 // we wait max 20 sec.

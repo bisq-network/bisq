@@ -21,18 +21,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import io.bitsquare.btc.listeners.AddressConfidenceListener;
-import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
-import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.network.Socks5ProxyProvider;
-import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
-import javafx.beans.property.*;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
@@ -44,10 +37,10 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.File;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -56,39 +49,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * WalletService handles all non trade specific wallet and bitcoin related services.
  * It startup the wallet app kit and initialized the wallet.
  */
-public class BitcoinWalletService {
+public class BitcoinWalletService extends WalletService {
     private static final Logger log = LoggerFactory.getLogger(BitcoinWalletService.class);
 
-    private static final long STARTUP_TIMEOUT_SEC = 60;
-
-    private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
-    private final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
-    private final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
-
-    private final DownloadListener downloadListener = new DownloadListener();
-    private final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
-
-    private WalletSetup walletSetup;
-    private final RegTestHost regTestHost;
-    private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
-    private final Preferences preferences;
-    private final FeeService feeService;
-    private final Socks5ProxyProvider socks5ProxyProvider;
-    private final NetworkParameters params;
-    private final File walletDir;
-    private final UserAgent userAgent;
-
-    private BitSquareWalletAppKit walletAppKit;
-    private Wallet wallet;
-    private Wallet tokenWallet;
-    private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
-    private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
-    public final BooleanProperty shutDownDone = new SimpleBooleanProperty();
-    private final Storage<Long> storage;
-    private final Long bloomFilterTweak;
-    private String walletFileName = "Bitsquare";
-    private String tokenWalletFileName = "SQU";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,39 +61,19 @@ public class BitcoinWalletService {
 
     @Inject
     public BitcoinWalletService(WalletSetup walletSetup,
-                                RegTestHost regTestHost,
-                                TradeWalletService tradeWalletService,
                                 AddressEntryList addressEntryList,
-                                UserAgent userAgent,
                                 Preferences preferences,
-                                FeeService feeService,
-                                Socks5ProxyProvider socks5ProxyProvider,
-                                @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
-        this.walletSetup = walletSetup;
-        this.regTestHost = regTestHost;
-        this.tradeWalletService = tradeWalletService;
-        this.addressEntryList = addressEntryList;
-        this.preferences = preferences;
-        this.feeService = feeService;
-        this.socks5ProxyProvider = socks5ProxyProvider;
-        this.params = preferences.getBitcoinNetwork().getParameters();
-        walletDir = new File(appDir, "bitcoin");
-        this.userAgent = userAgent;
+                                FeeService feeService) {
+        super(walletSetup,
+                preferences,
+                feeService);
 
-        storage = new Storage<>(walletDir);
-        Long persisted = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
-        if (persisted != null) {
-            bloomFilterTweak = persisted;
-        } else {
-            bloomFilterTweak = new Random().nextLong();
-            storage.queueUpForSave(bloomFilterTweak, 100);
-        }
+        this.addressEntryList = addressEntryList;
 
         walletSetup.addSetupCompletedHandler(() -> {
             wallet = walletSetup.getWallet();
             wallet.addEventListener(walletEventListener);
         });
-
     }
 
 
@@ -138,30 +82,15 @@ public class BitcoinWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public void shutDown() {
-        if (wallet != null)
-            wallet.removeEventListener(walletEventListener);
-    }
-
     public String exportWalletData(boolean includePrivKeys) {
         StringBuilder addressEntryListData = new StringBuilder();
         getAddressEntryListAsImmutableList().stream().forEach(e -> addressEntryListData.append(e.toString()).append("\n"));
         return "BitcoinJ wallet:\n" +
-                wallet.toString(includePrivKeys, true, true, walletAppKit.chain()) + "\n\n" +
+                wallet.toString(includePrivKeys, true, true, walletSetup.chain()) + "\n\n" +
                 "Bitsquare address entry list:\n" +
                 addressEntryListData.toString() +
                 "All pubkeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
-    }
-    public String exportTokenWalletData(boolean includePrivKeys) {
-        StringBuilder addressEntryListData = new StringBuilder();
-        getAddressEntryListAsImmutableList().stream().forEach(e -> addressEntryListData.append(e.toString()).append("\n"));
-        return "BitcoinJ SQU wallet:\n" +
-                tokenWallet.toString(includePrivKeys, true, true, walletAppKit.chain()) + "\n\n" +
-                "SQU address entry list:\n" +
-                addressEntryListData.toString() +
-                "All pubkeys as hex:\n" +
-                tokenWallet.printAllPubKeysAsHex();
     }
 
     //TODO
@@ -197,35 +126,6 @@ public class BitcoinWalletService {
                 e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
         });
         addressEntryList.queueUpForSave();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void addAddressConfidenceListener(AddressConfidenceListener listener) {
-        addressConfidenceListeners.add(listener);
-    }
-
-    public void removeAddressConfidenceListener(AddressConfidenceListener listener) {
-        addressConfidenceListeners.remove(listener);
-    }
-
-    public void addTxConfidenceListener(TxConfidenceListener listener) {
-        txConfidenceListeners.add(listener);
-    }
-
-    public void removeTxConfidenceListener(TxConfidenceListener listener) {
-        txConfidenceListeners.remove(listener);
-    }
-
-    public void addBalanceListener(BalanceListener listener) {
-        balanceListeners.add(listener);
-    }
-
-    public void removeBalanceListener(BalanceListener listener) {
-        balanceListeners.remove(listener);
     }
 
 
@@ -315,128 +215,13 @@ public class BitcoinWalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // TransactionConfidence
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public TransactionConfidence getConfidenceForAddress(Address address) {
-        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
-        if (wallet != null) {
-            Set<Transaction> transactions = wallet.getTransactions(true);
-            if (transactions != null) {
-                transactionConfidenceList.addAll(transactions.stream().map(tx ->
-                        getTransactionConfidence(tx, address)).collect(Collectors.toList()));
-            }
-        }
-        return getMostRecentConfidence(transactionConfidenceList);
-    }
-
-    public TransactionConfidence getConfidenceForTxId(String txId) {
-        if (wallet != null) {
-            Set<Transaction> transactions = wallet.getTransactions(true);
-            for (Transaction tx : transactions) {
-                if (tx.getHashAsString().equals(txId))
-                    return tx.getConfidence();
-            }
-        }
-        return null;
-    }
-
-    private TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
-        List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
-        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
-
-        mergedOutputs.stream().filter(e -> e.getScriptPubKey().isSentToAddress() ||
-                e.getScriptPubKey().isPayToScriptHash()).forEach(transactionOutput -> {
-            Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
-            if (address.equals(outputAddress)) {
-                transactionConfidenceList.add(tx.getConfidence());
-            }
-        });
-        return getMostRecentConfidence(transactionConfidenceList);
-    }
-
-
-    private List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx) {
-        List<TransactionOutput> transactionOutputs = tx.getOutputs();
-        List<TransactionOutput> connectedOutputs = new ArrayList<>();
-
-        // add all connected outputs from any inputs as well
-        List<TransactionInput> transactionInputs = tx.getInputs();
-        for (TransactionInput transactionInput : transactionInputs) {
-            TransactionOutput transactionOutput = transactionInput.getConnectedOutput();
-            if (transactionOutput != null) {
-                connectedOutputs.add(transactionOutput);
-            }
-        }
-
-        List<TransactionOutput> mergedOutputs = new ArrayList<>();
-        mergedOutputs.addAll(transactionOutputs);
-        mergedOutputs.addAll(connectedOutputs);
-        return mergedOutputs;
-    }
-
-
-    private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
-        TransactionConfidence transactionConfidence = null;
-        for (TransactionConfidence confidence : transactionConfidenceList) {
-            if (confidence != null) {
-                if (transactionConfidence == null ||
-                        confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING) ||
-                        (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) &&
-                                transactionConfidence.getConfidenceType().equals(
-                                        TransactionConfidence.ConfidenceType.BUILDING) &&
-                                confidence.getDepthInBlocks() < transactionConfidence.getDepthInBlocks())) {
-                    transactionConfidence = confidence;
-                }
-            }
-        }
-        return transactionConfidence;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Balance
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // BalanceType.AVAILABLE
-    public Coin getAvailableBalance() {
-        return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
-    }
-
-    public Coin getBalanceForAddress(Address address) {
-        return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(), address) : Coin.ZERO;
-    }
-
-    private Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
-        Coin balance = Coin.ZERO;
-        for (TransactionOutput transactionOutput : transactionOutputs) {
-            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-                if (addressOutput.equals(address))
-                    balance = balance.add(transactionOutput.getValue());
-            }
-        }
-        return balance;
-    }
 
     public Coin getSavingWalletBalance() {
         return Coin.valueOf(getFundedAvailableAddressEntries().stream()
                 .mapToLong(addressEntry -> getBalanceForAddress(addressEntry.getAddress()).value)
                 .sum());
-    }
-
-    public int getNumTxOutputsForAddress(Address address) {
-        List<TransactionOutput> transactionOutputs = new ArrayList<>();
-        wallet.getTransactions(true).stream().forEach(t -> transactionOutputs.addAll(t.getOutputs()));
-        int outputs = 0;
-        for (TransactionOutput transactionOutput : transactionOutputs) {
-            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-                if (addressOutput.equals(address))
-                    outputs++;
-            }
-        }
-        return outputs;
     }
 
 
@@ -536,8 +321,7 @@ public class BitcoinWalletService {
                             // in some cases getFee did not calculate correctly and we still get an InsufficientMoneyException
                             log.warn("We still have a missing fee " + (e.missing != null ? e.missing.toFriendlyString() : ""));
 
-                            if (e != null)
-                                amount = amount.subtract(e.missing);
+                            amount = amount.subtract(e.missing);
                             newTransaction.clearOutputs();
                             newTransaction.addOutput(amount, toAddress);
 
@@ -586,14 +370,6 @@ public class BitcoinWalletService {
                 errorMessageHandler.handleErrorMessage("One of the inputs of that transaction has been already double spent.");
             }
         }
-    }
-
-    private Coin getTxFeeForWithdrawalPerByte() {
-        Coin fee = (preferences.getUseCustomWithdrawalTxFee()) ?
-                Coin.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
-                feeService.getTxFeePerByte();
-        log.info("tx fee = " + fee.toFriendlyString());
-        return fee;
     }
 
 
@@ -698,22 +474,6 @@ public class BitcoinWalletService {
     // Withdrawal Send
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String sendFunds(String fromAddress,
-                            String toAddress,
-                            Coin receiverAmount,
-                            Coin fee,
-                            @Nullable KeyParameter aesKey,
-                            AddressEntry.Context context,
-                            FutureCallback<Transaction> callback) throws AddressFormatException,
-            AddressEntryException, InsufficientMoneyException {
-        Wallet.SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
-        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        Futures.addCallback(sendResult.broadcastComplete, callback);
-
-        printTxWithInputs("sendFunds", sendResult.tx);
-        return sendResult.tx.getHashAsString();
-    }
-
     public String sendFundsForMultipleAddresses(Set<String> fromAddresses,
                                                 String toAddress,
                                                 Coin receiverAmount,
@@ -731,32 +491,13 @@ public class BitcoinWalletService {
         return sendResult.tx.getHashAsString();
     }
 
-    public void emptyWallet(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler)
-            throws InsufficientMoneyException, AddressFormatException {
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.emptyWallet(new Address(params, toAddress));
-        sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
-        sendRequest.aesKey = aesKey;
-        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        printTxWithInputs("emptyWallet", sendResult.tx);
-        Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
-            @Override
-            public void onSuccess(Transaction result) {
-                resultHandler.handleResult();
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable t) {
-                errorMessageHandler.handleErrorMessage(t.getMessage());
-            }
-        });
-    }
-
-    private Wallet.SendRequest getSendRequest(String fromAddress,
-                                              String toAddress,
-                                              Coin amount,
-                                              Coin fee,
-                                              @Nullable KeyParameter aesKey,
-                                              AddressEntry.Context context) throws AddressFormatException,
+    @Override
+    protected Wallet.SendRequest getSendRequest(String fromAddress,
+                                                String toAddress,
+                                                Coin amount,
+                                                Coin fee,
+                                                @Nullable KeyParameter aesKey,
+                                                AddressEntry.Context context) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount, fee),
@@ -836,102 +577,10 @@ public class BitcoinWalletService {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Wallet getWallet() {
-        return wallet;
-    }
-
-    public Wallet getTokenWallet() {
-        return tokenWallet;
-    }
-
-    public Transaction getTransactionFromSerializedTx(byte[] tx) {
-        return new Transaction(params, tx);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Util
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static void printTxWithInputs(String tracePrefix, Transaction tx) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(tracePrefix).append(": ").append(tx.toString()).append("\n").append(tracePrefix);
-        for (TransactionInput input : tx.getInputs()) {
-            if (input.getConnectedOutput() != null)
-                sb.append(" input value: ").append(input.getConnectedOutput().getValue().toFriendlyString());
-            else
-                sb.append(": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
-        }
-        sb.append("\n").append("Size: " + tx.bitcoinSerialize().length);
-        log.info(sb.toString());
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Inner classes
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private static class DownloadListener extends DownloadProgressTracker {
-        private final DoubleProperty percentage = new SimpleDoubleProperty(-1);
-
-        @Override
-        protected void progress(double percentage, int blocksLeft, Date date) {
-            super.progress(percentage, blocksLeft, date);
-            UserThread.execute(() -> this.percentage.set(percentage / 100d));
-        }
-
-        @Override
-        protected void doneDownload() {
-            super.doneDownload();
-            UserThread.execute(() -> this.percentage.set(1d));
-        }
-
-        public ReadOnlyDoubleProperty percentageProperty() {
-            return percentage;
-        }
-    }
-
-
-    private class BitsquareWalletEventListener extends AbstractWalletEventListener {
-        @Override
-        public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-            notifyBalanceListeners(tx);
-        }
-
-        @Override
-        public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-            notifyBalanceListeners(tx);
-        }
-
-        @Override
-        public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-            for (AddressConfidenceListener addressConfidenceListener : addressConfidenceListeners) {
-                List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
-                transactionConfidenceList.add(getTransactionConfidence(tx, addressConfidenceListener.getAddress()));
-
-                TransactionConfidence transactionConfidence = getMostRecentConfidence(transactionConfidenceList);
-                addressConfidenceListener.onTransactionConfidenceChanged(transactionConfidence);
-            }
-
-            txConfidenceListeners.stream()
-                    .filter(txConfidenceListener -> tx != null &&
-                            tx.getHashAsString() != null &&
-                            txConfidenceListener != null &&
-                            tx.getHashAsString().equals(txConfidenceListener.getTxID()))
-                    .forEach(txConfidenceListener ->
-                            txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
-        }
-
-        private void notifyBalanceListeners(Transaction tx) {
-            for (BalanceListener balanceListener : balanceListeners) {
-                Coin balance;
-                if (balanceListener.getAddress() != null)
-                    balance = getBalanceForAddress(balanceListener.getAddress());
-                else
-                    balance = getAvailableBalance();
-
-                balanceListener.onBalanceChanged(balance, tx);
-            }
-        }
-    }
 }

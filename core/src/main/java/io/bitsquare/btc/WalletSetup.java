@@ -69,7 +69,6 @@ public class WalletSetup {
     private final Preferences preferences;
     private final FeeService feeService;
     private final Socks5ProxyProvider socks5ProxyProvider;
-    private final File appDir;
     private final NetworkParameters params;
     private final File walletDir;
     private BitSquareWalletAppKit walletAppKit;
@@ -87,70 +86,6 @@ public class WalletSetup {
     // private final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
     private List<Runnable> setupCompletedHandlers = new ArrayList<>();
 
-    public void addSetupCompletedHandler(Runnable handler) {
-        setupCompletedHandlers.add(handler);
-    }
-
-    public Wallet getWallet() {
-        return wallet;
-    }
-
-    public Wallet getTokenWallet() {
-        return tokenWallet;
-    }
-
-    public KeyParameter getAesKey() {
-        return aesKey;
-    }
-
-    public ReadOnlyIntegerProperty numPeersProperty() {
-        return numPeers;
-    }
-
-    public ReadOnlyObjectProperty<List<Peer>> connectedPeersProperty() {
-        return connectedPeers;
-    }
-
-    public ReadOnlyDoubleProperty downloadPercentageProperty() {
-        return downloadListener.percentageProperty();
-    }
-
-    public void setAesKey(KeyParameter aesKey) {
-        this.aesKey = aesKey;
-    }
-
-    public void decryptWallets(@NotNull KeyParameter key) {
-        wallet.decrypt(key);
-        tokenWallet.decrypt(key);
-
-        addressEntryList.stream().forEach(e -> {
-            final DeterministicKey keyPair = e.getKeyPair();
-            if (keyPair != null && keyPair.isEncrypted())
-                e.setDeterministicKey(keyPair.decrypt(key));
-        });
-
-        setAesKey(null);
-        addressEntryList.queueUpForSave();
-    }
-
-    public void encryptWallets(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
-        if (this.aesKey != null) {
-            log.warn("encryptWallet called but we have a aesKey already set. " +
-                    "We decryptWallet with the old key before we apply the new key.");
-            decryptWallets(this.aesKey);
-        }
-
-        wallet.encrypt(keyCrypterScrypt, key);
-        tokenWallet.encrypt(keyCrypterScrypt, key);
-
-        addressEntryList.stream().forEach(e -> {
-            final DeterministicKey keyPair = e.getKeyPair();
-            if (keyPair != null && keyPair.isEncrypted())
-                e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
-        });
-        setAesKey(key);
-        addressEntryList.queueUpForSave();
-    }
 
     @Inject
     public WalletSetup(RegTestHost regTestHost,
@@ -169,11 +104,9 @@ public class WalletSetup {
         this.preferences = preferences;
         this.feeService = feeService;
         this.socks5ProxyProvider = socks5ProxyProvider;
-        this.appDir = appDir;
 
         params = preferences.getBitcoinNetwork().getParameters();
         walletDir = new File(appDir, "bitcoin");
-
 
         storage = new Storage<>(walletDir);
         Long persisted = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
@@ -444,6 +377,78 @@ public class WalletSetup {
         }
     }
 
+    public void addSetupCompletedHandler(Runnable handler) {
+        setupCompletedHandlers.add(handler);
+    }
+
+    public Wallet getWallet() {
+        return wallet;
+    }
+
+    public Wallet getTokenWallet() {
+        return tokenWallet;
+    }
+
+    public NetworkParameters getParams() {
+        return params;
+    }
+
+    public KeyParameter getAesKey() {
+        return aesKey;
+    }
+
+    public BlockChain chain() {
+        return walletAppKit.chain();
+    }
+
+    public ReadOnlyIntegerProperty numPeersProperty() {
+        return numPeers;
+    }
+
+    public ReadOnlyObjectProperty<List<Peer>> connectedPeersProperty() {
+        return connectedPeers;
+    }
+
+    public ReadOnlyDoubleProperty downloadPercentageProperty() {
+        return downloadListener.percentageProperty();
+    }
+
+    public void setAesKey(KeyParameter aesKey) {
+        this.aesKey = aesKey;
+    }
+
+    public void decryptWallets(@NotNull KeyParameter key) {
+        wallet.decrypt(key);
+        tokenWallet.decrypt(key);
+
+        addressEntryList.stream().forEach(e -> {
+            final DeterministicKey keyPair = e.getKeyPair();
+            if (keyPair != null && keyPair.isEncrypted())
+                e.setDeterministicKey(keyPair.decrypt(key));
+        });
+
+        setAesKey(null);
+        addressEntryList.queueUpForSave();
+    }
+
+    public void encryptWallets(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
+        if (this.aesKey != null) {
+            log.warn("encryptWallet called but we have a aesKey already set. " +
+                    "We decryptWallet with the old key before we apply the new key.");
+            decryptWallets(this.aesKey);
+        }
+
+        wallet.encrypt(keyCrypterScrypt, key);
+        tokenWallet.encrypt(keyCrypterScrypt, key);
+
+        addressEntryList.stream().forEach(e -> {
+            final DeterministicKey keyPair = e.getKeyPair();
+            if (keyPair != null && keyPair.isEncrypted())
+                e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
+        });
+        setAesKey(key);
+        addressEntryList.queueUpForSave();
+    }
   /*  public String exportWalletData(boolean includePrivKeys) {
         StringBuilder addressEntryListData = new StringBuilder();
         getAddressEntryListAsImmutableList().stream().forEach(e -> addressEntryListData.append(e.toString()).append("\n"));

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.dao.wallet.dashboard;
 
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.SquWalletService;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.util.BSFormatter;
@@ -37,7 +37,7 @@ import static io.bitsquare.gui.util.FormBuilder.addTitledGroupBg;
 public class TokenDashboardView extends ActivatableView<GridPane, Void> {
 
     private final BSFormatter formatter;
-    private final Wallet tokenWallet;
+    private final Wallet squWalletService;
     private int gridRow = 0;
     private TextField confirmedBalance;
     private WalletEventListener walletEventListener;
@@ -47,8 +47,8 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TokenDashboardView(BitcoinWalletService walletService, BSFormatter formatter) {
-        tokenWallet = walletService.getTokenWallet();
+    private TokenDashboardView(SquWalletService squWalletService, BSFormatter formatter) {
+        this.squWalletService = squWalletService.getWallet();
         this.formatter = formatter;
     }
 
@@ -97,18 +97,18 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
-        tokenWallet.addEventListener(walletEventListener);
+        squWalletService.addEventListener(walletEventListener);
 
         updateBalance();
     }
 
     @Override
     protected void deactivate() {
-        tokenWallet.removeEventListener(walletEventListener);
+        squWalletService.removeEventListener(walletEventListener);
     }
 
     private void updateBalance() {
-        confirmedBalance.setText(formatter.formatCoinWithCode(tokenWallet.getBalance()));
+        confirmedBalance.setText(formatter.formatCoinWithCode(squWalletService.getBalance()));
     }
 }
 

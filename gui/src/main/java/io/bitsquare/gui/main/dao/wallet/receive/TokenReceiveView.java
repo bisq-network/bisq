@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.dao.wallet.receive;
 
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.BitcoinWalletService;
+import io.bitsquare.btc.SquWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -50,22 +50,27 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
 public class TokenReceiveView extends ActivatableView<GridPane, Void> {
-    private final Wallet tokenWallet;
-    private final BSFormatter formatter;
-    private int gridRow = 0;
+
     private ImageView qrCodeImageView;
     private AddressTextField addressTextField;
     private InputTextField amountTextField;
+
+    private final SquWalletService squWalletService;
+    private final BSFormatter formatter;
+
+    private Wallet tokenWallet;
+    private int gridRow = 0;
     private final String paymentLabelString;
     private Subscription amountTextFieldSubscription;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TokenReceiveView(BitcoinWalletService walletService, BSFormatter formatter) {
-        tokenWallet = walletService.getTokenWallet();
+    private TokenReceiveView(SquWalletService squWalletService, BSFormatter formatter) {
+        this.squWalletService = squWalletService;
         this.formatter = formatter;
         paymentLabelString = "Fund Bitsquare token wallet";
     }
@@ -92,6 +97,7 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
+        tokenWallet = squWalletService.getWallet();
         amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> {
             addressTextField.setAmountAsCoin(formatter.parseToCoin(t));
             updateQRCode();
