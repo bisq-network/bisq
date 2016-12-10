@@ -18,6 +18,11 @@
 package io.bitsquare.btc;
 
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import io.bitsquare.btc.exceptions.TransactionVerificationException;
+import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -26,10 +31,9 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.crypto.params.KeyParameter;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
+import java.util.Optional;
 
 /**
  * WalletService handles all non trade specific wallet and bitcoin related services.
@@ -89,39 +93,58 @@ public class SquWalletService extends WalletService {
         }, "RestoreWallet-%d").start();*/
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Withdrawal Send
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    protected Wallet.SendRequest getSendRequest(String fromAddress,
-                                                String toAddress,
-                                                Coin amount,
-                                                Coin fee,
-                                                @Nullable KeyParameter aesKey,
-                                                AddressEntry.Context context) throws AddressFormatException,
-            AddressEntryException, InsufficientMoneyException {
+    public Transaction prepareSendTx(String receiverAddress,
+                                     Coin receiverAmount,
+                                     Optional<String> changeAddressStringOptional) throws AddressFormatException,
+            AddressEntryException, InsufficientMoneyException, WalletException, TransactionVerificationException {
+
         Transaction tx = new Transaction(params);
-        Preconditions.checkArgument(Restrictions.isAboveDust(amount, fee),
+        Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(amount.subtract(fee), new Address(params, toAddress));
+        tx.addOutput(receiverAmount, new Address(params, receiverAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
-        sendRequest.fee = fee;
+        sendRequest.fee = Coin.ZERO;
         sendRequest.feePerKb = Coin.ZERO;
-        sendRequest.aesKey = aesKey;
+        sendRequest.aesKey = walletSetup.getAesKey();
         sendRequest.shuffleOutputs = false;
-        /*Optional<AddressEntry> addressEntry = findAddressEntry(fromAddress, context);
-        if (!addressEntry.isPresent())
-            throw new AddressEntryException("WithdrawFromAddress is not found in our wallet.");
-
-        checkNotNull(addressEntry.get(), "addressEntry.get() must not be null");
-        checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must not be null");
-        sendRequest.coinSelector = new TradeWalletCoinSelector(params, addressEntry.get().getAddress());
-        sendRequest.changeAddress = addressEntry.get().getAddress();*/
-        return sendRequest;
+        sendRequest.signInputs = false;
+        sendRequest.ensureMinRequiredFee = false;
+        sendRequest.changeAddress = changeAddressStringOptional.isPresent() ?
+                new Address(params, changeAddressStringOptional.get()) :
+                wallet.freshReceiveAddress();
+        wallet.completeTx(sendRequest);
+        checkWalletConsistency();
+        verifyTransaction(tx);
+        printTx("prepareSendTx", tx);
+        return tx;
     }
+
+    public Transaction signFinalSendTx(Transaction tx) throws WalletException, TransactionVerificationException {
+        // TODO
+        int index = 0;
+        TransactionInput txIn = tx.getInput(index);
+
+        signTransactionInput(tx, txIn, index);
+        checkWalletConsistency();
+        verifyTransaction(tx);
+        // now all sigs need to be included
+        checkScriptSigs(tx);
+        printTx("signFinalSendTx", tx);
+        return tx;
+    }
+
+    public void commitAndBroadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
+        wallet.commitTx(tx);
+        ListenableFuture<Transaction> broadcastComplete = walletSetup.peerGroup().broadcastTransaction(tx).future();
+        Futures.addCallback(broadcastComplete, callback);
+        printTx("commitAndBroadcastTx", tx);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

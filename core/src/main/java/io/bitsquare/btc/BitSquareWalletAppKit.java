@@ -351,11 +351,22 @@ public class BitSquareWalletAppKit extends AbstractIdleService {
             boolean chainFileExists = chainFile.exists();
             vWalletFile = new File(directory, walletFilePrefix + ".wallet");
             boolean shouldReplayWallet = (vWalletFile.exists() && !chainFileExists) || restoreWalletFromSeed != null;
-            vWallet = createOrLoadWallet(vWalletFile, shouldReplayWallet, restoreWalletFromSeed);
+
+            BitsquareKeyChainGroup keyChainGroup;
+            if (restoreWalletFromSeed != null)
+                keyChainGroup = new BitsquareKeyChainGroup(params, restoreWalletFromSeed, true);
+            else
+                keyChainGroup = new BitsquareKeyChainGroup(params, true);
+            vWallet = createOrLoadWallet(vWalletFile, shouldReplayWallet, restoreWalletFromSeed, keyChainGroup);
 
             vTokenWalletFile = new File(directory, tokenWalletFilePrefix + ".wallet");
             boolean shouldReplayTokenWallet = (vTokenWalletFile.exists() && !chainFileExists) || restoreTokenWalletFromSeed != null;
-            vTokenWallet = createOrLoadWallet(vTokenWalletFile, shouldReplayTokenWallet, restoreTokenWalletFromSeed);
+
+            if (restoreWalletFromSeed != null)
+                keyChainGroup = new BitsquareKeyChainGroup(params, restoreWalletFromSeed, false);
+            else
+                keyChainGroup = new BitsquareKeyChainGroup(params, false);
+            vTokenWallet = createOrLoadWallet(vTokenWalletFile, shouldReplayTokenWallet, restoreTokenWalletFromSeed, keyChainGroup);
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);
@@ -447,15 +458,15 @@ public class BitSquareWalletAppKit extends AbstractIdleService {
         }
     }
 
-    private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet, DeterministicSeed restoreFromSeed) throws Exception {
+    private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet, DeterministicSeed restoreFromSeed, BitsquareKeyChainGroup keyChainGroup) throws Exception {
         Wallet wallet;
 
         maybeMoveOldWalletOutOfTheWay(walletFile, restoreFromSeed);
 
         if (walletFile.exists()) {
-            wallet = loadWallet(walletFile, shouldReplayWallet);
+            wallet = loadWallet(walletFile, shouldReplayWallet, keyChainGroup.isUseBitcoinDeterministicKeyChain());
         } else {
-            wallet = createWallet(restoreFromSeed);
+            wallet = createWallet(keyChainGroup);
             wallet.freshReceiveKey();
             for (WalletExtension e : provideWalletExtensions()) {
                 wallet.addExtension(e);
@@ -465,7 +476,7 @@ public class BitSquareWalletAppKit extends AbstractIdleService {
             // deserializing the extension (see WalletExtension#deserializeWalletExtension(Wallet, byte[]))
             // Hence, we first save and then load wallet to ensure any extensions are correctly initialized.
             wallet.saveToFile(walletFile);
-            wallet = loadWallet(walletFile, false);
+            wallet = loadWallet(walletFile, false, keyChainGroup.isUseBitcoinDeterministicKeyChain());
         }
 
         if (useAutoSave) wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
@@ -473,7 +484,7 @@ public class BitSquareWalletAppKit extends AbstractIdleService {
         return wallet;
     }
 
-    private Wallet loadWallet(File walletFile, boolean shouldReplayWallet) throws Exception {
+    private Wallet loadWallet(File walletFile, boolean shouldReplayWallet, boolean useBitcoinDeterministicKeyChain) throws Exception {
         Wallet wallet;
         FileInputStream walletStream = new FileInputStream(walletFile);
         try {
@@ -485,6 +496,8 @@ public class BitSquareWalletAppKit extends AbstractIdleService {
                 serializer = new WalletProtobufSerializer(walletFactory);
             else
                 serializer = new WalletProtobufSerializer();
+
+            serializer.setKeyChainFactory(new BitsquareKeyChainFactory(useBitcoinDeterministicKeyChain));
             wallet = serializer.readWallet(params, extArray, proto);
             if (shouldReplayWallet)
                 wallet.reset();
@@ -494,20 +507,14 @@ public class BitSquareWalletAppKit extends AbstractIdleService {
         return wallet;
     }
 
-    protected Wallet createWallet(DeterministicSeed restoreFromSeed) {
-        KeyChainGroup kcg;
-        if (restoreFromSeed != null)
-            kcg = new KeyChainGroup(params, restoreFromSeed);
-        else
-            kcg = new KeyChainGroup(params);
-
+    protected Wallet createWallet(KeyChainGroup keyChainGroup) {
         if (lookaheadSize != -1)
-            kcg.setLookaheadSize(lookaheadSize);
+            keyChainGroup.setLookaheadSize(lookaheadSize);
 
         if (walletFactory != null) {
-            return walletFactory.create(params, kcg);
+            return walletFactory.create(params, keyChainGroup);
         } else {
-            return new Wallet(params, kcg);  // default
+            return new Wallet(params, keyChainGroup);  // default
         }
     }
 

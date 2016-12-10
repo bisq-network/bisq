@@ -19,6 +19,8 @@ package io.bitsquare.btc;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import io.bitsquare.btc.exceptions.TransactionVerificationException;
+import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
@@ -27,18 +29,27 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.TransactionSignature;
+import org.bitcoinj.script.Script;
+import org.bitcoinj.signers.TransactionSigner;
+import org.bitcoinj.wallet.DecryptingKeyBag;
+import org.bitcoinj.wallet.KeyBag;
+import org.bitcoinj.wallet.RedeemData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * WalletService handles all non trade specific wallet and bitcoin related services.
@@ -114,6 +125,148 @@ public abstract class WalletService {
 
     public void removeBalanceListener(BalanceListener listener) {
         balanceListeners.remove(listener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Checks
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void checkWalletConsistency() throws WalletException {
+        try {
+            log.trace("Check if wallet is consistent before commit.");
+            checkNotNull(wallet);
+            checkState(wallet.isConsistent());
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.getMessage());
+            throw new WalletException(t);
+        }
+    }
+
+    protected void verifyTransaction(Transaction transaction) throws TransactionVerificationException {
+        try {
+            log.trace("Verify transaction " + transaction);
+            transaction.verify();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.getMessage());
+            throw new TransactionVerificationException(t);
+        }
+    }
+
+    protected void checkScriptSigs(Transaction transaction) throws TransactionVerificationException {
+        for (int i = 0; i < transaction.getInputs().size(); i++) {
+            checkScriptSig(transaction, transaction.getInputs().get(i), i);
+        }
+    }
+
+    protected void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
+        try {
+            log.trace("Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey. Check input at index: " + inputIndex);
+            checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
+            input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey());
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.getMessage());
+            throw new TransactionVerificationException(t);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Sign tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+   /* protected void signInput(Transaction transaction) throws SigningException {
+        List<TransactionInput> inputs = transaction.getInputs();
+
+        int inputIndex = transaction.getInputs().size() - 1;
+        TransactionInput input = transaction.getInput(inputIndex);
+
+        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
+        Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
+        checkNotNull(wallet);
+        ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
+        checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" + input.getOutpoint().toString());
+        if (sigKey.isEncrypted())
+            checkNotNull(walletSetup.getAesKey());
+        Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
+        ECKey.ECDSASignature signature = sigKey.sign(hash, walletSetup.getAesKey());
+        TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
+        if (scriptPubKey.isSentToRawPubKey()) {
+            input.setScriptSig(ScriptBuilder.createInputScript(txSig));
+        } else if (scriptPubKey.isSentToAddress()) {
+            input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
+        } else {
+            throw new SigningException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
+        }
+    }*/
+
+    public void signTransactionInput(Transaction tx, TransactionInput txIn, int index) {
+        KeyBag maybeDecryptingKeyBag = new DecryptingKeyBag(wallet, walletSetup.getAesKey());
+        if (txIn.getConnectedOutput() != null) {
+            try {
+                // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
+                // we sign missing pieces (to check this would require either assuming any signatures are signing
+                // standard output types or a way to get processed signatures out of script execution)
+                txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey());
+                log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
+                return;
+            } catch (ScriptException e) {
+                // Expected.
+            }
+
+            Script scriptPubKey = txIn.getConnectedOutput().getScriptPubKey();
+            RedeemData redeemData = txIn.getConnectedRedeemData(maybeDecryptingKeyBag);
+            checkNotNull(redeemData, "Transaction exists in wallet that we cannot redeem: %s", txIn.getOutpoint().getHash());
+            txIn.setScriptSig(scriptPubKey.createEmptyInputScript(redeemData.keys.get(0), redeemData.redeemScript));
+
+            TransactionSigner.ProposedTransaction propTx = new TransactionSigner.ProposedTransaction(tx);
+            Transaction partialTx = propTx.partialTx;
+            txIn = partialTx.getInput(index);
+            if (txIn.getConnectedOutput() != null) {
+                try {
+                    // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
+                    // we sign missing pieces (to check this would require either assuming any signatures are signing
+                    // standard output types or a way to get processed signatures out of script execution)
+                    txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey());
+                    log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
+                    return;
+                } catch (ScriptException e) {
+                    // Expected.
+                }
+
+                redeemData = txIn.getConnectedRedeemData(maybeDecryptingKeyBag);
+                scriptPubKey = txIn.getConnectedOutput().getScriptPubKey();
+
+                checkNotNull(redeemData, "redeemData must not be null");
+                ECKey pubKey = redeemData.keys.get(0);
+                if (pubKey instanceof DeterministicKey)
+                    propTx.keyPaths.put(scriptPubKey, (((DeterministicKey) pubKey).getPath()));
+
+                ECKey key;
+                if ((key = redeemData.getFullKey()) == null) {
+                    log.warn("No local key found for input {}", index);
+                    return;
+                }
+
+                Script inputScript = txIn.getScriptSig();
+                byte[] script = redeemData.redeemScript.getProgram();
+                try {
+                    TransactionSignature signature = partialTx.calculateSignature(index, key, script, Transaction.SigHash.ALL, false);
+                    inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, signature.encodeToBitcoin(), 0);
+                    txIn.setScriptSig(inputScript);
+                } catch (ECKey.KeyIsEncryptedException e1) {
+                    throw e1;
+                } catch (ECKey.MissingPrivateKeyException e1) {
+                    log.warn("No private key in keypair for input {}", index);
+                }
+            } else {
+                log.warn("Missing connected output, assuming input {} is already signed.", index);
+            }
+        } else {
+            log.error("Missing connected output, assuming already signed.");
+        }
     }
 
 
@@ -254,21 +407,6 @@ public abstract class WalletService {
     // Withdrawal Send
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String sendFunds(String fromAddress,
-                            String toAddress,
-                            Coin receiverAmount,
-                            Coin fee,
-                            @Nullable KeyParameter aesKey,
-                            AddressEntry.Context context,
-                            FutureCallback<Transaction> callback) throws AddressFormatException,
-            AddressEntryException, InsufficientMoneyException {
-        Wallet.SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
-        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        Futures.addCallback(sendResult.broadcastComplete, callback);
-
-        printTxWithInputs("sendFunds", sendResult.tx);
-        return sendResult.tx.getHashAsString();
-    }
 
     public void emptyWallet(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {
@@ -276,7 +414,7 @@ public abstract class WalletService {
         sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        printTxWithInputs("emptyWallet", sendResult.tx);
+        printTx("emptyWallet", sendResult.tx);
         Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(Transaction result) {
@@ -289,14 +427,6 @@ public abstract class WalletService {
             }
         });
     }
-
-    abstract protected Wallet.SendRequest getSendRequest(String fromAddress,
-                                                         String toAddress,
-                                                         Coin amount,
-                                                         Coin fee,
-                                                         @Nullable KeyParameter aesKey,
-                                                         AddressEntry.Context context) throws AddressFormatException,
-            AddressEntryException, InsufficientMoneyException;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -316,16 +446,11 @@ public abstract class WalletService {
     // Util
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static void printTxWithInputs(String tracePrefix, Transaction tx) {
+
+    public static void printTx(String tracePrefix, Transaction tx) {
         StringBuilder sb = new StringBuilder();
-        sb.append(tracePrefix).append(": ").append(tx.toString()).append("\n").append(tracePrefix);
-        for (TransactionInput input : tx.getInputs()) {
-            if (input.getConnectedOutput() != null)
-                sb.append(" input value: ").append(input.getConnectedOutput().getValue().toFriendlyString());
-            else
-                sb.append(": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
-        }
-        sb.append("\n").append("Size: " + tx.bitcoinSerialize().length);
+        sb.append("\n").append(tracePrefix).append(":").append("\n").append(tx.toString()).append("\n");
+        sb.append("Size: ").append(tx.bitcoinSerialize().length);
         log.info(sb.toString());
     }
 

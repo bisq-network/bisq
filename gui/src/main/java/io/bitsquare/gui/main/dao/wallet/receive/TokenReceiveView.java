@@ -29,21 +29,23 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import javafx.geometry.Insets;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Wallet;
+import org.bitcoinj.core.*;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.uri.BitcoinURI;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -54,12 +56,15 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
     private ImageView qrCodeImageView;
     private AddressTextField addressTextField;
     private InputTextField amountTextField;
+    private TextField confirmedBalance;
 
     private final SquWalletService squWalletService;
     private final BSFormatter formatter;
 
-    private Wallet tokenWallet;
+    @Nullable
+    private Wallet squWallet;
     private int gridRow = 0;
+    private WalletEventListener walletEventListener;
     private final String paymentLabelString;
     private Subscription amountTextFieldSubscription;
 
@@ -77,14 +82,17 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 3, "Fund your token wallet");
+        addTitledGroupBg(root, gridRow, 1, "Balance");
+        confirmedBalance = addLabelTextField(root, gridRow, "Confirmed SQU balance:", Layout.FIRST_ROW_DISTANCE).second;
+
+        addTitledGroupBg(root, ++gridRow, 3, "Fund your token wallet", Layout.GROUP_DISTANCE);
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.setStyle("-fx-cursor: hand;");
         Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 1);
-        GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         root.getChildren().add(qrCodeImageView);
 
         addressTextField = addLabelAddressTextField(root, ++gridRow, "Address:").second;
@@ -93,11 +101,52 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
         amountTextField = addLabelInputTextField(root, ++gridRow, "Amount (optional):").second;
         if (DevFlags.DEV_MODE)
             amountTextField.setText("10");
+
+
+        walletEventListener = new WalletEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                updateBalance();
+            }
+
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                updateBalance();
+            }
+
+            @Override
+            public void onReorganize(Wallet wallet) {
+                updateBalance();
+            }
+
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                updateBalance();
+            }
+
+            @Override
+            public void onWalletChanged(Wallet wallet) {
+                updateBalance();
+            }
+
+            @Override
+            public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+                updateBalance();
+            }
+
+            @Override
+            public void onKeysAdded(List<ECKey> keys) {
+                updateBalance();
+            }
+        };
     }
 
     @Override
     protected void activate() {
-        tokenWallet = squWalletService.getWallet();
+        squWallet = squWalletService.getWallet();
+        squWallet.addEventListener(walletEventListener);
+        updateBalance();
+
         amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> {
             addressTextField.setAmountAsCoin(formatter.parseToCoin(t));
             updateQRCode();
@@ -107,12 +156,15 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
                         () -> new QRCodeWindow(getBitcoinURI()).show(),
                         200, TimeUnit.MILLISECONDS)
         ));
-        addressTextField.setAddress(tokenWallet.freshReceiveAddress().toString());
+        addressTextField.setAddress(squWallet.freshReceiveAddress().toString());
         updateQRCode();
     }
 
     @Override
     protected void deactivate() {
+        if (squWallet != null)
+            squWallet.removeEventListener(walletEventListener);
+
         qrCodeImageView.setOnMouseClicked(null);
         amountTextFieldSubscription.unsubscribe();
     }
@@ -134,12 +186,15 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
         return formatter.parseToCoin(amountTextField.getText());
     }
 
-    @NotNull
     private String getBitcoinURI() {
         return BitcoinURI.convertToBitcoinURI(addressTextField.getAddress(),
                 getAmountAsCoin(),
                 paymentLabelString,
                 null);
+    }
+
+    private void updateBalance() {
+        confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
     }
 }
 

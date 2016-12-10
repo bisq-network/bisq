@@ -29,6 +29,7 @@ import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.SQUFormatter;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.BSResources;
@@ -59,6 +60,7 @@ public class GuiModule extends AppModule {
 
         bind(OfferBook.class).in(Singleton.class);
         bind(BSFormatter.class).in(Singleton.class);
+        bind(SQUFormatter.class).in(Singleton.class);
 
         bind(IBANValidator.class).in(Singleton.class);
         bind(BtcValidator.class).in(Singleton.class);

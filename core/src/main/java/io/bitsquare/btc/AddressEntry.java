@@ -54,10 +54,7 @@ public final class AddressEntry implements Persistable {
         OFFER_FUNDING,
         RESERVED_FOR_TRADE, //reserved
         MULTI_SIG, //locked
-        TRADE_PAYOUT,
-
-        DAO_SHARE,
-        DAO_DIVIDEND
+        TRADE_PAYOUT
     }
 
     // keyPair can be null in case the object is created from deserialization as it is transient.

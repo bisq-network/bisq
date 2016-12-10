@@ -23,10 +23,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.BtcWalletService;
-import io.bitsquare.btc.SquWalletService;
-import io.bitsquare.btc.TradeWalletService;
-import io.bitsquare.btc.WalletSetup;
+import io.bitsquare.btc.*;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -202,7 +199,9 @@ public class BitsquareApp extends Application {
                 } else if (new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     stop();
                 } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
-                    showEmptyWalletPopup();
+                    showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
+                } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
+                    showEmptyWalletPopup(injector.getInstance(SquWalletService.class));
                 } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showSendAlertMessagePopup();
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
@@ -210,9 +209,10 @@ public class BitsquareApp extends Application {
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFPSWindow();
                 } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
-                    if (walletService.getWallet() != null)
-                        new ShowWalletDataWindow(walletService).information("Wallet raw data").show();
+                    BtcWalletService btcWalletService = injector.getInstance(BtcWalletService.class);
+                    SquWalletService squWalletService = injector.getInstance(SquWalletService.class);
+                    if (btcWalletService.getWallet() != null)
+                        new ShowWalletDataWindow(btcWalletService, squWalletService).information("Wallet raw data").show();
                     else
                         new Popup<>().warning("The wallet is not initialized yet").show();
                 } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
@@ -230,7 +230,7 @@ public class BitsquareApp extends Application {
             // configure the primary stage
             primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
             primaryStage.setScene(scene);
-            primaryStage.setMinWidth(1020); 
+            primaryStage.setMinWidth(1020);
             primaryStage.setMinHeight(620);
 
             // on windows the title icon is also used as task bar icon in a larger size
@@ -288,8 +288,10 @@ public class BitsquareApp extends Application {
                 .show();
     }
 
-    private void showEmptyWalletPopup() {
-        injector.getInstance(EmptyWalletWindow.class).show();
+    private void showEmptyWalletPopup(WalletService walletService) {
+        EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
+        emptyWalletWindow.setwalletService(walletService);
+        emptyWalletWindow.show();
     }
 
     private void showErrorPopup(Throwable throwable, boolean doShutDown) {

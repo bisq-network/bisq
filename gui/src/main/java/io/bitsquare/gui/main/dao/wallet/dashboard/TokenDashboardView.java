@@ -27,6 +27,7 @@ import javafx.scene.layout.GridPane;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.List;
 
@@ -36,10 +37,14 @@ import static io.bitsquare.gui.util.FormBuilder.addTitledGroupBg;
 @FxmlView
 public class TokenDashboardView extends ActivatableView<GridPane, Void> {
 
-    private final BSFormatter formatter;
-    private final Wallet squWalletService;
-    private int gridRow = 0;
     private TextField confirmedBalance;
+
+    private final SquWalletService squWalletService;
+    private final BSFormatter formatter;
+
+    @Nullable
+    private Wallet squWallet;
+    private int gridRow = 0;
     private WalletEventListener walletEventListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -48,7 +53,7 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
 
     @Inject
     private TokenDashboardView(SquWalletService squWalletService, BSFormatter formatter) {
-        this.squWalletService = squWalletService.getWallet();
+        this.squWalletService = squWalletService;
         this.formatter = formatter;
     }
 
@@ -97,18 +102,20 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
-        squWalletService.addEventListener(walletEventListener);
+        this.squWallet = squWalletService.getWallet();
+        squWallet.addEventListener(walletEventListener);
 
         updateBalance();
     }
 
     @Override
     protected void deactivate() {
-        squWalletService.removeEventListener(walletEventListener);
+        if (squWallet != null)
+            squWallet.removeEventListener(walletEventListener);
     }
 
     private void updateBalance() {
-        confirmedBalance.setText(formatter.formatCoinWithCode(squWalletService.getBalance()));
+        confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
     }
 }
 

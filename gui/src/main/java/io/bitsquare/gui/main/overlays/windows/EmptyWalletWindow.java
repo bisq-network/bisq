@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.Restrictions;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
@@ -50,13 +50,14 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private static final Logger log = LoggerFactory.getLogger(EmptyWalletWindow.class);
-    private final BtcWalletService walletService;
     private final WalletPasswordWindow walletPasswordWindow;
-    private OpenOfferManager openOfferManager;
     private final BSFormatter formatter;
+    private final OpenOfferManager openOfferManager;
+    
     private Button emptyWalletButton;
     private InputTextField addressInputTextField;
     private TextField balanceTextField;
+    private WalletService walletService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,9 +65,8 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public EmptyWalletWindow(BtcWalletService walletService, WalletPasswordWindow walletPasswordWindow,
+    public EmptyWalletWindow(WalletPasswordWindow walletPasswordWindow,
                              OpenOfferManager openOfferManager, BSFormatter formatter) {
-        this.walletService = walletService;
         this.walletPasswordWindow = walletPasswordWindow;
         this.openOfferManager = openOfferManager;
         this.formatter = formatter;
@@ -119,7 +119,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, "Your destination address:");
         addressInputTextField = tuple.second;
         if (DevFlags.DEV_MODE)
-            addressInputTextField.setText("mjYhQYSbET2bXJDyCdNqYhqSye5QX2WHPz");
+            addressInputTextField.setText("mgJE2Fq7UB12mvqBF16GEVotQGmCV7WwQE");
 
         emptyWalletButton = new Button("Empty wallet");
         boolean isBalanceSufficient = Restrictions.isAboveDust(totalBalance);
@@ -195,5 +195,9 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                 emptyWalletButton.setDisable(false);
             }
         });
+    }
+
+    public void setwalletService(WalletService walletService) {
+        this.walletService = walletService;
     }
 }

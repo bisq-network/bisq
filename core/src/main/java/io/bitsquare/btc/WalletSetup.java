@@ -449,6 +449,10 @@ public class WalletSetup {
         setAesKey(key);
         addressEntryList.queueUpForSave();
     }
+
+    public PeerGroup peerGroup() {
+        return walletAppKit.peerGroup();
+    }
   /*  public String exportWalletData(boolean includePrivKeys) {
         StringBuilder addressEntryListData = new StringBuilder();
         getAddressEntryListAsImmutableList().stream().forEach(e -> addressEntryListData.append(e.toString()).append("\n"));
@@ -537,4 +541,19 @@ public class WalletSetup {
             }
         }
     }*/
+
+    public void restoreBtcSeedWords(DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+        Context ctx = Context.get();
+        new Thread(() -> {
+            try {
+                Context.propagate(ctx);
+                walletAppKit.stopAsync();
+                walletAppKit.awaitTerminated();
+                initialize(seed, resultHandler, exceptionHandler);
+            } catch (Throwable t) {
+                t.printStackTrace();
+                log.error("Executing task failed. " + t.getMessage());
+            }
+        }, "RestoreWallet-%d").start();
+    }
 }

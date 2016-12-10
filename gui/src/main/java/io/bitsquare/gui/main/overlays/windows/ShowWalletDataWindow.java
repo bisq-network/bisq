@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.btc.BtcWalletService;
+import io.bitsquare.btc.SquWalletService;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.Overlay;
@@ -35,14 +36,16 @@ import static io.bitsquare.gui.util.FormBuilder.addLabelTextArea;
 public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
     private static final Logger log = LoggerFactory.getLogger(ShowWalletDataWindow.class);
     private BtcWalletService btcWalletService;
+    private SquWalletService squWalletService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ShowWalletDataWindow(BtcWalletService btcWalletService) {
+    public ShowWalletDataWindow(BtcWalletService btcWalletService, SquWalletService squWalletService) {
         this.btcWalletService = btcWalletService;
+        this.squWalletService = squWalletService;
         type = Type.Attention;
     }
 
@@ -86,12 +89,18 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         isUpdateCheckBox.setSelected(false);
 
         isUpdateCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            textArea.setText(btcWalletService.exportWalletData(isUpdateCheckBox.isSelected()));
+            showWallet(textArea, isUpdateCheckBox);
         });
 
-        textArea.setText(btcWalletService.exportWalletData(isUpdateCheckBox.isSelected()));
+        showWallet(textArea, isUpdateCheckBox);
 
         actionButtonText("Copy to clipboard");
         onAction(() -> Utilities.copyToClipboard(textArea.getText()));
+    }
+
+    private void showWallet(TextArea textArea, CheckBox isUpdateCheckBox) {
+        String btcWalletData = btcWalletService.exportWalletData(isUpdateCheckBox.isSelected());
+        String sqrWalletData = squWalletService.exportWalletData(isUpdateCheckBox.isSelected());
+        textArea.setText("BTC Wallet:\n" + btcWalletData + "\n\nSQU Wallet:\n" + sqrWalletData);
     }
 }

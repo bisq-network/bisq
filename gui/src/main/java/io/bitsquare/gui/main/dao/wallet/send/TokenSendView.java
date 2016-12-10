@@ -17,36 +17,173 @@
 
 package io.bitsquare.gui.main.dao.wallet.send;
 
+import com.google.common.util.concurrent.FutureCallback;
+import io.bitsquare.app.DevFlags;
+import io.bitsquare.btc.AddressEntryException;
+import io.bitsquare.btc.BtcWalletService;
+import io.bitsquare.btc.InsufficientFundsException;
+import io.bitsquare.btc.SquWalletService;
+import io.bitsquare.btc.exceptions.SigningException;
+import io.bitsquare.btc.exceptions.TransactionVerificationException;
+import io.bitsquare.btc.exceptions.WalletException;
+import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.Layout;
+import io.bitsquare.gui.util.SQUFormatter;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import org.bitcoinj.core.*;
+import org.bitcoinj.script.Script;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
+import java.util.List;
+import java.util.Optional;
+
+import static io.bitsquare.gui.util.FormBuilder.*;
 
 @FxmlView
 public class TokenSendView extends ActivatableView<GridPane, Void> {
 
+
+    private TextField confirmedBalance;
+
+    private final SquWalletService squWalletService;
+    private BtcWalletService btcWalletService;
+    private FeeService feeService;
+    private final BSFormatter formatter;
+
+    @Nullable
+    private Wallet squWallet;
+    private int gridRow = 0;
+    private WalletEventListener walletEventListener;
+    private InputTextField amountInputTextField;
+    private Button sendButton;
+    private InputTextField receiversAddressInputTextField;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TokenSendView() {
+    private TokenSendView(SquWalletService squWalletService, BtcWalletService btcWalletService, FeeService feeService, SQUFormatter formatter) {
+        this.squWalletService = squWalletService;
+        this.btcWalletService = btcWalletService;
+        this.feeService = feeService;
+
+        this.formatter = formatter;
     }
 
     @Override
     public void initialize() {
+        addTitledGroupBg(root, gridRow, 1, "Balance");
+        confirmedBalance = addLabelTextField(root, gridRow, "Confirmed SQU balance:", Layout.FIRST_ROW_DISTANCE).second;
+
+        addTitledGroupBg(root, ++gridRow, 3, "Send funds", Layout.GROUP_DISTANCE);
+        amountInputTextField = addLabelInputTextField(root, gridRow, "Amount in SQU:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        amountInputTextField.setPromptText("Set amount to withdraw (min. amount is 547");
+
+        receiversAddressInputTextField = addLabelInputTextField(root, ++gridRow, "Receiver's address:").second;
+        receiversAddressInputTextField.setPromptText("Fill in your destination address");
+
+        sendButton = addButtonAfterGroup(root, ++gridRow, "Send SQU funds");
+
+        if (DevFlags.DEV_MODE) {
+            amountInputTextField.setText("547"); // 546 is dust limit
+            receiversAddressInputTextField.setText("mgJE2Fq7UB12mvqBF16GEVotQGmCV7WwQE");
+        }
+
+        sendButton.setOnAction((event) -> {
+            String receiversAddressString = receiversAddressInputTextField.getText();
+            Coin receiverAmount = formatter.parseToCoin(amountInputTextField.getText());
+            Optional<String> changeAddressStringOptional = Optional.empty();
+            try {
+                Transaction preparedSquTx = squWalletService.prepareSendTx(receiversAddressString, receiverAmount, changeAddressStringOptional);
+                Transaction preparedMixedTx = btcWalletService.getTransactionWithFeeInput(preparedSquTx);
+                Transaction signedMixedTx = squWalletService.signFinalSendTx(preparedMixedTx);
+                squWalletService.commitAndBroadcastTx(signedMixedTx, new FutureCallback<Transaction>() {
+                    @Override
+                    public void onSuccess(@Nullable Transaction result) {
+                        if (result != null) {
+                            //log.error("onSuccess "+result.toString());
+                            // We don't commit tx to btcWallet because it gets committed when receiving the tx after 
+                            // broadcast as we use the same peerGroup for both wallets.
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        log.error(t.toString());
+                        new Popup<>().warning(t.toString());
+                    }
+                });
+            } catch (AddressFormatException | AddressEntryException | SigningException | InsufficientFundsException |
+                    TransactionVerificationException | WalletException | InsufficientMoneyException e) {
+                log.error(e.toString());
+                e.printStackTrace();
+                new Popup<>().warning(e.toString());
+            }
+        });
+
+        walletEventListener = new WalletEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                updateBalance();
+            }
+
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                updateBalance();
+            }
+
+            @Override
+            public void onReorganize(Wallet wallet) {
+                updateBalance();
+            }
+
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                updateBalance();
+            }
+
+            @Override
+            public void onWalletChanged(Wallet wallet) {
+                updateBalance();
+            }
+
+            @Override
+            public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+                updateBalance();
+            }
+
+            @Override
+            public void onKeysAdded(List<ECKey> keys) {
+                updateBalance();
+            }
+        };
     }
 
     @Override
     protected void activate() {
+        this.squWallet = squWalletService.getWallet();
+        squWallet.addEventListener(walletEventListener);
 
+        updateBalance();
     }
 
     @Override
     protected void deactivate() {
+        if (squWallet != null)
+            squWallet.removeEventListener(walletEventListener);
+    }
 
+    private void updateBalance() {
+        confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
     }
 }
 

@@ -42,28 +42,30 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class BSFormatter {
-    private static final Logger log = LoggerFactory.getLogger(BSFormatter.class);
+    protected static final Logger log = LoggerFactory.getLogger(BSFormatter.class);
 
-    private Locale locale = Preferences.getDefaultLocale();
-    private boolean useMilliBit;
-    private int scale = 3;
+    protected Locale locale = Preferences.getDefaultLocale();
+    protected boolean useMilliBit;
+    protected int scale = 3;
 
     // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
     // Input of "," as decimal mark (like in german locale) will be replaced with ".".
     // Input of a group separator (1,123,45) lead to an validation error.
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
-    private MonetaryFormat coinFormat = MonetaryFormat.BTC;
+    protected MonetaryFormat coinFormat;
 
-    //  private String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
+    //  protected String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
     // format is like: 1,00  never more then 2 decimals
-    private final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
-    private DecimalFormat decimalFormat = new DecimalFormat("#.#");
+    protected final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
+    protected DecimalFormat decimalFormat = new DecimalFormat("#.#");
 
 
     @Inject
     public BSFormatter() {
+        coinFormat = MonetaryFormat.BTC;
+        
       /*  if (user.tradeCurrencyProperty().get() == null)
             setFiatCurrencyCode(CurrencyUtil.getDefaultFiatCurrencyAsCode());
         else if (user.tradeCurrencyProperty().get() != null)
@@ -94,7 +96,7 @@ public class BSFormatter {
         this.locale = locale;
     }
 
-    private MonetaryFormat getMonetaryFormat() {
+    protected MonetaryFormat getMonetaryFormat() {
         if (useMilliBit)
             return MonetaryFormat.MBTC;
         else
@@ -203,7 +205,7 @@ public class BSFormatter {
         }
     }
 
-    private String formatFiatWithCode(Fiat fiat) {
+    protected String formatFiatWithCode(Fiat fiat) {
         if (fiat != null) {
             try {
                 return fiatFormat.noCode().format(fiat).toString() + " " + fiat.getCurrencyCode();
@@ -216,7 +218,7 @@ public class BSFormatter {
         }
     }
 
-    private Fiat parseToFiat(String input, String currencyCode) {
+    protected Fiat parseToFiat(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
                 return Fiat.parseFiat(currencyCode, cleanInput(input));
@@ -442,7 +444,7 @@ public class BSFormatter {
         }
     }
 
-    private String cleanInput(String input) {
+    protected String cleanInput(String input) {
         input = input.replace(",", ".");
         // don't use String.valueOf(Double.parseDouble(input)) as return value as it gives scientific
         // notation (1.0E-6) which screw up coinFormat.parse

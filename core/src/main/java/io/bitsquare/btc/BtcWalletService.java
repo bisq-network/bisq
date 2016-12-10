@@ -21,6 +21,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import io.bitsquare.btc.exceptions.SigningException;
+import io.bitsquare.btc.exceptions.TransactionVerificationException;
+import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
@@ -93,20 +96,9 @@ public class BtcWalletService extends WalletService {
                 wallet.printAllPubKeysAsHex();
     }
 
-    //TODO
+    // TODO
     public void restoreSeedWords(DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
-       /* Context ctx = Context.get();
-        new Thread(() -> {
-            try {
-                Context.propagate(ctx);
-                walletAppKit.stopAsync();
-                walletAppKit.awaitTerminated();
-                initialize(seed, resultHandler, exceptionHandler);
-            } catch (Throwable t) {
-                t.printStackTrace();
-                log.error("Executing task failed. " + t.getMessage());
-            }
-        }, "RestoreWallet-%d").start();*/
+        walletSetup.restoreBtcSeedWords(seed, resultHandler, exceptionHandler);
     }
 
     public void decryptWallet(@NotNull KeyParameter key) {
@@ -126,6 +118,72 @@ public class BtcWalletService extends WalletService {
                 e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
         });
         addressEntryList.queueUpForSave();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Fee tx for SQU
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction getTransactionWithFeeInput(Transaction transaction) throws
+            TransactionVerificationException, WalletException, AddressFormatException, AddressEntryException, InsufficientFundsException, SigningException {
+        log.trace("takerCreatesDepositsTxInputs called");
+        try {
+            int counter = 0;
+            int txSize = 407; // typical size for a tx with 2 inputs and 3 outputs
+            Coin txFeePerByte = getTxFeeForWithdrawalPerByte();
+            Address feePaymentAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+            Address changeAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+            checkNotNull(feePaymentAddress, "feePaymentAddress must not be null");
+            checkNotNull(changeAddress, "changeAddress must not be null");
+            TokenFeeCoinSelector coinSelector = new TokenFeeCoinSelector(params, feePaymentAddress);
+            List<TransactionInput> inputs = transaction.getInputs();
+            List<TransactionOutput> outputs = transaction.getOutputs();
+            Transaction resultTx;
+            do {
+                counter++;
+                final Transaction tx = new Transaction(params);
+                inputs.stream().forEach(tx::addInput);
+                outputs.stream().forEach(tx::addOutput);
+                Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+                sendRequest.shuffleOutputs = false;
+                sendRequest.aesKey = walletSetup.getAesKey();
+                // Need to be false as it would try to sign all inputs (SQU inputs are not in this wallet)
+                sendRequest.signInputs = false;
+                sendRequest.ensureMinRequiredFee = false;
+                sendRequest.feePerKb = Coin.ZERO;
+                sendRequest.fee = txFeePerByte.multiply(txSize);
+                sendRequest.coinSelector = coinSelector;
+                sendRequest.changeAddress = changeAddress;
+                wallet.completeTx(sendRequest);
+
+                resultTx = sendRequest.tx;
+            }
+            while (counter < 10 && Math.abs(resultTx.getFee().value - txFeePerByte.multiply(resultTx.bitcoinSerialize().length).value) > 1000);
+            if (counter == 10) {
+                log.error("Could not calculate the fee. Tx=" + resultTx);
+            }
+
+            //TODO
+            int index = 1;
+            TransactionInput txIn = resultTx.getInput(index);
+
+            signTransactionInput(resultTx, txIn, index);
+            checkScriptSig(resultTx, txIn, index);
+
+            checkWalletConsistency();
+            verifyTransaction(resultTx);
+
+            printTx("Signed resultTx", resultTx);
+            return resultTx;
+        } catch (InsufficientMoneyException e) {
+            throw new InsufficientFundsException("The fees for that transaction exceed the available funds " +
+                    "or the resulting output value is below the min. dust value:\n" +
+                    "Missing " + (e.missing != null ? e.missing.toFriendlyString() : "null"));
+        }
+    }
+
+    public void commitTx(Transaction tx) {
+        wallet.commitTx(tx);
     }
 
 
@@ -300,7 +358,7 @@ public class BtcWalletService extends WalletService {
                             wallet.completeTx(sendRequest);
                             tx = sendRequest.tx;
                             txSize = tx.bitcoinSerialize().length;
-                            printTxWithInputs("FeeEstimationTransaction", tx);
+                            printTx("FeeEstimationTransaction", tx);
                             sendRequest.tx.getOutputs().stream().forEach(o -> log.debug("Output value " + o.getValue().toFriendlyString()));
                         }
                         while (counter < 10 && Math.abs(tx.getFee().value - txFeeForWithdrawalPerByte.multiply(txSize).value) > 1000);
@@ -334,7 +392,7 @@ public class BtcWalletService extends WalletService {
 
                             try {
                                 sendResult = wallet.sendCoins(sendRequest);
-                                printTxWithInputs("FeeEstimationTransaction", newTransaction);
+                                printTx("FeeEstimationTransaction", newTransaction);
                             } catch (InsufficientMoneyException e2) {
                                 errorMessageHandler.handleErrorMessage("We did not get the correct fee calculated. " + (e2.missing != null ? e2.missing.toFriendlyString() : ""));
                             }
@@ -405,7 +463,7 @@ public class BtcWalletService extends WalletService {
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txSize = tx.bitcoinSerialize().length;
-                printTxWithInputs("FeeEstimationTransaction", tx);
+                printTx("FeeEstimationTransaction", tx);
             }
             while (counter < 10 && Math.abs(tx.getFee().value - txFeeForWithdrawalPerByte.multiply(txSize).value) > 1000);
             if (counter == 10)
@@ -455,7 +513,7 @@ public class BtcWalletService extends WalletService {
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txSize = tx.bitcoinSerialize().length;
-                printTxWithInputs("FeeEstimationTransactionForMultipleAddresses", tx);
+                printTx("FeeEstimationTransactionForMultipleAddresses", tx);
             }
             while (counter < 10 && Math.abs(tx.getFee().value - txFeeForWithdrawalPerByte.multiply(txSize).value) > 1000);
             if (counter == 10)
@@ -469,10 +527,25 @@ public class BtcWalletService extends WalletService {
         }
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Withdrawal Send
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String sendFunds(String fromAddress,
+                            String toAddress,
+                            Coin receiverAmount,
+                            Coin fee,
+                            @Nullable KeyParameter aesKey,
+                            AddressEntry.Context context,
+                            FutureCallback<Transaction> callback) throws AddressFormatException,
+            AddressEntryException, InsufficientMoneyException {
+        Wallet.SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
+        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
+        Futures.addCallback(sendResult.broadcastComplete, callback);
+
+        printTx("sendFunds", sendResult.tx);
+        return sendResult.tx.getHashAsString();
+    }
 
     public String sendFundsForMultipleAddresses(Set<String> fromAddresses,
                                                 String toAddress,
@@ -487,11 +560,10 @@ public class BtcWalletService extends WalletService {
         Wallet.SendResult sendResult = wallet.sendCoins(request);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
-        printTxWithInputs("sendFunds", sendResult.tx);
+        printTx("sendFunds", sendResult.tx);
         return sendResult.tx.getHashAsString();
     }
 
-    @Override
     protected Wallet.SendRequest getSendRequest(String fromAddress,
                                                 String toAddress,
                                                 Coin amount,
