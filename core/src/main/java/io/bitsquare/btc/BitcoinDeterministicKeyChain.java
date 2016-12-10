@@ -33,6 +33,7 @@ public class BitcoinDeterministicKeyChain extends DeterministicKeyChain {
     private static final Logger log = LoggerFactory.getLogger(BitcoinDeterministicKeyChain.class);
 
     // See https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
+    // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
     // We use 0 (0x80000000) as coin_type for BTC 
     public static ImmutableList<ChildNumber> BIP44_BTC_ACCOUNT_PATH = ImmutableList.of(
             new ChildNumber(44, true),

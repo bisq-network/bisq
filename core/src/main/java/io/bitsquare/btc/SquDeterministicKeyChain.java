@@ -34,7 +34,7 @@ public class SquDeterministicKeyChain extends DeterministicKeyChain {
 
     // See https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
     // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-    // We use 139 (0x80000000) as coin_type for BTC 
+    // We use 139 (0x80000000) as coin_type for SQU 
     // TODO register once the token name is fix
     public static ImmutableList<ChildNumber> BIP44_SQU_ACCOUNT_PATH = ImmutableList.of(
             new ChildNumber(44, true),
