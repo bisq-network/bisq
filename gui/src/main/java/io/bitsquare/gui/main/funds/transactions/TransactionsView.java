@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.funds.transactions;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.BtcWalletService;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple4;
 import io.bitsquare.common.util.Utilities;
@@ -88,7 +88,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final DisputeManager disputeManager;
-    private Stage stage;
+    private final Stage stage;
     private final OfferDetailsWindow offerDetailsWindow;
     private WalletEventListener walletEventListener;
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -564,9 +564,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                     walletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
                 new Popup().information("Transaction successfully sent to a new address in the local Bitsquare wallet.").show();
-            }, errorMessage -> {
-                new Popup().warning(errorMessage).show();
-            });
+            }, errorMessage -> new Popup().warning(errorMessage).show());
         } catch (Throwable e) {
             new Popup().warning(e.getMessage()).show();
         }

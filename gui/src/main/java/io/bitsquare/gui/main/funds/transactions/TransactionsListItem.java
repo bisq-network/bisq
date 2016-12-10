@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.funds.transactions;
 
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Tradable;
@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.Optional;
 
-public class TransactionsListItem {
+class TransactionsListItem {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private String dateString;
@@ -69,7 +69,7 @@ public class TransactionsListItem {
 
         Coin valueSentToMe = transaction.getValueSentToMe(walletService.getWallet());
         Coin valueSentFromMe = transaction.getValueSentFromMe(walletService.getWallet());
-        Address address = null;
+        Address address;
         if (valueSentToMe.isZero()) {
             amountAsCoin = valueSentFromMe.multiply(-1);
 
@@ -186,29 +186,27 @@ public class TransactionsListItem {
 
     private void updateConfidence(TransactionConfidence confidence) {
         confirmations = confidence.getDepthInBlocks();
-        if (confidence != null) {
-            switch (confidence.getConfidenceType()) {
-                case UNKNOWN:
-                    tooltip.setText("Unknown transaction status");
-                    txConfidenceIndicator.setProgress(0);
-                    break;
-                case PENDING:
-                    tooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
-                    txConfidenceIndicator.setProgress(-1.0);
-                    break;
-                case BUILDING:
-                    tooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                    txConfidenceIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
-                    break;
-                case DEAD:
-                    tooltip.setText("Transaction is invalid.");
-                    txConfidenceIndicator.setStyle(" -fx-progress-color: -bs-error-red;");
-                    txConfidenceIndicator.setProgress(-1);
-                    break;
-            }
-
-            txConfidenceIndicator.setPrefSize(24, 24);
+        switch (confidence.getConfidenceType()) {
+            case UNKNOWN:
+                tooltip.setText("Unknown transaction status");
+                txConfidenceIndicator.setProgress(0);
+                break;
+            case PENDING:
+                tooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
+                txConfidenceIndicator.setProgress(-1.0);
+                break;
+            case BUILDING:
+                tooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
+                txConfidenceIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
+                break;
+            case DEAD:
+                tooltip.setText("Transaction is invalid.");
+                txConfidenceIndicator.setStyle(" -fx-progress-color: -bs-error-red;");
+                txConfidenceIndicator.setProgress(-1);
+                break;
         }
+
+        txConfidenceIndicator.setPrefSize(24, 24);
     }
 
     public TxConfidenceIndicator getTxConfidenceIndicator() {

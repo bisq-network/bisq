@@ -18,9 +18,9 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
+import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
@@ -30,6 +30,7 @@ import javafx.scene.input.KeyCode;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,7 @@ import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
 
 public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> {
     private static final Logger log = LoggerFactory.getLogger(SpendFromDepositTxWindow.class);
-    private TradeWalletService tradeWalletService;
+    private final TradeWalletService tradeWalletService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -159,7 +160,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
             }
 
             @Override
-            public void onFailure(Throwable t) {
+            public void onFailure(@NotNull Throwable t) {
                 log.error(t.toString());
                 log.error("onFailure");
                 UserThread.execute(() -> new Popup<>().warning(t.toString()).show());

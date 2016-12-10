@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.btc.wallet;
 
 import com.google.common.collect.ImmutableList;
 import org.bitcoinj.crypto.ChildNumber;
@@ -28,8 +28,8 @@ import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.KeyChainFactory;
 import org.bitcoinj.wallet.Protos;
 
-public class BitsquareKeyChainFactory implements KeyChainFactory {
-    private boolean useBitcoinDeterministicKeyChain;
+class BitsquareKeyChainFactory implements KeyChainFactory {
+    private final boolean useBitcoinDeterministicKeyChain;
 
     public BitsquareKeyChainFactory(boolean useBitcoinDeterministicKeyChain) {
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;

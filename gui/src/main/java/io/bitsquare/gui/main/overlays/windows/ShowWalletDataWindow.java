@@ -17,8 +17,7 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.btc.BtcWalletService;
-import io.bitsquare.btc.SquWalletService;
+import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.Overlay;
@@ -35,17 +34,15 @@ import static io.bitsquare.gui.util.FormBuilder.addLabelTextArea;
 
 public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
     private static final Logger log = LoggerFactory.getLogger(ShowWalletDataWindow.class);
-    private BtcWalletService btcWalletService;
-    private SquWalletService squWalletService;
+    private final WalletsManager walletsManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ShowWalletDataWindow(BtcWalletService btcWalletService, SquWalletService squWalletService) {
-        this.btcWalletService = btcWalletService;
-        this.squWalletService = squWalletService;
+    public ShowWalletDataWindow(WalletsManager walletsManager) {
+        this.walletsManager = walletsManager;
         type = Type.Attention;
     }
 
@@ -98,9 +95,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         onAction(() -> Utilities.copyToClipboard(textArea.getText()));
     }
 
-    private void showWallet(TextArea textArea, CheckBox isUpdateCheckBox) {
-        String btcWalletData = btcWalletService.exportWalletData(isUpdateCheckBox.isSelected());
-        String sqrWalletData = squWalletService.exportWalletData(isUpdateCheckBox.isSelected());
-        textArea.setText("BTC Wallet:\n" + btcWalletData + "\n\nSQU Wallet:\n" + sqrWalletData);
+    private void showWallet(TextArea textArea, CheckBox includePrivKeysCheckBox) {
+        textArea.setText(walletsManager.getWalletsAsString(includePrivKeysCheckBox.isSelected()));
     }
 }

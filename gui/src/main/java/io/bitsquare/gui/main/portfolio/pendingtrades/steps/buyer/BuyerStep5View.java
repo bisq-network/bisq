@@ -19,7 +19,11 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.AddressEntryException;
+import io.bitsquare.btc.InsufficientFundsException;
+import io.bitsquare.btc.Restrictions;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -54,8 +58,8 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 public class BuyerStep5View extends TradeStepView {
     private final ChangeListener<Boolean> focusedPropertyListener;
 
-    protected Label btcTradeAmountLabel;
-    protected Label fiatTradeAmountLabel;
+    private Label btcTradeAmountLabel;
+    private Label fiatTradeAmountLabel;
     private InputTextField withdrawAddressTextField;
     private Button withdrawToExternalWalletButton, useSavingsWalletButton;
 

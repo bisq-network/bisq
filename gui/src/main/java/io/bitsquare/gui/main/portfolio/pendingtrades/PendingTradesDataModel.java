@@ -22,9 +22,9 @@ import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.btc.BtcWalletService;
-import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.FaultHandler;
@@ -70,11 +70,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final TradeManager tradeManager;
     public final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
-    private FeeService feeService;
+    private final FeeService feeService;
     private final User user;
     private final KeyRing keyRing;
     public final DisputeManager disputeManager;
-    private P2PService p2PService;
+    private final P2PService p2PService;
     public final Navigation navigation;
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
@@ -213,7 +213,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return tradeManager.isMyOffer(offer);
     }
 
-    boolean isOfferer() {
+    private boolean isOfferer() {
         return isOfferer;
     }
 

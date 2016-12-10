@@ -22,10 +22,10 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.InsufficientFundsException;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -90,7 +90,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private BalanceListener balanceListener;
     private Set<String> fromAddresses;
     private Coin amountOfSelectedItems = Coin.ZERO;
-    private ObjectProperty<Coin> senderAmountAsCoinProperty = new SimpleObjectProperty<>(Coin.ZERO);
+    private final ObjectProperty<Coin> senderAmountAsCoinProperty = new SimpleObjectProperty<>(Coin.ZERO);
     private ChangeListener<String> amountListener;
     private ChangeListener<Boolean> amountFocusListener;
 

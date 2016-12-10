@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.btc.wallet;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.bitcoinj.core.*;
@@ -36,16 +36,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our addressEntry.
  */
-abstract class BitsquareCoinSelector implements CoinSelector {
-    private static final Logger log = LoggerFactory.getLogger(BitsquareCoinSelector.class);
-    protected final NetworkParameters params;
+abstract class BtcCoinSelector implements CoinSelector {
+    private static final Logger log = LoggerFactory.getLogger(BtcCoinSelector.class);
+    final NetworkParameters params;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected BitsquareCoinSelector(NetworkParameters params) {
+    BtcCoinSelector(NetworkParameters params) {
         this.params = params;
     }
 
@@ -64,7 +64,7 @@ abstract class BitsquareCoinSelector implements CoinSelector {
     /**
      * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
      */
-    protected boolean shouldSelect(Transaction tx) {
+    private boolean shouldSelect(Transaction tx) {
         return isInBlockChainOrPending(tx);
     }
 

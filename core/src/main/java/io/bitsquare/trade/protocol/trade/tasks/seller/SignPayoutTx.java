@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class SignPayoutTx extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SignPayoutTx.class);
 
-    public SignPayoutTx(TaskRunner taskHandler, Trade trade) {
+    private SignPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

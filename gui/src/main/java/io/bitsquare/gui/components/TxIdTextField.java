@@ -19,8 +19,8 @@ package io.bitsquare.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;

@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.funds.locked;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;

@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.dao.wallet.receive;
 
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.SquWalletService;
+import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -194,7 +194,8 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
     }
 
     private void updateBalance() {
-        confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
+        if (squWallet != null)
+            confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
     }
 }
 

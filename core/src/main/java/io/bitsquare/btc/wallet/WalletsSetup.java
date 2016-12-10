@@ -15,13 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.btc.wallet;
 
 import com.google.common.util.concurrent.Service;
 import com.google.inject.Inject;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bitsquare.app.Log;
-import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.btc.*;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ExceptionHandler;
@@ -32,8 +32,6 @@ import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.*;
 import org.bitcoinj.core.*;
-import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.net.discovery.SeedPeers;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -57,8 +55,10 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class WalletSetup {
-    private static final Logger log = LoggerFactory.getLogger(WalletSetup.class);
+import static com.google.common.base.Preconditions.checkArgument;
+
+public class WalletsSetup {
+    private static final Logger log = LoggerFactory.getLogger(WalletsSetup.class);
 
     private static final long STARTUP_TIMEOUT_SEC = 60;
 
@@ -67,15 +67,14 @@ public class WalletSetup {
     private final AddressEntryList addressEntryList;
     private final UserAgent userAgent;
     private final Preferences preferences;
-    private final FeeService feeService;
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final NetworkParameters params;
     private final File walletDir;
-    private BitSquareWalletAppKit walletAppKit;
-    private Wallet wallet;
-    private Wallet tokenWallet;
-    private String walletFileName = "Bitsquare";
-    private String tokenWalletFileName = "SQU";
+    private WalletConfig walletConfig;
+    private Wallet btcWallet;
+    private Wallet squWallet;
+    private final String walletFileName = "Bitsquare";
+    private final String tokenWalletFileName = "SQU";
     private final Long bloomFilterTweak;
     private KeyParameter aesKey;
     private final Storage<Long> storage;
@@ -84,25 +83,23 @@ public class WalletSetup {
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     private final DownloadListener downloadListener = new DownloadListener();
     // private final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
-    private List<Runnable> setupCompletedHandlers = new ArrayList<>();
+    private final List<Runnable> setupCompletedHandlers = new ArrayList<>();
 
 
     @Inject
-    public WalletSetup(RegTestHost regTestHost,
-                       TradeWalletService tradeWalletService,
-                       AddressEntryList addressEntryList,
-                       UserAgent userAgent,
-                       Preferences preferences,
-                       FeeService feeService,
-                       Socks5ProxyProvider socks5ProxyProvider,
-                       @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
+    public WalletsSetup(RegTestHost regTestHost,
+                        TradeWalletService tradeWalletService,
+                        AddressEntryList addressEntryList,
+                        UserAgent userAgent,
+                        Preferences preferences,
+                        Socks5ProxyProvider socks5ProxyProvider,
+                        @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
 
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.userAgent = userAgent;
         this.preferences = preferences;
-        this.feeService = feeService;
         this.socks5ProxyProvider = socks5ProxyProvider;
 
         params = preferences.getBitcoinNetwork().getParameters();
@@ -118,7 +115,7 @@ public class WalletSetup {
         }
     }
 
-    public void initialize(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void initialize(@Nullable DeterministicSeed btcSeed, @Nullable DeterministicSeed squSeed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         Log.traceCall();
 
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
@@ -138,26 +135,26 @@ public class WalletSetup {
         log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new BitSquareWalletAppKit(params, socks5Proxy, walletDir, walletFileName, tokenWalletFileName) {
+        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, walletFileName, tokenWalletFileName) {
             @Override
             protected void onSetupCompleted() {
-                wallet = walletAppKit.wallet();
-                tokenWallet = walletAppKit.tokenWallet();
+                btcWallet = walletConfig.wallet();
+                squWallet = walletConfig.tokenWallet();
 
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
                 // their own money!
-                wallet.allowSpendingUnconfirmedTransactions();
-                tokenWallet.allowSpendingUnconfirmedTransactions();
+                btcWallet.allowSpendingUnconfirmedTransactions();
+                squWallet.allowSpendingUnconfirmedTransactions();
 
                 if (params != RegTestParams.get())
-                    walletAppKit.peerGroup().setMaxConnections(11);
+                    walletConfig.peerGroup().setMaxConnections(11);
 
                 // wallet.addEventListener(walletEventListener);
 
-                addressEntryList.onWalletReady(wallet);
+                addressEntryList.onWalletReady(btcWallet);
 
 
-                walletAppKit.peerGroup().addEventListener(new PeerEventListener() {
+                walletConfig.peerGroup().addEventListener(new PeerEventListener() {
                     @Override
                     public void onPeersDiscovered(Set<PeerAddress> peerAddresses) {
                     }
@@ -173,13 +170,13 @@ public class WalletSetup {
                     @Override
                     public void onPeerConnected(Peer peer, int peerCount) {
                         numPeers.set(peerCount);
-                        connectedPeers.set(walletAppKit.peerGroup().getConnectedPeers());
+                        connectedPeers.set(walletConfig.peerGroup().getConnectedPeers());
                     }
 
                     @Override
                     public void onPeerDisconnected(Peer peer, int peerCount) {
                         numPeers.set(peerCount);
-                        connectedPeers.set(walletAppKit.peerGroup().getConnectedPeers());
+                        connectedPeers.set(walletConfig.peerGroup().getConnectedPeers());
                     }
 
                     @Override
@@ -199,7 +196,7 @@ public class WalletSetup {
                 });
 
                 // set after wallet is ready
-                tradeWalletService.setWalletAppKit(walletAppKit);
+                tradeWalletService.setWalletConfig(walletConfig);
                 tradeWalletService.setAddressEntryList(addressEntryList);
                 timeoutTimer.stop();
 
@@ -216,7 +213,7 @@ public class WalletSetup {
 
         // Bitsquare's BitcoinJ fork has added a bloomFilterTweak (nonce) setter to reuse the same seed avoiding the trivial vulnerability
         // by getting the real pub keys by intersections of several filters sent at each startup.
-        walletAppKit.setBloomFilterTweak(bloomFilterTweak);
+        walletConfig.setBloomFilterTweak(bloomFilterTweak);
 
         // Avoid the simple attack (see: https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj/) due to the 
         // default implementation using both pubkey and hash of pubkey. We have set a insertPubKey flag in BasicKeyChain to default false.
@@ -225,7 +222,7 @@ public class WalletSetup {
         // the threshold. To avoid reaching the threshold we create much more keys which are unlikely to cause update of the
         // filter for most users. With lookaheadSize of 500 we get 1333 keys which should be enough for most users to 
         // never need to update a bloom filter, which would weaken privacy.
-        walletAppKit.setLookaheadSize(500);
+        walletConfig.setLookaheadSize(500);
 
         // Calculation is derived from: https://www.reddit.com/r/Bitcoin/comments/2vrx6n/privacy_in_bitcoinj_android_wallet_multibit_hive/coknjuz
         // No. of false positives (56M keys in the blockchain): 
@@ -243,7 +240,7 @@ public class WalletSetup {
         // For now to reduce risks with high bandwidth consumption we reduce the FP rate by half.
         // FP rate = 0,00005;  No. of false positives: 0,00005 * 56 000 000  = 2800
         // 1333 / (2800 + 1333) = 0.32 -> 32 % probability that a pub key is in our wallet
-        walletAppKit.setBloomFilterFalsePositiveRate(0.00005);
+        walletConfig.setBloomFilterFalsePositiveRate(0.00005);
 
         String btcNodes = preferences.getBitcoinNodes();
         log.debug("btcNodes: " + btcNodes);
@@ -284,7 +281,7 @@ public class WalletSetup {
                 PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
                 log.debug("btcNodes parsed: " + Arrays.toString(peerAddressListFixed));
 
-                walletAppKit.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
+                walletConfig.setPeerNodes(peerAddressList.toArray(peerAddressListFixed));
                 usePeerNodes = true;
             }
         }
@@ -294,13 +291,13 @@ public class WalletSetup {
         if (params == RegTestParams.get()) {
             if (regTestHost == RegTestHost.REG_TEST_SERVER) {
                 try {
-                    walletAppKit.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
+                    walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.SERVER_IP), params.getPort()));
                     usePeerNodes = true;
                 } catch (UnknownHostException e) {
                     throw new RuntimeException(e);
                 }
             } else if (regTestHost == RegTestHost.LOCALHOST) {
-                walletAppKit.connectToLocalHost();   // You should run a regtest mode bitcoind locally.}
+                walletConfig.connectToLocalHost();   // You should run a regtest mode bitcoind locally.}
             }
         } else if (params == MainNetParams.get()) {
             // Checkpoints are block headers that ship inside our app: for a new user, we pick the last header
@@ -308,13 +305,13 @@ public class WalletSetup {
             // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
             // last months worth or more (takes a few seconds).
             try {
-                walletAppKit.setCheckpoints(getClass().getResourceAsStream("/wallet/checkpoints"));
+                walletConfig.setCheckpoints(getClass().getResourceAsStream("/wallet/checkpoints"));
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error(e.toString());
             }
         } else if (params == TestNet3Params.get()) {
-            walletAppKit.setCheckpoints(getClass().getResourceAsStream("/wallet/checkpoints.testnet"));
+            walletConfig.setCheckpoints(getClass().getResourceAsStream("/wallet/checkpoints.testnet"));
         }
 
         // If operating over a proxy and we haven't set any peer nodes, then
@@ -331,31 +328,35 @@ public class WalletSetup {
         if (socks5Proxy != null && !usePeerNodes) {
             // SeedPeersSocks5Dns should replace SeedPeers once working reliably.
             // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
-            walletAppKit.setDiscovery(new SeedPeers(params));
+            walletConfig.setDiscovery(new SeedPeers(params));
         }
 
-        walletAppKit.setDownloadListener(downloadListener)
+        walletConfig.setDownloadListener(downloadListener)
                 .setBlockingStartup(false)
-                .setUserAgent(userAgent.getName(), userAgent.getVersion())
-                .restoreWalletFromSeed(seed);
+                .setUserAgent(userAgent.getName(), userAgent.getVersion());
 
-        walletAppKit.addListener(new Service.Listener() {
+        if (btcSeed != null)
+            walletConfig.restoreWalletFromSeed(btcSeed);
+        if (squSeed != null)
+            walletConfig.restoreSquWalletFromSeed(squSeed);
+
+        walletConfig.addListener(new Service.Listener() {
             @Override
             public void failed(@NotNull Service.State from, @NotNull Throwable failure) {
-                walletAppKit = null;
+                walletConfig = null;
                 log.error("walletAppKit failed");
                 timeoutTimer.stop();
                 UserThread.execute(() -> exceptionHandler.handleException(failure));
             }
         }, Threading.USER_THREAD);
-        walletAppKit.startAsync();
+        walletConfig.startAsync();
     }
 
     public void shutDown() {
-        if (walletAppKit != null) {
+        if (walletConfig != null) {
             try {
-                walletAppKit.stopAsync();
-                walletAppKit.awaitTerminated(5, TimeUnit.SECONDS);
+                walletConfig.stopAsync();
+                walletConfig.awaitTerminated(5, TimeUnit.SECONDS);
             } catch (Throwable e) {
                 // ignore
             }
@@ -363,12 +364,12 @@ public class WalletSetup {
         }
     }
 
-    public void backupWallets() {
+    void backupWallets() {
         FileUtil.rollingBackup(walletDir, walletFileName + ".wallet", 20);
         FileUtil.rollingBackup(walletDir, tokenWalletFileName + ".wallet", 20);
     }
 
-    public void clearBackup() {
+    void clearBackups() {
         try {
             FileUtil.deleteDirectory(new File(Paths.get(walletDir.getAbsolutePath(), "backup").toString()));
         } catch (IOException e) {
@@ -381,24 +382,20 @@ public class WalletSetup {
         setupCompletedHandlers.add(handler);
     }
 
-    public Wallet getWallet() {
-        return wallet;
+    public Wallet getBtcWallet() {
+        return btcWallet;
     }
 
-    public Wallet getTokenWallet() {
-        return tokenWallet;
+    public Wallet getSquWallet() {
+        return squWallet;
     }
 
     public NetworkParameters getParams() {
         return params;
     }
 
-    public KeyParameter getAesKey() {
-        return aesKey;
-    }
-
-    public BlockChain chain() {
-        return walletAppKit.chain();
+    public BlockChain getChain() {
+        return walletConfig.chain();
     }
 
     public ReadOnlyIntegerProperty numPeersProperty() {
@@ -413,66 +410,10 @@ public class WalletSetup {
         return downloadListener.percentageProperty();
     }
 
-    public void setAesKey(KeyParameter aesKey) {
-        this.aesKey = aesKey;
+    public PeerGroup getPeerGroup() {
+        return walletConfig.peerGroup();
     }
 
-    public void decryptWallets(@NotNull KeyParameter key) {
-        wallet.decrypt(key);
-        tokenWallet.decrypt(key);
-
-        addressEntryList.stream().forEach(e -> {
-            final DeterministicKey keyPair = e.getKeyPair();
-            if (keyPair != null && keyPair.isEncrypted())
-                e.setDeterministicKey(keyPair.decrypt(key));
-        });
-
-        setAesKey(null);
-        addressEntryList.queueUpForSave();
-    }
-
-    public void encryptWallets(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
-        if (this.aesKey != null) {
-            log.warn("encryptWallet called but we have a aesKey already set. " +
-                    "We decryptWallet with the old key before we apply the new key.");
-            decryptWallets(this.aesKey);
-        }
-
-        wallet.encrypt(keyCrypterScrypt, key);
-        tokenWallet.encrypt(keyCrypterScrypt, key);
-
-        addressEntryList.stream().forEach(e -> {
-            final DeterministicKey keyPair = e.getKeyPair();
-            if (keyPair != null && keyPair.isEncrypted())
-                e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
-        });
-        setAesKey(key);
-        addressEntryList.queueUpForSave();
-    }
-
-    public PeerGroup peerGroup() {
-        return walletAppKit.peerGroup();
-    }
-  /*  public String exportWalletData(boolean includePrivKeys) {
-        StringBuilder addressEntryListData = new StringBuilder();
-        getAddressEntryListAsImmutableList().stream().forEach(e -> addressEntryListData.append(e.toString()).append("\n"));
-        return "BitcoinJ wallet:\n" +
-                wallet.toString(includePrivKeys, true, true, walletAppKit.chain()) + "\n\n" +
-                "Bitsquare address entry list:\n" +
-                addressEntryListData.toString() +
-                "All pubkeys as hex:\n" +
-                wallet.printAllPubKeysAsHex();
-    }
-
-    public String exportTokenWalletData(boolean includePrivKeys) {
-        StringBuilder addressEntryListData = new StringBuilder();
-        return "BitcoinJ SQU wallet:\n" +
-                tokenWallet.toString(includePrivKeys, true, true, walletAppKit.chain()) + "\n\n" +
-                "SQU address entry list:\n" +
-                addressEntryListData.toString() +
-                "All pubkeys as hex:\n" +
-                tokenWallet.printAllPubKeysAsHex();
-    }*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Inner classes
@@ -498,62 +439,19 @@ public class WalletSetup {
         }
     }
 
-
-    /*private class BitsquareWalletEventListener extends AbstractWalletEventListener {
-        @Override
-        public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-            notifyBalanceListeners(tx);
-        }
-
-        @Override
-        public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-            notifyBalanceListeners(tx);
-        }
-
-        @Override
-        public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-            for (AddressConfidenceListener addressConfidenceListener : addressConfidenceListeners) {
-                List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
-                transactionConfidenceList.add(getTransactionConfidence(tx, addressConfidenceListener.getAddress()));
-
-                TransactionConfidence transactionConfidence = getMostRecentConfidence(transactionConfidenceList);
-                addressConfidenceListener.onTransactionConfidenceChanged(transactionConfidence);
-            }
-
-            txConfidenceListeners.stream()
-                    .filter(txConfidenceListener -> tx != null &&
-                            tx.getHashAsString() != null &&
-                            txConfidenceListener != null &&
-                            tx.getHashAsString().equals(txConfidenceListener.getTxID()))
-                    .forEach(txConfidenceListener ->
-                            txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
-        }
-
-        private void notifyBalanceListeners(Transaction tx) {
-            for (BalanceListener balanceListener : balanceListeners) {
-                Coin balance;
-                if (balanceListener.getAddress() != null)
-                    balance = getBalanceForAddress(balanceListener.getAddress());
-                else
-                    balance = getAvailableBalance();
-
-                balanceListener.onBalanceChanged(balance, tx);
-            }
-        }
-    }*/
-
-    public void restoreBtcSeedWords(DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void restoreSeedWords(@Nullable DeterministicSeed btcSeed, @Nullable DeterministicSeed squSeed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+        checkArgument(btcSeed != null || squSeed != null, "Either btcSeed or squSeed must be set.");
         Context ctx = Context.get();
         new Thread(() -> {
             try {
                 Context.propagate(ctx);
-                walletAppKit.stopAsync();
-                walletAppKit.awaitTerminated();
-                initialize(seed, resultHandler, exceptionHandler);
+                walletConfig.stopAsync();
+                walletConfig.awaitTerminated();
+                initialize(btcSeed, squSeed, resultHandler, exceptionHandler);
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error("Executing task failed. " + t.getMessage());
             }
-        }, "RestoreWallet-%d").start();
+        }, "RestoreBTCWallet-%d").start();
     }
 }

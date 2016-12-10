@@ -18,8 +18,7 @@
 package io.bitsquare.gui.main.settings.network;
 
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.BtcWalletService;
-import io.bitsquare.btc.WalletSetup;
+import io.bitsquare.btc.wallet.WalletsSetup;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.model.Activatable;
@@ -68,26 +67,24 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     TableColumn<P2pNetworkListItem, String> onionAddressColumn, connectionTypeColumn, creationDateColumn,
             roundTripTimeColumn, sentBytesColumn, receivedBytesColumn, peerTypeColumn;
 
-    private final BtcWalletService walletService;
     private final Preferences preferences;
-    private Clock clock;
+    private final Clock clock;
     private final BSFormatter formatter;
-    private final WalletSetup walletSetup;
+    private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private Subscription numP2PPeersSubscription;
     private Subscription bitcoinPeersSubscription;
     private Subscription nodeAddressSubscription;
-    private ObservableList<P2pNetworkListItem> networkListItems = FXCollections.observableArrayList();
+    private final ObservableList<P2pNetworkListItem> networkListItems = FXCollections.observableArrayList();
     private final SortedList<P2pNetworkListItem> sortedList = new SortedList<>(networkListItems);
     private ChangeListener<Boolean> btcNodesFocusListener;
     private String btcNodesPreFocusText;
 
     @Inject
-    public NetworkSettingsView(BtcWalletService walletService, WalletSetup walletSetup, P2PService p2PService, Preferences preferences, Clock clock,
+    public NetworkSettingsView(WalletsSetup walletsSetup, P2PService p2PService, Preferences preferences, Clock clock,
                                BSFormatter formatter) {
         super();
-        this.walletService = walletService;
-        this.walletSetup = walletSetup;
+        this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.preferences = preferences;
         this.clock = clock;
@@ -137,7 +134,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             }
         });
 
-        bitcoinPeersSubscription = EasyBind.subscribe(walletSetup.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
+        bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
 
         nodeAddressSubscription = EasyBind.subscribe(p2PService.getNetworkNode().nodeAddressProperty(),
                 nodeAddress -> onionAddress.setText(nodeAddress == null ? "Not known yet..." : p2PService.getAddress().getFullAddress()));
@@ -204,7 +201,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     private void updateBitcoinPeersTextArea() {
         bitcoinPeersTextArea.clear();
-        List<Peer> peerList = walletSetup.connectedPeersProperty().get();
+        List<Peer> peerList = walletsSetup.connectedPeersProperty().get();
         if (peerList != null) {
             peerList.stream().forEach(e -> {
                 if (bitcoinPeersTextArea.getText().length() > 0)

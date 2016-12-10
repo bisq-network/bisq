@@ -20,7 +20,9 @@ package io.bitsquare.gui.main.account.content.seedwords;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.BtcWalletService;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.SquWalletService;
+import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -35,8 +37,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
-import org.bitcoinj.core.Wallet;
-import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.wallet.DeterministicSeed;
@@ -54,24 +54,29 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 @FxmlView
 public class SeedWordsView extends ActivatableView<GridPane, Void> {
-    private final BtcWalletService walletService;
+    private final WalletsManager walletsManager;
+    private final BtcWalletService btcWalletService;
+    private final SquWalletService squWalletService;
     private final WalletPasswordWindow walletPasswordWindow;
-    private Preferences preferences;
+    private final Preferences preferences;
 
     private Button restoreButton;
-    private TextArea displaySeedWordsTextArea, restoreSeedWordsTextArea;
+    private TextArea displayBtcSeedWordsTextArea, displaySquSeedWordsTextArea, btcSeedWordsTextArea, squSeedWordsTextArea;
     private DatePicker datePicker, restoreDatePicker;
 
     private int gridRow = 0;
-    private DeterministicSeed keyChainSeed;
-    private ChangeListener<Boolean> seedWordsValidChangeListener;
-    private SimpleBooleanProperty seedWordsValid = new SimpleBooleanProperty(false);
-    private SimpleBooleanProperty dateValid = new SimpleBooleanProperty(false);
-    private ChangeListener<String> seedWordsTextAreaChangeListener;
+    private ChangeListener<Boolean> btcSeedWordsValidChangeListener, squSeedWordsValidChangeListener;
+    private final SimpleBooleanProperty btcSeedWordsValid = new SimpleBooleanProperty(false);
+    private final SimpleBooleanProperty squSeedWordsValid = new SimpleBooleanProperty(false);
+    private final SimpleBooleanProperty dateValid = new SimpleBooleanProperty(false);
+    private ChangeListener<String> btcSeedWordsTextAreaChangeListener;
+    private ChangeListener<String> squSeedWordsTextAreaChangeListener;
     private ChangeListener<Boolean> datePickerChangeListener;
     private ChangeListener<LocalDate> dateChangeListener;
-    private BooleanProperty seedWordsEdited = new SimpleBooleanProperty();
-    private String seedWordText;
+    private final BooleanProperty btcSeedWordsEdited = new SimpleBooleanProperty();
+    private final BooleanProperty squSeedWordsEdited = new SimpleBooleanProperty();
+    private String btcSeedWordText;
+    private String squSeedWordText;
     private LocalDate walletCreationDate;
 
 
@@ -80,52 +85,80 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsView(BtcWalletService walletService, WalletPasswordWindow walletPasswordWindow, Preferences preferences) {
-        this.walletService = walletService;
+    private SeedWordsView(WalletsManager walletsManager, BtcWalletService btcWalletService, SquWalletService squWalletService, WalletPasswordWindow walletPasswordWindow, Preferences preferences) {
+        this.walletsManager = walletsManager;
+        this.btcWalletService = btcWalletService;
+        this.squWalletService = squWalletService;
         this.walletPasswordWindow = walletPasswordWindow;
         this.preferences = preferences;
     }
 
     @Override
     protected void initialize() {
-        addTitledGroupBg(root, gridRow, 2, "Backup your wallet seed words");
-        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_DISTANCE).second;
-        displaySeedWordsTextArea.setPrefHeight(60);
-        displaySeedWordsTextArea.setEditable(false);
+        addTitledGroupBg(root, gridRow, 3, "Backup your wallet seed words");
+        displayBtcSeedWordsTextArea = addLabelTextArea(root, gridRow, "BTC wallet seed words:", "", Layout.FIRST_ROW_DISTANCE).second;
+        displayBtcSeedWordsTextArea.setPrefHeight(60);
+        displayBtcSeedWordsTextArea.setEditable(false);
+
+        displaySquSeedWordsTextArea = addLabelTextArea(root, ++gridRow, "SQU wallet seed words:", "").second;
+        displaySquSeedWordsTextArea.setPrefHeight(60);
+        displaySquSeedWordsTextArea.setEditable(false);
+
         datePicker = addLabelDatePicker(root, ++gridRow, "Wallet Date:").second;
         datePicker.setMouseTransparent(true);
 
-        addTitledGroupBg(root, ++gridRow, 2, "Restore your wallet seed words", Layout.GROUP_DISTANCE);
-        restoreSeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        restoreSeedWordsTextArea.setPrefHeight(60);
+        addTitledGroupBg(root, ++gridRow, 3, "Restore your wallet seed words", Layout.GROUP_DISTANCE);
+        btcSeedWordsTextArea = addLabelTextArea(root, gridRow, "BTC wallet seed words:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        btcSeedWordsTextArea.setPrefHeight(60);
+
+        squSeedWordsTextArea = addLabelTextArea(root, ++gridRow, "SQU wallet seed words:", "").second;
+        squSeedWordsTextArea.setPrefHeight(60);
+
         restoreDatePicker = addLabelDatePicker(root, ++gridRow, "Wallet Date:").second;
         restoreButton = addButtonAfterGroup(root, ++gridRow, "Restore wallet");
 
         addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
-        addMultilineLabel(root, gridRow, "Please write down you wallet seed words and the date! " +
+        addMultilineLabel(root, gridRow, "Please write down both wallet seed words and the date! " +
                         "You can recover your wallet any time with those seed words and the date.",
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
-
-        seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
+        btcSeedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {
-                restoreSeedWordsTextArea.getStyleClass().remove("validation_error");
+                btcSeedWordsTextArea.getStyleClass().remove("validation_error");
             } else {
-                restoreSeedWordsTextArea.getStyleClass().add("validation_error");
+                btcSeedWordsTextArea.getStyleClass().add("validation_error");
             }
         };
 
-        seedWordsTextAreaChangeListener = (observable, oldValue, newValue) -> {
-            seedWordsEdited.set(true);
+        squSeedWordsValidChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue) {
+                squSeedWordsTextArea.getStyleClass().remove("validation_error");
+            } else {
+                squSeedWordsTextArea.getStyleClass().add("validation_error");
+            }
+        };
+
+        btcSeedWordsTextAreaChangeListener = (observable, oldValue, newValue) -> {
+            btcSeedWordsEdited.set(true);
             try {
                 MnemonicCode codec = new MnemonicCode();
                 codec.check(Splitter.on(" ").splitToList(newValue));
-                seedWordsValid.set(true);
+                btcSeedWordsValid.set(true);
             } catch (IOException | MnemonicException e) {
-                seedWordsValid.set(false);
+                btcSeedWordsValid.set(false);
             }
         };
 
+        squSeedWordsTextAreaChangeListener = (observable, oldValue, newValue) -> {
+            squSeedWordsEdited.set(true);
+            try {
+                MnemonicCode codec = new MnemonicCode();
+                codec.check(Splitter.on(" ").splitToList(newValue));
+                squSeedWordsValid.set(true);
+            } catch (IOException | MnemonicException e) {
+                squSeedWordsValid.set(false);
+            }
+        };
 
         datePickerChangeListener = (observable, oldValue, newValue) -> {
             if (newValue)
@@ -139,23 +172,27 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void activate() {
-        seedWordsValid.addListener(seedWordsValidChangeListener);
+        btcSeedWordsValid.addListener(btcSeedWordsValidChangeListener);
+        squSeedWordsValid.addListener(squSeedWordsValidChangeListener);
         dateValid.addListener(datePickerChangeListener);
-        restoreSeedWordsTextArea.textProperty().addListener(seedWordsTextAreaChangeListener);
+        btcSeedWordsTextArea.textProperty().addListener(btcSeedWordsTextAreaChangeListener);
+        squSeedWordsTextArea.textProperty().addListener(squSeedWordsTextAreaChangeListener);
         restoreDatePicker.valueProperty().addListener(dateChangeListener);
-        restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !dateValid.get() || !seedWordsEdited.get(),
-                seedWordsValid, dateValid, seedWordsEdited));
+        restoreButton.disableProperty().bind(createBooleanBinding(() -> !btcSeedWordsValid.get() || !squSeedWordsValid.get() || !dateValid.get() || !btcSeedWordsEdited.get() || !squSeedWordsEdited.get(),
+                btcSeedWordsValid, squSeedWordsValid, dateValid, btcSeedWordsEdited, squSeedWordsEdited));
 
         restoreButton.setOnAction(e -> onRestore());
 
-        restoreSeedWordsTextArea.getStyleClass().remove("validation_error");
+        btcSeedWordsTextArea.getStyleClass().remove("validation_error");
+        squSeedWordsTextArea.getStyleClass().remove("validation_error");
         restoreDatePicker.getStyleClass().remove("validation_error");
 
 
-        DeterministicSeed keyChainSeed = walletService.getWallet().getKeyChainSeed();
+        DeterministicSeed btcKeyChainSeed = btcWalletService.getWallet().getKeyChainSeed();
+        DeterministicSeed squKeyChainSeed = squWalletService.getWallet().getKeyChainSeed();
         // wallet creation date is not encrypted
-        walletCreationDate = Instant.ofEpochSecond(keyChainSeed.getCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
-        if (keyChainSeed.isEncrypted()) {
+        walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
+        if (btcKeyChainSeed.isEncrypted()) {
             askForPassword();
         } else {
             String key = "showSeedWordsWarning";
@@ -165,13 +202,15 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                         .actionButtonText("Yes, and don't ask me again")
                         .onAction(() -> {
                             preferences.dontShowAgain(key, true);
-                            initSeedWords(keyChainSeed);
+                            initBtcSeedWords(btcKeyChainSeed);
+                            initSquSeedWords(squKeyChainSeed);
                             showSeedScreen();
                         })
                         .closeButtonText("No")
                         .show();
             } else {
-                initSeedWords(keyChainSeed);
+                initBtcSeedWords(btcKeyChainSeed);
+                initSquSeedWords(squKeyChainSeed);
                 showSeedScreen();
             }
         }
@@ -179,55 +218,58 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void deactivate() {
-        seedWordsValid.removeListener(seedWordsValidChangeListener);
+        btcSeedWordsValid.removeListener(btcSeedWordsValidChangeListener);
+        squSeedWordsValid.removeListener(squSeedWordsValidChangeListener);
         dateValid.removeListener(datePickerChangeListener);
-        restoreSeedWordsTextArea.textProperty().removeListener(seedWordsTextAreaChangeListener);
+        btcSeedWordsTextArea.textProperty().removeListener(btcSeedWordsTextAreaChangeListener);
+        squSeedWordsTextArea.textProperty().removeListener(squSeedWordsTextAreaChangeListener);
         restoreDatePicker.valueProperty().removeListener(dateChangeListener);
         restoreButton.disableProperty().unbind();
-
         restoreButton.setOnAction(null);
 
-
-        displaySeedWordsTextArea.setText("");
-        restoreSeedWordsTextArea.setText("");
+        displayBtcSeedWordsTextArea.setText("");
+        displaySquSeedWordsTextArea.setText("");
+        btcSeedWordsTextArea.setText("");
+        squSeedWordsTextArea.setText("");
 
         restoreDatePicker.setValue(null);
         datePicker.setValue(null);
 
-        restoreSeedWordsTextArea.getStyleClass().remove("validation_error");
+        btcSeedWordsTextArea.getStyleClass().remove("validation_error");
+        squSeedWordsTextArea.getStyleClass().remove("validation_error");
         restoreDatePicker.getStyleClass().remove("validation_error");
     }
 
     private void askForPassword() {
         walletPasswordWindow.headLine("Enter password to view seed words").onAesKey(aesKey -> {
-            Wallet wallet = walletService.getWallet();
-            KeyCrypter keyCrypter = wallet.getKeyCrypter();
-            keyChainSeed = wallet.getKeyChainSeed();
-            if (keyCrypter != null) {
-                DeterministicSeed decryptedSeed = keyChainSeed.decrypt(keyCrypter, "", aesKey);
-                initSeedWords(decryptedSeed);
-                showSeedScreen();
-            } else {
-                log.warn("keyCrypter is null");
-            }
+            initBtcSeedWords(walletsManager.getDecryptedSeed(aesKey, btcWalletService.getWallet()));
+            initSquSeedWords(walletsManager.getDecryptedSeed(aesKey, squWalletService.getWallet()));
+            showSeedScreen();
         }).show();
     }
 
-    private void initSeedWords(DeterministicSeed seed) {
+    private void initBtcSeedWords(DeterministicSeed seed) {
         List<String> mnemonicCode = seed.getMnemonicCode();
         if (mnemonicCode != null) {
-            seedWordText = Joiner.on(" ").join(mnemonicCode);
+            btcSeedWordText = Joiner.on(" ").join(mnemonicCode);
+        }
+    }
+
+    private void initSquSeedWords(DeterministicSeed seed) {
+        List<String> mnemonicCode = seed.getMnemonicCode();
+        if (mnemonicCode != null) {
+            squSeedWordText = Joiner.on(" ").join(mnemonicCode);
         }
     }
 
     private void showSeedScreen() {
-        displaySeedWordsTextArea.setText(seedWordText);
+        displayBtcSeedWordsTextArea.setText(btcSeedWordText);
+        displaySquSeedWordsTextArea.setText(squSeedWordText);
         datePicker.setValue(walletCreationDate);
     }
 
     private void onRestore() {
-        Wallet wallet = walletService.getWallet();
-        if (wallet.getBalance(Wallet.BalanceType.AVAILABLE).value > 0) {
+        if (walletsManager.hasPositiveBalance()) {
             new Popup()
                     .warning("Your bitcoin wallet is not empty.\n\n" +
                             "You must empty this wallet before attempting to restore an older one, as mixing wallets " +
@@ -237,7 +279,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                             "To open that emergency tool press \"cmd + e\".")
                     .actionButtonText("I want to restore anyway")
                     .onAction(this::checkIfEncrypted)
-                    .closeButtonText("I will empty my wallet first")
+                    .closeButtonText("I will empty my wallets first")
                     .show();
         } else {
             checkIfEncrypted();
@@ -245,10 +287,10 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     }
 
     private void checkIfEncrypted() {
-        if (walletService.getWallet().isEncrypted()) {
+        if (walletsManager.areWalletsEncrypted()) {
             new Popup()
-                    .information("Your bitcoin wallet is encrypted.\n\n" +
-                            "After restore, the wallet will no longer be encrypted and you must set a new password.\n\n" +
+                    .information("Your wallets are encrypted.\n\n" +
+                            "After restore, the wallets will no longer be encrypted and you must set a new password.\n\n" +
                             "Do you want to proceed?")
                     .closeButtonText("No")
                     .actionButtonText("Yes")
@@ -261,13 +303,16 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void doRestore() {
         long date = restoreDatePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
-        DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(restoreSeedWordsTextArea.getText()), null, "", date);
-        walletService.restoreSeedWords(seed,
+        DeterministicSeed btcSeed = new DeterministicSeed(Splitter.on(" ").splitToList(btcSeedWordsTextArea.getText()), null, "", date);
+        DeterministicSeed squSeed = new DeterministicSeed(Splitter.on(" ").splitToList(squSeedWordsTextArea.getText()), null, "", date);
+        walletsManager.restoreSeedWords(
+                btcSeed,
+                squSeed,
                 () -> UserThread.execute(() -> {
-                    log.info("Wallet restored with seed words");
+                    log.info("Wallets restored with seed words");
 
                     new Popup()
-                            .feedback("Wallet restored successfully with the new seed words.\n\n" +
+                            .feedback("Wallets restored successfully with the new seed words.\n\n" +
                                     "You need to shut down and restart the application.")
                             .closeButtonText("Shut down")
                             .onClose(BitsquareApp.shutDownHandler::run).show();
@@ -275,7 +320,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());
                     new Popup()
-                            .error("An error occurred when restoring the wallet with seed words.\n" +
+                            .error("An error occurred when restoring the wallets with seed words.\n" +
                                     "Error message: " + throwable.getMessage())
                             .show();
                 }));

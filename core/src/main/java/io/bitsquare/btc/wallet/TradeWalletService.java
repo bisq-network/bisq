@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.btc.wallet;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -23,6 +23,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.bitsquare.app.Log;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.AddressEntryList;
 import io.bitsquare.btc.data.InputsAndChangeOutput;
 import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
 import io.bitsquare.btc.data.RawTransactionInput;
@@ -97,7 +99,7 @@ public class TradeWalletService {
     @Nullable
     private Wallet wallet;
     @Nullable
-    private BitSquareWalletAppKit walletAppKit;
+    private WalletConfig walletConfig;
     @Nullable
     private KeyParameter aesKey;
     private AddressEntryList addressEntryList;
@@ -113,12 +115,12 @@ public class TradeWalletService {
     }
 
     // After WalletService is initialized we get the walletAppKit set
-    public void setWalletAppKit(BitSquareWalletAppKit walletAppKit) {
-        this.walletAppKit = walletAppKit;
-        wallet = walletAppKit.wallet();
+    public void setWalletConfig(WalletConfig walletConfig) {
+        this.walletConfig = walletConfig;
+        wallet = walletConfig.wallet();
     }
 
-    public void setAesKey(KeyParameter aesKey) {
+    void setAesKey(KeyParameter aesKey) {
         this.aesKey = aesKey;
     }
 
@@ -194,7 +196,7 @@ public class TradeWalletService {
      * @throws WalletException
      */
     public InputsAndChangeOutput takerCreatesDepositsTxInputs(Coin inputAmount, Coin txFee, AddressEntry takersAddressEntry, Address takersChangeAddress) throws
-            TransactionVerificationException, WalletException, AddressFormatException {
+            TransactionVerificationException, WalletException {
         log.trace("takerCreatesDepositsTxInputs called");
         log.trace("inputAmount " + inputAmount.toFriendlyString());
         log.trace("txFee " + txFee.toFriendlyString());
@@ -506,8 +508,8 @@ public class TradeWalletService {
         BtcWalletService.printTx("depositTx", depositTx);
 
         // Broadcast depositTx
-        checkNotNull(walletAppKit);
-        ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(depositTx).future();
+        checkNotNull(walletConfig);
+        ListenableFuture<Transaction> broadcastComplete = walletConfig.peerGroup().broadcastTransaction(depositTx).future();
         Futures.addCallback(broadcastComplete, callback);
 
         return depositTx;
@@ -947,8 +949,8 @@ public class TradeWalletService {
         verifyTransaction(payoutTx);
         checkWalletConsistency();
 
-        if (walletAppKit != null) {
-            ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(payoutTx).future();
+        if (walletConfig != null) {
+            ListenableFuture<Transaction> future = walletConfig.peerGroup().broadcastTransaction(payoutTx).future();
             Futures.addCallback(future, callback);
         }
 
@@ -965,8 +967,8 @@ public class TradeWalletService {
      * @param callback
      */
     public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
-        checkNotNull(walletAppKit);
-        ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(tx).future();
+        checkNotNull(walletConfig);
+        ListenableFuture<Transaction> future = walletConfig.peerGroup().broadcastTransaction(tx).future();
         Futures.addCallback(future, callback);
     }
 
@@ -1025,23 +1027,23 @@ public class TradeWalletService {
     }
 
     public ListenableFuture<StoredBlock> getBlockHeightFuture(Transaction transaction) {
-        checkNotNull(walletAppKit);
-        return walletAppKit.chain().getHeightFuture((int) transaction.getLockTime());
+        checkNotNull(walletConfig);
+        return walletConfig.chain().getHeightFuture((int) transaction.getLockTime());
     }
 
     public int getBestChainHeight() {
-        checkNotNull(walletAppKit);
-        return walletAppKit.chain().getBestChainHeight();
+        checkNotNull(walletConfig);
+        return walletConfig.chain().getBestChainHeight();
     }
 
     public void addBlockChainListener(BlockChainListener blockChainListener) {
-        checkNotNull(walletAppKit);
-        walletAppKit.chain().addListener(blockChainListener);
+        checkNotNull(walletConfig);
+        walletConfig.chain().addListener(blockChainListener);
     }
 
     public void removeBlockChainListener(BlockChainListener blockChainListener) {
-        checkNotNull(walletAppKit);
-        walletAppKit.chain().removeListener(blockChainListener);
+        checkNotNull(walletConfig);
+        walletConfig.chain().removeListener(blockChainListener);
     }
 
 
@@ -1206,7 +1208,7 @@ public class TradeWalletService {
         this.addressEntryList = addressEntryList;
     }
 
-    public List<AddressEntry> getAddressEntryListAsImmutableList() {
+    private List<AddressEntry> getAddressEntryListAsImmutableList() {
         return ImmutableList.copyOf(addressEntryList);
     }
 

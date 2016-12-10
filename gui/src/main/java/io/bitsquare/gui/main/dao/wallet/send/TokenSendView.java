@@ -19,14 +19,12 @@ package io.bitsquare.gui.main.dao.wallet.send;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.AddressEntryException;
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.InsufficientFundsException;
-import io.bitsquare.btc.SquWalletService;
-import io.bitsquare.btc.exceptions.SigningException;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.InputTextField;
@@ -39,6 +37,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -54,8 +53,8 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
     private TextField confirmedBalance;
 
     private final SquWalletService squWalletService;
-    private BtcWalletService btcWalletService;
-    private FeeService feeService;
+    private final BtcWalletService btcWalletService;
+    private final FeeService feeService;
     private final BSFormatter formatter;
 
     @Nullable
@@ -103,10 +102,9 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
             Coin receiverAmount = formatter.parseToCoin(amountInputTextField.getText());
             Optional<String> changeAddressStringOptional = Optional.empty();
             try {
-                Transaction preparedSquTx = squWalletService.prepareSendTx(receiversAddressString, receiverAmount, changeAddressStringOptional);
-                Transaction preparedMixedTx = btcWalletService.getTransactionWithFeeInput(preparedSquTx);
-                Transaction signedMixedTx = squWalletService.signFinalSendTx(preparedMixedTx);
-                squWalletService.commitAndBroadcastTx(signedMixedTx, new FutureCallback<Transaction>() {
+                Transaction preparedSendTx = squWalletService.getPreparedSendTx(receiversAddressString, receiverAmount, changeAddressStringOptional);
+                Transaction txWithBtcFee = btcWalletService.addFeeInputToPreparedSquSendTx(preparedSendTx);
+                squWalletService.signAndBroadcastSendTx(txWithBtcFee, new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@Nullable Transaction result) {
                         if (result != null) {
@@ -117,12 +115,12 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
                     }
 
                     @Override
-                    public void onFailure(Throwable t) {
+                    public void onFailure(@NotNull Throwable t) {
                         log.error(t.toString());
                         new Popup<>().warning(t.toString());
                     }
                 });
-            } catch (AddressFormatException | AddressEntryException | SigningException | InsufficientFundsException |
+            } catch (AddressFormatException | InsufficientFundsException |
                     TransactionVerificationException | WalletException | InsufficientMoneyException e) {
                 log.error(e.toString());
                 e.printStackTrace();
@@ -183,7 +181,8 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
     }
 
     private void updateBalance() {
-        confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
+        if (squWallet != null)
+            confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
     }
 }
 

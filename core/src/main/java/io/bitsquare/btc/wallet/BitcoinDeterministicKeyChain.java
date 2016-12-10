@@ -15,12 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.btc.wallet;
 
 import com.google.common.collect.ImmutableList;
 import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.crypto.HDUtils;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.wallet.DeterministicKeyChain;
 import org.bitcoinj.wallet.DeterministicSeed;
@@ -29,13 +28,13 @@ import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 
-public class BitcoinDeterministicKeyChain extends DeterministicKeyChain {
+class BitcoinDeterministicKeyChain extends DeterministicKeyChain {
     private static final Logger log = LoggerFactory.getLogger(BitcoinDeterministicKeyChain.class);
 
     // See https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
     // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
     // We use 0 (0x80000000) as coin_type for BTC 
-    public static ImmutableList<ChildNumber> BIP44_BTC_ACCOUNT_PATH = ImmutableList.of(
+    public static final ImmutableList<ChildNumber> BIP44_BTC_ACCOUNT_PATH = ImmutableList.of(
             new ChildNumber(44, true),
             new ChildNumber(0, true),
             ChildNumber.ZERO_HARDENED,
@@ -55,8 +54,6 @@ public class BitcoinDeterministicKeyChain extends DeterministicKeyChain {
 
     @Override
     protected ImmutableList<ChildNumber> getAccountPath() {
-        log.error(HDUtils.formatPath(BIP44_BTC_ACCOUNT_PATH));
-
         return BIP44_BTC_ACCOUNT_PATH;
     }
 

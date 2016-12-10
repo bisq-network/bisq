@@ -27,9 +27,9 @@ public class SQUFormatter extends BSFormatter {
     private static final Logger log = LoggerFactory.getLogger(SQUFormatter.class);
 
     @Inject
-    public SQUFormatter() {
+    private SQUFormatter() {
         super();
-        coinFormat = new MonetaryFormat().shift(8).minDecimals(0).repeatOptionalDecimals(0, 0);
+        coinFormat = new MonetaryFormat().shift(5).minDecimals(0).code(5, "SQU").minDecimals(3);
     }
 
 }

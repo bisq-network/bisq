@@ -23,10 +23,10 @@ import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.messages.*;
 import io.bitsquare.arbitration.payload.Attachment;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
-import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
@@ -71,7 +71,7 @@ public class DisputeManager {
     private final TradeWalletService tradeWalletService;
     private final BtcWalletService walletService;
     private final TradeManager tradeManager;
-    private ClosedTradableManager closedTradableManager;
+    private final ClosedTradableManager closedTradableManager;
     private final OpenOfferManager openOfferManager;
     private final P2PService p2PService;
     private final KeyRing keyRing;
@@ -83,7 +83,7 @@ public class DisputeManager {
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final Map<String, Dispute> openDisputes;
     private final Map<String, Dispute> closedDisputes;
-    private Map<String, Timer> delayMsgMap = new HashMap<>();
+    private final Map<String, Timer> delayMsgMap = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -91,14 +91,14 @@ public class DisputeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DisputeManager(P2PService p2PService,
-                          TradeWalletService tradeWalletService,
-                          BtcWalletService walletService,
-                          TradeManager tradeManager,
-                          ClosedTradableManager closedTradableManager,
-                          OpenOfferManager openOfferManager,
-                          KeyRing keyRing,
-                          @Named(Storage.DIR_KEY) File storageDir) {
+    private DisputeManager(P2PService p2PService,
+                           TradeWalletService tradeWalletService,
+                           BtcWalletService walletService,
+                           TradeManager tradeManager,
+                           ClosedTradableManager closedTradableManager,
+                           OpenOfferManager openOfferManager,
+                           KeyRing keyRing,
+                           @Named(Storage.DIR_KEY) File storageDir) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;

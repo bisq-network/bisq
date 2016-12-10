@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.btc.wallet;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
@@ -29,21 +29,21 @@ import org.slf4j.LoggerFactory;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our address.
  */
-class TradeWalletCoinSelector extends BitsquareCoinSelector {
-    private static final Logger log = LoggerFactory.getLogger(TradeWalletCoinSelector.class);
+class SquCoinSelector extends BtcCoinSelector {
+    private static final Logger log = LoggerFactory.getLogger(SquCoinSelector.class);
     private final Address address;
-    private boolean allowUnconfirmedSpend;
+    private final boolean allowUnconfirmedSpend;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TradeWalletCoinSelector(NetworkParameters params, @NotNull Address address) {
+    SquCoinSelector(NetworkParameters params, @NotNull Address address) {
         this(params, address, true);
     }
 
-    public TradeWalletCoinSelector(NetworkParameters params, @NotNull Address address, boolean allowUnconfirmedSpend) {
+    private SquCoinSelector(NetworkParameters params, @NotNull Address address, boolean allowUnconfirmedSpend) {
         super(params);
         this.address = address;
         this.allowUnconfirmedSpend = allowUnconfirmedSpend;
@@ -52,7 +52,7 @@ class TradeWalletCoinSelector extends BitsquareCoinSelector {
     @Override
     protected boolean matchesRequirement(TransactionOutput transactionOutput) {
         if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-            boolean confirmationCheck = allowUnconfirmedSpend || false;
+            boolean confirmationCheck = allowUnconfirmedSpend;
             if (!allowUnconfirmedSpend && transactionOutput.getParentTransaction() != null &&
                     transactionOutput.getParentTransaction().getConfidence() != null) {
                 final TransactionConfidence.ConfidenceType confidenceType = transactionOutput.getParentTransaction().getConfidence().getConfidenceType();

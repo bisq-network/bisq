@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Splitter;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.btc.BtcWalletService;
+import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.crypto.ScryptUtil;
@@ -44,7 +44,6 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.crypto.MnemonicException;
@@ -67,23 +66,25 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private static final Logger log = LoggerFactory.getLogger(WalletPasswordWindow.class);
-    private final BtcWalletService walletService;
     private Button unlockButton;
     private AesKeyHandler aesKeyHandler;
     private PasswordTextField passwordTextField;
     private Button forgotPasswordButton;
     private Button restoreButton;
-    private TextArea restoreSeedWordsTextArea;
+    private TextArea btcSeedWordsTextArea, squSeedWordsTextArea;
     private DatePicker restoreDatePicker;
-    private SimpleBooleanProperty seedWordsValid = new SimpleBooleanProperty(false);
-    private SimpleBooleanProperty dateValid = new SimpleBooleanProperty(false);
-    private BooleanProperty seedWordsEdited = new SimpleBooleanProperty();
+    private final SimpleBooleanProperty btcSeedWordsValid = new SimpleBooleanProperty(false);
+    private final SimpleBooleanProperty squSeedWordsValid = new SimpleBooleanProperty(false);
+    private final SimpleBooleanProperty dateValid = new SimpleBooleanProperty(false);
+    private final BooleanProperty btcSeedWordsEdited = new SimpleBooleanProperty();
+    private final BooleanProperty squSeedWordsEdited = new SimpleBooleanProperty();
     private ChangeListener<String> changeListener;
-    private ChangeListener<String> seedWordsTextAreaChangeListener;
+    private ChangeListener<String> btcWordsTextAreaChangeListener, squWordsTextAreaChangeListener;
     private ChangeListener<Boolean> datePickerChangeListener;
     private ChangeListener<Boolean> seedWordsValidChangeListener;
     private ChangeListener<LocalDate> dateChangeListener;
     private LocalDate walletCreationDate;
+    private final WalletsManager walletsManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -95,8 +96,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     @Inject
-    public WalletPasswordWindow(BtcWalletService walletService) {
-        this.walletService = walletService;
+    private WalletPasswordWindow(WalletsManager walletsManager) {
+        this.walletsManager = walletsManager;
         type = Type.Attention;
         width = 800;
     }
@@ -136,15 +137,18 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             passwordTextField.textProperty().removeListener(changeListener);
 
         if (seedWordsValidChangeListener != null) {
-            seedWordsValid.removeListener(seedWordsValidChangeListener);
+            btcSeedWordsValid.removeListener(seedWordsValidChangeListener);
             dateValid.removeListener(datePickerChangeListener);
-            restoreSeedWordsTextArea.textProperty().removeListener(seedWordsTextAreaChangeListener);
+            btcSeedWordsTextArea.textProperty().removeListener(btcWordsTextAreaChangeListener);
+            squSeedWordsTextArea.textProperty().removeListener(squWordsTextAreaChangeListener);
             restoreDatePicker.valueProperty().removeListener(dateChangeListener);
             restoreButton.disableProperty().unbind();
             restoreButton.setOnAction(null);
-            restoreSeedWordsTextArea.setText("");
+            btcSeedWordsTextArea.setText("");
+            squSeedWordsTextArea.setText("");
             restoreDatePicker.setValue(null);
-            restoreSeedWordsTextArea.getStyleClass().remove("validation_error");
+            btcSeedWordsTextArea.getStyleClass().remove("validation_error");
+            squSeedWordsTextArea.getStyleClass().remove("validation_error");
             restoreDatePicker.getStyleClass().remove("validation_error");
         }
     }
@@ -193,13 +197,12 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         unlockButton.setOnAction(e -> {
             String password = passwordTextField.getText();
             checkArgument(password.length() < 50, "Password must be less then 50 characters.");
-            Wallet wallet = walletService.getWallet();
-            KeyCrypterScrypt keyCrypterScrypt = (KeyCrypterScrypt) wallet.getKeyCrypter();
+            KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
             if (keyCrypterScrypt != null) {
                 busyAnimation.play();
                 deriveStatusLabel.setText("Derive key from password");
                 ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, password, aesKey -> {
-                    if (wallet.checkAESKey(aesKey)) {
+                    if (walletsManager.checkAESKey(aesKey)) {
                         if (aesKeyHandler != null)
                             aesKeyHandler.onAesKey(aesKey);
 
@@ -229,7 +232,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         Button cancelButton = new Button("Cancel");
         cancelButton.setOnAction(event -> {
             hide();
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            closeHandlerOptional.ifPresent(Runnable::run);
         });
 
         HBox hBox = new HBox();
@@ -273,41 +276,56 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         gridPane.getChildren().add(separator);
 
-        Tuple2<Label, TextArea> tuple = addLabelTextArea(gridPane, ++rowIndex, "Wallet seed words:", "", 5);
-        restoreSeedWordsTextArea = tuple.second;
-        restoreSeedWordsTextArea.setPrefHeight(60);
-        restoreSeedWordsTextArea.setStyle("-fx-border-color: #ddd;");
+        Tuple2<Label, TextArea> tuple = addLabelTextArea(gridPane, ++rowIndex, "BTC wallet seed words:", "", 5);
+        btcSeedWordsTextArea = tuple.second;
+        btcSeedWordsTextArea.setPrefHeight(60);
+        btcSeedWordsTextArea.setStyle("-fx-border-color: #ddd;");
+
+        Tuple2<Label, TextArea> tuple2 = addLabelTextArea(gridPane, ++rowIndex, "SQU wallet seed words:", "", 5);
+        squSeedWordsTextArea = tuple2.second;
+        squSeedWordsTextArea.setPrefHeight(60);
+        squSeedWordsTextArea.setStyle("-fx-border-color: #ddd;");
+
         Tuple2<Label, DatePicker> labelDatePickerTuple2 = addLabelDatePicker(gridPane, ++rowIndex, "Creation Date:");
         restoreDatePicker = labelDatePickerTuple2.second;
-        restoreButton = addButton(gridPane, ++rowIndex, "Restore wallet");
+        restoreButton = addButton(gridPane, ++rowIndex, "Restore wallets");
         restoreButton.setDefaultButton(true);
         stage.setHeight(340);
 
-        DeterministicSeed keyChainSeed = walletService.getWallet().getKeyChainSeed();
+
         // wallet creation date is not encrypted
-        walletCreationDate = Instant.ofEpochSecond(keyChainSeed.getCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
+        walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
 
-
-        restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !dateValid.get() || !seedWordsEdited.get(),
-                seedWordsValid, dateValid, seedWordsEdited));
+        restoreButton.disableProperty().bind(createBooleanBinding(() -> !btcSeedWordsValid.get() || !dateValid.get() || !btcSeedWordsEdited.get(),
+                btcSeedWordsValid, dateValid, btcSeedWordsEdited));
 
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
             if (newValue) {
-                restoreSeedWordsTextArea.getStyleClass().remove("validation_error");
+                btcSeedWordsTextArea.getStyleClass().remove("validation_error");
             } else {
-                restoreSeedWordsTextArea.getStyleClass().add("validation_error");
+                btcSeedWordsTextArea.getStyleClass().add("validation_error");
             }
         };
 
-        seedWordsTextAreaChangeListener = (observable, oldValue, newValue) -> {
-            seedWordsEdited.set(true);
+        btcWordsTextAreaChangeListener = (observable, oldValue, newValue) -> {
+            btcSeedWordsEdited.set(true);
             try {
                 MnemonicCode codec = new MnemonicCode();
                 codec.check(Splitter.on(" ").splitToList(newValue));
-                seedWordsValid.set(true);
+                btcSeedWordsValid.set(true);
             } catch (IOException | MnemonicException e) {
-                seedWordsValid.set(false);
+                btcSeedWordsValid.set(false);
+            }
+        };
+        squWordsTextAreaChangeListener = (observable, oldValue, newValue) -> {
+            squSeedWordsEdited.set(true);
+            try {
+                MnemonicCode codec = new MnemonicCode();
+                codec.check(Splitter.on(" ").splitToList(newValue));
+                squSeedWordsValid.set(true);
+            } catch (IOException | MnemonicException e) {
+                squSeedWordsValid.set(false);
             }
         };
 
@@ -318,28 +336,27 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             else
                 restoreDatePicker.getStyleClass().add("validation_error");
         };
-        dateChangeListener = (observable, oldValue, newValue) -> {
-            dateValid.set(walletCreationDate.equals(newValue));
-        };
+        dateChangeListener = (observable, oldValue, newValue) -> dateValid.set(walletCreationDate.equals(newValue));
 
-        seedWordsValid.addListener(seedWordsValidChangeListener);
+        btcSeedWordsValid.addListener(seedWordsValidChangeListener);
         dateValid.addListener(datePickerChangeListener);
-        restoreSeedWordsTextArea.textProperty().addListener(seedWordsTextAreaChangeListener);
+        btcSeedWordsTextArea.textProperty().addListener(btcWordsTextAreaChangeListener);
+        squSeedWordsTextArea.textProperty().addListener(squWordsTextAreaChangeListener);
         restoreDatePicker.valueProperty().addListener(dateChangeListener);
-        restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !dateValid.get() || !seedWordsEdited.get(),
-                seedWordsValid, dateValid, seedWordsEdited));
+        restoreButton.disableProperty().bind(createBooleanBinding(() -> !btcSeedWordsValid.get() || !dateValid.get() || !btcSeedWordsEdited.get(),
+                btcSeedWordsValid, dateValid, btcSeedWordsEdited));
 
         restoreButton.setOnAction(e -> onRestore());
 
-        restoreSeedWordsTextArea.getStyleClass().remove("validation_error");
+        btcSeedWordsTextArea.getStyleClass().remove("validation_error");
+        squSeedWordsTextArea.getStyleClass().remove("validation_error");
         restoreDatePicker.getStyleClass().remove("validation_error");
 
         layout();
     }
 
     private void onRestore() {
-        Wallet wallet = walletService.getWallet();
-        if (wallet.getBalance(Wallet.BalanceType.AVAILABLE).value > 0) {
+        if (walletsManager.hasPositiveBalance()) {
             new Popup()
                     .warning("Your bitcoin wallet is not empty.\n\n" +
                             "You must empty this wallet before attempting to restore an older one, as mixing wallets " +
@@ -357,7 +374,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void checkIfEncrypted() {
-        if (walletService.getWallet().isEncrypted()) {
+        if (walletsManager.areWalletsEncrypted()) {
             new Popup()
                     .information("Your bitcoin wallet is encrypted.\n\n" +
                             "After restore, the wallet will no longer be encrypted and you must set a new password.\n\n" +
@@ -373,8 +390,11 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     private void doRestore() {
         long date = restoreDatePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC);
-        DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(restoreSeedWordsTextArea.getText()), null, "", date);
-        walletService.restoreSeedWords(seed,
+        DeterministicSeed btcSeed = new DeterministicSeed(Splitter.on(" ").splitToList(btcSeedWordsTextArea.getText()), null, "", date);
+        DeterministicSeed squSeed = new DeterministicSeed(Splitter.on(" ").splitToList(squSeedWordsTextArea.getText()), null, "", date);
+        walletsManager.restoreSeedWords(
+                btcSeed,
+                squSeed,
                 () -> UserThread.execute(() -> {
                     log.debug("Wallet restored with seed words");
 

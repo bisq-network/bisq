@@ -8,10 +8,10 @@ import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.BtcWalletService;
-import io.bitsquare.btc.SquWalletService;
-import io.bitsquare.btc.WalletSetup;
 import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.SquWalletService;
+import io.bitsquare.btc.wallet.WalletsSetup;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -43,7 +43,7 @@ public class Statistics {
     private final OfferBookService offerBookService;
     private final PriceFeedService priceFeedService;
 
-    private P2PService p2pService;
+    private final P2PService p2pService;
 
     public static void setEnvironment(Environment env) {
         Statistics.env = env;
@@ -105,7 +105,7 @@ public class Statistics {
                 (errorMessage, throwable) -> log.warn(throwable.getMessage()));
     }
 
-    public void shutDown() {
+    private void shutDown() {
         gracefulShutDown(() -> {
             log.debug("Shutdown complete");
             System.exit(0);
@@ -119,12 +119,12 @@ public class Statistics {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletSetup.class).shutDownDone.addListener((ov, o, n) -> {
+                        injector.getInstance(WalletsSetup.class).shutDownDone.addListener((ov, o, n) -> {
                             statisticsModule.close(injector);
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
-                        injector.getInstance(WalletSetup.class).shutDown();
+                        injector.getInstance(WalletsSetup.class).shutDown();
                         injector.getInstance(BtcWalletService.class).shutDown();
                         injector.getInstance(SquWalletService.class).shutDown();
                     });

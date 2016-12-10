@@ -15,8 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.btc.wallet;
 
+import io.bitsquare.btc.AddressEntry;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.TransactionOutput;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our addressEntry.
  */
-class SavingsWalletCoinSelector extends BitsquareCoinSelector {
+class SavingsWalletCoinSelector extends BtcCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(SavingsWalletCoinSelector.class);
 
     private final Set<Address> savingsWalletAddressSet;

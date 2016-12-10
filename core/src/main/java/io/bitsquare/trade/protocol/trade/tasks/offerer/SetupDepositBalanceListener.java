@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
@@ -42,7 +42,7 @@ public class SetupDepositBalanceListener extends TradeTask {
     private Subscription tradeStateSubscription;
     private BalanceListener balanceListener;
 
-    public SetupDepositBalanceListener(TaskRunner taskHandler, Trade trade) {
+    private SetupDepositBalanceListener(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererCreatesAndSignsDepositTxAsBuyer.class);
 
-    public OffererCreatesAndSignsDepositTxAsBuyer(TaskRunner taskHandler, Trade trade) {
+    private OffererCreatesAndSignsDepositTxAsBuyer(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -43,7 +43,7 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
             Coin securityDeposit = trade.getOffer().getSecurityDeposit();
-            Coin buyerInputAmount = securityDeposit;
+            @SuppressWarnings("UnnecessaryLocalVariable") Coin buyerInputAmount = securityDeposit;
             Coin msOutputAmount = buyerInputAmount.add(trade.getTxFee()).add(securityDeposit).add(trade.getTradeAmount());
 
             log.debug("\n\n------------------------------------------------------------\n"

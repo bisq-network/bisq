@@ -22,12 +22,12 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
-import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
@@ -63,8 +63,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class CreateOfferDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
-    final BtcWalletService walletService;
-    final TradeWalletService tradeWalletService;
+    private final BtcWalletService walletService;
+    private final TradeWalletService tradeWalletService;
     private final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
@@ -79,7 +79,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final AddressEntry addressEntry;
     private Coin createOfferFeeAsCoin;
     private Coin txFeeAsCoin;
-    private Coin securityDepositAsCoin;
+    private final Coin securityDepositAsCoin;
     private final BalanceListener balanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
@@ -111,7 +111,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     PaymentAccount paymentAccount;
     boolean isTabSelected;
     private Notification walletFundedNotification;
-    boolean useSavingsWallet;
+    private boolean useSavingsWallet;
     Coin totalAvailableBalance;
     private double marketPriceMargin = 0;
 
@@ -400,13 +400,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
             Optional<TradeCurrency> tradeCurrencyOptional = preferences.getTradeCurrenciesAsObservable().stream().filter(e -> e.getCode().equals(code)).findAny();
             if (!tradeCurrencyOptional.isPresent()) {
                 if (CurrencyUtil.isCryptoCurrency(code)) {
-                    CurrencyUtil.getCryptoCurrency(code).ifPresent(cryptoCurrency -> {
-                        preferences.addCryptoCurrency(cryptoCurrency);
-                    });
+                    CurrencyUtil.getCryptoCurrency(code).ifPresent(preferences::addCryptoCurrency);
                 } else {
-                    CurrencyUtil.getFiatCurrency(code).ifPresent(fiatCurrency -> {
-                        preferences.addFiatCurrency(fiatCurrency);
-                    });
+                    CurrencyUtil.getFiatCurrency(code).ifPresent(preferences::addFiatCurrency);
                 }
             }
         }
@@ -526,7 +522,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         }
     }
 
-    void updateBalance() {
+    private void updateBalance() {
         Coin tradeWalletBalance = walletService.getBalanceForAddress(addressEntry.getAddress());
         if (useSavingsWallet) {
             Coin savingWalletBalance = walletService.getSavingWalletBalance();

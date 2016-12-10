@@ -15,20 +15,17 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.btc.wallet;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
+import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.provider.fee.FeeService;
-import io.bitsquare.common.handlers.ExceptionHandler;
-import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
-import org.bitcoinj.wallet.DeterministicSeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,17 +45,30 @@ public class SquWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SquWalletService(WalletSetup walletSetup,
+    public SquWalletService(WalletsSetup walletsSetup,
                             Preferences preferences,
                             FeeService feeService) {
-        super(walletSetup,
+        super(walletsSetup,
                 preferences,
                 feeService);
 
-        walletSetup.addSetupCompletedHandler(() -> {
-            wallet = walletSetup.getTokenWallet();
+        walletsSetup.addSetupCompletedHandler(() -> {
+            wallet = walletsSetup.getSquWallet();
             wallet.addEventListener(walletEventListener);
         });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Overridden Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    String getWalletAsString(boolean includePrivKeys) {
+        return "BitcoinJ wallet:\n" +
+                wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
+                "All pubkeys as hex:\n" +
+                wallet.printAllPubKeysAsHex();
     }
 
 
@@ -67,40 +77,14 @@ public class SquWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public String exportWalletData(boolean includePrivKeys) {
-        StringBuilder addressEntryListData = new StringBuilder();
-        return "BitcoinJ SQU wallet:\n" +
-                wallet.toString(includePrivKeys, true, true, walletSetup.chain()) + "\n\n" +
-                "SQU address entry list:\n" +
-                addressEntryListData.toString() +
-                "All pubkeys as hex:\n" +
-                wallet.printAllPubKeysAsHex();
-    }
-
-    //TODO
-    public void restoreSeedWords(DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
-       /* Context ctx = Context.get();
-        new Thread(() -> {
-            try {
-                Context.propagate(ctx);
-                walletAppKit.stopAsync();
-                walletAppKit.awaitTerminated();
-                initialize(seed, resultHandler, exceptionHandler);
-            } catch (Throwable t) {
-                t.printStackTrace();
-                log.error("Executing task failed. " + t.getMessage());
-            }
-        }, "RestoreWallet-%d").start();*/
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Withdrawal Send
+    // Send SQU with BTC fee
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction prepareSendTx(String receiverAddress,
-                                     Coin receiverAmount,
-                                     Optional<String> changeAddressStringOptional) throws AddressFormatException,
-            AddressEntryException, InsufficientMoneyException, WalletException, TransactionVerificationException {
+    public Transaction getPreparedSendTx(String receiverAddress,
+                                         Coin receiverAmount,
+                                         Optional<String> changeAddressStringOptional) throws AddressFormatException,
+            InsufficientMoneyException, WalletException, TransactionVerificationException {
 
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
@@ -110,7 +94,7 @@ public class SquWalletService extends WalletService {
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         sendRequest.fee = Coin.ZERO;
         sendRequest.feePerKb = Coin.ZERO;
-        sendRequest.aesKey = walletSetup.getAesKey();
+        sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
         sendRequest.signInputs = false;
         sendRequest.ensureMinRequiredFee = false;
@@ -124,7 +108,14 @@ public class SquWalletService extends WalletService {
         return tx;
     }
 
-    public Transaction signFinalSendTx(Transaction tx) throws WalletException, TransactionVerificationException {
+    public void signAndBroadcastSendTx(Transaction tx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
+        Transaction signedTx = signFinalSendTx(tx);
+        wallet.commitTx(signedTx);
+        Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(signedTx).future(), callback);
+        printTx("commitAndBroadcastTx", signedTx);
+    }
+
+    private Transaction signFinalSendTx(Transaction tx) throws WalletException, TransactionVerificationException {
         // TODO
         int index = 0;
         TransactionInput txIn = tx.getInput(index);
@@ -137,23 +128,5 @@ public class SquWalletService extends WalletService {
         printTx("signFinalSendTx", tx);
         return tx;
     }
-
-    public void commitAndBroadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
-        wallet.commitTx(tx);
-        ListenableFuture<Transaction> broadcastComplete = walletSetup.peerGroup().broadcastTransaction(tx).future();
-        Futures.addCallback(broadcastComplete, callback);
-        printTx("commitAndBroadcastTx", tx);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Util
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 }

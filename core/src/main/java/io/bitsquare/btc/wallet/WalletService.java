@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.btc.wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -30,6 +30,7 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.signers.TransactionSigner;
@@ -56,48 +57,73 @@ import static com.google.common.base.Preconditions.checkState;
  * It startup the wallet app kit and initialized the wallet.
  */
 public abstract class WalletService {
-    protected static final Logger log = LoggerFactory.getLogger(WalletService.class);
+    private static final Logger log = LoggerFactory.getLogger(WalletService.class);
 
-    protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
-    protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
-    protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
 
-    protected final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
-    protected final NetworkParameters params;
+    final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
+    final NetworkParameters params;
 
-    protected WalletSetup walletSetup;
-    protected final Preferences preferences;
-    protected final FeeService feeService;
+    final WalletsSetup walletsSetup;
+    private final Preferences preferences;
+    private final FeeService feeService;
 
-    protected Wallet wallet;
-
+    Wallet wallet;
+    KeyParameter aesKey;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(WalletSetup walletSetup,
-                         Preferences preferences,
-                         FeeService feeService) {
-        this.walletSetup = walletSetup;
+    WalletService(WalletsSetup walletsSetup,
+                  Preferences preferences,
+                  FeeService feeService) {
+        this.walletsSetup = walletsSetup;
         this.preferences = preferences;
         this.feeService = feeService;
 
-        params = walletSetup.getParams();
+        params = walletsSetup.getParams();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void decryptWallet(@NotNull KeyParameter key) {
+        wallet.decrypt(key);
+        aesKey = null;
+    }
+
+    void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
+        if (this.aesKey != null) {
+            log.warn("encryptWallet called but we have a aesKey already set. " +
+                    "We decryptWallet with the old key before we apply the new key.");
+            decryptWallet(this.aesKey);
+        }
+
+        wallet.encrypt(keyCrypterScrypt, key);
+        aesKey = key;
+    }
+
+    void setAesKey(KeyParameter aesKey) {
+        this.aesKey = aesKey;
+    }
+
+    abstract String getWalletAsString(boolean includePrivKeys);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public void shutDown() {
         if (wallet != null)
             wallet.removeEventListener(walletEventListener);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -132,7 +158,7 @@ public abstract class WalletService {
     // Checks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void checkWalletConsistency() throws WalletException {
+    void checkWalletConsistency() throws WalletException {
         try {
             log.trace("Check if wallet is consistent before commit.");
             checkNotNull(wallet);
@@ -144,7 +170,7 @@ public abstract class WalletService {
         }
     }
 
-    protected void verifyTransaction(Transaction transaction) throws TransactionVerificationException {
+    void verifyTransaction(Transaction transaction) throws TransactionVerificationException {
         try {
             log.trace("Verify transaction " + transaction);
             transaction.verify();
@@ -155,13 +181,13 @@ public abstract class WalletService {
         }
     }
 
-    protected void checkScriptSigs(Transaction transaction) throws TransactionVerificationException {
+    void checkScriptSigs(Transaction transaction) throws TransactionVerificationException {
         for (int i = 0; i < transaction.getInputs().size(); i++) {
             checkScriptSig(transaction, transaction.getInputs().get(i), i);
         }
     }
 
-    protected void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
+    void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
         try {
             log.trace("Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey. Check input at index: " + inputIndex);
             checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
@@ -177,6 +203,7 @@ public abstract class WalletService {
     // Sign tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODOcheck with signTransactionInput
    /* protected void signInput(Transaction transaction) throws SigningException {
         List<TransactionInput> inputs = transaction.getInputs();
 
@@ -189,9 +216,9 @@ public abstract class WalletService {
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
         checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" + input.getOutpoint().toString());
         if (sigKey.isEncrypted())
-            checkNotNull(walletSetup.getAesKey());
+            checkNotNull(aesKey);
         Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature signature = sigKey.sign(hash, walletSetup.getAesKey());
+        ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
         TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
         if (scriptPubKey.isSentToRawPubKey()) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
@@ -202,8 +229,8 @@ public abstract class WalletService {
         }
     }*/
 
-    public void signTransactionInput(Transaction tx, TransactionInput txIn, int index) {
-        KeyBag maybeDecryptingKeyBag = new DecryptingKeyBag(wallet, walletSetup.getAesKey());
+    void signTransactionInput(Transaction tx, TransactionInput txIn, int index) {
+        KeyBag maybeDecryptingKeyBag = new DecryptingKeyBag(wallet, aesKey);
         if (txIn.getConnectedOutput() != null) {
             try {
                 // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
@@ -297,7 +324,7 @@ public abstract class WalletService {
         return null;
     }
 
-    protected TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
+    private TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
         List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
 
@@ -312,7 +339,7 @@ public abstract class WalletService {
     }
 
 
-    protected List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx) {
+    private List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx) {
         List<TransactionOutput> transactionOutputs = tx.getOutputs();
         List<TransactionOutput> connectedOutputs = new ArrayList<>();
 
@@ -332,7 +359,7 @@ public abstract class WalletService {
     }
 
 
-    protected TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
+    private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
         TransactionConfidence transactionConfidence = null;
         for (TransactionConfidence confidence : transactionConfidenceList) {
             if (confidence != null) {
@@ -363,7 +390,7 @@ public abstract class WalletService {
         return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(), address) : Coin.ZERO;
     }
 
-    protected Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
+    private Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
         for (TransactionOutput transactionOutput : transactionOutputs) {
             if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
@@ -389,7 +416,7 @@ public abstract class WalletService {
         return outputs;
     }
 
-    protected Coin getTxFeeForWithdrawalPerByte() {
+    Coin getTxFeeForWithdrawalPerByte() {
         Coin fee = (preferences.getUseCustomWithdrawalTxFee()) ?
                 Coin.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
                 feeService.getTxFeePerByte();
@@ -460,7 +487,7 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    protected class BitsquareWalletEventListener extends AbstractWalletEventListener {
+    class BitsquareWalletEventListener extends AbstractWalletEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
             notifyBalanceListeners(tx);
@@ -490,7 +517,7 @@ public abstract class WalletService {
                             txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
         }
 
-        protected void notifyBalanceListeners(Transaction tx) {
+        void notifyBalanceListeners(Transaction tx) {
             for (BalanceListener balanceListener : balanceListeners) {
                 Coin balance;
                 if (balanceListener.getAddress() != null)

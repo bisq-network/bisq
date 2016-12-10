@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.dao.wallet.dashboard;
 
-import io.bitsquare.btc.SquWalletService;
+import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.util.BSFormatter;
@@ -44,7 +44,7 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
 
     @Nullable
     private Wallet squWallet;
-    private int gridRow = 0;
+    private final int gridRow = 0;
     private WalletEventListener walletEventListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,8 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
     }
 
     private void updateBalance() {
-        confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
+        if (squWallet != null)
+            confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
     }
 }
 

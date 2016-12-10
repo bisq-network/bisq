@@ -23,6 +23,10 @@ import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.SquWalletService;
+import io.bitsquare.btc.wallet.TradeWalletService;
+import io.bitsquare.btc.wallet.WalletsSetup;
 import io.bitsquare.http.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +60,7 @@ public class BitcoinModule extends AppModule {
         bindConstant().annotatedWith(named(AppOptionKeys.PROVIDERS)).to(env.getRequiredProperty(AppOptionKeys.PROVIDERS));
 
         bind(AddressEntryList.class).in(Singleton.class);
-        bind(WalletSetup.class).in(Singleton.class);
+        bind(WalletsSetup.class).in(Singleton.class);
         bind(BtcWalletService.class).in(Singleton.class);
         bind(SquWalletService.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);

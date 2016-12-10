@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.btc.wallet;
 
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.wallet.DeterministicKeyChain;
@@ -24,8 +24,8 @@ import org.bitcoinj.wallet.KeyChainGroup;
 
 import java.security.SecureRandom;
 
-public class BitsquareKeyChainGroup extends KeyChainGroup {
-    private boolean useBitcoinDeterministicKeyChain;
+class BitsquareKeyChainGroup extends KeyChainGroup {
+    private final boolean useBitcoinDeterministicKeyChain;
 
     public boolean isUseBitcoinDeterministicKeyChain() {
         return useBitcoinDeterministicKeyChain;
@@ -36,8 +36,8 @@ public class BitsquareKeyChainGroup extends KeyChainGroup {
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;
     }
 
-    public BitsquareKeyChainGroup(NetworkParameters params, DeterministicSeed watchKey, boolean useBitcoinDeterministicKeyChain) {
-        super(params, watchKey);
+    public BitsquareKeyChainGroup(NetworkParameters params, DeterministicSeed seed, boolean useBitcoinDeterministicKeyChain) {
+        super(params, seed);
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;
     }
 

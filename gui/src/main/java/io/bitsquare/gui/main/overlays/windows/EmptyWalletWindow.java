@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.Restrictions;
-import io.bitsquare.btc.WalletService;
+import io.bitsquare.btc.wallet.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
@@ -160,9 +160,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                     new Popup().warning("You have open offers which will be removed if you empty the wallet.\n" +
                             "Are you sure that you want to empty your wallet?")
                             .actionButtonText("Yes, I am sure")
-                            .onAction(() -> {
-                                doEmptyWallet2(aesKey);
-                            })
+                            .onAction(() -> doEmptyWallet2(aesKey))
                             .show(), 300, TimeUnit.MILLISECONDS);
         } else {
             doEmptyWallet2(aesKey);

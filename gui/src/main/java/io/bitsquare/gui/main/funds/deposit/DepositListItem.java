@@ -18,9 +18,9 @@
 package io.bitsquare.gui.main.funds.deposit;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.beans.property.SimpleStringProperty;
@@ -33,7 +33,7 @@ import org.bitcoinj.core.TransactionConfidence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DepositListItem {
+class DepositListItem {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final StringProperty balance = new SimpleStringProperty();
@@ -41,7 +41,7 @@ public class DepositListItem {
     private Coin balanceAsCoin;
     private final TxConfidenceIndicator txConfidenceIndicator;
     private final Tooltip tooltip;
-    private String addressString;
+    private final String addressString;
     private String usage = "-";
     private TxConfidenceListener txConfidenceListener;
     private int numTxOutputs = 0;

@@ -23,7 +23,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.wallet.*;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -209,10 +209,9 @@ public class BitsquareApp extends Application {
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFPSWindow();
                 } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    BtcWalletService btcWalletService = injector.getInstance(BtcWalletService.class);
-                    SquWalletService squWalletService = injector.getInstance(SquWalletService.class);
-                    if (btcWalletService.getWallet() != null)
-                        new ShowWalletDataWindow(btcWalletService, squWalletService).information("Wallet raw data").show();
+                    WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+                    if (walletsManager.areWalletsAvailable())
+                        new ShowWalletDataWindow(walletsManager).information("Wallet raw data").show();
                     else
                         new Popup<>().warning("The wallet is not initialized yet").show();
                 } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
@@ -406,12 +405,12 @@ public class BitsquareApp extends Application {
                 injector.getInstance(TradeManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletSetup.class).shutDownDone.addListener((ov, o, n) -> {
+                        injector.getInstance(WalletsSetup.class).shutDownDone.addListener((ov, o, n) -> {
                             bitsquareAppModule.close(injector);
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
-                        injector.getInstance(WalletSetup.class).shutDown();
+                        injector.getInstance(WalletsSetup.class).shutDown();
                         injector.getInstance(BtcWalletService.class).shutDown();
                         injector.getInstance(SquWalletService.class).shutDown();
                     });

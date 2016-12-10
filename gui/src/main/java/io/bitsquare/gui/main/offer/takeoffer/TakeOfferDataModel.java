@@ -21,12 +21,12 @@ import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
-import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
@@ -59,8 +59,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class TakeOfferDataModel extends ActivatableDataModel {
     private final TradeManager tradeManager;
-    final TradeWalletService tradeWalletService;
-    final BtcWalletService walletService;
+    private final TradeWalletService tradeWalletService;
+    private final BtcWalletService walletService;
     private final User user;
     private final FeeService feeService;
     private final Preferences preferences;
@@ -88,9 +88,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
 
     private BalanceListener balanceListener;
-    PaymentAccount paymentAccount;
+    private PaymentAccount paymentAccount;
     private boolean isTabSelected;
-    boolean useSavingsWallet;
+    private boolean useSavingsWallet;
     Coin totalAvailableBalance;
     private Notification walletFundedNotification;
     Fiat tradePrice;
@@ -367,7 +367,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         }
     }
 
-    void updateBalance() {
+    private void updateBalance() {
         Coin tradeWalletBalance = walletService.getBalanceForAddress(addressEntry.getAddress());
         if (useSavingsWallet) {
             Coin savingWalletBalance = walletService.getSavingWalletBalance();

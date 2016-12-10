@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.data.RawTransactionInput;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
@@ -37,7 +37,7 @@ import java.util.ArrayList;
 public class SignAndPublishDepositTxAsBuyer extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishDepositTxAsBuyer.class);
 
-    public SignAndPublishDepositTxAsBuyer(TaskRunner taskHandler, Trade trade) {
+    private SignAndPublishDepositTxAsBuyer(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

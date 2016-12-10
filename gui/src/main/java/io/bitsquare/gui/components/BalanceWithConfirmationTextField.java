@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.btc.BtcWalletService;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.control.TextField;

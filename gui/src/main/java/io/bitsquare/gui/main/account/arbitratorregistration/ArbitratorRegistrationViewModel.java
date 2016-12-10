@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
@@ -42,7 +42,7 @@ import java.util.Date;
 
 class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     private final ArbitratorManager arbitratorManager;
-    private User user;
+    private final User user;
     private final P2PService p2PService;
     private final BtcWalletService walletService;
     private final KeyRing keyRing;

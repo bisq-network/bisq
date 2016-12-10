@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.placeoffer.tasks;
 
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcWalletService;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.NodeAddress;
@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferFeeTx.class);
 
-    public CreateOfferFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
+    private CreateOfferFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 

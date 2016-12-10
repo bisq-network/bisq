@@ -22,9 +22,9 @@ import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
-import io.bitsquare.btc.BtcWalletService;
-import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
@@ -436,7 +436,7 @@ public class TradeManager {
         removeTrade(trade);
     }
 
-    public void removeTrade(Trade trade) {
+    private void removeTrade(Trade trade) {
         trades.remove(trade);
         if (!openOfferManager.findOpenOffer(trade.getId()).isPresent())
             walletService.swapAnyTradeEntryContextToAvailableEntry(trade.getId());
