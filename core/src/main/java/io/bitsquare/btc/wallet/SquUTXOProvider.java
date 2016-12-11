@@ -19,11 +19,9 @@ package io.bitsquare.btc.wallet;
 
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
-import org.bitcoinj.script.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,31 +37,11 @@ public class SquUTXOProvider implements UTXOProvider {
     @Inject
     public SquUTXOProvider(Preferences preferences) {
         params = preferences.getBitcoinNetwork().getParameters();
-
-        setTransactions();
     }
 
-    private void setTransactions() {
-        Transaction tx = new Transaction(null);
-        boolean isCoinBase = tx.isCoinBase();
-        int height = 1;
-        Coin valueOut = Coin.ZERO;
-        Sha256Hash hash = tx.getHash();
-        for (TransactionOutput out : tx.getOutputs()) {
-            valueOut = valueOut.add(out.getValue());
-            // For each output, add it to the set of unspent outputs so it can be consumed in future.
-            Script script = getScript(out.getScriptBytes());
-            UTXO newOut = new UTXO(hash,
-                    out.getIndex(),
-                    out.getValue(),
-                    height,
-                    isCoinBase,
-                    script,
-                    getScriptAddress(script));
-            utxoByAddressAsStringMap.put(newOut.getAddress(), newOut);
-        }
+    public void setUtxoSet(Set<UTXO> utxoSet) {
+        utxoSet.stream().forEach(e -> utxoByAddressAsStringMap.put(e.getAddress(), e));
     }
-
 
     @Override
     public List<UTXO> getOpenTransactionOutputs(List<Address> addresses) throws UTXOProviderException {
@@ -87,14 +65,15 @@ public class SquUTXOProvider implements UTXOProvider {
 
     @Override
     public int getChainHeadHeight() throws UTXOProviderException {
-        return 0;
+        //TODO
+        return 331;
     }
 
     @Override
     public NetworkParameters getParams() {
         return params;
     }
-
+/*
     private String getScriptAddress(@Nullable Script script) {
         String address = "";
         try {
@@ -112,5 +91,5 @@ public class SquUTXOProvider implements UTXOProvider {
         } catch (Exception e) {
             return new Script(new byte[0]);
         }
-    }
+    }*/
 }

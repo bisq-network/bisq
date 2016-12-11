@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -42,7 +43,7 @@ public class SquUtxoFeedService {
     private static final Logger log = LoggerFactory.getLogger(SquUtxoFeedService.class);
 
     private final SquUtxoFeedProvider squUtxoFeedProvider;
-    private SquUtxoFeedData squUtxoFeedData;
+    private SquUtxoFeedData data;
     private Map<String, Long> timeStampMap;
     private long epochInSecondAtLastRequest;
 
@@ -60,7 +61,7 @@ public class SquUtxoFeedService {
         requestSquUtxo(null, null);
     }
 
-    public void requestSquUtxo(@Nullable Runnable resultHandler, @Nullable FaultHandler faultHandler) {
+    public void requestSquUtxo(@Nullable Consumer<Set<UTXO>> resultHandler, @Nullable FaultHandler faultHandler) {
         //TODO add throttle
         Log.traceCall();
         SquUtxoFeedRequest squUtxoRequest = new SquUtxoFeedRequest();
@@ -72,9 +73,9 @@ public class SquUtxoFeedService {
                     checkNotNull(result, "Result must not be null at getFees");
                     timeStampMap = result.first;
                     epochInSecondAtLastRequest = timeStampMap.get("getSquUtxoTs");
-                    squUtxoFeedData = result.second;
+                    data = result.second;
                     if (resultHandler != null)
-                        resultHandler.run();
+                        resultHandler.accept(data.getUtxoSet());
                 });
             }
 
@@ -88,6 +89,6 @@ public class SquUtxoFeedService {
     }
 
     public Set<UTXO> getUtxoSet() {
-        return squUtxoFeedData != null ? squUtxoFeedData.getUtxoSet() : null;
+        return data != null ? data.getUtxoSet() : null;
     }
 }

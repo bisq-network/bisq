@@ -21,8 +21,9 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.gui.util.SQUFormatter;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.bitcoinj.core.Coin;
@@ -39,7 +40,7 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
     private TextField confirmedBalance;
 
     private final SquWalletService squWalletService;
-    private final BSFormatter formatter;
+    private final SQUFormatter formatter;
 
     private final int gridRow = 0;
     private BalanceListener balanceListener;
@@ -49,7 +50,7 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TokenDashboardView(SquWalletService squWalletService, BSFormatter formatter) {
+    private TokenDashboardView(SquWalletService squWalletService, SQUFormatter formatter) {
         this.squWalletService = squWalletService;
         this.formatter = formatter;
     }
@@ -69,6 +70,11 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
+        squWalletService.requestSquUtxo(() -> {
+            updateBalance(squWalletService.getAvailableBalance());
+        }, errorMessage -> {
+            new Popup<>().warning(errorMessage);
+        });
         squWalletService.addBalanceListener(balanceListener);
 
         updateBalance(squWalletService.getAvailableBalance());

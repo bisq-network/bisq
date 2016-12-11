@@ -25,9 +25,9 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
-import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.gui.util.SQUFormatter;
 import javafx.geometry.Insets;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -59,7 +59,7 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
     private TextField confirmedBalance;
 
     private final SquWalletService squWalletService;
-    private final BSFormatter formatter;
+    private final SQUFormatter formatter;
 
     @Nullable
     private Wallet squWallet;
@@ -74,7 +74,7 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TokenReceiveView(SquWalletService squWalletService, BSFormatter formatter) {
+    private TokenReceiveView(SquWalletService squWalletService, SQUFormatter formatter) {
         this.squWalletService = squWalletService;
         this.formatter = formatter;
         paymentLabelString = "Fund Bitsquare token wallet";

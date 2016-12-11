@@ -19,33 +19,40 @@ package io.bitsquare.btc.wallet;
 
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.wallet.DeterministicKeyChain;
-import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.KeyChainGroup;
 
 import java.security.SecureRandom;
 
 class BitsquareKeyChainGroup extends KeyChainGroup {
     private final boolean useBitcoinDeterministicKeyChain;
+    private int lookaheadSize;
 
     public boolean isUseBitcoinDeterministicKeyChain() {
         return useBitcoinDeterministicKeyChain;
     }
 
-    public BitsquareKeyChainGroup(NetworkParameters params, boolean useBitcoinDeterministicKeyChain) {
+    public BitsquareKeyChainGroup(NetworkParameters params, boolean useBitcoinDeterministicKeyChain, int lookaheadSize) {
         super(params);
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;
+        this.lookaheadSize = lookaheadSize;
     }
 
-    public BitsquareKeyChainGroup(NetworkParameters params, DeterministicSeed seed, boolean useBitcoinDeterministicKeyChain) {
-        super(params, seed);
+    public BitsquareKeyChainGroup(NetworkParameters params, DeterministicKeyChain chain, boolean useBitcoinDeterministicKeyChain, int lookaheadSize) {
+        super(params, chain);
+
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;
+        this.lookaheadSize = lookaheadSize;
+    }
+
+    @Override
+    public void setLookaheadSize(int lookaheadSize) {
+        super.setLookaheadSize(lookaheadSize);
     }
 
     @Override
     public void createAndActivateNewHDChain() {
-        DeterministicKeyChain chain = useBitcoinDeterministicKeyChain ?
-                new BitcoinDeterministicKeyChain(new SecureRandom()) :
-                new SquDeterministicKeyChain(new SecureRandom());
+        DeterministicKeyChain chain = useBitcoinDeterministicKeyChain ? new BtcDeterministicKeyChain(new SecureRandom()) : new SquDeterministicKeyChain(new SecureRandom());
+        chain.setLookaheadSize(lookaheadSize);
         addAndActivateHDChain(chain);
     }
 }

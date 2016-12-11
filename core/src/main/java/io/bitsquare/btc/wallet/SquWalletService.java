@@ -25,6 +25,8 @@ import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.squ.SquUtxoFeedService;
+import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
@@ -34,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * WalletService handles all non trade specific wallet and bitcoin related services.
@@ -136,6 +139,17 @@ public class SquWalletService extends WalletService {
         return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
     }
 
+    public void requestSquUtxo(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        Set<UTXO> utxoSet = squUtxoFeedService.getUtxoSet();
+        if (utxoSet != null)
+            squUTXOProvider.setUtxoSet(utxoSet);
+
+        squUtxoFeedService.requestSquUtxo(utxos -> {
+                    squUTXOProvider.setUtxoSet(utxos);
+                    resultHandler.handleResult();
+                },
+                (errorMessage, throwable) -> errorMessageHandler.handleErrorMessage(errorMessage));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Send SQU with BTC fee
@@ -188,4 +202,5 @@ public class SquWalletService extends WalletService {
         printTx("signFinalSendTx", tx);
         return tx;
     }
+
 }

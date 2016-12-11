@@ -38,7 +38,6 @@ class SquDeterministicKeyChain extends DeterministicKeyChain {
     public static final ImmutableList<ChildNumber> BIP44_SQU_ACCOUNT_PATH = ImmutableList.of(
             new ChildNumber(44, true),
             new ChildNumber(139, true),
-            ChildNumber.ZERO_HARDENED,
             ChildNumber.ZERO_HARDENED);
 
     public SquDeterministicKeyChain(SecureRandom random) {
@@ -51,6 +50,10 @@ class SquDeterministicKeyChain extends DeterministicKeyChain {
 
     public SquDeterministicKeyChain(DeterministicSeed seed, KeyCrypter crypter) {
         super(seed, crypter);
+    }
+
+    public SquDeterministicKeyChain(DeterministicSeed seed) {
+        super(seed);
     }
 
     @Override

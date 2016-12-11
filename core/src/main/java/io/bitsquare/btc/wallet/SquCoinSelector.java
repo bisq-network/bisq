@@ -17,10 +17,7 @@
 
 package io.bitsquare.btc.wallet;
 
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,5 +65,10 @@ class SquCoinSelector extends BitsquareCoinSelector {
             return false;
         }
 
+    }
+
+    @Override
+    protected boolean shouldSelect(Transaction tx) {
+        return true;
     }
 }

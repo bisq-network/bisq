@@ -52,19 +52,23 @@ abstract class BitsquareCoinSelector implements CoinSelector {
     abstract protected boolean matchesRequirement(TransactionOutput transactionOutput);
 
     private static boolean isInBlockChainOrPending(Transaction tx) {
-        // Pick chain-included transactions and transactions that are pending.
-        TransactionConfidence confidence = tx.getConfidence();
-        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+        if (tx != null) {
+            // Pick chain-included transactions and transactions that are pending.
+            TransactionConfidence confidence = tx.getConfidence();
+            TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
 
-        log.debug("numBroadcastPeers = " + confidence.numBroadcastPeers());
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                type.equals(TransactionConfidence.ConfidenceType.PENDING);
+            log.debug("numBroadcastPeers = " + confidence.numBroadcastPeers());
+            return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
+                    type.equals(TransactionConfidence.ConfidenceType.PENDING);
+        } else {
+            return false;
+        }
     }
 
     /**
      * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
      */
-    private boolean shouldSelect(Transaction tx) {
+    protected boolean shouldSelect(Transaction tx) {
         return isInBlockChainOrPending(tx);
     }
 

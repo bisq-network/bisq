@@ -218,11 +218,13 @@ public class WalletsSetup {
         // Avoid the simple attack (see: https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj/) due to the 
         // default implementation using both pubkey and hash of pubkey. We have set a insertPubKey flag in BasicKeyChain to default false.
 
-        // Default only 266 keys are generated (2 * 100+33). That would trigger new bloom filters when we are reaching 
+        // Default only 266 keys are generated (2 * 100+33 -> 100 external and 100 internal keys + buffers of 30%). That would trigger new bloom filters when we are reaching 
         // the threshold. To avoid reaching the threshold we create much more keys which are unlikely to cause update of the
-        // filter for most users. With lookaheadSize of 500 we get 1333 keys which should be enough for most users to 
+        // filter for most users. With lookaheadSize of 500 we get 1333 keys (500*1.3=666 666 external and 666 internal keys) which should be enough for most users to 
         // never need to update a bloom filter, which would weaken privacy.
-        walletConfig.setLookaheadSize(500);
+        // As we use 2 wallets (BTC, SQU) we generate 1333 + 266 keys in total.
+        walletConfig.setBtcWalletLookaheadSize(500);
+        walletConfig.setSquWalletLookaheadSize(100);
 
         // Calculation is derived from: https://www.reddit.com/r/Bitcoin/comments/2vrx6n/privacy_in_bitcoinj_android_wallet_multibit_hive/coknjuz
         // No. of false positives (56M keys in the blockchain): 
@@ -335,10 +337,8 @@ public class WalletsSetup {
                 .setBlockingStartup(false)
                 .setUserAgent(userAgent.getName(), userAgent.getVersion());
 
-        if (btcSeed != null)
-            walletConfig.restoreWalletFromSeed(btcSeed);
-        if (squSeed != null)
-            walletConfig.restoreSquWalletFromSeed(squSeed);
+        walletConfig.setBtcSeed(btcSeed);
+        walletConfig.setSquSeed(squSeed);
 
         walletConfig.addListener(new Service.Listener() {
             @Override

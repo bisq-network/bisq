@@ -34,6 +34,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.MarketPrice;
 import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.btc.provider.squ.SquUtxoFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.btc.wallet.WalletsSetup;
@@ -115,6 +116,7 @@ public class MainViewModel implements ViewModel {
     private final TacWindow tacWindow;
     private final Clock clock;
     private final FeeService feeService;
+    private final SquUtxoFeedService squUtxoFeedService;
     private final KeyRing keyRing;
     private final Navigation navigation;
     private final BSFormatter formatter;
@@ -182,7 +184,7 @@ public class MainViewModel implements ViewModel {
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, AddBitcoinNodesWindow addBitcoinNodesWindow,
-                         NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
+                         NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService, SquUtxoFeedService squUtxoFeedService,
                          KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
@@ -204,6 +206,7 @@ public class MainViewModel implements ViewModel {
         this.tacWindow = tacWindow;
         this.clock = clock;
         this.feeService = feeService;
+        this.squUtxoFeedService = squUtxoFeedService;
         this.keyRing = keyRing;
         this.navigation = navigation;
         this.formatter = formatter;
@@ -546,7 +549,8 @@ public class MainViewModel implements ViewModel {
         p2PService.onAllServicesInitialized();
 
         feeService.onAllServicesInitialized();
-
+        squUtxoFeedService.onAllServicesInitialized();
+        
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();

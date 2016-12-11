@@ -28,28 +28,32 @@ import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 
-class BitcoinDeterministicKeyChain extends DeterministicKeyChain {
-    private static final Logger log = LoggerFactory.getLogger(BitcoinDeterministicKeyChain.class);
+class BtcDeterministicKeyChain extends DeterministicKeyChain {
+    private static final Logger log = LoggerFactory.getLogger(BtcDeterministicKeyChain.class);
 
     // See https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
     // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
     // We use 0 (0x80000000) as coin_type for BTC 
+    // m / purpose' / coin_type' / account' / change / address_index
     public static final ImmutableList<ChildNumber> BIP44_BTC_ACCOUNT_PATH = ImmutableList.of(
             new ChildNumber(44, true),
             new ChildNumber(0, true),
-            ChildNumber.ZERO_HARDENED,
             ChildNumber.ZERO_HARDENED);
 
-    public BitcoinDeterministicKeyChain(SecureRandom random) {
+    public BtcDeterministicKeyChain(SecureRandom random) {
         super(random);
     }
 
-    public BitcoinDeterministicKeyChain(DeterministicKey accountKey, boolean isFollowingKey) {
+    public BtcDeterministicKeyChain(DeterministicKey accountKey, boolean isFollowingKey) {
         super(accountKey, isFollowingKey);
     }
 
-    public BitcoinDeterministicKeyChain(DeterministicSeed seed, KeyCrypter crypter) {
+    public BtcDeterministicKeyChain(DeterministicSeed seed, KeyCrypter crypter) {
         super(seed, crypter);
+    }
+
+    public BtcDeterministicKeyChain(DeterministicSeed seed) {
+        super(seed);
     }
 
     @Override

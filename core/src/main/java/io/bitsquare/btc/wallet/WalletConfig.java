@@ -34,7 +34,6 @@ import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.SPVBlockStore;
 import org.bitcoinj.store.WalletProtobufSerializer;
 import org.bitcoinj.wallet.DeterministicSeed;
-import org.bitcoinj.wallet.KeyChainGroup;
 import org.bitcoinj.wallet.Protos;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -58,12 +57,12 @@ import static com.google.common.base.Preconditions.checkState;
 public class WalletConfig extends AbstractIdleService {
     private static final Logger log = LoggerFactory.getLogger(WalletConfig.class);
 
-    private final String walletFilePrefix;
-    private final String tokenWalletFilePrefix;
-    private volatile Wallet vWallet;
+    private final String btcWalletFilePrefix;
+    private final String squWalletFilePrefix;
+    private volatile Wallet vBtcWallet;
     private volatile Wallet vTokenWallet;
-    private volatile File vWalletFile;
-    private volatile File vTokenWalletFile;
+    private volatile File vBtcWalletFile;
+    private volatile File vSquWalletFile;
     @Nullable
     private DeterministicSeed btcSeed;
     @Nullable
@@ -91,34 +90,35 @@ public class WalletConfig extends AbstractIdleService {
     private final Context context;
     private long bloomFilterTweak = 0;
     private double bloomFilterFPRate = -1;
-    private int lookaheadSize = -1;
+    private int btcWalletLookaheadSize = -1;
+    private int squWalletLookaheadSize = -1;
 
     private Socks5Proxy socks5Proxy;
 
     /**
      * Creates a new WalletAppKitBitSquare, with a newly created {@link Context}. Files will be stored in the given directory.
      */
-    public WalletConfig(NetworkParameters params, Socks5Proxy socks5Proxy, File directory, String walletFilePrefix, String tokenWalletFilePrefix) {
-        this(new Context(params), directory, walletFilePrefix, tokenWalletFilePrefix);
+    public WalletConfig(NetworkParameters params, Socks5Proxy socks5Proxy, File directory, String btcWalletFilePrefix, String squWalletFilePrefix) {
+        this(new Context(params), directory, btcWalletFilePrefix, squWalletFilePrefix);
         this.socks5Proxy = socks5Proxy;
     }
 
     /**
      * Creates a new WalletAppKitBitSquare, with a newly created {@link Context}. Files will be stored in the given directory.
      */
-    private WalletConfig(NetworkParameters params, File directory, String walletFilePrefix, String tokenWalletFilePrefix) {
-        this(new Context(params), directory, walletFilePrefix, tokenWalletFilePrefix);
+    private WalletConfig(NetworkParameters params, File directory, String btcWalletFilePrefix, String squWalletFilePrefix) {
+        this(new Context(params), directory, btcWalletFilePrefix, squWalletFilePrefix);
     }
 
     /**
      * Creates a new WalletAppKitBitSquare, with the given {@link Context}. Files will be stored in the given directory.
      */
-    private WalletConfig(Context context, File directory, String walletFilePrefix, String tokenWalletFilePrefix) {
+    private WalletConfig(Context context, File directory, String btcWalletFilePrefix, String squWalletFilePrefix) {
         this.context = context;
         this.params = checkNotNull(context.getParams());
         this.directory = checkNotNull(directory);
-        this.walletFilePrefix = checkNotNull(walletFilePrefix);
-        this.tokenWalletFilePrefix = tokenWalletFilePrefix;
+        this.btcWalletFilePrefix = checkNotNull(btcWalletFilePrefix);
+        this.squWalletFilePrefix = squWalletFilePrefix;
         if (!Utils.isAndroidRuntime()) {
             InputStream stream = WalletConfig.class.getResourceAsStream("/" + params.getId() + ".checkpoints");
             if (stream != null)
@@ -258,12 +258,12 @@ public class WalletConfig extends AbstractIdleService {
      * up the new kit. The next time your app starts it should work as normal (that is, don't keep calling this each
      * time).
      */
-    public WalletConfig restoreWalletFromSeed(DeterministicSeed seed) {
+    public WalletConfig setBtcSeed(DeterministicSeed seed) {
         this.btcSeed = seed;
         return this;
     }
 
-    public WalletConfig restoreSquWalletFromSeed(DeterministicSeed seed) {
+    public WalletConfig setSquSeed(DeterministicSeed seed) {
         this.squSeed = seed;
         return this;
     }
@@ -286,8 +286,13 @@ public class WalletConfig extends AbstractIdleService {
         return this;
     }
 
-    public WalletConfig setLookaheadSize(int lookaheadSize) {
-        this.lookaheadSize = lookaheadSize;
+    public WalletConfig setBtcWalletLookaheadSize(int lookaheadSize) {
+        this.btcWalletLookaheadSize = lookaheadSize;
+        return this;
+    }
+
+    public WalletConfig setSquWalletLookaheadSize(int lookaheadSize) {
+        this.squWalletLookaheadSize = lookaheadSize;
         return this;
     }
 
@@ -323,7 +328,7 @@ public class WalletConfig extends AbstractIdleService {
     public boolean isChainFileLocked() throws IOException {
         RandomAccessFile file2 = null;
         try {
-            File file = new File(directory, walletFilePrefix + ".spvchain");
+            File file = new File(directory, btcWalletFilePrefix + ".spvchain");
             if (!file.exists())
                 return false;
             if (file.isDirectory())
@@ -351,25 +356,27 @@ public class WalletConfig extends AbstractIdleService {
         }
         log.info("Starting up with directory = {}", directory);
         try {
-            File chainFile = new File(directory, walletFilePrefix + ".spvchain");
+            File chainFile = new File(directory, btcWalletFilePrefix + ".spvchain");
             boolean chainFileExists = chainFile.exists();
 
-            vWalletFile = new File(directory, walletFilePrefix + ".wallet");
-            boolean shouldReplayBtcWallet = (vWalletFile.exists() && !chainFileExists) || btcSeed != null;
+            // BTC wallet
+            vBtcWalletFile = new File(directory, btcWalletFilePrefix + ".wallet");
+            boolean shouldReplayBtcWallet = (vBtcWalletFile.exists() && !chainFileExists) || btcSeed != null;
             BitsquareKeyChainGroup keyChainGroup;
             if (btcSeed != null)
-                keyChainGroup = new BitsquareKeyChainGroup(params, btcSeed, true);
+                keyChainGroup = new BitsquareKeyChainGroup(params, new BtcDeterministicKeyChain(btcSeed), true, btcWalletLookaheadSize);
             else
-                keyChainGroup = new BitsquareKeyChainGroup(params, true);
-            vWallet = createOrLoadWallet(vWalletFile, shouldReplayBtcWallet, btcSeed, squSeed, keyChainGroup);
+                keyChainGroup = new BitsquareKeyChainGroup(params, true, btcWalletLookaheadSize);
+            vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayBtcWallet, btcSeed, null, keyChainGroup);
 
-            vTokenWalletFile = new File(directory, tokenWalletFilePrefix + ".wallet");
-            boolean shouldReplaySquWallet = (vTokenWalletFile.exists() && !chainFileExists) || squSeed != null;
+            // SQU walelt
+            vSquWalletFile = new File(directory, squWalletFilePrefix + ".wallet");
+            boolean shouldReplaySquWallet = (vSquWalletFile.exists() && !chainFileExists) || squSeed != null;
             if (squSeed != null)
-                keyChainGroup = new BitsquareKeyChainGroup(params, squSeed, false);
+                keyChainGroup = new BitsquareKeyChainGroup(params, new SquDeterministicKeyChain(squSeed), false, squWalletLookaheadSize);
             else
-                keyChainGroup = new BitsquareKeyChainGroup(params, false);
-            vTokenWallet = createOrLoadWallet(vTokenWalletFile, shouldReplaySquWallet, btcSeed, squSeed, keyChainGroup);
+                keyChainGroup = new BitsquareKeyChainGroup(params, false, squWalletLookaheadSize);
+            vTokenWallet = createOrLoadWallet(vSquWalletFile, shouldReplaySquWallet, null, squSeed, keyChainGroup);
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);
@@ -389,7 +396,7 @@ public class WalletConfig extends AbstractIdleService {
                             vStore = new SPVBlockStore(params, chainFile);
                         }
                     } else {
-                        time = vWallet.getEarliestKeyCreationTime();
+                        time = vBtcWallet.getEarliestKeyCreationTime();
                     }
 
 
@@ -426,9 +433,9 @@ public class WalletConfig extends AbstractIdleService {
             } else if (params != RegTestParams.get() && !useTor) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
             }
-            vChain.addWallet(vWallet);
+            vChain.addWallet(vBtcWallet);
             vChain.addWallet(vTokenWallet);
-            vPeerGroup.addWallet(vWallet);
+            vPeerGroup.addWallet(vBtcWallet);
             vPeerGroup.addWallet(vTokenWallet);
             onSetupCompleted();
 
@@ -513,10 +520,7 @@ public class WalletConfig extends AbstractIdleService {
         return wallet;
     }
 
-    private Wallet createWallet(KeyChainGroup keyChainGroup) {
-        if (lookaheadSize != -1)
-            keyChainGroup.setLookaheadSize(lookaheadSize);
-
+    private Wallet createWallet(BitsquareKeyChainGroup keyChainGroup) {
         if (walletFactory != null) {
             return walletFactory.create(params, keyChainGroup);
         } else {
@@ -561,12 +565,12 @@ public class WalletConfig extends AbstractIdleService {
         try {
             Context.propagate(context);
             vPeerGroup.stop();
-            vWallet.saveToFile(vWalletFile);
-            vTokenWallet.saveToFile(vTokenWalletFile);
+            vBtcWallet.saveToFile(vBtcWalletFile);
+            vTokenWallet.saveToFile(vSquWalletFile);
             vStore.close();
 
             vPeerGroup = null;
-            vWallet = null;
+            vBtcWallet = null;
             vTokenWallet = null;
             vStore = null;
             vChain = null;
@@ -591,7 +595,7 @@ public class WalletConfig extends AbstractIdleService {
 
     public Wallet wallet() {
         checkState(state() == State.STARTING || state() == State.RUNNING, "Cannot call until startup is complete");
-        return vWallet;
+        return vBtcWallet;
     }
 
     public Wallet tokenWallet() {
