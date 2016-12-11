@@ -32,7 +32,7 @@ import java.util.Set;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our addressEntry.
  */
-class MultiAddressesCoinSelector extends BtcCoinSelector {
+class MultiAddressesCoinSelector extends BitsquareCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(MultiAddressesCoinSelector.class);
     private final Set<AddressEntry> addressEntries;
     private final boolean allowUnconfirmedSpend;

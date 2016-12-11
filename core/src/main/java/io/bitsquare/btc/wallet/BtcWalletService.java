@@ -138,7 +138,7 @@ public class BtcWalletService extends WalletService {
             Address changeAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
             checkNotNull(feePaymentAddress, "feePaymentAddress must not be null");
             checkNotNull(changeAddress, "changeAddress must not be null");
-            SquCoinSelector coinSelector = new SquCoinSelector(params, feePaymentAddress);
+            BtcCoinSelector coinSelector = new BtcCoinSelector(params, feePaymentAddress);
             List<TransactionInput> inputs = transaction.getInputs();
             List<TransactionOutput> outputs = transaction.getOutputs();
             Transaction resultTx;

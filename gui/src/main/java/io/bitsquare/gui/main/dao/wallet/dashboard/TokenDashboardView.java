@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.dao.wallet.dashboard;
 
+import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -24,12 +25,10 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import org.bitcoinj.core.*;
-import org.bitcoinj.script.Script;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.util.List;
 
 import static io.bitsquare.gui.util.FormBuilder.addLabelTextField;
 import static io.bitsquare.gui.util.FormBuilder.addTitledGroupBg;
@@ -42,10 +41,8 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
     private final SquWalletService squWalletService;
     private final BSFormatter formatter;
 
-    @Nullable
-    private Wallet squWallet;
     private final int gridRow = 0;
-    private WalletEventListener walletEventListener;
+    private BalanceListener balanceListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -62,61 +59,28 @@ public class TokenDashboardView extends ActivatableView<GridPane, Void> {
         addTitledGroupBg(root, gridRow, 1, "Balance");
         confirmedBalance = addLabelTextField(root, gridRow, "Confirmed SQU balance:", Layout.FIRST_ROW_DISTANCE).second;
 
-        walletEventListener = new WalletEventListener() {
+        balanceListener = new BalanceListener() {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                updateBalance();
-            }
-
-            @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                updateBalance();
-            }
-
-            @Override
-            public void onReorganize(Wallet wallet) {
-                updateBalance();
-            }
-
-            @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                updateBalance();
-            }
-
-            @Override
-            public void onWalletChanged(Wallet wallet) {
-                updateBalance();
-            }
-
-            @Override
-            public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                updateBalance();
-            }
-
-            @Override
-            public void onKeysAdded(List<ECKey> keys) {
-                updateBalance();
+            public void onBalanceChanged(Coin balance, Transaction tx) {
+                updateBalance(balance);
             }
         };
     }
 
     @Override
     protected void activate() {
-        this.squWallet = squWalletService.getWallet();
-        squWallet.addEventListener(walletEventListener);
+        squWalletService.addBalanceListener(balanceListener);
 
-        updateBalance();
+        updateBalance(squWalletService.getAvailableBalance());
     }
 
     @Override
     protected void deactivate() {
-        if (squWallet != null)
-            squWallet.removeEventListener(walletEventListener);
+        squWalletService.removeBalanceListener(balanceListener);
     }
 
-    private void updateBalance() {
-        if (squWallet != null)
-            confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
+    private void updateBalance(Coin balance) {
+        confirmedBalance.setText(formatter.formatCoinWithCode(balance));
     }
 }
 

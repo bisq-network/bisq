@@ -17,114 +17,64 @@
 
 package io.bitsquare.btc.wallet;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.bitcoinj.core.*;
-import org.bitcoinj.wallet.CoinSelection;
-import org.bitcoinj.wallet.CoinSelector;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
- * We lookup for spendable outputs which matches our address of our addressEntry.
+ * We lookup for spendable outputs which matches our address of our address.
  */
-abstract class BtcCoinSelector implements CoinSelector {
+class BtcCoinSelector extends BitsquareCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(BtcCoinSelector.class);
-    final NetworkParameters params;
+    private final Address address;
+    private final boolean allowUnconfirmedSpend;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    BtcCoinSelector(NetworkParameters params) {
-        this.params = params;
+    BtcCoinSelector(NetworkParameters params, @NotNull Address address) {
+        this(params, address, true);
     }
 
-    abstract protected boolean matchesRequirement(TransactionOutput transactionOutput);
-
-    private static boolean isInBlockChainOrPending(Transaction tx) {
-        // Pick chain-included transactions and transactions that are pending.
-        TransactionConfidence confidence = tx.getConfidence();
-        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-
-        log.debug("numBroadcastPeers = " + confidence.numBroadcastPeers());
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                type.equals(TransactionConfidence.ConfidenceType.PENDING);
-    }
-
-    /**
-     * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
-     */
-    private boolean shouldSelect(Transaction tx) {
-        return isInBlockChainOrPending(tx);
+    private BtcCoinSelector(NetworkParameters params, @NotNull Address address, boolean allowUnconfirmedSpend) {
+        super(params);
+        this.address = address;
+        this.allowUnconfirmedSpend = allowUnconfirmedSpend;
     }
 
     @Override
-    public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
-        log.trace("candidates.size: " + candidates.size());
-        long targetAsLong = target.longValue();
-        log.trace("value needed: " + targetAsLong);
-        HashSet<TransactionOutput> selected = new HashSet<>();
-        // Sort the inputs by age*value so we get the highest "coindays" spent.
-        ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
-        // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
-        // them in order to improve performance.
-        if (!target.equals(NetworkParameters.MAX_MONEY)) {
-            sortOutputs(sortedOutputs);
-        }
-        // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
-        // bit over (excessive value will be change).
-        long total = 0;
-        for (TransactionOutput output : sortedOutputs) {
-            if (total >= targetAsLong) {
-                break;
-            }
-            // Only pick chain-included transactions, or transactions that are ours and pending.
-            // Only select outputs from our defined address(es)
-            if (!shouldSelect(output.getParentTransaction()) || !matchesRequirement(output)) {
-                continue;
+    protected boolean matchesRequirement(TransactionOutput transactionOutput) {
+        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+            boolean confirmationCheck = allowUnconfirmedSpend;
+            if (!allowUnconfirmedSpend && transactionOutput.getParentTransaction() != null &&
+                    transactionOutput.getParentTransaction().getConfidence() != null) {
+                final TransactionConfidence.ConfidenceType confidenceType = transactionOutput.getParentTransaction().getConfidence().getConfidenceType();
+                confirmationCheck = confidenceType == TransactionConfidence.ConfidenceType.BUILDING;
+                if (!confirmationCheck)
+                    log.error("Tx is not in blockchain yet. confidenceType=" + confidenceType);
             }
 
-            selected.add(output);
-            total += output.getValue().longValue();
+            Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
+            log.trace("matchesRequiredAddress?");
+            log.trace("addressOutput " + addressOutput.toString());
+            log.trace("address " + address.toString());
+            boolean matches = addressOutput.equals(address);
+            if (!matches)
+                log.trace("No match found at matchesRequiredAddress addressOutput / address " + addressOutput.toString
+                        () + " / " + address.toString());
 
-            log.debug("adding up outputs: output/total: " + output.getValue().longValue() + "/" + total);
+            return matches && confirmationCheck;
+        } else {
+            log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
+            return false;
         }
-        // Total may be lower than target here, if the given candidates were insufficient to create to requested
-        // transaction.
-        return new CoinSelection(Coin.valueOf(total), selected);
-    }
 
-    @VisibleForTesting
-    private static void sortOutputs(ArrayList<TransactionOutput> outputs) {
-        Collections.sort(outputs, (a, b) -> {
-            int depth1 = a.getParentTransactionDepthInBlocks();
-            int depth2 = b.getParentTransactionDepthInBlocks();
-            Coin aValue = a.getValue();
-            Coin bValue = b.getValue();
-            BigInteger aCoinDepth = BigInteger.valueOf(aValue.value).multiply(BigInteger.valueOf(depth1));
-            BigInteger bCoinDepth = BigInteger.valueOf(bValue.value).multiply(BigInteger.valueOf(depth2));
-            int c1 = bCoinDepth.compareTo(aCoinDepth);
-            if (c1 != 0) return c1;
-            // The "coin*days" destroyed are equal, sort by value alone to get the lowest transaction size.
-            int c2 = bValue.compareTo(aValue);
-            if (c2 != 0) return c2;
-            // They are entirely equivalent (possibly pending) so sort by hash to ensure a total ordering.
-            checkNotNull(a.getParentTransactionHash(), "a.getParentTransactionHash() must not be null");
-            checkNotNull(b.getParentTransactionHash(), "b.getParentTransactionHash() must not be null");
-            BigInteger aHash = a.getParentTransactionHash().toBigInteger();
-            BigInteger bHash = b.getParentTransactionHash().toBigInteger();
-            return aHash.compareTo(bHash);
-        });
     }
-
 }

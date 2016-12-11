@@ -24,12 +24,15 @@ import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.btc.provider.squ.SquUtxoFeedService;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
+import org.bitcoinj.script.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -38,6 +41,9 @@ import java.util.Optional;
  */
 public class SquWalletService extends WalletService {
     private static final Logger log = LoggerFactory.getLogger(SquWalletService.class);
+    private SquUTXOProvider squUTXOProvider;
+    private SquUtxoFeedService squUtxoFeedService;
+    private SquCoinSelector squCoinSelector;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,15 +52,64 @@ public class SquWalletService extends WalletService {
 
     @Inject
     public SquWalletService(WalletsSetup walletsSetup,
+                            SquUTXOProvider squUTXOProvider,
+                            SquUtxoFeedService squUtxoFeedService,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
                 preferences,
                 feeService);
+        this.squUTXOProvider = squUTXOProvider;
+        this.squUtxoFeedService = squUtxoFeedService;
+        this.squCoinSelector = new SquCoinSelector(walletsSetup.getParams());
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getSquWallet();
-            wallet.addEventListener(walletEventListener);
+            wallet.setUTXOProvider(this.squUTXOProvider);
+            wallet.setCoinSelector(squCoinSelector);
+            wallet.addEventListener(new BitsquareWalletEventListener());
+            wallet.addEventListener(new AbstractWalletEventListener() {
+                @Override
+                public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                    onChange();
+                }
+
+                @Override
+                public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                    onChange();
+                }
+
+                @Override
+                public void onReorganize(Wallet wallet) {
+                    onChange();
+                }
+
+                @Override
+                public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                    onChange();
+                }
+
+                @Override
+                public void onKeysAdded(List<ECKey> keys) {
+                    onChange();
+                }
+
+                @Override
+                public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+                    onChange();
+                }
+
+                @Override
+                public void onWalletChanged(Wallet wallet) {
+                    onChange();
+                }
+
+                public void onChange() {
+
+                }
+            });
+
+            // wallet.addEventListener();
         });
     }
 
@@ -75,6 +130,11 @@ public class SquWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public Coin getAvailableBalance() {
+        return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -128,5 +188,4 @@ public class SquWalletService extends WalletService {
         printTx("signFinalSendTx", tx);
         return tx;
     }
-
 }

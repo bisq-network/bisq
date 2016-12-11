@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our address.
  */
-class TradeWalletCoinSelector extends BtcCoinSelector {
+class TradeWalletCoinSelector extends BitsquareCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(TradeWalletCoinSelector.class);
     private final Address address;
     private final boolean allowUnconfirmedSpend;

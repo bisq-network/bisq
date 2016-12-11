@@ -21,7 +21,6 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +28,8 @@ import org.slf4j.LoggerFactory;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our address.
  */
-class SquCoinSelector extends BtcCoinSelector {
+class SquCoinSelector extends BitsquareCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(SquCoinSelector.class);
-    private final Address address;
     private final boolean allowUnconfirmedSpend;
 
 
@@ -39,13 +37,12 @@ class SquCoinSelector extends BtcCoinSelector {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    SquCoinSelector(NetworkParameters params, @NotNull Address address) {
-        this(params, address, true);
+    SquCoinSelector(NetworkParameters params) {
+        this(params, true);
     }
 
-    private SquCoinSelector(NetworkParameters params, @NotNull Address address, boolean allowUnconfirmedSpend) {
+    private SquCoinSelector(NetworkParameters params, boolean allowUnconfirmedSpend) {
         super(params);
-        this.address = address;
         this.allowUnconfirmedSpend = allowUnconfirmedSpend;
     }
 
@@ -64,13 +61,8 @@ class SquCoinSelector extends BtcCoinSelector {
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
             log.trace("matchesRequiredAddress?");
             log.trace("addressOutput " + addressOutput.toString());
-            log.trace("address " + address.toString());
-            boolean matches = addressOutput.equals(address);
-            if (!matches)
-                log.trace("No match found at matchesRequiredAddress addressOutput / address " + addressOutput.toString
-                        () + " / " + address.toString());
 
-            return matches && confirmationCheck;
+            return confirmationCheck;
         } else {
             log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
             return false;

@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our addressEntry.
  */
-class SavingsWalletCoinSelector extends BtcCoinSelector {
+class SavingsWalletCoinSelector extends BitsquareCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(SavingsWalletCoinSelector.class);
 
     private final Set<Address> savingsWalletAddressSet;
