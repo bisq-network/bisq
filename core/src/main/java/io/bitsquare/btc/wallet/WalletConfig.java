@@ -60,15 +60,17 @@ public class WalletConfig extends AbstractIdleService {
     private final String btcWalletFilePrefix;
     private final String squWalletFilePrefix;
     private volatile Wallet vBtcWallet;
-    private volatile Wallet vTokenWallet;
+    private volatile Wallet vSquWallet;
     private volatile File vBtcWalletFile;
     private volatile File vSquWalletFile;
     @Nullable
     private DeterministicSeed btcSeed;
     @Nullable
     private DeterministicSeed squSeed;
+    private int btcWalletLookaheadSize = -1;
+    private int squWalletLookaheadSize = -1;
 
-    final NetworkParameters params;
+    private final NetworkParameters params;
     private volatile BlockChain vChain;
     private volatile BlockStore vStore;
     private volatile PeerGroup vPeerGroup;
@@ -79,20 +81,15 @@ public class WalletConfig extends AbstractIdleService {
     private boolean autoStop = true;
     private InputStream checkpoints;
     private boolean blockingStartup = true;
-    private boolean useTor = false;   // Perhaps in future we can change this to true.
+    private boolean useTor = false;
     private String userAgent;
     private String version;
     private WalletProtobufSerializer.WalletFactory walletFactory;
-
     @Nullable
     private PeerDiscovery discovery;
-
     private final Context context;
     private long bloomFilterTweak = 0;
     private double bloomFilterFPRate = -1;
-    private int btcWalletLookaheadSize = -1;
-    private int squWalletLookaheadSize = -1;
-
     private Socks5Proxy socks5Proxy;
 
     /**
@@ -376,7 +373,7 @@ public class WalletConfig extends AbstractIdleService {
                 keyChainGroup = new BitsquareKeyChainGroup(params, new SquDeterministicKeyChain(squSeed), false, squWalletLookaheadSize);
             else
                 keyChainGroup = new BitsquareKeyChainGroup(params, false, squWalletLookaheadSize);
-            vTokenWallet = createOrLoadWallet(vSquWalletFile, shouldReplaySquWallet, null, squSeed, keyChainGroup);
+            vSquWallet = createOrLoadWallet(vSquWalletFile, shouldReplaySquWallet, null, squSeed, keyChainGroup);
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);
@@ -434,9 +431,9 @@ public class WalletConfig extends AbstractIdleService {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
             }
             vChain.addWallet(vBtcWallet);
-            vChain.addWallet(vTokenWallet);
+            vChain.addWallet(vSquWallet);
             vPeerGroup.addWallet(vBtcWallet);
-            vPeerGroup.addWallet(vTokenWallet);
+            vPeerGroup.addWallet(vSquWallet);
             onSetupCompleted();
 
             if (blockingStartup) {
@@ -566,12 +563,12 @@ public class WalletConfig extends AbstractIdleService {
             Context.propagate(context);
             vPeerGroup.stop();
             vBtcWallet.saveToFile(vBtcWalletFile);
-            vTokenWallet.saveToFile(vSquWalletFile);
+            vSquWallet.saveToFile(vSquWalletFile);
             vStore.close();
 
             vPeerGroup = null;
             vBtcWallet = null;
-            vTokenWallet = null;
+            vSquWallet = null;
             vStore = null;
             vChain = null;
         } catch (BlockStoreException e) {
@@ -600,7 +597,7 @@ public class WalletConfig extends AbstractIdleService {
 
     public Wallet tokenWallet() {
         checkState(state() == State.STARTING || state() == State.RUNNING, "Cannot call until startup is complete");
-        return vTokenWallet;
+        return vSquWallet;
     }
 
     public PeerGroup peerGroup() {

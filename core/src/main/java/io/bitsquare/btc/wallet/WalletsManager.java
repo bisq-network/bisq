@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 
 public class WalletsManager {
     private static final Logger log = LoggerFactory.getLogger(WalletsManager.class);
+
     private final BtcWalletService btcWalletService;
     private final TradeWalletService tradeWalletService;
     private final SquWalletService squWalletService;

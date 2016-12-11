@@ -63,15 +63,14 @@ public abstract class WalletService {
     private final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
 
-    final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
-    final NetworkParameters params;
-
-    final WalletsSetup walletsSetup;
+    protected final WalletsSetup walletsSetup;
     private final Preferences preferences;
     private final FeeService feeService;
 
-    Wallet wallet;
-    KeyParameter aesKey;
+    protected final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
+    protected final NetworkParameters params;
+    protected Wallet wallet;
+    protected KeyParameter aesKey;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
