@@ -62,22 +62,22 @@ Sends 0.00 BTC and receives 0.00001 BTC, total value 0.00001 BTC.
      out  DUP HASH160 PUSHDATA(20)[cc907567ff7e61e023f5e9e28e333d4149481e4b] EQUALVERIFY CHECKSIG 0.014768 BTC (aw scriptPubKey: 76a914cc907567ff7e61e023f5e9e28e333d4149481e4b88ac) 
      out  DUP HASH160 PUSHDATA(20)[027aea6622e5a3f4c4c48e2935544b92008176a1] EQUALVERIFY CHECKSIG 0.00001 BTC (aw scriptPubKey: 76a914027aea6622e5a3f4c4c48e2935544b92008176a188ac) 
          */
-        UTXO utxo1 = new UTXO(Sha256Hash.of(Utils.HEX.decode("ae71bba68ceac54af639f4b8d86ed1a720a5c9cf23285f1b8ce707d9ce848a04")),
-                1,
-                Coin.valueOf(1000),
-                331,
+        UTXO utxo1 = new UTXO(Sha256Hash.of(Utils.HEX.decode("a054a0066b8df03a82a543cacf7e4a0516a3910c70c1d9baac58a1c12d9ef6a7")),
+                0,
+                Coin.valueOf(222000),
+                336,
                 false,
-                new Script(HEX.decode("76a914027aea6622e5a3f4c4c48e2935544b92008176a188ac")),
-                "mfk4tmJsRjwrDLNgqbLBas1HCt7o4MU84i");
+                new Script(HEX.decode("76a91409acb7a09afade332fde6d741e59fe251bae332088ac")),
+                "mgQ7HPV9WvQvXLSYGuAvLgiTMkQd55iBCe");
         utxoSet.add(utxo1);
 
-        UTXO utxo2 = new UTXO(Sha256Hash.of(Utils.HEX.decode("ef07b4ce136c1230f9b4a8b9a7914b2f3e1ff1c8da83c50f4190796fd0f69514")),
+        UTXO utxo2 = new UTXO(Sha256Hash.of(Utils.HEX.decode("a054a0066b8df03a82a543cacf7e4a0516a3910c70c1d9baac58a1c12d9ef6a7")),
                 1,
-                Coin.valueOf(10_000),
-                331,
+                Coin.valueOf(444000),
+                336,
                 false,
-                new Script(HEX.decode("76a914bf20c68f946157aa3e68c610f220b0dadae80a2388ac")),
-                "mxwYcz39M8BwLSS8wQH3gvPB96PDuNVJTm");
+                new Script(HEX.decode("76a914e867afbc7c0840299d3409b105e56263e40a275688ac")),
+                "n2hoGpZku3iiw1x7xfFqVeW75akYPaYevU");
         utxoSet.add(utxo2);
         
         SquUtxoFeedData squUtxoFeedData = new SquUtxoFeedData(utxoSet);
