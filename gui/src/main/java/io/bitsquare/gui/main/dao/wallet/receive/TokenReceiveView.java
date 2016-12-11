@@ -24,6 +24,7 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.dao.wallet.BalanceUtil;
 import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
@@ -36,8 +37,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
-import org.bitcoinj.core.*;
-import org.bitcoinj.script.Script;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Wallet;
 import org.bitcoinj.uri.BitcoinURI;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -45,7 +46,6 @@ import org.fxmisc.easybind.Subscription;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
@@ -56,15 +56,15 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
     private ImageView qrCodeImageView;
     private AddressTextField addressTextField;
     private InputTextField amountTextField;
-    private TextField confirmedBalance;
+    private TextField balanceTextField;
 
     private final SquWalletService squWalletService;
     private final SQUFormatter formatter;
+    private BalanceUtil balanceUtil;
 
     @Nullable
     private Wallet squWallet;
     private int gridRow = 0;
-    private WalletEventListener walletEventListener;
     private final String paymentLabelString;
     private Subscription amountTextFieldSubscription;
 
@@ -74,16 +74,19 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TokenReceiveView(SquWalletService squWalletService, SQUFormatter formatter) {
+    private TokenReceiveView(SquWalletService squWalletService, SQUFormatter formatter, BalanceUtil balanceUtil) {
         this.squWalletService = squWalletService;
         this.formatter = formatter;
+        this.balanceUtil = balanceUtil;
         paymentLabelString = "Fund Bitsquare token wallet";
     }
 
     @Override
     public void initialize() {
         addTitledGroupBg(root, gridRow, 1, "Balance");
-        confirmedBalance = addLabelTextField(root, gridRow, "Confirmed SQU balance:", Layout.FIRST_ROW_DISTANCE).second;
+        balanceTextField = addLabelTextField(root, gridRow, "SQU balance:", Layout.FIRST_ROW_DISTANCE).second;
+        balanceUtil.setBalanceTextField(balanceTextField);
+        balanceUtil.initialize();
 
         addTitledGroupBg(root, ++gridRow, 3, "Fund your token wallet", Layout.GROUP_DISTANCE);
 
@@ -101,51 +104,12 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
         amountTextField = addLabelInputTextField(root, ++gridRow, "Amount (optional):").second;
         if (DevFlags.DEV_MODE)
             amountTextField.setText("10");
-
-
-        walletEventListener = new WalletEventListener() {
-            @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                updateBalance();
-            }
-
-            @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                updateBalance();
-            }
-
-            @Override
-            public void onReorganize(Wallet wallet) {
-                updateBalance();
-            }
-
-            @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                updateBalance();
-            }
-
-            @Override
-            public void onWalletChanged(Wallet wallet) {
-                updateBalance();
-            }
-
-            @Override
-            public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                updateBalance();
-            }
-
-            @Override
-            public void onKeysAdded(List<ECKey> keys) {
-                updateBalance();
-            }
-        };
     }
 
     @Override
     protected void activate() {
+        balanceUtil.activate();
         squWallet = squWalletService.getWallet();
-        squWallet.addEventListener(walletEventListener);
-        updateBalance();
 
         amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> {
             addressTextField.setAmountAsCoin(formatter.parseToCoin(t));
@@ -162,8 +126,7 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void deactivate() {
-        if (squWallet != null)
-            squWallet.removeEventListener(walletEventListener);
+        balanceUtil.deactivate();
 
         qrCodeImageView.setOnMouseClicked(null);
         amountTextFieldSubscription.unsubscribe();
@@ -191,11 +154,6 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
                 getAmountAsCoin(),
                 paymentLabelString,
                 null);
-    }
-
-    private void updateBalance() {
-        if (squWallet != null)
-            confirmedBalance.setText(formatter.formatCoinWithCode(squWallet.getBalance()));
     }
 }
 

@@ -17,17 +17,14 @@
 
 package io.bitsquare.gui.main.dao.wallet.dashboard;
 
-import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.gui.main.dao.wallet.BalanceUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.SQUFormatter;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
@@ -37,56 +34,42 @@ import static io.bitsquare.gui.util.FormBuilder.addTitledGroupBg;
 @FxmlView
 public class TokenDashboardView extends ActivatableView<GridPane, Void> {
 
-    private TextField confirmedBalance;
+    private TextField balanceTextField;
 
     private final SquWalletService squWalletService;
     private final SQUFormatter formatter;
+    private BalanceUtil balanceUtil;
 
     private final int gridRow = 0;
-    private BalanceListener balanceListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TokenDashboardView(SquWalletService squWalletService, SQUFormatter formatter) {
+    private TokenDashboardView(SquWalletService squWalletService, SQUFormatter formatter, BalanceUtil balanceUtil) {
         this.squWalletService = squWalletService;
         this.formatter = formatter;
+
+        this.balanceUtil = balanceUtil;
     }
 
     @Override
     public void initialize() {
         addTitledGroupBg(root, gridRow, 1, "Balance");
-        confirmedBalance = addLabelTextField(root, gridRow, "Confirmed SQU balance:", Layout.FIRST_ROW_DISTANCE).second;
-
-        balanceListener = new BalanceListener() {
-            @Override
-            public void onBalanceChanged(Coin balance, Transaction tx) {
-                updateBalance(balance);
-            }
-        };
+        balanceTextField = addLabelTextField(root, gridRow, "SQU balance:", Layout.FIRST_ROW_DISTANCE).second;
+        balanceUtil.setBalanceTextField(balanceTextField);
+        balanceUtil.initialize();
     }
 
     @Override
     protected void activate() {
-        squWalletService.requestSquUtxo(() -> {
-            updateBalance(squWalletService.getAvailableBalance());
-        }, errorMessage -> {
-            new Popup<>().warning(errorMessage);
-        });
-        squWalletService.addBalanceListener(balanceListener);
-
-        updateBalance(squWalletService.getAvailableBalance());
+        balanceUtil.activate();
     }
 
     @Override
     protected void deactivate() {
-        squWalletService.removeBalanceListener(balanceListener);
-    }
-
-    private void updateBalance(Coin balance) {
-        confirmedBalance.setText(formatter.formatCoinWithCode(balance));
+        balanceUtil.deactivate();
     }
 }
 
