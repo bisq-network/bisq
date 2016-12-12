@@ -17,7 +17,6 @@
 
 package io.bitsquare.btc.wallet;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -30,6 +29,7 @@ import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.script.ScriptBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -160,8 +161,10 @@ public class BtcWalletService extends WalletService {
                 wallet.completeTx(sendRequest);
 
                 resultTx = sendRequest.tx;
+                //TODO add estimated signature size
+                txSize = resultTx.bitcoinSerialize().length;
             }
-            while (counter < 10 && Math.abs(resultTx.getFee().value - txFeePerByte.multiply(resultTx.bitcoinSerialize().length).value) > 1000);
+            while (counter < 10 && Math.abs(resultTx.getFee().value - txFeePerByte.multiply(txSize).value) > 1000);
             if (counter == 10) {
                 log.error("Could not calculate the fee. Tx=" + resultTx);
             }
@@ -185,6 +188,119 @@ public class BtcWalletService extends WalletService {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Add mining fee input and mandatory change output for prepared proposal fee tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction addInputAndOutputToPreparedSquProposalFeeTx(Transaction preparedSquTx, byte[] hash) throws
+            TransactionVerificationException, WalletException, InsufficientFundsException {
+
+        // preparedSquTx has following structure:
+        // inputs [1-n] SQU inputs
+        // outputs [0-1] SQU change output
+        // mining fee: SQU proposal fee
+
+        try {
+            int counter = 0;
+            final int sigSizePerInput = 106;
+            int txSize = 203; // typical size for a tx with 2 unsigned inputs and 3 outputs
+            final Coin txFeePerByte = feeService.getTxFeePerByte();
+            Coin valueToForceChange = Coin.ZERO;
+            Address changeAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+            checkNotNull(changeAddress, "changeAddress must not be null");
+            final BtcCoinSelector coinSelector = new BtcCoinSelector(params, changeAddress);
+
+            final List<TransactionInput> preparedSquTxInputs = preparedSquTx.getInputs();
+            final List<TransactionOutput> preparedSquTxOutputs = preparedSquTx.getOutputs();
+            Transaction resultTx = null;
+            int numInputs = preparedSquTxInputs.size() + 1;
+            boolean validTx;
+            do {
+                counter++;
+                if (counter >= 10) {
+                    checkNotNull(resultTx, "resultTx must not be null");
+                    log.error("Could not calculate the fee. Tx=" + resultTx);
+                    break;
+                }
+
+                Transaction tx = new Transaction(params);
+                preparedSquTxInputs.stream().forEach(tx::addInput);
+
+                if (valueToForceChange.isZero()) {
+                    preparedSquTxOutputs.stream().forEach(tx::addOutput);
+                } else {
+                    //TODO test that case
+                    // We have only 1 output at preparedSquTxOutputs otherwise the valueToForceChange must be 0
+                    checkArgument(preparedSquTxOutputs.size() == 1);
+                    tx.addOutput(valueToForceChange, changeAddress);
+                    tx.addOutput(preparedSquTxOutputs.get(0));
+                }
+
+                Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+                sendRequest.shuffleOutputs = false;
+                sendRequest.aesKey = aesKey;
+                // Need to be false as it would try to sign all inputs (SQU inputs are not in this wallet)
+                sendRequest.signInputs = false;
+                sendRequest.ensureMinRequiredFee = false;
+                sendRequest.feePerKb = Coin.ZERO;
+                Coin fee = txFeePerByte.multiply(txSize + sigSizePerInput * numInputs);
+                sendRequest.fee = fee;
+                sendRequest.coinSelector = coinSelector;
+                sendRequest.changeAddress = changeAddress;
+                wallet.completeTx(sendRequest);
+
+                Transaction txWithBtcInputs = sendRequest.tx;
+                // add OP_RETURN output
+                txWithBtcInputs.addOutput(new TransactionOutput(params, txWithBtcInputs, Coin.ZERO, ScriptBuilder.createOpReturnScript(hash).getProgram()));
+
+
+                // As we cannot remove an outut we recreate the tx
+                resultTx = new Transaction(params);
+                txWithBtcInputs.getInputs().stream().forEach(resultTx::addInput);
+                txWithBtcInputs.getOutputs().stream().forEach(resultTx::addOutput);
+
+                numInputs = resultTx.getInputs().size();
+
+                printTx("resultTx", resultTx);
+                txSize = resultTx.bitcoinSerialize().length + sigSizePerInput * numInputs;
+                log.error("txSize " + txSize);
+                // We need min. 1 output beside op_return
+                // calculated fee must be inside of a tolerance range with tx fee
+                final int tolerance = 1000;
+                final long txFeeAsLong = resultTx.getFee().value;
+                final long calculatedFeeAsLong = txFeePerByte.multiply(txSize + sigSizePerInput * numInputs).value;
+                final boolean correctOutputs = resultTx.getOutputs().size() > 1;
+                validTx = correctOutputs && Math.abs(txFeeAsLong - calculatedFeeAsLong) < tolerance;
+
+                if (resultTx.getOutputs().size() == 1) {
+                    // We have the rare case that both inputs equalled the required fees, so both did not render 
+                    // a change output.
+                    // We need to add artificially a change output as the OP_RETURN is not allowed as only output
+                    valueToForceChange = Transaction.MIN_NONDUST_OUTPUT;
+                }
+            }
+            while (!validTx);
+
+            // Sign all BTC inputs
+            int startIndex = preparedSquTxInputs.size();
+            int endIndex = resultTx.getInputs().size();
+            for (int i = startIndex; i < endIndex; i++) {
+                TransactionInput txIn = resultTx.getInputs().get(i);
+                signTransactionInput(resultTx, txIn, i);
+                checkScriptSig(resultTx, txIn, i);
+            }
+
+            checkWalletConsistency();
+            verifyTransaction(resultTx);
+
+            printTx("Signed resultTx", resultTx);
+            return resultTx;
+        } catch (InsufficientMoneyException e) {
+            throw new InsufficientFundsException("The fees for that preparedSquTx exceed the available funds " +
+                    "or the resulting output value is below the min. dust value:\n" +
+                    "Missing " + (e.missing != null ? e.missing.toFriendlyString() : "null"));
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // AddressEntry
@@ -571,7 +687,7 @@ public class BtcWalletService extends WalletService {
                                               AddressEntry.Context context) throws AddressFormatException,
             AddressEntryException {
         Transaction tx = new Transaction(params);
-        Preconditions.checkArgument(Restrictions.isAboveDust(amount, fee),
+        checkArgument(Restrictions.isAboveDust(amount, fee),
                 "The amount is too low (dust limit).");
         tx.addOutput(amount.subtract(fee), new Address(params, toAddress));
 
@@ -599,7 +715,7 @@ public class BtcWalletService extends WalletService {
                                                                   @Nullable KeyParameter aesKey) throws
             AddressFormatException, AddressEntryException {
         Transaction tx = new Transaction(params);
-        Preconditions.checkArgument(Restrictions.isAboveDust(amount),
+        checkArgument(Restrictions.isAboveDust(amount),
                 "The amount is too low (dust limit).");
         tx.addOutput(amount.subtract(fee), new Address(params, toAddress));
 

@@ -59,13 +59,13 @@ import static com.google.common.base.Preconditions.checkState;
 public abstract class WalletService {
     private static final Logger log = LoggerFactory.getLogger(WalletService.class);
 
-    private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
-    private final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
-    private final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
+    protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
+    protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
+    protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
 
     protected final WalletsSetup walletsSetup;
-    private final Preferences preferences;
-    private final FeeService feeService;
+    protected final Preferences preferences;
+    protected final FeeService feeService;
 
     protected final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
     protected final NetworkParameters params;
@@ -324,7 +324,7 @@ public abstract class WalletService {
         return null;
     }
 
-    private TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
+    protected TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
         List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
 
@@ -339,7 +339,7 @@ public abstract class WalletService {
     }
 
 
-    private List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx) {
+    protected List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx) {
         List<TransactionOutput> transactionOutputs = tx.getOutputs();
         List<TransactionOutput> connectedOutputs = new ArrayList<>();
 
@@ -359,7 +359,7 @@ public abstract class WalletService {
     }
 
 
-    private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
+    protected TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
         TransactionConfidence transactionConfidence = null;
         for (TransactionConfidence confidence : transactionConfidenceList) {
             if (confidence != null) {
@@ -390,7 +390,7 @@ public abstract class WalletService {
         return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(), address) : Coin.ZERO;
     }
 
-    private Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
+    protected Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
         for (TransactionOutput transactionOutput : transactionOutputs) {
             if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
@@ -478,7 +478,7 @@ public abstract class WalletService {
         StringBuilder sb = new StringBuilder();
         sb.append("\n").append(tracePrefix).append(":").append("\n").append(tx.toString()).append("\n");
         sb.append("Size: ").append(tx.bitcoinSerialize().length);
-        log.info(sb.toString());
+        log.error(sb.toString());
     }
 
 

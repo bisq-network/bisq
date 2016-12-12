@@ -17,15 +17,16 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.dao.voting.VotingView"
-            prefHeight="660.0" prefWidth="1000.0"
-            xmlns:fx="http://javafx.com/fxml">
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.dao.voting.dashboard.VotingDashboardView"
+          hgap="5.0" vgap="5.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-10.0"
+          xmlns:fx="http://javafx.com/fxml">
 
-    <VBox fx:id="leftVBox" spacing="5" prefWidth="240" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="15"
-          AnchorPane.topAnchor="20"/>
-    <AnchorPane fx:id="content" AnchorPane.bottomAnchor="10" AnchorPane.rightAnchor="25" AnchorPane.leftAnchor="290"
-                AnchorPane.topAnchor="30"/>
-</AnchorPane>
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
+    </columnConstraints>
 
+</GridPane>

@@ -116,4 +116,9 @@ public class FeeService {
         return Coin.valueOf(feeData.takeOfferFee);
     }
 
+    public Coin getCreateProposalFee() {
+        //TODO
+        return Coin.valueOf(1000);
+    }
+
 }

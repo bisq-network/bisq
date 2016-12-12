@@ -23,15 +23,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SquUTXOProvider implements UTXOProvider {
     private static final Logger log = LoggerFactory.getLogger(SquUTXOProvider.class);
 
     private Map<String, UTXO> utxoByAddressAsStringMap = new HashMap<>();
-    private Set<String> addressesAsStringSet = new HashSet<>();
-    private Set<UTXO> transactionOutputSet = new HashSet<>();
     private NetworkParameters params;
 
     @Inject
@@ -45,22 +46,7 @@ public class SquUTXOProvider implements UTXOProvider {
 
     @Override
     public List<UTXO> getOpenTransactionOutputs(List<Address> addresses) throws UTXOProviderException {
-        // addressesAsStringSet.clear();
-        // addressesAsStringSet.addAll(addresses.stream().map(Address::toString).collect(Collectors.toSet()));
-        List<UTXO> foundOutputs = addresses.stream().map(e -> utxoByAddressAsStringMap.get(e.toString())).filter(e -> e != null).collect(Collectors.toList());
-
-        // List<UTXO> foundOutputs = transactionOutputSet.stream().filter(e -> addressesAsStringSet.contains(e.getAddress())).collect(Collectors.toList());
-     /*   
-        List<UTXO> foundOutputs = new ArrayList<UTXO>();
-        Collection<UTXO> outputsList = transactionOutputMap.values();
-        for (UTXO output : outputsList) {
-            for (Address address : addresses) {
-                if (output.getAddress().equals(address.toString())) {
-                    foundOutputs.add(output);
-                }
-            }
-        }*/
-        return foundOutputs;
+        return addresses.stream().map(e -> utxoByAddressAsStringMap.get(e.toString())).filter(e -> e != null).collect(Collectors.toList());
     }
 
     @Override
@@ -73,23 +59,4 @@ public class SquUTXOProvider implements UTXOProvider {
     public NetworkParameters getParams() {
         return params;
     }
-/*
-    private String getScriptAddress(@Nullable Script script) {
-        String address = "";
-        try {
-            if (script != null) {
-                address = script.getToAddress(params, true).toString();
-            }
-        } catch (Exception e) {
-        }
-        return address;
-    }
-
-    private Script getScript(byte[] scriptBytes) {
-        try {
-            return new Script(scriptBytes);
-        } catch (Exception e) {
-            return new Script(new byte[0]);
-        }
-    }*/
 }

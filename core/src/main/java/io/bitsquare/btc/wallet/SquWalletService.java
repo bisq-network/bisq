@@ -17,7 +17,6 @@
 
 package io.bitsquare.btc.wallet;
 
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bitsquare.btc.Restrictions;
@@ -30,6 +29,8 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
+import org.bitcoinj.wallet.CoinSelection;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,8 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * WalletService handles all non trade specific wallet and bitcoin related services.
@@ -139,16 +142,20 @@ public class SquWalletService extends WalletService {
         return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
     }
 
-    public void requestSquUtxo(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void requestSquUtxo(@Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
         Set<UTXO> utxoSet = squUtxoFeedService.getUtxoSet();
         if (utxoSet != null)
             squUTXOProvider.setUtxoSet(utxoSet);
 
         squUtxoFeedService.requestSquUtxo(utxos -> {
                     squUTXOProvider.setUtxoSet(utxos);
-                    resultHandler.handleResult();
+                    if (resultHandler != null)
+                        resultHandler.handleResult();
                 },
-                (errorMessage, throwable) -> errorMessageHandler.handleErrorMessage(errorMessage));
+                (errorMessage, throwable) -> {
+                    if (errorMessageHandler != null)
+                        errorMessageHandler.handleErrorMessage(errorMessage);
+                });
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +168,7 @@ public class SquWalletService extends WalletService {
             InsufficientMoneyException, WalletException, TransactionVerificationException {
 
         Transaction tx = new Transaction(params);
-        Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
+        checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
         tx.addOutput(receiverAmount, new Address(params, receiverAddress));
 
@@ -203,4 +210,44 @@ public class SquWalletService extends WalletService {
         return tx;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Burn SQU for proposal fee
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction getPreparedProposalFeeTx(Coin createProposalFee) throws WalletException, TransactionVerificationException, InsufficientMoneyException, ChangeBelowDustException {
+        Transaction tx = new Transaction(params);
+
+        SquFeeCoinSelector squFeeCoinSelector = new SquFeeCoinSelector(wallet, true);
+        CoinSelection coinSelection = squFeeCoinSelector.getCoinSelection(createProposalFee);
+        coinSelection.gathered.stream().forEach(tx::addInput);
+        Coin change = coinSelection.valueGathered.subtract(createProposalFee);
+        if (change.isPositive())
+            tx.addOutput(change, wallet.freshReceiveAddress());
+
+        printTx("preparedProposalFeeTx", tx);
+        return tx;
+    }
+
+    public void signAndBroadcastProposalFeeTx(Transaction tx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
+        // Sign all SQU inputs
+        int endIndex = tx.getInputs().size();
+        for (int i = 0; i < endIndex; i++) {
+            TransactionInput txIn = tx.getInputs().get(i);
+            TransactionOutput connectedOutput = txIn.getConnectedOutput();
+            if (connectedOutput != null && connectedOutput.isMine(wallet)) {
+                signTransactionInput(tx, txIn, i);
+                checkScriptSig(tx, txIn, i);
+            }
+        }
+
+        checkWalletConsistency();
+        verifyTransaction(tx);
+        printTx("signAndBroadcastProposalFeeTx", tx);
+
+        wallet.commitTx(tx);
+        checkWalletConsistency();
+        Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(tx).future(), callback);
+        printTx("signAndBroadcastProposalFeeTx", tx);
+    }
 }

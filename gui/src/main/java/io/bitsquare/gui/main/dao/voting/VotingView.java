@@ -17,44 +17,171 @@
 
 package io.bitsquare.gui.main.dao.voting;
 
-import io.bitsquare.gui.common.model.Activatable;
-import io.bitsquare.gui.common.view.ActivatableView;
-import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.util.BSFormatter;
-import javafx.scene.layout.GridPane;
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.common.view.*;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.dao.DaoView;
+import io.bitsquare.gui.main.dao.voting.dashboard.VotingDashboardView;
+import io.bitsquare.gui.main.dao.voting.history.VotingHistoryView;
+import io.bitsquare.gui.main.dao.voting.vote.VoteView;
+import io.bitsquare.gui.util.Colors;
+import javafx.beans.value.ChangeListener;
+import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Paint;
 
 import javax.inject.Inject;
 
 @FxmlView
-public class VotingView extends ActivatableView<GridPane, Activatable> {
+public class VotingView extends ActivatableViewAndModel {
 
+    private final ViewLoader viewLoader;
+    private final Navigation navigation;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, initialisation
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    private MenuItem dashboard, vote, history;
+    private Navigation.Listener listener;
+
+    @FXML
+    private VBox leftVBox;
+    @FXML
+    private AnchorPane content;
+
+    private Class<? extends View> selectedViewClass;
 
     @Inject
-    public VotingView(BSFormatter formatter) {
-        super();
+    private VotingView(CachingViewLoader viewLoader, Navigation navigation) {
+        this.viewLoader = viewLoader;
+        this.navigation = navigation;
     }
 
     @Override
     public void initialize() {
-    }
+        listener = viewPath -> {
+            if (viewPath.size() != 4 || viewPath.indexOf(VotingView.class) != 2)
+                return;
 
+            selectedViewClass = viewPath.tip();
+            loadView(selectedViewClass);
+        };
+
+        ToggleGroup toggleGroup = new ToggleGroup();
+        dashboard = new MenuItem(navigation, toggleGroup, "Dashboard", VotingDashboardView.class, AwesomeIcon.DASHBOARD);
+        vote = new MenuItem(navigation, toggleGroup, "Vote", VoteView.class, AwesomeIcon.EDIT);
+        history = new MenuItem(navigation, toggleGroup, "History", VotingHistoryView.class, AwesomeIcon.TABLE);
+        leftVBox.getChildren().addAll(dashboard, vote, history);
+    }
 
     @Override
     protected void activate() {
+        dashboard.activate();
+        vote.activate();
+        history.activate();
+
+        navigation.addListener(listener);
+        ViewPath viewPath = navigation.getCurrentPath();
+        if (viewPath.size() == 3 && viewPath.indexOf(VotingView.class) == 2 ||
+                viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
+            if (selectedViewClass == null)
+                selectedViewClass = VotingDashboardView.class;
+
+            loadView(selectedViewClass);
+
+        } else if (viewPath.size() == 4 && viewPath.indexOf(VotingView.class) == 2) {
+            selectedViewClass = viewPath.get(3);
+            loadView(selectedViewClass);
+        }
     }
 
     @Override
     protected void deactivate() {
+        navigation.removeListener(listener);
+
+        dashboard.deactivate();
+        vote.deactivate();
+        history.deactivate();
     }
 
+    private void loadView(Class<? extends View> viewClass) {
+        View view = viewLoader.load(viewClass);
+        content.getChildren().setAll(view.getRoot());
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Initialize
-    ///////////////////////////////////////////////////////////////////////////////////////////
+        if (view instanceof VotingDashboardView) dashboard.setSelected(true);
+        else if (view instanceof VoteView) vote.setSelected(true);
+        else if (view instanceof VotingHistoryView) history.setSelected(true);
+    }
 
-
+    public Class<? extends View> getSelectedViewClass() {
+        return selectedViewClass;
+    }
 }
+
+
+class MenuItem extends ToggleButton {
+
+    private final ChangeListener<Boolean> selectedPropertyChangeListener;
+    private final ChangeListener<Boolean> disablePropertyChangeListener;
+    private final Navigation navigation;
+    private final Class<? extends View> viewClass;
+
+    MenuItem(Navigation navigation, ToggleGroup toggleGroup, String title, Class<? extends View> viewClass, AwesomeIcon awesomeIcon) {
+        this.navigation = navigation;
+        this.viewClass = viewClass;
+
+        setToggleGroup(toggleGroup);
+        setText(title);
+        setId("account-settings-item-background-active");
+        setPrefHeight(40);
+        setPrefWidth(240);
+        setAlignment(Pos.CENTER_LEFT);
+
+        Label icon = new Label();
+        AwesomeDude.setIcon(icon, awesomeIcon);
+        icon.setTextFill(Paint.valueOf("#333"));
+        icon.setPadding(new Insets(0, 5, 0, 0));
+        icon.setAlignment(Pos.CENTER);
+        icon.setMinWidth(25);
+        icon.setMaxWidth(25);
+        setGraphic(icon);
+
+        selectedPropertyChangeListener = (ov, oldValue, newValue) -> {
+            if (newValue) {
+                setId("account-settings-item-background-selected");
+                icon.setTextFill(Colors.BLUE);
+            } else {
+                setId("account-settings-item-background-active");
+                icon.setTextFill(Paint.valueOf("#333"));
+            }
+        };
+
+        disablePropertyChangeListener = (ov, oldValue, newValue) -> {
+            if (newValue) {
+                setId("account-settings-item-background-disabled");
+                icon.setTextFill(Paint.valueOf("#ccc"));
+            } else {
+                setId("account-settings-item-background-active");
+                icon.setTextFill(Paint.valueOf("#333"));
+            }
+        };
+    }
+
+    public void activate() {
+        setOnAction((event) -> navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, viewClass));
+        selectedProperty().addListener(selectedPropertyChangeListener);
+        disableProperty().addListener(disablePropertyChangeListener);
+    }
+
+    public void deactivate() {
+        setOnAction(null);
+        selectedProperty().removeListener(selectedPropertyChangeListener);
+        disableProperty().removeListener(disablePropertyChangeListener);
+    }
+}
+

@@ -93,7 +93,7 @@ public class TokenWalletView extends ActivatableViewAndModel {
         if (viewPath.size() == 3 && viewPath.indexOf(TokenWalletView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
             if (selectedViewClass == null)
-                selectedViewClass = TokenSendView.class;
+                selectedViewClass = TokenDashboardView.class;
 
             loadView(selectedViewClass);
 

@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.dao;
 
+import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.*;
@@ -45,15 +46,17 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Preferences preferences;
+    private SquWalletService squWalletService;
     private Tab selectedTab;
     private TokenWalletView tokenWalletView;
 
 
     @Inject
-    private DaoView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {
+    private DaoView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences, SquWalletService squWalletService) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
+        this.squWalletService = squWalletService;
     }
 
     @Override
@@ -86,6 +89,8 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
     protected void activate() {
         navigation.addListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
+
+        squWalletService.requestSquUtxo(null, null);
 
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
             Tab selectedItem = root.getSelectionModel().getSelectedItem();
