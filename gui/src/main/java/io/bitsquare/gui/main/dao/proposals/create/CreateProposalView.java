@@ -28,6 +28,7 @@ import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.dao.proposals.Proposal;
+import io.bitsquare.dao.proposals.ProposalManager;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.InputTextField;
@@ -66,8 +67,8 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
 
     private final SquWalletService squWalletService;
     private final BtcWalletService btcWalletService;
-    private FeeService feeService;
-    private final P2PService p2PService;
+    private final FeeService feeService;
+    private final ProposalManager proposalManager;
     private final BSFormatter btcFormatter;
     private int gridRow = 0;
 
@@ -76,11 +77,12 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateProposalView(SquWalletService squWalletService, BtcWalletService btcWalletService, FeeService feeService, P2PService p2PService, KeyRing keyRing, BSFormatter btcFormatter) {
+    private CreateProposalView(SquWalletService squWalletService, BtcWalletService btcWalletService, FeeService feeService,
+                               ProposalManager proposalManager, P2PService p2PService, KeyRing keyRing, BSFormatter btcFormatter) {
         this.squWalletService = squWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
-        this.p2PService = p2PService;
+        this.proposalManager = proposalManager;
         this.btcFormatter = btcFormatter;
 
         nodeAddress = p2PService.getAddress();
@@ -149,8 +151,9 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
                 Transaction txWithBtcFee = btcWalletService.addInputAndOutputToPreparedSquProposalFeeTx(preparedSendTx, hash.getBytes());
                 squWalletService.signAndBroadcastProposalFeeTx(txWithBtcFee, new FutureCallback<Transaction>() {
                     @Override
-                    public void onSuccess(@Nullable Transaction result) {
-                        checkNotNull(result, "Transaction must not be null at signAndBroadcastProposalFeeTx callback.");
+                    public void onSuccess(@Nullable Transaction transaction) {
+                        checkNotNull(transaction, "Transaction must not be null at signAndBroadcastProposalFeeTx callback.");
+                        proposal.setFeeTxId(transaction.getHashAsString());
                         publishToP2PNetwork(proposal);
                         clearForm();
                         new Popup<>().confirmation("Your proposal has been successfully published.").show();
@@ -184,7 +187,7 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
     }
 
     private void publishToP2PNetwork(Proposal proposal) {
-        p2PService.addData(proposal, true);
+        proposalManager.addToP2PNetwork(proposal);
     }
 
     @Override

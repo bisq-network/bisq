@@ -35,7 +35,7 @@ public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePa
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     public final String uid;
-    public final String text;
+    public final String name;
     public final String title;
     public final String category;
     public final String description;
@@ -45,6 +45,7 @@ public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePa
     public final Coin requestedBtc;
     public final String btcAddress;
     public final NodeAddress nodeAddress;
+    public final Date creationDate;
     private PublicKey p2pStorageSignaturePubKey;
     public final byte[] squPubKey;
 
@@ -57,7 +58,7 @@ public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePa
     public String feeTxId;
 
     public Proposal(String uid,
-                    String text,
+                    String name,
                     String title,
                     String category,
                     String description,
@@ -70,8 +71,9 @@ public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePa
                     PublicKey p2pStorageSignaturePubKey,
                     byte[] squPubKey) {
 
+        creationDate = new Date();
         this.uid = uid;
-        this.text = text;
+        this.name = name;
         this.title = title;
         this.category = category;
         this.description = description;
@@ -103,16 +105,64 @@ public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePa
         this.hash = hash;
     }
 
-    // Called after sig and hash
+    // Called after tx is published
     public void setFeeTxId(String feeTxId) {
         this.feeTxId = feeTxId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Proposal proposal = (Proposal) o;
+
+        if (uid != null ? !uid.equals(proposal.uid) : proposal.uid != null) return false;
+        if (name != null ? !name.equals(proposal.name) : proposal.name != null) return false;
+        if (title != null ? !title.equals(proposal.title) : proposal.title != null) return false;
+        if (category != null ? !category.equals(proposal.category) : proposal.category != null) return false;
+        if (description != null ? !description.equals(proposal.description) : proposal.description != null)
+            return false;
+        if (link != null ? !link.equals(proposal.link) : proposal.link != null) return false;
+        if (startDate != null ? !startDate.equals(proposal.startDate) : proposal.startDate != null) return false;
+        if (endDate != null ? !endDate.equals(proposal.endDate) : proposal.endDate != null) return false;
+        if (requestedBtc != null ? !requestedBtc.equals(proposal.requestedBtc) : proposal.requestedBtc != null)
+            return false;
+        if (btcAddress != null ? !btcAddress.equals(proposal.btcAddress) : proposal.btcAddress != null) return false;
+        if (nodeAddress != null ? !nodeAddress.equals(proposal.nodeAddress) : proposal.nodeAddress != null)
+            return false;
+        if (creationDate != null ? !creationDate.equals(proposal.creationDate) : proposal.creationDate != null)
+            return false;
+        if (p2pStorageSignaturePubKey != null ? !p2pStorageSignaturePubKey.equals(proposal.p2pStorageSignaturePubKey) : proposal.p2pStorageSignaturePubKey != null)
+            return false;
+        return Arrays.equals(squPubKey, proposal.squPubKey);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = uid != null ? uid.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (title != null ? title.hashCode() : 0);
+        result = 31 * result + (category != null ? category.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (link != null ? link.hashCode() : 0);
+        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
+        result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
+        result = 31 * result + (requestedBtc != null ? requestedBtc.hashCode() : 0);
+        result = 31 * result + (btcAddress != null ? btcAddress.hashCode() : 0);
+        result = 31 * result + (nodeAddress != null ? nodeAddress.hashCode() : 0);
+        result = 31 * result + (creationDate != null ? creationDate.hashCode() : 0);
+        result = 31 * result + (p2pStorageSignaturePubKey != null ? p2pStorageSignaturePubKey.hashCode() : 0);
+        result = 31 * result + (squPubKey != null ? Arrays.hashCode(squPubKey) : 0);
+        return result;
     }
 
     @Override
     public String toString() {
         return "Proposal{" +
                 "uid='" + uid + '\'' +
-                ", text='" + text + '\'' +
+                ", text='" + name + '\'' +
                 ", title='" + title + '\'' +
                 ", category='" + category + '\'' +
                 ", description='" + description + '\'' +
