@@ -250,4 +250,13 @@ public class SquWalletService extends WalletService {
         Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(tx).future(), callback);
         printTx("signAndBroadcastProposalFeeTx", tx);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Create funds to a proposal
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Address getSquAddressForProposalFunding() {
+        return wallet.freshReceiveAddress();
+    }
 }

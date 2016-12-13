@@ -32,6 +32,18 @@ import java.util.concurrent.TimeUnit;
 public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePayload {
     private static final Logger log = LoggerFactory.getLogger(Proposal.class);
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enums
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public enum Phase {
+        NEW,
+        OPEN_FOR_VOTING,
+        OPEN_FOR_FUNDING,
+        CLOSED
+    }
+
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     public final String uid;
@@ -56,6 +68,9 @@ public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePa
 
     // Set after we signed and set the hash. The hash is used in the OP_RETURN of the fee tx
     public String feeTxId;
+    private boolean accepted;
+    private Coin fundsReceived;
+    private int phaseAsOrdinal;
 
     public Proposal(String uid,
                     String name,
@@ -85,6 +100,7 @@ public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePa
         this.nodeAddress = nodeAddress;
         this.p2pStorageSignaturePubKey = p2pStorageSignaturePubKey;
         this.squPubKey = squPubKey;
+        setPhase(Phase.NEW);
     }
 
     @Override
@@ -97,6 +113,7 @@ public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePa
         return p2pStorageSignaturePubKey;
     }
 
+
     public void setSignature(byte[] signature) {
         this.signature = signature;
     }
@@ -108,6 +125,34 @@ public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePa
     // Called after tx is published
     public void setFeeTxId(String feeTxId) {
         this.feeTxId = feeTxId;
+    }
+
+    public Phase getPhase() {
+        return Phase.values()[phaseAsOrdinal];
+    }
+
+    public void setPhase(Phase phase) {
+        phaseAsOrdinal = phase.ordinal();
+    }
+
+    public boolean isAccepted() {
+        return accepted;
+    }
+
+    public void setAccepted(boolean accepted) {
+        this.accepted = accepted;
+    }
+
+    public Coin getFundsReceived() {
+        return fundsReceived;
+    }
+
+    public void setFundsReceived(Coin fundsReceived) {
+        this.fundsReceived = fundsReceived;
+    }
+
+    public String shortId() {
+        return uid.substring(0, 8);
     }
 
     @Override

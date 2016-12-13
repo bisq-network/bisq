@@ -20,19 +20,22 @@ package io.bitsquare.gui.main.dao.proposals;
 import io.bitsquare.dao.proposals.Proposal;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.Layout;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
-import static io.bitsquare.gui.util.FormBuilder.addTitledGroupBg;
+import java.util.Random;
+
+import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class ProposalDisplay {
     private static final Logger log = LoggerFactory.getLogger(ProposalDisplay.class);
 
-    private InputTextField nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
-            startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
     private GridPane gridPane;
+    public InputTextField nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
+            startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
+    private TextField phaseTextField;
     private int gridRow = 0;
 
     public ProposalDisplay(GridPane gridPane) {
@@ -40,7 +43,7 @@ public class ProposalDisplay {
     }
 
     public void createAllFields() {
-        addTitledGroupBg(gridPane, ++gridRow, 9, "Selected proposal", Layout.GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++gridRow, 10, "Selected proposal", Layout.GROUP_DISTANCE);
         nameTextField = addLabelInputTextField(gridPane, gridRow, "Name/nickname:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         titleTextField = addLabelInputTextField(gridPane, ++gridRow, "Title:").second;
         categoryTextField = addLabelInputTextField(gridPane, ++gridRow, "Category:").second;
@@ -50,6 +53,7 @@ public class ProposalDisplay {
         endDateTextField = addLabelInputTextField(gridPane, ++gridRow, "Delivery date:").second;
         requestedBTCTextField = addLabelInputTextField(gridPane, ++gridRow, "Requested funds in BTC:").second;
         btcAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Bitcoin address:").second;
+        phaseTextField = addLabelTextField(gridPane, ++gridRow, "Phase:").second;
     }
 
     public void fillWithProposalData(Proposal proposal) {
@@ -62,10 +66,53 @@ public class ProposalDisplay {
         endDateTextField.setText(proposal.endDate.toString());
         requestedBTCTextField.setText(proposal.requestedBtc.toPlainString());
         btcAddressTextField.setText(proposal.btcAddress.toString());
+        phaseTextField.setText(proposal.getPhase().name());
+    }
+
+    public void clearForm() {
+        nameTextField.setText("");
+        titleTextField.setText("");
+        categoryTextField.setText("");
+        descriptionTextField.setText("");
+        linkTextField.setText("");
+        startDateTextField.setText("");
+        endDateTextField.setText("");
+        requestedBTCTextField.setText("");
+        btcAddressTextField.setText("");
+        phaseTextField.setText("");
+    }
+
+    public void fillWithMock() {
+        int random = new Random().nextInt(100);
+        nameTextField.setText("Mock name" + random);
+        titleTextField.setText("Mock Title " + random);
+        categoryTextField.setText("Mock Category " + random);
+        descriptionTextField.setText("Mock Description " + random);
+        linkTextField.setText("Mock Link " + random);
+        startDateTextField.setText("Mock Start date " + random);
+        endDateTextField.setText("Mock Delivery date " + random);
+        requestedBTCTextField.setText("Mock Requested funds " + random);
+        btcAddressTextField.setText("Mock Bitcoin address " + random);
+    }
+
+    public void setAllFieldsEditable(boolean isEditable) {
+        nameTextField.setEditable(isEditable);
+        titleTextField.setEditable(isEditable);
+        categoryTextField.setEditable(isEditable);
+        descriptionTextField.setEditable(isEditable);
+        linkTextField.setEditable(isEditable);
+        startDateTextField.setEditable(isEditable);
+        endDateTextField.setEditable(isEditable);
+        requestedBTCTextField.setEditable(isEditable);
+        btcAddressTextField.setEditable(isEditable);
     }
 
     public void removeAllFields() {
         gridPane.getChildren().clear();
         gridRow = 0;
+    }
+
+    public int incrementAndGetGridRow() {
+        return ++gridRow;
     }
 }

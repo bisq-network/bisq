@@ -17,7 +17,10 @@
 
 package io.bitsquare.dao.proposals;
 
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
@@ -25,6 +28,8 @@ import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bitsquare.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +40,8 @@ public class ProposalManager {
 
     private P2PService p2PService;
     private Storage<ArrayList<Proposal>> proposalsStorage;
+    private BtcWalletService btcWalletService;
+    private SquWalletService squWalletService;
     private ObservableList<Proposal> observableProposalsList = FXCollections.observableArrayList();
 
 
@@ -43,9 +50,12 @@ public class ProposalManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProposalManager(P2PService p2PService, Storage<ArrayList<Proposal>> proposalsStorage) {
+    public ProposalManager(P2PService p2PService, Storage<ArrayList<Proposal>> proposalsStorage,
+                           BtcWalletService btcWalletService, SquWalletService squWalletService) {
         this.p2PService = p2PService;
         this.proposalsStorage = proposalsStorage;
+        this.btcWalletService = btcWalletService;
+        this.squWalletService = squWalletService;
 
         init(proposalsStorage);
     }
@@ -93,5 +103,9 @@ public class ProposalManager {
 
     public ObservableList<Proposal> getObservableProposalsList() {
         return observableProposalsList;
+    }
+
+    public void fundProposal(Proposal proposal, Coin amount, FutureCallback<Transaction> callback) {
+        btcWalletService.fundProposal(amount, proposal.btcAddress, squWalletService.getSquAddressForProposalFunding(), callback);
     }
 }

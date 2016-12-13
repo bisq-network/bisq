@@ -31,10 +31,9 @@ import io.bitsquare.dao.proposals.Proposal;
 import io.bitsquare.dao.proposals.ProposalManager;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.dao.proposals.ProposalDisplay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.Layout;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import javafx.scene.control.Button;
@@ -54,23 +53,21 @@ import java.util.Date;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bitsquare.gui.util.FormBuilder.*;
+import static io.bitsquare.gui.util.FormBuilder.addButtonAfterGroup;
 
 @FxmlView
 public class CreateProposalView extends ActivatableView<GridPane, Void> {
 
+    private ProposalDisplay proposalDisplay;
+    private Button createButton;
+    
     private final NodeAddress nodeAddress;
     private final PublicKey p2pStorageSignaturePubKey;
-    private InputTextField nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
-            startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
-    private Button createButton;
-
     private final SquWalletService squWalletService;
     private final BtcWalletService btcWalletService;
     private final FeeService feeService;
     private final ProposalManager proposalManager;
     private final BSFormatter btcFormatter;
-    private int gridRow = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -92,32 +89,15 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 9, "Create new funding proposal");
-        nameTextField = addLabelInputTextField(root, gridRow, "Name/nickname:", Layout.FIRST_ROW_DISTANCE).second;
-        titleTextField = addLabelInputTextField(root, ++gridRow, "Title:").second;
-        categoryTextField = addLabelInputTextField(root, ++gridRow, "Category:").second;
-        descriptionTextField = addLabelInputTextField(root, ++gridRow, "Description:").second;
-        linkTextField = addLabelInputTextField(root, ++gridRow, "Link to detail info:").second;
-        startDateTextField = addLabelInputTextField(root, ++gridRow, "Start date:").second;
-        endDateTextField = addLabelInputTextField(root, ++gridRow, "Delivery date:").second;
-        requestedBTCTextField = addLabelInputTextField(root, ++gridRow, "Requested funds in BTC:").second;
-        btcAddressTextField = addLabelInputTextField(root, ++gridRow, "Bitcoin address:").second;
-        createButton = addButtonAfterGroup(root, ++gridRow, "Create proposal");
-
-        //TODO
-        nameTextField.setText("Mock name");
-        titleTextField.setText("Mock Title");
-        categoryTextField.setText("Mock Category");
-        descriptionTextField.setText("Mock Description");
-        linkTextField.setText("Mock Link");
-        startDateTextField.setText("Mock Start date");
-        endDateTextField.setText("Mock Delivery date");
-        requestedBTCTextField.setText("Mock Requested funds");
-        btcAddressTextField.setText("Mock Bitcoin address");
+        proposalDisplay = new ProposalDisplay(root);
+        proposalDisplay.removeAllFields();
+        proposalDisplay.createAllFields();
+        createButton = addButtonAfterGroup(root, proposalDisplay.incrementAndGetGridRow(), "Create proposal");
     }
 
     @Override
     protected void activate() {
+        proposalDisplay.fillWithMock();
         createButton.setOnAction(event -> {
             DeterministicKey squKeyPair = squWalletService.getWallet().freshKey(KeyChain.KeyPurpose.AUTHENTICATION);
             checkNotNull(squKeyPair, "squKeyPair must not be null");
@@ -127,15 +107,15 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
             Date endDate = new Date();
 
             Proposal proposal = new Proposal(UUID.randomUUID().toString(),
-                    nameTextField.getText(),
-                    titleTextField.getText(),
-                    categoryTextField.getText(),
-                    descriptionTextField.getText(),
-                    linkTextField.getText(),
+                    proposalDisplay.nameTextField.getText(),
+                    proposalDisplay.titleTextField.getText(),
+                    proposalDisplay.categoryTextField.getText(),
+                    proposalDisplay.descriptionTextField.getText(),
+                    proposalDisplay.linkTextField.getText(),
                     startDate,
                     endDate,
-                    btcFormatter.parseToCoin(requestedBTCTextField.getText()),
-                    btcAddressTextField.getText(),
+                    btcFormatter.parseToCoin(proposalDisplay.requestedBTCTextField.getText()),
+                    proposalDisplay.btcAddressTextField.getText(),
                     nodeAddress,
                     p2pStorageSignaturePubKey,
                     squKeyPair.getPubKey()
@@ -155,7 +135,7 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
                         checkNotNull(transaction, "Transaction must not be null at signAndBroadcastProposalFeeTx callback.");
                         proposal.setFeeTxId(transaction.getHashAsString());
                         publishToP2PNetwork(proposal);
-                        clearForm();
+                        proposalDisplay.clearForm();
                         new Popup<>().confirmation("Your proposal has been successfully published.").show();
                     }
 
@@ -172,18 +152,6 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
                 new Popup<>().warning(e.toString()).show();
             }
         });
-    }
-
-    private void clearForm() {
-        nameTextField.setText("");
-        titleTextField.setText("");
-        categoryTextField.setText("");
-        descriptionTextField.setText("");
-        linkTextField.setText("");
-        startDateTextField.setText("");
-        endDateTextField.setText("");
-        requestedBTCTextField.setText("");
-        btcAddressTextField.setText("");
     }
 
     private void publishToP2PNetwork(Proposal proposal) {

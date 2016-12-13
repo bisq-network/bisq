@@ -17,26 +17,43 @@
 
 package io.bitsquare.gui.main.dao.proposals.active;
 
+import com.google.common.util.concurrent.FutureCallback;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.dao.proposals.Proposal;
 import io.bitsquare.dao.proposals.ProposalManager;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.TableGroupHeadline;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.dao.DaoView;
 import io.bitsquare.gui.main.dao.proposals.ProposalDisplay;
+import io.bitsquare.gui.main.dao.voting.VotingView;
+import io.bitsquare.gui.main.dao.voting.dashboard.VotingDashboardView;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static io.bitsquare.gui.util.FormBuilder.addButtonAfterGroup;
+import static io.bitsquare.gui.util.FormBuilder.addLabel;
 
 @FxmlView
 public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
@@ -47,9 +64,15 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
 
     private final ProposalManager proposalManager;
     private final BSFormatter formatter;
+    private Navigation navigation;
+    private FundProposalWindow fundProposalWindow;
+    private BSFormatter btcFormatter;
     private SortedList<Proposal> sortedList;
     private Subscription selectedProposalSubscription;
     private ProposalDisplay proposalDisplay;
+    private GridPane gridPane;
+    private Button fundButton;
+    private Button voteButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -57,9 +80,13 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ActiveProposalsView(ProposalManager proposalManager, BSFormatter formatter) {
+    private ActiveProposalsView(ProposalManager proposalManager, BSFormatter formatter, Navigation navigation,
+                                FundProposalWindow fundProposalWindow, BSFormatter btcFormatter) {
         this.proposalManager = proposalManager;
         this.formatter = formatter;
+        this.navigation = navigation;
+        this.fundProposalWindow = fundProposalWindow;
+        this.btcFormatter = btcFormatter;
     }
 
     @Override
@@ -126,9 +153,17 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
                 AnchorPane bottomAnchorPane = new AnchorPane();
                 scrollPane.setContent(bottomAnchorPane);
 
-                GridPane gridPane = new GridPane();
+                gridPane = new GridPane();
                 gridPane.setHgap(5);
                 gridPane.setVgap(5);
+                ColumnConstraints columnConstraints1 = new ColumnConstraints();
+                columnConstraints1.setHalignment(HPos.RIGHT);
+                columnConstraints1.setHgrow(Priority.SOMETIMES);
+                columnConstraints1.setMinWidth(140);
+                ColumnConstraints columnConstraints2 = new ColumnConstraints();
+                columnConstraints2.setHgrow(Priority.ALWAYS);
+                columnConstraints2.setMinWidth(300);
+                gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
                 AnchorPane.setBottomAnchor(gridPane, 20d);
                 AnchorPane.setRightAnchor(gridPane, -10d);
                 AnchorPane.setLeftAnchor(gridPane, 10d);
@@ -139,6 +174,41 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
             }
             proposalDisplay.removeAllFields();
             proposalDisplay.createAllFields();
+            proposal.setPhase(Proposal.Phase.OPEN_FOR_FUNDING);
+            proposal.setAccepted(true);
+            if (proposal.getPhase() == Proposal.Phase.NEW) {
+
+            } else if (proposal.getPhase() == Proposal.Phase.OPEN_FOR_VOTING) {
+                voteButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), "Vote on proposal");
+                voteButton.setOnAction(event -> {
+                    navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VotingDashboardView.class);
+                });
+            } else if (proposal.getPhase() == Proposal.Phase.OPEN_FOR_FUNDING) {
+                checkArgument(proposal.isAccepted(), "A proposal with state OPEN_FOR_FUNDING must be accepted.");
+                fundButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), "Fund proposal");
+                fundButton.setOnAction(event -> {
+                    fundProposalWindow.applyProposal(proposal).
+                            onAction(() -> {
+                                Coin amount = btcFormatter.parseToCoin(fundProposalWindow.getAmount().getText());
+                                proposalManager.fundProposal(proposal, amount,
+                                        new FutureCallback<Transaction>() {
+                                            @Override
+                                            public void onSuccess(Transaction transaction) {
+                                                UserThread.runAfter(() -> new Popup<>().feedback("Proposal successfully funded.").show(), 1);
+                                            }
+
+                                            @Override
+                                            public void onFailure(@NotNull Throwable t) {
+                                                UserThread.runAfter(() -> new Popup<>().error(t.toString()).show(), 1);
+
+                                            }
+                                        });
+                            }).show();
+                });
+            } else if (proposal.getPhase() == Proposal.Phase.CLOSED) {
+                addLabel(gridPane, proposalDisplay.incrementAndGetGridRow(), "This proposal is not open anymore for funding. Please wait until the next funding period starts.");
+            }
+            proposalDisplay.setAllFieldsEditable(false);
 
             proposalDisplay.fillWithProposalData(proposal);
         }

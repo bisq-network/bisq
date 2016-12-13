@@ -120,7 +120,7 @@ public abstract class Overlay<T extends Overlay> {
     protected Optional<Runnable> closeHandlerOptional = Optional.empty();
     protected Optional<Runnable> actionHandlerOptional = Optional.empty();
     protected Stage stage;
-    private boolean showReportErrorButtons;
+    protected boolean showReportErrorButtons;
     protected Label messageLabel;
     protected String truncatedMessage;
     private BusyAnimation busyAnimation;
