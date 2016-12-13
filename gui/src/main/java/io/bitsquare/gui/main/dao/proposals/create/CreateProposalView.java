@@ -27,8 +27,8 @@ import io.bitsquare.btc.wallet.ChangeBelowDustException;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.dao.proposals.Proposal;
 import io.bitsquare.dao.proposals.ProposalManager;
+import io.bitsquare.dao.proposals.ProposalPayload;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.dao.proposals.ProposalDisplay;
@@ -60,7 +60,7 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
 
     private ProposalDisplay proposalDisplay;
     private Button createButton;
-    
+
     private final NodeAddress nodeAddress;
     private final PublicKey p2pStorageSignaturePubKey;
     private final SquWalletService squWalletService;
@@ -106,7 +106,7 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
             Date startDate = new Date();
             Date endDate = new Date();
 
-            Proposal proposal = new Proposal(UUID.randomUUID().toString(),
+            ProposalPayload proposalPayload = new ProposalPayload(UUID.randomUUID().toString(),
                     proposalDisplay.nameTextField.getText(),
                     proposalDisplay.titleTextField.getText(),
                     proposalDisplay.categoryTextField.getText(),
@@ -120,10 +120,10 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
                     p2pStorageSignaturePubKey,
                     squKeyPair.getPubKey()
             );
-            Sha256Hash hash = Sha256Hash.of(ByteArrayUtils.objectToByteArray(proposal));
-            proposal.setSignature(squKeyPair.sign(hash).encodeToDER());
-            hash = Sha256Hash.of(ByteArrayUtils.objectToByteArray(proposal));
-            proposal.setHash(hash.getBytes());
+            Sha256Hash hash = Sha256Hash.of(ByteArrayUtils.objectToByteArray(proposalPayload));
+            proposalPayload.setSignature(squKeyPair.sign(hash).encodeToDER());
+            hash = Sha256Hash.of(ByteArrayUtils.objectToByteArray(proposalPayload));
+            proposalPayload.setHash(hash.getBytes());
 
             try {
                 Coin createProposalFee = feeService.getCreateProposalFee();
@@ -133,10 +133,10 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
                     @Override
                     public void onSuccess(@Nullable Transaction transaction) {
                         checkNotNull(transaction, "Transaction must not be null at signAndBroadcastProposalFeeTx callback.");
-                        proposal.setFeeTxId(transaction.getHashAsString());
-                        publishToP2PNetwork(proposal);
+                        proposalPayload.setFeeTxId(transaction.getHashAsString());
+                        publishToP2PNetwork(proposalPayload);
                         proposalDisplay.clearForm();
-                        new Popup<>().confirmation("Your proposal has been successfully published.").show();
+                        new Popup<>().confirmation("Your proposalPayload has been successfully published.").show();
                     }
 
                     @Override
@@ -154,8 +154,8 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
         });
     }
 
-    private void publishToP2PNetwork(Proposal proposal) {
-        proposalManager.addToP2PNetwork(proposal);
+    private void publishToP2PNetwork(ProposalPayload proposalPayload) {
+        proposalManager.addToP2PNetwork(proposalPayload);
     }
 
     @Override

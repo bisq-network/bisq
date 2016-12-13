@@ -17,122 +17,33 @@
 
 package io.bitsquare.dao.proposals;
 
-import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.storage.payload.LazyProcessedStoragePayload;
-import io.bitsquare.p2p.storage.payload.PersistedStoragePayload;
+import io.bitsquare.app.Version;
+import io.bitsquare.common.persistance.Persistable;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.PublicKey;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
+public class Proposal implements Persistable {
+    // That object is saved to disc. We need to take care of changes to not break deserialization.
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePayload {
     private static final Logger log = LoggerFactory.getLogger(Proposal.class);
 
+    private final ProposalPayload proposalPayload;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enums
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public enum Phase {
-        NEW,
-        OPEN_FOR_VOTING,
-        OPEN_FOR_FUNDING,
-        CLOSED
-    }
-
-    public static final long TTL = TimeUnit.DAYS.toMillis(30);
-
-    public final String uid;
-    public final String name;
-    public final String title;
-    public final String category;
-    public final String description;
-    public final String link;
-    public final Date startDate;
-    public final Date endDate;
-    public final Coin requestedBtc;
-    public final String btcAddress;
-    public final NodeAddress nodeAddress;
-    public final Date creationDate;
-    private PublicKey p2pStorageSignaturePubKey;
-    public final byte[] squPubKey;
-
-    // Signature of proposal data without signature, hash and feeTxId
-    public byte[] signature;
-    // Sha256Hash of proposal data including the signature but without feeTxId and hash
-    public byte[] hash;
-
-    // Set after we signed and set the hash. The hash is used in the OP_RETURN of the fee tx
-    public String feeTxId;
     private boolean accepted;
     private Coin fundsReceived;
-    private int phaseAsOrdinal;
+    private boolean inVotePeriod;
+    private boolean inFundingPeriod;
+    private boolean closed;
+    private boolean waitingForVotingPeriod;
 
-    public Proposal(String uid,
-                    String name,
-                    String title,
-                    String category,
-                    String description,
-                    String link,
-                    Date startDate,
-                    Date endDate,
-                    Coin requestedBtc,
-                    String btcAddress,
-                    NodeAddress nodeAddress,
-                    PublicKey p2pStorageSignaturePubKey,
-                    byte[] squPubKey) {
-
-        creationDate = new Date();
-        this.uid = uid;
-        this.name = name;
-        this.title = title;
-        this.category = category;
-        this.description = description;
-        this.link = link;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.requestedBtc = requestedBtc;
-        this.btcAddress = btcAddress;
-        this.nodeAddress = nodeAddress;
-        this.p2pStorageSignaturePubKey = p2pStorageSignaturePubKey;
-        this.squPubKey = squPubKey;
-        setPhase(Phase.NEW);
+    public Proposal(ProposalPayload proposalPayload) {
+        this.proposalPayload = proposalPayload;
     }
 
-    @Override
-    public long getTTL() {
-        return TTL;
-    }
-
-    @Override
-    public PublicKey getOwnerPubKey() {
-        return p2pStorageSignaturePubKey;
-    }
-
-
-    public void setSignature(byte[] signature) {
-        this.signature = signature;
-    }
-
-    public void setHash(byte[] hash) {
-        this.hash = hash;
-    }
-
-    // Called after tx is published
-    public void setFeeTxId(String feeTxId) {
-        this.feeTxId = feeTxId;
-    }
-
-    public Phase getPhase() {
-        return Phase.values()[phaseAsOrdinal];
-    }
-
-    public void setPhase(Phase phase) {
-        phaseAsOrdinal = phase.ordinal();
+    public ProposalPayload getProposalPayload() {
+        return proposalPayload;
     }
 
     public boolean isAccepted() {
@@ -151,77 +62,35 @@ public class Proposal implements LazyProcessedStoragePayload, PersistedStoragePa
         this.fundsReceived = fundsReceived;
     }
 
-    public String shortId() {
-        return uid.substring(0, 8);
+    public boolean isInVotePeriod() {
+        return inVotePeriod;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Proposal proposal = (Proposal) o;
-
-        if (uid != null ? !uid.equals(proposal.uid) : proposal.uid != null) return false;
-        if (name != null ? !name.equals(proposal.name) : proposal.name != null) return false;
-        if (title != null ? !title.equals(proposal.title) : proposal.title != null) return false;
-        if (category != null ? !category.equals(proposal.category) : proposal.category != null) return false;
-        if (description != null ? !description.equals(proposal.description) : proposal.description != null)
-            return false;
-        if (link != null ? !link.equals(proposal.link) : proposal.link != null) return false;
-        if (startDate != null ? !startDate.equals(proposal.startDate) : proposal.startDate != null) return false;
-        if (endDate != null ? !endDate.equals(proposal.endDate) : proposal.endDate != null) return false;
-        if (requestedBtc != null ? !requestedBtc.equals(proposal.requestedBtc) : proposal.requestedBtc != null)
-            return false;
-        if (btcAddress != null ? !btcAddress.equals(proposal.btcAddress) : proposal.btcAddress != null) return false;
-        if (nodeAddress != null ? !nodeAddress.equals(proposal.nodeAddress) : proposal.nodeAddress != null)
-            return false;
-        if (creationDate != null ? !creationDate.equals(proposal.creationDate) : proposal.creationDate != null)
-            return false;
-        if (p2pStorageSignaturePubKey != null ? !p2pStorageSignaturePubKey.equals(proposal.p2pStorageSignaturePubKey) : proposal.p2pStorageSignaturePubKey != null)
-            return false;
-        return Arrays.equals(squPubKey, proposal.squPubKey);
-
+    public void setInVotePeriod(boolean inVotePeriod) {
+        this.inVotePeriod = inVotePeriod;
     }
 
-    @Override
-    public int hashCode() {
-        int result = uid != null ? uid.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (title != null ? title.hashCode() : 0);
-        result = 31 * result + (category != null ? category.hashCode() : 0);
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + (link != null ? link.hashCode() : 0);
-        result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
-        result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
-        result = 31 * result + (requestedBtc != null ? requestedBtc.hashCode() : 0);
-        result = 31 * result + (btcAddress != null ? btcAddress.hashCode() : 0);
-        result = 31 * result + (nodeAddress != null ? nodeAddress.hashCode() : 0);
-        result = 31 * result + (creationDate != null ? creationDate.hashCode() : 0);
-        result = 31 * result + (p2pStorageSignaturePubKey != null ? p2pStorageSignaturePubKey.hashCode() : 0);
-        result = 31 * result + (squPubKey != null ? Arrays.hashCode(squPubKey) : 0);
-        return result;
+    public boolean isInFundingPeriod() {
+        return inFundingPeriod;
     }
 
-    @Override
-    public String toString() {
-        return "Proposal{" +
-                "uid='" + uid + '\'' +
-                ", text='" + name + '\'' +
-                ", title='" + title + '\'' +
-                ", category='" + category + '\'' +
-                ", description='" + description + '\'' +
-                ", link='" + link + '\'' +
-                ", startDate=" + startDate +
-                ", endDate=" + endDate +
-                ", requestedBtc=" + requestedBtc +
-                ", btcAddress='" + btcAddress + '\'' +
-                ", nodeAddress=" + nodeAddress +
-                ", pubKey=" + Arrays.toString(squPubKey) +
-                ", signature=" + signature +
-                ", hash=" + hash +
-                ", feeTxId=" + feeTxId +
-                '}';
+    public void setInFundingPeriod(boolean inFundingPeriod) {
+        this.inFundingPeriod = inFundingPeriod;
     }
 
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public void setClosed(boolean closed) {
+        this.closed = closed;
+    }
+
+    public boolean isWaitingForVotingPeriod() {
+        return waitingForVotingPeriod;
+    }
+
+    public void setWaitingForVotingPeriod(boolean waitingForVotingPeriod) {
+        this.waitingForVotingPeriod = waitingForVotingPeriod;
+    }
 }

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.dao.proposals.active;
 
-import io.bitsquare.dao.proposals.Proposal;
+import io.bitsquare.dao.proposals.ProposalPayload;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.scene.Scene;
@@ -33,7 +33,7 @@ import static io.bitsquare.gui.util.FormBuilder.addLabelTextField;
 
 public class FundProposalWindow extends Overlay<FundProposalWindow> {
     private static final Logger log = LoggerFactory.getLogger(FundProposalWindow.class);
-    private Proposal proposal;
+    private ProposalPayload proposal;
     private InputTextField amount;
     private TextField info;
 
@@ -76,7 +76,7 @@ public class FundProposalWindow extends Overlay<FundProposalWindow> {
         }
     }
 
-    public FundProposalWindow applyProposal(Proposal proposal) {
+    public FundProposalWindow applyProposal(ProposalPayload proposal) {
         this.proposal = proposal;
         return this;
     }
@@ -89,7 +89,7 @@ public class FundProposalWindow extends Overlay<FundProposalWindow> {
         info = addLabelTextField(gridPane, ++rowIndex, "Proposal ID:").second;
         amount = addLabelInputTextField(gridPane, ++rowIndex, "Amount in BTC:").second;
 
-        info.setText(proposal.shortId());
+        info.setText(proposal.getShortId());
     }
 
     @Override

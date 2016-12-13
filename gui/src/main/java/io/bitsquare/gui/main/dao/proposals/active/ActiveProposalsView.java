@@ -174,20 +174,22 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
             }
             proposalDisplay.removeAllFields();
             proposalDisplay.createAllFields();
-            proposal.setPhase(Proposal.Phase.OPEN_FOR_FUNDING);
-            proposal.setAccepted(true);
-            if (proposal.getPhase() == Proposal.Phase.NEW) {
 
-            } else if (proposal.getPhase() == Proposal.Phase.OPEN_FOR_VOTING) {
+            //TODO
+            proposal.setInVotePeriod(true);
+
+            if (proposal.isWaitingForVotingPeriod()) {
+                addLabel(gridPane, proposalDisplay.incrementAndGetGridRow(), "This proposal is not open anymore for funding. Please wait until the next funding period starts.");
+            } else if (proposal.isInVotePeriod()) {
                 voteButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), "Vote on proposal");
                 voteButton.setOnAction(event -> {
                     navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VotingDashboardView.class);
                 });
-            } else if (proposal.getPhase() == Proposal.Phase.OPEN_FOR_FUNDING) {
+            } else if (proposal.isInFundingPeriod()) {
                 checkArgument(proposal.isAccepted(), "A proposal with state OPEN_FOR_FUNDING must be accepted.");
                 fundButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), "Fund proposal");
                 fundButton.setOnAction(event -> {
-                    fundProposalWindow.applyProposal(proposal).
+                    fundProposalWindow.applyProposal(proposal.getProposalPayload()).
                             onAction(() -> {
                                 Coin amount = btcFormatter.parseToCoin(fundProposalWindow.getAmount().getText());
                                 proposalManager.fundProposal(proposal, amount,
@@ -205,12 +207,12 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
                                         });
                             }).show();
                 });
-            } else if (proposal.getPhase() == Proposal.Phase.CLOSED) {
+            } else if (proposal.isClosed()) {
                 addLabel(gridPane, proposalDisplay.incrementAndGetGridRow(), "This proposal is not open anymore for funding. Please wait until the next funding period starts.");
             }
             proposalDisplay.setAllFieldsEditable(false);
 
-            proposalDisplay.fillWithProposalData(proposal);
+            proposalDisplay.fillWithProposalData(proposal.getProposalPayload());
         }
     }
 
@@ -233,14 +235,14 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
                             public void updateItem(final Proposal item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.formatDateTime(item.creationDate));
+                                    setText(formatter.formatDateTime(item.getProposalPayload().creationDate));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        dateColumn.setComparator((o1, o2) -> o1.creationDate.compareTo(o2.creationDate));
+        dateColumn.setComparator((o1, o2) -> o1.getProposalPayload().creationDate.compareTo(o2.getProposalPayload().creationDate));
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
 
@@ -258,14 +260,14 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
                             public void updateItem(final Proposal item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.name);
+                                    setText(item.getProposalPayload().name);
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        nameColumn.setComparator((o1, o2) -> o1.name.compareTo(o2.name));
+        nameColumn.setComparator((o1, o2) -> o1.getProposalPayload().name.compareTo(o2.getProposalPayload().name));
         tableView.getColumns().add(nameColumn);
     }
 }

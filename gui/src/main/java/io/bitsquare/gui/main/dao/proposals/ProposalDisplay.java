@@ -17,17 +17,17 @@
 
 package io.bitsquare.gui.main.dao.proposals;
 
-import io.bitsquare.dao.proposals.Proposal;
+import io.bitsquare.dao.proposals.ProposalPayload;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.Layout;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
-import static io.bitsquare.gui.util.FormBuilder.*;
+import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
+import static io.bitsquare.gui.util.FormBuilder.addTitledGroupBg;
 
 public class ProposalDisplay {
     private static final Logger log = LoggerFactory.getLogger(ProposalDisplay.class);
@@ -35,7 +35,6 @@ public class ProposalDisplay {
     private GridPane gridPane;
     public InputTextField nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
             startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
-    private TextField phaseTextField;
     private int gridRow = 0;
 
     public ProposalDisplay(GridPane gridPane) {
@@ -53,10 +52,9 @@ public class ProposalDisplay {
         endDateTextField = addLabelInputTextField(gridPane, ++gridRow, "Delivery date:").second;
         requestedBTCTextField = addLabelInputTextField(gridPane, ++gridRow, "Requested funds in BTC:").second;
         btcAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Bitcoin address:").second;
-        phaseTextField = addLabelTextField(gridPane, ++gridRow, "Phase:").second;
     }
 
-    public void fillWithProposalData(Proposal proposal) {
+    public void fillWithProposalData(ProposalPayload proposal) {
         nameTextField.setText(proposal.name);
         titleTextField.setText(proposal.title);
         categoryTextField.setText(proposal.category);
@@ -66,7 +64,6 @@ public class ProposalDisplay {
         endDateTextField.setText(proposal.endDate.toString());
         requestedBTCTextField.setText(proposal.requestedBtc.toPlainString());
         btcAddressTextField.setText(proposal.btcAddress.toString());
-        phaseTextField.setText(proposal.getPhase().name());
     }
 
     public void clearForm() {
@@ -79,7 +76,6 @@ public class ProposalDisplay {
         endDateTextField.setText("");
         requestedBTCTextField.setText("");
         btcAddressTextField.setText("");
-        phaseTextField.setText("");
     }
 
     public void fillWithMock() {

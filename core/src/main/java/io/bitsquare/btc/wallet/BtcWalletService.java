@@ -261,9 +261,7 @@ public class BtcWalletService extends WalletService {
 
                 numInputs = resultTx.getInputs().size();
 
-                printTx("resultTx", resultTx);
                 txSize = resultTx.bitcoinSerialize().length + sigSizePerInput * numInputs;
-                log.error("txSize " + txSize);
                 // We need min. 1 output beside op_return
                 // calculated fee must be inside of a tolerance range with tx fee
                 final int tolerance = 1000;

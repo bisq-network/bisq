@@ -69,8 +69,8 @@ public class ProposalManager {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
                 final StoragePayload storagePayload = data.getStoragePayload();
-                if (storagePayload instanceof Proposal)
-                    addToList((Proposal) storagePayload, true);
+                if (storagePayload instanceof ProposalPayload)
+                    addToList((ProposalPayload) storagePayload, true);
             }
 
             @Override
@@ -82,18 +82,18 @@ public class ProposalManager {
         // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
         p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
             final StoragePayload storagePayload = e.getStoragePayload();
-            if (storagePayload instanceof Proposal)
-                addToList((Proposal) storagePayload, false);
+            if (storagePayload instanceof ProposalPayload)
+                addToList((ProposalPayload) storagePayload, false);
         });
     }
 
-    public void addToP2PNetwork(Proposal proposal) {
-        p2PService.addData(proposal, true);
+    public void addToP2PNetwork(ProposalPayload proposalPayload) {
+        p2PService.addData(proposalPayload, true);
     }
 
-    public void addToList(Proposal proposal, boolean storeLocally) {
-        if (!observableProposalsList.contains(proposal)) {
-            observableProposalsList.add(proposal);
+    public void addToList(ProposalPayload proposalPayload, boolean storeLocally) {
+        if (!observableProposalsList.stream().filter(e -> e.getProposalPayload().equals(proposalPayload)).findAny().isPresent()) {
+            observableProposalsList.add(new Proposal(proposalPayload));
             if (storeLocally)
                 proposalsStorage.queueUpForSave(new ArrayList<>(observableProposalsList), 500);
         } else {
@@ -106,6 +106,6 @@ public class ProposalManager {
     }
 
     public void fundProposal(Proposal proposal, Coin amount, FutureCallback<Transaction> callback) {
-        btcWalletService.fundProposal(amount, proposal.btcAddress, squWalletService.getSquAddressForProposalFunding(), callback);
+        btcWalletService.fundProposal(amount, proposal.getProposalPayload().btcAddress, squWalletService.getSquAddressForProposalFunding(), callback);
     }
 }
