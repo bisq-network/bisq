@@ -91,7 +91,7 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
     public void initialize() {
         proposalDisplay = new ProposalDisplay(root);
         proposalDisplay.removeAllFields();
-        proposalDisplay.createAllFields();
+        proposalDisplay.createAllFields("Create new proposal", 0);
         createButton = addButtonAfterGroup(root, proposalDisplay.incrementAndGetGridRow(), "Create proposal");
     }
 

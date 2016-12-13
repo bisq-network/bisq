@@ -30,9 +30,10 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.dao.DaoView;
 import io.bitsquare.gui.main.dao.proposals.ProposalDisplay;
 import io.bitsquare.gui.main.dao.voting.VotingView;
-import io.bitsquare.gui.main.dao.voting.dashboard.VotingDashboardView;
+import io.bitsquare.gui.main.dao.voting.vote.VoteView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.Layout;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.HPos;
@@ -173,7 +174,7 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
                 proposalDisplay = new ProposalDisplay(gridPane);
             }
             proposalDisplay.removeAllFields();
-            proposalDisplay.createAllFields();
+            proposalDisplay.createAllFields("Selected proposal", Layout.GROUP_DISTANCE);
 
             //TODO
             proposal.setInVotePeriod(true);
@@ -183,7 +184,8 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
             } else if (proposal.isInVotePeriod()) {
                 voteButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), "Vote on proposal");
                 voteButton.setOnAction(event -> {
-                    navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VotingDashboardView.class);
+                    proposalManager.setSelectedProposal(proposal);
+                    navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
                 });
             } else if (proposal.isInFundingPeriod()) {
                 checkArgument(proposal.isAccepted(), "A proposal with state OPEN_FOR_FUNDING must be accepted.");

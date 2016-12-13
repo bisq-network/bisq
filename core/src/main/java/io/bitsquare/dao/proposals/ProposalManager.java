@@ -43,6 +43,7 @@ public class ProposalManager {
     private BtcWalletService btcWalletService;
     private SquWalletService squWalletService;
     private ObservableList<Proposal> observableProposalsList = FXCollections.observableArrayList();
+    private Proposal selectedProposal;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -107,5 +108,13 @@ public class ProposalManager {
 
     public void fundProposal(Proposal proposal, Coin amount, FutureCallback<Transaction> callback) {
         btcWalletService.fundProposal(amount, proposal.getProposalPayload().btcAddress, squWalletService.getSquAddressForProposalFunding(), callback);
+    }
+
+    public void setSelectedProposal(Proposal selectedProposal) {
+        this.selectedProposal = selectedProposal;
+    }
+
+    public Proposal getSelectedProposal() {
+        return selectedProposal;
     }
 }

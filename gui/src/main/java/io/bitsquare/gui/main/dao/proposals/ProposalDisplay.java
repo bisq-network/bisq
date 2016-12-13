@@ -41,9 +41,9 @@ public class ProposalDisplay {
         this.gridPane = gridPane;
     }
 
-    public void createAllFields() {
-        addTitledGroupBg(gridPane, ++gridRow, 10, "Selected proposal", Layout.GROUP_DISTANCE);
-        nameTextField = addLabelInputTextField(gridPane, gridRow, "Name/nickname:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+    public void createAllFields(String title, double top) {
+        addTitledGroupBg(gridPane, gridRow, 9, title, top);
+        nameTextField = addLabelInputTextField(gridPane, gridRow, "Name/nickname:", top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
         titleTextField = addLabelInputTextField(gridPane, ++gridRow, "Title:").second;
         categoryTextField = addLabelInputTextField(gridPane, ++gridRow, "Category:").second;
         descriptionTextField = addLabelInputTextField(gridPane, ++gridRow, "Description:").second;
