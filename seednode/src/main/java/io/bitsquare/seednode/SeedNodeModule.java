@@ -27,6 +27,7 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.crypto.EncryptionServiceModule;
+import io.bitsquare.dao.DaoModule;
 import io.bitsquare.filter.FilterModule;
 import io.bitsquare.p2p.P2PModule;
 import io.bitsquare.storage.Storage;
@@ -72,6 +73,7 @@ class SeedNodeModule extends AppModule {
         install(offerModule());
         install(torModule());
         install(bitcoinModule());
+        install(daoModule());
         install(alertModule());
         install(filterModule());
     }
@@ -107,4 +109,9 @@ class SeedNodeModule extends AppModule {
     private BitcoinModule bitcoinModule() {
         return new BitcoinModule(env);
     }
+
+    private DaoModule daoModule() {
+        return new DaoModule(env);
+    }
+
 }

@@ -30,7 +30,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-public class ProposalPayload implements LazyProcessedStoragePayload, PersistedStoragePayload {
+public final class ProposalPayload implements LazyProcessedStoragePayload, PersistedStoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

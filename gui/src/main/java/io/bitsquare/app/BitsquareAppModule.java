@@ -25,6 +25,7 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.crypto.EncryptionServiceModule;
+import io.bitsquare.dao.DaoModule;
 import io.bitsquare.filter.FilterModule;
 import io.bitsquare.gui.GuiModule;
 import io.bitsquare.gui.common.view.CachingViewLoader;
@@ -79,6 +80,7 @@ class BitsquareAppModule extends AppModule {
         install(offerModule());
         install(torModule());
         install(bitcoinModule());
+        install(daoModule());
         install(guiModule());
         install(alertModule());
         install(filterModule());
@@ -114,6 +116,10 @@ class BitsquareAppModule extends AppModule {
 
     private BitcoinModule bitcoinModule() {
         return new BitcoinModule(env);
+    }
+
+    private DaoModule daoModule() {
+        return new DaoModule(env);
     }
 
     private GuiModule guiModule() {

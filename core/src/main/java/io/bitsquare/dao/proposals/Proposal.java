@@ -23,7 +23,7 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Proposal implements Persistable {
+public final class Proposal implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -33,7 +33,8 @@ public class Proposal implements Persistable {
 
     private boolean accepted;
     private Coin fundsReceived;
-    private boolean inVotePeriod;
+    //TODO
+    private boolean inVotePeriod = true;
     private boolean inFundingPeriod;
     private boolean closed;
     private boolean waitingForVotingPeriod;
