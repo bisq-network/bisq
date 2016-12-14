@@ -15,12 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.dao.proposals.active;
+package io.bitsquare.gui.main.dao.compensation.active;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.dao.proposals.Proposal;
-import io.bitsquare.dao.proposals.ProposalManager;
+import io.bitsquare.dao.compensation.CompensationRequest;
+import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -28,7 +28,7 @@ import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.dao.DaoView;
-import io.bitsquare.gui.main.dao.proposals.ProposalDisplay;
+import io.bitsquare.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bitsquare.gui.main.dao.voting.VotingView;
 import io.bitsquare.gui.main.dao.voting.vote.VoteView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
@@ -57,20 +57,20 @@ import static io.bitsquare.gui.util.FormBuilder.addButtonAfterGroup;
 import static io.bitsquare.gui.util.FormBuilder.addLabel;
 
 @FxmlView
-public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
+public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Void> {
 
-    TableView<Proposal> tableView;
+    TableView<CompensationRequest> tableView;
     private InputTextField nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
             startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
 
-    private final ProposalManager proposalManager;
+    private final CompensationRequestManager compensationRequestManger;
     private final BSFormatter formatter;
     private Navigation navigation;
-    private FundProposalWindow fundProposalWindow;
+    private FundCompensationRequestWindow fundCompensationRequestWindow;
     private BSFormatter btcFormatter;
-    private SortedList<Proposal> sortedList;
-    private Subscription selectedProposalSubscription;
-    private ProposalDisplay proposalDisplay;
+    private SortedList<CompensationRequest> sortedList;
+    private Subscription selectedCompensationRequestSubscription;
+    private CompensationRequestDisplay CompensationRequestDisplay;
     private GridPane gridPane;
     private Button fundButton;
     private Button voteButton;
@@ -81,12 +81,12 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ActiveProposalsView(ProposalManager proposalManager, BSFormatter formatter, Navigation navigation,
-                                FundProposalWindow fundProposalWindow, BSFormatter btcFormatter) {
-        this.proposalManager = proposalManager;
+    private ActiveCompensationRequestView(CompensationRequestManager compensationRequestManger, BSFormatter formatter, Navigation navigation,
+                                          FundCompensationRequestWindow fundCompensationRequestWindow, BSFormatter btcFormatter) {
+        this.compensationRequestManger = compensationRequestManger;
         this.formatter = formatter;
         this.navigation = navigation;
-        this.fundProposalWindow = fundProposalWindow;
+        this.fundCompensationRequestWindow = fundCompensationRequestWindow;
         this.btcFormatter = btcFormatter;
     }
 
@@ -106,7 +106,7 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
         AnchorPane.setTopAnchor(gridPane, 10d);
         topAnchorPane.getChildren().add(gridPane);
 
-        TableGroupHeadline header = new TableGroupHeadline("Active proposals");
+        TableGroupHeadline header = new TableGroupHeadline("Active compensation request");
         GridPane.setRowIndex(header, 0);
         GridPane.setMargin(header, new Insets(0, -10, -10, -10));
         gridPane.getChildren().add(header);
@@ -123,7 +123,7 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
         // tableView.setMinHeight(100);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No transactions available"));
-        sortedList = new SortedList<>(proposalManager.getObservableProposalsList());
+        sortedList = new SortedList<>(compensationRequestManger.getObservableCompensationRequestsList());
         tableView.setItems(sortedList);
         setColumns();
     }
@@ -133,18 +133,18 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.getSelectionModel().clearSelection();
-        selectedProposalSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
+        selectedCompensationRequestSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectCompensationRequest);
     }
 
     @Override
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
-        selectedProposalSubscription.unsubscribe();
+        selectedCompensationRequestSubscription.unsubscribe();
     }
 
-    private void onSelectProposal(Proposal proposal) {
-        if (proposal != null) {
-            if (proposalDisplay == null) {
+    private void onSelectCompensationRequest(CompensationRequest compensationRequest) {
+        if (compensationRequest != null) {
+            if (CompensationRequestDisplay == null) {
                 ScrollPane scrollPane = new ScrollPane();
                 scrollPane.setFitToWidth(true);
                 scrollPane.setFitToHeight(true);
@@ -171,34 +171,34 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
                 AnchorPane.setTopAnchor(gridPane, -20d);
                 bottomAnchorPane.getChildren().add(gridPane);
 
-                proposalDisplay = new ProposalDisplay(gridPane);
+                CompensationRequestDisplay = new CompensationRequestDisplay(gridPane);
             }
-            proposalDisplay.removeAllFields();
-            proposalDisplay.createAllFields("Selected proposal", Layout.GROUP_DISTANCE);
+            CompensationRequestDisplay.removeAllFields();
+            CompensationRequestDisplay.createAllFields("Selected compensation request", Layout.GROUP_DISTANCE);
 
             //TODO
-            proposal.setInVotePeriod(true);
+            compensationRequest.setInVotePeriod(true);
 
-            if (proposal.isWaitingForVotingPeriod()) {
-                addLabel(gridPane, proposalDisplay.incrementAndGetGridRow(), "This proposal is not open anymore for funding. Please wait until the next funding period starts.");
-            } else if (proposal.isInVotePeriod()) {
-                voteButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), "Vote on proposal");
+            if (compensationRequest.isWaitingForVotingPeriod()) {
+                addLabel(gridPane, CompensationRequestDisplay.incrementAndGetGridRow(), "This compensation request is not open anymore for funding. Please wait until the next funding period starts.");
+            } else if (compensationRequest.isInVotePeriod()) {
+                voteButton = addButtonAfterGroup(gridPane, CompensationRequestDisplay.incrementAndGetGridRow(), "Vote on compensation request");
                 voteButton.setOnAction(event -> {
-                    proposalManager.setSelectedProposal(proposal);
+                    compensationRequestManger.setSelectedCompensationRequest(compensationRequest);
                     navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
                 });
-            } else if (proposal.isInFundingPeriod()) {
-                checkArgument(proposal.isAccepted(), "A proposal with state OPEN_FOR_FUNDING must be accepted.");
-                fundButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), "Fund proposal");
+            } else if (compensationRequest.isInFundingPeriod()) {
+                checkArgument(compensationRequest.isAccepted(), "A compensation request with state OPEN_FOR_FUNDING must be accepted.");
+                fundButton = addButtonAfterGroup(gridPane, CompensationRequestDisplay.incrementAndGetGridRow(), "Fund compensation request");
                 fundButton.setOnAction(event -> {
-                    fundProposalWindow.applyProposal(proposal.getProposalPayload()).
+                    fundCompensationRequestWindow.applyCompensationRequest(compensationRequest.getCompensationRequestPayload()).
                             onAction(() -> {
-                                Coin amount = btcFormatter.parseToCoin(fundProposalWindow.getAmount().getText());
-                                proposalManager.fundProposal(proposal, amount,
+                                Coin amount = btcFormatter.parseToCoin(fundCompensationRequestWindow.getAmount().getText());
+                                compensationRequestManger.fundCompensationRequest(compensationRequest, amount,
                                         new FutureCallback<Transaction>() {
                                             @Override
                                             public void onSuccess(Transaction transaction) {
-                                                UserThread.runAfter(() -> new Popup<>().feedback("Proposal successfully funded.").show(), 1);
+                                                UserThread.runAfter(() -> new Popup<>().feedback("Compensation request successfully funded.").show(), 1);
                                             }
 
                                             @Override
@@ -209,17 +209,17 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
                                         });
                             }).show();
                 });
-            } else if (proposal.isClosed()) {
-                addLabel(gridPane, proposalDisplay.incrementAndGetGridRow(), "This proposal is not open anymore for funding. Please wait until the next funding period starts.");
+            } else if (compensationRequest.isClosed()) {
+                addLabel(gridPane, CompensationRequestDisplay.incrementAndGetGridRow(), "This compensation request is not open anymore for funding. Please wait until the next funding period starts.");
             }
-            proposalDisplay.setAllFieldsEditable(false);
+            CompensationRequestDisplay.setAllFieldsEditable(false);
 
-            proposalDisplay.fillWithProposalData(proposal.getProposalPayload());
+            CompensationRequestDisplay.fillWithData(compensationRequest.getCompensationRequestPayload());
         }
     }
 
     private void setColumns() {
-        TableColumn<Proposal, Proposal> dateColumn = new TableColumn<Proposal, Proposal>("Date/Time") {
+        TableColumn<CompensationRequest, CompensationRequest> dateColumn = new TableColumn<CompensationRequest, CompensationRequest>("Date/Time") {
             {
                 setMinWidth(190);
                 setMaxWidth(190);
@@ -227,49 +227,49 @@ public class ActiveProposalsView extends ActivatableView<SplitPane, Void> {
         };
         dateColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         dateColumn.setCellFactory(
-                new Callback<TableColumn<Proposal, Proposal>, TableCell<Proposal,
-                        Proposal>>() {
+                new Callback<TableColumn<CompensationRequest, CompensationRequest>, TableCell<CompensationRequest,
+                        CompensationRequest>>() {
                     @Override
-                    public TableCell<Proposal, Proposal> call(
-                            TableColumn<Proposal, Proposal> column) {
-                        return new TableCell<Proposal, Proposal>() {
+                    public TableCell<CompensationRequest, CompensationRequest> call(
+                            TableColumn<CompensationRequest, CompensationRequest> column) {
+                        return new TableCell<CompensationRequest, CompensationRequest>() {
                             @Override
-                            public void updateItem(final Proposal item, boolean empty) {
+                            public void updateItem(final CompensationRequest item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.formatDateTime(item.getProposalPayload().creationDate));
+                                    setText(formatter.formatDateTime(item.getCompensationRequestPayload().creationDate));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        dateColumn.setComparator((o1, o2) -> o1.getProposalPayload().creationDate.compareTo(o2.getProposalPayload().creationDate));
+        dateColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().creationDate.compareTo(o2.getCompensationRequestPayload().creationDate));
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
 
 
-        TableColumn<Proposal, Proposal> nameColumn = new TableColumn<>("Name");
+        TableColumn<CompensationRequest, CompensationRequest> nameColumn = new TableColumn<>("Name");
         nameColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         nameColumn.setCellFactory(
-                new Callback<TableColumn<Proposal, Proposal>, TableCell<Proposal,
-                        Proposal>>() {
+                new Callback<TableColumn<CompensationRequest, CompensationRequest>, TableCell<CompensationRequest,
+                        CompensationRequest>>() {
                     @Override
-                    public TableCell<Proposal, Proposal> call(
-                            TableColumn<Proposal, Proposal> column) {
-                        return new TableCell<Proposal, Proposal>() {
+                    public TableCell<CompensationRequest, CompensationRequest> call(
+                            TableColumn<CompensationRequest, CompensationRequest> column) {
+                        return new TableCell<CompensationRequest, CompensationRequest>() {
                             @Override
-                            public void updateItem(final Proposal item, boolean empty) {
+                            public void updateItem(final CompensationRequest item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getProposalPayload().name);
+                                    setText(item.getCompensationRequestPayload().name);
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        nameColumn.setComparator((o1, o2) -> o1.getProposalPayload().name.compareTo(o2.getProposalPayload().name));
+        nameColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().name.compareTo(o2.getCompensationRequestPayload().name));
         tableView.getColumns().add(nameColumn);
     }
 }

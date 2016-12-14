@@ -17,9 +17,12 @@
 
 package io.bitsquare.gui.main.dao.voting.vote;
 
+import io.bitsquare.btc.exceptions.TransactionVerificationException;
+import io.bitsquare.btc.exceptions.WalletException;
+import io.bitsquare.btc.wallet.ChangeBelowDustException;
 import io.bitsquare.common.util.Tuple2;
-import io.bitsquare.dao.proposals.Proposal;
-import io.bitsquare.dao.proposals.ProposalManager;
+import io.bitsquare.dao.compensation.CompensationRequest;
+import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.dao.vote.*;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -34,6 +37,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -44,15 +48,13 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 @FxmlView
 public class VoteView extends ActivatableView<GridPane, Void> {
 
-
     private int gridRow = 0;
-    private ProposalManager proposalManager;
+    private CompensationRequestManager compensationRequestManager;
     private VoteManager voteManager;
-    private VoteItemCollection voteCollection;
     private Button voteButton;
-    private List<Proposal> proposals;
+    private List<CompensationRequest> compensationRequests;
     private TitledGroupBg titledGroupBg;
-    private List<VoteItem> voteItems;
+    private VoteItemCollection voteItemCollection;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,32 +62,33 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private VoteView(ProposalManager proposalManager, VoteManager voteManager, VoteItemCollection voteCollection) {
-        this.proposalManager = proposalManager;
+    private VoteView(CompensationRequestManager compensationRequestManager, VoteManager voteManager) {
+        this.compensationRequestManager = compensationRequestManager;
         this.voteManager = voteManager;
-        this.voteCollection = voteCollection;
     }
 
     @Override
     public void initialize() {
-        voteItems = voteCollection.getVoteItems();
-        // proposals = proposalManager.getObservableProposalsList().stream().filter(Proposal::isInVotePeriod).collect(Collectors.toList());
-
-
+        // TODO crate items here
     }
 
     @Override
     protected void activate() {
+        voteItemCollection = voteManager.getCurrentVoteItemCollection();
         root.getChildren().clear();
-        // TODO
-        proposals = proposalManager.getObservableProposalsList().stream().filter(Proposal::isInVotePeriod).collect(Collectors.toList());
-        titledGroupBg = addTitledGroupBg(root, gridRow, voteItems.size() + proposals.size() - 1, "Voting");
-        // GridPane.setRowSpan(titledGroupBg, voteItems.size() + proposals.size());
-        voteItems.stream().forEach(this::addVoteItem);
+
+        compensationRequests = compensationRequestManager.getObservableCompensationRequestsList().stream().filter(CompensationRequest::isInVotePeriod).collect(Collectors.toList());
+        titledGroupBg = addTitledGroupBg(root, gridRow, voteItemCollection.size() + compensationRequests.size() - 1, "Voting");
+        // GridPane.setRowSpan(titledGroupBg, voteItems.size() + CompensationRequest.size());
+        voteItemCollection.stream().forEach(this::addVoteItem);
 
         voteButton = addButtonAfterGroup(root, ++gridRow, "Vote");
         voteButton.setOnAction(event -> {
-            voteManager.vote();
+            try {
+                voteManager.vote(voteItemCollection);
+            } catch (InsufficientMoneyException | WalletException | TransactionVerificationException | ChangeBelowDustException e) {
+                e.printStackTrace();
+            }
         });
     }
 
@@ -94,11 +97,11 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     }
 
     private void addVoteItem(VoteItem voteItem) {
-        if (voteItem instanceof ProposalVoteItemCollection) {
-            addProposals((ProposalVoteItemCollection) voteItem);
+        if (voteItem instanceof CompensationRequestVoteItemCollection) {
+            addCompensationRequests((CompensationRequestVoteItemCollection) voteItem);
         } else {
             Tuple2<Label, InputTextField> tuple;
-            if (voteItem == voteItems.get(0))
+            if (voteItem == voteItemCollection.get(0))
                 tuple = addLabelInputTextField(root, gridRow, voteItem.name + " (" + voteItem.code + "):", Layout.FIRST_ROW_DISTANCE);
             else
                 tuple = addLabelInputTextField(root, ++gridRow, voteItem.name + " (" + voteItem.code + "):");
@@ -109,23 +112,23 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         }
     }
 
-    private void addProposals(ProposalVoteItemCollection proposalVoteItemCollection) {
-        proposals.forEach(proposal -> addProposalItem(proposal, proposalVoteItemCollection));
+    private void addCompensationRequests(CompensationRequestVoteItemCollection collection) {
+        compensationRequests.forEach(request -> addCompensationRequestItem(request, collection));
     }
 
-    private void addProposalItem(Proposal proposal, ProposalVoteItemCollection proposalVoteItemCollection) {
-        ProposalVoteItem proposalVoteItem = new ProposalVoteItem(proposal);
-        proposalVoteItemCollection.addProposalVoteItem(proposalVoteItem);
+    private void addCompensationRequestItem(CompensationRequest compensationRequest, CompensationRequestVoteItemCollection collection) {
+        CompensationRequestVoteItem compensationRequestVoteItem = new CompensationRequestVoteItem(compensationRequest);
+        collection.addCompensationRequestVoteItem(compensationRequestVoteItem);
 
-        addLabel(root, ++gridRow, "Proposal ID:", 0);
+        addLabel(root, ++gridRow, "Compensation request ID:", 0);
 
-        TextField textField = new TextField("ID: " + proposal.getProposalPayload().getShortId());
+        TextField textField = new TextField("ID: " + compensationRequest.getCompensationRequestPayload().getShortId());
         textField.setEditable(false);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
         textField.setMaxWidth(120);
 
-        Button openButton = new Button("Open Proposal");
+        Button openButton = new Button("Open compensation request");
         CheckBox acceptCheckBox = new CheckBox("Accept");
         CheckBox declineCheckBox = new CheckBox("Decline");
 
@@ -144,20 +147,20 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             // todo open popup
         });
         acceptCheckBox.setOnAction(event -> {
-            proposalVoteItem.setAcceptedVote(acceptCheckBox.isSelected());
+            compensationRequestVoteItem.setAcceptedVote(acceptCheckBox.isSelected());
             if (declineCheckBox.isSelected())
                 declineCheckBox.setSelected(!acceptCheckBox.isSelected());
 
         });
-        acceptCheckBox.setSelected(proposalVoteItem.isAcceptedVote());
+        acceptCheckBox.setSelected(compensationRequestVoteItem.isAcceptedVote());
 
         declineCheckBox.setOnAction(event -> {
-            proposalVoteItem.setDeclineVote(declineCheckBox.isSelected());
+            compensationRequestVoteItem.setDeclineVote(declineCheckBox.isSelected());
             if (acceptCheckBox.isSelected())
                 acceptCheckBox.setSelected(!declineCheckBox.isSelected());
 
         });
-        declineCheckBox.setSelected(proposalVoteItem.isDeclineVote());
+        declineCheckBox.setSelected(compensationRequestVoteItem.isDeclineVote());
     }
 }
 

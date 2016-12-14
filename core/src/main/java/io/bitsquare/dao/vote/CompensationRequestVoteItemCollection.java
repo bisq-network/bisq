@@ -26,25 +26,25 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ProposalVoteItemCollection extends VoteItem implements Persistable {
+public final class CompensationRequestVoteItemCollection extends VoteItem implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(ProposalVoteItemCollection.class);
+    private static final Logger log = LoggerFactory.getLogger(CompensationRequestVoteItemCollection.class);
     @Nullable
-    private List<ProposalVoteItem> proposalVoteItems = new ArrayList<>();
+    private List<CompensationRequestVoteItem> compensationRequestVoteItems = new ArrayList<>();
 
-    public ProposalVoteItemCollection(Byte code, String name) {
+    public CompensationRequestVoteItemCollection(Byte code, String name) {
         super(code, name);
     }
 
-    public void addProposalVoteItem(ProposalVoteItem proposalVoteItem) {
-        proposalVoteItems.add(proposalVoteItem);
+    public void addCompensationRequestVoteItem(CompensationRequestVoteItem compensationRequestVoteItem) {
+        compensationRequestVoteItems.add(compensationRequestVoteItem);
     }
 
     @Override
     public String toString() {
-        return "ProposalVoteItemCollection{" +
-                "proposalVoteItems=" + proposalVoteItems +
+        return "CompensationRequestVoteItemCollection{" +
+                "compensationRequestVoteItems=" + compensationRequestVoteItems +
                 '}';
     }
 }

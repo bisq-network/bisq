@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.dao.proposals;
+package io.bitsquare.dao.compensation;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
@@ -23,13 +23,13 @@ import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class Proposal implements Persistable {
+public final class CompensationRequest implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(Proposal.class);
+    private static final Logger log = LoggerFactory.getLogger(CompensationRequest.class);
 
-    private final ProposalPayload proposalPayload;
+    private final CompensationRequestPayload compensationRequestPayload;
 
     private boolean accepted;
     private Coin fundsReceived;
@@ -39,12 +39,12 @@ public final class Proposal implements Persistable {
     private boolean closed;
     private boolean waitingForVotingPeriod;
 
-    public Proposal(ProposalPayload proposalPayload) {
-        this.proposalPayload = proposalPayload;
+    public CompensationRequest(CompensationRequestPayload compensationRequestPayload) {
+        this.compensationRequestPayload = compensationRequestPayload;
     }
 
-    public ProposalPayload getProposalPayload() {
-        return proposalPayload;
+    public CompensationRequestPayload getCompensationRequestPayload() {
+        return compensationRequestPayload;
     }
 
     public boolean isAccepted() {

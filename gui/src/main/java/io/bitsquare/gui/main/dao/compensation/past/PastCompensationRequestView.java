@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.dao.proposals.past;
+package io.bitsquare.gui.main.dao.compensation.past;
 
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -24,7 +24,7 @@ import javafx.scene.layout.GridPane;
 import javax.inject.Inject;
 
 @FxmlView
-public class PastProposalsView extends ActivatableView<GridPane, Void> {
+public class PastCompensationRequestView extends ActivatableView<GridPane, Void> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@ public class PastProposalsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PastProposalsView() {
+    private PastCompensationRequestView() {
     }
 
     @Override

@@ -18,11 +18,14 @@
   -->
 
 
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.layout.AnchorPane?>
-<SplitPane fx:id="root" fx:controller="io.bitsquare.gui.main.dao.proposals.active.ActiveProposalsView"
-           AnchorPane.bottomAnchor="-20.0" AnchorPane.leftAnchor="-10.0"
-           AnchorPane.rightAnchor="-10.0" AnchorPane.topAnchor="-20.0"
-           orientation="VERTICAL"
-           xmlns:fx="http://javafx.com/fxml">
-</SplitPane>
+<?import javafx.scene.layout.*?>
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.dao.compensation.past.PastCompensationRequestView"
+          hgap="5.0" vgap="5.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-10.0"
+          xmlns:fx="http://javafx.com/fxml">
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="160.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
+    </columnConstraints>
+</GridPane>

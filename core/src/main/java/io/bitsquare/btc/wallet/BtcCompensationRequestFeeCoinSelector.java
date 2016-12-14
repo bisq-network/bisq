@@ -33,12 +33,12 @@ import java.util.List;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our address.
  */
-class BtcProposalFeeCoinSelector {
-    private static final Logger log = LoggerFactory.getLogger(BtcProposalFeeCoinSelector.class);
+class BtcCompensationRequestFeeCoinSelector {
+    private static final Logger log = LoggerFactory.getLogger(BtcCompensationRequestFeeCoinSelector.class);
 
     private Wallet wallet;
 
-    public BtcProposalFeeCoinSelector(Wallet wallet) {
+    public BtcCompensationRequestFeeCoinSelector(Wallet wallet) {
         this.wallet = wallet;
     }
 

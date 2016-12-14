@@ -19,8 +19,7 @@ package io.bitsquare.dao;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
-import io.bitsquare.dao.proposals.ProposalManager;
-import io.bitsquare.dao.vote.VoteItemCollection;
+import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.dao.vote.VoteManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +34,8 @@ public class DaoModule extends AppModule {
 
     @Override
     protected void configure() {
-        bind(ProposalManager.class).in(Singleton.class);
+        bind(CompensationRequestManager.class).in(Singleton.class);
         bind(VoteManager.class).in(Singleton.class);
-        bind(VoteItemCollection.class).in(Singleton.class);
     }
 }
 

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.dao.proposals;
+package io.bitsquare.dao.compensation;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.p2p.NodeAddress;
@@ -30,14 +30,15 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-public final class ProposalPayload implements LazyProcessedStoragePayload, PersistedStoragePayload {
+public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(ProposalPayload.class);
+    private static final Logger log = LoggerFactory.getLogger(CompensationRequestPayload.class);
 
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
+    // public final String version;
     public final String uid;
     public final String name;
     public final String title;
@@ -53,28 +54,32 @@ public final class ProposalPayload implements LazyProcessedStoragePayload, Persi
     //TODO store as byte array
     public final PublicKey p2pStorageSignaturePubKey;
     public final byte[] squPubKey;
+    // TODO optional TAC/VAT rules/refund...
 
-    // Signature of proposal data without signature, hash and feeTxId
-    public byte[] signature;
-    // Sha256Hash of proposal data including the signature but without feeTxId and hash
+    // Sha256Hash of CompensationRequest data including the signature but without feeTxId and hash
     public byte[] hash;
 
+    // Signature of CompensationRequest data without signature, hash and feeTxId
+    public byte[] signature;
+
+    public byte[] OP_RETURN_hash;
+   
     // Set after we signed and set the hash. The hash is used in the OP_RETURN of the fee tx
     public String feeTxId;
 
-    public ProposalPayload(String uid,
-                           String name,
-                           String title,
-                           String category,
-                           String description,
-                           String link,
-                           Date startDate,
-                           Date endDate,
-                           Coin requestedBtc,
-                           String btcAddress,
-                           NodeAddress nodeAddress,
-                           PublicKey p2pStorageSignaturePubKey,
-                           byte[] squPubKey) {
+    public CompensationRequestPayload(String uid,
+                                      String name,
+                                      String title,
+                                      String category,
+                                      String description,
+                                      String link,
+                                      Date startDate,
+                                      Date endDate,
+                                      Coin requestedBtc,
+                                      String btcAddress,
+                                      NodeAddress nodeAddress,
+                                      PublicKey p2pStorageSignaturePubKey,
+                                      byte[] squPubKey) {
 
         creationDate = new Date();
         this.uid = uid;
@@ -125,27 +130,30 @@ public final class ProposalPayload implements LazyProcessedStoragePayload, Persi
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ProposalPayload proposal = (ProposalPayload) o;
+        CompensationRequestPayload comPreqPayload = (CompensationRequestPayload) o;
 
-        if (uid != null ? !uid.equals(proposal.uid) : proposal.uid != null) return false;
-        if (name != null ? !name.equals(proposal.name) : proposal.name != null) return false;
-        if (title != null ? !title.equals(proposal.title) : proposal.title != null) return false;
-        if (category != null ? !category.equals(proposal.category) : proposal.category != null) return false;
-        if (description != null ? !description.equals(proposal.description) : proposal.description != null)
+        if (uid != null ? !uid.equals(comPreqPayload.uid) : comPreqPayload.uid != null) return false;
+        if (name != null ? !name.equals(comPreqPayload.name) : comPreqPayload.name != null) return false;
+        if (title != null ? !title.equals(comPreqPayload.title) : comPreqPayload.title != null) return false;
+        if (category != null ? !category.equals(comPreqPayload.category) : comPreqPayload.category != null)
             return false;
-        if (link != null ? !link.equals(proposal.link) : proposal.link != null) return false;
-        if (startDate != null ? !startDate.equals(proposal.startDate) : proposal.startDate != null) return false;
-        if (endDate != null ? !endDate.equals(proposal.endDate) : proposal.endDate != null) return false;
-        if (requestedBtc != null ? !requestedBtc.equals(proposal.requestedBtc) : proposal.requestedBtc != null)
+        if (description != null ? !description.equals(comPreqPayload.description) : comPreqPayload.description != null)
             return false;
-        if (btcAddress != null ? !btcAddress.equals(proposal.btcAddress) : proposal.btcAddress != null) return false;
-        if (nodeAddress != null ? !nodeAddress.equals(proposal.nodeAddress) : proposal.nodeAddress != null)
+        if (link != null ? !link.equals(comPreqPayload.link) : comPreqPayload.link != null) return false;
+        if (startDate != null ? !startDate.equals(comPreqPayload.startDate) : comPreqPayload.startDate != null)
             return false;
-        if (creationDate != null ? !creationDate.equals(proposal.creationDate) : proposal.creationDate != null)
+        if (endDate != null ? !endDate.equals(comPreqPayload.endDate) : comPreqPayload.endDate != null) return false;
+        if (requestedBtc != null ? !requestedBtc.equals(comPreqPayload.requestedBtc) : comPreqPayload.requestedBtc != null)
             return false;
-        if (p2pStorageSignaturePubKey != null ? !p2pStorageSignaturePubKey.equals(proposal.p2pStorageSignaturePubKey) : proposal.p2pStorageSignaturePubKey != null)
+        if (btcAddress != null ? !btcAddress.equals(comPreqPayload.btcAddress) : comPreqPayload.btcAddress != null)
             return false;
-        return Arrays.equals(squPubKey, proposal.squPubKey);
+        if (nodeAddress != null ? !nodeAddress.equals(comPreqPayload.nodeAddress) : comPreqPayload.nodeAddress != null)
+            return false;
+        if (creationDate != null ? !creationDate.equals(comPreqPayload.creationDate) : comPreqPayload.creationDate != null)
+            return false;
+        if (p2pStorageSignaturePubKey != null ? !p2pStorageSignaturePubKey.equals(comPreqPayload.p2pStorageSignaturePubKey) : comPreqPayload.p2pStorageSignaturePubKey != null)
+            return false;
+        return Arrays.equals(squPubKey, comPreqPayload.squPubKey);
 
     }
 
@@ -170,7 +178,7 @@ public final class ProposalPayload implements LazyProcessedStoragePayload, Persi
 
     @Override
     public String toString() {
-        return "Proposal{" +
+        return "CompensationRequestPayload{" +
                 "uid='" + uid + '\'' +
                 ", text='" + name + '\'' +
                 ", title='" + title + '\'' +

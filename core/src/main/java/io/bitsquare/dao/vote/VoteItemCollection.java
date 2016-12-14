@@ -17,40 +17,22 @@
 
 package io.bitsquare.dao.vote;
 
-import com.google.inject.Inject;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.ArrayList;
 
-public final class VoteItemCollection implements Persistable {
+public final class VoteItemCollection extends ArrayList<VoteItem> implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     private static final Logger log = LoggerFactory.getLogger(VoteItemCollection.class);
 
-    private List<VoteItem> voteItems;
 
-    @Inject
     public VoteItemCollection() {
-        voteItems = Arrays.asList(
-                new VoteItem(VotingCodes.CREATE_OFFER_FEE, "Create offer fee", 1),
-                new VoteItem(VotingCodes.TAKE_OFFER_FEE, "Take offer fee", 1),
-                new ProposalVoteItemCollection(VotingCodes.PROPOSAL_MAP, "Proposals")
-        );
-    }
-
-
-    public List<VoteItem> getVoteItems() {
-        return voteItems;
-    }
-
-    @Override
-    public String toString() {
-        return "VoteItemCollection{" +
-                "voteItems=" + voteItems +
-                '}';
+        add(new VoteItem(VotingCodes.CREATE_OFFER_FEE, "Create offer fee", 1));
+        add(new VoteItem(VotingCodes.TAKE_OFFER_FEE, "Take offer fee", 1));
+        add(new CompensationRequestVoteItemCollection(VotingCodes.REQUEST_MAP, "CompensationRequest"));
     }
 }

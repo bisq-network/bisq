@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.dao.proposals.create;
+package io.bitsquare.gui.main.dao.compensation.create;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.btc.InsufficientFundsException;
@@ -27,11 +27,11 @@ import io.bitsquare.btc.wallet.ChangeBelowDustException;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.dao.proposals.ProposalManager;
-import io.bitsquare.dao.proposals.ProposalPayload;
+import io.bitsquare.dao.compensation.CompensationRequestManager;
+import io.bitsquare.dao.compensation.CompensationRequestPayload;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.main.dao.proposals.ProposalDisplay;
+import io.bitsquare.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.NodeAddress;
@@ -56,9 +56,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.gui.util.FormBuilder.addButtonAfterGroup;
 
 @FxmlView
-public class CreateProposalView extends ActivatableView<GridPane, Void> {
+public class CreateCompensationRequestView extends ActivatableView<GridPane, Void> {
 
-    private ProposalDisplay proposalDisplay;
+    private CompensationRequestDisplay CompensationRequestDisplay;
     private Button createButton;
 
     private final NodeAddress nodeAddress;
@@ -66,7 +66,7 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
     private final SquWalletService squWalletService;
     private final BtcWalletService btcWalletService;
     private final FeeService feeService;
-    private final ProposalManager proposalManager;
+    private final CompensationRequestManager compensationRequestManager;
     private final BSFormatter btcFormatter;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -74,12 +74,12 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateProposalView(SquWalletService squWalletService, BtcWalletService btcWalletService, FeeService feeService,
-                               ProposalManager proposalManager, P2PService p2PService, KeyRing keyRing, BSFormatter btcFormatter) {
+    private CreateCompensationRequestView(SquWalletService squWalletService, BtcWalletService btcWalletService, FeeService feeService,
+                                          CompensationRequestManager compensationRequestManager, P2PService p2PService, KeyRing keyRing, BSFormatter btcFormatter) {
         this.squWalletService = squWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
-        this.proposalManager = proposalManager;
+        this.compensationRequestManager = compensationRequestManager;
         this.btcFormatter = btcFormatter;
 
         nodeAddress = p2PService.getAddress();
@@ -89,15 +89,15 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        proposalDisplay = new ProposalDisplay(root);
-        proposalDisplay.removeAllFields();
-        proposalDisplay.createAllFields("Create new proposal", 0);
-        createButton = addButtonAfterGroup(root, proposalDisplay.incrementAndGetGridRow(), "Create proposal");
+        CompensationRequestDisplay = new CompensationRequestDisplay(root);
+        CompensationRequestDisplay.removeAllFields();
+        CompensationRequestDisplay.createAllFields("Create new compensation request", 0);
+        createButton = addButtonAfterGroup(root, CompensationRequestDisplay.incrementAndGetGridRow(), "Create compensation request");
     }
 
     @Override
     protected void activate() {
-        proposalDisplay.fillWithMock();
+        CompensationRequestDisplay.fillWithMock();
         createButton.setOnAction(event -> {
             DeterministicKey squKeyPair = squWalletService.getWallet().freshKey(KeyChain.KeyPurpose.AUTHENTICATION);
             checkNotNull(squKeyPair, "squKeyPair must not be null");
@@ -106,37 +106,37 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
             Date startDate = new Date();
             Date endDate = new Date();
 
-            ProposalPayload proposalPayload = new ProposalPayload(UUID.randomUUID().toString(),
-                    proposalDisplay.nameTextField.getText(),
-                    proposalDisplay.titleTextField.getText(),
-                    proposalDisplay.categoryTextField.getText(),
-                    proposalDisplay.descriptionTextField.getText(),
-                    proposalDisplay.linkTextField.getText(),
+            CompensationRequestPayload compensationRequestPayload = new CompensationRequestPayload(UUID.randomUUID().toString(),
+                    CompensationRequestDisplay.nameTextField.getText(),
+                    CompensationRequestDisplay.titleTextField.getText(),
+                    CompensationRequestDisplay.categoryTextField.getText(),
+                    CompensationRequestDisplay.descriptionTextField.getText(),
+                    CompensationRequestDisplay.linkTextField.getText(),
                     startDate,
                     endDate,
-                    btcFormatter.parseToCoin(proposalDisplay.requestedBTCTextField.getText()),
-                    proposalDisplay.btcAddressTextField.getText(),
+                    btcFormatter.parseToCoin(CompensationRequestDisplay.requestedBTCTextField.getText()),
+                    CompensationRequestDisplay.btcAddressTextField.getText(),
                     nodeAddress,
                     p2pStorageSignaturePubKey,
                     squKeyPair.getPubKey()
             );
-            Sha256Hash hash = Sha256Hash.of(ByteArrayUtils.objectToByteArray(proposalPayload));
-            proposalPayload.setSignature(squKeyPair.sign(hash).encodeToDER());
-            hash = Sha256Hash.of(ByteArrayUtils.objectToByteArray(proposalPayload));
-            proposalPayload.setHash(hash.getBytes());
+            Sha256Hash hash = Sha256Hash.of(ByteArrayUtils.objectToByteArray(compensationRequestPayload));
+            compensationRequestPayload.setSignature(squKeyPair.sign(hash).encodeToDER());
+            hash = Sha256Hash.of(ByteArrayUtils.objectToByteArray(compensationRequestPayload));
+            compensationRequestPayload.setHash(hash.getBytes());
 
             try {
-                Coin createProposalFee = feeService.getCreateProposalFee();
-                Transaction preparedSendTx = squWalletService.getPreparedProposalFeeTx(createProposalFee);
-                Transaction txWithBtcFee = btcWalletService.addInputAndOutputToPreparedSquProposalFeeTx(preparedSendTx, hash.getBytes());
-                squWalletService.signAndBroadcastProposalFeeTx(txWithBtcFee, new FutureCallback<Transaction>() {
+                Coin createCompensationRequestFee = feeService.getCreateCompensationRequestFee();
+                Transaction preparedSendTx = squWalletService.getPreparedCompensationRequestFeeTx(createCompensationRequestFee);
+                Transaction txWithBtcFee = btcWalletService.addInputAndOutputToPreparedSquCompensationRequestFeeTx(preparedSendTx, hash.getBytes());
+                squWalletService.signAndBroadcastCompensationRequestFeeTx(txWithBtcFee, new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@Nullable Transaction transaction) {
-                        checkNotNull(transaction, "Transaction must not be null at signAndBroadcastProposalFeeTx callback.");
-                        proposalPayload.setFeeTxId(transaction.getHashAsString());
-                        publishToP2PNetwork(proposalPayload);
-                        proposalDisplay.clearForm();
-                        new Popup<>().confirmation("Your proposalPayload has been successfully published.").show();
+                        checkNotNull(transaction, "Transaction must not be null at signAndBroadcastCompensationRequestFeeTx callback.");
+                        compensationRequestPayload.setFeeTxId(transaction.getHashAsString());
+                        publishToP2PNetwork(compensationRequestPayload);
+                        CompensationRequestDisplay.clearForm();
+                        new Popup<>().confirmation("Your compensationRequestPayload has been successfully published.").show();
                     }
 
                     @Override
@@ -154,8 +154,8 @@ public class CreateProposalView extends ActivatableView<GridPane, Void> {
         });
     }
 
-    private void publishToP2PNetwork(ProposalPayload proposalPayload) {
-        proposalManager.addToP2PNetwork(proposalPayload);
+    private void publishToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {
+        compensationRequestManager.addToP2PNetwork(compensationRequestPayload);
     }
 
     @Override

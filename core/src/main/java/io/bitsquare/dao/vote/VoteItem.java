@@ -28,9 +28,10 @@ public class VoteItem implements Persistable {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     private static final Logger log = LoggerFactory.getLogger(VoteItem.class);
-
+    //  public final String version;
     public final Byte code;
     public final String name;
+    private boolean hasVoted;
 
     public int getValue() {
         return value;
@@ -59,5 +60,13 @@ public class VoteItem implements Persistable {
 
     public void setValue(Integer value) {
         this.value = value;
+    }
+
+    public boolean hasVoted() {
+        return hasVoted;
+    }
+
+    public void setHasVoted(boolean hasVoted) {
+        this.hasVoted = hasVoted;
     }
 }

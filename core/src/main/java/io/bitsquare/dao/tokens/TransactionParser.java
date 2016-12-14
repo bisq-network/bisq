@@ -64,7 +64,10 @@ public class TransactionParser {
                 log.debug("index {}, out.value {}, available input value {}", i, out.value, accumulatedTokenInputValue);
                 accumulatedTokenInputValue -= out.value;
                 // If we had enough token funds for our output we are a valid token output
-                out.isToken = accumulatedTokenInputValue >= 0;
+                if (accumulatedTokenInputValue >= 0)
+                    out.isToken = true;
+                else
+                    log.error("");
             }
         }
     }

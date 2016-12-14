@@ -15,9 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.dao.proposals;
+package io.bitsquare.gui.main.dao.compensation;
 
-import io.bitsquare.dao.proposals.ProposalPayload;
+import io.bitsquare.dao.compensation.CompensationRequestPayload;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.Layout;
 import javafx.scene.layout.GridPane;
@@ -29,15 +29,15 @@ import java.util.Random;
 import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
 import static io.bitsquare.gui.util.FormBuilder.addTitledGroupBg;
 
-public class ProposalDisplay {
-    private static final Logger log = LoggerFactory.getLogger(ProposalDisplay.class);
+public class CompensationRequestDisplay {
+    private static final Logger log = LoggerFactory.getLogger(CompensationRequestDisplay.class);
 
     private GridPane gridPane;
     public InputTextField nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
             startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
     private int gridRow = 0;
 
-    public ProposalDisplay(GridPane gridPane) {
+    public CompensationRequestDisplay(GridPane gridPane) {
         this.gridPane = gridPane;
     }
 
@@ -54,16 +54,16 @@ public class ProposalDisplay {
         btcAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Bitcoin address:").second;
     }
 
-    public void fillWithProposalData(ProposalPayload proposal) {
-        nameTextField.setText(proposal.name);
-        titleTextField.setText(proposal.title);
-        categoryTextField.setText(proposal.category);
-        descriptionTextField.setText(proposal.description);
-        linkTextField.setText(proposal.link);
-        startDateTextField.setText(proposal.startDate.toString());
-        endDateTextField.setText(proposal.endDate.toString());
-        requestedBTCTextField.setText(proposal.requestedBtc.toPlainString());
-        btcAddressTextField.setText(proposal.btcAddress.toString());
+    public void fillWithData(CompensationRequestPayload data) {
+        nameTextField.setText(data.name);
+        titleTextField.setText(data.title);
+        categoryTextField.setText(data.category);
+        descriptionTextField.setText(data.description);
+        linkTextField.setText(data.link);
+        startDateTextField.setText(data.startDate.toString());
+        endDateTextField.setText(data.endDate.toString());
+        requestedBTCTextField.setText(data.requestedBtc.toPlainString());
+        btcAddressTextField.setText(data.btcAddress.toString());
     }
 
     public void clearForm() {

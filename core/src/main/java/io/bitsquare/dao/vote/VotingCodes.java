@@ -29,7 +29,7 @@ public final class VotingCodes {
     public static final Byte CREATE_OFFER_FEE = 0x01;
     public static final Byte TAKE_OFFER_FEE = 0x01;
 
-    public static final Byte PROPOSAL_MAP = 0x41;
+    public static final Byte REQUEST_MAP = 0x41;
 
     public static final Map<Byte, String> MAP = new HashMap<>();
 }

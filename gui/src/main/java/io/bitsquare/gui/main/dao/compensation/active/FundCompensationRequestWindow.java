@@ -15,9 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.dao.proposals.active;
+package io.bitsquare.gui.main.dao.compensation.active;
 
-import io.bitsquare.dao.proposals.ProposalPayload;
+import io.bitsquare.dao.compensation.CompensationRequestPayload;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.scene.Scene;
@@ -31,9 +31,9 @@ import javax.inject.Inject;
 import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
 import static io.bitsquare.gui.util.FormBuilder.addLabelTextField;
 
-public class FundProposalWindow extends Overlay<FundProposalWindow> {
-    private static final Logger log = LoggerFactory.getLogger(FundProposalWindow.class);
-    private ProposalPayload proposal;
+public class FundCompensationRequestWindow extends Overlay<FundCompensationRequestWindow> {
+    private static final Logger log = LoggerFactory.getLogger(FundCompensationRequestWindow.class);
+    private CompensationRequestPayload compensationRequest;
     private InputTextField amount;
     private TextField info;
 
@@ -42,13 +42,13 @@ public class FundProposalWindow extends Overlay<FundProposalWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FundProposalWindow() {
+    public FundCompensationRequestWindow() {
         type = Type.Instruction;
     }
 
     public void show() {
         if (headLine == null)
-            headLine = "Fund proposal";
+            headLine = "Fund compensation request";
 
         createGridPane();
         addHeadLine();
@@ -76,8 +76,8 @@ public class FundProposalWindow extends Overlay<FundProposalWindow> {
         }
     }
 
-    public FundProposalWindow applyProposal(ProposalPayload proposal) {
-        this.proposal = proposal;
+    public FundCompensationRequestWindow applyCompensationRequest(CompensationRequestPayload request) {
+        this.compensationRequest = request;
         return this;
     }
 
@@ -86,10 +86,10 @@ public class FundProposalWindow extends Overlay<FundProposalWindow> {
     }
 
     private void addContent() {
-        info = addLabelTextField(gridPane, ++rowIndex, "Proposal ID:").second;
+        info = addLabelTextField(gridPane, ++rowIndex, "Request ID:").second;
         amount = addLabelInputTextField(gridPane, ++rowIndex, "Amount in BTC:").second;
 
-        info.setText(proposal.getShortId());
+        info.setText(compensationRequest.getShortId());
     }
 
     @Override

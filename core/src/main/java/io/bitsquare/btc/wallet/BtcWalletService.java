@@ -189,16 +189,16 @@ public class BtcWalletService extends WalletService {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Add mining fee input and mandatory change output for prepared proposal fee tx
+    // Add mining fee input and mandatory change output for prepared CompensationRequest fee tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction addInputAndOutputToPreparedSquProposalFeeTx(Transaction preparedSquTx, byte[] hash) throws
+    public Transaction addInputAndOutputToPreparedSquCompensationRequestFeeTx(Transaction preparedSquTx, byte[] hash) throws
             TransactionVerificationException, WalletException, InsufficientFundsException {
 
         // preparedSquTx has following structure:
         // inputs [1-n] SQU inputs
         // outputs [0-1] SQU change output
-        // mining fee: SQU proposal fee
+        // mining fee: SQU CompensationRequest fee
 
         try {
             int counter = 0;
@@ -302,10 +302,10 @@ public class BtcWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Send funds to a proposal
+    // Send funds to a CompensationRequest
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void fundProposal(Coin amount, String btcAddress, Address squAddressForProposalFunding, FutureCallback<Transaction> callback) {
+    public void fundCompensationRequest(Coin amount, String btcAddress, Address squAddressForCompensationRequestFunding, FutureCallback<Transaction> callback) {
         //TODO
     }
 

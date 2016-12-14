@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.dao.proposals;
+package io.bitsquare.gui.main.dao.compensation;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -23,9 +23,9 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.dao.DaoView;
-import io.bitsquare.gui.main.dao.proposals.active.ActiveProposalsView;
-import io.bitsquare.gui.main.dao.proposals.create.CreateProposalView;
-import io.bitsquare.gui.main.dao.proposals.past.PastProposalsView;
+import io.bitsquare.gui.main.dao.compensation.active.ActiveCompensationRequestView;
+import io.bitsquare.gui.main.dao.compensation.create.CreateCompensationRequestView;
+import io.bitsquare.gui.main.dao.compensation.past.PastCompensationRequestView;
 import io.bitsquare.gui.util.Colors;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -41,7 +41,7 @@ import javafx.scene.paint.Paint;
 import javax.inject.Inject;
 
 @FxmlView
-public class ProposalsView extends ActivatableViewAndModel {
+public class CompensationView extends ActivatableViewAndModel {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
@@ -57,7 +57,7 @@ public class ProposalsView extends ActivatableViewAndModel {
     private Class<? extends View> selectedViewClass;
 
     @Inject
-    private ProposalsView(CachingViewLoader viewLoader, Navigation navigation) {
+    private CompensationView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
@@ -65,7 +65,7 @@ public class ProposalsView extends ActivatableViewAndModel {
     @Override
     public void initialize() {
         listener = viewPath -> {
-            if (viewPath.size() != 4 || viewPath.indexOf(ProposalsView.class) != 2)
+            if (viewPath.size() != 4 || viewPath.indexOf(CompensationView.class) != 2)
                 return;
 
             selectedViewClass = viewPath.tip();
@@ -73,9 +73,9 @@ public class ProposalsView extends ActivatableViewAndModel {
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        create = new MenuItem(navigation, toggleGroup, "Create Proposal", CreateProposalView.class, AwesomeIcon.EDIT);
-        active = new MenuItem(navigation, toggleGroup, "Active proposals", ActiveProposalsView.class, AwesomeIcon.ARROW_RIGHT);
-        past = new MenuItem(navigation, toggleGroup, "Past proposals", PastProposalsView.class, AwesomeIcon.LIST);
+        create = new MenuItem(navigation, toggleGroup, "Create request", CreateCompensationRequestView.class, AwesomeIcon.EDIT);
+        active = new MenuItem(navigation, toggleGroup, "Active requests", ActiveCompensationRequestView.class, AwesomeIcon.ARROW_RIGHT);
+        past = new MenuItem(navigation, toggleGroup, "Past requests", PastCompensationRequestView.class, AwesomeIcon.LIST);
         leftVBox.getChildren().addAll(create, active, past);
     }
 
@@ -87,14 +87,14 @@ public class ProposalsView extends ActivatableViewAndModel {
 
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
-        if (viewPath.size() == 3 && viewPath.indexOf(ProposalsView.class) == 2 ||
+        if (viewPath.size() == 3 && viewPath.indexOf(CompensationView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
             if (selectedViewClass == null)
-                selectedViewClass = CreateProposalView.class;
+                selectedViewClass = CreateCompensationRequestView.class;
 
             loadView(selectedViewClass);
 
-        } else if (viewPath.size() == 4 && viewPath.indexOf(ProposalsView.class) == 2) {
+        } else if (viewPath.size() == 4 && viewPath.indexOf(CompensationView.class) == 2) {
             selectedViewClass = viewPath.get(3);
             loadView(selectedViewClass);
         }
@@ -113,9 +113,9 @@ public class ProposalsView extends ActivatableViewAndModel {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
-        if (view instanceof CreateProposalView) create.setSelected(true);
-        else if (view instanceof ActiveProposalsView) active.setSelected(true);
-        else if (view instanceof PastProposalsView) past.setSelected(true);
+        if (view instanceof CreateCompensationRequestView) create.setSelected(true);
+        else if (view instanceof ActiveCompensationRequestView) active.setSelected(true);
+        else if (view instanceof PastCompensationRequestView) past.setSelected(true);
     }
 
     public Class<? extends View> getSelectedViewClass() {
@@ -173,7 +173,7 @@ class MenuItem extends ToggleButton {
     }
 
     public void activate() {
-        setOnAction((event) -> navigation.navigateTo(MainView.class, DaoView.class, ProposalsView.class, viewClass));
+        setOnAction((event) -> navigation.navigateTo(MainView.class, DaoView.class, CompensationView.class, viewClass));
         selectedProperty().addListener(selectedPropertyChangeListener);
         disableProperty().addListener(disablePropertyChangeListener);
     }

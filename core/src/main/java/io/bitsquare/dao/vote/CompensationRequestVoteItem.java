@@ -19,21 +19,21 @@ package io.bitsquare.dao.vote;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
-import io.bitsquare.dao.proposals.Proposal;
+import io.bitsquare.dao.compensation.CompensationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class ProposalVoteItem implements Persistable {
+public final class CompensationRequestVoteItem implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(ProposalVoteItem.class);
+    private static final Logger log = LoggerFactory.getLogger(CompensationRequestVoteItem.class);
 
-    public final Proposal proposal;
+    public final CompensationRequest compensationRequest;
     private boolean declineVote;
     private boolean acceptedVote;
 
-    public ProposalVoteItem(Proposal proposal) {
-        this.proposal = proposal;
+    public CompensationRequestVoteItem(CompensationRequest compensationRequest) {
+        this.compensationRequest = compensationRequest;
     }
 
     public void setDeclineVote(boolean declineVote) {
@@ -54,8 +54,8 @@ public final class ProposalVoteItem implements Persistable {
 
     @Override
     public String toString() {
-        return "ProposalVoteItem{" +
-                "proposal=" + proposal +
+        return "CompensationRequest{" +
+                "compensationRequest=" + compensationRequest +
                 ", declineVote=" + declineVote +
                 ", acceptedVote=" + acceptedVote +
                 '}';
