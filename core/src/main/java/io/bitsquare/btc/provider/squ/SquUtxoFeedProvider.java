@@ -79,6 +79,26 @@ Sends 0.00 BTC and receives 0.00001 BTC, total value 0.00001 BTC.
                 new Script(HEX.decode("76a914e867afbc7c0840299d3409b105e56263e40a275688ac")),
                 "n2hoGpZku3iiw1x7xfFqVeW75akYPaYevU");
         utxoSet.add(utxo2);
+
+        UTXO utxo3 = new UTXO(Sha256Hash.of(Utils.HEX.decode("10085081b3c7eb3d15bc45eab9f8c4bd17a043f92928ea321f2705370bd44865")),
+                0,
+                Coin.valueOf(700000),
+                443437,
+                false,
+                new Script(HEX.decode("76a914d95933afd27f70537bdd4eab383e8f6f91d72be788ac")),
+                "1LpEVV576FBUvEbRfb5qPkngXoNfW1EgfM");
+        utxoSet.add(utxo3);
+
+        UTXO utxo4 = new UTXO(Sha256Hash.of(Utils.HEX.decode("10085081b3c7eb3d15bc45eab9f8c4bd17a043f92928ea321f2705370bd44865")),
+                1,
+                Coin.valueOf(300000),
+                443437,
+                false,
+                new Script(HEX.decode("76a9143fb608a123ef3c624dcdf5bfcd10a8c320958c3d88ac")),
+                "16ose1XjoftsppsyKWUeQSmDPrUq2bAPTE");
+        utxoSet.add(utxo4);
+
+        //
         
         SquUtxoFeedData squUtxoFeedData = new SquUtxoFeedData(utxoSet);
 

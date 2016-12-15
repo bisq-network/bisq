@@ -42,7 +42,7 @@ public class FeeService {
 
     public static final long MIN_TX_FEE = 40; // satoshi/byte
     public static final long MAX_TX_FEE = 200;
-    public static final long DEFAULT_TX_FEE = 60;
+    public static final long DEFAULT_TX_FEE = 100;
 
     public static final long MIN_CREATE_OFFER_FEE = 10_000;
     public static final long MAX_CREATE_OFFER_FEE = 500_000;

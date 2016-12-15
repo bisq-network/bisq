@@ -67,11 +67,14 @@ public class SquWalletService extends WalletService {
                 feeService);
         this.squUTXOProvider = squUTXOProvider;
         this.squUtxoFeedService = squUtxoFeedService;
-        this.squCoinSelector = new SquCoinSelector(walletsSetup.getParams());
+        this.squCoinSelector = new SquCoinSelector(walletsSetup.getParams(), true);
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getSquWallet();
-            wallet.setUTXOProvider(this.squUTXOProvider);
+
+            //TODO disable 
+            // wallet.setUTXOProvider(this.squUTXOProvider);
+           
             wallet.setCoinSelector(squCoinSelector);
             wallet.addEventListener(new BitsquareWalletEventListener());
             wallet.addEventListener(new AbstractWalletEventListener() {
@@ -189,23 +192,32 @@ public class SquWalletService extends WalletService {
         return tx;
     }
 
-    public void signAndBroadcastSendTx(Transaction tx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
+    public Transaction signSendTx(Transaction tx) throws WalletException, TransactionVerificationException {
         Transaction signedTx = signFinalSendTx(tx);
+        printTx("signedTx", signedTx);
+        return signedTx;
+    }
+
+    public void commitAndBroadcastSendTx(Transaction signedTx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
         wallet.commitTx(signedTx);
         Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(signedTx).future(), callback);
         printTx("commitAndBroadcastTx", signedTx);
     }
 
     private Transaction signFinalSendTx(Transaction tx) throws WalletException, TransactionVerificationException {
-        // TODO
-        int index = 0;
-        TransactionInput txIn = tx.getInput(index);
+        // Sign all SQU inputs
+        int endIndex = tx.getInputs().size();
+        for (int i = 0; i < endIndex; i++) {
+            TransactionInput txIn = tx.getInputs().get(i);
+            TransactionOutput connectedOutput = txIn.getConnectedOutput();
+            if (connectedOutput != null && connectedOutput.isMine(wallet)) {
+                signTransactionInput(tx, txIn, i);
+                checkScriptSig(tx, txIn, i);
+            }
+        }
 
-        signTransactionInput(tx, txIn, index);
         checkWalletConsistency();
         verifyTransaction(tx);
-        // now all sigs need to be included
-        checkScriptSigs(tx);
         printTx("signFinalSendTx", tx);
         return tx;
     }

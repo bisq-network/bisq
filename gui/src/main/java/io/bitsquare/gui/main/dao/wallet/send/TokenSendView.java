@@ -54,7 +54,8 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
     private final SquWalletService squWalletService;
     private final BtcWalletService btcWalletService;
     private final FeeService feeService;
-    private final BSFormatter formatter;
+    private final BSFormatter squFormatter;
+    private BSFormatter btcFormatter;
     private BalanceUtil balanceUtil;
 
     @Nullable
@@ -69,12 +70,13 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TokenSendView(SquWalletService squWalletService, BtcWalletService btcWalletService, FeeService feeService, SQUFormatter formatter, BalanceUtil balanceUtil) {
+    private TokenSendView(SquWalletService squWalletService, BtcWalletService btcWalletService, FeeService feeService, SQUFormatter squFormatter, BSFormatter btcFormatter, BalanceUtil balanceUtil) {
         this.squWalletService = squWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
 
-        this.formatter = formatter;
+        this.squFormatter = squFormatter;
+        this.btcFormatter = btcFormatter;
         this.balanceUtil = balanceUtil;
     }
 
@@ -95,33 +97,40 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
         sendButton = addButtonAfterGroup(root, ++gridRow, "Send SQU funds");
 
         if (DevFlags.DEV_MODE) {
-            amountInputTextField.setText("547"); // 546 is dust limit
-            receiversAddressInputTextField.setText("mgJE2Fq7UB12mvqBF16GEVotQGmCV7WwQE");
+            // amountInputTextField.setText("0.547"); // 546 is dust limit
+            //receiversAddressInputTextField.setText("mgJE2Fq7UB12mvqBF16GEVotQGmCV7WwQE");
         }
 
         sendButton.setOnAction((event) -> {
             String receiversAddressString = receiversAddressInputTextField.getText();
-            Coin receiverAmount = formatter.parseToCoin(amountInputTextField.getText());
+            Coin receiverAmount = squFormatter.parseToCoin(amountInputTextField.getText());
             Optional<String> changeAddressStringOptional = Optional.empty();
             try {
                 Transaction preparedSendTx = squWalletService.getPreparedSendTx(receiversAddressString, receiverAmount, changeAddressStringOptional);
+                int numSquInputs = preparedSendTx.getInputs().size();
                 Transaction txWithBtcFee = btcWalletService.addFeeInputToPreparedSquSendTx(preparedSendTx);
-                squWalletService.signAndBroadcastSendTx(txWithBtcFee, new FutureCallback<Transaction>() {
-                    @Override
-                    public void onSuccess(@Nullable Transaction result) {
-                        if (result != null) {
-                            //log.error("onSuccess "+result.toString());
-                            // We don't commit tx to btcWallet because it gets committed when receiving the tx after 
-                            // broadcast as we use the same peerGroup for both wallets.
-                        }
-                    }
+                Transaction signedTx = squWalletService.signSendTx(txWithBtcFee);
 
-                    @Override
-                    public void onFailure(@NotNull Throwable t) {
-                        log.error(t.toString());
-                        new Popup<>().warning(t.toString());
-                    }
-                });
+                Coin miningFee = signedTx.getFee();
+                int txSize = signedTx.bitcoinSerialize().length;
+                new Popup().headLine("Confirm withdrawal request")
+                        .width(1200)
+                        .confirmation("Sending: " + squFormatter.formatCoinWithCode(receiverAmount) + "\n" +
+                               /* "From address: " + withdrawFromTextField.getText() + "\n" +*/
+                               /* "Receiver address: " + receiversAddressString + "\n" +
+                                "Transaction fee: " + btcFormatter.formatCoinWithCode(miningFee) + " (" +
+                                MathUtils.roundDouble(((double) miningFee.value / (double) txSize), 2) +
+                                " Satoshis/byte)\n" +
+                                "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +*/
+                                "Transaction details:" + signedTx.toString() + "\n" +
+                                /*"The recipient will receive: " + squFormatter.formatCoinWithCode(receiverAmount) + "\n\n" +*/
+                                "Are you sure you want to withdraw that amount?")
+                        .actionButtonText("Yes")
+                        .onAction(() -> doSend(signedTx))
+                        .closeButtonText("Cancel")
+                        .show();
+
+
             } catch (AddressFormatException | InsufficientFundsException |
                     TransactionVerificationException | WalletException | InsufficientMoneyException e) {
                 log.error(e.toString());
@@ -129,6 +138,28 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
                 new Popup<>().warning(e.toString());
             }
         });
+    }
+
+    private void doSend(Transaction signedTx) {
+        try {
+            squWalletService.commitAndBroadcastSendTx(signedTx, new FutureCallback<Transaction>() {
+                @Override
+                public void onSuccess(@Nullable Transaction result) {
+                    if (result != null)
+                        log.error("Successfully sent tx with id " + result.getHashAsString());
+                }
+
+                @Override
+                public void onFailure(@NotNull Throwable t) {
+                    log.error(t.toString());
+                    new Popup<>().warning(t.toString());
+                }
+            });
+        } catch (WalletException | TransactionVerificationException e) {
+            log.error(e.toString());
+            e.printStackTrace();
+            new Popup<>().warning(e.toString());
+        }
     }
 
     @Override

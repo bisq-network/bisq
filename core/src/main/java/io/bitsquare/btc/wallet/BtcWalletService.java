@@ -128,7 +128,7 @@ public class BtcWalletService extends WalletService {
     // Add fee input to prepared SQU send tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction addFeeInputToPreparedSquSendTx(Transaction transaction) throws
+    public Transaction addFeeInputToPreparedSquSendTx(Transaction preparedSquTx) throws
             TransactionVerificationException, WalletException, InsufficientFundsException {
         log.trace("addFeeInputToPreparedSquSendTx called");
         try {
@@ -140,14 +140,14 @@ public class BtcWalletService extends WalletService {
             checkNotNull(feePaymentAddress, "feePaymentAddress must not be null");
             checkNotNull(changeAddress, "changeAddress must not be null");
             BtcCoinSelector coinSelector = new BtcCoinSelector(params, feePaymentAddress);
-            List<TransactionInput> inputs = transaction.getInputs();
-            List<TransactionOutput> outputs = transaction.getOutputs();
+            final List<TransactionInput> preparedSquTxInputs = preparedSquTx.getInputs();
+            final List<TransactionOutput> preparedSquTxOutputs = preparedSquTx.getOutputs();
             Transaction resultTx;
             do {
                 counter++;
                 final Transaction tx = new Transaction(params);
-                inputs.stream().forEach(tx::addInput);
-                outputs.stream().forEach(tx::addOutput);
+                preparedSquTxInputs.stream().forEach(tx::addInput);
+                preparedSquTxOutputs.stream().forEach(tx::addOutput);
                 Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
                 sendRequest.shuffleOutputs = false;
                 sendRequest.aesKey = aesKey;
@@ -169,12 +169,14 @@ public class BtcWalletService extends WalletService {
                 log.error("Could not calculate the fee. Tx=" + resultTx);
             }
 
-            //TODO
-            int index = 1;
-            TransactionInput txIn = resultTx.getInput(index);
-
-            signTransactionInput(resultTx, txIn, index);
-            checkScriptSig(resultTx, txIn, index);
+            // Sign all BTC inputs
+            int startIndex = preparedSquTxInputs.size();
+            int endIndex = resultTx.getInputs().size();
+            for (int i = startIndex; i < endIndex; i++) {
+                TransactionInput txIn = resultTx.getInputs().get(i);
+                signTransactionInput(resultTx, txIn, i);
+                checkScriptSig(resultTx, txIn, i);
+            }
 
             checkWalletConsistency();
             verifyTransaction(resultTx);
@@ -309,7 +311,7 @@ public class BtcWalletService extends WalletService {
         //TODO
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // AddressEntry
     ///////////////////////////////////////////////////////////////////////////////////////////

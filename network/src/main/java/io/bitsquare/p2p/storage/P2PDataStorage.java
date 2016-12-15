@@ -97,7 +97,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             try {
                 FileUtil.resourceToFile(storageFileName, destinationFile);
             } catch (ResourceNotFoundException | IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 log.error("Could not copy the " + storageFileName + " resource file to the db directory.\n" + e.getMessage());
             }
         } else {
