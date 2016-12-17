@@ -167,7 +167,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("REALEST", "RealEst. Coin"));
         result.add(new CryptoCurrency("RDD", "ReddCoin"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
-        result.add(new CryptoCurrency("STEEM", "STEEM"));
+        result.add(new CryptoCurrency("SFSC", "Safe FileSystem Coin"));
         result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("SHIFT", "Shift"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
@@ -175,6 +175,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("SIB", "Sibcoin"));
         result.add(new CryptoCurrency("SMLY", "Smileycoin"));
         result.add(new CryptoCurrency("SLR", "SolarCoin"));
+        result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("STEEMUSD", "Steem Dollars", true));
         result.add(new CryptoCurrency("XLM", "Stellar Lumens"));
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
