@@ -128,178 +128,125 @@ public class BtcWalletService extends WalletService {
     // Add fee input to prepared SQU send tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction addFeeInputToPreparedSquSendTx(Transaction preparedSquTx) throws
-            TransactionVerificationException, WalletException, InsufficientFundsException {
-        log.trace("addFeeInputToPreparedSquSendTx called");
-        try {
-            int counter = 0;
-            int txSize = 407; // typical size for a tx with 2 inputs and 3 outputs
-            Coin txFeePerByte = getTxFeeForWithdrawalPerByte();
-            Address feePaymentAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
-            Address changeAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
-            checkNotNull(feePaymentAddress, "feePaymentAddress must not be null");
-            checkNotNull(changeAddress, "changeAddress must not be null");
-            BtcCoinSelector coinSelector = new BtcCoinSelector(params, feePaymentAddress);
-            final List<TransactionInput> preparedSquTxInputs = preparedSquTx.getInputs();
-            final List<TransactionOutput> preparedSquTxOutputs = preparedSquTx.getOutputs();
-            Transaction resultTx;
-            do {
-                counter++;
-                final Transaction tx = new Transaction(params);
-                preparedSquTxInputs.stream().forEach(tx::addInput);
-                preparedSquTxOutputs.stream().forEach(tx::addOutput);
-                Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
-                sendRequest.shuffleOutputs = false;
-                sendRequest.aesKey = aesKey;
-                // Need to be false as it would try to sign all inputs (SQU inputs are not in this wallet)
-                sendRequest.signInputs = false;
-                sendRequest.ensureMinRequiredFee = false;
-                sendRequest.feePerKb = Coin.ZERO;
-                sendRequest.fee = txFeePerByte.multiply(txSize);
-                sendRequest.coinSelector = coinSelector;
-                sendRequest.changeAddress = changeAddress;
-                wallet.completeTx(sendRequest);
-
-                resultTx = sendRequest.tx;
-                //TODO add estimated signature size
-                txSize = resultTx.bitcoinSerialize().length;
-            }
-            while (counter < 10 && Math.abs(resultTx.getFee().value - txFeePerByte.multiply(txSize).value) > 1000);
-            if (counter == 10) {
-                log.error("Could not calculate the fee. Tx=" + resultTx);
-            }
-
-            // Sign all BTC inputs
-            int startIndex = preparedSquTxInputs.size();
-            int endIndex = resultTx.getInputs().size();
-            for (int i = startIndex; i < endIndex; i++) {
-                TransactionInput txIn = resultTx.getInputs().get(i);
-                signTransactionInput(resultTx, txIn, i);
-                checkScriptSig(resultTx, txIn, i);
-            }
-
-            checkWalletConsistency();
-            verifyTransaction(resultTx);
-
-            printTx("Signed resultTx", resultTx);
-            return resultTx;
-        } catch (InsufficientMoneyException e) {
-            throw new InsufficientFundsException("The fees for that transaction exceed the available funds " +
-                    "or the resulting output value is below the min. dust value:\n" +
-                    "Missing " + (e.missing != null ? e.missing.toFriendlyString() : "null"));
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Add mining fee input and mandatory change output for prepared CompensationRequest fee tx
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Transaction addInputAndOutputToPreparedSquCompensationRequestFeeTx(Transaction preparedSquTx, byte[] hash) throws
-            TransactionVerificationException, WalletException, InsufficientFundsException {
+    public Transaction completePreparedSquTx(Transaction preparedSquTx, boolean isSendTx, @Nullable byte[] hash) throws
+            TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
 
         // preparedSquTx has following structure:
         // inputs [1-n] SQU inputs
+        // outputs [0-1] SQU receivers output
         // outputs [0-1] SQU change output
-        // mining fee: SQU CompensationRequest fee
+        // mining fee: optional burned SQU fee
 
-        try {
-            int counter = 0;
-            final int sigSizePerInput = 106;
-            int txSize = 203; // typical size for a tx with 2 unsigned inputs and 3 outputs
-            final Coin txFeePerByte = feeService.getTxFeePerByte();
-            Coin valueToForceChange = Coin.ZERO;
-            Address changeAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
-            checkNotNull(changeAddress, "changeAddress must not be null");
-            final BtcCoinSelector coinSelector = new BtcCoinSelector(params, changeAddress);
+        // We add BTC mining fee. Result tx looks like:
+        // inputs [1-n] SQU inputs
+        // inputs [1-n] BTC inputs
+        // outputs [0-1] SQU receivers output
+        // outputs [0-1] SQU change output
+        // outputs [0-1] BTC change output
+        // outputs [0-1] OP_RETURN with hash
+        // mining fee: BTC mining fee + optional burned SQU fee
 
-            final List<TransactionInput> preparedSquTxInputs = preparedSquTx.getInputs();
-            final List<TransactionOutput> preparedSquTxOutputs = preparedSquTx.getOutputs();
-            Transaction resultTx = null;
-            int numInputs = preparedSquTxInputs.size() + 1;
-            boolean validTx;
-            do {
-                counter++;
-                if (counter >= 10) {
-                    checkNotNull(resultTx, "resultTx must not be null");
-                    log.error("Could not calculate the fee. Tx=" + resultTx);
-                    break;
-                }
+        // In case of txs for burned SQU fees we have no receiver output and it might be that there is no change outputs
+        // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input 
+        // for BTC to force an additional change output.
 
-                Transaction tx = new Transaction(params);
-                preparedSquTxInputs.stream().forEach(tx::addInput);
+        // safety check counter to avoid endless loops
+        int counter = 0;
+        // estimated size of input sig
+        final int sigSizePerInput = 106;
+        // typical size for a tx with 2 inputs
+        int txSizeWithUnsignedInputs = 203;
+        // If isSendTx we allow overriding the estimated fee from preferences
+        final Coin txFeePerByte = isSendTx ? getTxFeeForWithdrawalPerByte() : feeService.getTxFeePerByte();
+        // In case there are no change outputs we force a change by adding min dust to the BTC input
+        Coin forcedChangeValue = Coin.ZERO;
 
-                if (valueToForceChange.isZero()) {
-                    preparedSquTxOutputs.stream().forEach(tx::addOutput);
-                } else {
-                    //TODO test that case
-                    // We have only 1 output at preparedSquTxOutputs otherwise the valueToForceChange must be 0
-                    checkArgument(preparedSquTxOutputs.size() == 1);
-                    tx.addOutput(valueToForceChange, changeAddress);
-                    tx.addOutput(preparedSquTxOutputs.get(0));
-                }
+        Address changeAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+        checkNotNull(changeAddress, "changeAddress must not be null");
 
-                Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
-                sendRequest.shuffleOutputs = false;
-                sendRequest.aesKey = aesKey;
-                // Need to be false as it would try to sign all inputs (SQU inputs are not in this wallet)
-                sendRequest.signInputs = false;
-                sendRequest.ensureMinRequiredFee = false;
-                sendRequest.feePerKb = Coin.ZERO;
-                Coin fee = txFeePerByte.multiply(txSize + sigSizePerInput * numInputs);
-                sendRequest.fee = fee;
-                sendRequest.coinSelector = coinSelector;
-                sendRequest.changeAddress = changeAddress;
-                wallet.completeTx(sendRequest);
-
-                Transaction txWithBtcInputs = sendRequest.tx;
-                // add OP_RETURN output
-                txWithBtcInputs.addOutput(new TransactionOutput(params, txWithBtcInputs, Coin.ZERO, ScriptBuilder.createOpReturnScript(hash).getProgram()));
-
-
-                // As we cannot remove an outut we recreate the tx
-                resultTx = new Transaction(params);
-                txWithBtcInputs.getInputs().stream().forEach(resultTx::addInput);
-                txWithBtcInputs.getOutputs().stream().forEach(resultTx::addOutput);
-
-                numInputs = resultTx.getInputs().size();
-
-                txSize = resultTx.bitcoinSerialize().length + sigSizePerInput * numInputs;
-                // We need min. 1 output beside op_return
-                // calculated fee must be inside of a tolerance range with tx fee
-                final int tolerance = 1000;
-                final long txFeeAsLong = resultTx.getFee().value;
-                final long calculatedFeeAsLong = txFeePerByte.multiply(txSize + sigSizePerInput * numInputs).value;
-                final boolean correctOutputs = resultTx.getOutputs().size() > 1;
-                validTx = correctOutputs && Math.abs(txFeeAsLong - calculatedFeeAsLong) < tolerance;
-
-                if (resultTx.getOutputs().size() == 1) {
-                    // We have the rare case that both inputs equalled the required fees, so both did not render 
-                    // a change output.
-                    // We need to add artificially a change output as the OP_RETURN is not allowed as only output
-                    valueToForceChange = Transaction.MIN_NONDUST_OUTPUT;
-                }
-            }
-            while (!validTx);
-
-            // Sign all BTC inputs
-            int startIndex = preparedSquTxInputs.size();
-            int endIndex = resultTx.getInputs().size();
-            for (int i = startIndex; i < endIndex; i++) {
-                TransactionInput txIn = resultTx.getInputs().get(i);
-                signTransactionInput(resultTx, txIn, i);
-                checkScriptSig(resultTx, txIn, i);
+        final BtcCoinSelector coinSelector = new BtcCoinSelector(params, changeAddress);
+        final List<TransactionInput> preparedSquTxInputs = preparedSquTx.getInputs();
+        final List<TransactionOutput> preparedSquTxOutputs = preparedSquTx.getOutputs();
+        int numInputs = preparedSquTxInputs.size() + 1; // We add 1 for the BTC fee input
+        Transaction resultTx = null;
+        boolean isFeeInTolerance;
+        do {
+            counter++;
+            if (counter >= 10) {
+                checkNotNull(resultTx, "resultTx must not be null");
+                log.error("Could not calculate the fee. Tx=" + resultTx);
+                break;
             }
 
-            checkWalletConsistency();
-            verifyTransaction(resultTx);
+            Transaction tx = new Transaction(params);
+            preparedSquTxInputs.stream().forEach(tx::addInput);
 
-            printTx("Signed resultTx", resultTx);
-            return resultTx;
-        } catch (InsufficientMoneyException e) {
-            throw new InsufficientFundsException("The fees for that preparedSquTx exceed the available funds " +
-                    "or the resulting output value is below the min. dust value:\n" +
-                    "Missing " + (e.missing != null ? e.missing.toFriendlyString() : "null"));
+            if (forcedChangeValue.isZero()) {
+                preparedSquTxOutputs.stream().forEach(tx::addOutput);
+            } else {
+                //TODO test that case
+                checkArgument(preparedSquTxOutputs.size() == 0, "preparedSquTxOutputs.size must be null in that code branch");
+                tx.addOutput(forcedChangeValue, changeAddress);
+            }
+
+            Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+            sendRequest.shuffleOutputs = false;
+            sendRequest.aesKey = aesKey;
+            // signInputs needs to be false as it would try to sign all inputs (SQU inputs are not in this wallet)
+            sendRequest.signInputs = false;
+            sendRequest.ensureMinRequiredFee = false;
+            sendRequest.feePerKb = Coin.ZERO;
+            sendRequest.fee = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs);
+            sendRequest.coinSelector = coinSelector;
+            sendRequest.changeAddress = changeAddress;
+            wallet.completeTx(sendRequest);
+
+            resultTx = sendRequest.tx;
+
+            // We might have the rare case that both inputs matched the required fees, so both did not require 
+            // a change output.
+            // In such cases we need to add artificially a change output (OP_RETURN is not allowed as only output)
+            forcedChangeValue = resultTx.getOutputs().size() == 0 ? Transaction.MIN_NONDUST_OUTPUT : Coin.ZERO;
+
+            // add OP_RETURN output
+            if (hash != null)
+                resultTx.addOutput(new TransactionOutput(params, resultTx, Coin.ZERO, ScriptBuilder.createOpReturnScript(hash).getProgram()));
+
+            numInputs = resultTx.getInputs().size();
+            txSizeWithUnsignedInputs = resultTx.bitcoinSerialize().length;
+            final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
+            // calculated fee must be inside of a tolerance range with tx fee
+            isFeeInTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
+        while (forcedChangeValue.isPositive() || isFeeInTolerance);
+
+        // Sign all BTC inputs
+        for (int i = preparedSquTxInputs.size(); i < resultTx.getInputs().size(); i++) {
+            TransactionInput txIn = resultTx.getInputs().get(i);
+            checkArgument(txIn.getConnectedOutput() != null && txIn.getConnectedOutput().isMine(wallet),
+                    "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
+            signTransactionInput(resultTx, txIn, i);
+            checkScriptSig(resultTx, txIn, i);
+        }
+
+        checkWalletConsistency();
+        verifyTransaction(resultTx);
+
+        printTx("BTC wallet: Signed tx", resultTx);
+        return resultTx;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Commit tx 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void commitTx(Transaction tx) {
+        wallet.commitTx(tx);
+        printTx("BTC commit Tx", tx);
+    }
+
+    public Transaction getClonedTransaction(Transaction tx) {
+        return new Transaction(params, tx.bitcoinSerialize());
     }
 
 

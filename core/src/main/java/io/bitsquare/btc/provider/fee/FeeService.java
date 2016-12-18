@@ -121,4 +121,9 @@ public class FeeService {
         return Coin.valueOf(1000);
     }
 
+    public Coin getVotingTxFee() {
+        //TODO
+        return Coin.valueOf(999);
+    }
+
 }

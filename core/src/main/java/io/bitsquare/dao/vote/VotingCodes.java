@@ -20,16 +20,22 @@ package io.bitsquare.dao.vote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public final class VotingCodes {
     private static final Logger log = LoggerFactory.getLogger(VotingCodes.class);
 
-    public static final Byte CREATE_OFFER_FEE = 0x01;
-    public static final Byte TAKE_OFFER_FEE = 0x01;
+    public enum Code {
+        COMP_REQUEST_MAPS((byte) 0x01, 2),
+        CREATE_OFFER_FEE((byte) 0x11, 1),
+        TAKE_OFFER_FEE((byte) 0x12, 1),
+        PERIOD_UNTIL_NEXT_VOTING((byte) 0x20, 1);
 
-    public static final Byte REQUEST_MAP = 0x41;
+        public final Byte code;
+        public final int payloadSize;
 
-    public static final Map<Byte, String> MAP = new HashMap<>();
+        Code(Byte code, int payloadSize) {
+            this.code = code;
+            this.payloadSize = payloadSize;
+        }
+    }
+
 }

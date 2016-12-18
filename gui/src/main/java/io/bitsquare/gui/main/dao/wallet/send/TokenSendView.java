@@ -25,6 +25,7 @@ import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.SquWalletService;
+import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.InputTextField;
@@ -41,7 +42,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.util.Optional;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
@@ -97,40 +97,59 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
         sendButton = addButtonAfterGroup(root, ++gridRow, "Send SQU funds");
 
         if (DevFlags.DEV_MODE) {
-            // amountInputTextField.setText("0.547"); // 546 is dust limit
-            //receiversAddressInputTextField.setText("mgJE2Fq7UB12mvqBF16GEVotQGmCV7WwQE");
+            amountInputTextField.setText("0.546"); // 546 is dust limit
+            receiversAddressInputTextField.setText("mgJE2Fq7UB12mvqBF16GEVotQGmCV7WwQE");
         }
 
         sendButton.setOnAction((event) -> {
             String receiversAddressString = receiversAddressInputTextField.getText();
             Coin receiverAmount = squFormatter.parseToCoin(amountInputTextField.getText());
-            Optional<String> changeAddressStringOptional = Optional.empty();
             try {
-                Transaction preparedSendTx = squWalletService.getPreparedSendTx(receiversAddressString, receiverAmount, changeAddressStringOptional);
-                int numSquInputs = preparedSendTx.getInputs().size();
-                Transaction txWithBtcFee = btcWalletService.addFeeInputToPreparedSquSendTx(preparedSendTx);
-                Transaction signedTx = squWalletService.signSendTx(txWithBtcFee);
+                Transaction preparedSendTx = squWalletService.getPreparedSendTx(receiversAddressString, receiverAmount);
+                Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedSendTx, true, null);
+                Transaction signedTx = squWalletService.signTx(txWithBtcFee);
 
                 Coin miningFee = signedTx.getFee();
                 int txSize = signedTx.bitcoinSerialize().length;
                 new Popup().headLine("Confirm withdrawal request")
-                        .width(1200)
                         .confirmation("Sending: " + squFormatter.formatCoinWithCode(receiverAmount) + "\n" +
                                /* "From address: " + withdrawFromTextField.getText() + "\n" +*/
-                               /* "Receiver address: " + receiversAddressString + "\n" +
+                                "Receiver address: " + receiversAddressString + "\n" +
                                 "Transaction fee: " + btcFormatter.formatCoinWithCode(miningFee) + " (" +
                                 MathUtils.roundDouble(((double) miningFee.value / (double) txSize), 2) +
                                 " Satoshis/byte)\n" +
-                                "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +*/
-                                "Transaction details:" + signedTx.toString() + "\n" +
+                                "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
                                 /*"The recipient will receive: " + squFormatter.formatCoinWithCode(receiverAmount) + "\n\n" +*/
                                 "Are you sure you want to withdraw that amount?")
                         .actionButtonText("Yes")
-                        .onAction(() -> doSend(signedTx))
+                        .onAction(() -> {
+                            try {
+                                squWalletService.commitTx(txWithBtcFee);
+                                // We need to create another instance, otherwise the tx would trigger an invalid state exception 
+                                // if it gets committed 2 times 
+                                btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+                                squWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                    @Override
+                                    public void onSuccess(@Nullable Transaction transaction) {
+                                        if (transaction != null) {
+                                            log.error("Successfully sent tx with id " + transaction.getHashAsString());
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(@NotNull Throwable t) {
+                                        log.error(t.toString());
+                                        new Popup<>().warning(t.toString());
+                                    }
+                                });
+                            } catch (WalletException | TransactionVerificationException e) {
+                                log.error(e.toString());
+                                e.printStackTrace();
+                                new Popup<>().warning(e.toString());
+                            }
+                        })
                         .closeButtonText("Cancel")
                         .show();
-
-
             } catch (AddressFormatException | InsufficientFundsException |
                     TransactionVerificationException | WalletException | InsufficientMoneyException e) {
                 log.error(e.toString());
@@ -138,28 +157,6 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
                 new Popup<>().warning(e.toString());
             }
         });
-    }
-
-    private void doSend(Transaction signedTx) {
-        try {
-            squWalletService.commitAndBroadcastSendTx(signedTx, new FutureCallback<Transaction>() {
-                @Override
-                public void onSuccess(@Nullable Transaction result) {
-                    if (result != null)
-                        log.error("Successfully sent tx with id " + result.getHashAsString());
-                }
-
-                @Override
-                public void onFailure(@NotNull Throwable t) {
-                    log.error(t.toString());
-                    new Popup<>().warning(t.toString());
-                }
-            });
-        } catch (WalletException | TransactionVerificationException e) {
-            log.error(e.toString());
-            e.printStackTrace();
-            new Popup<>().warning(e.toString());
-        }
     }
 
     @Override

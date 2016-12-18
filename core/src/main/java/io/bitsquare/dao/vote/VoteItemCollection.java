@@ -31,8 +31,9 @@ public final class VoteItemCollection extends ArrayList<VoteItem> implements Per
 
 
     public VoteItemCollection() {
-        add(new VoteItem(VotingCodes.CREATE_OFFER_FEE, "Create offer fee", 1));
-        add(new VoteItem(VotingCodes.TAKE_OFFER_FEE, "Take offer fee", 1));
-        add(new CompensationRequestVoteItemCollection(VotingCodes.REQUEST_MAP, "CompensationRequest"));
+        add(new VoteItem(VotingCodes.Code.CREATE_OFFER_FEE, "Create offer fee", (byte) 0));
+        add(new VoteItem(VotingCodes.Code.TAKE_OFFER_FEE, "Take offer fee", (byte) 0));
+        add(new VoteItem(VotingCodes.Code.PERIOD_UNTIL_NEXT_VOTING, "Period until next voting", (byte) 0));
+        add(new CompensationRequestVoteItemCollection(VotingCodes.Code.COMP_REQUEST_MAPS, "CompensationRequest"));
     }
 }

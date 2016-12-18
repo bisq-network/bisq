@@ -127,9 +127,14 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
             try {
                 Coin createCompensationRequestFee = feeService.getCreateCompensationRequestFee();
-                Transaction preparedSendTx = squWalletService.getPreparedCompensationRequestFeeTx(createCompensationRequestFee);
-                Transaction txWithBtcFee = btcWalletService.addInputAndOutputToPreparedSquCompensationRequestFeeTx(preparedSendTx, hash.getBytes());
-                squWalletService.signAndBroadcastCompensationRequestFeeTx(txWithBtcFee, new FutureCallback<Transaction>() {
+                Transaction preparedSendTx = squWalletService.getPreparedBurnFeeTx(createCompensationRequestFee);
+                Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedSendTx, false, hash.getBytes());
+                Transaction signedTx = squWalletService.signTx(txWithBtcFee);
+                squWalletService.commitTx(txWithBtcFee);
+                // We need to create another instance, otherwise the tx would trigger an invalid state exception 
+                // if it gets committed 2 times 
+                btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+                squWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@Nullable Transaction transaction) {
                         checkNotNull(transaction, "Transaction must not be null at signAndBroadcastCompensationRequestFeeTx callback.");

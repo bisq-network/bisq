@@ -22,7 +22,6 @@ import io.bitsquare.common.persistance.Persistable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,10 +29,14 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestVoteItemCollection.class);
-    @Nullable
+
+    public List<CompensationRequestVoteItem> getCompensationRequestVoteItems() {
+        return compensationRequestVoteItems;
+    }
+
     private List<CompensationRequestVoteItem> compensationRequestVoteItems = new ArrayList<>();
 
-    public CompensationRequestVoteItemCollection(Byte code, String name) {
+    public CompensationRequestVoteItemCollection(VotingCodes.Code code, String name) {
         super(code, name);
     }
 

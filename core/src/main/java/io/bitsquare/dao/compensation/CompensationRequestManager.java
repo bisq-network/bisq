@@ -107,7 +107,7 @@ public class CompensationRequestManager {
     }
 
     public void fundCompensationRequest(CompensationRequest compensationRequest, Coin amount, FutureCallback<Transaction> callback) {
-        btcWalletService.fundCompensationRequest(amount, compensationRequest.getCompensationRequestPayload().btcAddress, squWalletService.getSquAddressForCompensationRequestFunding(), callback);
+        btcWalletService.fundCompensationRequest(amount, compensationRequest.getCompensationRequestPayload().btcAddress, squWalletService.getUnusedAddress(), callback);
     }
 
     public void setSelectedCompensationRequest(CompensationRequest selectedCompensationRequest) {

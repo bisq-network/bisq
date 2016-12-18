@@ -32,12 +32,16 @@ public final class CompensationRequestVoteItem implements Persistable {
     private boolean declineVote;
     private boolean acceptedVote;
 
+
+    private boolean hasVoted;
+
     public CompensationRequestVoteItem(CompensationRequest compensationRequest) {
         this.compensationRequest = compensationRequest;
     }
 
     public void setDeclineVote(boolean declineVote) {
         this.declineVote = declineVote;
+        this.hasVoted = true;
     }
 
     public boolean isDeclineVote() {
@@ -46,18 +50,24 @@ public final class CompensationRequestVoteItem implements Persistable {
 
     public void setAcceptedVote(boolean acceptedVote) {
         this.acceptedVote = acceptedVote;
+        this.hasVoted = true;
     }
 
     public boolean isAcceptedVote() {
         return acceptedVote;
     }
 
+    public boolean isHasVoted() {
+        return hasVoted;
+    }
+
     @Override
     public String toString() {
-        return "CompensationRequest{" +
+        return "CompensationRequestVoteItem{" +
                 "compensationRequest=" + compensationRequest +
                 ", declineVote=" + declineVote +
                 ", acceptedVote=" + acceptedVote +
+                ", hasVoted=" + hasVoted +
                 '}';
     }
 }

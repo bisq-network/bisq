@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -74,7 +73,7 @@ public class SquWalletService extends WalletService {
 
             //TODO disable 
             // wallet.setUTXOProvider(this.squUTXOProvider);
-           
+
             wallet.setCoinSelector(squCoinSelector);
             wallet.addEventListener(new BitsquareWalletEventListener());
             wallet.addEventListener(new AbstractWalletEventListener() {
@@ -114,11 +113,9 @@ public class SquWalletService extends WalletService {
                 }
 
                 public void onChange() {
-
+                    // TODO
                 }
             });
-
-            // wallet.addEventListener();
         });
     }
 
@@ -137,13 +134,18 @@ public class SquWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
+    // Balance
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public Coin getAvailableBalance() {
         return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UTXO
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestSquUtxo(@Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
         Set<UTXO> utxoSet = squUtxoFeedService.getUtxoSet();
@@ -161,13 +163,54 @@ public class SquWalletService extends WalletService {
                 });
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Sign tx 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction signTx(Transaction tx) throws WalletException, TransactionVerificationException {
+        for (int i = 0; i < tx.getInputs().size(); i++) {
+            TransactionInput txIn = tx.getInputs().get(i);
+            TransactionOutput connectedOutput = txIn.getConnectedOutput();
+            if (connectedOutput != null && connectedOutput.isMine(wallet)) {
+                signTransactionInput(tx, txIn, i);
+                checkScriptSig(tx, txIn, i);
+            }
+        }
+
+        checkWalletConsistency();
+        verifyTransaction(tx);
+        printTx("SQU wallet: Signed Tx", tx);
+        return tx;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Commit tx 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void commitTx(Transaction tx) {
+        wallet.commitTx(tx);
+        printTx("SQU commit Tx", tx);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Broadcast tx 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
+        Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(tx).future(), callback);
+        printTx("SQU broadcast Tx", tx);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Send SQU with BTC fee
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedSendTx(String receiverAddress,
-                                         Coin receiverAmount,
-                                         Optional<String> changeAddressStringOptional) throws AddressFormatException,
+                                         Coin receiverAmount) throws AddressFormatException,
             InsufficientMoneyException, WalletException, TransactionVerificationException {
 
         Transaction tx = new Transaction(params);
@@ -182,9 +225,7 @@ public class SquWalletService extends WalletService {
         sendRequest.shuffleOutputs = false;
         sendRequest.signInputs = false;
         sendRequest.ensureMinRequiredFee = false;
-        sendRequest.changeAddress = changeAddressStringOptional.isPresent() ?
-                new Address(params, changeAddressStringOptional.get()) :
-                wallet.freshReceiveAddress();
+        sendRequest.changeAddress = getUnusedAddress();
         wallet.completeTx(sendRequest);
         checkWalletConsistency();
         verifyTransaction(tx);
@@ -192,121 +233,32 @@ public class SquWalletService extends WalletService {
         return tx;
     }
 
-    public Transaction signSendTx(Transaction tx) throws WalletException, TransactionVerificationException {
-        Transaction signedTx = signFinalSendTx(tx);
-        printTx("signedTx", signedTx);
-        return signedTx;
-    }
-
-    public void commitAndBroadcastSendTx(Transaction signedTx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
-        wallet.commitTx(signedTx);
-        Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(signedTx).future(), callback);
-        printTx("commitAndBroadcastTx", signedTx);
-    }
-
-    private Transaction signFinalSendTx(Transaction tx) throws WalletException, TransactionVerificationException {
-        // Sign all SQU inputs
-        int endIndex = tx.getInputs().size();
-        for (int i = 0; i < endIndex; i++) {
-            TransactionInput txIn = tx.getInputs().get(i);
-            TransactionOutput connectedOutput = txIn.getConnectedOutput();
-            if (connectedOutput != null && connectedOutput.isMine(wallet)) {
-                signTransactionInput(tx, txIn, i);
-                checkScriptSig(tx, txIn, i);
-            }
-        }
-
-        checkWalletConsistency();
-        verifyTransaction(tx);
-        printTx("signFinalSendTx", tx);
-        return tx;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Burn SQU for CompensationRequest fee
+    // Burn fee tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction getPreparedCompensationRequestFeeTx(Coin createCompensationRequestFee) throws WalletException, TransactionVerificationException, InsufficientMoneyException, ChangeBelowDustException {
+    public Transaction getPreparedBurnFeeTx(Coin fee) throws WalletException, TransactionVerificationException, InsufficientMoneyException, ChangeBelowDustException {
         Transaction tx = new Transaction(params);
 
         SquFeeCoinSelector squFeeCoinSelector = new SquFeeCoinSelector(wallet, true);
-        CoinSelection coinSelection = squFeeCoinSelector.getCoinSelection(createCompensationRequestFee);
+        CoinSelection coinSelection = squFeeCoinSelector.getCoinSelection(fee);
         coinSelection.gathered.stream().forEach(tx::addInput);
-        Coin change = coinSelection.valueGathered.subtract(createCompensationRequestFee);
+        Coin change = coinSelection.valueGathered.subtract(fee);
         if (change.isPositive())
-            tx.addOutput(change, wallet.freshReceiveAddress());
+            tx.addOutput(change, getUnusedAddress());
 
         printTx("preparedCompensationRequestFeeTx", tx);
         return tx;
     }
 
-    public void signAndBroadcastCompensationRequestFeeTx(Transaction tx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
-        // Sign all SQU inputs
-        int endIndex = tx.getInputs().size();
-        for (int i = 0; i < endIndex; i++) {
-            TransactionInput txIn = tx.getInputs().get(i);
-            TransactionOutput connectedOutput = txIn.getConnectedOutput();
-            if (connectedOutput != null && connectedOutput.isMine(wallet)) {
-                signTransactionInput(tx, txIn, i);
-                checkScriptSig(tx, txIn, i);
-            }
-        }
-
-        checkWalletConsistency();
-        verifyTransaction(tx);
-
-        wallet.commitTx(tx);
-        checkWalletConsistency();
-        Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(tx).future(), callback);
-        printTx("signAndBroadcastCompensationRequestFeeTx", tx);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Burn SQU for CompensationRequest fee
+    // Get unused address
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction getPreparedVotingTx(Coin createCompensationRequestFee) throws WalletException, TransactionVerificationException, InsufficientMoneyException, ChangeBelowDustException {
-        Transaction tx = new Transaction(params);
-        //TODO
-        SquFeeCoinSelector squFeeCoinSelector = new SquFeeCoinSelector(wallet, true);
-        CoinSelection coinSelection = squFeeCoinSelector.getCoinSelection(createCompensationRequestFee);
-        coinSelection.gathered.stream().forEach(tx::addInput);
-        Coin change = coinSelection.valueGathered.subtract(createCompensationRequestFee);
-        if (change.isPositive())
-            tx.addOutput(change, wallet.freshReceiveAddress());
-
-        printTx("PreparedVotingTx", tx);
-        return tx;
-    }
-
-    public void signAndBroadcastVotingTx(Transaction tx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
-        // Sign all SQU inputs
-        //TODO
-        int endIndex = tx.getInputs().size();
-        for (int i = 0; i < endIndex; i++) {
-            TransactionInput txIn = tx.getInputs().get(i);
-            TransactionOutput connectedOutput = txIn.getConnectedOutput();
-            if (connectedOutput != null && connectedOutput.isMine(wallet)) {
-                signTransactionInput(tx, txIn, i);
-                checkScriptSig(tx, txIn, i);
-            }
-        }
-
-        checkWalletConsistency();
-        verifyTransaction(tx);
-
-        wallet.commitTx(tx);
-        checkWalletConsistency();
-        Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(tx).future(), callback);
-        printTx("signAndBroadcastVotingTx", tx);
-    }
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Create funds to a CompensationRequest
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Address getSquAddressForCompensationRequestFunding() {
+    public Address getUnusedAddress() {
+        //TODO check if current address was used, otherwise get fresh
         return wallet.freshReceiveAddress();
     }
 }

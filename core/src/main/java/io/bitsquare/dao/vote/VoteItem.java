@@ -29,24 +29,24 @@ public class VoteItem implements Persistable {
 
     private static final Logger log = LoggerFactory.getLogger(VoteItem.class);
     //  public final String version;
-    public final Byte code;
+    public final VotingCodes.Code code;
     public final String name;
-    private boolean hasVoted;
+    protected boolean hasVoted;
 
-    public int getValue() {
+    public byte getValue() {
         return value;
     }
 
-    private int value;
+    private byte value;
 
-    public VoteItem(Byte code, String name, int value) {
+    public VoteItem(VotingCodes.Code code, String name, byte value) {
         this.code = code;
         this.name = name;
         this.value = value;
     }
 
-    public VoteItem(Byte code, String name) {
-        this(code, name, 0);
+    public VoteItem(VotingCodes.Code code, String name) {
+        this(code, name, (byte) 0x00);
     }
 
     @Override
@@ -58,15 +58,12 @@ public class VoteItem implements Persistable {
                 '}';
     }
 
-    public void setValue(Integer value) {
+    public void setValue(byte value) {
         this.value = value;
+        this.hasVoted = true;
     }
 
     public boolean hasVoted() {
         return hasVoted;
-    }
-
-    public void setHasVoted(boolean hasVoted) {
-        this.hasVoted = hasVoted;
     }
 }
