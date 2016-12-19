@@ -18,6 +18,7 @@
 package io.bitsquare.gui.util.validation;
 
 
+import io.bitsquare.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bitsquare.gui.util.validation.params.IOPParams;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
