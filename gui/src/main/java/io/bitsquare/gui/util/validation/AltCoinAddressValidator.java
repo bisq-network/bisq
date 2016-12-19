@@ -92,6 +92,8 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return validationResult;
                     else
                         return new ValidationResult(false, "ZEC address need to start with t. Addresses starting with z are not supported.");
+                case "GBYTE":
+                    return ByteballAddressValidator.validate(input);
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode:" + currencyCode);
                     return validationResult;
