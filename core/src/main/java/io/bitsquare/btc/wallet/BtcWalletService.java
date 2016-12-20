@@ -158,6 +158,7 @@ public class BtcWalletService extends WalletService {
         int txSizeWithUnsignedInputs = 203;
         // If isSendTx we allow overriding the estimated fee from preferences
         final Coin txFeePerByte = isSendTx ? getTxFeeForWithdrawalPerByte() : feeService.getTxFeePerByte();
+        log.error("txFeePerByte " + txFeePerByte);
         // In case there are no change outputs we force a change by adding min dust to the BTC input
         Coin forcedChangeValue = Coin.ZERO;
 

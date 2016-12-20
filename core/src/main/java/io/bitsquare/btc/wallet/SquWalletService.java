@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -66,15 +67,15 @@ public class SquWalletService extends WalletService {
                 feeService);
         this.squUTXOProvider = squUTXOProvider;
         this.squUtxoFeedService = squUtxoFeedService;
-        this.squCoinSelector = new SquCoinSelector(walletsSetup.getParams(), true);
+        this.squCoinSelector = new SquCoinSelector();
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getSquWallet();
-
-            //TODO disable 
-            // wallet.setUTXOProvider(this.squUTXOProvider);
-
             wallet.setCoinSelector(squCoinSelector);
+
+            //TODO
+            //wallet.setUTXOProvider(squUTXOProvider);
+           
             wallet.addEventListener(new BitsquareWalletEventListener());
             wallet.addEventListener(new AbstractWalletEventListener() {
                 @Override
@@ -152,8 +153,8 @@ public class SquWalletService extends WalletService {
         if (utxoSet != null)
             squUTXOProvider.setUtxoSet(utxoSet);
 
-        squUtxoFeedService.requestSquUtxo(utxos -> {
-                    squUTXOProvider.setUtxoSet(utxos);
+        squUtxoFeedService.requestSquUtxo(e -> {
+                    squUTXOProvider.setUtxoSet(e);
                     if (resultHandler != null)
                         resultHandler.handleResult();
                 },
@@ -238,18 +239,29 @@ public class SquWalletService extends WalletService {
     // Burn fee tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction getPreparedBurnFeeTx(Coin fee) throws WalletException, TransactionVerificationException, InsufficientMoneyException, ChangeBelowDustException {
+    public Transaction getPreparedBurnFeeTx(Coin fee) throws WalletException, TransactionVerificationException,
+            InsufficientMoneyException, ChangeBelowDustException {
         Transaction tx = new Transaction(params);
-
-        SquFeeCoinSelector squFeeCoinSelector = new SquFeeCoinSelector(wallet, true);
-        CoinSelection coinSelection = squFeeCoinSelector.getCoinSelection(fee);
+        SquCoinSelector squCoinSelector = new SquCoinSelector();
+        CoinSelection coinSelection = squCoinSelector.select(fee, getTransactionOutputsFromUtxoProvider());
         coinSelection.gathered.stream().forEach(tx::addInput);
-        Coin change = coinSelection.valueGathered.subtract(fee);
+        Coin change = squCoinSelector.getChange(fee, coinSelection);
         if (change.isPositive())
             tx.addOutput(change, getUnusedAddress());
 
         printTx("preparedCompensationRequestFeeTx", tx);
         return tx;
+    }
+
+    private List<TransactionOutput> getTransactionOutputsFromUtxoProvider() {
+        // As we have set the utxoProvider in the wallet it will be used for candidates selection internally
+        return wallet.calculateAllSpendCandidates(true, true);
+    }
+
+    protected Set<Address> getAllAddressesFromActiveKeys() throws UTXOProviderException {
+        return wallet.getActiveKeychain().getLeafKeys().stream().
+                map(key -> new Address(params, key.getPubKeyHash())).
+                collect(Collectors.toSet());
     }
 
 

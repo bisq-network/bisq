@@ -152,7 +152,8 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                             })
                             .closeButtonText("Cancel")
                             .show();
-                } catch (InsufficientMoneyException | WalletException | TransactionVerificationException | ChangeBelowDustException | InsufficientFundsException e) {
+                } catch (InsufficientMoneyException | WalletException | TransactionVerificationException |
+                        ChangeBelowDustException | InsufficientFundsException e) {
                     log.error(e.toString());
                     e.printStackTrace();
                     new Popup<>().warning(e.toString()).show();

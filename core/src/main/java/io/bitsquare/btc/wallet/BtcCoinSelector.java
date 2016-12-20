@@ -18,10 +18,8 @@
 package io.bitsquare.btc.wallet;
 
 import com.google.common.collect.Sets;
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.*;
+import org.bitcoinj.params.RegTestParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,25 +34,25 @@ class BtcCoinSelector extends BsDefaultCoinSelector {
 
     private NetworkParameters params;
     private final Set<Address> addresses;
-    private final boolean allowUnconfirmedSpend;
+    private final boolean permitForeignPendingTx;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    BtcCoinSelector(NetworkParameters params, Set<Address> addresses, boolean allowUnconfirmedSpend) {
+    BtcCoinSelector(NetworkParameters params, Set<Address> addresses, boolean permitForeignPendingTx) {
         this.params = params;
         this.addresses = addresses;
-        this.allowUnconfirmedSpend = allowUnconfirmedSpend;
+        this.permitForeignPendingTx = permitForeignPendingTx;
     }
 
     BtcCoinSelector(NetworkParameters params, Set<Address> addresses) {
         this(params, addresses, true);
     }
 
-    BtcCoinSelector(NetworkParameters params, Address address, boolean allowUnconfirmedSpend) {
-        this(params, Sets.newHashSet(address), allowUnconfirmedSpend);
+    BtcCoinSelector(NetworkParameters params, Address address, boolean permitForeignPendingTx) {
+        this(params, Sets.newHashSet(address), permitForeignPendingTx);
     }
 
     BtcCoinSelector(NetworkParameters params, Address address) {
@@ -62,17 +60,23 @@ class BtcCoinSelector extends BsDefaultCoinSelector {
     }
 
     @Override
+    protected boolean isSelectable(Transaction tx) {
+        TransactionConfidence confidence = tx.getConfidence();
+        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+        boolean isConfirmed = type.equals(TransactionConfidence.ConfidenceType.BUILDING);
+        boolean isPending = type.equals(TransactionConfidence.ConfidenceType.PENDING);
+        boolean isOwnTxAndPending = isPending &&
+                confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
+                // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
+                // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
+                // TODO check with local BTC mainnet core node (1 connection)
+                (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
+        return isConfirmed || (permitForeignPendingTx && isPending) || isOwnTxAndPending;
+    }
+
+    @Override
     protected boolean selectOutput(TransactionOutput transactionOutput) {
         if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-            boolean confirmationCheck = allowUnconfirmedSpend;
-            if (!allowUnconfirmedSpend && transactionOutput.getParentTransaction() != null &&
-                    transactionOutput.getParentTransaction().getConfidence() != null) {
-                final TransactionConfidence.ConfidenceType confidenceType = transactionOutput.getParentTransaction().getConfidence().getConfidenceType();
-                confirmationCheck = confidenceType == TransactionConfidence.ConfidenceType.BUILDING;
-                if (!confirmationCheck)
-                    log.debug("Tx is not in blockchain yet. confidenceType=" + confidenceType);
-            }
-
             Address address = transactionOutput.getScriptPubKey().getToAddress(params);
             log.trace(address.toString());
 
@@ -81,7 +85,7 @@ class BtcCoinSelector extends BsDefaultCoinSelector {
                 log.trace("No match found at matchesRequiredAddress address / addressEntry " +
                         address.toString() + " / " + address.toString());
 
-            return matchesAddress && confirmationCheck;
+            return matchesAddress;
         } else {
             log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
             return false;

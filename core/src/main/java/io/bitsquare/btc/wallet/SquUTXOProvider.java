@@ -23,40 +23,45 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class SquUTXOProvider implements UTXOProvider {
     private static final Logger log = LoggerFactory.getLogger(SquUTXOProvider.class);
 
-    private Map<String, UTXO> utxoByAddressAsStringMap = new HashMap<>();
-    private NetworkParameters params;
+    private Map<String, Set<UTXO>> utxoSetByAddressMap = new HashMap<>();
+    private NetworkParameters parameters;
 
     @Inject
     public SquUTXOProvider(Preferences preferences) {
-        params = preferences.getBitcoinNetwork().getParameters();
+        this.parameters = preferences.getBitcoinNetwork().getParameters();
     }
 
     public void setUtxoSet(Set<UTXO> utxoSet) {
-        utxoSet.stream().forEach(e -> utxoByAddressAsStringMap.put(e.getAddress(), e));
+        utxoSet.stream().forEach(utxo -> {
+            String address = utxo.getAddress();
+            if (!utxoSetByAddressMap.containsKey(address))
+                utxoSetByAddressMap.put(address, new HashSet<>());
+
+            utxoSetByAddressMap.get(address).add(utxo);
+        });
     }
 
     @Override
     public List<UTXO> getOpenTransactionOutputs(List<Address> addresses) throws UTXOProviderException {
-        return addresses.stream().map(e -> utxoByAddressAsStringMap.get(e.toString())).filter(e -> e != null).collect(Collectors.toList());
+        List<UTXO> result = new ArrayList<>();
+        addresses.stream()
+                .filter(address -> utxoSetByAddressMap.containsKey(address.toString()))
+                .forEach(address -> result.addAll(utxoSetByAddressMap.get(address.toString())));
+        return result;
     }
 
     @Override
     public int getChainHeadHeight() throws UTXOProviderException {
-        //TODO
-        return 331;
+        return 0;
     }
 
     @Override
     public NetworkParameters getParams() {
-        return params;
+        return parameters;
     }
 }

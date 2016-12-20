@@ -52,16 +52,35 @@ public abstract class BsDefaultCoinSelector implements CoinSelector {
         // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
         // bit over (excessive value will be change).
         long total = 0;
+        long targetValue = target.value;
         for (TransactionOutput output : sortedOutputs) {
-            if (total >= target.value) break;
+            if (total >= targetValue)
+                break;
+
             // Only pick chain-included transactions, or transactions that are ours and pending.
-            if (!shouldSelect(output.getParentTransaction()) || !selectOutput(output)) continue;
+            if (!shouldSelect(output.getParentTransaction()) || !selectOutput(output))
+                continue;
+
             selected.add(output);
             total += output.getValue().value;
         }
         // Total may be lower than target here, if the given candidates were insufficient to create to requested
         // transaction.
         return new CoinSelection(Coin.valueOf(total), selected);
+    }
+
+    public Coin getChange(Coin target, CoinSelection coinSelection) throws InsufficientMoneyException, ChangeBelowDustException {
+        long targetValue = target.value;
+        long total = coinSelection.valueGathered.value;
+        long missing = targetValue - total;
+        if (missing > 0)
+            throw new InsufficientMoneyException(Coin.valueOf(missing));
+
+        long change = total - targetValue;
+        if (change > 0 && change < Transaction.MIN_NONDUST_OUTPUT.value)
+            throw new ChangeBelowDustException(Coin.valueOf(change));
+
+        return Coin.valueOf(change);
     }
 
     abstract boolean selectOutput(TransactionOutput output);
