@@ -590,12 +590,12 @@ public class WalletConfig extends AbstractIdleService {
         return vStore;
     }
 
-    public Wallet wallet() {
+    public Wallet getBtcWallet() {
         checkState(state() == State.STARTING || state() == State.RUNNING, "Cannot call until startup is complete");
         return vBtcWallet;
     }
 
-    public Wallet tokenWallet() {
+    public Wallet getSquWallet() {
         checkState(state() == State.STARTING || state() == State.RUNNING, "Cannot call until startup is complete");
         return vSquWallet;
     }

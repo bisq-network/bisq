@@ -160,7 +160,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 amount.set("1");
                 minAmount.set(amount.get());
-                price.set("700");
+                price.set("800");
 
                 setAmountToModel();
                 setMinAmountToModel();

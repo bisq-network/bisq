@@ -17,6 +17,7 @@
 
 package io.bitsquare.btc.wallet;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Service;
 import com.google.inject.Inject;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -54,6 +55,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -63,7 +65,6 @@ public class WalletsSetup {
     private static final long STARTUP_TIMEOUT_SEC = 60;
 
     private final RegTestHost regTestHost;
-    private final TradeWalletService tradeWalletService;
     private final AddressEntryList addressEntryList;
     private final UserAgent userAgent;
     private final Preferences preferences;
@@ -88,7 +89,6 @@ public class WalletsSetup {
 
     @Inject
     public WalletsSetup(RegTestHost regTestHost,
-                        TradeWalletService tradeWalletService,
                         AddressEntryList addressEntryList,
                         UserAgent userAgent,
                         Preferences preferences,
@@ -96,7 +96,6 @@ public class WalletsSetup {
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
 
         this.regTestHost = regTestHost;
-        this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
         this.userAgent = userAgent;
         this.preferences = preferences;
@@ -138,8 +137,8 @@ public class WalletsSetup {
         walletConfig = new WalletConfig(params, socks5Proxy, walletDir, walletFileName, tokenWalletFileName) {
             @Override
             protected void onSetupCompleted() {
-                btcWallet = walletConfig.wallet();
-                squWallet = walletConfig.tokenWallet();
+                btcWallet = walletConfig.getBtcWallet();
+                squWallet = walletConfig.getSquWallet();
 
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
                 // their own money!
@@ -195,9 +194,6 @@ public class WalletsSetup {
                     }
                 });
 
-                // set after wallet is ready
-                tradeWalletService.setWalletConfig(walletConfig);
-                tradeWalletService.setAddressEntryList(addressEntryList);
                 timeoutTimer.stop();
 
                 setupCompletedHandlers.stream().forEach(Runnable::run);
@@ -414,6 +410,22 @@ public class WalletsSetup {
         return walletConfig.peerGroup();
     }
 
+    public WalletConfig getWalletConfig() {
+        return walletConfig;
+    }
+
+    public Set<Address> getAddressesByContext(AddressEntry.Context context) {
+        return ImmutableList.copyOf(addressEntryList).stream()
+                .filter(addressEntry -> addressEntry.getContext() == context)
+                .map(AddressEntry::getAddress)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<Address> getAddressesFromAddressEntries(Set<AddressEntry> addressEntries) {
+        return addressEntries.stream()
+                .map(AddressEntry::getAddress)
+                .collect(Collectors.toSet());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Inner classes

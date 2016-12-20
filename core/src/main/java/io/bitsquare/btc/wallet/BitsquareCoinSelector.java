@@ -109,7 +109,7 @@ abstract class BitsquareCoinSelector implements CoinSelector {
     }
 
     @VisibleForTesting
-    private static void sortOutputs(ArrayList<TransactionOutput> outputs) {
+    private void sortOutputs(ArrayList<TransactionOutput> outputs) {
         Collections.sort(outputs, (a, b) -> {
             int depth1 = a.getParentTransactionDepthInBlocks();
             int depth2 = b.getParentTransactionDepthInBlocks();

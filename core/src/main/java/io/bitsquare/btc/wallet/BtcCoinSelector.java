@@ -17,21 +17,24 @@
 
 package io.bitsquare.btc.wallet;
 
+import com.google.common.collect.Sets;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
+
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
- * We lookup for spendable outputs which matches our address of our address.
+ * We lookup for spendable outputs which matches any of our addresses.
  */
 class BtcCoinSelector extends BitsquareCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(BtcCoinSelector.class);
-    private final Address address;
+
+    private final Set<Address> addresses;
     private final boolean allowUnconfirmedSpend;
 
 
@@ -39,14 +42,22 @@ class BtcCoinSelector extends BitsquareCoinSelector {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    BtcCoinSelector(NetworkParameters params, @NotNull Address address) {
-        this(params, address, true);
+    BtcCoinSelector(NetworkParameters params, Set<Address> addresses, boolean allowUnconfirmedSpend) {
+        super(params);
+        this.addresses = addresses;
+        this.allowUnconfirmedSpend = allowUnconfirmedSpend;
     }
 
-    private BtcCoinSelector(NetworkParameters params, @NotNull Address address, boolean allowUnconfirmedSpend) {
-        super(params);
-        this.address = address;
-        this.allowUnconfirmedSpend = allowUnconfirmedSpend;
+    BtcCoinSelector(NetworkParameters params, Set<Address> addresses) {
+        this(params, addresses, true);
+    }
+
+    BtcCoinSelector(NetworkParameters params, Address address, boolean allowUnconfirmedSpend) {
+        this(params, Sets.newHashSet(address), allowUnconfirmedSpend);
+    }
+
+    BtcCoinSelector(NetworkParameters params, Address address) {
+        this(params, Sets.newHashSet(address), true);
     }
 
     @Override
@@ -58,23 +69,22 @@ class BtcCoinSelector extends BitsquareCoinSelector {
                 final TransactionConfidence.ConfidenceType confidenceType = transactionOutput.getParentTransaction().getConfidence().getConfidenceType();
                 confirmationCheck = confidenceType == TransactionConfidence.ConfidenceType.BUILDING;
                 if (!confirmationCheck)
-                    log.error("Tx is not in blockchain yet. confidenceType=" + confidenceType);
+                    log.debug("Tx is not in blockchain yet. confidenceType=" + confidenceType);
             }
 
-            Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-            log.trace("matchesRequiredAddress?");
-            log.trace("addressOutput " + addressOutput.toString());
-            log.trace("address " + address.toString());
-            boolean matches = addressOutput.equals(address);
+            Address address = transactionOutput.getScriptPubKey().getToAddress(params);
+            log.trace("only lookup in savings wallet address entries");
+            log.trace(address.toString());
+
+            boolean matches = addresses.contains(address);
             if (!matches)
-                log.trace("No match found at matchesRequiredAddress addressOutput / address " + addressOutput.toString
-                        () + " / " + address.toString());
+                log.trace("No match found at matchesRequiredAddress address / addressEntry " +
+                        address.toString() + " / " + address.toString());
 
             return matches && confirmationCheck;
         } else {
             log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
             return false;
         }
-
     }
 }

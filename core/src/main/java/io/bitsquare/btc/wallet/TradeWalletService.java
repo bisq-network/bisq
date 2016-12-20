@@ -24,7 +24,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.AddressEntryList;
 import io.bitsquare.btc.data.InputsAndChangeOutput;
 import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
 import io.bitsquare.btc.data.RawTransactionInput;
@@ -95,14 +94,15 @@ import static com.google.inject.internal.util.$Preconditions.checkState;
 public class TradeWalletService {
     private static final Logger log = LoggerFactory.getLogger(TradeWalletService.class);
 
+    private final WalletsSetup walletsSetup;
     private final NetworkParameters params;
+
     @Nullable
     private Wallet wallet;
     @Nullable
     private WalletConfig walletConfig;
     @Nullable
     private KeyParameter aesKey;
-    private AddressEntryList addressEntryList;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -110,15 +110,19 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeWalletService(Preferences preferences) {
+    public TradeWalletService(WalletsSetup walletsSetup, Preferences preferences) {
+        this.walletsSetup = walletsSetup;
         this.params = preferences.getBitcoinNetwork().getParameters();
+        walletsSetup.addSetupCompletedHandler(() -> {
+            walletConfig = walletsSetup.getWalletConfig();
+            wallet = walletsSetup.getBtcWallet();
+        });
     }
 
-    // After WalletService is initialized we get the walletAppKit set
-    public void setWalletConfig(WalletConfig walletConfig) {
-        this.walletConfig = walletConfig;
-        wallet = walletConfig.wallet();
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // AesKey
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     void setAesKey(KeyParameter aesKey) {
         this.aesKey = aesKey;
@@ -157,9 +161,9 @@ public class TradeWalletService {
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         if (useSavingsWallet)
-            sendRequest.coinSelector = new SavingsWalletCoinSelector(params, getAddressEntryListAsImmutableList());
+            sendRequest.coinSelector = new BtcCoinSelector(params, walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
         else
-            sendRequest.coinSelector = new TradeWalletCoinSelector(params, fundingAddress);
+            sendRequest.coinSelector = new BtcCoinSelector(params, fundingAddress);
         // We use a fixed fee
         sendRequest.feePerKb = Coin.ZERO;
         sendRequest.fee = txFee;
@@ -1191,7 +1195,7 @@ public class TradeWalletService {
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.fee = txFee;
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
-            sendRequest.coinSelector = new TradeWalletCoinSelector(params, addressEntry.getAddress());
+            sendRequest.coinSelector = new BtcCoinSelector(params, addressEntry.getAddress());
             // We use always the same address in a trade for all transactions
             sendRequest.changeAddress = changeAddress;
             // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.
@@ -1203,13 +1207,4 @@ public class TradeWalletService {
             throw new WalletException(t);
         }
     }
-
-    public void setAddressEntryList(AddressEntryList addressEntryList) {
-        this.addressEntryList = addressEntryList;
-    }
-
-    private List<AddressEntry> getAddressEntryListAsImmutableList() {
-        return ImmutableList.copyOf(addressEntryList);
-    }
-
 }
