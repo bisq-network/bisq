@@ -18,6 +18,12 @@
 package io.bitsquare.gui.util.validation;
 
 
+import io.bitsquare.gui.util.validation.altcoins.ByteballAddressValidator;
+import io.bitsquare.gui.util.validation.params.IOPParams;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.params.MainNetParams;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +52,7 @@ public final class AltCoinAddressValidator extends InputValidator {
             // 2: If the address contains a checksum, verify the checksum
 
             ValidationResult wrongChecksum = new ValidationResult(false, "Address validation failed because checksum was not correct.");
-            ValidationResult wrongStructure = new ValidationResult(false, "Address validation failed because it does not match the structure of a " + currencyCode + " address.");
+            ValidationResult regexTestFailed = new ValidationResult(false, "Address validation failed because it does not match the structure of a " + currencyCode + " address.");
 
             switch (currencyCode) {
                 // Example for BTC, though for BTC we use the BitcoinJ library address check
@@ -55,11 +61,31 @@ public final class AltCoinAddressValidator extends InputValidator {
                     // taken form: https://stackoverflow.com/questions/21683680/regex-to-match-bitcoin-addresses
                     if (input.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (verifyChecksum(input))
-                            return new ValidationResult(true);
+                            try {
+                                new Address(MainNetParams.get(), input);
+                                return new ValidationResult(true);
+                            } catch (AddressFormatException e) {
+                                return new ValidationResult(false, getErrorMessage(e));
+                            }
                         else
-                            return wrongStructure;
+                            return wrongChecksum;
                     } else {
-                        return wrongChecksum;
+                        return regexTestFailed;
+                    }
+                case "IOP":
+                    if (input.matches("^[p][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        if (verifyChecksum(input)) {
+                            try {
+                                new Address(IOPParams.get(), input);
+                                return new ValidationResult(true);
+                            } catch (AddressFormatException e) {
+                                return new ValidationResult(false, getErrorMessage(e));
+                            }
+                        } else {
+                            return wrongChecksum;
+                        }
+                    } else {
+                        return regexTestFailed;
                     }
                 case "ZEC":
                     // We only support t addresses (transparent transactions)
@@ -67,11 +93,18 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return validationResult;
                     else
                         return new ValidationResult(false, "ZEC address need to start with t. Addresses starting with z are not supported.");
+                case "GBYTE":
+                    return ByteballAddressValidator.validate(input);
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode:" + currencyCode);
                     return validationResult;
             }
         }
+    }
+
+    @NotNull
+    private String getErrorMessage(AddressFormatException e) {
+        return "Address is not a valid " + currencyCode + " address! " + e.getMessage();
     }
 
     private boolean verifyChecksum(String input) {
