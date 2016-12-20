@@ -17,71 +17,35 @@
 
 package io.bitsquare.btc.wallet;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.bitcoinj.core.*;
+import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.CoinSelector;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
- * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
- * We lookup for spendable outputs which matches our address of our addressEntry.
+ * Used from org.bitcoinj.wallet.DefaultCoinSelector but added selectOutput method and changed static methods to
+ * instance methods.
+ * <p>
+ * <p>
+ * This class implements a {@link CoinSelector} which attempts to get the highest priority
+ * possible. This means that the transaction is the most likely to get confirmed. Note that this means we may end up
+ * "spending" more priority than would be required to get the transaction we are creating confirmed.
  */
-abstract class BitsquareCoinSelector implements CoinSelector {
-    private static final Logger log = LoggerFactory.getLogger(BitsquareCoinSelector.class);
-    final NetworkParameters params;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    BitsquareCoinSelector(NetworkParameters params) {
-        this.params = params;
-    }
-
-    abstract protected boolean matchesRequirement(TransactionOutput transactionOutput);
-
-    private static boolean isInBlockChainOrPending(Transaction tx) {
-        if (tx != null) {
-            // Pick chain-included transactions and transactions that are pending.
-            TransactionConfidence confidence = tx.getConfidence();
-            TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-
-            log.debug("numBroadcastPeers = " + confidence.numBroadcastPeers());
-            return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                    type.equals(TransactionConfidence.ConfidenceType.PENDING);
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
-     */
-    protected boolean shouldSelect(Transaction tx) {
-        return isInBlockChainOrPending(tx);
-    }
-
+public abstract class BsDefaultCoinSelector implements CoinSelector {
     @Override
     public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
-        log.trace("candidates.size: " + candidates.size());
-        long targetAsLong = target.longValue();
-        log.trace("value needed: " + targetAsLong);
-        HashSet<TransactionOutput> selected = new HashSet<>();
+        ArrayList<TransactionOutput> selected = new ArrayList<>();
         // Sort the inputs by age*value so we get the highest "coindays" spent.
-        ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
+        // TODO: Consider changing the wallets internal format to track just outputs and keep them ordered.
+        ArrayList<TransactionOutput> sortedOutputs = new ArrayList<TransactionOutput>(candidates);
         // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
         // them in order to improve performance.
+        // TODO: Take in network parameters when instanatiated, and then test against the current network. Or just have a boolean parameter for "give me everything"
         if (!target.equals(NetworkParameters.MAX_MONEY)) {
             sortOutputs(sortedOutputs);
         }
@@ -89,27 +53,20 @@ abstract class BitsquareCoinSelector implements CoinSelector {
         // bit over (excessive value will be change).
         long total = 0;
         for (TransactionOutput output : sortedOutputs) {
-            if (total >= targetAsLong) {
-                break;
-            }
+            if (total >= target.value) break;
             // Only pick chain-included transactions, or transactions that are ours and pending.
-            // Only select outputs from our defined address(es)
-            if (!shouldSelect(output.getParentTransaction()) || !matchesRequirement(output)) {
-                continue;
-            }
-
+            if (!shouldSelect(output.getParentTransaction()) || !selectOutput(output)) continue;
             selected.add(output);
-            total += output.getValue().longValue();
-
-            log.debug("adding up outputs: output/total: " + output.getValue().longValue() + "/" + total);
+            total += output.getValue().value;
         }
         // Total may be lower than target here, if the given candidates were insufficient to create to requested
         // transaction.
         return new CoinSelection(Coin.valueOf(total), selected);
     }
 
-    @VisibleForTesting
-    private void sortOutputs(ArrayList<TransactionOutput> outputs) {
+    abstract boolean selectOutput(TransactionOutput output);
+
+    protected void sortOutputs(ArrayList<TransactionOutput> outputs) {
         Collections.sort(outputs, (a, b) -> {
             int depth1 = a.getParentTransactionDepthInBlocks();
             int depth2 = b.getParentTransactionDepthInBlocks();
@@ -123,12 +80,31 @@ abstract class BitsquareCoinSelector implements CoinSelector {
             int c2 = bValue.compareTo(aValue);
             if (c2 != 0) return c2;
             // They are entirely equivalent (possibly pending) so sort by hash to ensure a total ordering.
-            checkNotNull(a.getParentTransactionHash(), "a.getParentTransactionHash() must not be null");
-            checkNotNull(b.getParentTransactionHash(), "b.getParentTransactionHash() must not be null");
             BigInteger aHash = a.getParentTransactionHash().toBigInteger();
             BigInteger bHash = b.getParentTransactionHash().toBigInteger();
             return aHash.compareTo(bHash);
         });
     }
 
+    /**
+     * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
+     */
+    protected boolean shouldSelect(Transaction tx) {
+        if (tx != null) {
+            return isSelectable(tx);
+        }
+        return true;
+    }
+
+    protected boolean isSelectable(Transaction tx) {
+        // Only pick chain-included transactions, or transactions that are ours and pending.
+        TransactionConfidence confidence = tx.getConfidence();
+        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
+                type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
+                        confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
+                        // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
+                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
+                        (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
+    }
 }

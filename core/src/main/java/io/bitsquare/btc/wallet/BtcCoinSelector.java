@@ -31,9 +31,10 @@ import java.util.Set;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches any of our addresses.
  */
-class BtcCoinSelector extends BitsquareCoinSelector {
+class BtcCoinSelector extends BsDefaultCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(BtcCoinSelector.class);
 
+    private NetworkParameters params;
     private final Set<Address> addresses;
     private final boolean allowUnconfirmedSpend;
 
@@ -43,7 +44,7 @@ class BtcCoinSelector extends BitsquareCoinSelector {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     BtcCoinSelector(NetworkParameters params, Set<Address> addresses, boolean allowUnconfirmedSpend) {
-        super(params);
+        this.params = params;
         this.addresses = addresses;
         this.allowUnconfirmedSpend = allowUnconfirmedSpend;
     }
@@ -61,7 +62,7 @@ class BtcCoinSelector extends BitsquareCoinSelector {
     }
 
     @Override
-    protected boolean matchesRequirement(TransactionOutput transactionOutput) {
+    protected boolean selectOutput(TransactionOutput transactionOutput) {
         if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
             boolean confirmationCheck = allowUnconfirmedSpend;
             if (!allowUnconfirmedSpend && transactionOutput.getParentTransaction() != null &&
@@ -73,15 +74,14 @@ class BtcCoinSelector extends BitsquareCoinSelector {
             }
 
             Address address = transactionOutput.getScriptPubKey().getToAddress(params);
-            log.trace("only lookup in savings wallet address entries");
             log.trace(address.toString());
 
-            boolean matches = addresses.contains(address);
-            if (!matches)
+            boolean matchesAddress = addresses.contains(address);
+            if (!matchesAddress)
                 log.trace("No match found at matchesRequiredAddress address / addressEntry " +
                         address.toString() + " / " + address.toString());
 
-            return matches && confirmationCheck;
+            return matchesAddress && confirmationCheck;
         } else {
             log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
             return false;
