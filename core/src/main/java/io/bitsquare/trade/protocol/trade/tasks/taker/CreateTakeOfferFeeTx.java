@@ -35,7 +35,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class CreateTakeOfferFeeTx extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(CreateTakeOfferFeeTx.class);
 
-    private CreateTakeOfferFeeTx(TaskRunner taskHandler, Trade trade) {
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    public CreateTakeOfferFeeTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

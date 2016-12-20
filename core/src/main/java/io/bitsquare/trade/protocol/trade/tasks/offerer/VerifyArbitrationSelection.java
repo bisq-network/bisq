@@ -25,8 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class VerifyArbitrationSelection extends TradeTask {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(VerifyArbitrationSelection.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public VerifyArbitrationSelection(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 public class SendPublishDepositTxRequest extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendPublishDepositTxRequest.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public SendPublishDepositTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

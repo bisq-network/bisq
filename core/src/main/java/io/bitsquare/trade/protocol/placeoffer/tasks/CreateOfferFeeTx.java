@@ -35,7 +35,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferFeeTx.class);
 
-    private CreateOfferFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    public CreateOfferFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 

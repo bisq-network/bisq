@@ -33,6 +33,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     private boolean removeOfferFailed;
     private boolean addOfferFailed;
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public BroadcastCreateOfferFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
@@ -62,7 +63,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                                     model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
                                     model.setTransaction(transaction);
                                     model.offerBookService.addOffer(model.offer,
-                                            () -> complete(),
+                                            BroadcastCreateOfferFeeTx.this::complete,
                                             errorMessage -> {
                                                 log.error("addOffer failed");
                                                 addOfferFailed = true;

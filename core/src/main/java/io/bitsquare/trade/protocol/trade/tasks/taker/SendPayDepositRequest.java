@@ -33,6 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class SendPayDepositRequest extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendPayDepositRequest.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public SendPayDepositRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

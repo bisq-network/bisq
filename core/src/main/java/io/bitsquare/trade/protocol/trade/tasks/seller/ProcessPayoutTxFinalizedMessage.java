@@ -31,6 +31,7 @@ import static io.bitsquare.util.Validator.checkTradeId;
 public class ProcessPayoutTxFinalizedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessPayoutTxFinalizedMessage.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public ProcessPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

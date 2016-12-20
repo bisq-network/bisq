@@ -42,7 +42,8 @@ public class SetupDepositBalanceListener extends TradeTask {
     private Subscription tradeStateSubscription;
     private BalanceListener balanceListener;
 
-    private SetupDepositBalanceListener(TaskRunner taskHandler, Trade trade) {
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    public SetupDepositBalanceListener(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

@@ -24,8 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ValidateOffer extends Task<PlaceOfferModel> {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(ValidateOffer.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public ValidateOffer(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }

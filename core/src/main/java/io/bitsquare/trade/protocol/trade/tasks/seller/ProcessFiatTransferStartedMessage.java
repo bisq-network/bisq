@@ -31,6 +31,7 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class ProcessFiatTransferStartedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessFiatTransferStartedMessage.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public ProcessFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

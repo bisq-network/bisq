@@ -29,6 +29,7 @@ import java.util.List;
 public class PublishTradeStatistics extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(PublishTradeStatistics.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public PublishTradeStatistics(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

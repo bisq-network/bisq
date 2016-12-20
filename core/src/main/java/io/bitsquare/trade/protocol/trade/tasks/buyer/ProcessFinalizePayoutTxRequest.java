@@ -30,6 +30,7 @@ import static io.bitsquare.util.Validator.*;
 public class ProcessFinalizePayoutTxRequest extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessFinalizePayoutTxRequest.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public ProcessFinalizePayoutTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

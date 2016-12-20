@@ -24,8 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LoadTakeOfferFeeTx extends TradeTask {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(LoadTakeOfferFeeTx.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public LoadTakeOfferFeeTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

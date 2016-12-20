@@ -36,6 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class CreateAndSignContract extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(CreateAndSignContract.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public CreateAndSignContract(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

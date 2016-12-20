@@ -33,6 +33,7 @@ import static io.bitsquare.util.Validator.checkTradeId;
 public class ProcessDepositTxPublishedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessDepositTxPublishedMessage.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public ProcessDepositTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

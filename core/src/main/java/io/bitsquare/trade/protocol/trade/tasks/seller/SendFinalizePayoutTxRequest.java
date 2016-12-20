@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 public class SendFinalizePayoutTxRequest extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendFinalizePayoutTxRequest.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public SendFinalizePayoutTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

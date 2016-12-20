@@ -34,6 +34,7 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 public class ProcessPublishDepositTxRequest extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessPublishDepositTxRequest.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public ProcessPublishDepositTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

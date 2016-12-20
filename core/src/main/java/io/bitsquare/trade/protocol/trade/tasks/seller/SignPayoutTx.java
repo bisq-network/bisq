@@ -29,9 +29,11 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SignPayoutTx extends TradeTask {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(SignPayoutTx.class);
 
-    private SignPayoutTx(TaskRunner taskHandler, Trade trade) {
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    public SignPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

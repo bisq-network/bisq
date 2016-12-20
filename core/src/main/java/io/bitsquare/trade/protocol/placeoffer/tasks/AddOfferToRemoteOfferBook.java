@@ -24,8 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(AddOfferToRemoteOfferBook.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public AddOfferToRemoteOfferBook(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }

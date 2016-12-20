@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 public class SendFiatTransferStartedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendFiatTransferStartedMessage.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public SendFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

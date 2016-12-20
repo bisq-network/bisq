@@ -24,8 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class VerifyOffererAccount extends TradeTask {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(VerifyOffererAccount.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public VerifyOffererAccount(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 public class BroadcastTakeOfferFeeTx extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(BroadcastTakeOfferFeeTx.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public BroadcastTakeOfferFeeTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

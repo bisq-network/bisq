@@ -25,8 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SelectArbitrator extends TradeTask {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(SelectArbitrator.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public SelectArbitrator(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

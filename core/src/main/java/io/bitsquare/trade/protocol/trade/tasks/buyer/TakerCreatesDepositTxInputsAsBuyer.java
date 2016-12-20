@@ -27,8 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TakerCreatesDepositTxInputsAsBuyer extends TradeTask {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(TakerCreatesDepositTxInputsAsBuyer.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public TakerCreatesDepositTxInputsAsBuyer(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

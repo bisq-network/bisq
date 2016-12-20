@@ -33,7 +33,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(OffererCreatesAndSignsDepositTxAsSeller.class);
 
-    private OffererCreatesAndSignsDepositTxAsSeller(TaskRunner taskHandler, Trade trade) {
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    public OffererCreatesAndSignsDepositTxAsSeller(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

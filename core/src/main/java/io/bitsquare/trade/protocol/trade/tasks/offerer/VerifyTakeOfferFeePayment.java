@@ -24,8 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class VerifyTakeOfferFeePayment extends TradeTask {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(VerifyTakeOfferFeePayment.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public VerifyTakeOfferFeePayment(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

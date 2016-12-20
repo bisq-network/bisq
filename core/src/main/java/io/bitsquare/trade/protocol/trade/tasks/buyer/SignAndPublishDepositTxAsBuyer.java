@@ -37,7 +37,8 @@ import java.util.ArrayList;
 public class SignAndPublishDepositTxAsBuyer extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishDepositTxAsBuyer.class);
 
-    private SignAndPublishDepositTxAsBuyer(TaskRunner taskHandler, Trade trade) {
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    public SignAndPublishDepositTxAsBuyer(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

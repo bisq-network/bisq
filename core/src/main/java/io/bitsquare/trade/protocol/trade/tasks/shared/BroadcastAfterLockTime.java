@@ -38,6 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class BroadcastAfterLockTime extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(BroadcastAfterLockTime.class);
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public BroadcastAfterLockTime(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
