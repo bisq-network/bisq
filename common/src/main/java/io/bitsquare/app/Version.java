@@ -80,4 +80,7 @@ public class Version {
                 ", getP2PNetworkId()=" + getP2PMessageVersion() +
                 '}');
     }
+
+    public static final byte COMP_REQUEST_VERSION = (byte) 0x01;
+
 }

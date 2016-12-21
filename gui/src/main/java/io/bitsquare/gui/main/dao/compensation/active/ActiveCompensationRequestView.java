@@ -237,14 +237,14 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                             public void updateItem(final CompensationRequest item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.formatDateTime(item.getCompensationRequestPayload().creationDate));
+                                    setText(formatter.formatDateTime(item.getCompensationRequestPayload().getCreationDate()));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        dateColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().creationDate.compareTo(o2.getCompensationRequestPayload().creationDate));
+        dateColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getCreationDate().compareTo(o2.getCompensationRequestPayload().getCreationDate()));
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
 

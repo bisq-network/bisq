@@ -60,10 +60,10 @@ public class CompensationRequestDisplay {
         categoryTextField.setText(data.category);
         descriptionTextField.setText(data.description);
         linkTextField.setText(data.link);
-        startDateTextField.setText(data.startDate.toString());
-        endDateTextField.setText(data.endDate.toString());
-        requestedBTCTextField.setText(data.requestedBtc.toPlainString());
-        btcAddressTextField.setText(data.btcAddress.toString());
+        startDateTextField.setText(data.getStartDate().toString());
+        endDateTextField.setText(data.getEndDate().toString());
+        requestedBTCTextField.setText(data.getRequestedBtc().toPlainString());
+        btcAddressTextField.setText(data.btcAddress);
     }
 
     public void clearForm() {

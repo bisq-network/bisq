@@ -109,57 +109,64 @@ public class VoteView extends ActivatableView<GridPane, Void> {
 
         voteButton = addButtonAfterGroup(root, ++gridRow, "Vote");
         voteButton.setOnAction(event -> {
-            byte[] hash = voteManager.calculateHash(voteItemCollection);
-            if (hash.length > 0) {
-                try {
-                    Coin votingTxFee = feeService.getVotingTxFee();
-                    Transaction preparedVotingTx = squWalletService.getPreparedBurnFeeTx(votingTxFee);
-                    Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedVotingTx, false, hash);
-                    Transaction signedTx = squWalletService.signTx(txWithBtcFee);
-                    Coin miningFee = signedTx.getFee();
-                    int txSize = signedTx.bitcoinSerialize().length;
-                    new Popup().headLine("Confirm withdrawal request")
-                            .confirmation("Voting fee: " + btcFormatter.formatCoinWithCode(votingTxFee) + "\n" +
-                                    "Mining fee: " + btcFormatter.formatCoinWithCode(miningFee) + " (" +
-                                    MathUtils.roundDouble(((double) miningFee.value / (double) txSize), 2) +
-                                    " Satoshis/byte)\n" +
-                                    "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
-                                    "Are you sure you want to send the vote transaction?")
-                            .actionButtonText("Yes")
-                            .onAction(() -> {
-                                try {
-                                    squWalletService.commitTx(txWithBtcFee);
-                                    // We need to create another instance, otherwise the tx would trigger an invalid state exception 
-                                    // if it gets committed 2 times 
-                                    btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-                                    squWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
-                                        @Override
-                                        public void onSuccess(@Nullable Transaction transaction) {
-                                            checkNotNull(transaction, "Transaction must not be null at doSend callback.");
-                                            log.error("tx successful published" + transaction.getHashAsString());
-                                        }
+            if (!voteItemCollection.isMyVote()) {
+                byte[] hash = voteManager.calculateHash(voteItemCollection);
+                if (hash.length > 0) {
+                    try {
+                        Coin votingTxFee = feeService.getVotingTxFee();
+                        Transaction preparedVotingTx = squWalletService.getPreparedBurnFeeTx(votingTxFee);
+                        Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedVotingTx, false, hash);
+                        Transaction signedTx = squWalletService.signTx(txWithBtcFee);
+                        Coin miningFee = signedTx.getFee();
+                        int txSize = signedTx.bitcoinSerialize().length;
+                        new Popup().headLine("Confirm voting fee payment transaction")
+                                .confirmation("Voting fee: " + btcFormatter.formatCoinWithCode(votingTxFee) + "\n" +
+                                        "Mining fee: " + btcFormatter.formatCoinWithCode(miningFee) + " (" +
+                                        MathUtils.roundDouble(((double) miningFee.value / (double) txSize), 2) +
+                                        " Satoshis/byte)\n" +
+                                        "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
+                                        "Are you sure you want to send the transaction?")
+                                .actionButtonText("Yes")
+                                .onAction(() -> {
+                                    try {
+                                        squWalletService.commitTx(txWithBtcFee);
+                                        // We need to create another instance, otherwise the tx would trigger an invalid state exception 
+                                        // if it gets committed 2 times 
+                                        btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+                                        squWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                            @Override
+                                            public void onSuccess(@Nullable Transaction transaction) {
+                                                checkNotNull(transaction, "Transaction must not be null at doSend callback.");
+                                                log.error("tx successful published" + transaction.getHashAsString());
+                                                new Popup<>().confirmation("Your transaction has been successfully published.").show();
+                                                voteItemCollection.setIsMyVote(true);
+                                            }
 
-                                        @Override
-                                        public void onFailure(@NotNull Throwable t) {
-                                            new Popup<>().warning(t.toString()).show();
-                                        }
-                                    });
-                                } catch (WalletException | TransactionVerificationException e) {
-                                    log.error(e.toString());
-                                    e.printStackTrace();
-                                    new Popup<>().warning(e.toString());
-                                }
-                            })
-                            .closeButtonText("Cancel")
-                            .show();
-                } catch (InsufficientMoneyException | WalletException | TransactionVerificationException |
-                        ChangeBelowDustException | InsufficientFundsException e) {
-                    log.error(e.toString());
-                    e.printStackTrace();
-                    new Popup<>().warning(e.toString()).show();
+                                            @Override
+                                            public void onFailure(@NotNull Throwable t) {
+                                                new Popup<>().warning(t.toString()).show();
+                                            }
+                                        });
+                                    } catch (WalletException | TransactionVerificationException e) {
+                                        log.error(e.toString());
+                                        e.printStackTrace();
+                                        new Popup<>().warning(e.toString());
+                                    }
+                                })
+                                .closeButtonText("Cancel")
+                                .show();
+                    } catch (InsufficientMoneyException | WalletException | TransactionVerificationException |
+                            ChangeBelowDustException | InsufficientFundsException e) {
+                        log.error(e.toString());
+                        e.printStackTrace();
+                        new Popup<>().warning(e.toString()).show();
+                    }
+                } else {
+                    new Popup<>().warning("You did not vote on any entry.").show();
                 }
             } else {
-                new Popup<>().warning("You did not vote on any entry.").show();
+                //TODO
+                new Popup<>().warning("You voted already.").show();
             }
         });
     }

@@ -37,18 +37,18 @@ public class VoteManager {
     private final BtcWalletService btcWalletService;
     private final SquWalletService squWalletService;
     private FeeService feeService;
-    private final Storage<ArrayList<VoteItemCollection>> voteItemCollectionStorage;
+    private final Storage<ArrayList<VoteItemCollection>> voteItemCollectionsStorage;
     private ArrayList<VoteItemCollection> voteItemCollections = new ArrayList<>();
     private VoteItemCollection currentVoteItemCollection;
 
     @Inject
-    public VoteManager(BtcWalletService btcWalletService, SquWalletService squWalletService, FeeService feeService, Storage<ArrayList<VoteItemCollection>> voteItemCollectionStorage) {
+    public VoteManager(BtcWalletService btcWalletService, SquWalletService squWalletService, FeeService feeService, Storage<ArrayList<VoteItemCollection>> voteItemCollectionsStorage) {
         this.btcWalletService = btcWalletService;
         this.squWalletService = squWalletService;
         this.feeService = feeService;
-        this.voteItemCollectionStorage = voteItemCollectionStorage;
+        this.voteItemCollectionsStorage = voteItemCollectionsStorage;
 
-        ArrayList<VoteItemCollection> persisted = voteItemCollectionStorage.initAndGetPersistedWithFileName("VoteItemCollections");
+        ArrayList<VoteItemCollection> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
         if (persisted != null)
             voteItemCollections.addAll(persisted);
 
@@ -150,7 +150,7 @@ public class VoteManager {
         //TODO check equals code
         if (!voteItemCollections.contains(voteItemCollection)) {
             voteItemCollections.add(voteItemCollection);
-            voteItemCollectionStorage.queueUpForSave(voteItemCollections, 500);
+            voteItemCollectionsStorage.queueUpForSave(voteItemCollections, 500);
         }
     }
 
