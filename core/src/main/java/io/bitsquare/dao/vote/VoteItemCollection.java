@@ -32,10 +32,10 @@ public final class VoteItemCollection extends ArrayList<VoteItem> implements Per
     private boolean isMyVote;
 
     public VoteItemCollection() {
-        add(new VoteItem(VotingCodes.Code.CREATE_OFFER_FEE, "Create offer fee", (byte) 0));
-        add(new VoteItem(VotingCodes.Code.TAKE_OFFER_FEE, "Take offer fee", (byte) 0));
-        add(new VoteItem(VotingCodes.Code.PERIOD_UNTIL_NEXT_VOTING, "Period until next voting", (byte) 0));
-        add(new CompensationRequestVoteItemCollection(VotingCodes.Code.COMP_REQUEST_MAPS, "CompensationRequest"));
+        add(new VoteItem(VotingParameters.Code.CREATE_OFFER_FEE_IN_BTC, "Create offer fee", (byte) 0));
+        add(new VoteItem(VotingParameters.Code.TAKE_OFFER_FEE_IN_BTC, "Take offer fee", (byte) 0));
+        add(new VoteItem(VotingParameters.Code.COMPENSATION_REQUEST_PERIOD_IN_BLOCKS, "Period until next voting", (byte) 0));
+        add(new CompensationRequestVoteItemCollection(VotingParameters.Code.COMP_REQUEST_MAPS, "CompensationRequest"));
     }
 
     public void setIsMyVote(boolean isMyVote) {

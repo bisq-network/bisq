@@ -43,7 +43,7 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
     }
 
 
-    public CompensationRequestVoteItemCollection(VotingCodes.Code code, String name) {
+    public CompensationRequestVoteItemCollection(VotingParameters.Code code, String name) {
         super(code, name);
     }
 

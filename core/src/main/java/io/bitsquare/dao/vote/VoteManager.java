@@ -101,9 +101,6 @@ public class VoteManager {
                 checkArgument(itemOptional.get() instanceof CompensationRequestVoteItemCollection,
                         "Item must be CompensationRequestVoteItemCollection");
                 CompensationRequestVoteItemCollection collection = (CompensationRequestVoteItemCollection) itemOptional.get();
-                int payloadSize = collection.code.payloadSize;
-                checkArgument(payloadSize == 2, "payloadSize for CompensationRequestVoteItemCollection must be 2. " +
-                        "We got payloadSize=" + payloadSize);
                 List<CompensationRequestVoteItem> items = collection.getCompensationRequestVoteItemsSortedByTxId();
                 int itemsSize = items.size();
                 // We have max 39 bytes space ((80 - 20 - 2) / 2 = 29). 29 bytes are 232 bits/items to vote on
@@ -165,9 +162,6 @@ public class VoteManager {
                 checkArgument(outputStream.size() % 2 == 0,
                         "Position of writing code must be at even index.");
                 outputStream.write(paramItem.code.code);
-                int payloadSize = paramItem.code.payloadSize;
-                checkArgument(payloadSize == 1,
-                        "payloadSize is not as expected(4). payloadSize=" + payloadSize);
                 byte value = paramItem.getValue();
                 outputStream.write(value);
             });

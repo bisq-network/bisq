@@ -29,7 +29,7 @@ public class VoteItem implements Persistable {
 
     private static final Logger log = LoggerFactory.getLogger(VoteItem.class);
     //  public final String version;
-    public final VotingCodes.Code code;
+    public final VotingParameters.Code code;
     public final String name;
     protected boolean hasVoted;
 
@@ -39,13 +39,13 @@ public class VoteItem implements Persistable {
 
     private byte value;
 
-    public VoteItem(VotingCodes.Code code, String name, byte value) {
+    public VoteItem(VotingParameters.Code code, String name, byte value) {
         this.code = code;
         this.name = name;
         this.value = value;
     }
 
-    public VoteItem(VotingCodes.Code code, String name) {
+    public VoteItem(VotingParameters.Code code, String name) {
         this(code, name, (byte) 0x00);
     }
 

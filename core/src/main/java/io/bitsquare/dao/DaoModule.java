@@ -21,6 +21,7 @@ import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
 import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.dao.vote.VoteManager;
+import io.bitsquare.dao.vote.VotingParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -36,6 +37,7 @@ public class DaoModule extends AppModule {
     protected void configure() {
         bind(CompensationRequestManager.class).in(Singleton.class);
         bind(VoteManager.class).in(Singleton.class);
+        bind(VotingParameters.class).in(Singleton.class);
     }
 }
 
