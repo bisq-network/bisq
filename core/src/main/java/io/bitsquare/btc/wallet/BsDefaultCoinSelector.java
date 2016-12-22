@@ -54,9 +54,12 @@ public abstract class BsDefaultCoinSelector implements CoinSelector {
         long total = 0;
         long targetValue = target.value;
         for (TransactionOutput output : sortedOutputs) {
-            if (total >= targetValue)
-                break;
-
+            if (total >= targetValue) {
+                long change = total - targetValue;
+                if (change == 0 || change >= Transaction.MIN_NONDUST_OUTPUT.value)
+                    break;
+            }
+            
             // Only pick chain-included transactions, or transactions that are ours and pending.
             if (!shouldSelect(output.getParentTransaction()) || !selectOutput(output))
                 continue;

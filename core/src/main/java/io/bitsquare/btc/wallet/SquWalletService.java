@@ -75,7 +75,7 @@ public class SquWalletService extends WalletService {
 
             //TODO
             //wallet.setUTXOProvider(squUTXOProvider);
-           
+
             wallet.addEventListener(new BitsquareWalletEventListener());
             wallet.addEventListener(new AbstractWalletEventListener() {
                 @Override

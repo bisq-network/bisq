@@ -104,6 +104,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         root.getChildren().clear();
 
         compensationRequests = compensationRequestManager.getObservableCompensationRequestsList().stream().filter(CompensationRequest::isInVotePeriod).collect(Collectors.toList());
+        compensationRequests.sort((o1, o2) -> o2.getCompensationRequestPayload().feeTxId.compareTo(o1.getCompensationRequestPayload().feeTxId));
         titledGroupBg = addTitledGroupBg(root, gridRow, voteItemCollection.size() + compensationRequests.size() - 1, "Voting");
         // GridPane.setRowSpan(titledGroupBg, voteItems.size() + CompensationRequest.size());
         voteItemCollection.stream().forEach(this::addVoteItem);
@@ -114,7 +115,9 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             //TODO
             if (voteItemCollection.isMyVote()) {
                 new Popup<>().warning("You voted already.").show();
-            } else if (!voteItemCollection.stream().filter(e -> e.hasVoted()).findAny().isPresent()) {
+            } else if (!voteItemCollection.stream().filter(e -> e.hasVoted()).findAny().isPresent() &&
+                    !voteItemCollection.stream().filter(e -> e instanceof CompensationRequestVoteItemCollection)
+                            .filter(e -> ((CompensationRequestVoteItemCollection) e).hasAnyVoted()).findAny().isPresent()) {
                 new Popup<>().warning("You did not vote on any entry.").show();
             } else {
                 try {
@@ -231,17 +234,27 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             // todo open popup
         });
         acceptCheckBox.setOnAction(event -> {
-            compensationRequestVoteItem.setAcceptedVote(acceptCheckBox.isSelected());
-            if (declineCheckBox.isSelected())
-                declineCheckBox.setSelected(!acceptCheckBox.isSelected());
+            boolean selected = acceptCheckBox.isSelected();
+            compensationRequestVoteItem.setAcceptedVote(selected);
+            if (declineCheckBox.isSelected()) {
+                declineCheckBox.setSelected(!selected);
+                compensationRequestVoteItem.setDeclineVote(!selected);
+            } else if (!selected) {
+                compensationRequestVoteItem.setHasVotes(false);
+            }
 
         });
         acceptCheckBox.setSelected(compensationRequestVoteItem.isAcceptedVote());
 
         declineCheckBox.setOnAction(event -> {
-            compensationRequestVoteItem.setDeclineVote(declineCheckBox.isSelected());
-            if (acceptCheckBox.isSelected())
-                acceptCheckBox.setSelected(!declineCheckBox.isSelected());
+            boolean selected = declineCheckBox.isSelected();
+            compensationRequestVoteItem.setDeclineVote(selected);
+            if (acceptCheckBox.isSelected()) {
+                acceptCheckBox.setSelected(!selected);
+                compensationRequestVoteItem.setAcceptedVote(!selected);
+            } else if (!selected) {
+                compensationRequestVoteItem.setHasVotes(false);
+            }
 
         });
         declineCheckBox.setSelected(compensationRequestVoteItem.isDeclineVote());

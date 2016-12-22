@@ -40,6 +40,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
+import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
@@ -130,7 +131,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                         p2pStorageSignaturePubKey
                 );
                 // We get the JSON of the object excluding signature and feeTxId
-                String payloadAsJson = Utilities.objectToJson(compensationRequestPayload);
+                String payloadAsJson = StringUtils.deleteWhitespace(Utilities.objectToJson(compensationRequestPayload));
                 log.error(payloadAsJson);
                 // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
                 // encoded string.

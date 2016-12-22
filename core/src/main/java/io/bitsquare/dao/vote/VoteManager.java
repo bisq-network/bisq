@@ -27,6 +27,7 @@ import io.bitsquare.dao.compensation.CompensationRequest;
 import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.dao.compensation.CompensationRequestPayload;
 import io.bitsquare.storage.Storage;
+import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +77,7 @@ public class VoteManager {
                 .collect(Collectors.toList());
         CompensationRequestPayload[] array = new CompensationRequestPayload[list.size()];
         list.toArray(array);
-        String json = Utilities.objectToJson(array);
+        String json = StringUtils.deleteWhitespace(Utilities.objectToJson(array));
         return json.getBytes();
     }
 
@@ -103,14 +104,14 @@ public class VoteManager {
                 int payloadSize = collection.code.payloadSize;
                 checkArgument(payloadSize == 2, "payloadSize for CompensationRequestVoteItemCollection must be 2. " +
                         "We got payloadSize=" + payloadSize);
-                List<CompensationRequestVoteItem> items = collection.getCompensationRequestVoteItems();
+                List<CompensationRequestVoteItem> items = collection.getCompensationRequestVoteItemsSortedByTxId();
                 int itemsSize = items.size();
                 // We have max 39 bytes space ((80 - 20 - 2) / 2 = 29). 29 bytes are 232 bits/items to vote on
                 checkArgument(itemsSize <= 232, "itemsSize must not be more than 232. " +
                         "We got itemsSize=" + itemsSize);
 
                 // We want groups of 8 bits so if we have less then a multiple of 8 we fill it up with 0
-                int paddedBitSize = ((itemsSize - 1) / 8 + 1) * 8;
+                int paddedBitSize = itemsSize > 0 ? ((itemsSize - 1) / 8 + 1) * 8 : 0;
                 // We add the size of the bytes we use for the comp request vote data. Can be 0 or multiple of 2.
                 sizeOfCompReqVotesInBytes = paddedBitSize / 8 * 2;
                 outputStream.write((byte) sizeOfCompReqVotesInBytes);
@@ -136,13 +137,16 @@ public class VoteManager {
                 }
 
                 byte[] bitSetVotedArray = bitSetVoted.toByteArray();
+                if (bitSetVotedArray.length > 0)
+                    outputStream.write(bitSetVotedArray);
+                else
+                    outputStream.write((byte) 0);
+
                 byte[] bitSetValueArray = bitSetValue.toByteArray();
-
-                checkArgument(bitSetVotedArray.length == bitSetValueArray.length,
-                        "bitSetVotedArray.length must be equal to bitSetValueArray.length");
-
-                outputStream.write(bitSetVotedArray);
-                outputStream.write(bitSetValueArray);
+                if (bitSetValueArray.length > 0)
+                    outputStream.write(bitSetValueArray);
+                else
+                    outputStream.write((byte) 0);
             } else {
                 // If we don't have items we set size 0
                 outputStream.write((byte) 0);
@@ -158,6 +162,8 @@ public class VoteManager {
                     "Size of parameter items must not exceed free space.");
 
             items.stream().forEach(paramItem -> {
+                checkArgument(outputStream.size() % 2 == 0,
+                        "Position of writing code must be at even index.");
                 outputStream.write(paramItem.code.code);
                 int payloadSize = paramItem.code.payloadSize;
                 checkArgument(payloadSize == 1,

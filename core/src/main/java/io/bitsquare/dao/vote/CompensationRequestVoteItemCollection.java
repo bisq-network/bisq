@@ -30,11 +30,18 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestVoteItemCollection.class);
 
+    private List<CompensationRequestVoteItem> compensationRequestVoteItems = new ArrayList<>();
+
     public List<CompensationRequestVoteItem> getCompensationRequestVoteItems() {
         return compensationRequestVoteItems;
     }
 
-    private List<CompensationRequestVoteItem> compensationRequestVoteItems = new ArrayList<>();
+    public List<CompensationRequestVoteItem> getCompensationRequestVoteItemsSortedByTxId() {
+        ArrayList<CompensationRequestVoteItem> list = new ArrayList<>(compensationRequestVoteItems);
+        list.sort((o1, o2) -> o2.compensationRequest.getCompensationRequestPayload().feeTxId.compareTo(o1.compensationRequest.getCompensationRequestPayload().feeTxId));
+        return list;
+    }
+
 
     public CompensationRequestVoteItemCollection(VotingCodes.Code code, String name) {
         super(code, name);
@@ -49,5 +56,9 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
         return "CompensationRequestVoteItemCollection{" +
                 "compensationRequestVoteItems=" + compensationRequestVoteItems +
                 '}';
+    }
+
+    public boolean hasAnyVoted() {
+        return compensationRequestVoteItems.stream().filter(CompensationRequestVoteItem::isHasVoted).findAny().isPresent();
     }
 }

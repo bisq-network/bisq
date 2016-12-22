@@ -61,6 +61,10 @@ public final class CompensationRequestVoteItem implements Persistable {
         return hasVoted;
     }
 
+    public void setHasVotes(boolean hasVoted) {
+        this.hasVoted = hasVoted;
+    }
+
     @Override
     public String toString() {
         return "CompensationRequestVoteItem{" +
