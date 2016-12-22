@@ -23,7 +23,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bitsquare.p2p.storage.payload.PersistedStoragePayload;
 import org.bitcoinj.core.Coin;
-import org.bouncycastle.util.encoders.Hex;
+import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,9 @@ import java.util.concurrent.TimeUnit;
 public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
+
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestPayload.class);
+
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     public final byte version;
@@ -77,7 +79,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                                       NodeAddress nodeAddress,
                                       PublicKey p2pStorageSignaturePubKey) {
 
-        version = Version.COMP_REQUEST_VERSION;
+        version = Version.COMPENSATION_REQUEST_VERSION;
         creationDate = new Date().getTime();
 
         this.uid = uid;
@@ -92,7 +94,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         this.btcAddress = btcAddress;
         this.nodeAddress = nodeAddress.getFullAddress();
         this.p2pStorageSignaturePubKey = p2pStorageSignaturePubKey;
-        p2pStorageSignaturePubKeyAsHex = Hex.toHexString(p2pStorageSignaturePubKey.getEncoded());
+        p2pStorageSignaturePubKeyAsHex = Utils.HEX.encode(p2pStorageSignaturePubKey.getEncoded());
     }
 
     public void setSignature(String signature) {

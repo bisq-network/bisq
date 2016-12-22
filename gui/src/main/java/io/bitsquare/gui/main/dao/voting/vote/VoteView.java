@@ -53,6 +53,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -109,9 +110,15 @@ public class VoteView extends ActivatableView<GridPane, Void> {
 
         voteButton = addButtonAfterGroup(root, ++gridRow, "Vote");
         voteButton.setOnAction(event -> {
-            if (!voteItemCollection.isMyVote()) {
-                byte[] hash = voteManager.calculateHash(voteItemCollection);
-                if (hash.length > 0) {
+            log.error(voteItemCollection.toString());
+            //TODO
+            if (voteItemCollection.isMyVote()) {
+                new Popup<>().warning("You voted already.").show();
+            } else if (!voteItemCollection.stream().filter(e -> e.hasVoted()).findAny().isPresent()) {
+                new Popup<>().warning("You did not vote on any entry.").show();
+            } else {
+                try {
+                    byte[] hash = voteManager.calculateHash(voteItemCollection);
                     try {
                         Coin votingTxFee = feeService.getVotingTxFee();
                         Transaction preparedVotingTx = squWalletService.getPreparedBurnFeeTx(votingTxFee);
@@ -161,12 +168,10 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                         e.printStackTrace();
                         new Popup<>().warning(e.toString()).show();
                     }
-                } else {
-                    new Popup<>().warning("You did not vote on any entry.").show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    new Popup<>().error(e.toString()).show();
                 }
-            } else {
-                //TODO
-                new Popup<>().warning("You voted already.").show();
             }
         });
     }

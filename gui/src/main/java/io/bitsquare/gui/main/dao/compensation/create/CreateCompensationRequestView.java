@@ -131,6 +131,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                 );
                 // We get the JSON of the object excluding signature and feeTxId
                 String payloadAsJson = Utilities.objectToJson(compensationRequestPayload);
+                log.error(payloadAsJson);
                 // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
                 // encoded string.
                 String signature = squKeyPair.signMessage(payloadAsJson);
@@ -139,7 +140,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                 try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                     String dataAndSig = payloadAsJson + signature;
                     byte[] dataAndSigAsBytes = dataAndSig.getBytes();
-                    outputStream.write(Version.COMP_REQUEST_VERSION);
+                    outputStream.write(Version.COMPENSATION_REQUEST_VERSION);
                     outputStream.write(Utils.sha256hash160(dataAndSigAsBytes));
                     byte hash[] = outputStream.toByteArray();
                     //TODO should we store the hash in the compensationRequestPayload object?

@@ -18,17 +18,23 @@
 package io.bitsquare.dao.vote;
 
 import com.google.inject.Inject;
+import io.bitsquare.app.Version;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.SquWalletService;
+import io.bitsquare.common.util.Utilities;
+import io.bitsquare.dao.compensation.CompensationRequest;
+import io.bitsquare.dao.compensation.CompensationRequestManager;
+import io.bitsquare.dao.compensation.CompensationRequestPayload;
 import io.bitsquare.storage.Storage;
 import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -38,15 +44,18 @@ public class VoteManager {
     private final SquWalletService squWalletService;
     private FeeService feeService;
     private final Storage<ArrayList<VoteItemCollection>> voteItemCollectionsStorage;
+    private CompensationRequestManager compensationRequestManager;
     private ArrayList<VoteItemCollection> voteItemCollections = new ArrayList<>();
     private VoteItemCollection currentVoteItemCollection;
 
     @Inject
-    public VoteManager(BtcWalletService btcWalletService, SquWalletService squWalletService, FeeService feeService, Storage<ArrayList<VoteItemCollection>> voteItemCollectionsStorage) {
+    public VoteManager(BtcWalletService btcWalletService, SquWalletService squWalletService, FeeService feeService,
+                       Storage<ArrayList<VoteItemCollection>> voteItemCollectionsStorage, CompensationRequestManager compensationRequestManager) {
         this.btcWalletService = btcWalletService;
         this.squWalletService = squWalletService;
         this.feeService = feeService;
         this.voteItemCollectionsStorage = voteItemCollectionsStorage;
+        this.compensationRequestManager = compensationRequestManager;
 
         ArrayList<VoteItemCollection> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
         if (persisted != null)
@@ -60,79 +69,126 @@ public class VoteManager {
         setCurrentVoteItemCollection(new VoteItemCollection());
     }
 
-    public byte[] calculateHash(VoteItemCollection voteItemCollection) {
-        List<Byte> bytesList = new ArrayList<>();
-        // we add first the 16 bytes for compensationRequest votes
-        voteItemCollection.stream().forEach(e -> {
-            if (e instanceof CompensationRequestVoteItemCollection) {
-                CompensationRequestVoteItemCollection collection = (CompensationRequestVoteItemCollection) e;
-                bytesList.add(collection.code.code);
+    public byte[] getCompensationRequestsCollection() {
+        List<CompensationRequestPayload> list = compensationRequestManager.getObservableCompensationRequestsList().stream()
+                .filter(CompensationRequest::isInVotePeriod)
+                .map(CompensationRequest::getCompensationRequestPayload)
+                .collect(Collectors.toList());
+        CompensationRequestPayload[] array = new CompensationRequestPayload[list.size()];
+        list.toArray(array);
+        String json = Utilities.objectToJson(array);
+        return json.getBytes();
+    }
+
+    public byte[] calculateHash(VoteItemCollection voteItemCollection) throws IOException {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            // First we add the version byte
+            outputStream.write(Version.VOTING_VERSION);
+
+            // Next we add the 20 bytes hash of the voter’s compensation requests collection.
+            // This is needed to mark our version of the "reality" as we have only eventually consistency in the 
+            // P2P network we cannot guarantee that all peers have the same data.
+            // In the voting result we only consider those which match the majority view.
+            outputStream.write(Utils.sha256hash160(getCompensationRequestsCollection()));
+
+            // Then we add the a multiple of 2 bytes for compensationRequest votes
+            Optional<VoteItem> itemOptional = voteItemCollection.stream()
+                    .filter(e -> e instanceof CompensationRequestVoteItemCollection)
+                    .findAny();
+            int sizeOfCompReqVotesInBytes = 0;
+            if (itemOptional.isPresent()) {
+                checkArgument(itemOptional.get() instanceof CompensationRequestVoteItemCollection,
+                        "Item must be CompensationRequestVoteItemCollection");
+                CompensationRequestVoteItemCollection collection = (CompensationRequestVoteItemCollection) itemOptional.get();
                 int payloadSize = collection.code.payloadSize;
-                if (payloadSize == 2) {
-                    List<CompensationRequestVoteItem> items = collection.getCompensationRequestVoteItems();
-                    int size = items.size();
-                    BitSet bitSetVoted = new BitSet(size);
-                    BitSet bitSetValue = new BitSet(size);
-                    for (int i = 0; i < items.size(); i++) {
-                        CompensationRequestVoteItem compensationRequestVoteItem = items.get(i);
-                        log.error(compensationRequestVoteItem.toString());
-                        boolean hasVoted = compensationRequestVoteItem.isHasVoted();
-                        log.error("bitSetVoted " + hasVoted);
+                checkArgument(payloadSize == 2, "payloadSize for CompensationRequestVoteItemCollection must be 2. " +
+                        "We got payloadSize=" + payloadSize);
+                List<CompensationRequestVoteItem> items = collection.getCompensationRequestVoteItems();
+                int itemsSize = items.size();
+                // We have max 39 bytes space ((80 - 20 - 2) / 2 = 29). 29 bytes are 232 bits/items to vote on
+                checkArgument(itemsSize <= 232, "itemsSize must not be more than 232. " +
+                        "We got itemsSize=" + itemsSize);
+
+                // We want groups of 8 bits so if we have less then a multiple of 8 we fill it up with 0
+                int paddedBitSize = ((itemsSize - 1) / 8 + 1) * 8;
+                // We add the size of the bytes we use for the comp request vote data. Can be 0 or multiple of 2.
+                sizeOfCompReqVotesInBytes = paddedBitSize / 8 * 2;
+                outputStream.write((byte) sizeOfCompReqVotesInBytes);
+
+                BitSet bitSetVoted = new BitSet(paddedBitSize);
+                BitSet bitSetValue = new BitSet(paddedBitSize);
+                for (int i = 0; i < paddedBitSize; i++) {
+                    if (i < itemsSize) {
+                        CompensationRequestVoteItem item = items.get(i);
+                        boolean hasVoted = item.isHasVoted();
                         bitSetVoted.set(i, hasVoted);
                         if (hasVoted) {
-                            boolean acceptedVote = compensationRequestVoteItem.isAcceptedVote();
-                            checkArgument(acceptedVote == !compensationRequestVoteItem.isDeclineVote(), "Accepted must be opposite of declined value");
+                            boolean acceptedVote = item.isAcceptedVote();
+                            checkArgument(acceptedVote == !item.isDeclineVote(), "Accepted must be opposite of declined value");
                             bitSetValue.set(i, acceptedVote);
-                            log.error("bitSetValue " + acceptedVote);
                         } else {
                             bitSetValue.set(i, false);
-                            log.error("bitSetValue  false");
                         }
-                    }
-
-                    byte[] bitSetVotedArray = bitSetVoted.toByteArray();
-                    byte[] bitSetValueArray = bitSetValue.toByteArray();
-                    for (int i = 0; i < bitSetVotedArray.length; i++) {
-                        bytesList.add(bitSetVotedArray[i]);
-                    }
-                    for (int i = 0; i < bitSetValueArray.length; i++) {
-                        bytesList.add(bitSetValueArray[i]);
-                    }
-                } else {
-                    log.error("payloadSize is not as expected(1). payloadSize=" + payloadSize);
-                }
-            }
-        });
-
-        // After that we add the optional parameter votes
-        voteItemCollection.stream().forEach(e -> {
-            if (!(e instanceof CompensationRequestVoteItemCollection)) {
-                if (e.hasVoted()) {
-                    bytesList.add(e.code.code);
-                    int payloadSize = e.code.payloadSize;
-                    if (payloadSize == 1) {
-                        byte value = e.getValue();
-                        log.error("value : " + value);
-                        log.error("value binary: " + Integer.toBinaryString(value));
-                        bytesList.add(value);
                     } else {
-                        log.error("payloadSize is not as expected(4). payloadSize=" + payloadSize);
+                        bitSetVoted.set(i, false);
+                        bitSetValue.set(i, false);
                     }
                 }
+
+                byte[] bitSetVotedArray = bitSetVoted.toByteArray();
+                byte[] bitSetValueArray = bitSetValue.toByteArray();
+
+                checkArgument(bitSetVotedArray.length == bitSetValueArray.length,
+                        "bitSetVotedArray.length must be equal to bitSetValueArray.length");
+
+                outputStream.write(bitSetVotedArray);
+                outputStream.write(bitSetValueArray);
+            } else {
+                // If we don't have items we set size 0
+                outputStream.write((byte) 0);
             }
-        });
 
-        byte[] bytes = new byte[bytesList.size()];
-        for (int i = 0; i < bytes.length; i++) {
-            bytes[i] = bytesList.get(i);
+            // After that we add the optional parameter votes
+            int freeSpace = 80 - outputStream.size();
+            Set<VoteItem> items = voteItemCollection.stream()
+                    .filter(e -> !(e instanceof CompensationRequestVoteItemCollection))
+                    .filter(VoteItem::hasVoted)
+                    .collect(Collectors.toSet());
+            checkArgument(items.size() <= freeSpace,
+                    "Size of parameter items must not exceed free space.");
+
+            items.stream().forEach(paramItem -> {
+                outputStream.write(paramItem.code.code);
+                int payloadSize = paramItem.code.payloadSize;
+                checkArgument(payloadSize == 1,
+                        "payloadSize is not as expected(4). payloadSize=" + payloadSize);
+                byte value = paramItem.getValue();
+                outputStream.write(value);
+            });
+
+            byte[] bytes = outputStream.toByteArray();
+            for (int i = 0; i < bytes.length; i++) {
+                byte b = bytes[i];
+                String info = "";
+                if (i == 0)
+                    info = "Version" + ": " + String.format("0x%02x ", b);
+                else if (i < 21)
+                    info = "Hash of CompensationRequestsCollection";
+                else if (i < 22)
+                    info = "Num of CompensationRequests vote bytes" + ": " + b;
+                else if (sizeOfCompReqVotesInBytes > 0 && i < 22 + sizeOfCompReqVotesInBytes)
+                    info = i % 2 == 0 ? "CompensationRequests hasVoted bitmap" : "CompensationRequests value bitmap";
+                else if (i % 2 == 0)
+                    info = "Param code" + ": " + String.format("0x%02x", b);
+                else
+                    info = "Param value" + ": " + b;
+                log.error(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(" ", "0") + " [" + info + "]");
+            }
+            return bytes;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw e;
         }
-        log.error("bytesList " + bytesList);
-        log.error("bytes " + bytes);
-        log.error("Hex " + Utils.HEX.encode(bytes));
-        bytesList.forEach(e -> log.error("binary: " + Integer.toBinaryString(e)));
-
-
-        return bytes;
     }
 
     byte[] toBytes(int i) {
@@ -146,7 +202,7 @@ public class VoteManager {
         return result;
     }
 
-    public void setVoteItemCollections(VoteItemCollection voteItemCollection) {
+    public void addVoteItemCollection(VoteItemCollection voteItemCollection) {
         //TODO check equals code
         if (!voteItemCollections.contains(voteItemCollection)) {
             voteItemCollections.add(voteItemCollection);
@@ -156,7 +212,7 @@ public class VoteManager {
 
     public void setCurrentVoteItemCollection(VoteItemCollection currentVoteItemCollection) {
         this.currentVoteItemCollection = currentVoteItemCollection;
-        setVoteItemCollections(currentVoteItemCollection);
+        addVoteItemCollection(currentVoteItemCollection);
     }
 
     public VoteItemCollection getCurrentVoteItemCollection() {
