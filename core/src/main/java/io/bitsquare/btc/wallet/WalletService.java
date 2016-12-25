@@ -124,6 +124,9 @@ public abstract class WalletService {
             wallet.removeEventListener(walletEventListener);
     }
 
+    public int getBestChainHeight() {
+        return walletsSetup.getChain().getBestChainHeight();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener

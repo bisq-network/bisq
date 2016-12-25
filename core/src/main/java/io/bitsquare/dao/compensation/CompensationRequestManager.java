@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.SquWalletService;
+import io.bitsquare.dao.vote.VotingParameters;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
@@ -35,15 +36,21 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class CompensationRequestManager {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
+
+    private static final int GENESIS_BLOCK_HEIGHT = 391; // TODO dev version regtest 
 
     private P2PService p2PService;
     private Storage<ArrayList<CompensationRequest>> compensationRequestsStorage;
     private BtcWalletService btcWalletService;
     private SquWalletService squWalletService;
+    private VotingParameters votingParameters;
     private ObservableList<CompensationRequest> observableCompensationRequestsList = FXCollections.observableArrayList();
     private CompensationRequest selectedCompensationRequest;
+    private int bestChainHeight = -1;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,11 +59,12 @@ public class CompensationRequestManager {
 
     @Inject
     public CompensationRequestManager(P2PService p2PService, Storage<ArrayList<CompensationRequest>> compensationRequestsStorage,
-                                      BtcWalletService btcWalletService, SquWalletService squWalletService) {
+                                      BtcWalletService btcWalletService, SquWalletService squWalletService, VotingParameters votingParameters) {
         this.p2PService = p2PService;
         this.compensationRequestsStorage = compensationRequestsStorage;
         this.btcWalletService = btcWalletService;
         this.squWalletService = squWalletService;
+        this.votingParameters = votingParameters;
 
         init(compensationRequestsStorage);
     }
@@ -76,7 +84,7 @@ public class CompensationRequestManager {
 
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
-                // We don't remove items
+                // TODO
             }
         });
 
@@ -88,18 +96,41 @@ public class CompensationRequestManager {
         });
     }
 
+    public void onAllServicesInitialized() {
+
+
+    }
+
+    //TODO WIP
+    public void setPhase() {
+        bestChainHeight = btcWalletService.getBestChainHeight();
+
+        checkArgument(bestChainHeight >= GENESIS_BLOCK_HEIGHT, "GENESIS_BLOCK_HEIGHT must be in the past");
+        int pastBlocks = bestChainHeight - GENESIS_BLOCK_HEIGHT;
+        int periodIndex = pastBlocks / votingParameters.getTotalPeriodInBlocks();
+
+        int startPhase1 = GENESIS_BLOCK_HEIGHT + periodIndex * votingParameters.getTotalPeriodInBlocks();
+        int endPhase1 = startPhase1 + votingParameters.getCompensationRequestPeriodInBlocks();
+
+
+    }
+
     public void addToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {
         p2PService.addData(compensationRequestPayload, true);
     }
 
     public void addToList(CompensationRequestPayload compensationRequestPayload, boolean storeLocally) {
-        if (!observableCompensationRequestsList.stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny().isPresent()) {
+        if (!contains(compensationRequestPayload)) {
             observableCompensationRequestsList.add(new CompensationRequest(compensationRequestPayload));
             if (storeLocally)
                 compensationRequestsStorage.queueUpForSave(new ArrayList<>(observableCompensationRequestsList), 500);
         } else {
             log.warn("We have already an item with the same CompensationRequest.");
         }
+    }
+
+    private boolean contains(CompensationRequestPayload compensationRequestPayload) {
+        return observableCompensationRequestsList.stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny().isPresent();
     }
 
     public ObservableList<CompensationRequest> getObservableCompensationRequestsList() {
@@ -117,6 +148,5 @@ public class CompensationRequestManager {
     public CompensationRequest getSelectedCompensationRequest() {
         return selectedCompensationRequest;
     }
-
 
 }

@@ -42,6 +42,7 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
+import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -117,6 +118,7 @@ public class MainViewModel implements ViewModel {
     private final Clock clock;
     private final FeeService feeService;
     private final SquUtxoFeedService squUtxoFeedService;
+    private CompensationRequestManager compensationRequestManager;
     private final KeyRing keyRing;
     private final Navigation navigation;
     private final BSFormatter formatter;
@@ -185,7 +187,7 @@ public class MainViewModel implements ViewModel {
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, AddBitcoinNodesWindow addBitcoinNodesWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService, SquUtxoFeedService squUtxoFeedService,
-                         KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
+                         CompensationRequestManager compensationRequestManager, KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
@@ -207,6 +209,7 @@ public class MainViewModel implements ViewModel {
         this.clock = clock;
         this.feeService = feeService;
         this.squUtxoFeedService = squUtxoFeedService;
+        this.compensationRequestManager = compensationRequestManager;
         this.keyRing = keyRing;
         this.navigation = navigation;
         this.formatter = formatter;
@@ -550,6 +553,7 @@ public class MainViewModel implements ViewModel {
 
         feeService.onAllServicesInitialized();
         squUtxoFeedService.onAllServicesInitialized();
+        compensationRequestManager.onAllServicesInitialized();
         
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();

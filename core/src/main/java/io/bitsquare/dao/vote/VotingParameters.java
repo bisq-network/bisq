@@ -73,10 +73,10 @@ public class VotingParameters {
     private double conversionRate = 0.000001; // how many btc you get for 1 squ (e.g. 1 000 000 squ = 1 btc)
 
     // 144 blocks is 1 day
-    private long compensationRequestPeriodInBlocks = 2880;  // 20 days
-    private long votingPeriodInBlocks = 432; // 3 days
-    private long fundingPeriodInBlocks = 1008; // 7 days
-    private long breakBetweenPeriodsInBlocks = 10;
+    private int compensationRequestPeriodInBlocks = 2880;  // 20 days
+    private int votingPeriodInBlocks = 432; // 3 days
+    private int fundingPeriodInBlocks = 1008; // 7 days
+    private int breakBetweenPeriodsInBlocks = 10;
 
     private double quorumForCompensationRequestVoting = 5; // 5%
     private double quorumForParameterVoting = 5; // 5%
@@ -157,35 +157,39 @@ public class VotingParameters {
         this.conversionRate = conversionRate;
     }
 
-    public long getCompensationRequestPeriodInBlocks() {
+    public int getCompensationRequestPeriodInBlocks() {
         return compensationRequestPeriodInBlocks;
     }
 
-    public void setCompensationRequestPeriodInBlocks(long compensationRequestPeriodInBlocks) {
+    public int getTotalPeriodInBlocks() {
+        return compensationRequestPeriodInBlocks + votingPeriodInBlocks + fundingPeriodInBlocks + 3 * breakBetweenPeriodsInBlocks;
+    }
+
+    public void setCompensationRequestPeriodInBlocks(int compensationRequestPeriodInBlocks) {
         this.compensationRequestPeriodInBlocks = compensationRequestPeriodInBlocks;
     }
 
-    public long getVotingPeriodInBlocks() {
+    public int getVotingPeriodInBlocks() {
         return votingPeriodInBlocks;
     }
 
-    public void setVotingPeriodInBlocks(long votingPeriodInBlocks) {
+    public void setVotingPeriodInBlocks(int votingPeriodInBlocks) {
         this.votingPeriodInBlocks = votingPeriodInBlocks;
     }
 
-    public long getFundingPeriodInBlocks() {
+    public int getFundingPeriodInBlocks() {
         return fundingPeriodInBlocks;
     }
 
-    public void setFundingPeriodInBlocks(long fundingPeriodInBlocks) {
+    public void setFundingPeriodInBlocks(int fundingPeriodInBlocks) {
         this.fundingPeriodInBlocks = fundingPeriodInBlocks;
     }
 
-    public long getBreakBetweenPeriodsInBlocks() {
+    public int getBreakBetweenPeriodsInBlocks() {
         return breakBetweenPeriodsInBlocks;
     }
 
-    public void setBreakBetweenPeriodsInBlocks(long breakBetweenPeriodsInBlocks) {
+    public void setBreakBetweenPeriodsInBlocks(int breakBetweenPeriodsInBlocks) {
         this.breakBetweenPeriodsInBlocks = breakBetweenPeriodsInBlocks;
     }
 

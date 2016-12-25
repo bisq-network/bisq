@@ -31,6 +31,7 @@ import java.security.PublicKey;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+// The data of the CompensationRequest
 public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -40,6 +41,8 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     public final byte version;
+    private final long creationDate;
+    
     public final String uid;
     public final String name;
     public final String title;
@@ -51,7 +54,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     private final long requestedBtc;
     public final String btcAddress;
     private final String nodeAddress;
-    private final long creationDate;
+
     @JsonExclude
     private PublicKey p2pStorageSignaturePubKey;
     // used for json

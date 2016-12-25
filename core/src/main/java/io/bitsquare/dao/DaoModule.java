@@ -37,6 +37,7 @@ public class DaoModule extends AppModule {
     protected void configure() {
         bind(CompensationRequestManager.class).in(Singleton.class);
         bind(VoteManager.class).in(Singleton.class);
+        bind(DaoService.class).in(Singleton.class);
         bind(VotingParameters.class).in(Singleton.class);
     }
 }
