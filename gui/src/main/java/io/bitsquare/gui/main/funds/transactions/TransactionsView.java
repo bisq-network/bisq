@@ -198,7 +198,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         tableView.setItems(sortedList);
         updateList();
 
-        walletService.getWallet().addEventListener(walletEventListener);
+        walletService.addEventListener(walletEventListener);
 
         scene = root.getScene();
         if (scene != null)
@@ -233,7 +233,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
         observableList.forEach(TransactionsListItem::cleanup);
-        walletService.getWallet().removeEventListener(walletEventListener);
+        walletService.removeEventListener(walletEventListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
@@ -252,7 +252,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         Stream<Tradable> concat3 = Stream.concat(concat2, failedTradesManager.getFailedTrades().stream());
         Set<Tradable> all = concat3.collect(Collectors.toSet());
 
-        Set<Transaction> transactions = walletService.getWallet().getTransactions(true);
+        Set<Transaction> transactions = walletService.getTransactions(true);
         List<TransactionsListItem> transactionsListItems = transactions.stream()
                 .map(transaction -> {
                     Optional<Tradable> tradableOptional = all.stream()

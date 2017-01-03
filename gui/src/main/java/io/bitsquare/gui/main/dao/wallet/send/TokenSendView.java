@@ -37,7 +37,10 @@ import io.bitsquare.gui.util.SQUFormatter;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -58,8 +61,6 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
     private BSFormatter btcFormatter;
     private BalanceUtil balanceUtil;
 
-    @Nullable
-    private Wallet squWallet;
     private int gridRow = 0;
     private InputTextField amountInputTextField;
     private Button sendButton;
@@ -162,7 +163,6 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
     @Override
     protected void activate() {
         balanceUtil.activate();
-        this.squWallet = squWalletService.getWallet();
     }
 
     @Override

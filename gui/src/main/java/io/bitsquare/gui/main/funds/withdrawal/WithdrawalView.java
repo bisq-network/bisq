@@ -331,7 +331,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void doWithdraw(Coin amount, Coin fee, FutureCallback<Transaction> callback) {
-        if (walletService.getWallet().isEncrypted()) {
+        if (walletService.isEncrypted()) {
             UserThread.runAfter(() -> walletPasswordWindow.onAesKey(aesKey ->
                     sendFunds(amount, fee, aesKey, callback))
                     .show(), 300, TimeUnit.MILLISECONDS);

@@ -348,7 +348,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 priceFeedService,
 
                 Version.VERSION,
-                walletService.getWallet().getLastBlockSeenHeight(),
+                walletService.getLastBlockSeenHeight(),
                 txFeeAsCoin.value,
                 createOfferFeeAsCoin.value,
                 securityDepositAsCoin.value,

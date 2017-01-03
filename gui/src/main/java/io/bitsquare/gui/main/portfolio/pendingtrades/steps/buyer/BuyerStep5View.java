@@ -145,7 +145,7 @@ public class BuyerStep5View extends TradeStepView {
         gridPane.getChildren().add(hBox);
 
         useSavingsWalletButton.setOnAction(e -> {
-            model.dataModel.walletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+            model.dataModel.btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
 
             handleTradeCompleted();
             model.dataModel.tradeManager.addTradeToClosedTrades(trade);
@@ -168,7 +168,7 @@ public class BuyerStep5View extends TradeStepView {
 
     private void reviewWithdrawal() {
         Coin amount = trade.getPayoutAmount();
-        BtcWalletService walletService = model.dataModel.walletService;
+        BtcWalletService walletService = model.dataModel.btcWalletService;
 
         AddressEntry fromAddressesEntry = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         String fromAddresses = fromAddressesEntry.getAddressString();
@@ -245,7 +245,7 @@ public class BuyerStep5View extends TradeStepView {
             else
                 new Popup().error(errorMessage).show();
         };
-        if (model.dataModel.walletService.getWallet().isEncrypted()) {
+        if (model.dataModel.btcWalletService.isEncrypted()) {
             UserThread.runAfter(() -> model.dataModel.walletPasswordWindow.onAesKey(aesKey ->
                     doWithdrawRequest(toAddress, amount, fee, aesKey, resultHandler, faultHandler))
                     .show(), 300, TimeUnit.MILLISECONDS);

@@ -188,8 +188,8 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         restoreDatePicker.getStyleClass().remove("validation_error");
 
 
-        DeterministicSeed btcKeyChainSeed = btcWalletService.getWallet().getKeyChainSeed();
-        DeterministicSeed squKeyChainSeed = squWalletService.getWallet().getKeyChainSeed();
+        DeterministicSeed btcKeyChainSeed = btcWalletService.getKeyChainSeed();
+        DeterministicSeed squKeyChainSeed = squWalletService.getKeyChainSeed();
         // wallet creation date is not encrypted
         walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
         if (btcKeyChainSeed.isEncrypted()) {
@@ -242,8 +242,8 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void askForPassword() {
         walletPasswordWindow.headLine("Enter password to view seed words").onAesKey(aesKey -> {
-            initBtcSeedWords(walletsManager.getDecryptedSeed(aesKey, btcWalletService.getWallet()));
-            initSquSeedWords(walletsManager.getDecryptedSeed(aesKey, squWalletService.getWallet()));
+            initBtcSeedWords(walletsManager.getDecryptedSeed(aesKey, btcWalletService.getKeyChainSeed(), btcWalletService.getKeyCrypter()));
+            initSquSeedWords(walletsManager.getDecryptedSeed(aesKey, squWalletService.getKeyChainSeed(), squWalletService.getKeyCrypter()));
             showSeedScreen();
         }).show();
     }

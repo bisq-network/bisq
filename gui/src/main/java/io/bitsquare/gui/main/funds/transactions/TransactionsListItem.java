@@ -67,19 +67,19 @@ class TransactionsListItem {
         txId = transaction.getHashAsString();
         this.walletService = walletService;
 
-        Coin valueSentToMe = transaction.getValueSentToMe(walletService.getWallet());
-        Coin valueSentFromMe = transaction.getValueSentFromMe(walletService.getWallet());
+        Coin valueSentToMe = walletService.getValueSentToMeForTransaction(transaction);
+        Coin valueSentFromMe = walletService.getValueSentFromMeForTransaction(transaction);
         Address address;
         if (valueSentToMe.isZero()) {
             amountAsCoin = valueSentFromMe.multiply(-1);
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
-                if (!transactionOutput.isMine(walletService.getWallet())) {
+                if (!walletService.isTransactionOutputMine(transactionOutput)) {
                     direction = "Sent to:";
                     received = false;
                     if (transactionOutput.getScriptPubKey().isSentToAddress()
                             || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
+                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getParams());
                         addressString = address.toString();
                     }
                 }
@@ -91,10 +91,10 @@ class TransactionsListItem {
             received = true;
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
-                if (transactionOutput.isMine(walletService.getWallet())) {
+                if (!walletService.isTransactionOutputMine(transactionOutput)) {
                     if (transactionOutput.getScriptPubKey().isSentToAddress() ||
                             transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
+                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getParams());
                         addressString = address.toString();
                     }
                 }
@@ -103,11 +103,11 @@ class TransactionsListItem {
             amountAsCoin = valueSentToMe.subtract(valueSentFromMe);
             boolean outgoing = false;
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
-                if (!transactionOutput.isMine(walletService.getWallet())) {
+                if (!walletService.isTransactionOutputMine(transactionOutput)) {
                     outgoing = true;
                     if (transactionOutput.getScriptPubKey().isSentToAddress() ||
                             transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getWallet().getParams());
+                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getParams());
                         addressString = address.toString();
                     }
                 }

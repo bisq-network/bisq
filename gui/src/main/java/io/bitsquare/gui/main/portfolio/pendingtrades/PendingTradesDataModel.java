@@ -68,7 +68,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PendingTradesDataModel extends ActivatableDataModel {
     public final TradeManager tradeManager;
-    public final BtcWalletService walletService;
+    public final BtcWalletService btcWalletService;
     private final TradeWalletService tradeWalletService;
     private final FeeService feeService;
     private final User user;
@@ -94,11 +94,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesDataModel(TradeManager tradeManager, BtcWalletService walletService, TradeWalletService tradeWalletService, FeeService feeService,
+    public PendingTradesDataModel(TradeManager tradeManager, BtcWalletService btcWalletService, TradeWalletService tradeWalletService, FeeService feeService,
                                   User user, KeyRing keyRing, DisputeManager disputeManager, Preferences preferences, P2PService p2PService,
                                   Navigation navigation, WalletPasswordWindow walletPasswordWindow, NotificationCenter notificationCenter) {
         this.tradeManager = tradeManager;
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
         this.tradeWalletService = tradeWalletService;
         this.feeService = feeService;
         this.user = user;
@@ -322,14 +322,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             } else {
                 log.info("Trade.depositTx is null. We try to find the tx in our wallet.");
                 List<Transaction> candidates = new ArrayList<>();
-                List<Transaction> transactions = walletService.getWallet().getRecentTransactions(100, true);
+                List<Transaction> transactions = btcWalletService.getRecentTransactions(100, true);
                 transactions.stream().forEach(transaction -> {
-                    Coin valueSentFromMe = transaction.getValueSentFromMe(walletService.getWallet());
+                    Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
                     if (!valueSentFromMe.isZero()) {
                         // spending tx
                         // MS tx
                         candidates.addAll(transaction.getOutputs().stream()
-                                .filter(transactionOutput -> !transactionOutput.isMine(walletService.getWallet()))
+                                .filter(transactionOutput -> !btcWalletService.isTransactionOutputMine(transactionOutput))
                                 .filter(transactionOutput -> transactionOutput.getScriptPubKey().isPayToScriptHash())
                                 .map(transactionOutput -> transaction)
                                 .collect(Collectors.toList()));

@@ -127,7 +127,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         emptyWalletButton.setDisable(!isBalanceSufficient && addressInputTextField.getText().length() > 0);
         emptyWalletButton.setOnAction(e -> {
             if (addressInputTextField.getText().length() > 0 && isBalanceSufficient) {
-                if (walletService.getWallet().isEncrypted()) {
+                if (walletService.isEncrypted()) {
                     walletPasswordWindow
                             .onAesKey(this::doEmptyWallet)
                             .onClose(this::blurAgain)

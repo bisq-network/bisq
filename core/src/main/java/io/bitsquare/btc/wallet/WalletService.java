@@ -30,18 +30,19 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.signers.TransactionSigner;
-import org.bitcoinj.wallet.DecryptingKeyBag;
-import org.bitcoinj.wallet.KeyBag;
-import org.bitcoinj.wallet.RedeemData;
+import org.bitcoinj.utils.Threading;
+import org.bitcoinj.wallet.*;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
@@ -463,12 +464,87 @@ public abstract class WalletService {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Wallet getWallet() {
-        return wallet;
-    }
-
     public Transaction getTransactionFromSerializedTx(byte[] tx) {
         return new Transaction(params, tx);
+    }
+
+    public NetworkParameters getParams() {
+        return params;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Wallet delegates to avoid direct access to wallet outside the service class
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addEventListener(WalletEventListener listener) {
+        wallet.addEventListener(listener, Threading.USER_THREAD);
+    }
+
+    public boolean removeEventListener(WalletEventListener listener) {
+        return wallet.removeEventListener(listener);
+    }
+
+    public boolean isWalletReady() {
+        return wallet != null;
+    }
+
+    public DeterministicSeed getKeyChainSeed() {
+        return wallet.getKeyChainSeed();
+    }
+
+    @Nullable
+    public KeyCrypter getKeyCrypter() {
+        return wallet.getKeyCrypter();
+    }
+
+    public boolean checkAESKey(KeyParameter aesKey) {
+        return wallet.checkAESKey(aesKey);
+    }
+
+    public DeterministicKey freshKey(KeyChain.KeyPurpose purpose) {
+        return wallet.freshKey(purpose);
+    }
+
+    public Address freshReceiveAddress() {
+        return wallet.freshReceiveAddress();
+    }
+
+    public boolean isEncrypted() {
+        return wallet.isEncrypted();
+    }
+
+    public List<Transaction> getRecentTransactions(int numTransactions, boolean includeDead) {
+        return wallet.getRecentTransactions(numTransactions, includeDead);
+    }
+
+    public int getLastBlockSeenHeight() {
+        return wallet.getLastBlockSeenHeight();
+    }
+
+    public Set<Transaction> getTransactions(boolean includeDead) {
+        return wallet.getTransactions(includeDead);
+    }
+
+    public Coin getBalance(Wallet.BalanceType balanceType) {
+        return wallet.getBalance(balanceType);
+    }
+
+    @Nullable
+    public Transaction getTransaction(Sha256Hash hash) {
+        return wallet.getTransaction(hash);
+    }
+
+    public boolean isTransactionOutputMine(TransactionOutput transactionOutput) {
+        return transactionOutput.isMine(wallet);
+    }
+
+    public Coin getValueSentFromMeForTransaction(Transaction transaction) throws ScriptException {
+        return transaction.getValueSentFromMe(wallet);
+    }
+
+    public Coin getValueSentToMeForTransaction(Transaction transaction) throws ScriptException {
+        return transaction.getValueSentToMe(wallet);
     }
 
 

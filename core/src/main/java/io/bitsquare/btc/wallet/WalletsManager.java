@@ -85,36 +85,33 @@ public class WalletsManager {
     }
 
     public boolean areWalletsEncrypted() {
-        return getBtcWallet() != null && getBtcWallet().isEncrypted();
+        return btcWalletService.isEncrypted() && squWalletService.isEncrypted();
     }
 
     public boolean areWalletsAvailable() {
-        return getBtcWallet() != null;
+        return btcWalletService.isWalletReady() && squWalletService.isWalletReady();
     }
 
-    private Wallet getBtcWallet() {
-        return btcWalletService.getWallet();
-    }
 
     public KeyCrypterScrypt getKeyCrypterScrypt() {
-        if (areWalletsEncrypted())
-            return (KeyCrypterScrypt) getBtcWallet().getKeyCrypter();
+        if (areWalletsEncrypted() && btcWalletService.getKeyCrypter() != null)
+            return (KeyCrypterScrypt) btcWalletService.getKeyCrypter();
         else
             return ScryptUtil.getKeyCrypterScrypt();
     }
 
     public boolean checkAESKey(KeyParameter aesKey) {
-        return getBtcWallet() != null && getBtcWallet().checkAESKey(aesKey);
+        return btcWalletService.checkAESKey(aesKey);
     }
 
     public long getChainSeedCreationTimeSeconds() {
-        return getBtcWallet() != null ? getBtcWallet().getKeyChainSeed().getCreationTimeSeconds() : 0;
+        return btcWalletService.getKeyChainSeed().getCreationTimeSeconds();
     }
 
     public boolean hasPositiveBalance() {
-        return getBtcWallet() != null &&
-                (getBtcWallet().getBalance(Wallet.BalanceType.AVAILABLE).value > 0 ||
-                        squWalletService.getWallet().getBalance(Wallet.BalanceType.AVAILABLE).value > 0);
+        return btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE)
+                .add(squWalletService.getBalance(Wallet.BalanceType.AVAILABLE))
+                .isPositive();
     }
 
     public void setAesKey(KeyParameter aesKey) {
@@ -123,11 +120,9 @@ public class WalletsManager {
         tradeWalletService.setAesKey(aesKey);
     }
 
-    public DeterministicSeed getDecryptedSeed(KeyParameter aesKey, Wallet wallet) {
-        KeyCrypter btcKeyCrypter = wallet.getKeyCrypter();
-        if (btcKeyCrypter != null) {
-            DeterministicSeed btcKeyChainSeed = wallet.getKeyChainSeed();
-            return btcKeyChainSeed.decrypt(btcKeyCrypter, "", aesKey);
+    public DeterministicSeed getDecryptedSeed(KeyParameter aesKey, DeterministicSeed keyChainSeed, KeyCrypter keyCrypter) {
+        if (keyCrypter != null) {
+            return keyChainSeed.decrypt(keyCrypter, "", aesKey);
         } else {
             log.warn("keyCrypter is null");
             return null;

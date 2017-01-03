@@ -107,7 +107,8 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     protected void activate() {
         CompensationRequestDisplay.fillWithMock();
         createButton.setOnAction(event -> {
-            DeterministicKey squKeyPair = squWalletService.getWallet().freshKey(KeyChain.KeyPurpose.AUTHENTICATION);
+            // TODO
+            DeterministicKey squKeyPair = squWalletService.freshKey(KeyChain.KeyPurpose.AUTHENTICATION);
             checkNotNull(squKeyPair, "squKeyPair must not be null");
 
             //TODO
@@ -148,6 +149,8 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
                     Coin createCompensationRequestFee = feeService.getCreateCompensationRequestFee();
                     Transaction preparedSendTx = squWalletService.getPreparedBurnFeeTx(createCompensationRequestFee);
+                    
+                    //TODO use key form spending SQU input instead of squKeyPair
 
                     //TODO 1 Btc output (small payment to own compensation receiving address)
                     Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedSendTx, false, hash);

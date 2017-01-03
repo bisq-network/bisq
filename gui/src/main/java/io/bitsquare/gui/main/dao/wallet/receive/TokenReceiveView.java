@@ -38,12 +38,10 @@ import javafx.scene.layout.GridPane;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Wallet;
 import org.bitcoinj.uri.BitcoinURI;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.TimeUnit;
@@ -62,8 +60,6 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
     private final SQUFormatter formatter;
     private BalanceUtil balanceUtil;
 
-    @Nullable
-    private Wallet squWallet;
     private int gridRow = 0;
     private final String paymentLabelString;
     private Subscription amountTextFieldSubscription;
@@ -109,7 +105,6 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
     @Override
     protected void activate() {
         balanceUtil.activate();
-        squWallet = squWalletService.getWallet();
 
         amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> {
             addressTextField.setAmountAsCoin(formatter.parseToCoin(t));
@@ -120,7 +115,7 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
                         () -> new QRCodeWindow(getBitcoinURI()).show(),
                         200, TimeUnit.MILLISECONDS)
         ));
-        addressTextField.setAddress(squWallet.freshReceiveAddress().toString());
+        addressTextField.setAddress(squWalletService.freshReceiveAddress().toString());
         updateQRCode();
     }
 

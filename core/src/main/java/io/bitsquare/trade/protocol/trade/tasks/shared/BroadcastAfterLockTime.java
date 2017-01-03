@@ -75,7 +75,7 @@ public class BroadcastAfterLockTime extends TradeTask {
         Transaction payoutTx = trade.getPayoutTx();
         checkNotNull(payoutTx, "payoutTx must not be null at BroadcastAfterLockTime.broadcastTx");
 
-        Transaction payoutTxFromWallet = processModel.getWalletService().getWallet().getTransaction(payoutTx.getHash());
+        Transaction payoutTxFromWallet = processModel.getWalletService().getTransaction(payoutTx.getHash());
         log.debug("payoutTxFromWallet:" + payoutTxFromWallet);
         if (payoutTxFromWallet != null)
             payoutTx = payoutTxFromWallet;

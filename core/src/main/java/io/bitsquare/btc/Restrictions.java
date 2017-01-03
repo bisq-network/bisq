@@ -25,10 +25,10 @@ public class Restrictions {
     public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001"); // 4 cent @ 400 EUR/BTC 
 
     public static boolean isAboveDust(Coin amount, Coin txFee) {
-        return amount != null && amount.compareTo(txFee.add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
+        return amount != null && amount.compareTo(txFee.add(Transaction.MIN_NONDUST_OUTPUT)) >= 0;
     }
 
     public static boolean isAboveDust(Coin amount) {
-        return amount != null && amount.compareTo(Transaction.MIN_NONDUST_OUTPUT) > 0;
+        return amount != null && amount.compareTo(Transaction.MIN_NONDUST_OUTPUT) >= 0;
     }
 }
