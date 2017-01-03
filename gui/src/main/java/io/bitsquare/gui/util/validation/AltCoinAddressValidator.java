@@ -18,6 +18,7 @@
 package io.bitsquare.gui.util.validation;
 
 
+import io.bitsquare.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bitsquare.gui.util.validation.params.IOPParams;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -92,6 +93,8 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return validationResult;
                     else
                         return new ValidationResult(false, "ZEC address need to start with t. Addresses starting with z are not supported.");
+                case "GBYTE":
+                    return ByteballAddressValidator.validate(input);
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode:" + currencyCode);
                     return validationResult;
