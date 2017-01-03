@@ -149,6 +149,7 @@ class PriceRequestService {
                 .filter(e -> poloniexMap == null || !poloniexMap.containsKey(e.getKey()))
                 .forEach(e -> allPricesMap.put(e.getKey(), e.getValue()));
         coinmarketcapTs = Instant.now().getEpochSecond();
+        log.info("Coinmarketcap LTC (last): " + map.get("LTC").l);
         writeToJson();
     }
 
@@ -157,11 +158,13 @@ class PriceRequestService {
         poloniexMap = poloniexProvider.request();
         allPricesMap.putAll(poloniexMap);
         poloniexTs = Instant.now().getEpochSecond();
+        log.info("Poloniex LTC (last): " + poloniexMap.get("LTC").l);
         writeToJson();
     }
 
     private void requestBtcAverageLocalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
         btcAverageLocalMap = btcAverageProvider.getLocal();
+        log.info("BTCAverage local USD (last):" + btcAverageLocalMap.get("USD").l);
         allPricesMap.putAll(btcAverageLocalMap);
         btcAverageTs = Instant.now().getEpochSecond();
         writeToJson();
@@ -169,6 +172,7 @@ class PriceRequestService {
 
     private void requestBtcAverageGlobalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
         Map<String, PriceData> map = btcAverageProvider.getGlobal();
+        log.info("BTCAverage global USD (last):" + map.get("USD").l);
         // we don't replace prices which we got form the local request, just in case the global data are received 
         // earlier at startup we allow them but the local request will overwrite them.
         map.entrySet().stream()
