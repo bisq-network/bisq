@@ -41,12 +41,8 @@ import io.bitsquare.p2p.P2PService;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.Utils;
+import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.wallet.KeyChain;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -57,6 +53,7 @@ import java.security.PublicKey;
 import java.util.Date;
 import java.util.UUID;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.gui.util.FormBuilder.addButtonAfterGroup;
 
@@ -107,10 +104,6 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     protected void activate() {
         CompensationRequestDisplay.fillWithMock();
         createButton.setOnAction(event -> {
-            // TODO
-            DeterministicKey squKeyPair = squWalletService.freshKey(KeyChain.KeyPurpose.AUTHENTICATION);
-            checkNotNull(squKeyPair, "squKeyPair must not be null");
-
             //TODO
             Date startDate = new Date();
             Date endDate = new Date();
@@ -131,15 +124,27 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                         nodeAddress,
                         p2pStorageSignaturePubKey
                 );
-                // We get the JSON of the object excluding signature and feeTxId
-                String payloadAsJson = StringUtils.deleteWhitespace(Utilities.objectToJson(compensationRequestPayload));
-                log.error(payloadAsJson);
-                // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
-                // encoded string.
-                String signature = squKeyPair.signMessage(payloadAsJson);
-                compensationRequestPayload.setSignature(signature);
 
                 try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                    Coin createCompensationRequestFee = feeService.getCreateCompensationRequestFee();
+                    Transaction preparedSendTx = squWalletService.getPreparedBurnFeeTx(createCompensationRequestFee);
+
+                    checkArgument(!preparedSendTx.getInputs().isEmpty(), "preparedSendTx inputs must not be empty");
+
+                    // We use the key of the first SQU input for signing the data
+                    TransactionOutput connectedOutput = preparedSendTx.getInputs().get(0).getConnectedOutput();
+                    checkNotNull(connectedOutput, "connectedOutput must not be null");
+                    DeterministicKey squKeyPair = squWalletService.findKeyFromPubHash(connectedOutput.getScriptPubKey().getPubKeyHash());
+                    checkNotNull(squKeyPair, "squKeyPair must not be null");
+
+                    // We get the JSON of the object excluding signature and feeTxId
+                    String payloadAsJson = StringUtils.deleteWhitespace(Utilities.objectToJson(compensationRequestPayload));
+                    log.error(payloadAsJson);
+                    // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
+                    // encoded string.
+                    String signature = squKeyPair.signMessage(payloadAsJson);
+                    compensationRequestPayload.setSignature(signature);
+                    
                     String dataAndSig = payloadAsJson + signature;
                     byte[] dataAndSigAsBytes = dataAndSig.getBytes();
                     outputStream.write(Version.COMPENSATION_REQUEST_VERSION);
@@ -147,10 +152,6 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                     byte hash[] = outputStream.toByteArray();
                     //TODO should we store the hash in the compensationRequestPayload object?
 
-                    Coin createCompensationRequestFee = feeService.getCreateCompensationRequestFee();
-                    Transaction preparedSendTx = squWalletService.getPreparedBurnFeeTx(createCompensationRequestFee);
-                    
-                    //TODO use key form spending SQU input instead of squKeyPair
 
                     //TODO 1 Btc output (small payment to own compensation receiving address)
                     Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedSendTx, false, hash);

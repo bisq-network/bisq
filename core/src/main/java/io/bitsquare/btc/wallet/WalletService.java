@@ -506,6 +506,10 @@ public abstract class WalletService {
         return wallet.freshKey(purpose);
     }
 
+    public DeterministicKey findKeyFromPubHash(byte[] pubkeyHash) {
+        return wallet.getActiveKeychain().findKeyFromPubHash(pubkeyHash);
+    }
+
     public Address freshReceiveAddress() {
         return wallet.freshReceiveAddress();
     }
