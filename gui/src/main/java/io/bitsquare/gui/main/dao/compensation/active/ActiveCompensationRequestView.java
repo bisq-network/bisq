@@ -131,7 +131,6 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     @Override
     protected void activate() {
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.getSelectionModel().clearSelection();
         selectedCompensationRequestSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectCompensationRequest);
     }
@@ -245,6 +244,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                     }
                 });
         dateColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getCreationDate().compareTo(o2.getCompensationRequestPayload().getCreationDate()));
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
 

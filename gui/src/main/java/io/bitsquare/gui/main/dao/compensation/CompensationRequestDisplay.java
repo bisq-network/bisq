@@ -33,7 +33,7 @@ public class CompensationRequestDisplay {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestDisplay.class);
 
     private GridPane gridPane;
-    public InputTextField nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
+    public InputTextField uidTextField, nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
             startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
     private int gridRow = 0;
 
@@ -42,8 +42,10 @@ public class CompensationRequestDisplay {
     }
 
     public void createAllFields(String title, double top) {
-        addTitledGroupBg(gridPane, gridRow, 9, title, top);
-        nameTextField = addLabelInputTextField(gridPane, gridRow, "Name/nickname:", top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
+        addTitledGroupBg(gridPane, gridRow, 10, title, top);
+        uidTextField = addLabelInputTextField(gridPane, gridRow, "ID:", top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
+        uidTextField.setEditable(false);
+        nameTextField = addLabelInputTextField(gridPane, ++gridRow, "Name/nickname:").second;
         titleTextField = addLabelInputTextField(gridPane, ++gridRow, "Title:").second;
         categoryTextField = addLabelInputTextField(gridPane, ++gridRow, "Category:").second;
         descriptionTextField = addLabelInputTextField(gridPane, ++gridRow, "Description:").second;
@@ -55,6 +57,7 @@ public class CompensationRequestDisplay {
     }
 
     public void fillWithData(CompensationRequestPayload data) {
+        uidTextField.setText(data.uid);
         nameTextField.setText(data.name);
         titleTextField.setText(data.title);
         categoryTextField.setText(data.category);
@@ -67,6 +70,7 @@ public class CompensationRequestDisplay {
     }
 
     public void clearForm() {
+        uidTextField.setText("");
         nameTextField.setText("");
         titleTextField.setText("");
         categoryTextField.setText("");
@@ -80,6 +84,7 @@ public class CompensationRequestDisplay {
 
     public void fillWithMock() {
         int random = new Random().nextInt(100);
+        uidTextField.setText("Mock UID" + random);
         nameTextField.setText("Mock name" + random);
         titleTextField.setText("Mock Title " + random);
         categoryTextField.setText("Mock Category " + random);

@@ -100,6 +100,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
+        gridRow = 0;
         voteItemCollection = voteManager.getCurrentVoteItemCollection();
         root.getChildren().clear();
 
@@ -189,10 +190,9 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         } else {
             Tuple2<Label, InputTextField> tuple;
             if (voteItem == voteItemCollection.get(0))
-                tuple = addLabelInputTextField(root, gridRow, voteItem.name + " (" + voteItem.code + "):", Layout.FIRST_ROW_DISTANCE);
+                tuple = addLabelInputTextField(root, gridRow, voteItem.name + ":", Layout.FIRST_ROW_DISTANCE);
             else
-                tuple = addLabelInputTextField(root, ++gridRow, voteItem.name + " (" + voteItem.code + "):");
-
+                tuple = addLabelInputTextField(root, ++gridRow, voteItem.name + ":");
             InputTextField inputTextField = tuple.second;
             inputTextField.setText(String.valueOf(voteItem.getValue()));
             inputTextField.textProperty().addListener((observable, oldValue, newValue) -> voteItem.setValue((byte) ((int) Integer.valueOf(newValue))));

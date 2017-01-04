@@ -60,7 +60,7 @@ import static io.bitsquare.gui.util.FormBuilder.addButtonAfterGroup;
 @FxmlView
 public class CreateCompensationRequestView extends ActivatableView<GridPane, Void> {
 
-    private CompensationRequestDisplay CompensationRequestDisplay;
+    private CompensationRequestDisplay compensationRequestDisplay;
     private Button createButton;
 
     private final PublicKey p2pStorageSignaturePubKey;
@@ -94,15 +94,15 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
     @Override
     public void initialize() {
-        CompensationRequestDisplay = new CompensationRequestDisplay(root);
-        CompensationRequestDisplay.removeAllFields();
-        CompensationRequestDisplay.createAllFields("Create new compensation request", 0);
-        createButton = addButtonAfterGroup(root, CompensationRequestDisplay.incrementAndGetGridRow(), "Create compensation request");
+        compensationRequestDisplay = new CompensationRequestDisplay(root);
+        compensationRequestDisplay.removeAllFields();
+        compensationRequestDisplay.createAllFields("Create new compensation request", 0);
+        createButton = addButtonAfterGroup(root, compensationRequestDisplay.incrementAndGetGridRow(), "Create compensation request");
     }
 
     @Override
     protected void activate() {
-        CompensationRequestDisplay.fillWithMock();
+        compensationRequestDisplay.fillWithMock();
         createButton.setOnAction(event -> {
             //TODO
             Date startDate = new Date();
@@ -112,15 +112,15 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
             nodeAddress = p2PService.getAddress();
             if (nodeAddress != null) {
                 CompensationRequestPayload compensationRequestPayload = new CompensationRequestPayload(UUID.randomUUID().toString(),
-                        CompensationRequestDisplay.nameTextField.getText(),
-                        CompensationRequestDisplay.titleTextField.getText(),
-                        CompensationRequestDisplay.categoryTextField.getText(),
-                        CompensationRequestDisplay.descriptionTextField.getText(),
-                        CompensationRequestDisplay.linkTextField.getText(),
+                        compensationRequestDisplay.nameTextField.getText(),
+                        compensationRequestDisplay.titleTextField.getText(),
+                        compensationRequestDisplay.categoryTextField.getText(),
+                        compensationRequestDisplay.descriptionTextField.getText(),
+                        compensationRequestDisplay.linkTextField.getText(),
                         startDate,
                         endDate,
-                        btcFormatter.parseToCoin(CompensationRequestDisplay.requestedBTCTextField.getText()),
-                        CompensationRequestDisplay.btcAddressTextField.getText(),
+                        btcFormatter.parseToCoin(compensationRequestDisplay.requestedBTCTextField.getText()),
+                        compensationRequestDisplay.btcAddressTextField.getText(),
                         nodeAddress,
                         p2pStorageSignaturePubKey
                 );
@@ -178,7 +178,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                                             checkNotNull(transaction, "Transaction must not be null at broadcastTx callback.");
                                             compensationRequestPayload.setFeeTxId(transaction.getHashAsString());
                                             compensationRequestManager.addToP2PNetwork(compensationRequestPayload);
-                                            CompensationRequestDisplay.clearForm();
+                                            compensationRequestDisplay.clearForm();
                                             new Popup<>().confirmation("Your transaction has been successfully published.").show();
                                         }
 
