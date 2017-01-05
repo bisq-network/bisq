@@ -92,6 +92,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BITNZD", "BitNZD", true));
         result.add(new CryptoCurrency("BITSEK", "BitSEK", true));
         result.add(new CryptoCurrency("BITSGD", "BitSGD", true));
+        result.add(new CryptoCurrency("GBYTE", "Byte"));
         result.add(new CryptoCurrency("SYNQ", "BitSYNQ"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("BITUSD", "BitUSD", true));
