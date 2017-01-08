@@ -21,7 +21,6 @@ import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
@@ -65,7 +64,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final FeeService feeService;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
-    private final BlockchainService blockchainService;
     private final BSFormatter formatter;
 
     private Coin takerFeeAsCoin;
@@ -104,7 +102,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Inject
     TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
                        BtcWalletService walletService, User user, FeeService feeService,
-                       Preferences preferences, PriceFeedService priceFeedService, BlockchainService blockchainService,
+                       Preferences preferences, PriceFeedService priceFeedService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.tradeWalletService = tradeWalletService;
@@ -113,7 +111,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.feeService = feeService;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
-        this.blockchainService = blockchainService;
         this.formatter = formatter;
 
         // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);

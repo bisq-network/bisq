@@ -19,12 +19,18 @@ package io.bitsquare.dao;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
+import io.bitsquare.dao.blockchain.BlockchainRpcService;
+import io.bitsquare.dao.blockchain.BlockchainService;
+import io.bitsquare.dao.blockchain.RpcOptionKeys;
 import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.dao.vote.VoteManager;
-import io.bitsquare.dao.vote.VotingParameters;
+import io.bitsquare.dao.vote.VotingDefaultValues;
+import io.bitsquare.dao.vote.VotingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+
+import static com.google.inject.name.Names.named;
 
 public class DaoModule extends AppModule {
     private static final Logger log = LoggerFactory.getLogger(DaoModule.class);
@@ -35,10 +41,19 @@ public class DaoModule extends AppModule {
 
     @Override
     protected void configure() {
+        bind(DaoManager.class).in(Singleton.class);
+        bind(BlockchainService.class).to(BlockchainRpcService.class).in(Singleton.class);
+        bind(DaoPeriodService.class).in(Singleton.class);
+        bind(VotingService.class).in(Singleton.class);
+        
         bind(CompensationRequestManager.class).in(Singleton.class);
         bind(VoteManager.class).in(Singleton.class);
         bind(DaoService.class).in(Singleton.class);
-        bind(VotingParameters.class).in(Singleton.class);
+        bind(VotingDefaultValues.class).in(Singleton.class);
+
+        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_USER)).to(env.getRequiredProperty(RpcOptionKeys.RPC_USER));
+        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_PASSWORD)).to(env.getRequiredProperty(RpcOptionKeys.RPC_PASSWORD));
+        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_PORT)).to(env.getRequiredProperty(RpcOptionKeys.RPC_PORT));
     }
 }
 

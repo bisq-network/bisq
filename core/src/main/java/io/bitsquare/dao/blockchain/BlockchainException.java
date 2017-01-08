@@ -15,10 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.dao.tokens;
+package io.bitsquare.dao.blockchain;
 
-public abstract class TxService {
-    abstract public Tx getTx(String txId);
+public class BlockchainException extends Exception {
+    public BlockchainException(String message) {
+        super(message);
+    }
 
-    abstract public void addTx(Tx tx);
+    public BlockchainException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

@@ -90,8 +90,6 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
-        squWalletService.requestSquUtxo(null, null);
-
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
             Tab selectedItem = root.getSelectionModel().getSelectedItem();
             if (selectedItem == tokenWalletTab)

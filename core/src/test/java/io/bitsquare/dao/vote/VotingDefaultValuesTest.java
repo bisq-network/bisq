@@ -15,10 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.dao.tokens;
+package io.bitsquare.dao.vote;
 
-public abstract class TxService {
-    abstract public Tx getTx(String txId);
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    abstract public void addTx(Tx tx);
-}
+import static junit.framework.Assert.assertEquals;
+
+public class VotingDefaultValuesTest {
+    private static final Logger log = LoggerFactory.getLogger(VotingDefaultValuesTest.class);
+
+    @Test
+    public void testValidTxs() {
+        VotingDefaultValues votingDefaultValues = new VotingDefaultValues();
+
+        assertEquals(10, votingDefaultValues.getAdjustedValue(100, 0));
+        assertEquals(100, votingDefaultValues.getAdjustedValue(100, 127));
+        assertEquals(1000, votingDefaultValues.getAdjustedValue(100, 254));
+    }
+} 

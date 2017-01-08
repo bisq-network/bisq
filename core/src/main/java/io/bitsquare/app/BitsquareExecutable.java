@@ -22,6 +22,7 @@ import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.BtcOptionKeys;
 import io.bitsquare.btc.RegTestHost;
 import io.bitsquare.common.CommonOptionKeys;
+import io.bitsquare.dao.blockchain.RpcOptionKeys;
 import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
@@ -110,6 +111,13 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg()
                 .ofType(boolean.class);
         parser.accepts(AppOptionKeys.PROVIDERS, description("Custom providers (comma separated)", false))
+                .withRequiredArg();
+
+        parser.accepts(RpcOptionKeys.RPC_USER, description("Bitcoind rpc username", ""))
+                .withRequiredArg();
+        parser.accepts(RpcOptionKeys.RPC_PASSWORD, description("Bitcoind rpc password", ""))
+                .withRequiredArg();
+        parser.accepts(RpcOptionKeys.RPC_PORT, description("Bitcoind rpc port", ""))
                 .withRequiredArg();
 
         parser.accepts(BtcOptionKeys.BTC_NETWORK, description("Bitcoin network", BitcoinNetwork.DEFAULT))

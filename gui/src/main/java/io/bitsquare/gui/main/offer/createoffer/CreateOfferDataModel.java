@@ -22,7 +22,6 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
@@ -73,7 +72,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     final String shortOfferId;
     private final FeeService feeService;
     private final Navigation navigation;
-    private final BlockchainService blockchainService;
     private final BSFormatter formatter;
     private final String offerId;
     private final AddressEntry addressEntry;
@@ -123,7 +121,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     @Inject
     CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService walletService, TradeWalletService tradeWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService,
-                         FeeService feeService, Navigation navigation, BlockchainService blockchainService, BSFormatter formatter) {
+                         FeeService feeService, Navigation navigation, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -134,7 +132,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.priceFeedService = priceFeedService;
         this.feeService = feeService;
         this.navigation = navigation;
-        this.blockchainService = blockchainService;
         this.formatter = formatter;
 
         // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
@@ -265,7 +262,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         createOfferFeeAsCoin = feeService.getCreateOfferFee();
         txFeeAsCoin = feeService.getTxFee(400);
-       
+
         calculateVolume();
         calculateTotalToPay();
         return true;

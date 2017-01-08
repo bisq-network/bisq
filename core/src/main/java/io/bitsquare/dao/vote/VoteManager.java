@@ -17,12 +17,14 @@
 
 package io.bitsquare.dao.vote;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.dao.DaoPeriodService;
 import io.bitsquare.dao.compensation.CompensationRequest;
 import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.dao.compensation.CompensationRequestPayload;
@@ -41,33 +43,63 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class VoteManager {
     private static final Logger log = LoggerFactory.getLogger(VoteManager.class);
+
+    public static final String ERROR_MSG_MISSING_BYTE = "We need to have at least 1 more byte for the voting value.";
+    public static final String ERROR_MSG_WRONG_SIZE = "sizeOfCompReqVotesInBytes must be 0 or multiple of 2. sizeOfCompReqVotesInBytes=";
+    public static final String ERROR_MSG_INVALID_COMP_REQ_MAPS = "Bitmaps for compensation requests are invalid.";
+    public static final String ERROR_MSG_INVALID_COMP_REQ_VAL = "We found an accepted vote at a not voted request.";
+
     private final BtcWalletService btcWalletService;
     private final SquWalletService squWalletService;
     private FeeService feeService;
-    private final Storage<ArrayList<VoteItemCollection>> voteItemCollectionsStorage;
+    private final Storage<ArrayList<VoteItemsList>> voteItemCollectionsStorage;
     private CompensationRequestManager compensationRequestManager;
-    private ArrayList<VoteItemCollection> voteItemCollections = new ArrayList<>();
-    private VoteItemCollection currentVoteItemCollection;
+    private DaoPeriodService daoPeriodService;
+    private VotingDefaultValues votingDefaultValues;
+    private ArrayList<VoteItemsList> voteItemsLists = new ArrayList<>();
+    private VoteItemsList activeVoteItemsList;
 
     @Inject
-    public VoteManager(BtcWalletService btcWalletService, SquWalletService squWalletService, FeeService feeService,
-                       Storage<ArrayList<VoteItemCollection>> voteItemCollectionsStorage, CompensationRequestManager compensationRequestManager) {
+    public VoteManager(BtcWalletService btcWalletService,
+                       SquWalletService squWalletService,
+                       FeeService feeService,
+                       Storage<ArrayList<VoteItemsList>> voteItemCollectionsStorage,
+                       CompensationRequestManager compensationRequestManager,
+                       DaoPeriodService daoPeriodService,
+                       VotingDefaultValues votingDefaultValues) {
         this.btcWalletService = btcWalletService;
         this.squWalletService = squWalletService;
         this.feeService = feeService;
         this.voteItemCollectionsStorage = voteItemCollectionsStorage;
         this.compensationRequestManager = compensationRequestManager;
+        this.daoPeriodService = daoPeriodService;
+        this.votingDefaultValues = votingDefaultValues;
 
-        ArrayList<VoteItemCollection> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
+        ArrayList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
         if (persisted != null)
-            voteItemCollections.addAll(persisted);
-
-        checkIfOpenForVoting();
+            voteItemsLists.addAll(persisted);
     }
 
-    private void checkIfOpenForVoting() {
-        //TODO mock
-        setCurrentVoteItemCollection(new VoteItemCollection());
+    @VisibleForTesting
+    VoteManager(VotingDefaultValues votingDefaultValues) {
+        this.btcWalletService = null;
+        this.squWalletService = null;
+        this.feeService = null;
+        this.voteItemCollectionsStorage = null;
+        this.compensationRequestManager = null;
+        this.daoPeriodService = null;
+        this.votingDefaultValues = votingDefaultValues;
+    }
+
+    public void onAllServicesInitialized() {
+        if (daoPeriodService.getPhase() == DaoPeriodService.Phase.OPEN_FOR_VOTING) {
+            VoteItemsList activeVoteItemsList = new VoteItemsList(votingDefaultValues);
+            setActiveVoteItemsList(activeVoteItemsList);
+        }
+    }
+
+    public VotingDefaultValues getVotingDefaultValues() {
+        return votingDefaultValues;
     }
 
     public byte[] getCompensationRequestsCollection() {
@@ -81,7 +113,77 @@ public class VoteManager {
         return json.getBytes();
     }
 
-    public byte[] calculateHash(VoteItemCollection voteItemCollection) throws IOException {
+    public VoteItemsList getVoteItemListFromOpReturnData(byte[] opReturnData) {
+        VoteItemsList voteItems = new VoteItemsList(votingDefaultValues);
+        CompensationRequestVoteItemCollection compensationRequestVoteItemCollection = voteItems.getCompensationRequestVoteItemCollection();
+        // Protocol allows values 0 or multiple of 2. But in implementation we limit to 0 and 2
+        int sizeOfCompReqVotesInBytes = 0;
+        CompensationRequestVoteItem compensationRequestVoteItem = null;
+        VotingType votingTypeByCode = null;
+        for (int i = 0; i < opReturnData.length; i++) {
+            Byte currentByte = opReturnData[i];
+            String info = "";
+            if (i == 0) {
+                info = "Version" + ": " + String.format("0x%02x ", currentByte);
+                if (currentByte != Version.VOTING_VERSION)
+                    return voteItems;
+            } else if (i < 21) {
+                info = "Hash of CompensationRequestsCollection";
+                byte[] hashOfCompensationRequestsCollection = new byte[20];
+                System.arraycopy(opReturnData, 1, hashOfCompensationRequestsCollection, 0, 20);
+                voteItems.setHashOfCompensationRequestsCollection(hashOfCompensationRequestsCollection);
+            } else if (i < 22) {
+                info = "Num of CompensationRequests vote bytes" + ": " + currentByte;
+                // TODO check conversion to int
+                sizeOfCompReqVotesInBytes = currentByte.intValue();
+                checkArgument(sizeOfCompReqVotesInBytes % 2 == 0,
+                        ERROR_MSG_WRONG_SIZE + sizeOfCompReqVotesInBytes);
+            } else if (sizeOfCompReqVotesInBytes > 0 && i < 22 + sizeOfCompReqVotesInBytes) {
+                // We fill up all 8 item blocks, might be that we have less real CompensationRequestVoteItems...
+                if (i % 2 == 0) {
+                    info = "CompensationRequests hasVoted bitmap";
+                    Byte nextByte = opReturnData[i + 1];
+                    final BitSet bitSetVoted = BitSet.valueOf(new byte[]{currentByte});
+                    final BitSet bitSetValue = BitSet.valueOf(new byte[]{nextByte});
+                    checkArgument(bitSetVoted.length() >= bitSetValue.length(), ERROR_MSG_INVALID_COMP_REQ_MAPS);
+                    for (int n = 0; n < bitSetVoted.length(); n++) {
+                        compensationRequestVoteItem = new CompensationRequestVoteItem(null);
+                        compensationRequestVoteItemCollection.addCompensationRequestVoteItem(compensationRequestVoteItem);
+                        boolean hasVoted = bitSetVoted.get(n);
+                        compensationRequestVoteItem.setHasVoted(hasVoted);
+                        boolean accepted = bitSetValue.get(n);
+                        if (hasVoted) {
+                            if (accepted)
+                                compensationRequestVoteItem.setAcceptedVote(true);
+                            else
+                                compensationRequestVoteItem.setDeclineVote(true);
+                        } else {
+                            checkArgument(!accepted, ERROR_MSG_INVALID_COMP_REQ_VAL);
+                        }
+                    }
+                } else {
+                    info = "CompensationRequests value bitmap";
+                }
+            } else if (i % 2 == 0) {
+                checkArgument(opReturnData.length > i + 1, ERROR_MSG_MISSING_BYTE);
+                info = "Param code" + ": " + String.format("0x%02x", currentByte);
+                votingTypeByCode = votingDefaultValues.getVotingTypeByCode(currentByte);
+            } else {
+                long defaultValue = votingDefaultValues.getValueByVotingType(votingTypeByCode);
+                long adjustedValue = votingDefaultValues.getAdjustedValue(defaultValue, currentByte);
+                votingDefaultValues.setValueByVotingType(votingTypeByCode, adjustedValue);
+                Optional<VoteItem> voteItem = voteItems.getVoteItemByVotingType(votingTypeByCode);
+                checkArgument(voteItem.isPresent(), "voteItem need to be available.");
+                voteItem.get().setValue(currentByte);
+                info = "Param value" + ": " + currentByte;
+            }
+            log.info(info);
+            //log.error(String.format("%8s", Integer.toBinaryString(currentByte & 0xFF)).replace(" ", "0") + " [" + info + "]");
+        }
+        return voteItems;
+    }
+
+    public byte[] calculateOpReturnData(VoteItemsList voteItemsList) throws IOException {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             // First we add the version byte
             outputStream.write(Version.VOTING_VERSION);
@@ -93,7 +195,7 @@ public class VoteManager {
             outputStream.write(Utils.sha256hash160(getCompensationRequestsCollection()));
 
             // Then we add the a multiple of 2 bytes for compensationRequest votes
-            Optional<VoteItem> itemOptional = voteItemCollection.stream()
+            Optional<VoteItem> itemOptional = voteItemsList.stream()
                     .filter(e -> e instanceof CompensationRequestVoteItemCollection)
                     .findAny();
             int sizeOfCompReqVotesInBytes = 0;
@@ -151,7 +253,7 @@ public class VoteManager {
 
             // After that we add the optional parameter votes
             int freeSpace = 80 - outputStream.size();
-            Set<VoteItem> items = voteItemCollection.stream()
+            Set<VoteItem> items = voteItemsList.stream()
                     .filter(e -> !(e instanceof CompensationRequestVoteItemCollection))
                     .filter(VoteItem::hasVoted)
                     .collect(Collectors.toSet());
@@ -161,28 +263,28 @@ public class VoteManager {
             items.stream().forEach(paramItem -> {
                 checkArgument(outputStream.size() % 2 == 0,
                         "Position of writing code must be at even index.");
-                outputStream.write(paramItem.code.code);
+                outputStream.write(paramItem.votingType.code);
                 byte value = paramItem.getValue();
                 outputStream.write(value);
             });
 
             byte[] bytes = outputStream.toByteArray();
             for (int i = 0; i < bytes.length; i++) {
-                byte b = bytes[i];
+                Byte currentByte = bytes[i];
                 String info = "";
                 if (i == 0)
-                    info = "Version" + ": " + String.format("0x%02x ", b);
+                    info = "Version" + ": " + String.format("0x%02x ", currentByte);
                 else if (i < 21)
                     info = "Hash of CompensationRequestsCollection";
                 else if (i < 22)
-                    info = "Num of CompensationRequests vote bytes" + ": " + b;
+                    info = "Num of CompensationRequests vote bytes" + ": " + currentByte;
                 else if (sizeOfCompReqVotesInBytes > 0 && i < 22 + sizeOfCompReqVotesInBytes)
                     info = i % 2 == 0 ? "CompensationRequests hasVoted bitmap" : "CompensationRequests value bitmap";
                 else if (i % 2 == 0)
-                    info = "Param code" + ": " + String.format("0x%02x", b);
+                    info = "Param code" + ": " + String.format("0x%02x", currentByte);
                 else
-                    info = "Param value" + ": " + b;
-                log.error(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(" ", "0") + " [" + info + "]");
+                    info = "Param value" + ": " + currentByte;
+                log.error(String.format("%8s", Integer.toBinaryString(currentByte & 0xFF)).replace(" ", "0") + " [" + info + "]");
             }
             return bytes;
         } catch (IOException e) {
@@ -202,20 +304,22 @@ public class VoteManager {
         return result;
     }
 
-    public void addVoteItemCollection(VoteItemCollection voteItemCollection) {
+    public void addVoteItemCollection(VoteItemsList voteItemsList) {
         //TODO check equals code
-        if (!voteItemCollections.contains(voteItemCollection)) {
-            voteItemCollections.add(voteItemCollection);
-            voteItemCollectionsStorage.queueUpForSave(voteItemCollections, 500);
+        if (!voteItemsLists.contains(voteItemsList)) {
+            voteItemsLists.add(voteItemsList);
+            voteItemCollectionsStorage.queueUpForSave(voteItemsLists, 500);
         }
     }
 
-    public void setCurrentVoteItemCollection(VoteItemCollection currentVoteItemCollection) {
-        this.currentVoteItemCollection = currentVoteItemCollection;
-        addVoteItemCollection(currentVoteItemCollection);
+    public void setActiveVoteItemsList(VoteItemsList activeVoteItemsList) {
+        this.activeVoteItemsList = activeVoteItemsList;
+        addVoteItemCollection(activeVoteItemsList);
     }
 
-    public VoteItemCollection getCurrentVoteItemCollection() {
-        return currentVoteItemCollection;
+    public VoteItemsList getActiveVoteItemsList() {
+        return activeVoteItemsList;
     }
+
+
 }

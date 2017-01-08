@@ -128,7 +128,7 @@ public class BtcWalletService extends WalletService {
     // Add fee input to prepared SQU send tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction completePreparedSquTx(Transaction preparedSquTx, boolean isSendTx, @Nullable byte[] hash) throws
+    public Transaction completePreparedSquTx(Transaction preparedSquTx, boolean isSendTx, @Nullable byte[] opReturnData) throws
             TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
 
         // preparedSquTx has following structure:
@@ -143,7 +143,7 @@ public class BtcWalletService extends WalletService {
         // outputs [0-1] SQU receivers output
         // outputs [0-1] SQU change output
         // outputs [0-1] BTC change output
-        // outputs [0-1] OP_RETURN with hash
+        // outputs [0-1] OP_RETURN with opReturnData
         // mining fee: BTC mining fee + optional burned SQU fee
 
         // In case of txs for burned SQU fees we have no receiver output and it might be that there is no change outputs
@@ -210,8 +210,8 @@ public class BtcWalletService extends WalletService {
             forcedChangeValue = resultTx.getOutputs().size() == 0 ? Transaction.MIN_NONDUST_OUTPUT : Coin.ZERO;
 
             // add OP_RETURN output
-            if (hash != null)
-                resultTx.addOutput(new TransactionOutput(params, resultTx, Coin.ZERO, ScriptBuilder.createOpReturnScript(hash).getProgram()));
+            if (opReturnData != null)
+                resultTx.addOutput(new TransactionOutput(params, resultTx, Coin.ZERO, ScriptBuilder.createOpReturnScript(opReturnData).getProgram()));
 
             numInputs = resultTx.getInputs().size();
             txSizeWithUnsignedInputs = resultTx.bitcoinSerialize().length;

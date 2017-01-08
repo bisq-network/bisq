@@ -25,27 +25,30 @@ import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.ChangeBelowDustException;
 import io.bitsquare.btc.wallet.SquWalletService;
+import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
-import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.dao.compensation.CompensationRequest;
 import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.dao.vote.*;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.SQUFormatter;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
@@ -55,13 +58,16 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.gui.util.FormBuilder.*;
+import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 @FxmlView
 public class VoteView extends ActivatableView<GridPane, Void> {
+
+    private ComboBox<VoteItem> parametersComboBox;
+    private ComboBox<CompensationRequestVoteItem> compensationRequestsComboBox;
 
     private int gridRow = 0;
     private CompensationRequestManager compensationRequestManager;
@@ -73,9 +79,13 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     private VoteManager voteManager;
     private Button voteButton;
     private List<CompensationRequest> compensationRequests;
-    private TitledGroupBg titledGroupBg;
-    private VoteItemCollection voteItemCollection;
-
+    private TitledGroupBg compensationRequestsTitledGroupBg, parametersTitledGroupBg;
+    private VoteItemsList voteItemsList;
+    private CompensationRequestVoteItemCollection compensationRequestVoteItemCollection;
+    private VBox parametersVBox, compensationRequestsVBox;
+    private DoubleProperty parametersLabelWidth = new SimpleDoubleProperty();
+    private DoubleProperty compensationRequestsLabelWidth = new SimpleDoubleProperty();
+    private ChangeListener<Number> numberChangeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -83,7 +93,8 @@ public class VoteView extends ActivatableView<GridPane, Void> {
 
     @Inject
     private VoteView(CompensationRequestManager compensationRequestManager, SquWalletService squWalletService,
-                     BtcWalletService btcWalletService, FeeService feeService, SQUFormatter squFormatter, BSFormatter btcFormatter, VoteManager voteManager) {
+                     BtcWalletService btcWalletService, FeeService feeService, SQUFormatter squFormatter,
+                     BSFormatter btcFormatter, VoteManager voteManager) {
         this.compensationRequestManager = compensationRequestManager;
         this.squWalletService = squWalletService;
         this.btcWalletService = btcWalletService;
@@ -95,38 +106,114 @@ public class VoteView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        // TODO crate items here
-    }
+        addTitledGroupBg(root, gridRow, 2, "Add items for voting");
 
-    @Override
-    protected void activate() {
-        gridRow = 0;
-        voteItemCollection = voteManager.getCurrentVoteItemCollection();
-        root.getChildren().clear();
+        compensationRequestsComboBox = addLabelComboBox(root, gridRow, "", Layout.FIRST_ROW_DISTANCE).second;
+        compensationRequestsComboBox.setPromptText("Add compensation request");
+        compensationRequestsComboBox.setConverter(new StringConverter<CompensationRequestVoteItem>() {
+            @Override
+            public String toString(CompensationRequestVoteItem item) {
+                return item.compensationRequest.getCompensationRequestPayload().uid;
+            }
 
-        compensationRequests = compensationRequestManager.getObservableCompensationRequestsList().stream().filter(CompensationRequest::isInVotePeriod).collect(Collectors.toList());
-        compensationRequests.sort((o1, o2) -> o2.getCompensationRequestPayload().feeTxId.compareTo(o1.getCompensationRequestPayload().feeTxId));
-        titledGroupBg = addTitledGroupBg(root, gridRow, voteItemCollection.size() + compensationRequests.size() - 1, "Voting");
-        // GridPane.setRowSpan(titledGroupBg, voteItems.size() + CompensationRequest.size());
-        voteItemCollection.stream().forEach(this::addVoteItem);
+            @Override
+            public CompensationRequestVoteItem fromString(String s) {
+                return null;
+            }
+        });
+        compensationRequestsComboBox.setOnAction(event -> {
+            SingleSelectionModel<CompensationRequestVoteItem> selectionModel = compensationRequestsComboBox.getSelectionModel();
+            CompensationRequestVoteItem selectedItem = selectionModel.getSelectedItem();
+            if (selectedItem != null) {
+                if (!CompensationViewItem.contains(selectedItem)) {
+                    CompensationViewItem.attach(selectedItem, compensationRequestsVBox, compensationRequestsLabelWidth,
+                            () -> compensationRequestsTitledGroupBg.setManaged(!CompensationViewItem.isEmpty()));
+                    UserThread.execute(selectionModel::clearSelection);
+                } else {
+                    new Popup<>().warning("You have already that compensation request added.").show();
+                }
+            }
+
+            compensationRequestsTitledGroupBg.setManaged(!CompensationViewItem.isEmpty());
+        });
+
+        parametersComboBox = addLabelComboBox(root, ++gridRow, "").second;
+        parametersComboBox.setPromptText("Add parameter");
+        parametersComboBox.setConverter(new StringConverter<VoteItem>() {
+            @Override
+            public String toString(VoteItem item) {
+                return item.name;
+            }
+
+            @Override
+            public VoteItem fromString(String s) {
+                return null;
+            }
+        });
+        parametersComboBox.setOnAction(event -> {
+            SingleSelectionModel<VoteItem> selectionModel = parametersComboBox.getSelectionModel();
+            VoteItem selectedItem = selectionModel.getSelectedItem();
+            if (selectedItem != null) {
+                if (!ParameterViewItem.contains(selectedItem)) {
+                    ParameterViewItem.attach(selectedItem, parametersVBox, parametersLabelWidth, voteManager.getVotingDefaultValues(),
+                            () -> parametersTitledGroupBg.setManaged(!ParameterViewItem.isEmpty()));
+                    UserThread.execute(selectionModel::clearSelection);
+                } else {
+                    new Popup<>().warning("You have already that parameter added.").show();
+                }
+            }
+            parametersTitledGroupBg.setManaged(!ParameterViewItem.isEmpty());
+
+        });
+
+        compensationRequestsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Compensation requests", Layout.GROUP_DISTANCE);
+        compensationRequestsTitledGroupBg.setManaged(false);
+        compensationRequestsTitledGroupBg.visibleProperty().bind(compensationRequestsTitledGroupBg.managedProperty());
+
+        compensationRequestsVBox = new VBox();
+        compensationRequestsVBox.setSpacing(5);
+        GridPane.setRowIndex(compensationRequestsVBox, gridRow);
+        GridPane.setColumnSpan(compensationRequestsVBox, 2);
+        GridPane.setMargin(compensationRequestsVBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        root.getChildren().add(compensationRequestsVBox);
+        compensationRequestsVBox.managedProperty().bind(compensationRequestsTitledGroupBg.managedProperty());
+        compensationRequestsVBox.visibleProperty().bind(compensationRequestsVBox.managedProperty());
+
+
+        parametersTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Parameters", Layout.GROUP_DISTANCE);
+        parametersTitledGroupBg.setManaged(false);
+        parametersTitledGroupBg.visibleProperty().bind(parametersTitledGroupBg.managedProperty());
+
+        parametersVBox = new VBox();
+        parametersVBox.setSpacing(5);
+        GridPane.setRowIndex(parametersVBox, gridRow);
+        GridPane.setColumnSpan(parametersVBox, 2);
+        GridPane.setMargin(parametersVBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        root.getChildren().add(parametersVBox);
+        parametersVBox.managedProperty().bind(parametersTitledGroupBg.managedProperty());
+        parametersVBox.visibleProperty().bind(parametersVBox.managedProperty());
 
         voteButton = addButtonAfterGroup(root, ++gridRow, "Vote");
+        voteButton.managedProperty().bind(createBooleanBinding(() -> compensationRequestsTitledGroupBg.isManaged() || parametersTitledGroupBg.isManaged(),
+                compensationRequestsTitledGroupBg.managedProperty(), parametersTitledGroupBg.managedProperty()));
+        voteButton.visibleProperty().bind(voteButton.managedProperty());
+
         voteButton.setOnAction(event -> {
-            log.error(voteItemCollection.toString());
+            log.error(voteItemsList.toString());
             //TODO
-            if (voteItemCollection.isMyVote()) {
+            if (voteItemsList.isMyVote()) {
                 new Popup<>().warning("You voted already.").show();
-            } else if (!voteItemCollection.stream().filter(e -> e.hasVoted()).findAny().isPresent() &&
-                    !voteItemCollection.stream().filter(e -> e instanceof CompensationRequestVoteItemCollection)
-                            .filter(e -> ((CompensationRequestVoteItemCollection) e).hasAnyVoted()).findAny().isPresent()) {
+            } else if (!voteItemsList.stream().filter(VoteItem::hasVoted).findAny().isPresent() &&
+                    !voteItemsList.stream().filter(e -> e instanceof CompensationRequestVoteItemCollection)
+                            .filter(e -> ((CompensationRequestVoteItemCollection) e).hasVotedOnAnyItem()).findAny().isPresent()) {
                 new Popup<>().warning("You did not vote on any entry.").show();
             } else {
                 try {
-                    byte[] hash = voteManager.calculateHash(voteItemCollection);
+                    byte[] opReturnData = voteManager.calculateOpReturnData(voteItemsList);
                     try {
                         Coin votingTxFee = feeService.getVotingTxFee();
                         Transaction preparedVotingTx = squWalletService.getPreparedBurnFeeTx(votingTxFee);
-                        Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedVotingTx, false, hash);
+                        Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedVotingTx, false, opReturnData);
                         Transaction signedTx = squWalletService.signTx(txWithBtcFee);
                         Coin miningFee = signedTx.getFee();
                         int txSize = signedTx.bitcoinSerialize().length;
@@ -150,7 +237,9 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                                 checkNotNull(transaction, "Transaction must not be null at doSend callback.");
                                                 log.error("tx successful published" + transaction.getHashAsString());
                                                 new Popup<>().confirmation("Your transaction has been successfully published.").show();
-                                                voteItemCollection.setIsMyVote(true);
+                                                voteItemsList.setIsMyVote(true);
+
+                                                //TODO send to P2P network
                                             }
 
                                             @Override
@@ -181,83 +270,30 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     }
 
     @Override
-    protected void deactivate() {
-    }
+    protected void activate() {
+        //TODO rename
+        voteItemsList = voteManager.getActiveVoteItemsList();
+        if (voteItemsList != null) {
+            compensationRequestVoteItemCollection = voteItemsList.getCompensationRequestVoteItemCollection();
+            ObservableList<CompensationRequestVoteItem> compensationRequestVoteItems = FXCollections.observableArrayList(compensationRequestVoteItemCollection.getCompensationRequestVoteItems());
+            compensationRequestsComboBox.setItems(compensationRequestVoteItems);
 
-    private void addVoteItem(VoteItem voteItem) {
-        if (voteItem instanceof CompensationRequestVoteItemCollection) {
-            addCompensationRequests((CompensationRequestVoteItemCollection) voteItem);
+            //TODO move to voteManager.getCurrentVoteItemsList()?
+            compensationRequestManager.getObservableCompensationRequestsList().stream().forEach(e -> compensationRequestVoteItems.add(new CompensationRequestVoteItem(e)));
+
+            parametersComboBox.setItems(FXCollections.observableArrayList(voteItemsList.getVoteItemList()));
         } else {
-            Tuple2<Label, InputTextField> tuple;
-            if (voteItem == voteItemCollection.get(0))
-                tuple = addLabelInputTextField(root, gridRow, voteItem.name + ":", Layout.FIRST_ROW_DISTANCE);
-            else
-                tuple = addLabelInputTextField(root, ++gridRow, voteItem.name + ":");
-            InputTextField inputTextField = tuple.second;
-            inputTextField.setText(String.valueOf(voteItem.getValue()));
-            inputTextField.textProperty().addListener((observable, oldValue, newValue) -> voteItem.setValue((byte) ((int) Integer.valueOf(newValue))));
+            //TODO add listener
         }
     }
 
-    private void addCompensationRequests(CompensationRequestVoteItemCollection collection) {
-        compensationRequests.forEach(request -> addCompensationRequestItem(request, collection));
-    }
-
-    private void addCompensationRequestItem(CompensationRequest compensationRequest, CompensationRequestVoteItemCollection collection) {
-        CompensationRequestVoteItem compensationRequestVoteItem = new CompensationRequestVoteItem(compensationRequest);
-        collection.addCompensationRequestVoteItem(compensationRequestVoteItem);
-
-        addLabel(root, ++gridRow, "Compensation request ID:", 0);
-
-        TextField textField = new TextField("ID: " + compensationRequest.getCompensationRequestPayload().getShortId());
-        textField.setEditable(false);
-        textField.setMouseTransparent(true);
-        textField.setFocusTraversable(false);
-        textField.setMaxWidth(120);
-
-        Button openButton = new Button("Open compensation request");
-        CheckBox acceptCheckBox = new CheckBox("Accept");
-        CheckBox declineCheckBox = new CheckBox("Decline");
-
-        HBox hBox = new HBox();
-        HBox.setMargin(acceptCheckBox, new Insets(5, 0, 0, 0));
-        HBox.setMargin(declineCheckBox, new Insets(5, 0, 0, 0));
-        hBox.setSpacing(10);
-        hBox.getChildren().addAll(textField, openButton, acceptCheckBox, declineCheckBox);
-        HBox.setHgrow(textField, Priority.ALWAYS);
-        GridPane.setRowIndex(hBox, gridRow);
-        GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(0, 0, 0, 0));
-        root.getChildren().add(hBox);
-
-        openButton.setOnAction(event -> {
-            // todo open popup
-        });
-        acceptCheckBox.setOnAction(event -> {
-            boolean selected = acceptCheckBox.isSelected();
-            compensationRequestVoteItem.setAcceptedVote(selected);
-            if (declineCheckBox.isSelected()) {
-                declineCheckBox.setSelected(!selected);
-                compensationRequestVoteItem.setDeclineVote(!selected);
-            } else if (!selected) {
-                compensationRequestVoteItem.setHasVotes(false);
-            }
-
-        });
-        acceptCheckBox.setSelected(compensationRequestVoteItem.isAcceptedVote());
-
-        declineCheckBox.setOnAction(event -> {
-            boolean selected = declineCheckBox.isSelected();
-            compensationRequestVoteItem.setDeclineVote(selected);
-            if (acceptCheckBox.isSelected()) {
-                acceptCheckBox.setSelected(!selected);
-                compensationRequestVoteItem.setAcceptedVote(!selected);
-            } else if (!selected) {
-                compensationRequestVoteItem.setHasVotes(false);
-            }
-
-        });
-        declineCheckBox.setSelected(compensationRequestVoteItem.isDeclineVote());
+    @Override
+    protected void deactivate() {
+        compensationRequestsComboBox.setOnAction(null);
+        parametersComboBox.setOnAction(null);
+        voteButton.setOnAction(null);
+        ParameterViewItem.cleanupAllInstances();
+        CompensationViewItem.cleanupAllInstances();
     }
 }
 

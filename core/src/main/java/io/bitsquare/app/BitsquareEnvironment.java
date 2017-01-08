@@ -25,6 +25,7 @@ import io.bitsquare.btc.UserAgent;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.dao.blockchain.RpcOptionKeys;
 import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
@@ -79,7 +80,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String btcNetworkDir;
     private final String logLevel, providers;
     private BitcoinNetwork bitcoinNetwork;
-    private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc,
+    private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword, rpcPort,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress, socks5ProxyHttpAddress;
 
     public BitsquareEnvironment(OptionSet options) {
@@ -152,7 +153,15 @@ public class BitsquareEnvironment extends StandardEnvironment {
         seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
                 "";
-
+        rpcUser = commandLineProperties.containsProperty(RpcOptionKeys.RPC_USER) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_USER) :
+                "";
+        rpcPassword = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PASSWORD) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PASSWORD) :
+                "";
+        rpcPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PORT) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PORT) :
+                "";
         myAddress = commandLineProperties.containsProperty(NetworkOptionKeys.MY_ADDRESS) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.MY_ADDRESS) :
                 "";
@@ -245,6 +254,10 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(AppOptionKeys.MAX_MEMORY, maxMemory);
                 setProperty(AppOptionKeys.USER_DATA_DIR_KEY, userDataDir);
                 setProperty(AppOptionKeys.PROVIDERS, providers);
+
+                setProperty(RpcOptionKeys.RPC_USER, rpcUser);
+                setProperty(RpcOptionKeys.RPC_PASSWORD, rpcPassword);
+                setProperty(RpcOptionKeys.RPC_PORT, rpcPort);
 
                 setProperty(AppOptionKeys.BTC_NODES, btcNodes);
                 setProperty(AppOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);

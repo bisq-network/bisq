@@ -15,10 +15,19 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.dao.tokens;
+package io.bitsquare.dao.blockchain;
 
-public abstract class TxService {
-    abstract public Tx getTx(String txId);
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    abstract public void addTx(Tx tx);
+public class SquTxInput {
+    private static final Logger log = LoggerFactory.getLogger(SquTxInput.class);
+
+    public final int index;
+    public final String spendingTxId;
+
+    public SquTxInput(int index, String spendingTxId) {
+        this.index = index;
+        this.spendingTxId = spendingTxId;
+    }
 }

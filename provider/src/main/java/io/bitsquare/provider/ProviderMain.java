@@ -17,12 +17,15 @@
 
 package io.bitsquare.provider;
 
+import ch.qos.logback.classic.Level;
+import io.bitsquare.app.Log;
 import io.bitsquare.http.HttpException;
 import io.bitsquare.provider.fee.FeeRequestService;
 import io.bitsquare.provider.price.PriceRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -39,6 +42,9 @@ public class ProviderMain {
     }
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, InvalidKeyException, HttpException {
+        Log.setup(System.getProperty("user.home") + File.separator + "provider");
+        Log.setLevel(Level.INFO);
+        
         port(8080);
 
         handleGetAllMarketPrices(args);

@@ -23,9 +23,10 @@ import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.provider.fee.FeeService;
-import io.bitsquare.btc.provider.squ.SquUtxoFeedService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.dao.blockchain.BlockchainService;
+import io.bitsquare.dao.blockchain.SquUTXO;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
@@ -35,7 +36,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,9 +50,10 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public class SquWalletService extends WalletService {
     private static final Logger log = LoggerFactory.getLogger(SquWalletService.class);
-    private SquUTXOProvider squUTXOProvider;
-    private SquUtxoFeedService squUtxoFeedService;
-    private SquCoinSelector squCoinSelector;
+
+    private final BlockchainService blockchainService;
+    private final SquUTXOProvider squUTXOProvider;
+    private final SquCoinSelector squCoinSelector;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -58,15 +62,15 @@ public class SquWalletService extends WalletService {
 
     @Inject
     public SquWalletService(WalletsSetup walletsSetup,
+                            BlockchainService blockchainService,
                             SquUTXOProvider squUTXOProvider,
-                            SquUtxoFeedService squUtxoFeedService,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
                 preferences,
                 feeService);
+        this.blockchainService = blockchainService;
         this.squUTXOProvider = squUTXOProvider;
-        this.squUtxoFeedService = squUtxoFeedService;
         this.squCoinSelector = new SquCoinSelector();
 
         walletsSetup.addSetupCompletedHandler(() -> {
@@ -74,7 +78,7 @@ public class SquWalletService extends WalletService {
             wallet.setCoinSelector(squCoinSelector);
 
             //TODO
-            //wallet.setUTXOProvider(squUTXOProvider);
+            wallet.setUTXOProvider(squUTXOProvider);
 
             wallet.addEventListener(new BitsquareWalletEventListener());
             wallet.addEventListener(new AbstractWalletEventListener() {
@@ -149,19 +153,26 @@ public class SquWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestSquUtxo(@Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        Set<UTXO> utxoSet = squUtxoFeedService.getUtxoSet();
-        if (utxoSet != null)
-            squUTXOProvider.setUtxoSet(utxoSet);
+        log.error("requestSquUtxo");
+        if (blockchainService.isUtxoAvailable()) {
+            applyUtxoSetToUTXOProvider(blockchainService.getUtxoByTxIdMap());
+            if (resultHandler != null)
+                resultHandler.handleResult();
+        } else {
+            blockchainService.addUtxoListener(utxoByTxIdMap -> {
+                applyUtxoSetToUTXOProvider(utxoByTxIdMap);
+                if (resultHandler != null)
+                    resultHandler.handleResult();
+            });
+        }
+    }
 
-        squUtxoFeedService.requestSquUtxo(e -> {
-                    squUTXOProvider.setUtxoSet(e);
-                    if (resultHandler != null)
-                        resultHandler.handleResult();
-                },
-                (errorMessage, throwable) -> {
-                    if (errorMessageHandler != null)
-                        errorMessageHandler.handleErrorMessage(errorMessage);
-                });
+    private void applyUtxoSetToUTXOProvider(Map<String, Map<Integer, SquUTXO>> utxoByTxIdMap) {
+        Set<UTXO> utxoSet = new HashSet<>();
+        utxoByTxIdMap.entrySet().stream()
+                .forEach(e -> e.getValue().entrySet().stream()
+                        .forEach(u -> utxoSet.add(u.getValue())));
+        squUTXOProvider.setUtxoSet(utxoSet);
     }
 
 

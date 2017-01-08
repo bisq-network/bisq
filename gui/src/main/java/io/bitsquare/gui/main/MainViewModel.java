@@ -34,7 +34,6 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.MarketPrice;
 import io.bitsquare.btc.provider.price.PriceFeedService;
-import io.bitsquare.btc.provider.squ.SquUtxoFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.btc.wallet.WalletsSetup;
@@ -42,7 +41,8 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
-import io.bitsquare.dao.compensation.CompensationRequestManager;
+import io.bitsquare.dao.DaoManager;
+import io.bitsquare.dao.blockchain.BlockchainException;
 import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -117,8 +117,7 @@ public class MainViewModel implements ViewModel {
     private final TacWindow tacWindow;
     private final Clock clock;
     private final FeeService feeService;
-    private final SquUtxoFeedService squUtxoFeedService;
-    private CompensationRequestManager compensationRequestManager;
+    private final DaoManager daoManager;
     private final KeyRing keyRing;
     private final Navigation navigation;
     private final BSFormatter formatter;
@@ -186,8 +185,10 @@ public class MainViewModel implements ViewModel {
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, AddBitcoinNodesWindow addBitcoinNodesWindow,
-                         NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService, SquUtxoFeedService squUtxoFeedService,
-                         CompensationRequestManager compensationRequestManager, KeyRing keyRing, Navigation navigation, BSFormatter formatter) {
+                         NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
+                         DaoManager daoManager,
+                         KeyRing keyRing, Navigation navigation,
+                         BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
@@ -208,8 +209,7 @@ public class MainViewModel implements ViewModel {
         this.tacWindow = tacWindow;
         this.clock = clock;
         this.feeService = feeService;
-        this.squUtxoFeedService = squUtxoFeedService;
-        this.compensationRequestManager = compensationRequestManager;
+        this.daoManager = daoManager;
         this.keyRing = keyRing;
         this.navigation = navigation;
         this.formatter = formatter;
@@ -230,12 +230,8 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
-        log.error("initializeAllServices");
         Log.traceCall();
-
         UserThread.runAfter(tacWindow::showIfNeeded, 2);
-
-
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
                 showStartupTimeoutPopup();
@@ -552,9 +548,13 @@ public class MainViewModel implements ViewModel {
         p2PService.onAllServicesInitialized();
 
         feeService.onAllServicesInitialized();
-        squUtxoFeedService.onAllServicesInitialized();
-        compensationRequestManager.onAllServicesInitialized();
-        
+
+        try {
+            daoManager.onAllServicesInitialized();
+        } catch (BlockchainException e) {
+            new Popup<>().error(e.toString()).show();
+        }
+
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();
@@ -936,7 +936,11 @@ public class MainViewModel implements ViewModel {
         Coin totalAvailableBalance = Coin.valueOf(tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .mapToLong(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).getValue())
                 .sum());
-        availableBalance.set(formatter.formatCoinWithCode(totalAvailableBalance));
+        String value = formatter.formatCoinWithCode(totalAvailableBalance);
+        // If we get full precision the BTC postfix breaks layout so we omit it
+        if (value.length() > 11)
+            value = formatter.formatCoin(totalAvailableBalance);
+        availableBalance.set(value);
     }
 
     private void updateReservedBalance() {

@@ -21,7 +21,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.SquWalletService;
-import io.bitsquare.dao.vote.VotingParameters;
+import io.bitsquare.dao.DaoPeriodService;
+import io.bitsquare.dao.vote.VotingDefaultValues;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
@@ -36,18 +37,18 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 public class CompensationRequestManager {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
 
     private static final int GENESIS_BLOCK_HEIGHT = 391; // TODO dev version regtest 
 
-    private P2PService p2PService;
-    private Storage<ArrayList<CompensationRequest>> compensationRequestsStorage;
-    private BtcWalletService btcWalletService;
-    private SquWalletService squWalletService;
-    private VotingParameters votingParameters;
+    private final P2PService p2PService;
+    private final DaoPeriodService daoPeriodService;
+    private final BtcWalletService btcWalletService;
+    private final SquWalletService squWalletService;
+    private final VotingDefaultValues votingDefaultValues;
+    private final Storage<ArrayList<CompensationRequest>> compensationRequestsStorage;
+
     private ObservableList<CompensationRequest> observableCompensationRequestsList = FXCollections.observableArrayList();
     private CompensationRequest selectedCompensationRequest;
     private int bestChainHeight = -1;
@@ -58,18 +59,19 @@ public class CompensationRequestManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public CompensationRequestManager(P2PService p2PService, Storage<ArrayList<CompensationRequest>> compensationRequestsStorage,
-                                      BtcWalletService btcWalletService, SquWalletService squWalletService, VotingParameters votingParameters) {
+    public CompensationRequestManager(P2PService p2PService,
+                                      BtcWalletService btcWalletService,
+                                      SquWalletService squWalletService,
+                                      DaoPeriodService daoPeriodService,
+                                      VotingDefaultValues votingDefaultValues,
+                                      Storage<ArrayList<CompensationRequest>> compensationRequestsStorage) {
         this.p2PService = p2PService;
-        this.compensationRequestsStorage = compensationRequestsStorage;
+        this.daoPeriodService = daoPeriodService;
         this.btcWalletService = btcWalletService;
         this.squWalletService = squWalletService;
-        this.votingParameters = votingParameters;
+        this.votingDefaultValues = votingDefaultValues;
+        this.compensationRequestsStorage = compensationRequestsStorage;
 
-        init(compensationRequestsStorage);
-    }
-
-    private void init(Storage<ArrayList<CompensationRequest>> compensationRequestsStorage) {
         ArrayList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
         if (persisted != null)
             observableCompensationRequestsList.addAll(persisted);
@@ -97,22 +99,9 @@ public class CompensationRequestManager {
     }
 
     public void onAllServicesInitialized() {
+        if (daoPeriodService.getPhase() == DaoPeriodService.Phase.OPEN_FOR_COMPENSATION_REQUESTS) {
 
-
-    }
-
-    //TODO WIP
-    public void setPhase() {
-        bestChainHeight = btcWalletService.getBestChainHeight();
-
-        checkArgument(bestChainHeight >= GENESIS_BLOCK_HEIGHT, "GENESIS_BLOCK_HEIGHT must be in the past");
-        int pastBlocks = bestChainHeight - GENESIS_BLOCK_HEIGHT;
-        int periodIndex = pastBlocks / votingParameters.getTotalPeriodInBlocks();
-
-        int startPhase1 = GENESIS_BLOCK_HEIGHT + periodIndex * votingParameters.getTotalPeriodInBlocks();
-        int endPhase1 = startPhase1 + votingParameters.getCompensationRequestPeriodInBlocks();
-
-
+        }
     }
 
     public void addToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {

@@ -43,8 +43,8 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
     }
 
 
-    public CompensationRequestVoteItemCollection(VotingParameters.Code code, String name) {
-        super(code, name);
+    public CompensationRequestVoteItemCollection(VotingType votingType) {
+        super(votingType, null, null);
     }
 
     public void addCompensationRequestVoteItem(CompensationRequestVoteItem compensationRequestVoteItem) {
@@ -58,7 +58,7 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
                 '}';
     }
 
-    public boolean hasAnyVoted() {
+    public boolean hasVotedOnAnyItem() {
         return compensationRequestVoteItems.stream().filter(CompensationRequestVoteItem::isHasVoted).findAny().isPresent();
     }
 }

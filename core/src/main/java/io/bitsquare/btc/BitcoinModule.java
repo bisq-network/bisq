@@ -20,7 +20,6 @@ package io.bitsquare.btc;
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
 import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.btc.provider.squ.SquUtxoFeedService;
@@ -62,7 +61,6 @@ public class BitcoinModule extends AppModule {
         bind(BtcWalletService.class).in(Singleton.class);
         bind(SquWalletService.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);
-        bind(BlockchainService.class).in(Singleton.class);
 
         bind(HttpClient.class).in(Singleton.class);
         bind(SquUtxoFeedService.class).in(Singleton.class);

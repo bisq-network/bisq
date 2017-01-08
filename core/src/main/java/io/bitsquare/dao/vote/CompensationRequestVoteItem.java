@@ -31,8 +31,6 @@ public final class CompensationRequestVoteItem implements Persistable {
     public final CompensationRequest compensationRequest;
     private boolean declineVote;
     private boolean acceptedVote;
-
-
     private boolean hasVoted;
 
     public CompensationRequestVoteItem(CompensationRequest compensationRequest) {
@@ -61,7 +59,7 @@ public final class CompensationRequestVoteItem implements Persistable {
         return hasVoted;
     }
 
-    public void setHasVotes(boolean hasVoted) {
+    public void setHasVoted(boolean hasVoted) {
         this.hasVoted = hasVoted;
     }
 

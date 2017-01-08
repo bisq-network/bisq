@@ -70,7 +70,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     private BSFormatter btcFormatter;
     private SortedList<CompensationRequest> sortedList;
     private Subscription selectedCompensationRequestSubscription;
-    private CompensationRequestDisplay CompensationRequestDisplay;
+    private CompensationRequestDisplay compensationRequestDisplay;
     private GridPane gridPane;
     private Button fundButton;
     private Button voteButton;
@@ -143,7 +143,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
 
     private void onSelectCompensationRequest(CompensationRequest compensationRequest) {
         if (compensationRequest != null) {
-            if (CompensationRequestDisplay == null) {
+            if (compensationRequestDisplay == null) {
                 ScrollPane scrollPane = new ScrollPane();
                 scrollPane.setFitToWidth(true);
                 scrollPane.setFitToHeight(true);
@@ -170,25 +170,25 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 AnchorPane.setTopAnchor(gridPane, -20d);
                 bottomAnchorPane.getChildren().add(gridPane);
 
-                CompensationRequestDisplay = new CompensationRequestDisplay(gridPane);
+                compensationRequestDisplay = new CompensationRequestDisplay(gridPane);
             }
-            CompensationRequestDisplay.removeAllFields();
-            CompensationRequestDisplay.createAllFields("Selected compensation request", Layout.GROUP_DISTANCE);
+            compensationRequestDisplay.removeAllFields();
+            compensationRequestDisplay.createAllFields("Selected compensation request", Layout.GROUP_DISTANCE);
 
             //TODO
             compensationRequest.setInVotePeriod(true);
 
             if (compensationRequest.isWaitingForVotingPeriod()) {
-                addLabel(gridPane, CompensationRequestDisplay.incrementAndGetGridRow(), "This compensation request is not open anymore for funding. Please wait until the next funding period starts.");
+                addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), "This compensation request is not open anymore for funding. Please wait until the next funding period starts.");
             } else if (compensationRequest.isInVotePeriod()) {
-                voteButton = addButtonAfterGroup(gridPane, CompensationRequestDisplay.incrementAndGetGridRow(), "Vote on compensation request");
+                voteButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), "Vote on compensation request");
                 voteButton.setOnAction(event -> {
                     compensationRequestManger.setSelectedCompensationRequest(compensationRequest);
                     navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
                 });
             } else if (compensationRequest.isInFundingPeriod()) {
                 checkArgument(compensationRequest.isAccepted(), "A compensation request with state OPEN_FOR_FUNDING must be accepted.");
-                fundButton = addButtonAfterGroup(gridPane, CompensationRequestDisplay.incrementAndGetGridRow(), "Fund compensation request");
+                fundButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), "Fund compensation request");
                 fundButton.setOnAction(event -> {
                     fundCompensationRequestWindow.applyCompensationRequest(compensationRequest.getCompensationRequestPayload()).
                             onAction(() -> {
@@ -209,11 +209,11 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                             }).show();
                 });
             } else if (compensationRequest.isClosed()) {
-                addLabel(gridPane, CompensationRequestDisplay.incrementAndGetGridRow(), "This compensation request is not open anymore for funding. Please wait until the next funding period starts.");
+                addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), "This compensation request is not open anymore for funding. Please wait until the next funding period starts.");
             }
-            CompensationRequestDisplay.setAllFieldsEditable(false);
+            compensationRequestDisplay.setAllFieldsEditable(false);
 
-            CompensationRequestDisplay.fillWithData(compensationRequest.getCompensationRequestPayload());
+            compensationRequestDisplay.fillWithData(compensationRequest.getCompensationRequestPayload());
         }
     }
 
@@ -271,6 +271,30 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 });
         nameColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().name.compareTo(o2.getCompensationRequestPayload().name));
         tableView.getColumns().add(nameColumn);
+
+
+        TableColumn<CompensationRequest, CompensationRequest> uidColumn = new TableColumn<>("ID");
+        uidColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
+        uidColumn.setCellFactory(
+                new Callback<TableColumn<CompensationRequest, CompensationRequest>, TableCell<CompensationRequest,
+                        CompensationRequest>>() {
+                    @Override
+                    public TableCell<CompensationRequest, CompensationRequest> call(
+                            TableColumn<CompensationRequest, CompensationRequest> column) {
+                        return new TableCell<CompensationRequest, CompensationRequest>() {
+                            @Override
+                            public void updateItem(final CompensationRequest item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getCompensationRequestPayload().uid);
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        uidColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().uid.compareTo(o2.getCompensationRequestPayload().uid));
+        tableView.getColumns().add(uidColumn);
     }
 }
 
