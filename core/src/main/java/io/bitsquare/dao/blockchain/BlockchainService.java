@@ -21,8 +21,6 @@ import com.google.inject.Inject;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,12 +36,13 @@ abstract public class BlockchainService {
     private static final Logger log = LoggerFactory.getLogger(BlockchainService.class);
 
     // regtest
-    public static final String GENESIS_TX_ID = "aaecf8666c4d6680b952a1f95a5bc4e0fb958dae992d445df760d6162a131c61";
-    public static final int GENESIS_BLOCK_HEIGHT = 700; //at regtest: 700,  447000
+    public static final String GENESIS_TX_ID = "f3eb7bd51d792ecd7df7f74905a1452a43aa4f678ff2c0ded853939b1d2b590e";
+    public static final int GENESIS_BLOCK_HEIGHT = 102; //at regtest: 700,  447000
 
     protected Map<String, Map<Integer, SquUTXO>> utxoByTxIdMap;
     private List<UtxoListener> utxoListeners = new ArrayList<>();
     private boolean isUtxoAvailable;
+    protected int chainHeadHeight;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +79,8 @@ abstract public class BlockchainService {
     public boolean isUtxoAvailable() {
         return isUtxoAvailable;
     }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -128,11 +129,12 @@ abstract public class BlockchainService {
                     // We do not support raw MS for SQU
                     if (addresses.size() == 1) {
                         String address = addresses.get(0);
-                        SquUTXO utxo = new SquUTXO(Sha256Hash.of(Utils.HEX.decode(txId)),
+                        //TODO set coinbase to true after testing
+                        SquUTXO utxo = new SquUTXO(txId,
                                 output.index,
                                 output.value,
                                 blockHeight,
-                                true,
+                                false,
                                 output.script,
                                 address);
                         utxoByIndexMap.put(i, utxo);
@@ -153,11 +155,12 @@ abstract public class BlockchainService {
                             // We do not support raw MS for SQU
                             if (addresses.size() == 1) {
                                 String address = addresses.get(0);
-                                SquUTXO utxo = new SquUTXO(Sha256Hash.of(Utils.HEX.decode(txId)),
+                                //TODO set coinbase to true after testing
+                                SquUTXO utxo = new SquUTXO(txId,
                                         squOutput.index,
                                         squOutput.value,
                                         blockHeight,
-                                        true,
+                                        false,
                                         squOutput.script,
                                         address);
                                 Map<Integer, SquUTXO> utxoByIndexMap = new HashMap<>();
@@ -203,7 +206,7 @@ abstract public class BlockchainService {
                             availableValue = availableValue.subtract(squOutput.value);
                             if (!availableValue.isNegative()) {
                                 // We are spending available tokens
-                                SquUTXO utxo = new SquUTXO(Sha256Hash.of(Utils.HEX.decode(txId)),
+                                SquUTXO utxo = new SquUTXO(txId,
                                         squOutput.index,
                                         squOutput.value,
                                         blockHeight,
@@ -284,5 +287,9 @@ abstract public class BlockchainService {
             });
         });
         log.info(sb.toString());
+    }
+
+    public int getChainHeadHeight() {
+        return chainHeadHeight;
     }
 }

@@ -99,7 +99,7 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
 
         if (DevFlags.DEV_MODE) {
             amountInputTextField.setText("0.546"); // 546 is dust limit
-            receiversAddressInputTextField.setText("mgJE2Fq7UB12mvqBF16GEVotQGmCV7WwQE");
+            receiversAddressInputTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
         }
 
         sendButton.setOnAction((event) -> {

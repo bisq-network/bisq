@@ -31,6 +31,8 @@ public class SquUTXOProvider implements UTXOProvider {
     private Map<String, Set<UTXO>> utxoSetByAddressMap = new HashMap<>();
     private NetworkParameters parameters;
 
+    private int chainHeadHeight;
+
     @Inject
     public SquUTXOProvider(Preferences preferences) {
         this.parameters = preferences.getBitcoinNetwork().getParameters();
@@ -44,6 +46,8 @@ public class SquUTXOProvider implements UTXOProvider {
 
             utxoSetByAddressMap.get(address).add(utxo);
         });
+
+        log.info("utxoSetByAddressMap " + utxoSetByAddressMap.toString());
     }
 
     @Override
@@ -55,9 +59,13 @@ public class SquUTXOProvider implements UTXOProvider {
         return result;
     }
 
+    public void setChainHeadHeight(int chainHeadHeight) {
+        this.chainHeadHeight = chainHeadHeight;
+    }
+
     @Override
     public int getChainHeadHeight() throws UTXOProviderException {
-        return 0;
+        return chainHeadHeight;
     }
 
     @Override

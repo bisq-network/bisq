@@ -20,27 +20,16 @@ package io.bitsquare.dao.blockchain;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.UTXO;
+import org.bitcoinj.core.Utils;
 import org.bitcoinj.script.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 public class SquUTXO extends UTXO {
     private static final Logger log = LoggerFactory.getLogger(SquUTXO.class);
 
-
-    public SquUTXO(Sha256Hash hash, long index, Coin value, int height, boolean coinbase, Script script) {
-        super(hash, index, value, height, coinbase, script);
-    }
-
-    public SquUTXO(Sha256Hash hash, long index, Coin value, int height, boolean coinbase, Script script, String address) {
-        super(hash, index, value, height, coinbase, script, address);
-    }
-
-    public SquUTXO(InputStream in) throws IOException {
-        super(in);
+    public SquUTXO(String txId, long index, Coin value, int height, boolean coinBase, Script script, String address) {
+        super(Sha256Hash.wrap(Utils.HEX.decode(txId)), index, value, height, coinBase, script, address);
     }
 
     @Override

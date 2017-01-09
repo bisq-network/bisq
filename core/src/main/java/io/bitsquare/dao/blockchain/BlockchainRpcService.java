@@ -177,10 +177,11 @@ public class BlockchainRpcService extends BlockchainService {
     @Override
     void parseBlockchainFromGenesis(Map<String, Map<Integer, SquUTXO>> utxoByTxIdMap, int genesisBlockHeight, String genesisTxId) throws BlockchainException {
         try {
-            int blockCount = client.getBlockCount();
-            log.info("blockCount=" + blockCount);
+            chainHeadHeight = client.getBlockCount();
+
+            log.info("blockCount=" + chainHeadHeight);
             long startTs = System.currentTimeMillis();
-            for (int i = genesisBlockHeight; i <= blockCount; i++) {
+            for (int i = genesisBlockHeight; i <= chainHeadHeight; i++) {
                 String blockHash = client.getBlockHash(i);
                 Block block = client.getBlock(blockHash);
                 log.info("blockHeight=" + i);

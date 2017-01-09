@@ -33,7 +33,9 @@ import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.SPVBlockStore;
 import org.bitcoinj.store.WalletProtobufSerializer;
+import org.bitcoinj.wallet.DeterministicKeyChain;
 import org.bitcoinj.wallet.DeterministicSeed;
+import org.bitcoinj.wallet.KeyChainGroup;
 import org.bitcoinj.wallet.Protos;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -84,7 +86,7 @@ public class WalletConfig extends AbstractIdleService {
     private boolean useTor = false;
     private String userAgent;
     private String version;
-    private WalletProtobufSerializer.WalletFactory walletFactory;
+    private BitsquareWalletFactory walletFactory;
     @Nullable
     private PeerDiscovery discovery;
     private final Context context;
@@ -98,6 +100,34 @@ public class WalletConfig extends AbstractIdleService {
     public WalletConfig(NetworkParameters params, Socks5Proxy socks5Proxy, File directory, String btcWalletFilePrefix, String squWalletFilePrefix) {
         this(new Context(params), directory, btcWalletFilePrefix, squWalletFilePrefix);
         this.socks5Proxy = socks5Proxy;
+
+        walletFactory = new BitsquareWalletFactory() {
+            @Override
+            public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup) {
+                // This is called when we load an existing wallet
+                // We have already the chain here so we can use this to distinguish.
+                List<DeterministicKeyChain> deterministicKeyChains = keyChainGroup.getDeterministicKeyChains();
+                if (!deterministicKeyChains.isEmpty() && deterministicKeyChains.get(0) instanceof SquDeterministicKeyChain)
+                    return new SquWallet(params, keyChainGroup);
+                else
+                    return new Wallet(params, keyChainGroup);
+            }
+
+            @Override
+            public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isSquWallet) {
+                // This is called at first startup when we create the wallet
+                if (isSquWallet)
+                    return new SquWallet(params, keyChainGroup);
+                else
+                    return new Wallet(params, keyChainGroup);
+            }
+        };
+    }
+
+    public interface BitsquareWalletFactory extends WalletProtobufSerializer.WalletFactory {
+        Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup);
+
+        Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isSquWallet);
     }
 
     /**
@@ -364,7 +394,7 @@ public class WalletConfig extends AbstractIdleService {
                 keyChainGroup = new BitsquareKeyChainGroup(params, new BtcDeterministicKeyChain(btcSeed), true, btcWalletLookaheadSize);
             else
                 keyChainGroup = new BitsquareKeyChainGroup(params, true, btcWalletLookaheadSize);
-            vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayBtcWallet, btcSeed, null, keyChainGroup);
+            vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayBtcWallet, btcSeed, null, keyChainGroup, false);
 
             // SQU walelt
             vSquWalletFile = new File(directory, squWalletFilePrefix + ".wallet");
@@ -373,7 +403,7 @@ public class WalletConfig extends AbstractIdleService {
                 keyChainGroup = new BitsquareKeyChainGroup(params, new SquDeterministicKeyChain(squSeed), false, squWalletLookaheadSize);
             else
                 keyChainGroup = new BitsquareKeyChainGroup(params, false, squWalletLookaheadSize);
-            vSquWallet = createOrLoadWallet(vSquWalletFile, shouldReplaySquWallet, null, squSeed, keyChainGroup);
+            vSquWallet = createOrLoadWallet(vSquWalletFile, shouldReplaySquWallet, null, squSeed, keyChainGroup, true);
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);
@@ -465,7 +495,9 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
-    private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet, @Nullable DeterministicSeed restoreFromBtcSeed, @Nullable DeterministicSeed restoreFromSquSeed, BitsquareKeyChainGroup keyChainGroup) throws Exception {
+    private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet, @Nullable DeterministicSeed restoreFromBtcSeed,
+                                      @Nullable DeterministicSeed restoreFromSquSeed, BitsquareKeyChainGroup keyChainGroup, boolean isSquWallet)
+            throws Exception {
         Wallet wallet;
 
         if (restoreFromBtcSeed != null)
@@ -476,17 +508,9 @@ public class WalletConfig extends AbstractIdleService {
         if (walletFile.exists()) {
             wallet = loadWallet(walletFile, shouldReplayWallet, keyChainGroup.isUseBitcoinDeterministicKeyChain());
         } else {
-            wallet = createWallet(keyChainGroup);
+            wallet = createWallet(keyChainGroup, isSquWallet);
             wallet.freshReceiveKey();
-            for (WalletExtension e : provideWalletExtensions()) {
-                wallet.addExtension(e);
-            }
-
-            // Currently the only way we can be sure that an extension is aware of its containing wallet is by
-            // deserializing the extension (see WalletExtension#deserializeWalletExtension(Wallet, byte[]))
-            // Hence, we first save and then load wallet to ensure any extensions are correctly initialized.
             wallet.saveToFile(walletFile);
-            wallet = loadWallet(walletFile, false, keyChainGroup.isUseBitcoinDeterministicKeyChain());
         }
 
         if (useAutoSave) wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
@@ -517,11 +541,14 @@ public class WalletConfig extends AbstractIdleService {
         return wallet;
     }
 
-    private Wallet createWallet(BitsquareKeyChainGroup keyChainGroup) {
+    private Wallet createWallet(BitsquareKeyChainGroup keyChainGroup, boolean isSquWallet) {
         if (walletFactory != null) {
-            return walletFactory.create(params, keyChainGroup);
+            return walletFactory.create(params, keyChainGroup, isSquWallet);
         } else {
-            return new Wallet(params, keyChainGroup);  // default
+            if (isSquWallet)
+                return new SquWallet(params, keyChainGroup);
+            else
+                return new Wallet(params, keyChainGroup);
         }
     }
 

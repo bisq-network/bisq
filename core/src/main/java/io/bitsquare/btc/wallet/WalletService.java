@@ -561,7 +561,7 @@ public abstract class WalletService {
         StringBuilder sb = new StringBuilder();
         sb.append("\n").append(tracePrefix).append(":").append("\n").append(tx.toString()).append("\n");
         sb.append("Size: ").append(tx.bitcoinSerialize().length);
-        log.error(sb.toString());
+        log.info(sb.toString());
     }
 
 

@@ -233,7 +233,7 @@ public class BtcWalletService extends WalletService {
         checkWalletConsistency();
         verifyTransaction(resultTx);
 
-        printTx("BTC wallet: Signed tx", resultTx);
+        //printTx("BTC wallet: Signed tx", resultTx);
         return resultTx;
     }
 
@@ -243,7 +243,7 @@ public class BtcWalletService extends WalletService {
 
     public void commitTx(Transaction tx) {
         wallet.commitTx(tx);
-        printTx("BTC commit Tx", tx);
+        // printTx("BTC commit Tx", tx);
     }
 
     public Transaction getClonedTransaction(Transaction tx) {

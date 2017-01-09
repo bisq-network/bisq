@@ -379,7 +379,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawToTextField.setPromptText("Fill in your destination address");
 
         if (DevFlags.DEV_MODE)
-            withdrawToTextField.setText("mgJE2Fq7UB12mvqBF16GEVotQGmCV7WwQE");
+            withdrawToTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
     }
 
     private Optional<Tradable> getTradable(WithdrawalListItem item) {

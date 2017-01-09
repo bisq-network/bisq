@@ -153,7 +153,7 @@ public class BuyerStep5View extends TradeStepView {
         withdrawToExternalWalletButton.setOnAction(e -> reviewWithdrawal());
 
         if (DevFlags.DEV_MODE) {
-            withdrawAddressTextField.setText("mgJE2Fq7UB12mvqBF16GEVotQGmCV7WwQE");
+            withdrawAddressTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
         } else {
             String key = "tradeCompleted" + trade.getId();
             if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {

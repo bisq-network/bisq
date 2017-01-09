@@ -119,7 +119,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, "Your destination address:");
         addressInputTextField = tuple.second;
         if (DevFlags.DEV_MODE)
-            addressInputTextField.setText("mgJE2Fq7UB12mvqBF16GEVotQGmCV7WwQE");
+            addressInputTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
 
         emptyWalletButton = new Button("Empty wallet");
         boolean isBalanceSufficient = Restrictions.isAboveDust(totalBalance);

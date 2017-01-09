@@ -24,8 +24,6 @@ import io.bitsquare.dao.vote.VotingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 public class DaoPeriodService {
     private static final Logger log = LoggerFactory.getLogger(DaoPeriodService.class);
 
@@ -72,10 +70,10 @@ public class DaoPeriodService {
 
     public void onAllServicesInitialized() {
         // TODO use blockchainService
-        bestChainHeight = btcWalletService.getBestChainHeight();
+       /* bestChainHeight = btcWalletService.getBestChainHeight();
         checkArgument(bestChainHeight >= GENESIS_BLOCK_HEIGHT, "GENESIS_BLOCK_HEIGHT must be in the past");
 
-        applyVotingResults(votingDefaultValues, bestChainHeight, GENESIS_BLOCK_HEIGHT);
+        applyVotingResults(votingDefaultValues, bestChainHeight, GENESIS_BLOCK_HEIGHT);*/
     }
 
     private void applyVotingResults(VotingDefaultValues votingDefaultValues, int bestChainHeight, int genesisBlockHeight) {

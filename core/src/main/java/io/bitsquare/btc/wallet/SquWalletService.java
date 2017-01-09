@@ -153,7 +153,6 @@ public class SquWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestSquUtxo(@Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        log.error("requestSquUtxo");
         if (blockchainService.isUtxoAvailable()) {
             applyUtxoSetToUTXOProvider(blockchainService.getUtxoByTxIdMap());
             if (resultHandler != null)
@@ -168,6 +167,7 @@ public class SquWalletService extends WalletService {
     }
 
     private void applyUtxoSetToUTXOProvider(Map<String, Map<Integer, SquUTXO>> utxoByTxIdMap) {
+        squUTXOProvider.setChainHeadHeight(blockchainService.getChainHeadHeight());
         Set<UTXO> utxoSet = new HashSet<>();
         utxoByTxIdMap.entrySet().stream()
                 .forEach(e -> e.getValue().entrySet().stream()
@@ -192,7 +192,7 @@ public class SquWalletService extends WalletService {
 
         checkWalletConsistency();
         verifyTransaction(tx);
-        printTx("SQU wallet: Signed Tx", tx);
+        // printTx("SQU wallet: Signed Tx", tx);
         return tx;
     }
 
@@ -203,7 +203,7 @@ public class SquWalletService extends WalletService {
 
     public void commitTx(Transaction tx) {
         wallet.commitTx(tx);
-        printTx("SQU commit Tx", tx);
+        //printTx("SQU commit Tx", tx);
     }
 
 
@@ -241,7 +241,7 @@ public class SquWalletService extends WalletService {
         wallet.completeTx(sendRequest);
         checkWalletConsistency();
         verifyTransaction(tx);
-        printTx("prepareSendTx", tx);
+        //  printTx("prepareSendTx", tx);
         return tx;
     }
 
@@ -260,7 +260,7 @@ public class SquWalletService extends WalletService {
         if (change.isPositive())
             tx.addOutput(change, getUnusedAddress());
 
-        printTx("preparedCompensationRequestFeeTx", tx);
+        // printTx("preparedCompensationRequestFeeTx", tx);
         return tx;
     }
 
