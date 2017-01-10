@@ -119,6 +119,10 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(RpcOptionKeys.RPC_PORT, description("Bitcoind rpc port", ""))
                 .withRequiredArg();
+        parser.accepts(RpcOptionKeys.RPC_BLOCK_PORT, description("Bitcoind rpc port for block notifications", ""))
+                .withRequiredArg();
+        parser.accepts(RpcOptionKeys.RPC_WALLET_PORT, description("Bitcoind rpc port for wallet notifications", ""))
+                .withRequiredArg();
 
         parser.accepts(BtcOptionKeys.BTC_NETWORK, description("Bitcoin network", BitcoinNetwork.DEFAULT))
                 .withRequiredArg()

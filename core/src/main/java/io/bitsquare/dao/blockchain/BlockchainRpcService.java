@@ -62,6 +62,8 @@ public class BlockchainRpcService extends BlockchainService {
     private final String rpcUser;
     private final String rpcPassword;
     private final String rpcPort;
+    private final String rpcBlockPort;
+    private final String rpcWalletPort;
     private final ListeningExecutorService setupExecutorService = Utilities.getListeningExecutorService("BlockchainRpcService.setup", 1, 1, 5);
     private final ListeningExecutorService rpcRequestsExecutor = Utilities.getListeningExecutorService("BlockchainRpcService.requests", 1, 1, 10);
 
@@ -75,10 +77,14 @@ public class BlockchainRpcService extends BlockchainService {
     @Inject
     public BlockchainRpcService(@Named(RpcOptionKeys.RPC_USER) String rpcUser,
                                 @Named(RpcOptionKeys.RPC_PASSWORD) String rpcPassword,
-                                @Named(RpcOptionKeys.RPC_PORT) String rpcPort) {
+                                @Named(RpcOptionKeys.RPC_PORT) String rpcPort,
+                                @Named(RpcOptionKeys.RPC_BLOCK_PORT) String rpcBlockPort,
+                                @Named(RpcOptionKeys.RPC_WALLET_PORT) String rpcWalletPort) {
         this.rpcUser = rpcUser;
         this.rpcPassword = rpcPassword;
         this.rpcPort = rpcPort;
+        this.rpcBlockPort = rpcBlockPort;
+        this.rpcWalletPort = rpcWalletPort;
     }
 
 
@@ -98,9 +104,11 @@ public class BlockchainRpcService extends BlockchainService {
             try (FileInputStream fileInputStream = new FileInputStream(new File(resource.toURI()))) {
                 try (InputStream inputStream = new BufferedInputStream(fileInputStream)) {
                     nodeConfig.load(inputStream);
-                    nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
                     nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
                     nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
+                    nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
+                    nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
+                    nodeConfig.setProperty("node.bitcoind.notification.wallet.port", rpcWalletPort);
                     BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
                     daemon = new BtcdDaemonImpl(client);
                     log.info("Setup took {} ms", System.currentTimeMillis() - startTs);

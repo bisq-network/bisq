@@ -80,7 +80,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String btcNetworkDir;
     private final String logLevel, providers;
     private BitcoinNetwork bitcoinNetwork;
-    private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword, rpcPort,
+    private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword, rpcPort, rpcBlockPort, rpcWalletPort,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress, socks5ProxyHttpAddress;
 
     public BitsquareEnvironment(OptionSet options) {
@@ -162,6 +162,13 @@ public class BitsquareEnvironment extends StandardEnvironment {
         rpcPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PORT) ?
                 (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PORT) :
                 "";
+        rpcBlockPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_BLOCK_PORT) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_BLOCK_PORT) :
+                "";
+        rpcWalletPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_WALLET_PORT) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_WALLET_PORT) :
+                "";
+
         myAddress = commandLineProperties.containsProperty(NetworkOptionKeys.MY_ADDRESS) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.MY_ADDRESS) :
                 "";
@@ -258,6 +265,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(RpcOptionKeys.RPC_USER, rpcUser);
                 setProperty(RpcOptionKeys.RPC_PASSWORD, rpcPassword);
                 setProperty(RpcOptionKeys.RPC_PORT, rpcPort);
+                setProperty(RpcOptionKeys.RPC_BLOCK_PORT, rpcBlockPort);
+                setProperty(RpcOptionKeys.RPC_WALLET_PORT, rpcWalletPort);
 
                 setProperty(AppOptionKeys.BTC_NODES, btcNodes);
                 setProperty(AppOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);

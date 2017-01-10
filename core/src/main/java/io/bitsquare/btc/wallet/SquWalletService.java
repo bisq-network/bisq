@@ -52,7 +52,6 @@ public class SquWalletService extends WalletService {
     private static final Logger log = LoggerFactory.getLogger(SquWalletService.class);
 
     private final BlockchainService blockchainService;
-    private final SquUTXOProvider squUTXOProvider;
     private final SquCoinSelector squCoinSelector;
 
 
@@ -63,22 +62,17 @@ public class SquWalletService extends WalletService {
     @Inject
     public SquWalletService(WalletsSetup walletsSetup,
                             BlockchainService blockchainService,
-                            SquUTXOProvider squUTXOProvider,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
                 preferences,
                 feeService);
         this.blockchainService = blockchainService;
-        this.squUTXOProvider = squUTXOProvider;
-        this.squCoinSelector = new SquCoinSelector();
+        this.squCoinSelector = new SquCoinSelector(true);
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getSquWallet();
             wallet.setCoinSelector(squCoinSelector);
-
-            //TODO
-            wallet.setUTXOProvider(squUTXOProvider);
 
             wallet.addEventListener(new BitsquareWalletEventListener());
             wallet.addEventListener(new AbstractWalletEventListener() {
@@ -167,12 +161,11 @@ public class SquWalletService extends WalletService {
     }
 
     private void applyUtxoSetToUTXOProvider(Map<String, Map<Integer, SquUTXO>> utxoByTxIdMap) {
-        squUTXOProvider.setChainHeadHeight(blockchainService.getChainHeadHeight());
-        Set<UTXO> utxoSet = new HashSet<>();
+        Set<SquUTXO> utxoSet = new HashSet<>();
         utxoByTxIdMap.entrySet().stream()
                 .forEach(e -> e.getValue().entrySet().stream()
                         .forEach(u -> utxoSet.add(u.getValue())));
-        squUTXOProvider.setUtxoSet(utxoSet);
+        squCoinSelector.setUtxoSet(utxoSet);
     }
 
 
@@ -253,7 +246,6 @@ public class SquWalletService extends WalletService {
     public Transaction getPreparedBurnFeeTx(Coin fee) throws WalletException, TransactionVerificationException,
             InsufficientMoneyException, ChangeBelowDustException {
         Transaction tx = new Transaction(params);
-        SquCoinSelector squCoinSelector = new SquCoinSelector();
         CoinSelection coinSelection = squCoinSelector.select(fee, getTransactionOutputsFromUtxoProvider());
         coinSelection.gathered.stream().forEach(tx::addInput);
         Coin change = squCoinSelector.getChange(fee, coinSelection);

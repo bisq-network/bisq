@@ -32,7 +32,7 @@ public class BlockchainRpcServiceMain {
         Log.setLevel(Level.WARN);
 
         // regtest uses port 18332, mainnet 8332
-        BlockchainRpcService blockchainRpcService = new BlockchainRpcService(args[0], args[1], args[2]);
+        BlockchainRpcService blockchainRpcService = new BlockchainRpcService(args[0], args[1], args[2], args[3], args[4]);
         blockchainRpcService.onAllServicesInitialized();
     }
 }

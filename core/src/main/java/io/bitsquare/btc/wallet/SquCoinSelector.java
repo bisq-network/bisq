@@ -17,12 +17,19 @@
 
 package io.bitsquare.btc.wallet;
 
+import io.bitsquare.dao.blockchain.SquUTXO;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.script.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
@@ -33,16 +40,24 @@ class SquCoinSelector extends BsDefaultCoinSelector {
 
     private final boolean permitForeignPendingTx;
 
+    private Map<Script, Set<SquUTXO>> utxoSetByScriptMap = new HashMap<>();
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SquCoinSelector() {
-        this(true);
-    }
-
     public SquCoinSelector(boolean permitForeignPendingTx) {
         this.permitForeignPendingTx = permitForeignPendingTx;
+    }
+
+    public void setUtxoSet(Set<SquUTXO> utxoSet) {
+        utxoSet.stream().forEach(utxo -> {
+            Script script = utxo.getScript();
+            if (!utxoSetByScriptMap.containsKey(script))
+                utxoSetByScriptMap.put(script, new HashSet<>());
+
+            utxoSetByScriptMap.get(script).add(utxo);
+        });
     }
 
     @Override
@@ -62,7 +77,12 @@ class SquCoinSelector extends BsDefaultCoinSelector {
 
     @Override
     protected boolean selectOutput(TransactionOutput transactionOutput) {
-        return (transactionOutput.getScriptPubKey().isSentToAddress() ||
-                transactionOutput.getScriptPubKey().isPayToScriptHash());
+        Script scriptPubKey = transactionOutput.getScriptPubKey();
+        if (scriptPubKey.isSentToAddress() || scriptPubKey.isPayToScriptHash()) {
+            return utxoSetByScriptMap.containsKey(scriptPubKey);
+        } else {
+            log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
+            return false;
+        }
     }
 }
