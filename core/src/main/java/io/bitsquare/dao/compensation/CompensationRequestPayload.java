@@ -18,6 +18,7 @@
 package io.bitsquare.dao.compensation;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.LazyProcessedStoragePayload;
@@ -27,7 +28,14 @@ import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +50,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
 
     public final byte version;
     private final long creationDate;
-    
+
     public final String uid;
     public final String name;
     public final String title;
@@ -56,7 +64,10 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     private final String nodeAddress;
 
     @JsonExclude
-    private PublicKey p2pStorageSignaturePubKey;
+    private transient PublicKey p2pStorageSignaturePubKey;
+    @JsonExclude
+    private final byte[] p2pStorageSignaturePubKeyBytes;
+
     // used for json
     private final String p2pStorageSignaturePubKeyAsHex;
 
@@ -97,7 +108,20 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         this.btcAddress = btcAddress;
         this.nodeAddress = nodeAddress.getFullAddress();
         this.p2pStorageSignaturePubKey = p2pStorageSignaturePubKey;
+        this.p2pStorageSignaturePubKeyBytes = new X509EncodedKeySpec(p2pStorageSignaturePubKey.getEncoded()).getEncoded();
         p2pStorageSignaturePubKeyAsHex = Utils.HEX.encode(p2pStorageSignaturePubKey.getEncoded());
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+            p2pStorageSignaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(p2pStorageSignaturePubKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        } catch (Throwable t) {
+            log.warn("Cannot be deserialized." + t.getMessage());
+        }
     }
 
     public void setSignature(String signature) {
