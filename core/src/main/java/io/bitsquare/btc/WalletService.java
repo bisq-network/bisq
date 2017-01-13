@@ -32,7 +32,9 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.network.DnsLookupTor;
 import io.bitsquare.network.Socks5ProxyProvider;
+import io.bitsquare.network.Socks5MultiDiscovery;
 import io.bitsquare.storage.FileUtil;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
@@ -266,9 +268,7 @@ public class WalletService {
         // Pass custom seed nodes if set in options
         if (!btcNodes.isEmpty()) {
 
-            // TODO: this parsing should be more robust,
-            // give validation error if needed.
-            String[] nodes = btcNodes.replace(", ", ",").split(",");
+            String[] nodes = parseCSV(btcNodes);
             List<PeerAddress> peerAddressList = new ArrayList<>();
             for (String node : nodes) {
                 String[] parts = node.split(":");
@@ -279,19 +279,24 @@ public class WalletService {
                 if (parts.length == 2) {
                     // note: this will cause a DNS request if hostname used.
                     // note: DNS requests are routed over socks5 proxy, if used.
-                    // fixme: .onion hostnames will fail! see comments in SeedPeersSocks5Dns
+                    // note: .onion hostnames will be unresolved.
                     InetSocketAddress addr;
                     if (socks5Proxy != null) {
-                        InetSocketAddress unresolved = InetSocketAddress.createUnresolved(parts[0], Integer.parseInt(parts[1]));
-                        // proxy remote DNS request happens here.
-                        addr = SeedPeersSocks5Dns.lookup(socks5Proxy, unresolved);
+                        try {
+                            // proxy remote DNS request happens here.  blocking.
+                            addr = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, parts[0]), Integer.parseInt(parts[1]));
+                        }
+                        catch(Exception e) {
+                            log.warn("Dns lookup failed for host: {}", parts[0]);
+                            addr = null;
+                        }
                     } else {
                         // DNS request happens here. if it fails, addr.isUnresolved() == true.
                         addr = new InetSocketAddress(parts[0], Integer.parseInt(parts[1]));
                     }
-                    // note: isUnresolved check should be removed once we fix PeerAddress
-                    if (addr != null && !addr.isUnresolved())
+                    if (addr != null && !addr.isUnresolved()) {
                         peerAddressList.add(new PeerAddress(addr.getAddress(), addr.getPort()));
+                    }
                 }
             }
             if (peerAddressList.size() > 0) {
@@ -343,9 +348,10 @@ public class WalletService {
         // could become outdated, so it is important that the user be able to
         // disable it, but should be made aware of the reduced privacy.
         if (socks5Proxy != null && !usePeerNodes) {
-            // SeedPeersSocks5Dns should replace SeedPeers once working reliably.
             // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
-            walletAppKit.setDiscovery(new SeedPeers(params));
+            // TODO: the discovery mode should come from command-line args, and default to ALL if not present.
+            int discoveryMode = Socks5MultiDiscovery.SOCKS5_DISCOVER_ALL;
+            walletAppKit.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, discoveryMode));
         }
 
         walletAppKit.setDownloadListener(downloadListener)
@@ -1129,6 +1135,19 @@ public class WalletService {
                 log.trace(tracePrefix + ": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
         }
     }
+
+    /**
+     * parses a comma separated string into String array.
+     *
+     * all spaces are stripped from the string, so this
+     * method is not suitable for CSV with values that contain spaces.
+     */
+    private String[] parseCSV(String buf) {
+        // todo:  improve parsing to handle multiple spaces, etc.
+        return buf.replace(" ", "").split(",");
+    }
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
