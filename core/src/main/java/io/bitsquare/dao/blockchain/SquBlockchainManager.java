@@ -101,7 +101,6 @@ public class SquBlockchainManager {
                             GENESIS_BLOCK_HEIGHT,
                             block -> {
                                 UserThread.execute(() -> {
-                                    log.error("### new block");
                                     try {
                                         blockchainService.parseBlock(new SquBlock(block.getTx(), block.getHeight()),
                                                 GENESIS_BLOCK_HEIGHT,
