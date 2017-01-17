@@ -93,7 +93,9 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return validationResult;
                     else
                         return new ValidationResult(false, "ZEC address need to start with t. Addresses starting with z are not supported.");
-                case "XTO":
+
+                    // TODO test not successful
+                /*case "XTO":
                     if (input.matches("^[T2][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (verifyChecksum(input))
                             try {
@@ -106,7 +108,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                             return wrongChecksum;
                     } else {
                         return regexTestFailed;
-                    }
+                    }*/
                 case "GBYTE":
                     return ByteballAddressValidator.validate(input);
                 default:
