@@ -27,12 +27,11 @@ import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
 import com.neemre.btcdcli4j.core.domain.Block;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
-import com.neemre.btcdcli4j.core.domain.Transaction;
 import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
 import com.neemre.btcdcli4j.daemon.event.BlockListener;
-import com.neemre.btcdcli4j.daemon.event.WalletListener;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -56,8 +55,8 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.bitcoinj.core.Utils.HEX;
 
-public class BlockchainRpcService extends BlockchainService {
-    private static final Logger log = LoggerFactory.getLogger(BlockchainRpcService.class);
+public class SquBlockchainRpcService extends SquBlockchainService {
+    private static final Logger log = LoggerFactory.getLogger(SquBlockchainRpcService.class);
 
     private final String rpcUser;
     private final String rpcPassword;
@@ -75,11 +74,11 @@ public class BlockchainRpcService extends BlockchainService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BlockchainRpcService(@Named(RpcOptionKeys.RPC_USER) String rpcUser,
-                                @Named(RpcOptionKeys.RPC_PASSWORD) String rpcPassword,
-                                @Named(RpcOptionKeys.RPC_PORT) String rpcPort,
-                                @Named(RpcOptionKeys.RPC_BLOCK_PORT) String rpcBlockPort,
-                                @Named(RpcOptionKeys.RPC_WALLET_PORT) String rpcWalletPort) {
+    public SquBlockchainRpcService(@Named(RpcOptionKeys.RPC_USER) String rpcUser,
+                                   @Named(RpcOptionKeys.RPC_PASSWORD) String rpcPassword,
+                                   @Named(RpcOptionKeys.RPC_PORT) String rpcPort,
+                                   @Named(RpcOptionKeys.RPC_BLOCK_PORT) String rpcBlockPort,
+                                   @Named(RpcOptionKeys.RPC_WALLET_PORT) String rpcWalletPort) {
         this.rpcUser = rpcUser;
         this.rpcPassword = rpcPassword;
         this.rpcPort = rpcPort;
@@ -93,7 +92,7 @@ public class BlockchainRpcService extends BlockchainService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void setup(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    void setup(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         ListenableFuture<BtcdClientImpl> future = setupExecutorService.submit(() -> {
             long startTs = System.currentTimeMillis();
             PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
@@ -114,16 +113,16 @@ public class BlockchainRpcService extends BlockchainService {
                     log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
                     return client;
                 } catch (IOException | BitcoindException | CommunicationException e) {
-                    throw new BlockchainException(e.getMessage(), e);
+                    throw new SquBlockchainException(e.getMessage(), e);
                 }
             } catch (URISyntaxException | IOException e) {
-                throw new BlockchainException(e.getMessage(), e);
+                throw new SquBlockchainException(e.getMessage(), e);
             }
         });
 
         Futures.addCallback(future, new FutureCallback<BtcdClientImpl>() {
             public void onSuccess(BtcdClientImpl client) {
-                BlockchainRpcService.this.client = client;
+                SquBlockchainRpcService.this.client = client;
                 resultHandler.handleResult();
             }
 
@@ -134,83 +133,61 @@ public class BlockchainRpcService extends BlockchainService {
     }
 
     @Override
-    protected void syncFromGenesis(Consumer<Map<String, Map<Integer, SquUTXO>>> resultHandler, ErrorMessageHandler errorMessageHandler) {
-        ListenableFuture<Map<String, Map<Integer, SquUTXO>>> future = rpcRequestsExecutor.submit(() -> {
+    protected ListenableFuture<Tuple2<Map<String, Map<Integer, SquUTXO>>, Integer>> syncFromGenesis(int genesisBlockHeight, String genesisTxId) {
+        return rpcRequestsExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
             Map<String, Map<Integer, SquUTXO>> utxoByTxIdMap = new HashMap<>();
-            try {
-                parseBlockchainFromGenesis(utxoByTxIdMap, GENESIS_BLOCK_HEIGHT, GENESIS_TX_ID);
-            } catch (BlockchainException e) {
-                throw new BlockchainException(e.getMessage(), e);
-            }
+            int chainHeadHeight = requestChainHeadHeight();
+            parseBlockchain(utxoByTxIdMap, chainHeadHeight, genesisBlockHeight, genesisTxId);
             log.info("syncFromGenesis took {} ms", System.currentTimeMillis() - startTs);
-            return utxoByTxIdMap;
-        });
-
-        Futures.addCallback(future, new FutureCallback<Map<String, Map<Integer, SquUTXO>>>() {
-            public void onSuccess(Map<String, Map<Integer, SquUTXO>> utxoByTxIdMap) {
-                resultHandler.accept(utxoByTxIdMap);
-            }
-
-            public void onFailure(@NotNull Throwable throwable) {
-                errorMessageHandler.handleErrorMessage(throwable.getMessage());
-            }
+            return new Tuple2<>(utxoByTxIdMap, chainHeadHeight);
         });
     }
 
     @Override
-    protected void syncFromGenesisCompete() {
+    protected void syncFromGenesisCompete(String genesisTxId, int genesisBlockHeight, Consumer<Block> onNewBlockHandler) {
         daemon.addBlockListener(new BlockListener() {
             @Override
             public void blockDetected(Block block) {
                 log.info("blockDetected " + block.getHash());
-                parseBlock(new SquBlock(block.getTx(), block.getHeight()), GENESIS_TX_ID, utxoByTxIdMap);
-                printUtxoMap(utxoByTxIdMap);
+                if (onNewBlockHandler != null)
+                    onNewBlockHandler.accept(block);
             }
         });
-        daemon.addWalletListener(new WalletListener() {
+       /* daemon.addWalletListener(new WalletListener() {
             @Override
             public void walletChanged(Transaction transaction) {
                 log.info("walletChanged " + transaction.getTxId());
-                try {
-                    parseTransaction(transaction.getTxId(), GENESIS_TX_ID, client.getBlockCount(), utxoByTxIdMap);
+               *//* try {
+                   // parseTransaction(transaction.getTxId(), GENESIS_TX_ID, client.getBlockCount(), tempUtxoByTxIdMap, utxoByTxIdMap);
                     printUtxoMap(utxoByTxIdMap);
-                } catch (BitcoindException | CommunicationException e) {
+                } catch (BitcoindException | CommunicationException | SquBlockchainException e) {
+                    //TODO
                     e.printStackTrace();
-                }
+                }*//*
             }
-        });
+        });*/
     }
 
     @Override
-    void parseBlockchainFromGenesis(Map<String, Map<Integer, SquUTXO>> utxoByTxIdMap, int genesisBlockHeight, String genesisTxId) throws BlockchainException {
-        try {
-            chainHeadHeight = client.getBlockCount();
-
-            log.info("blockCount=" + chainHeadHeight);
-            long startTs = System.currentTimeMillis();
-            for (int i = genesisBlockHeight; i <= chainHeadHeight; i++) {
-                String blockHash = client.getBlockHash(i);
-                Block block = client.getBlock(blockHash);
-                log.info("blockHeight=" + i);
-                parseBlock(new SquBlock(block.getTx(), block.getHeight()), genesisTxId, utxoByTxIdMap);
-            }
-            printUtxoMap(utxoByTxIdMap);
-            log.info("Took {} ms", System.currentTimeMillis() - startTs);
-        } catch (BitcoindException | CommunicationException e) {
-            throw new BlockchainException(e.getMessage(), e);
-        }
+    int requestChainHeadHeight() throws BitcoindException, CommunicationException {
+        return client.getBlockCount();
     }
 
     @Override
-    SquTransaction getSquTransaction(String txId) throws BlockchainException {
+    Block requestBlock(int blockHeight) throws BitcoindException, CommunicationException {
+        return client.getBlock(client.getBlockHash(blockHeight));
+    }
+
+    @Override
+    SquTransaction requestTransaction(String txId) throws SquBlockchainException {
         try {
-            RawTransaction rawTransaction = (RawTransaction) client.getRawTransaction(txId, 1);
+            RawTransaction rawTransaction = getRawTransaction(txId);
             return new SquTransaction(txId,
                     rawTransaction.getVIn()
                             .stream()
-                            .filter(e -> e != null && e.getVOut() != null && e.getTxId() != null)
-                            .map(e -> new SquTxInput(e.getVOut(), e.getTxId()))
+                            .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
+                            .map(rawInput -> new SquTxInput(rawInput.getVOut(), rawInput.getTxId(), rawTransaction.getHex()))
                             .collect(Collectors.toList()),
                     rawTransaction.getVOut()
                             .stream()
@@ -218,10 +195,14 @@ public class BlockchainRpcService extends BlockchainService {
                             .map(e -> new SquTxOutput(e.getN(),
                                     Coin.valueOf(e.getValue().movePointRight(8).longValue()),
                                     e.getScriptPubKey().getAddresses(),
-                                    new Script(HEX.decode(e.getScriptPubKey().getHex()))))
+                                    e.getScriptPubKey().getHex() != null ? new Script(HEX.decode(e.getScriptPubKey().getHex())) : null))
                             .collect(Collectors.toList()));
         } catch (BitcoindException | CommunicationException e) {
-            throw new BlockchainException(e.getMessage(), e);
+            throw new SquBlockchainException(e.getMessage(), e);
         }
+    }
+
+    protected RawTransaction getRawTransaction(String txId) throws BitcoindException, CommunicationException {
+        return (RawTransaction) client.getRawTransaction(txId, 1);
     }
 }

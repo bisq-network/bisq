@@ -128,14 +128,13 @@ public class BtcWalletService extends WalletService {
     // Add fee input to prepared SQU send tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction completePreparedSquTx(Transaction preparedSquTx, boolean isSendTx, @Nullable byte[] opReturnData) throws
-            TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
 
+    public Transaction completePreparedSendSquTx(Transaction preparedSquTx, boolean isSendTx) throws
+            TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
         // preparedSquTx has following structure:
         // inputs [1-n] SQU inputs
         // outputs [0-1] SQU receivers output
         // outputs [0-1] SQU change output
-        // mining fee: optional burned SQU fee
 
         // We add BTC mining fee. Result tx looks like:
         // inputs [1-n] SQU inputs
@@ -143,8 +142,27 @@ public class BtcWalletService extends WalletService {
         // outputs [0-1] SQU receivers output
         // outputs [0-1] SQU change output
         // outputs [0-1] BTC change output
-        // outputs [0-1] OP_RETURN with opReturnData
-        // mining fee: BTC mining fee + optional burned SQU fee
+        // mining fee: BTC mining fee
+        return completePreparedSquTx(preparedSquTx, isSendTx, null);
+    }
+
+    public Transaction completePreparedSquTx(Transaction preparedSquTx, boolean isSendTx, @Nullable byte[] opReturnData) throws
+            TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
+
+        // preparedSquTx has following structure:
+        // inputs [1-n] SQU inputs
+        // outputs [0-1] SQU receivers output
+        // outputs [0-1] SQU change output
+        // mining fee: optional burned SQU fee (only if opReturnData != null)
+
+        // We add BTC mining fee. Result tx looks like:
+        // inputs [1-n] SQU inputs
+        // inputs [1-n] BTC inputs
+        // outputs [0-1] SQU receivers output
+        // outputs [0-1] SQU change output
+        // outputs [0-1] BTC change output
+        // outputs [0-1] OP_RETURN with opReturnData (only if opReturnData != null)
+        // mining fee: BTC mining fee + optional burned SQU fee (only if opReturnData != null)
 
         // In case of txs for burned SQU fees we have no receiver output and it might be that there is no change outputs
         // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input 

@@ -107,7 +107,7 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
             Coin receiverAmount = squFormatter.parseToCoin(amountInputTextField.getText());
             try {
                 Transaction preparedSendTx = squWalletService.getPreparedSendTx(receiversAddressString, receiverAmount);
-                Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedSendTx, true, null);
+                Transaction txWithBtcFee = btcWalletService.completePreparedSendSquTx(preparedSendTx, true);
                 Transaction signedTx = squWalletService.signTx(txWithBtcFee);
 
                 Coin miningFee = signedTx.getFee();

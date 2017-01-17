@@ -25,6 +25,9 @@ import org.bitcoinj.script.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// Estimation for UTXO set: 1 UTXO object has 78 byte
+// 1000 UTXOs - 10 000 UTXOs: 78kb -780kb
+
 public class SquUTXO extends UTXO {
     private static final Logger log = LoggerFactory.getLogger(SquUTXO.class);
 

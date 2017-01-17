@@ -41,8 +41,8 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class VoteManager {
-    private static final Logger log = LoggerFactory.getLogger(VoteManager.class);
+public class VotingManager {
+    private static final Logger log = LoggerFactory.getLogger(VotingManager.class);
 
     public static final String ERROR_MSG_MISSING_BYTE = "We need to have at least 1 more byte for the voting value.";
     public static final String ERROR_MSG_WRONG_SIZE = "sizeOfCompReqVotesInBytes must be 0 or multiple of 2. sizeOfCompReqVotesInBytes=";
@@ -60,13 +60,13 @@ public class VoteManager {
     private VoteItemsList activeVoteItemsList;
 
     @Inject
-    public VoteManager(BtcWalletService btcWalletService,
-                       SquWalletService squWalletService,
-                       FeeService feeService,
-                       Storage<ArrayList<VoteItemsList>> voteItemCollectionsStorage,
-                       CompensationRequestManager compensationRequestManager,
-                       DaoPeriodService daoPeriodService,
-                       VotingDefaultValues votingDefaultValues) {
+    public VotingManager(BtcWalletService btcWalletService,
+                         SquWalletService squWalletService,
+                         FeeService feeService,
+                         Storage<ArrayList<VoteItemsList>> voteItemCollectionsStorage,
+                         CompensationRequestManager compensationRequestManager,
+                         DaoPeriodService daoPeriodService,
+                         VotingDefaultValues votingDefaultValues) {
         this.btcWalletService = btcWalletService;
         this.squWalletService = squWalletService;
         this.feeService = feeService;
@@ -81,7 +81,7 @@ public class VoteManager {
     }
 
     @VisibleForTesting
-    VoteManager(VotingDefaultValues votingDefaultValues) {
+    VotingManager(VotingDefaultValues votingDefaultValues) {
         this.btcWalletService = null;
         this.squWalletService = null;
         this.feeService = null;

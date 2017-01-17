@@ -76,7 +76,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     private FeeService feeService;
     private SQUFormatter squFormatter;
     private BSFormatter btcFormatter;
-    private VoteManager voteManager;
+    private VotingManager voteManager;
     private Button voteButton;
     private List<CompensationRequest> compensationRequests;
     private TitledGroupBg compensationRequestsTitledGroupBg, parametersTitledGroupBg;
@@ -94,7 +94,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     @Inject
     private VoteView(CompensationRequestManager compensationRequestManager, SquWalletService squWalletService,
                      BtcWalletService btcWalletService, FeeService feeService, SQUFormatter squFormatter,
-                     BSFormatter btcFormatter, VoteManager voteManager) {
+                     BSFormatter btcFormatter, VotingManager voteManager) {
         this.compensationRequestManager = compensationRequestManager;
         this.squWalletService = squWalletService;
         this.btcWalletService = btcWalletService;

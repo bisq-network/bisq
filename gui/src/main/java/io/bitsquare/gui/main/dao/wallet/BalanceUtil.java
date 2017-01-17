@@ -17,17 +17,17 @@
 
 package io.bitsquare.gui.main.dao.wallet;
 
-import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.SQUFormatter;
 import javafx.scene.control.TextField;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.*;
+import org.bitcoinj.script.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.List;
 
 public class BalanceUtil {
     private static final Logger log = LoggerFactory.getLogger(BalanceUtil.class);
@@ -35,7 +35,7 @@ public class BalanceUtil {
     private final SquWalletService squWalletService;
     private final SQUFormatter formatter;
     private TextField balanceTextField;
-    private BalanceListener balanceListener;
+    private WalletEventListener walletEventListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -52,31 +52,59 @@ public class BalanceUtil {
     }
 
     public void initialize() {
-        balanceListener = new BalanceListener() {
+        walletEventListener = new WalletEventListener() {
             @Override
-            public void onBalanceChanged(Coin balance, Transaction tx) {
-                updateBalance(balance);
+            public void onKeysAdded(List<ECKey> keys) {
+
+            }
+
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                requestUtxo();
+            }
+
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                requestUtxo();
+            }
+
+            @Override
+            public void onReorganize(Wallet wallet) {
+                requestUtxo();
+            }
+
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                requestUtxo();
+            }
+
+            @Override
+            public void onWalletChanged(Wallet wallet) {
+
+            }
+
+            @Override
+            public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+
             }
         };
     }
 
-    public void activate() {
+    private void requestUtxo() {
         squWalletService.requestSquUtxo(() -> {
-            updateBalance(squWalletService.getAvailableBalance());
+            balanceTextField.setText(formatter.formatCoinWithCode(squWalletService.getAvailableBalance()));
         }, errorMessage -> {
             new Popup<>().warning(errorMessage);
         });
-        squWalletService.addBalanceListener(balanceListener);
+    }
 
-        updateBalance(squWalletService.getAvailableBalance());
+    public void activate() {
+        requestUtxo();
+        squWalletService.addEventListener(walletEventListener);
     }
 
     public void deactivate() {
-        squWalletService.removeBalanceListener(balanceListener);
-    }
-
-    private void updateBalance(Coin balance) {
-        balanceTextField.setText(formatter.formatCoinWithCode(balance));
+        squWalletService.removeEventListener(walletEventListener);
     }
 
 }

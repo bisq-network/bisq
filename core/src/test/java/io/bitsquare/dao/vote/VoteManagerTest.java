@@ -31,7 +31,7 @@ public class VoteManagerTest {
 
     @Test
     public void testGetVoteItemListFromOpReturnData() {
-        VoteManager votingManager = new VoteManager(new VotingDefaultValues());
+        VotingManager votingManager = new VotingManager(new VotingDefaultValues());
         byte[] opReturnData;
         VoteItemsList voteItemsList;
 
@@ -55,7 +55,7 @@ public class VoteManagerTest {
             votingManager.getVoteItemListFromOpReturnData(opReturnData);
             fail("Expected an IllegalArgumentException to be thrown");
         } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage(), startsWith(VoteManager.ERROR_MSG_WRONG_SIZE));
+            assertThat(e.getMessage(), startsWith(VotingManager.ERROR_MSG_WRONG_SIZE));
         }
 
         // compensation requests set but no votes
@@ -77,7 +77,7 @@ public class VoteManagerTest {
             votingManager.getVoteItemListFromOpReturnData(opReturnData);
             fail("Expected an IllegalArgumentException to be thrown");
         } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage(), is(VoteManager.ERROR_MSG_INVALID_COMP_REQ_MAPS));
+            assertThat(e.getMessage(), is(VotingManager.ERROR_MSG_INVALID_COMP_REQ_MAPS));
         }
 
         // has voted on item 2, but we found a accepted flag at item 1
@@ -90,7 +90,7 @@ public class VoteManagerTest {
             votingManager.getVoteItemListFromOpReturnData(opReturnData);
             fail("Expected an IllegalArgumentException to be thrown");
         } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage(), is(VoteManager.ERROR_MSG_INVALID_COMP_REQ_VAL));
+            assertThat(e.getMessage(), is(VotingManager.ERROR_MSG_INVALID_COMP_REQ_VAL));
         }
 
         // has voted on all and are declined
@@ -120,7 +120,7 @@ public class VoteManagerTest {
             votingManager.getVoteItemListFromOpReturnData(opReturnData);
             fail("Expected an IllegalArgumentException to be thrown");
         } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage(), is(VoteManager.ERROR_MSG_MISSING_BYTE));
+            assertThat(e.getMessage(), is(VotingManager.ERROR_MSG_MISSING_BYTE));
         }
 
         // wrong length
@@ -134,7 +134,7 @@ public class VoteManagerTest {
             votingManager.getVoteItemListFromOpReturnData(opReturnData);
             fail("Expected an IllegalArgumentException to be thrown");
         } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage(), is(VoteManager.ERROR_MSG_MISSING_BYTE));
+            assertThat(e.getMessage(), is(VotingManager.ERROR_MSG_MISSING_BYTE));
         }
 
         // Invalid param vote 255 is not allowed only 0-254
@@ -177,7 +177,7 @@ public class VoteManagerTest {
 
     @Test
     public void testCalculateHash() {
-        VoteManager votingManager = new VoteManager(new VotingDefaultValues());
+        VotingManager votingManager = new VotingManager(new VotingDefaultValues());
 
         // assertEquals(10, votingManager.calculateHash(100, 0));
     }

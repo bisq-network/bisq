@@ -25,7 +25,7 @@ import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.dao.blockchain.BlockchainService;
+import io.bitsquare.dao.blockchain.SquBlockchainManager;
 import io.bitsquare.dao.blockchain.SquUTXO;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
@@ -51,7 +51,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class SquWalletService extends WalletService {
     private static final Logger log = LoggerFactory.getLogger(SquWalletService.class);
 
-    private final BlockchainService blockchainService;
+    private final SquBlockchainManager squBlockchainManager;
     private final SquCoinSelector squCoinSelector;
 
 
@@ -61,13 +61,13 @@ public class SquWalletService extends WalletService {
 
     @Inject
     public SquWalletService(WalletsSetup walletsSetup,
-                            BlockchainService blockchainService,
+                            SquBlockchainManager squBlockchainManager,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
                 preferences,
                 feeService);
-        this.blockchainService = blockchainService;
+        this.squBlockchainManager = squBlockchainManager;
         this.squCoinSelector = new SquCoinSelector(true);
 
         walletsSetup.addSetupCompletedHandler(() -> {
@@ -147,12 +147,12 @@ public class SquWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestSquUtxo(@Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        if (blockchainService.isUtxoAvailable()) {
-            applyUtxoSetToUTXOProvider(blockchainService.getUtxoByTxIdMap());
+        if (squBlockchainManager.isUtxoAvailable()) {
+            applyUtxoSetToUTXOProvider(squBlockchainManager.getUtxoByTxIdMap());
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {
-            blockchainService.addUtxoListener(utxoByTxIdMap -> {
+            squBlockchainManager.addUtxoListener(utxoByTxIdMap -> {
                 applyUtxoSetToUTXOProvider(utxoByTxIdMap);
                 if (resultHandler != null)
                     resultHandler.handleResult();

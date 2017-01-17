@@ -17,12 +17,12 @@
 
 package io.bitsquare.dao.blockchain;
 
-public class BlockchainException extends Exception {
-    public BlockchainException(String message) {
+public class SquBlockchainException extends Exception {
+    public SquBlockchainException(String message) {
         super(message);
     }
 
-    public BlockchainException(String message, Throwable cause) {
+    public SquBlockchainException(String message, Throwable cause) {
         super(message, cause);
     }
 }

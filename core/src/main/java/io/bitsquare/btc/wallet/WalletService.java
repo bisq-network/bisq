@@ -570,7 +570,7 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    class BitsquareWalletEventListener extends AbstractWalletEventListener {
+    public class BitsquareWalletEventListener extends AbstractWalletEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
             notifyBalanceListeners(tx);

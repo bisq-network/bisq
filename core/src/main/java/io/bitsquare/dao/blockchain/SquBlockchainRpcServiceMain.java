@@ -24,15 +24,16 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
-public class BlockchainRpcServiceMain {
-    private static final Logger log = LoggerFactory.getLogger(BlockchainRpcServiceMain.class);
+public class SquBlockchainRpcServiceMain {
+    private static final Logger log = LoggerFactory.getLogger(SquBlockchainRpcServiceMain.class);
 
-    public static void main(String[] args) throws BlockchainException {
+    public static void main(String[] args) throws SquBlockchainException {
         Log.setup(System.getProperty("user.home") + File.separator + "BlockchainRpcServiceMain");
         Log.setLevel(Level.WARN);
 
         // regtest uses port 18332, mainnet 8332
-        BlockchainRpcService blockchainRpcService = new BlockchainRpcService(args[0], args[1], args[2], args[3], args[4]);
-        blockchainRpcService.onAllServicesInitialized();
+        SquBlockchainRpcService blockchainRpcService = new SquBlockchainRpcService(args[0], args[1], args[2], args[3], args[4]);
+        SquBlockchainManager squBlockchainManager = new SquBlockchainManager(blockchainRpcService);
+        squBlockchainManager.onAllServicesInitialized();
     }
 }

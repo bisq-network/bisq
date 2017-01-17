@@ -34,4 +34,34 @@ public class SquTransaction {
         this.inputs = inputs;
         this.outputs = outputs;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SquTransaction that = (SquTransaction) o;
+
+        if (txId != null ? !txId.equals(that.txId) : that.txId != null) return false;
+        if (inputs != null ? !inputs.equals(that.inputs) : that.inputs != null) return false;
+        return !(outputs != null ? !outputs.equals(that.outputs) : that.outputs != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = txId != null ? txId.hashCode() : 0;
+        result = 31 * result + (inputs != null ? inputs.hashCode() : 0);
+        result = 31 * result + (outputs != null ? outputs.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "SquTransaction{" +
+                "txId='" + txId + '\'' +
+                ", inputs=" + inputs +
+                ", outputs=" + outputs +
+                '}';
+    }
 }

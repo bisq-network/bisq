@@ -20,21 +20,21 @@ package io.bitsquare.dao;
 import com.google.inject.Inject;
 import io.bitsquare.btc.provider.squ.SquUtxoFeedService;
 import io.bitsquare.btc.wallet.SquWalletService;
-import io.bitsquare.dao.blockchain.BlockchainException;
-import io.bitsquare.dao.blockchain.BlockchainService;
+import io.bitsquare.dao.blockchain.SquBlockchainException;
+import io.bitsquare.dao.blockchain.SquBlockchainManager;
 import io.bitsquare.dao.compensation.CompensationRequestManager;
-import io.bitsquare.dao.vote.VoteManager;
+import io.bitsquare.dao.vote.VotingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DaoManager {
     private static final Logger log = LoggerFactory.getLogger(DaoManager.class);
 
-    private final BlockchainService blockchainService;
+    private final SquBlockchainManager squBlockchainManager;
     private final SquWalletService squWalletService;
     private final DaoPeriodService daoPeriodService;
     private final SquUtxoFeedService squUtxoFeedService;
-    private final VoteManager voteManager;
+    private final VotingManager voteManager;
     private final CompensationRequestManager compensationRequestManager;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -42,13 +42,13 @@ public class DaoManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoManager(BlockchainService blockchainService,
+    public DaoManager(SquBlockchainManager squBlockchainManager,
                       SquWalletService squWalletService,
                       DaoPeriodService daoPeriodService,
                       SquUtxoFeedService squUtxoFeedService,
-                      VoteManager voteManager,
+                      VotingManager voteManager,
                       CompensationRequestManager compensationRequestManager) {
-        this.blockchainService = blockchainService;
+        this.squBlockchainManager = squBlockchainManager;
         this.squWalletService = squWalletService;
         this.daoPeriodService = daoPeriodService;
         this.squUtxoFeedService = squUtxoFeedService;
@@ -56,12 +56,12 @@ public class DaoManager {
         this.compensationRequestManager = compensationRequestManager;
     }
 
-    public void onAllServicesInitialized() throws BlockchainException {
+    public void onAllServicesInitialized() throws SquBlockchainException {
         daoPeriodService.onAllServicesInitialized();
         squUtxoFeedService.onAllServicesInitialized();
         voteManager.onAllServicesInitialized();
         compensationRequestManager.onAllServicesInitialized();
-        blockchainService.onAllServicesInitialized();
+        squBlockchainManager.onAllServicesInitialized();
     }
 
 

@@ -38,4 +38,37 @@ public class SquTxOutput {
         this.addresses = addresses;
         this.script = script;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SquTxOutput that = (SquTxOutput) o;
+
+        if (index != that.index) return false;
+        if (value != null ? !value.equals(that.value) : that.value != null) return false;
+        if (addresses != null ? !addresses.equals(that.addresses) : that.addresses != null) return false;
+        return !(script != null ? !script.equals(that.script) : that.script != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = index;
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (addresses != null ? addresses.hashCode() : 0);
+        result = 31 * result + (script != null ? script.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "SquTxOutput{" +
+                "index=" + index +
+                ", value=" + value +
+                ", addresses=" + addresses +
+                ", script=" + script +
+                '}';
+    }
 }

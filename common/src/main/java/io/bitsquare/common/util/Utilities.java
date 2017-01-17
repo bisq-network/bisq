@@ -50,6 +50,7 @@ public class Utilities {
     public static final String LB = System.getProperty("line.separator");
     public static final String LB2 = LB + LB;
 
+    // TODO check out Jackson lib
     public static String objectToJson(Object object) {
         Gson gson = new GsonBuilder()
                 .setExclusionStrategies(new AnnotationExclusionStrategy())

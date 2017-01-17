@@ -730,6 +730,7 @@ public class Connection implements MessageListener {
 
                         Object rawInputObject = objectInputStream.readObject();
 
+
                         // Throttle inbound messages
                         long now = System.currentTimeMillis();
                         long elapsed = now - lastReadTimeStamp;

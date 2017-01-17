@@ -40,6 +40,8 @@ public enum VotingType {
 
     COMP_REQUEST_MAPS((byte) 0x50);
 
+    // TODO max growth rate of SQU
+
     public final Byte code;
 
     VotingType(Byte code) {

@@ -56,6 +56,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 // Derived from WalletAppKit
+// TODO use same seed for both wallets. 
+// TODo add rolling backup for both wallets
 public class WalletConfig extends AbstractIdleService {
     private static final Logger log = LoggerFactory.getLogger(WalletConfig.class);
 

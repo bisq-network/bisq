@@ -23,11 +23,43 @@ import org.slf4j.LoggerFactory;
 public class SquTxInput {
     private static final Logger log = LoggerFactory.getLogger(SquTxInput.class);
 
-    public final int index;
+    public final int spendingOuptuIndex;
     public final String spendingTxId;
+    public final String txId;
 
-    public SquTxInput(int index, String spendingTxId) {
-        this.index = index;
+    public SquTxInput(int spendingOuptuIndex, String spendingTxId, String txId) {
+        this.spendingOuptuIndex = spendingOuptuIndex;
         this.spendingTxId = spendingTxId;
+        this.txId = txId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SquTxInput that = (SquTxInput) o;
+
+        if (spendingOuptuIndex != that.spendingOuptuIndex) return false;
+        if (spendingTxId != null ? !spendingTxId.equals(that.spendingTxId) : that.spendingTxId != null) return false;
+        return !(txId != null ? !txId.equals(that.txId) : that.txId != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = spendingOuptuIndex;
+        result = 31 * result + (spendingTxId != null ? spendingTxId.hashCode() : 0);
+        result = 31 * result + (txId != null ? txId.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "SquTxInput{" +
+                "spendingOuptuIndex=" + spendingOuptuIndex +
+                ", spendingTxId='" + spendingTxId + '\'' +
+                ", txId='" + txId + '\'' +
+                '}';
     }
 }
