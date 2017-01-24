@@ -1,0 +1,125 @@
+/* AUTOMATICALLY GENERATED ON Mon Jan 16 10:23:35 CET 2017*/
+/* DO NOT EDIT */
+
+grant {
+  permission "java.util.PropertyPermission" "idea.launcher.*", "read";
+  permission "java.util.PropertyPermission" "slf4j.detectLoggerNameMismatch", "read";
+  permission "java.util.PropertyPermission" "user.home", "read";
+  permission "java.util.PropertyPermission" "java.runtime.name", "read";
+  permission "java.util.PropertyPermission" "java.runtime.version", "read";
+  permission "java.util.PropertyPermission" "sun.arch.data.model", "read";
+  permission "java.util.PropertyPermission" "ignoreDevMsg", "read";
+  permission "java.util.PropertyPermission" "ignoreDevMsg", "read";
+  permission "java.util.PropertyPermission" "bitcoinNetwork", "read";
+  permission "java.util.PropertyPermission" "appDataDir", "read";
+  permission "java.util.PropertyPermission" "logLevel", "read";
+  permission "java.util.PropertyPermission" "storageDir", "read";
+  permission "java.util.PropertyPermission" "keyStorageDir", "read";
+  permission "java.util.PropertyPermission" "dumpStatistics", "read";
+  permission "java.util.PropertyPermission" "torDir", "read";
+  permission "java.util.PropertyPermission" "maxConnections", "read";
+  permission "java.util.PropertyPermission" "networkId", "read";
+  permission "java.util.PropertyPermission" "myAddress", "read";
+  permission "java.util.PropertyPermission" "banList", "read";
+  permission "java.util.PropertyPermission" "socks5ProxyBtcAddress", "read";
+  permission "java.util.PropertyPermission" "socks5ProxyHttpAddress", "read";
+  permission "java.util.PropertyPermission" "useragent.name", "read";
+  permission "java.util.PropertyPermission" "useragent.version", "read";
+  permission "java.util.PropertyPermission" "walletDir", "read";
+  permission "java.util.PropertyPermission" "useTorForBtc", "read";
+  permission "java.util.PropertyPermission" "providers", "read";
+  permission "java.util.PropertyPermission" "rpcUser", "read";
+  permission "java.util.PropertyPermission" "rpcPassword", "read";
+  permission "java.util.PropertyPermission" "rpcPort", "read";
+  permission "java.util.PropertyPermission" "rpcBlockPort", "read";
+  permission "java.util.PropertyPermission" "rpcWalletPort", "read";
+  permission "java.util.PropertyPermission" "logback.*", "read";
+  permission "java.util.PropertyPermission" "org.apache.commons.logging.*", "read";
+  permission "java.util.PropertyPermission" "spring.getenv.ignore", "read";
+  permission "java.util.PropertyPermission" "javafx.toolkit", "read";
+  permission "java.util.PropertyPermission" "guice.custom.loader", "read";
+  permission "java.util.PropertyPermission" "cglib.debugLocation", "read";
+  /* ??? */
+  permission "java.util.PropertyPermission" "com.google.appengine.runtime.environment", "read";
+
+  permission "java.lang.RuntimePermission" "accessDeclaredMembers";
+  permission "java.lang.RuntimePermission" "setDefaultUncaughtExceptionHandler";
+  permission "java.lang.RuntimePermission" "getenv.*";
+  permission "java.lang.RuntimePermission" "accessClassInPackage.sun.misc";
+  permission "java.lang.RuntimePermission" "accessClassInPackage.sun.util.logging.resources";
+  permission "java.lang.RuntimePermission" "accessClassInPackage.com.sun.javafx.tk.quantum";
+  permission "java.lang.RuntimePermission" "accessClassInPackage.sun.reflect";
+  permission "java.lang.RuntimePermission" "getProtectionDomain";
+  permission "java.lang.RuntimePermission" "setContextClassLoader";
+  permission "java.lang.RuntimePermission" "shutdownHooks";
+  permission "java.lang.RuntimePermission" "getenv.logLevel";
+  permission "java.lang.RuntimePermission" "getenv.storageDir";
+  permission "java.lang.RuntimePermission" "getenv.keyStorageDir";
+  permission "java.lang.RuntimePermission" "getenv.dumpStatistics";
+  permission "java.lang.RuntimePermission" "getenv.torDir";
+  permission "java.lang.RuntimePermission" "getenv.maxConnections";
+  permission "java.lang.RuntimePermission" "getenv.myAddress";
+  permission "java.lang.RuntimePermission" "getenv.networkId";
+  permission "java.lang.RuntimePermission" "getenv.banList";
+  permission "java.lang.RuntimePermission" "getenv.socks5ProxyBtcAddress";
+  permission "java.lang.RuntimePermission" "getenv.socks5ProxyHttpAddress";
+  permission "java.lang.RuntimePermission" "getenv.useragent.name";
+  permission "java.lang.RuntimePermission" "getenv.useragent.version";
+  permission "java.lang.RuntimePermission" "getenv.walletDir";
+  permission "java.lang.RuntimePermission" "getenv.useTorForBtc";
+  permission "java.lang.RuntimePermission" "getenv.providers";
+  permission "java.lang.RuntimePermission" "getenv.rpcPassword";
+  permission "java.lang.RuntimePermission" "getenv.rpcUser";
+  permission "java.lang.RuntimePermission" "getenv.rpcPort";
+  permission "java.lang.RuntimePermission" "getenv.rpcBlockPort";
+  permission "java.lang.RuntimePermission" "getenv.rpcWalletPort";
+  permission "java.lang.RuntimePermission" "getenv.ignoreDevMsg";
+  permission "java.lang.RuntimePermission" "getenv.ignoreDevMsg";
+  permission "java.lang.RuntimePermission" "getenv.bitcoinNetwork";
+  permission "java.lang.RuntimePermission" "getenv.appDataDir";
+  permission "java.lang.RuntimePermission" "getenv.appDataDir";
+  permission "java.lang.RuntimePermission" "getClassLoader";
+  permission "java.lang.RuntimePermission" "createSecurityManager";
+  permission "java.lang.RuntimePermission" "setSecurityManager";
+
+  /* user data dir for Mac, Linux, Windows */
+  permission "java.io.FilePermission" "${user.home}${/}Library${/}Application Support${/}-", "read,write,delete";
+  permission "java.io.FilePermission" "${user.home}${/}.local${/}share${/}-", "read,write,delete";
+  permission "java.io.FilePermission" "${appdata}${/}-", "read,write,delete";
+
+  /* temp dir Mac, Linux, Windows TODO */
+  permission "java.io.FilePermission" "/var/folders/-", "read,write,delete";
+
+  permission "java.io.FilePermission" "${user.home}${/}.m2${/}-", "read";
+
+  /* make variable START */
+  permission "java.io.FilePermission" "bitsquare.properties", "read";
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/-", "read";
+  permission "java.io.FilePermission" "/Users/mike/.bitsquare/bitsquare.properties", "read";
+  permission "java.net.SocketPermission" "${hostname}:*", "listen,connect,resolve";
+  /* make variable STOP */
+
+  permission "java.net.SocketPermission" "127.0.0.1:*", "listen,connect,resolve";
+  permission "java.net.URLPermission" "http://*:8080/getFees", "GET:User-Agent";
+  permission "java.net.URLPermission" "http://*:8080/getAllMarketPrices", "GET:User-Agent";
+
+  permission "java.awt.AWTPermission" "accessSystemTray";
+  permission "java.awt.AWTPermission" "showWindowWithoutWarningBanner";
+  permission "java.security.SecurityPermission" "insertProvider";
+  permission "java.security.SecurityPermission" "getProperty.security.provider.*";
+  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+  permission "java.util.logging.LoggingPermission" "control";
+};
+
+/*
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/gui/target/classes/io/bitsquare/gui/main/MainView.fxml", "read";
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/core/target/classes/bitsquare.properties", "read";
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/gui/target/classes/io/bitsquare/gui/bitsquare.css", "read";
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/gui/target/classes/io/bitsquare/gui/images.css", "read";
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/core/target/classes/logback.xml", "read";
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/common/target/classes/logback.xml", "read";
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/network/target/classes/logback.xml", "read";
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/jtorproxy/target/classes/logback.xml", "read";
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/gui/target/classes/logback.xml", "read";
+  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/gui/target/classes/i18n/displayStrings.properties", "read";
+  */
