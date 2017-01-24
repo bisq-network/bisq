@@ -39,6 +39,15 @@ grant {
   permission "java.util.PropertyPermission" "javafx.toolkit", "read";
   permission "java.util.PropertyPermission" "guice.custom.loader", "read";
   permission "java.util.PropertyPermission" "cglib.debugLocation", "read";
+
+
+  permission "java.util.PropertyPermission" "useLocalhost", "read";
+  permission "java.util.PropertyPermission" "nodePort", "read";
+  permission "java.util.PropertyPermission" "seedNodes", "read";
+  permission "java.util.PropertyPermission" "bitcoinRegtestHost", "read";
+  permission "java.util.PropertyPermission" "btcNodes", "read";
+  permission "java.util.PropertyPermission" "appName", "read";
+
   /* ??? */
   permission "java.util.PropertyPermission" "com.google.appengine.runtime.environment", "read";
 
@@ -79,13 +88,13 @@ grant {
   permission "java.lang.RuntimePermission" "getenv.appDataDir";
   permission "java.lang.RuntimePermission" "getenv.appDataDir";
   permission "java.lang.RuntimePermission" "getClassLoader";
-  permission "java.lang.RuntimePermission" "createSecurityManager";
-  permission "java.lang.RuntimePermission" "setSecurityManager";
+  permission "java.lang.RuntimePermission" "accessUserInformation";
+  permission "java.lang.RuntimePermission" "loadLibrary.javasecp256k1";
 
   /* user data dir for Mac, Linux, Windows */
-  permission "java.io.FilePermission" "${user.home}${/}Library${/}Application Support${/}-", "read,write,delete";
-  permission "java.io.FilePermission" "${user.home}${/}.local${/}share${/}-", "read,write,delete";
-  permission "java.io.FilePermission" "${appdata}${/}-", "read,write,delete";
+  permission "java.io.FilePermission" "${user.home}${/}Library${/}Application Support${/}-", "read,write,delete,execute";
+  permission "java.io.FilePermission" "${user.home}${/}.local${/}share${/}-", "read,write,delete,execute";
+  permission "java.io.FilePermission" "${appdata}${/}-", "read,write,delete,execute";
 
   /* temp dir Mac, Linux, Windows TODO */
   permission "java.io.FilePermission" "/var/folders/-", "read,write,delete";
@@ -102,6 +111,8 @@ grant {
   permission "java.net.SocketPermission" "127.0.0.1:*", "listen,connect,resolve";
   permission "java.net.URLPermission" "http://*:8080/getFees", "GET:User-Agent";
   permission "java.net.URLPermission" "http://*:8080/getAllMarketPrices", "GET:User-Agent";
+  permission "java.net.SocketPermission" "*:8333", "connect,resolve";
+  permission "java.net.SocketPermission" "*.onion:80", "connect,resolve";
 
   permission "java.awt.AWTPermission" "accessSystemTray";
   permission "java.awt.AWTPermission" "showWindowWithoutWarningBanner";
