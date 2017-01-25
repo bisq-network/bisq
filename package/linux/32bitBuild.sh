@@ -28,7 +28,11 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles $jarFile:$jdkfixFile \
     -srcfiles package/linux/LICENSE \
     -appclass io.bitsquare.app.BitsquareAppMain \
-    -outfile Bitsquare
+    -outfile Bitsquare \
+    -BjvmOptions=-Djava.security.manager \
+    -BjvmOptions=-Djava.security.debug=failure \
+    -BjvmOptions=-Djava.security.policy=file:bitsquare.policy \
+
 
 # sudo alien -r -c -k gui/deploy/bundles/bitsquare-$version.deb
 

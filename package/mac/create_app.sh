@@ -29,9 +29,13 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bitsquare \
     -outdir gui/deploy \
     -srcfiles "gui/deploy/Bitsquare-$version.jar" \
+    -srcfiles "core/src/main/resources/bitsquare.policy" \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare \
-    -BjvmProperties=-Djava.net.preferIPv4Stack=true
+    -BjvmOptions=-Djava.net.preferIPv4Stack=true \
+    -BjvmOptions=-Djava.security.manager \
+    -BjvmOptions=-Djava.security.debug=failure \
+    -BjvmOptions=-Djava.security.policy=file:bitsquare.policy \
 
 rm "gui/deploy/Bitsquare.html"
 rm "gui/deploy/Bitsquare.jnlp"
