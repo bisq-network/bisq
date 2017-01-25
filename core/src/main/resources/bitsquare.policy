@@ -39,16 +39,13 @@ grant {
   permission "java.util.PropertyPermission" "javafx.toolkit", "read";
   permission "java.util.PropertyPermission" "guice.custom.loader", "read";
   permission "java.util.PropertyPermission" "cglib.debugLocation", "read";
-
-
   permission "java.util.PropertyPermission" "useLocalhost", "read";
   permission "java.util.PropertyPermission" "nodePort", "read";
   permission "java.util.PropertyPermission" "seedNodes", "read";
   permission "java.util.PropertyPermission" "bitcoinRegtestHost", "read";
   permission "java.util.PropertyPermission" "btcNodes", "read";
   permission "java.util.PropertyPermission" "appName", "read";
-
-  /* ??? */
+  /* Why ??? */
   permission "java.util.PropertyPermission" "com.google.appengine.runtime.environment", "read";
 
   permission "java.lang.RuntimePermission" "accessDeclaredMembers";
@@ -90,6 +87,7 @@ grant {
   permission "java.lang.RuntimePermission" "getClassLoader";
   permission "java.lang.RuntimePermission" "accessUserInformation";
   permission "java.lang.RuntimePermission" "loadLibrary.javasecp256k1";
+  permission "java.lang.RuntimePermission" "modifyThread";
 
   /* user data dir for Mac, Linux, Windows */
   permission "java.io.FilePermission" "${user.home}${/}Library${/}Application Support${/}-", "read,write,delete,execute";
@@ -99,14 +97,8 @@ grant {
   /* temp dir Mac, Linux, Windows TODO */
   permission "java.io.FilePermission" "/var/folders/-", "read,write,delete";
 
+  /* only for dev */
   permission "java.io.FilePermission" "${user.home}${/}.m2${/}-", "read";
-
-  /* make variable START */
-  permission "java.io.FilePermission" "bitsquare.properties", "read";
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/-", "read";
-  permission "java.io.FilePermission" "/Users/mike/.bitsquare/bitsquare.properties", "read";
-  permission "java.net.SocketPermission" "${hostname}:*", "listen,connect,resolve";
-  /* make variable STOP */
 
   permission "java.net.SocketPermission" "127.0.0.1:*", "listen,connect,resolve";
   permission "java.net.URLPermission" "http://*:8080/getFees", "GET:User-Agent";

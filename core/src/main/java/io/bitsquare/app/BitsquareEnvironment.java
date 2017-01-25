@@ -193,9 +193,9 @@ public class BitsquareEnvironment extends StandardEnvironment {
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
-            propertySources.addLast(appDirProperties());
-            propertySources.addLast(homeDirProperties());
-            propertySources.addLast(classpathProperties());
+//            propertySources.addLast(appDirProperties());
+//            propertySources.addLast(homeDirProperties());
+//            propertySources.addLast(classpathProperties());
 
             bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK, BitcoinNetwork.DEFAULT.name()).toUpperCase());
             btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
