@@ -110,7 +110,7 @@ grant {
   permission "java.awt.AWTPermission" "showWindowWithoutWarningBanner";
   permission "java.security.SecurityPermission" "insertProvider";
   permission "java.security.SecurityPermission" "getProperty.security.provider.*";
-  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+  permission "java.lang.reflect.ReflectPermission" "suppressAccessChecks";
   permission "java.util.logging.LoggingPermission" "control";
 };
 
