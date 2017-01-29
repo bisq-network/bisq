@@ -238,7 +238,6 @@ public class MainViewModel implements ViewModel {
 
     private void initializeAllServices() {*/
         
-        log.error("initializeAllServices");
         Log.traceCall();
 
         UserThread.runAfter(tacWindow::showIfNeeded, 2);

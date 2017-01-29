@@ -857,9 +857,9 @@ public class TradeWalletService {
         log.info("buyerAddressString " + buyerAddressString);
         log.info("sellerAddressString " + sellerAddressString);
         log.info("arbitratorAddressString " + arbitratorAddressString);
-        log.info("buyerPrivateKeyAsHex " + buyerPrivateKeyAsHex);
-        log.info("sellerPrivateKeyAsHex " + sellerPrivateKeyAsHex);
-        log.info("arbitratorPrivateKeyAsHex " + arbitratorPrivateKeyAsHex);
+        log.info("buyerPrivateKeyAsHex (not displayed for security reasons)");
+        log.info("sellerPrivateKeyAsHex (not displayed for security reasons)");
+        log.info("arbitratorPrivateKeyAsHex (not displayed for security reasons)");
         log.info("buyerPubKeyAsHex " + buyerPubKeyAsHex);
         log.info("sellerPubKeyAsHex " + sellerPubKeyAsHex);
         log.info("arbitratorPubKeyAsHex " + arbitratorPubKeyAsHex);
@@ -1122,12 +1122,12 @@ public class TradeWalletService {
     }
 
     private static void printTxWithInputs(String tracePrefix, Transaction tx) {
-        log.trace(tracePrefix + ": " + tx.toString());
+        log.info(tracePrefix + ": " + tx.toString());
         for (TransactionInput input : tx.getInputs()) {
             if (input.getConnectedOutput() != null)
-                log.trace(tracePrefix + " input value: " + input.getConnectedOutput().getValue().toFriendlyString());
+                log.info(tracePrefix + " input value: " + input.getConnectedOutput().getValue().toFriendlyString());
             else
-                log.trace(tracePrefix + ": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
+                log.info(tracePrefix + ": Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
         }
     }
 

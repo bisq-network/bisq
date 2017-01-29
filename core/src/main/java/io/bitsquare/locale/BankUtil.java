@@ -68,6 +68,7 @@ public class BankUtil {
             case "NZ":
             case "AU":
             case "SE":
+            case "CL":
                 return false;
             case "CA":
             case "MX":
@@ -150,6 +151,8 @@ public class BankUtil {
                 return "Bankgiro number:";
             case "MX":
                 return "CLABE:";
+            case "CL":
+                return "Cuenta:";
             default:
                 return "Account no. (IBAN):";
         }

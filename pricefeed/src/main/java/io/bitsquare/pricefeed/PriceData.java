@@ -19,10 +19,10 @@ package io.bitsquare.pricefeed;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class PriceData {
-    private final String c; // currencyCode
-    private final double a; // ask;
-    private final double b; // bid
-    private final double l; // last
+    public final String c; // currencyCode
+    public final double a; // ask;
+    public final double b; // bid
+    public final double l; // last
 
     public PriceData(String currencyCode, double ask, double bid, double last) {
         this.c = currencyCode;
