@@ -17,6 +17,24 @@
 
 package io.bitsquare.gui.util.validation;
 
+import java.util.Locale;
+
+/*
+ * BIC information taken from German wikipedia (2017-01-30)
+ * 
+ * length 8 or 11 characters
+ * General format: BBBB CC LL (bbb)
+ * with	B - Bank code
+ *	C - Country code
+ *	L - Location code
+ *	b - branch code (if applicable)
+ *
+ * B and C must be letters
+ * first L cannot be 0 or 1, second L cannot be O (upper case 'o')
+ * bbb cannot begin with X, unless it is XXX
+ */
+
+// TODO Special letters like ä, å, ... are not detected as invalid
 
 public final class BICValidator extends InputValidator {
 
@@ -29,8 +47,34 @@ public final class BICValidator extends InputValidator {
         // TODO Add validation for primary and secondary IDs according to the selected type
 
         // IBAN max 34 chars
-        // bic: max 11 char
-        return super.validate(input);
+        // bic: 8 or 11 chars
+
+	// check ensure length 8 or 11
+	if (!isStringWithFixedLength(input,8) && !isStringWithFixedLength(input,11))
+		return new ValidationResult(false, "Input length is neither 8 nor 11");
+
+	input = input.toUpperCase(Locale.ROOT);
+
+	// ensure Bank and Contry code to be letters only
+	for (int k=0; k<6; k++) {
+		if (!Character.isLetter(input.charAt(k)))
+			return new ValidationResult(false, "Bank and Country code must be letters");
+	}
+
+	// ensure location code starts not with 0 or 1 and ends not with O
+	char ch = input.charAt(6);
+	if (ch == '0' || ch == '1' || input.charAt(7) == 'O')
+		return new ValidationResult(false, "BIC contains invalid location code");
+
+	// check complete for 8 char BIC
+	if (input.length() == 8)
+		return new ValidationResult(true);
+
+	// ensure branch code does not start with X unless it is XXX
+	if (input.charAt(8) == 'X')
+		if (input.charAt(9) != 'X' || input.charAt(10) != 'X')
+			return new ValidationResult(false, "BIC contains invalid branch code");
+	return new ValidationResult(true);
     }
 
 

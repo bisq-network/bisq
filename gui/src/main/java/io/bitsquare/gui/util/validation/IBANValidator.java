@@ -17,6 +17,12 @@
 
 package io.bitsquare.gui.util.validation;
 
+import java.math.BigInteger;
+import java.util.Locale;
+import java.util.Arrays;
+
+
+// TODO Does not yet recognize special letters like ä, ö, ü, å, ... as invalid characters
 
 public final class IBANValidator extends InputValidator {
 
@@ -28,9 +34,50 @@ public final class IBANValidator extends InputValidator {
     public ValidationResult validate(String input) {
         // TODO Add validation for primary and secondary IDs according to the selected type
 
-        // IBAN max 34 chars
+        // IBAN max 34 chars, shortest is Norwegian with 15 chars, BBAN may include letters
         // bic: max 11 char
-        return super.validate(input);
+
+	// check input length first
+	if (isStringInRange(input, 15, 34)) {
+		input = input.toUpperCase(Locale.ROOT); // ensure upper case
+
+		// reorder IBAN to format <account number> <country code> <checksum>
+		String input2 = new String(input.substring(4, input.length()) + input.substring(0,4));
+		int charCount = 0;
+		char ch;
+
+		// check if input is alphanumeric and count included letters
+		for (int k=0; k<input2.length(); k++) {
+			ch = input2.charAt(k);
+			if (Character.isLetter(ch))
+				charCount++;
+			else if (!Character.isDigit(ch))
+				return (new ValidationResult(false, "Non-alphanumeric character detected"));
+		}
+
+		// create final char array for checksum validation
+		char [] charArray = new char[input2.length()+charCount];
+		int i = 0;
+		int tmp;
+		for (int k=0; k<input2.length(); k++) {
+			ch = input2.charAt(k);
+			if (Character.isLetter(ch)) {
+				tmp = ch - ('A' - 10); // letters are transformed to two digit numbers A->10, B->11, ...
+				String s = Integer.toString(tmp);
+				charArray[i++] = s.charAt(0); // insert transformed
+				charArray[i++] = s.charAt(1); // letters into char array
+			} else charArray[i++] = ch; // transfer digits directly to char array
+		}
+// System.out.print(Arrays.toString(charArray) + '\t');
+		BigInteger bigInt = new BigInteger(new String(charArray));
+		int result  = bigInt.mod(new BigInteger(Integer.toString(97))).intValue();
+		if (result == 1)
+			return new ValidationResult(true);
+		else
+			return new ValidationResult(false, "IBAN checksum is invalid");
+	}
+//	return new ValidationResult(false, BSResources.get("validation.accountNrChars", "15 - 34"));
+	return new ValidationResult(false, "Number must have length 15 to 34 chars.");
     }
 
 
