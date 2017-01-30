@@ -15,6 +15,7 @@ import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.io.LookAheadObjectInputStream;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.ProtoBufferMessage;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
@@ -22,6 +23,7 @@ import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.BanList;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
+import io.bitsquare.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.p2p.peers.keepalive.messages.Pong;
@@ -32,6 +34,7 @@ import io.bitsquare.p2p.storage.payload.StoragePayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,8 +58,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Connection is created by the server thread or by sendMessage from NetworkNode.
  * All handlers are called on User thread.
  */
+@Slf4j
 public class Connection implements MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(Connection.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -193,55 +196,40 @@ public class Connection implements MessageListener {
                         Thread.sleep(50);
                     }
 
-                    Messages.Envelope.Builder builder = Messages.Envelope.newBuilder().setP2PNetworkVersion(Version.P2P_NETWORK_VERSION);
                     Messages.Envelope envelope = null;
 
                     lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
 
-                    if (message instanceof Ping) {
-                        envelope = builder.setPing(Messages.Ping.newBuilder()
-                                .setNonce(((Ping) message).nonce)
-                                .setLastRoundTripTime(((Ping) message).lastRoundTripTime).build()).build();
-                        // pings and offer refresh msg we dont want to log in production
-                        log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                        "Sending direct message to peer" +
-                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, envelope.toString(), envelope.getSerializedSize());
-                    } else if (message instanceof RefreshTTLMessage) {
-                        envelope = builder.setRefreshTtlMessage(Messages.RefreshTTLMessage.newBuilder()
-                                .setHashOfDataAndSeqNr(ByteString.copyFrom(((RefreshTTLMessage) message).hashOfDataAndSeqNr))
-                                .setHashOfPayload(ByteString.copyFrom(((RefreshTTLMessage) message).hashOfPayload))
-                                .setSequenceNumber(((RefreshTTLMessage) message).sequenceNumber)
-                                .setSignature(ByteString.copyFrom(((RefreshTTLMessage) message).signature)).build()).build();
-
-                        // pings and offer refresh msg we dont want to log in production
-                        log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
-                                        "Sending direct message to peer" +
-                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
-                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, envelope.toString(), envelope.getSerializedSize());
+                    if (message instanceof ProtoBufferMessage) {
+                        envelope = ((ProtoBufferMessage) message).toProtoBuf();
+                    } else {
+                        log.error("trying to send unknown message {}", message.toString());
                     }
-                 /*
 
-                    else if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
+                    if (message instanceof Ping | message instanceof RefreshTTLMessage) {
+                        // pings and offer refresh msg we dont want to log in production
+                        log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
+                                        "Sending direct message to peer" +
+                                        "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
+                                        "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
+                                peersNodeAddress, uid, envelope.toString(), envelope.getSerializedSize());
+                    } else if (message instanceof PrefixedSealedAndSignedMessage && peersNodeAddressOptional.isPresent()) {
                         setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
                         log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Sending direct message to peer" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
+                                peersNodeAddress, uid, Utilities.toTruncatedString(message), -1);
                     } else if (message instanceof GetDataResponse && ((GetDataResponse) message).isGetUpdatedDataResponse) {
                         setPeerType(Connection.PeerType.PEER);
                     } else {
                         log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, Utilities.toTruncatedString(message), size);
+                                peersNodeAddress, uid, Utilities.toTruncatedString(message), envelope.getSerializedSize());
                     }
-                                                */
 
                     if (!stopped && envelope != null) {
 
@@ -760,7 +748,8 @@ public class Connection implements MessageListener {
 
                         Messages.Envelope envelope = Messages.Envelope.parseDelimitedFrom(protoInputStream);
                         if(envelope == null) {
-                            log.warn("Envelope is null");
+                            log.trace("Envelope is null");
+                            log.warn("Envelope is null, available={}", protoInputStream.available());
                             return;
                         }
 
@@ -779,7 +768,7 @@ public class Connection implements MessageListener {
                         lastReadTimeStamp = now;
                         int size = envelope.getSerializedSize();
 
-                        if (isPong(envelope) || isRefreshTTLMessage(envelope)) {
+                        if (isPong(envelope)) {
                             message = new Pong(envelope.getPong().getRequestNonce());
                             // We only log Pong and RefreshTTLMessage when in dev environment (trace)
                             log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
@@ -790,7 +779,7 @@ public class Connection implements MessageListener {
                                     envelope.toString(),
                                     size);
                         } else
-                        if (isPong(envelope) || isRefreshTTLMessage(envelope)) {
+                        if (isRefreshTTLMessage(envelope)) {
                             Messages.RefreshTTLMessage msg = envelope.getRefreshTtlMessage();
                             message = new RefreshTTLMessage(msg.getHashOfDataAndSeqNr().toByteArray(),
                                     msg.getSignature().toByteArray(),

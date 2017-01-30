@@ -16,6 +16,8 @@ message Envelope {
         Pong pong = 3;
         RefreshTTLMessage refresh_ttl_message = 4;
         CloseConnectionMessage close_connection_message = 5;
+        PreliminaryGetDataRequest preliminary_get_data_request = 6;
+        GetPeersRequest get_peers_request = 7;
     }
 }
 
@@ -40,3 +42,27 @@ message CloseConnectionMessage {
     string reason = 2;
 }
 
+
+message PreliminaryGetDataRequest {
+    int64 messageVersion = 1;
+    int32 nonce = 2;
+    repeated bytes excludedKeys = 3;
+    repeated int32 supportedCapabilities = 4;
+}
+
+message GetPeersRequest {
+    NodeAddress senderNodeAddress = 1;
+    int32 nonce = 2;
+    repeated int32 supportedCapabilities = 3;
+    repeated Peer reportedPeers = 4;
+}
+
+message NodeAddress {
+    string hostName = 1;
+    int32 port = 2;
+}
+
+message Peer {
+    NodeAddress nodeAddress = 1;
+    int64 date = 2;
+}

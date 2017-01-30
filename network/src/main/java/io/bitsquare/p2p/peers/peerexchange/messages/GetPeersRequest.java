@@ -1,8 +1,11 @@
 package io.bitsquare.p2p.peers.peerexchange.messages;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.ProtoBufferMessage;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.peerexchange.Peer;
@@ -10,10 +13,11 @@ import io.bitsquare.p2p.peers.peerexchange.Peer;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class GetPeersRequest extends PeerExchangeMessage implements SendersNodeAddressMessage, SupportedCapabilitiesMessage {
+public final class GetPeersRequest extends PeerExchangeMessage implements SendersNodeAddressMessage, SupportedCapabilitiesMessage, ProtoBufferMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -49,5 +53,27 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
                 ", reportedPeers.size()=" + reportedPeers.size() +
                 ", supportedCapabilities=" + supportedCapabilities +
                 "} " + super.toString();
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder envelopeBuilder = Messages.Envelope.newBuilder().setP2PNetworkVersion(Version.P2P_NETWORK_VERSION);
+
+        Messages.GetPeersRequest.Builder msgBuilder = envelopeBuilder.getGetPeersRequestBuilder();
+        msgBuilder
+                .setNonce(nonce)
+                .setSenderNodeAddress(
+                        msgBuilder.getSenderNodeAddressBuilder()
+                                .setHostName(senderNodeAddress.getHostName())
+                                .setPort(senderNodeAddress.getPort()));
+        msgBuilder.addAllSupportedCapabilities(supportedCapabilities);
+        msgBuilder.addAllReportedPeers(reportedPeers.stream()
+                .map(peer -> Messages.Peer.newBuilder()
+                        .setDate(peer.date.getTime())
+                        .setNodeAddress(Messages.NodeAddress.newBuilder()
+                                .setHostName(peer.nodeAddress.getHostName())
+                                .setPort(peer.nodeAddress.getPort())).build())
+                .collect(Collectors.toList()));
+        return envelopeBuilder.setGetPeersRequest(msgBuilder).build();
     }
 }
