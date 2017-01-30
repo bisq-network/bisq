@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package io.bitsquare.proto;
+
+//
+// A simple protocol for describing signed sets of IP addresses. Intended to be distributed via HTTP[S] or in files.
+//
+
+option java_package = "io.bitsquare.common.wire.proto";
+option java_outer_classname = "Messages";
+
+message Envelope {
+    int64 p2p_network_version = 1;
+    oneof message {
+        Ping ping = 2;
+        Pong pong = 3;
+        RefreshTTLMessage refresh_ttl_message = 4;
+        CloseConnectionMessage close_connection_message = 5;
+    }
+}
+
+message Ping {
+    int32 nonce = 1;
+    int32 lastRoundTripTime = 2;
+}
+
+message Pong {
+    int32 requestNonce = 1;
+}
+
+message RefreshTTLMessage {
+    bytes hashOfDataAndSeqNr = 1;     // 32 bytes
+    bytes signature = 2;              // 46 bytes
+    bytes hashOfPayload = 3;          // 32 bytes
+    int32 sequenceNumber = 4;            // 4 bytes
+}
+
+message CloseConnectionMessage {
+    int64 messageVersion = 1;
+    string reason = 2;
+}
+
