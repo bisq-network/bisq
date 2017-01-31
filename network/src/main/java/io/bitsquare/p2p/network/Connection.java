@@ -5,10 +5,12 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.ByteArrayUtils;
 import io.bitsquare.common.UserThread;
+import io.bitsquare.common.crypto.Util;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.proto.Messages;
@@ -16,6 +18,7 @@ import io.bitsquare.io.LookAheadObjectInputStream;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.ProtoBufferMessage;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
@@ -53,6 +56,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static io.bitsquare.p2p.ProtoBufferUtilities.*;
 
 /**
  * Connection is created by the server thread or by sendMessage from NetworkNode.
@@ -324,6 +328,7 @@ public class Connection implements MessageListener {
         return sharedModel.reportInvalidRequest(ruleViolation);
     }
 
+    // TODO either use the argument or delete it
     private boolean violatesThrottleLimit(Serializable serializable) {
         long now = System.currentTimeMillis();
         boolean violated = false;
@@ -746,14 +751,6 @@ public class Connection implements MessageListener {
                         Connection connection = sharedModel.connection;
                         log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
 
-                        Messages.Envelope envelope = Messages.Envelope.parseDelimitedFrom(protoInputStream);
-                        if(envelope == null) {
-                            log.trace("Envelope is null");
-                            log.warn("Envelope is null, available={}", protoInputStream.available());
-                            return;
-                        }
-
-
                         // Throttle inbound messages
                         long now = System.currentTimeMillis();
                         long elapsed = now - lastReadTimeStamp;
@@ -764,12 +761,37 @@ public class Connection implements MessageListener {
                             Thread.sleep(20);
                         }
 
-                        Message message = null;
+                        // Reading the protobuffer message from the inputstream
+                        Messages.Envelope envelope = null;
+                        try {
+                            if (protoInputStream.available() > 0) {
+                                envelope = Messages.Envelope.parseDelimitedFrom(protoInputStream);
+                            } else {
+                                return;
+                            }
+
+                            if (envelope == null) {
+                                log.debug("Envelope is null, available={}", protoInputStream.available());
+                                reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                                return;
+                            }
+                        } catch (IOException e) {
+                            log.error("Invalid data arrived at inputHandler of connection " + connection, e);
+                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                        }
+
+                        Message  message = null;
+                        Optional<Message> optMessage = ProtoBufferUtilities.fromProtoBuf(envelope);
+                        if(optMessage.isPresent()) {
+                            message = optMessage.get();
+                        } else {
+                            log.warn("Unknown message type received:{}", Utilities.toTruncatedString(envelope));
+                        }
+
                         lastReadTimeStamp = now;
                         int size = envelope.getSerializedSize();
 
-                        if (isPong(envelope)) {
-                            message = new Pong(envelope.getPong().getRequestNonce());
+                        if (message instanceof Pong) {
                             // We only log Pong and RefreshTTLMessage when in dev environment (trace)
                             log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
@@ -778,12 +800,7 @@ public class Connection implements MessageListener {
                                     connection,
                                     envelope.toString(),
                                     size);
-                        } else
-                        if (isRefreshTTLMessage(envelope)) {
-                            Messages.RefreshTTLMessage msg = envelope.getRefreshTtlMessage();
-                            message = new RefreshTTLMessage(msg.getHashOfDataAndSeqNr().toByteArray(),
-                                    msg.getSignature().toByteArray(),
-                                    msg.getHashOfPayload().toByteArray(), msg.getSequenceNumber());
+                        } else if (message instanceof RefreshTTLMessage) {
                             // We only log Pong and RefreshTTLMessage when in dev environment (trace)
                             log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
@@ -792,9 +809,7 @@ public class Connection implements MessageListener {
                                     connection,
                                     envelope.toString(),
                                     size);
-                        }
-                        /*
-                        else if (rawInputObject instanceof Message) {
+                        } else {
                             // We want to log all incoming messages (except Pong and RefreshTTLMessage)
                             // so we log before the data type checks
                             //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
@@ -803,34 +818,22 @@ public class Connection implements MessageListener {
                                             "Received object (truncated)={} / size={}"
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                     connection,
-                                    Utilities.toTruncatedString(rawInputObject),
+                                    envelope.toString(),
                                     size);
-                        }
-                        */
-                        else {
-                            log.error("Invalid data arrived at inputHandler of connection {} Size={}", connection, size);
-                            try {
-                                // Don't call toString on rawInputObject
-                                log.error("rawInputObject.className=" + envelope.toString());
-                            } catch (Throwable ignore) {
-                            }
+
+                            // We want to track the messages also before the checks, so do it early...
+                            // TODO track protobuffer message received or add enum with type
+                            // connection.statistic.addReceivedMessage((Message) rawInputObject);
                         }
 
                         // We want to track the size of each object even if it is invalid data
                         connection.statistic.addReceivedBytes(size);
-/* TODO
 
-                        // We want to track the messages also before the checks, so do it early...
-                        Message message = null;
-                        if (rawInputObject instanceof Message) {
-                            message = (Message) rawInputObject;
-                            connection.statistic.addReceivedMessage((Message) rawInputObject);
-                        }
-
-*/
+                        /*
                         // First we check the size
                         boolean exceeds;
                         if (envelope.getSerializedSize() > MAX_MSG_SIZE_GET_DATA) { // TODO should be datamessage
+                            envelope.getSerializedSize()
                             exceeds = true;
                             log.info("size={}; object={}", size, envelope.toString());
                         } else {
@@ -838,42 +841,30 @@ public class Connection implements MessageListener {
                         }
                         if (exceeds)
                             log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, envelope.toString());
+*/
+
+                        // First we check the size
+                        boolean exceeds;
+                        if (message instanceof GetDataResponse) {
+                            exceeds = size > MAX_MSG_SIZE_GET_DATA;
+                            log.info("size={}; object={}", size, Utilities.toTruncatedString(envelope, 100));
+                        } else {
+                            exceeds = size > MAX_MSG_SIZE;
+                        }
+                        if (exceeds)
+                            log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, Utilities.toTruncatedString(envelope));
 
                         if (exceeds && reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
                             return;
 
-                        /* TODO protobuffer equivalent?
-
-                        // Then we check if data is of type Serializable (protoInputStream supports
-                        // Externalizable objects as well)
-                        Serializable serializable;
-                        if (rawInputObject instanceof Serializable) {
-                            serializable = (Serializable) rawInputObject;
-                        } else {
-                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
-                            // We return anyway here independent of the return value of reportInvalidRequest
-                            return;
-                        }
-                         */
-
                         // Then check data throttle limit. Do that for non-message type objects as well,
                         // so that's why we use serializable here.
-                        if (connection.violatesThrottleLimit(null) && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
+                        if (connection.violatesThrottleLimit(null)
+                                && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
                             return;
-
-                        /* TODO catch exception during parse instead of this
-
-                        // We do the message type check after the size/throttle checks.
-                        // The type check was done already earlier so we only check if message is not null.
-                        if (message == null) {
-                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
-                            // We return anyway here independent of the return value of reportInvalidRequest
-                            return;
-                        }
-                        */
 
                         // Check P2P network ID
-                        int messageVersion = (int)envelope.getP2PNetworkVersion();
+                        int messageVersion = (int) envelope.getP2PNetworkVersion();
                         int p2PMessageVersion = Version.getP2PMessageVersion();
                         if (messageVersion != p2PMessageVersion) {
                             log.warn("message.getMessageVersion()=" + messageVersion);
@@ -886,10 +877,13 @@ public class Connection implements MessageListener {
                             */
                         }
 
+                        // TODO no inheritance & is this even needed? We can send unsupported stuff to old nodes
+                        /*
                         if (sharedModel.getSupportedCapabilities() == null && message instanceof SupportedCapabilitiesMessage)
                             sharedModel.setSupportedCapabilities(((SupportedCapabilitiesMessage) message).getSupportedCapabilities());
+                        */
 
-                        if (isCloseConnectionMessage(envelope)) {
+                        if (message instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down
                             log.debug("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", envelope.getCloseConnectionMessage().getReason(), connection);
@@ -906,8 +900,9 @@ public class Connection implements MessageListener {
                                 connection.statistic.updateLastActivityTimestamp();
                             }
 
-                            if (message instanceof GetDataRequest)
+                            if (isGetDataRequest(envelope)) {
                                 connection.setPeerType(PeerType.INITIAL_DATA_REQUEST);
+                            }
                             // First a seed node gets a message from a peer (PreliminaryDataRequest using
                             // AnonymousMessage interface) which does not have its hidden service
                             // published, so it does not know its address. As the IncomingConnection does not have the
@@ -938,10 +933,10 @@ public class Connection implements MessageListener {
                                 }
                             }
 
-                            if (message instanceof PrefixedSealedAndSignedMessage)
+                            if (isPrefixedSealedAndSignedMessage(envelope))
                                 connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
-
+                            // Further treatment of the incoming message
                             messageListener.onMessage(message, connection);
                         }
                     } catch (InvalidClassException e) {
@@ -949,13 +944,12 @@ public class Connection implements MessageListener {
                         e.printStackTrace();
                         reportInvalidRequest(RuleViolation.INVALID_CLASS);
                         return;
-                    }/*
-                    catch (ClassNotFoundException | NoClassDefFoundError e) {
+                    } catch (NoClassDefFoundError e) {
                         log.warn(e.getMessage());
                         e.printStackTrace();
                         reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                         return;
-                    } */ catch (IOException e) {
+                    } catch (IOException e) {
                         stop();
                         sharedModel.handleConnectionException(e);
                     } catch (Throwable t) {
@@ -973,20 +967,6 @@ public class Connection implements MessageListener {
             }
         }
 
-        private boolean isPing(Messages.Envelope envelope) {
-            return Messages.Ping.getDefaultInstance().equals(envelope.getPing());
-        }
-        private boolean isPong(Messages.Envelope envelope) {
-            return Messages.Pong.getDefaultInstance().equals(envelope.getPong());
-        }
-
-        private boolean isRefreshTTLMessage(Messages.Envelope envelope) {
-            return Messages.RefreshTTLMessage.getDefaultInstance().equals(envelope.getRefreshTtlMessage());
-        }
-
-        private boolean isCloseConnectionMessage(Messages.Envelope envelope) {
-            return Messages.CloseConnectionMessage.getDefaultInstance().equals(envelope.getCloseConnectionMessage());
-        }
 
         private boolean reportInvalidRequest(RuleViolation ruleViolation) {
             boolean causedShutDown = sharedModel.reportInvalidRequest(ruleViolation);

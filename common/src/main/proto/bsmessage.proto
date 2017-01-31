@@ -17,7 +17,11 @@ message Envelope {
         RefreshTTLMessage refresh_ttl_message = 4;
         CloseConnectionMessage close_connection_message = 5;
         PreliminaryGetDataRequest preliminary_get_data_request = 6;
-        GetPeersRequest get_peers_request = 7;
+        GetUpdatedDataRequest get_updated_data_request = 7;
+        GetPeersRequest get_peers_request = 8;
+        GetDataRequest get_data_request = 9;
+        GetDataResponse get_data_response = 10;
+        SendersNodeAddressMessage senders_node_address_message = 11;
     }
 }
 
@@ -31,38 +35,168 @@ message Pong {
 }
 
 message RefreshTTLMessage {
-    bytes hashOfDataAndSeqNr = 1;     // 32 bytes
+    bytes hash_of_data_and_seq_nr = 1;     // 32 bytes
     bytes signature = 2;              // 46 bytes
-    bytes hashOfPayload = 3;          // 32 bytes
-    int32 sequenceNumber = 4;            // 4 bytes
+    bytes hash_of_payload = 3;          // 32 bytes
+    int32 sequence_number = 4;            // 4 bytes
 }
 
 message CloseConnectionMessage {
-    int64 messageVersion = 1;
+    int64 message_version = 1;
     string reason = 2;
 }
 
-
+// START GetDataRequest
 message PreliminaryGetDataRequest {
-    int64 messageVersion = 1;
+    int64 message_version = 1;
     int32 nonce = 2;
-    repeated bytes excludedKeys = 3;
-    repeated int32 supportedCapabilities = 4;
+    repeated bytes excluded_keys = 3;
+    repeated int32 supported_capabilities = 4;
 }
 
+message GetUpdatedDataRequest  {
+    int64 message_version = 1;
+    NodeAddress sender_node_address = 2;
+    int32 nonce = 3;
+    repeated bytes excluded_keys = 4;
+}
+// STOP GetDataRequest
+
 message GetPeersRequest {
-    NodeAddress senderNodeAddress = 1;
+    NodeAddress sender_node_address = 1;
     int32 nonce = 2;
-    repeated int32 supportedCapabilities = 3;
-    repeated Peer reportedPeers = 4;
+    repeated int32 supported_capabilities = 3;
+    repeated Peer reported_peers = 4;
 }
 
 message NodeAddress {
-    string hostName = 1;
+    string host_name = 1;
     int32 port = 2;
 }
 
 message Peer {
-    NodeAddress nodeAddress = 1;
+    NodeAddress node_address = 1;
     int64 date = 2;
 }
+
+message GetDataRequest {
+    int32 nonce = 1;
+    repeated bytes excluded_keys = 2;
+}
+
+message GetDataResponse {
+    int64 message_version = 1;
+    repeated int32 supported_capabilities = 2;
+    int32 request_nonce = 3;
+    bool is_get_updated_data_response = 4;
+    repeated ProtectedStorageEntry data_set = 5;
+}
+
+message ProtectedStorageEntry {
+    // private final byte[] ownerPubKeyBytes;
+    // public transient PublicKey ownerPubKey;
+    // public int sequenceNumber;
+    // public byte[] signature;
+    // @VisibleForTesting
+    // public long creationTimeStamp;
+}
+
+
+message SendersNodeAddressMessage {
+    oneof message {
+        Ping ping = 2;
+    }
+}
+
+message PrefixedSealedAndSignedMessage {
+    int64 message_version = 1;
+    NodeAddress node_address = 2;
+    SealedAndSigned sealed_and_signed = 3;
+    bytes address_prefix_hash = 4;
+    string uid = 5;
+}
+
+message SealedAndSigned {
+    bytes encrypted_secret_key = 1;
+    bytes encrypted_payload_with_hmac = 2;
+    bytes signature = 3;
+    bytes sig_public_key_bytes = 4;
+}
+
+    public final byte[] encryptedSecretKey;
+    public final byte[] encryptedPayloadWithHmac;
+    public final byte[] signature;
+    public transient PublicKey sigPublicKey;
+    private final byte[] sigPublicKeyBytes;
+
+
+
+
+
+
+/*
+public ProtectedStorageEntry(StoragePayload storagePayload, PublicKey ownerPubKey, int sequenceNumber, byte[] signature) {
+this.storagePayload = storagePayload;
+this.ownerPubKey = ownerPubKey;
+this.sequenceNumber = sequenceNumber;
+this.signature = signature;
+this.creationTimeStamp = System.currentTimeMillis();
+this.ownerPubKeyBytes = new X509EncodedKeySpec(this.ownerPubKey.getEncoded()).getEncoded();
+}
+
+private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+try {
+in.defaultReadObject();
+ownerPubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(ownerPubKeyBytes));
+checkCreationTimeStamp();
+} catch (Throwable t) {
+log.warn("Exception at readObject: " + t.getMessage());
+}
+}
+
+public StoragePayload getStoragePayload() {
+return storagePayload;
+}
+
+public void checkCreationTimeStamp() {
+// We don't allow creation date in the future, but we cannot be too strict as clocks are not synced
+// The 0 test is needed to be backward compatible as creationTimeStamp (timeStamp) was transient before 0.4.7
+// TODO "|| creationTimeStamp == 0" can removed after we don't support 0.4.6 anymore
+if (creationTimeStamp > System.currentTimeMillis() || creationTimeStamp == 0)
+creationTimeStamp = System.currentTimeMillis();
+}
+
+public void refreshTTL() {
+creationTimeStamp = System.currentTimeMillis();
+}
+
+public void backDate() {
+creationTimeStamp -= storagePayload.getTTL() / 2;
+}
+
+public void updateSequenceNumber(int sequenceNumber) {
+this.sequenceNumber = sequenceNumber;
+}
+
+public void updateSignature(byte[] signature) {
+this.signature = signature;
+}
+
+public boolean isExpired() {
+return (System.currentTimeMillis() - creationTimeStamp) > storagePayload.getTTL();
+}
+
+@Override
+public String toString() {
+return "ProtectedStorageEntry{" +
+"expirablePayload=" + storagePayload +
+", creationTimeStamp=" + creationTimeStamp +
+", sequenceNumber=" + sequenceNumber +
+", ownerPubKey.hashCode()=" + (ownerPubKey != null ? ownerPubKey.hashCode() : "null") +
+", signature.hashCode()=" + (signature != null ? Arrays.toString(signature).hashCode() : "null") +
+'}';
+}
+
+}
+
+*/
