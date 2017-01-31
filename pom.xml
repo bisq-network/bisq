@@ -50,6 +50,7 @@
         <module>monitor</module>
         <module>statistics</module>
         <module>pricefeed</module>
+        <module>api</module>
     </modules>
 
     <build>
