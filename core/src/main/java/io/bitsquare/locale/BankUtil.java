@@ -69,6 +69,7 @@ public class BankUtil {
             case "AU":
             case "SE":
             case "CL":
+            case "NO":
                 return false;
             case "CA":
             case "MX":
@@ -105,6 +106,7 @@ public class BankUtil {
             case "MX":
             case "HK":
             case "SE":
+            case "NO":
                 return false;
             default:
                 return true;
@@ -147,6 +149,8 @@ public class BankUtil {
             case "CA":
             case "HK":
                 return "Account number:";
+            case "NO":
+                return "Kontonummer:";
             case "SE":
                 return "Bankgiro number:";
             case "MX":
@@ -227,6 +231,7 @@ public class BankUtil {
             case "MX":
             case "HK":
             case "SE":
+            case "NO":
                 return true;
             default:
                 return false;
