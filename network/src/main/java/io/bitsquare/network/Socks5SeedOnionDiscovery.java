@@ -18,21 +18,14 @@
 package io.bitsquare.network;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.net.discovery.PeerDiscovery;
 import org.bitcoinj.net.discovery.PeerDiscoveryException;
 import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
 
-import javax.annotation.Nullable;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 
 /**
@@ -141,5 +134,6 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
 
     @Override
     public void shutdown() {
+        //TODO should we add a DnsLookupTor.shutdown() ?
     }
 }

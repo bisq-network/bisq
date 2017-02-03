@@ -18,17 +18,15 @@
 package io.bitsquare.network;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.net.discovery.PeerDiscovery;
 import org.bitcoinj.net.discovery.PeerDiscoveryException;
 import org.bitcoinj.net.discovery.SeedPeers;
 
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
-import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -36,39 +34,35 @@ import java.util.Arrays;
  * which can be enabled/disabled via constructor flag.
  */
 public class Socks5MultiDiscovery implements PeerDiscovery {
-    
-    public static final int SOCKS5_DISCOVER_ADDR   = 0x0001;
-    public static final int SOCKS5_DISCOVER_DNS    = 0x0010;
-    public static final int SOCKS5_DISCOVER_ONION  = 0x0100;
-    public static final int SOCKS5_DISCOVER_ALL    = 0x1111;
-    
-    private ArrayList<PeerDiscovery> discoveryList;
-    
+
+    public static final int SOCKS5_DISCOVER_ADDR = 0x0001;
+    public static final int SOCKS5_DISCOVER_DNS = 0x0010;
+    public static final int SOCKS5_DISCOVER_ONION = 0x0100;
+    public static final int SOCKS5_DISCOVER_ALL = 0x1111;
+
+    private final ArrayList<PeerDiscovery> discoveryList = new ArrayList<>();
+
     /**
      * Supports finding peers by hostname over a socks5 proxy.
      *
-     * @param Socks5Proxy       proxy the socks5 proxy to connect over.
-     * @param NetworkParameters param to be used for seed and port information.
+     * @param proxy             proxy the socks5 proxy to connect over.
+     * @param params            param to be used for seed and port information.
      * @param mode              specify discovery mode, OR'd together. one or more of:
-     *                              SOCKS5_DISCOVER_ADDR
-     *                              SOCKS5_DISCOVER_DNS
-     *                              SOCKS5_DISCOVER_ONION
-     *                              SOCKS5_DISCOVER_ALL
+     *                          SOCKS5_DISCOVER_ADDR
+     *                          SOCKS5_DISCOVER_DNS
+     *                          SOCKS5_DISCOVER_ONION
+     *                          SOCKS5_DISCOVER_ALL
      */
     public Socks5MultiDiscovery(Socks5Proxy proxy, NetworkParameters params, int mode) {
-
-        discoveryList = new ArrayList<PeerDiscovery>();
-        
-        if( (mode & SOCKS5_DISCOVER_ONION) != 0) {
+        if ((mode & SOCKS5_DISCOVER_ONION) != 0) 
             discoveryList.add(new Socks5SeedOnionDiscovery(proxy, params));
-        }
-        if( (mode & SOCKS5_DISCOVER_ADDR) != 0) {
+
+        if ((mode & SOCKS5_DISCOVER_ADDR) != 0) 
             // note:  SeedPeers does not perform any network operations, so does not use proxy.
-            discoveryList.add(new SeedPeers(params));  
-        }
-        if( (mode & SOCKS5_DISCOVER_DNS) != 0) {
+            discoveryList.add(new SeedPeers(params));
+
+        if ((mode & SOCKS5_DISCOVER_DNS) != 0) 
             discoveryList.add(new Socks5DnsDiscovery(proxy, params));
-        }
     }
 
     /**
@@ -76,17 +70,18 @@ public class Socks5MultiDiscovery implements PeerDiscovery {
      */
     @Override
     public InetSocketAddress[] getPeers(long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
-        ArrayList<InetSocketAddress> list = new ArrayList<InetSocketAddress>();
-        
+        ArrayList<InetSocketAddress> list = new ArrayList<>();
+
         for (PeerDiscovery discovery : discoveryList) {
             list.addAll(Arrays.asList(discovery.getPeers(timeoutValue, timeoutUnit)));
         }
-        
+
         return list.toArray(new InetSocketAddress[list.size()]);
     }
-    
+
     @Override
     public void shutdown() {
+        //TODO should we add a DnsLookupTor.shutdown() ?
     }
-    
+
 }

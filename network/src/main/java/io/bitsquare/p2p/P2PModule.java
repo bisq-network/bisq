@@ -55,6 +55,10 @@ public class P2PModule extends AppModule {
         Integer maxConnections = env.getProperty(NetworkOptionKeys.MAX_CONNECTIONS, int.class, P2PService.MAX_CONNECTIONS_DEFAULT);
         bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.MAX_CONNECTIONS)).toInstance(maxConnections);
 
+        String socks5DiscoverMode = env.getProperty(NetworkOptionKeys.SOCKS5_DISCOVER_MODE, String.class, "ALL");
+        bind(String.class).annotatedWith(Names.named(NetworkOptionKeys.SOCKS5_DISCOVER_MODE)).toInstance(socks5DiscoverMode);
+
+
         Integer networkId = env.getProperty(NetworkOptionKeys.NETWORK_ID, int.class, 1);
         bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.NETWORK_ID)).toInstance(networkId);
         bindConstant().annotatedWith(named(NetworkOptionKeys.SEED_NODES_KEY)).to(env.getRequiredProperty(NetworkOptionKeys.SEED_NODES_KEY));

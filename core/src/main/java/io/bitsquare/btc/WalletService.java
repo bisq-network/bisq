@@ -33,16 +33,17 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.network.DnsLookupTor;
-import io.bitsquare.network.Socks5ProxyProvider;
+import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.network.Socks5MultiDiscovery;
+import io.bitsquare.network.Socks5ProxyProvider;
 import io.bitsquare.storage.FileUtil;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.*;
+import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.bitcoinj.net.discovery.SeedPeers;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
@@ -94,6 +95,7 @@ public class WalletService {
     private final NetworkParameters params;
     private final File walletDir;
     private final UserAgent userAgent;
+    private final int socks5DiscoverMode;
 
     private WalletAppKitBitSquare walletAppKit;
     private Wallet wallet;
@@ -116,7 +118,8 @@ public class WalletService {
                          UserAgent userAgent,
                          Preferences preferences,
                          Socks5ProxyProvider socks5ProxyProvider,
-                         @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
+                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
+                         @Named(NetworkOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
@@ -134,6 +137,23 @@ public class WalletService {
             bloomFilterTweak = new Random().nextLong();
             storage.queueUpForSave(bloomFilterTweak, 100);
         }
+
+        String[] socks5DiscoverModes = StringUtils.deleteWhitespace(socks5DiscoverModeString).split(",");
+        int mode = 0;
+        for (int i = 0; i < socks5DiscoverModes.length; i++) {
+            switch (socks5DiscoverModes[i]) {
+                case "ADDR":
+                    mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_ADDR;
+                case "DNS":
+                    mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_DNS;
+                case "ONION":
+                    mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_ONION;
+                case "ALL":
+                default:
+                    mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_ALL;
+            }
+        }
+        socks5DiscoverMode = mode;
     }
 
 
@@ -268,7 +288,7 @@ public class WalletService {
         // Pass custom seed nodes if set in options
         if (!btcNodes.isEmpty()) {
 
-            String[] nodes = parseCSV(btcNodes);
+            String[] nodes = StringUtils.deleteWhitespace(btcNodes).split(",");
             List<PeerAddress> peerAddressList = new ArrayList<>();
             for (String node : nodes) {
                 String[] parts = node.split(":");
@@ -285,8 +305,7 @@ public class WalletService {
                         try {
                             // proxy remote DNS request happens here.  blocking.
                             addr = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, parts[0]), Integer.parseInt(parts[1]));
-                        }
-                        catch(Exception e) {
+                        } catch (Exception e) {
                             log.warn("Dns lookup failed for host: {}", parts[0]);
                             addr = null;
                         }
@@ -349,9 +368,7 @@ public class WalletService {
         // disable it, but should be made aware of the reduced privacy.
         if (socks5Proxy != null && !usePeerNodes) {
             // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
-            // TODO: the discovery mode should come from command-line args, and default to ALL if not present.
-            int discoveryMode = Socks5MultiDiscovery.SOCKS5_DISCOVER_ALL;
-            walletAppKit.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, discoveryMode));
+            walletAppKit.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, socks5DiscoverMode));
         }
 
         walletAppKit.setDownloadListener(downloadListener)
@@ -1136,23 +1153,10 @@ public class WalletService {
         }
     }
 
-    /**
-     * parses a comma separated string into String array.
-     *
-     * all spaces are stripped from the string, so this
-     * method is not suitable for CSV with values that contain spaces.
-     */
-    private String[] parseCSV(String buf) {
-        // todo:  improve parsing to handle multiple spaces, etc.
-        return buf.replace(" ", "").split(",");
-    }
 
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Inner classes
-///////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Inner classes
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private static class DownloadListener extends DownloadProgressTracker {
         private final DoubleProperty percentage = new SimpleDoubleProperty(-1);

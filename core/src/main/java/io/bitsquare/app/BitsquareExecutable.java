@@ -93,6 +93,9 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, description("A proxy address to be used for Http requests (should be non-Tor). [host:port]", ""))
                 .withRequiredArg();
+        parser.accepts(NetworkOptionKeys.SOCKS5_DISCOVER_MODE, description("Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
+                " (comma separated, they get OR'd together). Default value is ALL", "ALL"))
+                .withRequiredArg();
 
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
