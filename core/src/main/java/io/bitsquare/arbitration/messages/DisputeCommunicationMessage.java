@@ -51,24 +51,38 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     transient private BooleanProperty arrivedProperty = new SimpleBooleanProperty();
     transient private BooleanProperty storedInMailboxProperty = new SimpleBooleanProperty();
 
-    public DisputeCommunicationMessage(String tradeId, int traderId, boolean senderIsTrader, String message, NodeAddress myNodeAddress) {
+    public DisputeCommunicationMessage(String tradeId, int traderId, boolean senderIsTrader, String message,
+                                       NodeAddress myNodeAddress, long date, boolean arrived, boolean storedInMailbox) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
         this.message = message;
         this.myNodeAddress = myNodeAddress;
-        date = new Date().getTime();
+        this.date = date;
+        this.arrived = arrived;
+        this.storedInMailbox = storedInMailbox;
+        updateBooleanProperties();
+    }
+
+    public DisputeCommunicationMessage(String tradeId, int traderId, boolean senderIsTrader, String message,
+                                       NodeAddress myNodeAddress) {
+        this(tradeId, traderId, senderIsTrader, message, myNodeAddress, new Date().getTime(), false, false);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            arrivedProperty = new SimpleBooleanProperty(arrived);
-            storedInMailboxProperty = new SimpleBooleanProperty(storedInMailbox);
+            updateBooleanProperties();
         } catch (Throwable t) {
             log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
+
+    private void updateBooleanProperties() {
+        arrivedProperty = new SimpleBooleanProperty(arrived);
+        storedInMailboxProperty = new SimpleBooleanProperty(storedInMailbox);
+    }
+
 
     @Override
     public NodeAddress getSenderNodeAddress() {

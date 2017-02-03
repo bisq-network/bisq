@@ -26,6 +26,8 @@ import io.bitsquare.trade.Contract;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +38,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
+@Slf4j
+@EqualsAndHashCode
 public final class Dispute implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(Dispute.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Fields
@@ -125,17 +128,22 @@ public final class Dispute implements Payload {
         this.openingDate = new Date().getTime();
 
         id = tradeId + "_" + traderId;
+        fillInTransients();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            disputeCommunicationMessagesAsObservableList = FXCollections.observableArrayList(disputeCommunicationMessages);
-            disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
-            isClosedProperty = new SimpleBooleanProperty(isClosed);
+            fillInTransients();
         } catch (Throwable t) {
             log.warn("Cannot be deserialized." + t.getMessage());
         }
+    }
+
+    private void fillInTransients() {
+        disputeCommunicationMessagesAsObservableList = FXCollections.observableArrayList(disputeCommunicationMessages);
+        disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
+        isClosedProperty = new SimpleBooleanProperty(isClosed);
     }
 
     public void addDisputeMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
@@ -289,77 +297,6 @@ public final class Dispute implements Payload {
     @org.jetbrains.annotations.Nullable
     public String getDisputePayoutTxId() {
         return disputePayoutTxId;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Dispute)) return false;
-
-        Dispute dispute = (Dispute) o;
-
-        if (traderId != dispute.traderId) return false;
-        if (disputeOpenerIsBuyer != dispute.disputeOpenerIsBuyer) return false;
-        if (disputeOpenerIsOfferer != dispute.disputeOpenerIsOfferer) return false;
-        if (openingDate != dispute.openingDate) return false;
-        if (tradeDate != dispute.tradeDate) return false;
-        if (isSupportTicket != dispute.isSupportTicket) return false;
-        if (isClosed != dispute.isClosed) return false;
-        if (tradeId != null ? !tradeId.equals(dispute.tradeId) : dispute.tradeId != null) return false;
-        if (id != null ? !id.equals(dispute.id) : dispute.id != null) return false;
-        if (traderPubKeyRing != null ? !traderPubKeyRing.equals(dispute.traderPubKeyRing) : dispute.traderPubKeyRing != null)
-            return false;
-        if (contract != null ? !contract.equals(dispute.contract) : dispute.contract != null) return false;
-        if (!Arrays.equals(contractHash, dispute.contractHash)) return false;
-        if (!Arrays.equals(depositTxSerialized, dispute.depositTxSerialized)) return false;
-        if (!Arrays.equals(payoutTxSerialized, dispute.payoutTxSerialized)) return false;
-        if (depositTxId != null ? !depositTxId.equals(dispute.depositTxId) : dispute.depositTxId != null) return false;
-        if (payoutTxId != null ? !payoutTxId.equals(dispute.payoutTxId) : dispute.payoutTxId != null) return false;
-        if (contractAsJson != null ? !contractAsJson.equals(dispute.contractAsJson) : dispute.contractAsJson != null)
-            return false;
-        if (offererContractSignature != null ? !offererContractSignature.equals(dispute.offererContractSignature) : dispute.offererContractSignature != null)
-            return false;
-        if (takerContractSignature != null ? !takerContractSignature.equals(dispute.takerContractSignature) : dispute.takerContractSignature != null)
-            return false;
-        if (arbitratorPubKeyRing != null ? !arbitratorPubKeyRing.equals(dispute.arbitratorPubKeyRing) : dispute.arbitratorPubKeyRing != null)
-            return false;
-        if (disputeCommunicationMessages != null ? !disputeCommunicationMessages.equals(dispute.disputeCommunicationMessages) : dispute.disputeCommunicationMessages != null)
-            return false;
-        if (disputeResult != null ? !disputeResult.equals(dispute.disputeResult) : dispute.disputeResult != null)
-            return false;
-        if (disputePayoutTxId != null ? !disputePayoutTxId.equals(dispute.disputePayoutTxId) : dispute.disputePayoutTxId != null)
-            return false;
-        return !(storage != null ? !storage.equals(dispute.storage) : dispute.storage != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = tradeId != null ? tradeId.hashCode() : 0;
-        result = 31 * result + (id != null ? id.hashCode() : 0);
-        result = 31 * result + traderId;
-        result = 31 * result + (disputeOpenerIsBuyer ? 1 : 0);
-        result = 31 * result + (disputeOpenerIsOfferer ? 1 : 0);
-        result = 31 * result + (int) (openingDate ^ (openingDate >>> 32));
-        result = 31 * result + (traderPubKeyRing != null ? traderPubKeyRing.hashCode() : 0);
-        result = 31 * result + (int) (tradeDate ^ (tradeDate >>> 32));
-        result = 31 * result + (contract != null ? contract.hashCode() : 0);
-        result = 31 * result + (contractHash != null ? Arrays.hashCode(contractHash) : 0);
-        result = 31 * result + (depositTxSerialized != null ? Arrays.hashCode(depositTxSerialized) : 0);
-        result = 31 * result + (payoutTxSerialized != null ? Arrays.hashCode(payoutTxSerialized) : 0);
-        result = 31 * result + (depositTxId != null ? depositTxId.hashCode() : 0);
-        result = 31 * result + (payoutTxId != null ? payoutTxId.hashCode() : 0);
-        result = 31 * result + (contractAsJson != null ? contractAsJson.hashCode() : 0);
-        result = 31 * result + (offererContractSignature != null ? offererContractSignature.hashCode() : 0);
-        result = 31 * result + (takerContractSignature != null ? takerContractSignature.hashCode() : 0);
-        result = 31 * result + (arbitratorPubKeyRing != null ? arbitratorPubKeyRing.hashCode() : 0);
-        result = 31 * result + (isSupportTicket ? 1 : 0);
-        result = 31 * result + (disputeCommunicationMessages != null ? disputeCommunicationMessages.hashCode() : 0);
-        result = 31 * result + (isClosed ? 1 : 0);
-        result = 31 * result + (disputeResult != null ? disputeResult.hashCode() : 0);
-        result = 31 * result + (disputePayoutTxId != null ? disputePayoutTxId.hashCode() : 0);
-        result = 31 * result + (storage != null ? storage.hashCode() : 0);
-        return result;
     }
 
     @Override

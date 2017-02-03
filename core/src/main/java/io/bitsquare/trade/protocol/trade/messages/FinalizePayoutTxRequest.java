@@ -41,12 +41,22 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
                                    String sellerPayoutAddress,
                                    long lockTimeAsBlockHeight,
                                    NodeAddress senderNodeAddress) {
+        this(tradeId, sellerSignature, sellerPayoutAddress, lockTimeAsBlockHeight, senderNodeAddress,
+                UUID.randomUUID().toString());
+    }
+
+    public FinalizePayoutTxRequest(String tradeId,
+                                   byte[] sellerSignature,
+                                   String sellerPayoutAddress,
+                                   long lockTimeAsBlockHeight,
+                                   NodeAddress senderNodeAddress,
+                                   String uid) {
         super(tradeId);
         this.sellerSignature = sellerSignature;
         this.sellerPayoutAddress = sellerPayoutAddress;
         this.lockTimeAsBlockHeight = lockTimeAsBlockHeight;
         this.senderNodeAddress = senderNodeAddress;
-        uid = UUID.randomUUID().toString();
+        this.uid = uid;
     }
 
     @Override

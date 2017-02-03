@@ -254,22 +254,25 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
         date = new Date().getTime();
         setState(State.UNDEFINED);
-        decimalFormat = new DecimalFormat("#.#");
-        decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
+        init();
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            stateProperty = new SimpleObjectProperty<>(State.UNDEFINED);
-
-            // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
-            errorMessageProperty = new SimpleStringProperty();
-            decimalFormat = new DecimalFormat("#.#");
-            decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
+            init();
         } catch (Throwable t) {
             log.warn("Cannot be deserialized." + t.getMessage());
         }
+    }
+
+    private void init() {
+        stateProperty = new SimpleObjectProperty<>(State.UNDEFINED);
+
+        // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
+        errorMessageProperty = new SimpleStringProperty();
+        decimalFormat = new DecimalFormat("#.#");
+        decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
     }
 
     @Override

@@ -25,7 +25,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
@@ -43,12 +46,27 @@ public final class PrivateNotification implements Payload {
         this.message = message;
     }
 
+    public PrivateNotification(String message, String signatureAsBase64, byte[] publicKeyBytes) {
+        this(message);
+        this.signatureAsBase64 = signatureAsBase64;
+        this.publicKeyBytes = publicKeyBytes;
+        init();
+    }
+
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            publicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(publicKeyBytes));
+            init();
         } catch (Throwable t) {
             log.warn("Exception at readObject: " + t.getMessage());
+        }
+    }
+
+    private void init()  {
+        try {
+            publicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(publicKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            log.error("Could not create public key from bytes", e);
         }
     }
 

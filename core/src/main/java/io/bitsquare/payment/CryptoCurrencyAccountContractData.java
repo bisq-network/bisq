@@ -25,11 +25,13 @@ public final class CryptoCurrencyAccountContractData extends PaymentAccountContr
 
     private String address;
 
-    // TODO Not needed. Remove when we have an update which breaks backward compatibility
-    private String paymentId;
-
     public CryptoCurrencyAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
+    }
+
+    public CryptoCurrencyAccountContractData(String paymentMethod, String id, long maxTradePeriod, String address) {
+        super(paymentMethod, id, maxTradePeriod);
+        this.address = address;
     }
 
     public void setAddress(String address) {

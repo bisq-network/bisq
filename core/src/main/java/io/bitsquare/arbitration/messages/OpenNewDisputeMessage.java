@@ -29,6 +29,13 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
     private final NodeAddress myNodeAddress;
 
     public OpenNewDisputeMessage(Dispute dispute, NodeAddress myNodeAddress) {
+        super();
+        this.dispute = dispute;
+        this.myNodeAddress = myNodeAddress;
+    }
+
+    public OpenNewDisputeMessage(Dispute dispute, NodeAddress myNodeAddress, String uid) {
+        super(uid);
         this.dispute = dispute;
         this.myNodeAddress = myNodeAddress;
     }

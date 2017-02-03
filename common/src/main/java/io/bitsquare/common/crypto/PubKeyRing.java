@@ -53,16 +53,28 @@ public final class PubKeyRing implements Payload {
         this.encryptionPubKeyBytes = new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded();
     }
 
+    public PubKeyRing(byte[] signaturePubKeyBytes, byte[] encryptionPubKeyBytes) {
+        this.signaturePubKeyBytes = signaturePubKeyBytes;
+        this.encryptionPubKeyBytes = encryptionPubKeyBytes;
+        init();
+    }
+
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
-            encryptionPubKey = KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
+            init();
+        } catch (Throwable t) {
+            log.warn("Cannot be deserialized." + t.getMessage());
+        }
+    }
+
+    private void init() {
+        try {
+        signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
+        encryptionPubKey = KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
             log.error(e.getMessage());
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
         }
     }
 

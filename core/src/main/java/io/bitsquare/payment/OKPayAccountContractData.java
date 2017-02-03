@@ -29,6 +29,11 @@ public final class OKPayAccountContractData extends PaymentAccountContractData {
         super(paymentMethod, id, maxTradePeriod);
     }
 
+    public OKPayAccountContractData(String paymentMethodName, String id, long maxTradePeriod, String accountNr) {
+        super(paymentMethodName, id, maxTradePeriod);
+        this.accountNr = accountNr;
+    }
+
     public void setAccountNr(String accountNr) {
         this.accountNr = accountNr;
     }

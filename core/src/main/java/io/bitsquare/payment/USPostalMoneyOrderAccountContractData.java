@@ -31,6 +31,13 @@ public final class USPostalMoneyOrderAccountContractData extends PaymentAccountC
         super(paymentMethod, id, maxTradePeriod);
     }
 
+    public USPostalMoneyOrderAccountContractData(String paymentMethodName, String id, long maxTradePeriod,
+                                                 String postalAddress, String holderName) {
+        super(paymentMethodName, id, maxTradePeriod);
+        this.postalAddress = postalAddress;
+        this.holderName = holderName;
+    }
+
     public void setPostalAddress(String postalAddress) {
         this.postalAddress = postalAddress;
     }

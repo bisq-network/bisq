@@ -30,6 +30,13 @@ public final class SwishAccountContractData extends PaymentAccountContractData {
         super(paymentMethod, id, maxTradePeriod);
     }
 
+    public SwishAccountContractData(String paymentMethodName, String id, long maxTradePeriod,
+                                    String mobileNr, String holderName) {
+        super(paymentMethodName, id, maxTradePeriod);
+        this.mobileNr = mobileNr;
+        this.holderName = holderName;
+    }
+
     public void setMobileNr(String mobileNr) {
         this.mobileNr = mobileNr;
     }

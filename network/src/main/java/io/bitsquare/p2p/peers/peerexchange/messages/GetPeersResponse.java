@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public final class GetPeersResponse extends PeerExchangeMessage implements SupportedCapabilitiesMessage {
+public final class  GetPeersResponse extends PeerExchangeMessage implements SupportedCapabilitiesMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

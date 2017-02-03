@@ -33,6 +33,12 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
         this.myNodeAddress = myNodeAddress;
     }
 
+    public PeerOpenedDisputeMessage(Dispute dispute, NodeAddress myNodeAddress, String uid) {
+        super(uid);
+        this.dispute = dispute;
+        this.myNodeAddress = myNodeAddress;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

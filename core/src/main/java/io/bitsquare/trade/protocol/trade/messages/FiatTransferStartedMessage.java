@@ -25,7 +25,7 @@ import javax.annotation.concurrent.Immutable;
 import java.util.UUID;
 
 @Immutable
-public final class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
+    public final class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -33,11 +33,16 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
-    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress, NodeAddress senderNodeAddress) {
+    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress,
+                                      NodeAddress senderNodeAddress, String uid) {
         super(tradeId);
         this.buyerPayoutAddress = buyerPayoutAddress;
         this.senderNodeAddress = senderNodeAddress;
-        uid = UUID.randomUUID().toString();
+        this.uid = uid;
+    }
+
+    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress, NodeAddress senderNodeAddress) {
+        this(tradeId, buyerPayoutAddress, senderNodeAddress, UUID.randomUUID().toString());
     }
 
     @Override

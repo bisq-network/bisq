@@ -20,13 +20,15 @@ package io.bitsquare.trade.protocol.availability.messages;
 
 import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.p2p.ProtoBufferMessage;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.trade.protocol.availability.AvailabilityResult;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 
-// We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection 
+// We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
 public final class OfferAvailabilityResponse extends OfferMessage implements SupportedCapabilitiesMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.

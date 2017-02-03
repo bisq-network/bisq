@@ -11,7 +11,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.concurrent.TimeUnit;
 
@@ -62,15 +65,24 @@ public final class MailboxStoragePayload implements StoragePayload {
 
         this.receiverPubKeyForRemoveOperation = receiverPubKeyForRemoveOperation;
         this.receiverPubKeyForRemoveOperationBytes = new X509EncodedKeySpec(this.receiverPubKeyForRemoveOperation.getEncoded()).getEncoded();
+        init();
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            senderPubKeyForAddOperation = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(senderPubKeyForAddOperationBytes));
-            receiverPubKeyForRemoveOperation = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(receiverPubKeyForRemoveOperationBytes));
+            init();
         } catch (Throwable t) {
             log.warn("Exception at readObject: " + t.getMessage() + "\nThis= " + this.toString());
+        }
+    }
+
+    private void init() {
+        try {
+            senderPubKeyForAddOperation = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(senderPubKeyForAddOperationBytes));
+            receiverPubKeyForRemoveOperation = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(receiverPubKeyForRemoveOperationBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            log.error("Couldn't create the  public keys", e);
         }
     }
 

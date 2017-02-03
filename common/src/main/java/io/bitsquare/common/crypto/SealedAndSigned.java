@@ -24,7 +24,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
@@ -47,13 +50,32 @@ public final class SealedAndSigned implements Payload {
         this.sigPublicKeyBytes = new X509EncodedKeySpec(this.sigPublicKey.getEncoded()).getEncoded();
     }
 
+    public SealedAndSigned(byte[] encryptedSecretKey, byte[] encryptedPayloadWithHmac, byte[] signature, byte[] sigPublicKeyBytes) {
+        this(encryptedSecretKey, encryptedPayloadWithHmac, signature, SealedAndSigned.createSigPublicKey(sigPublicKeyBytes));
+    }
+
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            sigPublicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
+            sigPublicKey = createSigPublicKey(sigPublicKeyBytes);
         } catch (Throwable t) {
             log.warn("Exception at readObject: " + t.getMessage());
         }
+    }
+
+    /**
+     * We have the bytes, now recreate the sigPublicKey. This happens when receiving this class over the wire,
+     * because the public key is transient.
+     */
+    static PublicKey createSigPublicKey(byte[] sigPublicKeyBytes)  {
+        PublicKey publicKey = null;
+        try {
+            publicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
+                    .generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            log.error("Error creating sigPublicKey", e);
+        }
+        return publicKey;
     }
 
     @Override

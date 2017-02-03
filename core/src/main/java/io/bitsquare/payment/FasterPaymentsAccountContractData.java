@@ -30,6 +30,13 @@ public final class FasterPaymentsAccountContractData extends PaymentAccountContr
         super(paymentMethod, id, maxTradePeriod);
     }
 
+    public FasterPaymentsAccountContractData(String paymentMethod, String id, long maxTradePeriod,
+                                             String sortCode, String accountNr) {
+        super(paymentMethod, id, maxTradePeriod);
+        this.sortCode = sortCode;
+        this.accountNr = accountNr;
+    }
+
     public void setAccountNr(String accountNr) {
         this.accountNr = accountNr;
     }

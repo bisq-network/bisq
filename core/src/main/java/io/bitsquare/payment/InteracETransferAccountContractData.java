@@ -32,6 +32,15 @@ public final class InteracETransferAccountContractData extends PaymentAccountCon
         super(paymentMethod, id, maxTradePeriod);
     }
 
+    public InteracETransferAccountContractData(String paymentMethodName, String id, long maxTradePeriod,
+                                               String email, String holderName, String question, String answer) {
+        super(paymentMethodName, id, maxTradePeriod);
+        this.email = email;
+        this.holderName = holderName;
+        this.question = question;
+        this.answer = answer;
+    }
+
     public void setEmail(String email) {
         this.email = email;
     }

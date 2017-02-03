@@ -110,17 +110,23 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         this.p2pStorageSignaturePubKey = p2pStorageSignaturePubKey;
         this.p2pStorageSignaturePubKeyBytes = new X509EncodedKeySpec(p2pStorageSignaturePubKey.getEncoded()).getEncoded();
         p2pStorageSignaturePubKeyAsHex = Utils.HEX.encode(p2pStorageSignaturePubKey.getEncoded());
+        init();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            p2pStorageSignaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(p2pStorageSignaturePubKeyBytes));
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
+            init();
         } catch (Throwable t) {
             log.warn("Cannot be deserialized." + t.getMessage());
+        }
+    }
+
+    private void init() {
+        try {
+            p2pStorageSignaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(p2pStorageSignaturePubKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            log.error("Couldn't create the p2p storage public key", e);
         }
     }
 

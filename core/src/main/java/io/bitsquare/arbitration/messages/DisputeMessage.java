@@ -25,7 +25,15 @@ import java.util.UUID;
 public abstract class DisputeMessage implements MailboxMessage {
     //TODO add serialVersionUID also in superclasses as changes would break compatibility
     private final int messageVersion = Version.getP2PMessageVersion();
-    private final String uid = UUID.randomUUID().toString();
+    private final String uid;
+
+    public DisputeMessage(String uid) {
+        this.uid = uid;
+    }
+
+    public DisputeMessage() {
+         uid = UUID.randomUUID().toString();
+    }
 
     @Override
     public int getMessageVersion() {

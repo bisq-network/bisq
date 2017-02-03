@@ -31,6 +31,14 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
     private final NodeAddress myNodeAddress;
 
     public PeerPublishedPayoutTxMessage(byte[] transaction, String tradeId, NodeAddress myNodeAddress) {
+        super();
+        this.transaction = transaction;
+        this.tradeId = tradeId;
+        this.myNodeAddress = myNodeAddress;
+    }
+
+    public PeerPublishedPayoutTxMessage(byte[] transaction, String tradeId, NodeAddress myNodeAddress, String uid) {
+        super(uid);
         this.transaction = transaction;
         this.tradeId = tradeId;
         this.myNodeAddress = myNodeAddress;
