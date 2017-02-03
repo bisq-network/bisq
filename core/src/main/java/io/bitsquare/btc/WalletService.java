@@ -32,15 +32,18 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ExceptionHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.network.DnsLookupTor;
+import io.bitsquare.network.NetworkOptionKeys;
+import io.bitsquare.network.Socks5MultiDiscovery;
 import io.bitsquare.network.Socks5ProxyProvider;
 import io.bitsquare.storage.FileUtil;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.*;
+import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.bitcoinj.net.discovery.SeedPeers;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
@@ -92,6 +95,7 @@ public class WalletService {
     private final NetworkParameters params;
     private final File walletDir;
     private final UserAgent userAgent;
+    private final int socks5DiscoverMode;
 
     private WalletAppKitBitSquare walletAppKit;
     private Wallet wallet;
@@ -114,7 +118,8 @@ public class WalletService {
                          UserAgent userAgent,
                          Preferences preferences,
                          Socks5ProxyProvider socks5ProxyProvider,
-                         @Named(BtcOptionKeys.WALLET_DIR) File appDir) {
+                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
+                         @Named(NetworkOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
         this.tradeWalletService = tradeWalletService;
         this.addressEntryList = addressEntryList;
@@ -132,6 +137,23 @@ public class WalletService {
             bloomFilterTweak = new Random().nextLong();
             storage.queueUpForSave(bloomFilterTweak, 100);
         }
+
+        String[] socks5DiscoverModes = StringUtils.deleteWhitespace(socks5DiscoverModeString).split(",");
+        int mode = 0;
+        for (int i = 0; i < socks5DiscoverModes.length; i++) {
+            switch (socks5DiscoverModes[i]) {
+                case "ADDR":
+                    mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_ADDR;
+                case "DNS":
+                    mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_DNS;
+                case "ONION":
+                    mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_ONION;
+                case "ALL":
+                default:
+                    mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_ALL;
+            }
+        }
+        socks5DiscoverMode = mode;
     }
 
 
@@ -266,9 +288,7 @@ public class WalletService {
         // Pass custom seed nodes if set in options
         if (!btcNodes.isEmpty()) {
 
-            // TODO: this parsing should be more robust,
-            // give validation error if needed.
-            String[] nodes = btcNodes.replace(", ", ",").split(",");
+            String[] nodes = StringUtils.deleteWhitespace(btcNodes).split(",");
             List<PeerAddress> peerAddressList = new ArrayList<>();
             for (String node : nodes) {
                 String[] parts = node.split(":");
@@ -279,21 +299,25 @@ public class WalletService {
                 if (parts.length == 2) {
                     // note: this will cause a DNS request if hostname used.
                     // note: DNS requests are routed over socks5 proxy, if used.
-                    // fixme: .onion hostnames will fail! see comments in SeedPeersSocks5Dns
+                    // note: .onion hostnames will be unresolved.
                     InetSocketAddress addr;
                     if (socks5Proxy != null) {
-                        InetSocketAddress unresolved = InetSocketAddress.createUnresolved(parts[0], Integer.parseInt(parts[1]));
-                        // proxy remote DNS request happens here.
-                        addr = SeedPeersSocks5Dns.lookup(socks5Proxy, unresolved);
+                        try {
+                            // proxy remote DNS request happens here.  blocking.
+                            addr = new InetSocketAddress(DnsLookupTor.lookup(socks5Proxy, parts[0]), Integer.parseInt(parts[1]));
+                        } catch (Exception e) {
+                            log.warn("Dns lookup failed for host: {}", parts[0]);
+                            addr = null;
+                        }
                     } else {
                         // DNS request happens here. if it fails, addr.isUnresolved() == true.
                         addr = new InetSocketAddress(parts[0], Integer.parseInt(parts[1]));
                     }
-                    // note: isUnresolved check should be removed once we fix PeerAddress
-                    if (addr != null && !addr.isUnresolved())
+                    if (addr != null && !addr.isUnresolved()) {
                         peerAddressList.add(new PeerAddress(addr.getAddress(), addr.getPort()));
                     }
                 }
+            }
             if (peerAddressList.size() > 0) {
                 PeerAddress peerAddressListFixed[] = new PeerAddress[peerAddressList.size()];
                 log.debug("btcNodes parsed: " + Arrays.toString(peerAddressListFixed));
@@ -343,9 +367,8 @@ public class WalletService {
         // could become outdated, so it is important that the user be able to
         // disable it, but should be made aware of the reduced privacy.
         if (socks5Proxy != null && !usePeerNodes) {
-            // SeedPeersSocks5Dns should replace SeedPeers once working reliably.
             // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
-            walletAppKit.setDiscovery(new SeedPeers(params));
+            walletAppKit.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, socks5DiscoverMode));
         }
 
         walletAppKit.setDownloadListener(downloadListener)
@@ -1131,9 +1154,9 @@ public class WalletService {
     }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// Inner classes
-///////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Inner classes
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private static class DownloadListener extends DownloadProgressTracker {
         private final DoubleProperty percentage = new SimpleDoubleProperty(-1);

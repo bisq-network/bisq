@@ -17,34 +17,41 @@
 
 package io.bitsquare.network;
 
-import com.runjva.sourceforge.jsocks.protocol.*;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import io.bitsquare.common.util.Utilities;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.net.discovery.DnsDiscovery;
+import org.bitcoinj.net.discovery.MultiplexingDiscovery;
+import org.bitcoinj.net.discovery.PeerDiscovery;
+import org.bitcoinj.net.discovery.PeerDiscoveryException;
+import org.bitcoinj.utils.ContextPropagatingThreadFactory;
+import org.bitcoinj.utils.DaemonThreadFactory;
 
-import org.bitcoinj.net.discovery.*;
-import org.bitcoinj.core.*;
-import org.bitcoinj.utils.*;
-
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 
 /**
  * <p>Supports peer discovery through DNS over Socks5 proxy with RESOLVE DNS extension.</p>
- *
+ * <p>
  * (As of this writing, only Tor is known to support the RESOLVE DNS extension.)
- *
+ * <p>
  * <p>Failure to resolve individual host names will not cause an Exception to be thrown.
  * However, if all hosts passed fail to resolve a PeerDiscoveryException will be thrown during getPeers().
  * </p>
- *
+ * <p>
  * <p>DNS seeds do not attempt to enumerate every peer on the network. {@link DnsDiscovery#getPeers(long, java.util.concurrent.TimeUnit)}
  * will return up to 30 random peers from the set of those returned within the timeout period. If you want more peers
  * to connect to, you need to discover them via other means (like addr broadcasts).</p>
  */
 public class Socks5DnsDiscovery extends MultiplexingDiscovery {
-    
+
     private Socks5Proxy proxy;
-    
+
     /**
      * Supports finding peers through DNS A records. Community run DNS entry points will be used.
      *
@@ -58,7 +65,7 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
      * Supports finding peers through DNS A records.
      *
      * @param dnsSeeds Host names to be examined for seed addresses.
-     * @param params Network parameters to be used for port information.
+     * @param params   Network parameters to be used for port information.
      */
     public Socks5DnsDiscovery(Socks5Proxy proxy, String[] dnsSeeds, NetworkParameters params) {
         super(params, buildDiscoveries(proxy, params, dnsSeeds));
@@ -68,9 +75,10 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
     private static List<PeerDiscovery> buildDiscoveries(Socks5Proxy proxy, NetworkParameters params, String[] seeds) {
         List<PeerDiscovery> discoveries = new ArrayList<PeerDiscovery>(seeds.length);
         for (String seed : seeds) {
-            if(seed == "dnsseed.bluematt.me") {
-                continue;  // this dns is known to fail with tor-resolve because it returns too many addrs.
-                           // we avoid adding it in order to prevent ugly log messages.
+            if ("dnsseed.bluematt.me".equals(seed)) {
+                // this dns is known to fail with tor-resolve because it returns too many addrs.
+                // we avoid adding it in order to prevent ugly log messages.
+                continue;
             }
             discoveries.add(new Socks5DnsSeedDiscovery(proxy, params, seed));
         }
@@ -81,15 +89,15 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
     protected ExecutorService createExecutor() {
         // Attempted workaround for reported bugs on Linux in which gethostbyname does not appear to be properly
         // thread safe and can cause segfaults on some libc versions.
-        if (System.getProperty("os.name").toLowerCase().contains("linux")) {
+        if (Utilities.isLinux()) 
             return Executors.newSingleThreadExecutor(new ContextPropagatingThreadFactory("DNS seed lookups"));
-        }
-        else {
+        else 
             return Executors.newFixedThreadPool(seeds.size(), new DaemonThreadFactory("DNS seed lookups"));
-        }
     }
 
-    /** Implements discovery from a single DNS host over Socks5 proxy with RESOLVE DNS extension. */
+    /**
+     * Implements discovery from a single DNS host over Socks5 proxy with RESOLVE DNS extension.
+     */
     public static class Socks5DnsSeedDiscovery implements PeerDiscovery {
         private final String hostname;
         private final NetworkParameters params;
@@ -108,15 +116,15 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
         public InetSocketAddress[] getPeers(long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
             try {
                 InetSocketAddress addr = new InetSocketAddress(DnsLookupTor.lookup(proxy, hostname), params.getPort());
-                return new InetSocketAddress[] {addr};
-            }
-            catch(Exception e) {
+                return new InetSocketAddress[]{addr};
+            } catch (Exception e) {
                 throw new PeerDiscoveryException(e);
             }
         }
 
         @Override
         public void shutdown() {
+            //TODO should we add a DnsLookupTor.shutdown() ?
         }
 
         @Override
