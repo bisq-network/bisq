@@ -206,7 +206,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             peerList.stream().forEach(e -> {
                 if (bitcoinPeersTextArea.getText().length() > 0)
                     bitcoinPeersTextArea.appendText("\n");
-                bitcoinPeersTextArea.appendText(e.toString());
+                bitcoinPeersTextArea.appendText(e.getAddress().getSocketAddress().toString());
             });
         }
     }
