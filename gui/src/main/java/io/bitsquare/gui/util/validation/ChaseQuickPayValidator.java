@@ -17,17 +17,22 @@
 
 package io.bitsquare.gui.util.validation;
 
-
 public final class ChaseQuickPayValidator extends InputValidator {
+
+    private final EmailValidator emailValidator;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public ChaseQuickPayValidator() {
+	super();
+	emailValidator = new EmailValidator();
+    }
+
     @Override
     public ValidationResult validate(String input) {
-        // TODO
-        return super.validate(input);
+        return emailValidator.validate(input);
     }
 
 
