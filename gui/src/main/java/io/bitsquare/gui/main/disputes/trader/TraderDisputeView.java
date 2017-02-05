@@ -511,7 +511,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             messageListView.prefWidthProperty().bind(root.widthProperty());
             messagesAnchorPane.prefWidthProperty().bind(root.widthProperty());
             disputeCommunicationMessages.addListener(disputeDirectMessageListListener);
-            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
+            if (selectedDispute != null)
+                selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
         }
     }
@@ -1044,7 +1045,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
 
-    private String getBuyerOnionAddressColumnLabel(Dispute item) {
+    protected String getBuyerOnionAddressColumnLabel(Dispute item) {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress buyerNodeAddress = contract.getBuyerNodeAddress();
@@ -1057,7 +1058,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private String getSellerOnionAddressColumnLabel(Dispute item) {
+    protected String getSellerOnionAddressColumnLabel(Dispute item) {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress sellerNodeAddress = contract.getSellerNodeAddress();
