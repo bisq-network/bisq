@@ -72,11 +72,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } else {
                         return regexTestFailed;
                     }
-                /*case "PIVX":
+                case "PIVX":
                     if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (verifyChecksum(input)) {
                             try {
-                                new Address(MainNetParams.get(), input);
+                                new Address(PIVXParams.get(), input);
                                 return new ValidationResult(true);
                             } catch (AddressFormatException e) {
                                 return new ValidationResult(false, getErrorMessage(e));
@@ -86,7 +86,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                         }
                     } else {
                         return regexTestFailed;
-                    }*/
+                    }
                 case "IOP":
                     if (input.matches("^[p][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (verifyChecksum(input)) {
