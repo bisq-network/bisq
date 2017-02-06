@@ -44,43 +44,42 @@ public final class EmailValidator extends InputValidator {
 
     @Override
     public ValidationResult validate(String input) {
-        // TODO
-	if (input == null || input.length() < 6) // shortest address is l@d.cc
-		return invalidAddress;
-	String [] substrings;
-	String local, domain;
+        if (input == null || input.length() < 6) // shortest address is l@d.cc
+            return invalidAddress;
+        String[] subStrings;
+        String local, domain;
 
-	substrings = input.split("@",-1);
+        subStrings = input.split("@", -1);
 
-	if (substrings.length == 1) // address does not contain '@'
-		return invalidAddress;
-	if (substrings.length > 2) // multiple @'s included -> check for valid double quotes
-		if (!checkForValidQuotes(substrings)) // around @'s -> "..@..@.." and concatenate local part
-			return invalidAddress;
-	local = substrings[0];
-	domain = substrings[substrings.length-1];
+        if (subStrings.length == 1) // address does not contain '@'
+            return invalidAddress;
+        if (subStrings.length > 2) // multiple @'s included -> check for valid double quotes
+            if (!checkForValidQuotes(subStrings)) // around @'s -> "..@..@.." and concatenate local part
+                return invalidAddress;
+        local = subStrings[0];
+        domain = subStrings[subStrings.length - 1];
 
-	// local part cannot begin or end with '.'
-	if (local.startsWith(".") || local.endsWith("."))
-		return invalidAddress;
+        // local part cannot begin or end with '.'
+        if (local.startsWith(".") || local.endsWith("."))
+            return invalidAddress;
 
-	String [] splitDomain = domain.split("\\.", -1); // '.' is a regex in java and has to be escaped
-	String tld = splitDomain[splitDomain.length-1];
-	if (splitDomain.length < 2)
-		return invalidAddress;
+        String[] splitDomain = domain.split("\\.", -1); // '.' is a regex in java and has to be escaped
+        String tld = splitDomain[splitDomain.length - 1];
+        if (splitDomain.length < 2)
+            return invalidAddress;
 
-	if (splitDomain[0] == null || splitDomain[0].isEmpty())
-		return invalidAddress;
+        if (splitDomain[0] == null || splitDomain[0].isEmpty())
+            return invalidAddress;
 
-	// TLD length is at least two
-	if (tld.length() < 2)
-		return invalidAddress;
+        // TLD length is at least two
+        if (tld.length() < 2)
+            return invalidAddress;
 
-	// TLD is letters only
-	for (int k=0; k<tld.length(); k++)
-		if (!Character.isLetter(tld.charAt(k)))
-			return invalidAddress;
-	return new ValidationResult(true);
+        // TLD is letters only
+        for (int k = 0; k < tld.length(); k++)
+            if (!Character.isLetter(tld.charAt(k)))
+                return invalidAddress;
+        return new ValidationResult(true);
     }
 
 
@@ -88,22 +87,22 @@ public final class EmailValidator extends InputValidator {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean checkForValidQuotes(String [] substrings) {
-	int length = substrings.length - 2; // is index on last substring of local part
+    private boolean checkForValidQuotes(String[] subStrings) {
+        int length = subStrings.length - 2; // is index on last substring of local part
 
-	// check for odd number of double quotes before first and after last '@'
-	if ( (substrings[0].split("\"",-1).length %2 == 1) || (substrings[length].split("\"",-1).length %2 == 1) )
-		return false;
-	for (int k=1; k<length; k++) {
-		if (substrings[k].split("\"",-1).length % 2 == 0)
-			return false;
-	}
+        // check for odd number of double quotes before first and after last '@'
+        if ((subStrings[0].split("\"", -1).length % 2 == 1) || (subStrings[length].split("\"", -1).length % 2 == 1))
+            return false;
+        for (int k = 1; k < length; k++) {
+            if (subStrings[k].split("\"", -1).length % 2 == 0)
+                return false;
+        }
 
-	String patchLocal = new String("");
-	for (int k=0; k<=length; k++) // remember: length is last index not array length
-		patchLocal = patchLocal.concat(substrings[k]); // @'s are not reinstalled, since not needed for further checks
-	substrings[0] = patchLocal;
-	return true;
+        String patchLocal = "";
+        for (int k = 0; k <= length; k++) // remember: length is last index not array length
+            patchLocal = patchLocal.concat(subStrings[k]); // @'s are not reinstalled, since not needed for further checks
+        subStrings[0] = patchLocal;
+        return true;
     }
 
 }

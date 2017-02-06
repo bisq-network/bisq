@@ -26,19 +26,13 @@ public final class ChaseQuickPayValidator extends InputValidator {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ChaseQuickPayValidator() {
-	super();
-	emailValidator = new EmailValidator();
+        super();
+        emailValidator = new EmailValidator();
     }
 
     @Override
     public ValidationResult validate(String input) {
         return emailValidator.validate(input);
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 }
