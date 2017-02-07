@@ -17,7 +17,7 @@ In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll n
 
     $ java -version
 
-If `java` is not found, or your version is anything less than `1.8.0_112`, then follow the next steps, otherwise you can skip to step 2:
+If `java` is not found, or your version is anything less than `1.8.0_121`, then follow the next steps, otherwise you can skip to step 2:
 
 #### 1.1 Debian based systems (Ubuntu)
 
