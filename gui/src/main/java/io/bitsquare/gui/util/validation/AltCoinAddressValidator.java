@@ -20,6 +20,7 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bitsquare.gui.util.validation.params.IOPParams;
+import io.bitsquare.gui.util.validation.params.PivxParams;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.params.MainNetParams;
@@ -72,11 +73,11 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } else {
                         return regexTestFailed;
                     }
-                /*case "PIVX":
-                    if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+               case "PIVX":
+                if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (verifyChecksum(input)) {
                             try {
-                                new Address(MainNetParams.get(), input);
+                                new Address(PivxParams.get(), input);
                                 return new ValidationResult(true);
                             } catch (AddressFormatException e) {
                                 return new ValidationResult(false, getErrorMessage(e));
@@ -86,7 +87,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                         }
                     } else {
                         return regexTestFailed;
-                    }*/
+                    }
                 case "IOP":
                     if (input.matches("^[p][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (verifyChecksum(input)) {
