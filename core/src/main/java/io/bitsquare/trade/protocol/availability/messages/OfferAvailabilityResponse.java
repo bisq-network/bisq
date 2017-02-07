@@ -22,6 +22,7 @@ import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.ProtoBufferMessage;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.trade.protocol.availability.AvailabilityResult;
 
@@ -58,5 +59,14 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
         return "OfferAvailabilityResponse{" +
                 "availabilityResult=" + availabilityResult +
                 "} " + super.toString();
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        return baseEnvelope.setOfferAvailabilityResponse(Messages.OfferAvailabilityResponse.newBuilder().setMessageVersion(getMessageVersion())
+                .setOfferId(offerId)
+                .setAvailabilityResult(Messages.AvailabilityResult.forNumber(availabilityResult.ordinal()))
+                .addAllSupportedCapabilities(supportedCapabilities)).build();
     }
 }

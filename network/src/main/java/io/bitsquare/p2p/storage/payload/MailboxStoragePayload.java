@@ -1,7 +1,9 @@
 package io.bitsquare.p2p.storage.payload;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.peers.BroadcastHandler;
@@ -95,6 +97,15 @@ public final class MailboxStoragePayload implements StoragePayload {
     public PublicKey getOwnerPubKey() {
         return receiverPubKeyForRemoveOperation;
     }
+
+    @Override
+    public Messages.StoragePayload toProtoBuf() {
+        return Messages.StoragePayload.newBuilder().setMailboxStoragePayload(Messages.MailboxStoragePayload.newBuilder()
+                .setTTL(TTL)
+                .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toProtoBuf().getPrefixedSealedAndSignedMessage())
+                .setSenderPubKeyForAddOperationBytes(ByteString.copyFrom(senderPubKeyForAddOperationBytes))).build();
+    }
+
 
     @Override
     public boolean equals(Object o) {

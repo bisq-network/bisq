@@ -17,8 +17,11 @@
 
 package io.bitsquare.trade.protocol.trade.messages;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
@@ -77,5 +80,16 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
         result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        return baseEnvelope.setPayoutTxFinalizedMessage(baseEnvelope.getPayoutTxFinalizedMessageBuilder()
+                .setUid(uid)
+                .setMessageVersion(getMessageVersion())
+                .setTradeId(tradeId)
+                .setPayoutTx(ByteString.copyFrom(payoutTx))
+                .setSenderNodeAddress(senderNodeAddress.toProtoBuf())).build();
     }
 }

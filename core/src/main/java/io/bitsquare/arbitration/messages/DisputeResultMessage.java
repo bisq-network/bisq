@@ -19,7 +19,9 @@ package io.bitsquare.arbitration.messages;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.DisputeResult;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 
 public final class DisputeResultMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -56,5 +58,13 @@ public final class DisputeResultMessage extends DisputeMessage {
     @Override
     public NodeAddress getSenderNodeAddress() {
         return myNodeAddress;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        return baseEnvelope.setDisputeResultMessage(Messages.DisputeResultMessage.newBuilder()
+                .setDisputeResult(disputeResult.toProtoBuf())
+                .setMyNodeAddress(myNodeAddress.toProtoBuf())).build();
     }
 }

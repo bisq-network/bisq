@@ -20,7 +20,9 @@ package io.bitsquare.crypto;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.*;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.storage.FileUtil;
@@ -32,6 +34,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -105,5 +108,10 @@ final class TestMessage implements MailboxMessage {
     @Override
     public int getMessageVersion() {
         return messageVersion;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        throw new NotImplementedException();
     }
 }

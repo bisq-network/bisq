@@ -17,8 +17,11 @@
 
 package io.bitsquare.arbitration.messages;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 
 import java.util.Arrays;
 
@@ -70,4 +73,12 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
         return myNodeAddress;
     }
 
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        return baseEnvelope.setPeerPublishedPayoutTxMessage(Messages.PeerPublishedPayoutTxMessage.newBuilder()
+                .setTransaction(ByteString.copyFrom(transaction))
+                .setTradeId(tradeId)
+                .setMyNodeAddress(myNodeAddress.toProtoBuf())).build();
+    }
 }

@@ -1,9 +1,11 @@
 package io.bitsquare.p2p.mocks;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.storage.payload.ExpirablePayload;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.UUID;
 
@@ -23,6 +25,11 @@ public final class MockMailboxPayload implements MailboxMessage, ExpirablePayloa
     @Override
     public int getMessageVersion() {
         return messageVersion;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        throw new NotImplementedException();
     }
 
     @Override

@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.availability.messages;
 import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 
 import javax.annotation.Nullable;
@@ -57,5 +58,10 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
         return "OfferAvailabilityRequest{" +
                 "pubKeyRing=" + pubKeyRing +
                 "} " + super.toString();
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        return null;
     }
 }

@@ -1,6 +1,7 @@
 package io.bitsquare.filter;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,5 +29,12 @@ public class PaymentAccountFilter implements Serializable {
                 ", getMethodName='" + getMethodName + '\'' +
                 ", value='" + value + '\'' +
                 '}';
+    }
+
+    public Messages.PaymentAccountFilter toProtoBuf() {
+        return Messages.PaymentAccountFilter.newBuilder()
+                .setPaymentMethodId(paymentMethodId)
+                .setGetMethodName(getMethodName)
+                .setValue(value).build();
     }
 }

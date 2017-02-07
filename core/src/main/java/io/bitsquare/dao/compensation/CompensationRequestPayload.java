@@ -17,9 +17,11 @@
 
 package io.bitsquare.dao.compensation;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.util.JsonExclude;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bitsquare.p2p.storage.payload.PersistedStoragePayload;
@@ -71,7 +73,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     // used for json
     private final String p2pStorageSignaturePubKeyAsHex;
 
-    // Signature of the JSON data of this object excluding the signature and feeTxId fields using the standard Bitcoin 
+    // Signature of the JSON data of this object excluding the signature and feeTxId fields using the standard Bitcoin
     // messaging signing format as a base64 encoded string.
     @JsonExclude
     public String signature;
@@ -172,6 +174,30 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     public String getShortId() {
         return uid.substring(0, 8);
     }
+
+    @Override
+    public Messages.StoragePayload toProtoBuf() {
+        return Messages.StoragePayload.newBuilder().setCompensationRequestPayload(
+                Messages.CompensationRequestPayload.newBuilder()
+                        .setTTL(TTL)
+                        .setVersion(version)
+                        .setCreationDate(creationDate)
+                        .setUid(uid)
+                        .setName(name)
+                        .setTitle(title)
+                        .setCategory(category)
+                        .setDescription(description)
+                        .setLink(link)
+                        .setStartDate(startDate)
+                        .setEndDate(endDate)
+                        .setRequestedBtc(requestedBtc)
+                        .setBtcAddress(btcAddress)
+                        .setNodeAddress(nodeAddress)
+                        .setP2PStorageSignaturePubKeyAsHex(p2pStorageSignaturePubKeyAsHex)
+                        .setSignature(signature)
+                        .setFeeTxId(feeTxId)).build();
+    }
+
 
     @Override
     public boolean equals(Object o) {

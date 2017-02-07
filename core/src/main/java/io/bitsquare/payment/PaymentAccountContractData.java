@@ -19,6 +19,7 @@ package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 
 public abstract class PaymentAccountContractData implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -58,6 +59,8 @@ public abstract class PaymentAccountContractData implements Payload {
     public long getMaxTradePeriod() {
         return maxTradePeriod;
     }
+
+    abstract public Messages.PaymentAccountContractData toProtoBuf();
 
     @Override
     public boolean equals(Object o) {

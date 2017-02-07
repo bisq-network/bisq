@@ -46,6 +46,10 @@ public final class NodeAddress implements Persistable, Payload {
     }
 
 
+    public Messages.NodeAddress toProtoBuf() {
+        return Messages.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

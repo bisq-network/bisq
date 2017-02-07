@@ -17,15 +17,19 @@
 
 package io.bitsquare.trade.protocol.trade.messages;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.payment.PaymentAccountContractData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Immutable
 
@@ -68,5 +72,20 @@ public final class PublishDepositTxRequest extends TradeMessage {
         log.trace("offererTradeWalletPubKey size " + offererMultiSigPubKey.length);
         log.trace("preparedDepositTx size " + preparedDepositTx.length);
         log.trace("offererInputs size " + Utilities.serialize(new ArrayList<>(offererInputs)).length);
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        return baseEnvelope.setPublishDepositTxRequest(baseEnvelope.getPublishDepositTxRequestBuilder()
+                .setMessageVersion(getMessageVersion())
+                .setTradeId(tradeId)
+                .setOffererPaymentAccountContractData(offererPaymentAccountContractData.toProtoBuf())
+                .setOffererAccountId(offererAccountId)
+                .setOffererContractAsJson(offererContractAsJson)
+                .setOffererContractSignature(offererContractSignature)
+                .setOffererPayoutAddressstring(offererPayoutAddressString)
+                .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
+                .addAllOffererInputs(offererInputs.stream().map(rawTransactionInput -> rawTransactionInput.toProtoBuf()).collect(Collectors.toList()))).build();
     }
 }

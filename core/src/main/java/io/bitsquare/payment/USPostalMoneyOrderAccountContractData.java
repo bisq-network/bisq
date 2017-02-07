@@ -18,6 +18,7 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 
 public final class USPostalMoneyOrderAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -64,5 +65,20 @@ public final class USPostalMoneyOrderAccountContractData extends PaymentAccountC
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Postal address: " + postalAddress;
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.USPostalMoneyOrderAccountContractData.Builder thisClass =
+                Messages.USPostalMoneyOrderAccountContractData.newBuilder()
+                        .setPostalAddress(postalAddress)
+                        .setHolderName(holderName);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setUSPostalMoneyOrderAccountContractData(thisClass);
+        return paymentAccountContractData.build();
     }
 }

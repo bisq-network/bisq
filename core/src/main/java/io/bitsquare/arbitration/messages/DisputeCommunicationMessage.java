@@ -17,9 +17,12 @@
 
 package io.bitsquare.arbitration.messages;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.payload.Attachment;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.slf4j.Logger;
@@ -30,6 +33,7 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class DisputeCommunicationMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -192,5 +196,21 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 ", message='" + message + '\'' +
                 ", attachments=" + attachments +
                 '}';
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        return baseEnvelope.setDisputeCommunicationMessage(Messages.DisputeCommunicationMessage.newBuilder()
+                .setDate(date)
+                .setTradeId(tradeId)
+                .setTraderId(traderId)
+                .setSenderIsTrader(senderIsTrader)
+                .setMessage(message)
+                .addAllAttachments(attachments.stream().map(attachment -> attachment.toProtoBuf()).collect(Collectors.toList()))
+                .setArrived(arrived)
+                .setStoredInMailbox(storedInMailbox)
+                .setIsSystemMessage(isSystemMessage)
+                .setMyNodeAddress(myNodeAddress.toProtoBuf())).build();
     }
 }

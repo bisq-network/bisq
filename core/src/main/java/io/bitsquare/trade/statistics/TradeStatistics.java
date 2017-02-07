@@ -1,9 +1,11 @@
 package io.bitsquare.trade.statistics;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.JsonExclude;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bitsquare.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bitsquare.p2p.storage.payload.PersistedStoragePayload;
@@ -101,7 +103,28 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         return offerId;
     }
 
-    // We don't include the pubKeyRing as both traders might publish it if the offerer uses an old 
+    @Override
+    public Messages.StoragePayload toProtoBuf() {
+        return Messages.StoragePayload.newBuilder().setTradeStatistics(Messages.TradeStatistics.newBuilder()
+                .setTTL(TTL)
+                .setCurrency(currency)
+                .setDirection(Messages.Offer.Direction.forNumber(direction.ordinal()))
+                .setTradePrice(tradePrice)
+                .setTradeAmount(tradeAmount)
+                .setTradeDate(tradeDate)
+                .setPaymentMethod(paymentMethod)
+                .setOfferDate(offerDate)
+                .setUseMarketBasedPrice(useMarketBasedPrice)
+                .setMarketPriceMargin(marketPriceMargin)
+                .setOfferAmount(offerAmount)
+                .setOfferMinAmount(offerMinAmount)
+                .setOfferId(offerId)
+                .setDepositTxId(depositTxId)
+                .setPubKeyRing((Messages.PubKeyRing) pubKeyRing.toProtoBuf())).build();
+    }
+
+
+    // We don't include the pubKeyRing as both traders might publish it if the offerer uses an old
     // version and update later (taker publishes first, then later offerer)
     // We also don't include the trade date as that is set locally and different for offerer and taker
     @Override

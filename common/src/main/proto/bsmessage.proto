@@ -1,5 +1,4 @@
 syntax = "proto3";
-
 package io.bitsquare.proto;
 
 //
@@ -25,12 +24,23 @@ message Envelope {
         SendersNodeAddressMessage senders_node_address_message = 12;
         PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 13;
         OfferAvailabilityResponse offer_availability_response = 14;
-
-
         RemoveDataMessage remove_data_message = 15;
         AddDataMessage add_data_message = 16;
         RemoveMailboxDataMessage remove_mailbox_data_message = 17;
         DepositTxPublishedMessage deposit_tx_published_message = 18;
+        FinalizePayoutTxRequest finalize_payout_tx_request = 19;
+        DisputeCommunicationMessage dispute_communication_message = 20;
+        OpenNewDisputeMessage open_new_dispute_message = 21;
+        PeerOpenedDisputeMessage peer_opened_dispute_message = 22;
+        DisputeResultMessage dispute_result_message = 23;
+        PeerPublishedPayoutTxMessage peer_published_payout_tx_message = 24;
+        PayDepositRequest pay_deposit_request = 25;
+        PublishDepositTxRequest publish_deposit_tx_request = 26;
+        FiatTransferStartedMessage fiat_transfer_started_message = 27;
+        PayoutTxFinalizedMessage payout_tx_finalized_message = 28;
+        CashDepositAccountContractData cash_deposit_account_contract_data = 29;
+        SpecificBanksAccountContractData specific_banks_account_contract_data = 30;
+        PrivateNotificationMessage private_notification_message = 31;
     }
 }
 
@@ -151,8 +161,16 @@ message RemoveMailboxDataMessage {
 
 // start storagepayloads
 message StoragePayload {
-    //oneof message {
-    //}
+    oneof message {
+        Alert alert = 1;
+        Arbitrator arbitrator = 2;
+        Filter filter = 3;
+        PaymentAccountFilter payment_account_filter = 4;
+        CompensationRequestPayload compensation_request_payload = 5;
+        TradeStatistics trade_statistics = 6;
+        MailboxStoragePayload mailbox_storage_payload = 7;
+        Offer offer = 8;
+    }
 }
 
 message Alert {
@@ -421,7 +439,7 @@ message Contract {
     Offer offer = 1;
     int64 trade_amount = 2;
     int64 trade_price = 3;
-    string take_offer_fee_tx_i_d = 4;
+    string take_offer_fee_tx_id = 4;
     NodeAddress arbitrator_node_address = 5;
     bool is_buyer_offerer_and_seller_taker = 6;
     string offerer_account_id = 7;
@@ -456,6 +474,12 @@ message MockMailboxPayload {
     NodeAddress sender_node_address = 3;
     int64 ttl = 4;
     string uid = 5;
+}
+
+message MockPayload {
+    string messageVersion = 1;
+    string msg = 2;
+    string ttl = 3;
 }
 
 message PayDepositRequest {
@@ -503,6 +527,7 @@ message PrivateNotificationMessage {
     NodeAddress my_node_address = 3;
     PrivateNotification private_notification = 4;
 }
+
 
 message PrivateNotification {
     string message = 1;
@@ -571,32 +596,45 @@ message PaymentAccountContractData {
     string id = 1;
     string payment_method_name = 2;
     int64 max_trade_period = 3;
+    oneof message {
+        AliPayAccountContractData ali_pay_account_contract_data = 4;
+        ChaseQuickPayAccountContractData chase_quick_pay_account_contract_data = 5;
+        ClearXchangeAccountContractData clear_xchange_account_contract_data = 6;
+        CountryBasedPaymentAccountContractData country_based_payment_account_contract_data = 7;
+        CryptoCurrencyAccountContractData crypto_currency_account_contract_data = 8;
+        FasterPaymentsAccountContractData faster_payments_account_contract_data = 9;
+        InteracETransferAccountContractData interac_e_transfer_account_contract_data = 10;
+        OKPayAccountContractData o_k_pay_account_contract_data = 11;
+        PerfectMoneyAccountContractData perfect_money_account_contract_data = 12;
+        SwishAccountContractData swish_account_contract_data = 13;
+        USPostalMoneyOrderAccountContractData u_s_postal_money_order_account_contract_data = 14;
+    }
 }
 
 message AliPayAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string account_nr = 2;
+    string account_nr = 1;
 }
 
 message ChaseQuickPayAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string email = 2;
-    string holder_name = 3;
+    string email = 1;
+    string holder_name = 2;
 }
 
 message ClearXchangeAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string holder_name = 2;
-    string email_or_mobile_nr = 3;
+    string holder_name = 1;
+    string email_or_mobile_nr = 2;
 }
 
 message CountryBasedPaymentAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string countryCode = 2;
+    string countryCode = 1;
+    oneof message {
+        BankAccountContractData bank_account_contract_data = 2;
+        CashDepositAccountContractData cash_deposit_account_contract_data = 3;
+        SepaAccountContractData sepa_account_contract_data = 4;
+    }
 }
 
 message BankAccountContractData {
-    CountryBasedPaymentAccountContractData country_based_payment_account_contract_data = 1;
     string holder_name = 2;
     string bank_name = 3;
     string bank_id = 4;
@@ -604,80 +642,73 @@ message BankAccountContractData {
     string account_nr = 6;
     string account_type = 7;
     string holder_tax_id = 8;
+    oneof message {
+        NationalBankAccountContractData national_bank_account_contract_data = 9;
+        SameBankAccountContractData same_bank_accont_contract_data = 10;
+        SpecificBanksAccountContractData specific_banks_account_contract_data = 11;
+    }
 }
 
 message NationalBankAccountContractData {
-    BankAccountContractData bank_account_contract_data = 1;
 }
 
 message SameBankAccountContractData {
-    BankAccountContractData bank_account_contract_data = 1;
 }
 message SpecificBanksAccountContractData {
-    BankAccountContractData bank_account_contract_data = 1;
     repeated string accepted_banks = 2;
 }
 
 message CashDepositAccountContractData {
-    CountryBasedPaymentAccountContractData country_based_payment_account_contract_data = 1;
-    string holder_name = 2;
-    string holder_email = 3;
-    string bank_name = 4;
-    string bank_id = 5;
-    string branch_id = 6;
-    string account_nr = 7;
-    string account_type = 8;
-    string requirements = 9;
-    string holder_tax_id = 10;
+    string holder_name = 1;
+    string holder_email = 2;
+    string bank_name = 3;
+    string bank_id = 4;
+    string branch_id = 5;
+    string account_nr = 6;
+    string account_type = 7;
+    string requirements = 8;
+    string holder_tax_id = 9;
 }
 
 message SepaAccountContractData {
-    CountryBasedPaymentAccountContractData country_based_payment_account_contract_data = 1;
-    string holder_name = 2;
-    string iban = 3;
-    string bic = 4;
-    repeated string accepted_country_codes = 5;
+    string holder_name = 1;
+    string iban = 2;
+    string bic = 3;
+    repeated string accepted_country_codes = 4;
 }
 
 message CryptoCurrencyAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string address = 2;
+    string address = 1;
 }
 
 message FasterPaymentsAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string sort_code = 2;
-    string account_nr = 3;
+    string sort_code = 1;
+    string account_nr = 2;
 }
 
 message InteracETransferAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string email = 2;
-    string holder_name = 3;
-    string question = 4;
-    string answer = 5;
+    string email = 1;
+    string holder_name = 2;
+    string question = 3;
+    string answer = 4;
 }
 
 message OKPayAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string account_nr = 2;
+    string account_nr = 1;
 }
 
 message PerfectMoneyAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string account_nr = 2;
+    string account_nr = 1;
 }
 
 message SwishAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string mobile_nr = 2;
-    string holder_name = 3;
+    string mobile_nr = 1;
+    string holder_name = 2;
 }
 
 message USPostalMoneyOrderAccountContractData {
-    PaymentAccountContractData payment_account_contract_data = 1;
-    string postal_address = 2;
-    string holder_name = 3;
+    string postal_address = 1;
+    string holder_name = 2;
 }
 
 message ProtectedMailboxStorageEntry {

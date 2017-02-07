@@ -34,6 +34,7 @@ public class ProtoBufferTest {
             //log.info("peerseesd empty: '{}'",envelope3.getPong().equals(Messages.Envelope.) == "");
             assertTrue(isPing(envelope3));
             assertTrue(!isPing(envelope4));
+
             log.info("3 = {} 4 = {}",isPing(envelope3), isPing(envelope4));
             log.info(envelope3.toString());
             log.info(envelope4.toString());

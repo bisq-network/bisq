@@ -1,9 +1,11 @@
 package io.bitsquare.p2p.storage.storageentry;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +100,12 @@ public class ProtectedStorageEntry implements Payload {
 
     public boolean isExpired() {
         return (System.currentTimeMillis() - creationTimeStamp) > storagePayload.getTTL();
+    }
+
+    public Messages.ProtectedStorageEntry toProtoBuf() {
+        return Messages.ProtectedStorageEntry.newBuilder().setStoragePayload((Messages.StoragePayload) storagePayload.toProtoBuf())
+                .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes)).setSequenceNumber(sequenceNumber)
+                .setSignature(ByteString.copyFrom(signature)).setCreationTimeStamp(creationTimeStamp).build();
     }
 
     @Override

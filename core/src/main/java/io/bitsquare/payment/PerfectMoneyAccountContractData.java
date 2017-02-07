@@ -18,6 +18,7 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 
 public final class PerfectMoneyAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -52,4 +53,16 @@ public final class PerfectMoneyAccountContractData extends PaymentAccountContrac
         return getPaymentDetails();
     }
 
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.PerfectMoneyAccountContractData.Builder thisClass =
+                Messages.PerfectMoneyAccountContractData.newBuilder().setAccountNr(accountNr);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setPerfectMoneyAccountContractData(thisClass);
+        return paymentAccountContractData.build();
+    }
 }

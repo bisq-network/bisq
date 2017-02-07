@@ -18,6 +18,7 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 
 public final class FasterPaymentsAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -62,5 +63,20 @@ public final class FasterPaymentsAccountContractData extends PaymentAccountContr
     public String getPaymentDetailsForTradePopup() {
         return "UK Sort code: " + sortCode + "\n" +
                 "Account number: " + accountNr;
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.FasterPaymentsAccountContractData.Builder thisClass =
+                Messages.FasterPaymentsAccountContractData.newBuilder()
+                        .setSortCode(sortCode)
+                        .setAccountNr(accountNr);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setFasterPaymentsAccountContractData(thisClass);
+        return paymentAccountContractData.build();
     }
 }

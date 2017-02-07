@@ -1,6 +1,8 @@
 package io.bitsquare.p2p.storage.messages;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 
 public final class RemoveMailboxDataMessage extends BroadcastMessage {
@@ -33,5 +35,13 @@ public final class RemoveMailboxDataMessage extends BroadcastMessage {
         return "RemoveMailboxDataMessage{" +
                 "data=" + protectedMailboxStorageEntry +
                 "} " + super.toString();
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        return baseEnvelope.setRemoveMailboxDataMessage(Messages.RemoveMailboxDataMessage.newBuilder()
+                .setProtectedStorageEntry(protectedMailboxStorageEntry.toProtoBuf())).build();
+
     }
 }

@@ -18,6 +18,7 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 
 public final class InteracETransferAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -84,5 +85,22 @@ public final class InteracETransferAccountContractData extends PaymentAccountCon
                 "Email: " + email + "\n" +
                 "Secret question: " + question + "\n" +
                 "Answer: " + answer;
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.InteracETransferAccountContractData.Builder interacETransferAccountContractData =
+                Messages.InteracETransferAccountContractData.newBuilder()
+                .setEmail(email)
+                .setHolderName(holderName)
+                .setQuestion(question)
+                .setAnswer(answer);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setInteracETransferAccountContractData(interacETransferAccountContractData);
+        return paymentAccountContractData.build();
     }
 }

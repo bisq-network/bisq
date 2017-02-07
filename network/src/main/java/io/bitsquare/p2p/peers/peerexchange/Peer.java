@@ -3,6 +3,7 @@ package io.bitsquare.p2p.peers.peerexchange;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 
 import java.util.Date;
@@ -52,5 +53,11 @@ public final class Peer implements Payload, Persistable {
                 "address=" + nodeAddress +
                 ", date=" + date +
                 '}';
+    }
+
+    @Override
+    public Object toProtoBuf() {
+        return Messages.Peer.newBuilder().setNodeAddress(nodeAddress.toProtoBuf())
+                .setDate(date.getTime()).build();
     }
 }

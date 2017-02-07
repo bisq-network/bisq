@@ -18,6 +18,7 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 
 public final class CryptoCurrencyAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -50,5 +51,18 @@ public final class CryptoCurrencyAccountContractData extends PaymentAccountContr
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.CryptoCurrencyAccountContractData.Builder cryptoCurrencyAccountContractData =
+                Messages.CryptoCurrencyAccountContractData.newBuilder().setAddress(address);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setCryptoCurrencyAccountContractData(cryptoCurrencyAccountContractData);
+        return paymentAccountContractData.build();
     }
 }

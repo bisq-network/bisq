@@ -18,6 +18,7 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.locale.CountryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,5 +97,27 @@ public final class SepaAccountContractData extends CountryBasedPaymentAccountCon
                 "IBAN: " + iban + "\n" +
                 "BIC: " + bic + "\n" +
                 "Country of bank: " + CountryUtil.getNameAndCode(getCountryCode());
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.SepaAccountContractData.Builder sepaAccountContractData =
+                Messages.SepaAccountContractData.newBuilder()
+                        .setHolderName(holderName)
+                        .setIban(iban)
+                        .setBic(bic)
+                        .addAllAcceptedCountryCodes(acceptedCountryCodes);
+        Messages.CountryBasedPaymentAccountContractData.Builder countryBasedPaymentAccountContractData =
+                Messages.CountryBasedPaymentAccountContractData.newBuilder()
+                        .setCountryCode(countryCode)
+                        .setSepaAccountContractData(sepaAccountContractData);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
+
+        return paymentAccountContractData.build();
     }
 }

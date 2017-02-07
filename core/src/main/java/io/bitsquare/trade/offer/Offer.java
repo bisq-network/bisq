@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.offer;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.Restrictions;
@@ -28,6 +29,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.common.util.MathUtils;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
@@ -53,6 +55,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -124,11 +127,11 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     //TODO add support for altcoin price or fix precision issue
     private final long fiatPrice;
 
-    // Distance form market price if percentage based price is used (usePercentageBasedPrice = true), otherwise 0. 
+    // Distance form market price if percentage based price is used (usePercentageBasedPrice = true), otherwise 0.
     // E.g. 0.1 -> 10%. Can be negative as well. Depending on direction the marketPriceMargin is above or below the market price.
-    // Positive values is always the usual case where you want a better price as the market. 
-    // E.g. Buy offer with market price 400.- leads to a 360.- price. 
-    // Sell offer with market price 400.- leads to a 440.- price. 
+    // Positive values is always the usual case where you want a better price as the market.
+    // E.g. Buy offer with market price 400.- leads to a 360.- price.
+    // Sell offer with market price 400.- leads to a 440.- price.
     private final double marketPriceMargin;
 
     private final long amount;
@@ -165,7 +168,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
     @JsonExclude
     transient private State state = State.UNDEFINED;
-    // Those state properties are transient and only used at runtime! 
+    // Those state properties are transient and only used at runtime!
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
     @JsonExclude
     transient private ObjectProperty<State> stateProperty = new SimpleObjectProperty<>(state);
@@ -476,7 +479,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         double factor = (double) takersTradePrice / (double) offerPriceAsFiat.value;
         // We allow max. 2 % difference between own offer price calculation and takers calculation.
         // Market price might be different at offerer's and takers side so we need a bit of tolerance.
-        // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations 
+        // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations
         // from one provider.
         if (Math.abs(1 - factor) > 0.02) {
             String msg = "Taker's trade price is too far away from our calculated price based on the market price.\n" +
@@ -624,6 +627,48 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     public HashMap<String, String> getExtraDataMap() {
         return extraDataMap;
     }
+
+    @Override
+    public Messages.StoragePayload toProtoBuf() {
+        return Messages.StoragePayload.newBuilder().setOffer(Messages.Offer.newBuilder()
+                .setTTL(TTL)
+                .setDirectionValue(direction.ordinal())
+                .setCurrencyCode(currencyCode)
+                .setPaymentMethodName(paymentMethodName)
+                .setCountryCode(countryCode)
+                .addAllAcceptedCountryCodes(acceptedCountryCodes)
+                .setBankId(bankId)
+                .addAllAcceptedBankIds(getAcceptedBankIds())
+                .addAllArbitratorNodeAddresses(arbitratorNodeAddresses.stream()
+                        .map(nodeAddress -> nodeAddress.toProtoBuf()).collect(Collectors.toList()))
+                .setId(id)
+                .setDate(date)
+                .setProtocolVersion(protocolVersion)
+                .setUseMarketBasedPrice(useMarketBasedPrice)
+                .setFiatPrice(fiatPrice)
+                .setMarketPriceMargin(marketPriceMargin)
+                .setAmount(amount)
+                .setMinAmount(minAmount)
+                .setOffererNodeAddress(offererNodeAddress.toProtoBuf())
+                .setPubKeyRing(pubKeyRing.toProtoBuf())
+                .setOffererPaymentAccountId(offererPaymentAccountId)
+                .setOfferFeePaymentTxID(offerFeePaymentTxID)
+                .setVersionNr(versionNr)
+                .setBlockHeightAtOfferCreation(blockHeightAtOfferCreation)
+                .setTxFee(txFee)
+                .setCreateOfferFee(createOfferFee)
+                .setSecurityDeposit(securityDeposit)
+                .setMaxTradeLimit(maxTradeLimit)
+                .setMaxTradePeriod(maxTradePeriod)
+                .setUseAutoClose(useAutoClose)
+                .setUseReOpenAfterAutoClose(useReOpenAfterAutoClose)
+                .setLowerClosePrice(lowerClosePrice)
+                .setUpperClosePrice(upperClosePrice)
+                .setIsPrivateOffer(isPrivateOffer)
+                .setHashOfChallenge(hashOfChallenge)
+                .putAllExtraDataMap(extraDataMap)).build();
+    }
+
 
     //TODO update with new properties
     @Override

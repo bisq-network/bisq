@@ -18,6 +18,7 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 
 public final class ClearXchangeAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -55,5 +56,20 @@ public final class ClearXchangeAccountContractData extends PaymentAccountContrac
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Email or mobile no.: " + emailOrMobileNr;
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.ClearXchangeAccountContractData.Builder thisClass =
+                Messages.ClearXchangeAccountContractData.newBuilder()
+                        .setHolderName(holderName)
+                        .setEmailOrMobileNr(emailOrMobileNr);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setClearXchangeAccountContractData(thisClass);
+        return paymentAccountContractData.build();
     }
 }

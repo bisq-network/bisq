@@ -1,8 +1,10 @@
 package io.bitsquare.p2p.mocks;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.storage.payload.ExpirablePayload;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public final class MockPayload implements Message, ExpirablePayload {
     public final String msg;
@@ -16,6 +18,11 @@ public final class MockPayload implements Message, ExpirablePayload {
     @Override
     public int getMessageVersion() {
         return messageVersion;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        throw new NotImplementedException();
     }
 
     @Override
@@ -45,4 +52,5 @@ public final class MockPayload implements Message, ExpirablePayload {
     public long getTTL() {
         return ttl;
     }
+
 }

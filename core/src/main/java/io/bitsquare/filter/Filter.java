@@ -17,8 +17,10 @@
 
 package io.bitsquare.filter;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +34,9 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public final class Filter implements StoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -90,6 +94,21 @@ public final class Filter implements StoragePayload {
     @Override
     public PublicKey getOwnerPubKey() {
         return publicKey;
+    }
+
+
+    @Override
+    public Messages.StoragePayload toProtoBuf() {
+        List<Messages.PaymentAccountFilter> paymentAccountFilterList;
+        paymentAccountFilterList = bannedPaymentAccounts.stream()
+                .map(paymentAccountFilter -> paymentAccountFilter.toProtoBuf()).collect(Collectors.toList());
+        return Messages.StoragePayload.newBuilder().setFilter(Messages.Filter.newBuilder()
+                .setTTL(TTL)
+                .addAllBannedNodeAddress(bannedNodeAddress)
+                .addAllBannedOfferIds(bannedOfferIds)
+                .addAllBannedPaymentAccounts(paymentAccountFilterList)
+                .setSignatureAsBase64(signatureAsBase64)
+                .setPublicKeyBytes(ByteString.copyFrom(publicKeyBytes))).build();
     }
 
 

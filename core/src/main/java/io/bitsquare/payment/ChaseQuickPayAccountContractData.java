@@ -18,6 +18,7 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 
 public final class ChaseQuickPayAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -55,5 +56,20 @@ public final class ChaseQuickPayAccountContractData extends PaymentAccountContra
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Email: " + email;
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.ChaseQuickPayAccountContractData.Builder chaseQuickPayAccountContractData =
+                Messages.ChaseQuickPayAccountContractData.newBuilder()
+                        .setEmail(email)
+                        .setHolderName(holderName);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setChaseQuickPayAccountContractData(chaseQuickPayAccountContractData);
+        return paymentAccountContractData.build();
     }
 }

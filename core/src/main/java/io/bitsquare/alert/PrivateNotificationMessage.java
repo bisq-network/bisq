@@ -1,7 +1,9 @@
 package io.bitsquare.alert;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,16 @@ public class PrivateNotificationMessage implements MailboxMessage {
     @Override
     public int getMessageVersion() {
         return messageVersion;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        return baseEnvelope.setPrivateNotificationMessage(baseEnvelope.getPrivateNotificationMessageBuilder()
+                .setMessageVersion(messageVersion)
+                .setUid(uid)
+                .setMyNodeAddress(myNodeAddress.toProtoBuf())
+                .setPrivateNotification(privateNotification.toProtoBuf())).build();
     }
 
     @Override

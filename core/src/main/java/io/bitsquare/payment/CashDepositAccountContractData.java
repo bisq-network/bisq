@@ -18,8 +18,10 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.locale.BankUtil;
 import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +74,31 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
                 holderIdString +
                 requirementsString +
                 "Country of bank: " + CountryUtil.getNameAndCode(getCountryCode());
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.CashDepositAccountContractData.Builder cashDepositAccountContractData =
+                Messages.CashDepositAccountContractData.newBuilder()
+                        .setHolderName(holderName)
+                        .setHolderEmail(holderEmail)
+                        .setBankName(bankName)
+                        .setBankId(bankId)
+                        .setBranchId(branchId)
+                        .setAccountNr(accountNr)
+                        .setRequirements(requirements)
+                        .setHolderTaxId(holderTaxId);
+        Messages.CountryBasedPaymentAccountContractData.Builder countryBasedPaymentAccountContractData =
+                Messages.CountryBasedPaymentAccountContractData.newBuilder()
+                        .setCountryCode(countryCode)
+                        .setCashDepositAccountContractData(cashDepositAccountContractData);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
+        return paymentAccountContractData.build();
     }
 
 

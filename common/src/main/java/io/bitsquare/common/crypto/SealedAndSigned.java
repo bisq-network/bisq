@@ -17,8 +17,10 @@
 
 package io.bitsquare.common.crypto;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,13 +53,13 @@ public final class SealedAndSigned implements Payload {
     }
 
     public SealedAndSigned(byte[] encryptedSecretKey, byte[] encryptedPayloadWithHmac, byte[] signature, byte[] sigPublicKeyBytes) {
-        this(encryptedSecretKey, encryptedPayloadWithHmac, signature, SealedAndSigned.createSigPublicKey(sigPublicKeyBytes));
+        this(encryptedSecretKey, encryptedPayloadWithHmac, signature, SealedAndSigned.init(sigPublicKeyBytes));
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            sigPublicKey = createSigPublicKey(sigPublicKeyBytes);
+            sigPublicKey = init(sigPublicKeyBytes);
         } catch (Throwable t) {
             log.warn("Exception at readObject: " + t.getMessage());
         }
@@ -67,7 +69,7 @@ public final class SealedAndSigned implements Payload {
      * We have the bytes, now recreate the sigPublicKey. This happens when receiving this class over the wire,
      * because the public key is transient.
      */
-    static PublicKey createSigPublicKey(byte[] sigPublicKeyBytes)  {
+    static PublicKey init(byte[] sigPublicKeyBytes)  {
         PublicKey publicKey = null;
         try {
             publicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
@@ -76,6 +78,14 @@ public final class SealedAndSigned implements Payload {
             log.error("Error creating sigPublicKey", e);
         }
         return publicKey;
+    }
+
+
+    public Messages.SealedAndSigned toProtoBuf() {
+        return Messages.SealedAndSigned.newBuilder().setEncryptedSecretKey(ByteString.copyFrom(encryptedSecretKey))
+                .setEncryptedPayloadWithHmac(ByteString.copyFrom(encryptedPayloadWithHmac))
+                .setSignature(ByteString.copyFrom(signature)).setSigPublicKeyBytes(ByteString.copyFrom(sigPublicKeyBytes))
+                .build();
     }
 
     @Override
@@ -100,4 +110,5 @@ public final class SealedAndSigned implements Payload {
         result = 31 * result + (sigPublicKey != null ? sigPublicKey.hashCode() : 0);
         return result;
     }
+
 }

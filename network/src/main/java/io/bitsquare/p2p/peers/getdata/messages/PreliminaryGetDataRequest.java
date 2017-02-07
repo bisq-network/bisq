@@ -59,7 +59,7 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
                 '}';
     }
 
-    //@Override
+    @Override
     public Messages.Envelope toProtoBuf() {
         Messages.Envelope.Builder envelopeBuilder = Messages.Envelope.newBuilder().setP2PNetworkVersion(Version.P2P_NETWORK_VERSION);
         Messages.PreliminaryGetDataRequest.Builder msgBuilder = envelopeBuilder.getPreliminaryGetDataRequestBuilder()
@@ -69,4 +69,5 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
         msgBuilder.addAllExcludedKeys(excludedKeys.stream().map(ByteString::copyFrom).collect(Collectors.toList()));
         return envelopeBuilder.setPreliminaryGetDataRequest(msgBuilder).build();
     }
+
 }

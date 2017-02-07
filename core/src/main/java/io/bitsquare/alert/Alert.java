@@ -17,8 +17,10 @@
 
 package io.bitsquare.alert;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +83,7 @@ public final class Alert implements StoragePayload {
     }
 
     public boolean isNewVersion() {
-        // Usually we use 3 digits (0.4.8) but to support also 4 digits in case of hotfixes (0.4.8.1) we 
+        // Usually we use 3 digits (0.4.8) but to support also 4 digits in case of hotfixes (0.4.8.1) we
         // add a 0 at all 3 digit versions to allow correct comparison: 0.4.8 -> 480; 0.4.8.1 -> 481; 481 > 480
         String myVersionString = Version.VERSION.replace(".", "");
         if (myVersionString.length() == 3)
@@ -103,6 +105,16 @@ public final class Alert implements StoragePayload {
     @Override
     public PublicKey getOwnerPubKey() {
         return storagePublicKey;
+    }
+
+    @Override
+    public Messages.StoragePayload toProtoBuf() {
+        return Messages.StoragePayload.newBuilder().setAlert(Messages.Alert.newBuilder().setTTL(TTL)
+                .setMessage(message)
+                .setVersion(version)
+                .setIsUpdateInfo(isUpdateInfo)
+                .setSignatureAsBase64(signatureAsBase64)
+                .setStoragePublicKeyBytes(ByteString.copyFrom(storagePublicKeyBytes))).build();
     }
 
     @Override

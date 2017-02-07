@@ -2,12 +2,15 @@ package io.bitsquare.p2p.peers.getdata.messages;
 
 import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 public final class GetDataResponse implements SupportedCapabilitiesMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -36,6 +39,17 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage {
     @Override
     public int getMessageVersion() {
         return messageVersion;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.GetDataResponse.Builder builder = Messages.GetDataResponse.newBuilder();
+        builder.addAllDataSet(
+                dataSet.stream()
+                        .map(protectedStorageEntry -> protectedStorageEntry.toProtoBuf()).collect(Collectors.toList()))
+                .setRequestNonce(requestNonce)
+                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
+        return Messages.Envelope.newBuilder().setGetDataResponse(builder).build();
     }
 
     @Override

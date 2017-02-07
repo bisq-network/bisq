@@ -17,8 +17,10 @@
 
 package io.bitsquare.btc.data;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 
 import java.util.Arrays;
 
@@ -64,5 +66,12 @@ public final class RawTransactionInput implements Payload {
                 ", parentTransaction=" + Arrays.toString(parentTransaction) +
                 ", value=" + value +
                 '}';
+    }
+
+    @Override
+    public Messages.RawTransactionInput toProtoBuf() {
+        return Messages.RawTransactionInput.newBuilder().setIndex(index)
+                .setParentTransaction(ByteString.copyFrom(parentTransaction))
+                .setValue(value).build();
     }
 }

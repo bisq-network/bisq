@@ -18,14 +18,16 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.UUID;
 
 @Immutable
-    public final class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
+public final class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -87,5 +89,16 @@ import java.util.UUID;
                 ", senderNodeAddress=" + senderNodeAddress +
                 ", uid='" + uid + '\'' +
                 "} " + super.toString();
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        return baseEnvelope.setFiatTransferStartedMessage(baseEnvelope.getFiatTransferStartedMessageBuilder()
+                .setMessageVersion(getMessageVersion())
+                .setTradeId(tradeId)
+                .setBuyerPayoutAddress(buyerPayoutAddress)
+                .setSenderNodeAddress(senderNodeAddress.toProtoBuf())
+                .setUid(uid)).build();
     }
 }

@@ -18,6 +18,7 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,5 +35,32 @@ public final class NationalBankAccountContractData extends BankAccountContractDa
     @Override
     public String getPaymentDetails() {
         return "National Bank transfer - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.NationalBankAccountContractData.Builder thisClass =
+                Messages.NationalBankAccountContractData.newBuilder();
+        Messages.BankAccountContractData.Builder bankAccountContractData =
+                Messages.BankAccountContractData.newBuilder()
+                        .setHolderName(holderName)
+                        .setBankName(bankName)
+                        .setBankId(bankId)
+                        .setBranchId(branchId)
+                        .setAccountNr(accountNr)
+                        .setAccountType(accountType)
+                        .setHolderTaxId(holderTaxId)
+                        .setNationalBankAccountContractData(thisClass);
+        Messages.CountryBasedPaymentAccountContractData.Builder countryBasedPaymentAccountContractData =
+                Messages.CountryBasedPaymentAccountContractData.newBuilder()
+                        .setCountryCode(countryCode)
+                        .setBankAccountContractData(bankAccountContractData);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
+        return paymentAccountContractData.build();
     }
 }

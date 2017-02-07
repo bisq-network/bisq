@@ -18,6 +18,8 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.p2p.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,5 +37,33 @@ public final class SameBankAccountContractData extends BankAccountContractData {
     @Override
     public String getPaymentDetails() {
         return "Transfer with same Bank - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.SameBankAccountContractData sameBankAccountContractData =
+                Messages.SameBankAccountContractData.getDefaultInstance();
+        Messages.BankAccountContractData.Builder bankAccountContractData =
+                Messages.BankAccountContractData.newBuilder()
+                        .setHolderName(holderName)
+                        .setBankName(bankName)
+                        .setBankId(bankId)
+                        .setBranchId(branchId)
+                        .setAccountNr(accountNr)
+                        .setAccountType(accountType)
+                        .setHolderTaxId(holderTaxId)
+                        .setSameBankAccontContractData(sameBankAccountContractData);
+        Messages.CountryBasedPaymentAccountContractData.Builder countryBasedPaymentAccountContractData =
+                Messages.CountryBasedPaymentAccountContractData.newBuilder()
+                        .setCountryCode(countryCode)
+                        .setBankAccountContractData(bankAccountContractData);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
+
+        return paymentAccountContractData.build();
     }
 }

@@ -17,9 +17,11 @@
 
 package io.bitsquare.alert;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,5 +112,13 @@ public final class PrivateNotification implements Payload {
                 ", signatureAsBase64='" + signatureAsBase64 + '\'' +
                 ", publicKeyBytes=" + Arrays.toString(publicKeyBytes) +
                 '}';
+    }
+
+    @Override
+    public Messages.PrivateNotification toProtoBuf() {
+        return Messages.PrivateNotification.newBuilder()
+                .setMessage(message)
+                .setSignatureAsBase64(signatureAsBase64)
+                .setPublicKeyBytes(ByteString.copyFrom(publicKeyBytes)).build();
     }
 }

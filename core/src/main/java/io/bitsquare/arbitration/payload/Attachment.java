@@ -1,7 +1,9 @@
 package io.bitsquare.arbitration.payload;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,5 +55,11 @@ public final class Attachment implements Payload {
                 "description=" + fileName +
                 ", data=" + Arrays.toString(bytes) +
                 '}';
+    }
+
+    @Override
+    public Messages.Attachment toProtoBuf() {
+        return Messages.Attachment.newBuilder().setBytes(ByteString.copyFrom(bytes))
+                .setFileName(fileName).build();
     }
 }

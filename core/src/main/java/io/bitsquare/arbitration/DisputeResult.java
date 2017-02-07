@@ -17,9 +17,11 @@
 
 package io.bitsquare.arbitration;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -36,6 +38,29 @@ public final class DisputeResult implements Payload {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(DisputeResult.class);
 
+    @Override
+    public Messages.DisputeResult toProtoBuf() {
+        return Messages.DisputeResult.newBuilder()
+                .setTradeId(tradeId)
+                .setTraderId(traderId)
+                .setDisputeFeePolicy(Messages.DisputeResult.DisputeFeePolicy.forNumber(disputeFeePolicy.ordinal()))
+                .setWinner(Messages.DisputeResult.Winner.forNumber(winner.ordinal()))
+                .setReasonOrdinal(reasonOrdinal)
+                .setTamperProofEvidence(tamperProofEvidence)
+                .setIdVerification(idVerification)
+                .setScreenCast(screenCast)
+                .setSummaryNotes(summaryNotes)
+                .setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoBuf().getDisputeCommunicationMessage())
+                .setArbitratorSignature(ByteString.copyFrom(arbitratorSignature))
+                .setBuyerPayoutAmount(buyerPayoutAmount)
+                .setSellerPayoutAmount(sellerPayoutAmount)
+                .setArbitratorPayoutAmount(arbitratorPayoutAmount)
+                .setArbitratorAddressAsstring(arbitratorAddressAsString)
+                .setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey))
+                .setCloseDate(closeDate)
+                .setIsLoserPublisher(isLoserPublisher).build();
+    }
+
     public enum DisputeFeePolicy {
         LOSER,
         SPLIT,
@@ -50,10 +75,10 @@ public final class DisputeResult implements Payload {
 
     // only append new values as we use the ordinal value
     public enum Reason {
+        OTHER,
         BUG,
         USABILITY,
         SCAM,
-        OTHER,
         PROTOCOL_VIOLATION,
         NO_REPLY
     }

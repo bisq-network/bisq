@@ -19,6 +19,7 @@ package io.bitsquare.payment;
 
 import com.google.common.base.Joiner;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,5 +63,33 @@ public final class SpecificBanksAccountContractData extends BankAccountContractD
     public String getPaymentDetailsForTradePopup() {
         return super.getPaymentDetailsForTradePopup() + "\n" +
                 "Accepted banks: " + Joiner.on(", ").join(acceptedBanks);
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.SpecificBanksAccountContractData.Builder specificBanksAccountContractData =
+                Messages.SpecificBanksAccountContractData.newBuilder().addAllAcceptedBanks(acceptedBanks);
+        Messages.BankAccountContractData.Builder bankAccountContractData =
+                Messages.BankAccountContractData.newBuilder()
+                        .setHolderName(holderName)
+                        .setBankName(bankName)
+                        .setBankId(bankId)
+                        .setBranchId(branchId)
+                        .setAccountNr(accountNr)
+                        .setAccountType(accountType)
+                        .setHolderTaxId(holderTaxId)
+                        .setSpecificBanksAccountContractData(specificBanksAccountContractData);
+        Messages.CountryBasedPaymentAccountContractData.Builder countryBasedPaymentAccountContractData =
+                Messages.CountryBasedPaymentAccountContractData.newBuilder()
+                        .setCountryCode(countryCode)
+                        .setBankAccountContractData(bankAccountContractData);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
+
+        return paymentAccountContractData.build();
     }
 }

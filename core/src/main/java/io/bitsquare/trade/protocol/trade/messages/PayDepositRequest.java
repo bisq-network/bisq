@@ -17,10 +17,13 @@
 
 package io.bitsquare.trade.protocol.trade.messages;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.payment.PaymentAccountContractData;
 import org.bitcoinj.core.Coin;
@@ -29,6 +32,7 @@ import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Immutable
 public final class PayDepositRequest extends TradeMessage implements MailboxMessage {
@@ -153,5 +157,29 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        return baseEnvelope.setPayDepositRequest(Messages.PayDepositRequest.newBuilder()
+                .setTradeId(tradeId)
+                .setTradeAmount(tradeAmount)
+                .setTradePrice(tradePrice)
+                .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
+                .setTxFee(Messages.Coin.newBuilder().setValue(txFee.getValue()))
+                .setTakeOfferFee(Messages.Coin.newBuilder().setValue(takeOfferFee.getValue()))
+                .addAllRawTransactionInputs(rawTransactionInputs.stream().map(rawTransactionInput -> rawTransactionInput.toProtoBuf()).collect(Collectors.toList()))
+                .setChangeOutputValue(changeOutputValue)
+                .setChangeOutputAddress(changeOutputAddress)
+                .setTakerPayoutAddressString(takerPayoutAddressString)
+                .setTakerPubKeyRing(takerPubKeyRing.toProtoBuf())
+                .setTakerPaymentAccountContractData(takerPaymentAccountContractData.toProtoBuf())
+                .setTakerAccountId(takerAccountId)
+                .setTakeOfferFeeTxId(takeOfferFeeTxId)
+                .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream().map(nodeAddress -> nodeAddress.toProtoBuf()).collect(Collectors.toList()))
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoBuf())
+                .setSenderNodeAddress(senderNodeAddress.toProtoBuf())
+                .setUid(uid)).build();
     }
 }

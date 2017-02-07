@@ -17,8 +17,10 @@
 
 package io.bitsquare.common.crypto;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,4 +116,10 @@ public final class PubKeyRing implements Payload {
                 '}';
     }
 
+    @Override
+    public Messages.PubKeyRing toProtoBuf() {
+        return Messages.PubKeyRing.newBuilder().setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
+                .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes)).build();
+
+    }
 }

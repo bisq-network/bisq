@@ -1,7 +1,9 @@
 package io.bitsquare.p2p.messaging;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.SealedAndSigned;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 
@@ -46,6 +48,16 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
     @Override
     public int getMessageVersion() {
         return messageVersion;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        return Messages.Envelope.newBuilder().setPrefixedSealedAndSignedMessage(
+                Messages.PrefixedSealedAndSignedMessage.newBuilder()
+                        .setMessageVersion(messageVersion).setNodeAddress(senderNodeAddress.toProtoBuf())
+                        .setSealedAndSigned(sealedAndSigned.toProtoBuf())
+                        .setAddressPrefixHash(ByteString.copyFrom(addressPrefixHash))
+                        .setUid(uid)).build();
     }
 
     @Override

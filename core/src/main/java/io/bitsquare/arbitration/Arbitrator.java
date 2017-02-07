@@ -17,8 +17,10 @@
 
 package io.bitsquare.arbitration;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
 
@@ -109,6 +111,22 @@ public final class Arbitrator implements StoragePayload {
     public byte[] getRegistrationPubKey() {
         return registrationPubKey;
     }
+
+
+    @Override
+    public Messages.StoragePayload toProtoBuf() {
+        return Messages.StoragePayload.newBuilder().setArbitrator(Messages.Arbitrator.newBuilder()
+                .setTTL(TTL)
+                .setBtcPubKey(ByteString.copyFrom(btcPubKey))
+                .setPubKeyRing((Messages.PubKeyRing) pubKeyRing.toProtoBuf())
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoBuf())
+                .addAllLanguageCodes(languageCodes)
+                .setBtcAddress(btcAddress)
+                .setRegistrationDate(registrationDate)
+                .setRegistrationSignature(registrationSignature)
+                .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey))).build();
+    }
+
 
     @Override
     public boolean equals(Object o) {

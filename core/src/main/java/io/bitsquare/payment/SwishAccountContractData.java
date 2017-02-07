@@ -18,6 +18,7 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 
 public final class SwishAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -62,5 +63,20 @@ public final class SwishAccountContractData extends PaymentAccountContractData {
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Mobile no.: " + mobileNr;
+    }
+
+    @Override
+    public Messages.PaymentAccountContractData toProtoBuf() {
+        Messages.SwishAccountContractData.Builder thisClass =
+                Messages.SwishAccountContractData.newBuilder()
+                        .setMobileNr(mobileNr)
+                        .setHolderName(holderName);
+        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
+                Messages.PaymentAccountContractData.newBuilder()
+                        .setId(id)
+                        .setPaymentMethodName(paymentMethodName)
+                        .setMaxTradePeriod(maxTradePeriod)
+                        .setSwishAccountContractData(thisClass);
+        return paymentAccountContractData.build();
     }
 }

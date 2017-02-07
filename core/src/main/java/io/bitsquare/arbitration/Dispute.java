@@ -17,10 +17,13 @@
 
 package io.bitsquare.arbitration;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.p2p.Message;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Contract;
 import javafx.beans.property.*;
@@ -37,6 +40,7 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @Slf4j
 @EqualsAndHashCode
@@ -329,5 +333,32 @@ public final class Dispute implements Payload {
                 ", isClosedProperty=" + isClosedProperty +
                 ", disputeResultProperty=" + disputeResultProperty +
                 '}';
+    }
+
+    @Override
+    public Messages.Dispute toProtoBuf() {
+        return Messages.Dispute.newBuilder().setTradeId(tradeId)
+                .setId(id)
+                .setTraderId(traderId)
+                .setDisputeOpenerIsBuyer(disputeOpenerIsBuyer)
+                .setDisputeOpenerIsOfferer(disputeOpenerIsOfferer)
+                .setOpeningDate(openingDate)
+                .setTraderPubKeyRing(traderPubKeyRing.toProtoBuf())
+                .setTradeDate(tradeDate)
+                .setContract(contract.toProtoBuf())
+                .setContractHash(ByteString.copyFrom(contractHash))
+                .setDepositTxSerialized(ByteString.copyFrom(depositTxSerialized))
+                .setPayoutTxId(payoutTxId)
+                .setDepositTxId(depositTxId)
+                .setPayoutTxId(payoutTxId)
+                .setContractAsJson(contractAsJson)
+                .setOffererContractSignature(offererContractSignature)
+                .setTakerContractSignature(takerContractSignature)
+                .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoBuf())
+                .setIsSupportTicket(isSupportTicket)
+                .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream().map(disputeCommunicationMessage -> disputeCommunicationMessage.toProtoBuf().getDisputeCommunicationMessage()).collect(Collectors.toList()))
+                .setIsClosed(isClosed)
+                .setDisputeResult((Messages.DisputeResult) disputeResult.toProtoBuf())
+                .setDisputePayoutTxId(disputePayoutTxId).build();
     }
 }

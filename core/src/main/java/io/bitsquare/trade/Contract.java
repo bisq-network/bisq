@@ -17,10 +17,12 @@
 
 package io.bitsquare.trade;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.offer.Offer;
@@ -256,5 +258,24 @@ public final class Contract implements Payload {
                 "\n\toffererBtcPubKey=" + Arrays.toString(offererBtcPubKey) +
                 "\n\ttakerBtcPubKey=" + Arrays.toString(takerBtcPubKey) +
                 '}';
+    }
+
+    @Override
+    public Messages.Contract toProtoBuf() {
+        return Messages.Contract.newBuilder()
+                .setOffer(offer.toProtoBuf().getOffer())
+                .setTradeAmount(tradeAmount)
+                .setTradePrice(tradePrice)
+                .setTakeOfferFeeTxId(takeOfferFeeTxID)
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoBuf())
+                .setTakerPaymentAccountContractData((Messages.PaymentAccountContractData) takerPaymentAccountContractData.toProtoBuf())
+                .setOffererPubKeyRing(offererPubKeyRing.toProtoBuf())
+                .setTakerPubKeyRing(takerPubKeyRing.toProtoBuf())
+                .setBuyerNodeAddress(buyerNodeAddress.toProtoBuf())
+                .setSellerNodeAddress(sellerNodeAddress.toProtoBuf())
+                .setOffererPayoutAddressstring(offererPayoutAddressString)
+                .setTakerPayoutAddressstring(takerPayoutAddressString)
+                .setOffererBtcPubKey(ByteString.copyFrom(offererBtcPubKey))
+                .setTakerBtcPubKey(ByteString.copyFrom(takerBtcPubKey)).build();
     }
 }
