@@ -139,7 +139,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
-        offerId = Utilities.getRandomPrefix(6, 12) + "-" +
+        offerId = Utilities.getRandomPrefix(5, 8) + "-" +
                 UUID.randomUUID().toString() + "-" +
                 Version.VERSION.replace(".", "");
         shortOfferId = Utilities.getShortId(offerId);
