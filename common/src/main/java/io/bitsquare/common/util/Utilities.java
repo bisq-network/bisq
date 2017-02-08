@@ -452,7 +452,7 @@ public class Utilities {
     }
 
     public static String getShortId(String id) {
-        return getShortId(id, "_");
+        return getShortId(id, "-");
     }
 
     public static String getShortId(String id, String sep) {
