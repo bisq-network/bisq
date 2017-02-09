@@ -62,7 +62,7 @@ public final class InteracETransferValidator extends InputValidator {
     private ValidationResult validatePhoneNumber(String input) {
 
         // check for correct format and strip +, space and -
-        if (input.matches("\\+?1 ?\\d\\d\\d ?\\d\\d\\d-?\\d\\d\\d\\d")) {
+        if (input.matches("\\+?1[ -]?\\d{3}[ -]?\\d{3}[ -]?\\d{4}")) {
             input = input.replace("+", "");
             input = input.replace(" ", "");
             input = input.replace("-", "");
