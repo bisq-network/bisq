@@ -252,7 +252,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public String getReference() {
-        return getOffer() != null ? getOffer().getReferenceText() : "";
+        return getOffer() != null ? getOffer().getShortId() : "";
     }
 
 

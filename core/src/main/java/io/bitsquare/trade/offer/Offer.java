@@ -28,6 +28,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.common.util.MathUtils;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
@@ -276,10 +277,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return getVolumeByAmount(getMinAmount());
     }
 
-    public String getReferenceText() {
-        return getId().substring(0, Math.min(8, getId().length()));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Availability
@@ -352,7 +349,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public String getShortId() {
-        return getId().substring(0, Math.min(8, getId().length()));
+        return Utilities.getShortId(id);
     }
 
     public NodeAddress getOffererNodeAddress() {

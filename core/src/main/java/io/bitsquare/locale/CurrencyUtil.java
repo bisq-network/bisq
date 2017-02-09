@@ -137,6 +137,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
         result.add(new CryptoCurrency("JBS", "Jumbucks"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
+        result.add(new CryptoCurrency("LTBC", "LTBcoin"));
         result.add(new CryptoCurrency("LSK", "Lisk"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
@@ -159,6 +160,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("PASC", "Pascal Coin"));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("PINK", "Pinkcoin"));
+        result.add(new CryptoCurrency("PIVX", "PIVX"));
         result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
         result.add(new CryptoCurrency("PLU", "Plutons", true));
         result.add(new CryptoCurrency("POST", "PostCoin"));
@@ -168,6 +170,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("REALEST", "RealEst. Coin"));
         result.add(new CryptoCurrency("RDD", "ReddCoin"));
         result.add(new CryptoCurrency("XRP", "Ripple"));
+        result.add(new CryptoCurrency("SFSC", "Safe FileSystem Coin"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("SDC", "ShadowCash"));
         result.add(new CryptoCurrency("SHIFT", "Shift"));

@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.disputes;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
+import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
@@ -51,6 +52,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
+    private DisputeManager disputeManager;
     private final KeyRing keyRing;
     private Preferences preferences;
 
@@ -59,14 +61,15 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private Tab currentTab;
     private final ViewLoader viewLoader;
     private MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;
-    private boolean isArbitrator;
 
     @Inject
-    public DisputesView(CachingViewLoader viewLoader, Navigation navigation, ArbitratorManager arbitratorManager,
+    public DisputesView(CachingViewLoader viewLoader, Navigation navigation,
+                        ArbitratorManager arbitratorManager, DisputeManager disputeManager,
                         KeyRing keyRing, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
+        this.disputeManager = disputeManager;
         this.keyRing = keyRing;
 
 
@@ -92,11 +95,15 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     }
 
     private void updateArbitratorsDisputesTabDisableState() {
-        isArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
+        boolean isActiveArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
                 .filter(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()))
                 .findAny().isPresent();
 
-        if (arbitratorsDisputesTab == null && isArbitrator) {
+        boolean hasDisputesAsArbitrator = disputeManager.getDisputesAsObservableList().stream()
+                .filter(d -> d.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()))
+                .findAny().isPresent();
+
+        if (arbitratorsDisputesTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {
             arbitratorsDisputesTab = new Tab("Arbitrator's support tickets");
             arbitratorsDisputesTab.setClosable(false);
             root.getTabs().add(arbitratorsDisputesTab);

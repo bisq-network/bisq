@@ -238,7 +238,7 @@ public class TradeWalletService {
 
         verifyTransaction(dummyTX);
 
-        printTxWithInputs("dummyTX", dummyTX);
+        //printTxWithInputs("dummyTX", dummyTX);
 
         List<RawTransactionInput> rawTransactionInputList = dummyTX.getInputs().stream()
                 .map(e -> {
@@ -407,7 +407,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedDepositTx);
 
-        printTxWithInputs("preparedDepositTx", preparedDepositTx);
+        //printTxWithInputs("preparedDepositTx", preparedDepositTx);
 
         return new PreparedDepositTxAndOffererInputs(offererRawTransactionInputs, preparedDepositTx.bitcoinSerialize());
     }
@@ -429,14 +429,14 @@ public class TradeWalletService {
      * @throws WalletException
      */
     public Transaction takerSignsAndPublishesDepositTx(boolean takerIsSeller,
-                                                byte[] contractHash,
-                                                byte[] offerersDepositTxSerialized,
-                                                List<RawTransactionInput> buyerInputs,
-                                                List<RawTransactionInput> sellerInputs,
-                                                byte[] buyerPubKey,
-                                                byte[] sellerPubKey,
-                                                byte[] arbitratorPubKey,
-                                                FutureCallback<Transaction> callback) throws SigningException, TransactionVerificationException,
+                                                       byte[] contractHash,
+                                                       byte[] offerersDepositTxSerialized,
+                                                       List<RawTransactionInput> buyerInputs,
+                                                       List<RawTransactionInput> sellerInputs,
+                                                       byte[] buyerPubKey,
+                                                       byte[] sellerPubKey,
+                                                       byte[] arbitratorPubKey,
+                                                       FutureCallback<Transaction> callback) throws SigningException, TransactionVerificationException,
             WalletException {
         Transaction offerersDepositTx = new Transaction(params, offerersDepositTxSerialized);
 
@@ -493,7 +493,7 @@ public class TradeWalletService {
 
         // Add all outputs from offerersDepositTx to depositTx
         offerersDepositTx.getOutputs().forEach(depositTx::addOutput);
-        printTxWithInputs("offerersDepositTx", offerersDepositTx);
+        //printTxWithInputs("offerersDepositTx", offerersDepositTx);
 
         // Sign inputs 
         int start = takerIsSeller ? buyerInputs.size() : 0;
@@ -577,7 +577,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedPayoutTx);
 
-        printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
+        //printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
 
         return sellerSignature.encodeToDER();
     }
@@ -732,7 +732,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedPayoutTx);
 
-        printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
+        //printTxWithInputs("preparedPayoutTx", preparedPayoutTx);
 
         return arbitratorSignature.encodeToDER();
     }
@@ -1122,7 +1122,11 @@ public class TradeWalletService {
     }
 
     private static void printTxWithInputs(String tracePrefix, Transaction tx) {
-        log.info(tracePrefix + ": " + tx.toString());
+        long fee = tx.getFee() != null ? tx.getFee().value : 0;
+        int size = tx.getMessageSize();
+        log.info(tracePrefix + ": " + tx.toString() + "\nSize (Byte): " + size + "\nFee (Satoshi/Byte): "
+                + (fee / size));
+        
         for (TransactionInput input : tx.getInputs()) {
             if (input.getConnectedOutput() != null)
                 log.info(tracePrefix + " input value: " + input.getConnectedOutput().getValue().toFriendlyString());

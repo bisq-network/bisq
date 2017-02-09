@@ -19,6 +19,7 @@ package io.bitsquare.btc;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
+import io.bitsquare.common.util.Utilities;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
@@ -136,7 +137,7 @@ public final class AddressEntry implements Persistable {
     // For display we usually only display the first 8 characters.
     @Nullable
     public String getShortOfferId() {
-        return getOfferId() != null ? getOfferId().substring(0, Math.min(8, getOfferId().length())) : null;
+        return offerId != null ? Utilities.getShortId(offerId) : null;
     }
 
     public Context getContext() {
