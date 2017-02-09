@@ -19,10 +19,12 @@ package io.bitsquare.filter;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.bitsquare.app.AppOptionKeys;
+import io.bitsquare.messages.app.AppOptionKeys;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.messages.filter.payload.Filter;
+import io.bitsquare.messages.filter.payload.PaymentAccountFilter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;

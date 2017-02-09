@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.btc.wallet.BtcWalletService;
@@ -26,17 +26,17 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.taskrunner.Model;
 import io.bitsquare.filter.FilterManager;
-import io.bitsquare.filter.PaymentAccountFilter;
+import io.bitsquare.messages.filter.payload.PaymentAccountFilter;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccount;
-import io.bitsquare.payment.PaymentAccountContractData;
+import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
 import io.bitsquare.user.User;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;

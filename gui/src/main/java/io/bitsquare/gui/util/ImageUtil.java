@@ -18,7 +18,7 @@
 package io.bitsquare.gui.util;
 
 import com.sun.javafx.tk.quantum.QuantumToolkit;
-import io.bitsquare.locale.Country;
+import io.bitsquare.messages.locale.Country;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import org.slf4j.Logger;

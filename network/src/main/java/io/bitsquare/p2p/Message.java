@@ -2,6 +2,7 @@ package io.bitsquare.p2p;
 
 import com.google.protobuf.ByteString;
 import io.bitsquare.common.wire.proto.Messages;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.Serializable;
 import java.util.HashSet;

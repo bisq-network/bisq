@@ -1,10 +1,15 @@
 package io.bitsquare.gui.main.offer.offerbook;
 
-import io.bitsquare.locale.Country;
-import io.bitsquare.locale.CryptoCurrency;
-import io.bitsquare.locale.FiatCurrency;
+import io.bitsquare.messages.locale.Country;
+import io.bitsquare.messages.locale.CryptoCurrency;
+import io.bitsquare.messages.locale.FiatCurrency;
+import io.bitsquare.messages.payment.PaymentMethod;
+import io.bitsquare.messages.payment.payload.NationalBankAccountContractData;
+import io.bitsquare.messages.payment.payload.SameBankAccountContractData;
+import io.bitsquare.messages.payment.payload.SepaAccountContractData;
+import io.bitsquare.messages.payment.payload.SpecificBanksAccountContractData;
 import io.bitsquare.payment.*;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

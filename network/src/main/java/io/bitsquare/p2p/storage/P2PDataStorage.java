@@ -1,8 +1,8 @@
 package io.bitsquare.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
-import io.bitsquare.app.Log;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Log;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.CryptoException;

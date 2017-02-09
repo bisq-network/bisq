@@ -18,7 +18,7 @@
 package io.bitsquare.btc.data;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.common.wire.proto.Messages;
 
@@ -69,7 +69,7 @@ public final class RawTransactionInput implements Payload {
     }
 
     @Override
-    public Messages.RawTransactionInput toProtoBuf() {
+    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
         return Messages.RawTransactionInput.newBuilder().setIndex(index)
                 .setParentTransaction(ByteString.copyFrom(parentTransaction))
                 .setValue(value).build();

@@ -18,10 +18,11 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
+import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
@@ -103,7 +104,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
 
     @Override
     public Messages.Envelope toProtoBuf() {
-        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
         return baseEnvelope.setFinalizePayoutTxRequest(Messages.FinalizePayoutTxRequest.newBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.settings.about;
 
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;

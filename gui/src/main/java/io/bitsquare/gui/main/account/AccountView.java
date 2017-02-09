@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.messages.app.DevFlags;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
@@ -25,7 +25,7 @@ import io.bitsquare.gui.main.account.arbitratorregistration.ArbitratorRegistrati
 import io.bitsquare.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;

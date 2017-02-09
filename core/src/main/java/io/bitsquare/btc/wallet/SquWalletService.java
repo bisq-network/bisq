@@ -19,15 +19,15 @@ package io.bitsquare.btc.wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import io.bitsquare.btc.Restrictions;
+import io.bitsquare.messages.btc.Restrictions;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
-import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.dao.blockchain.SquBlockchainManager;
 import io.bitsquare.dao.blockchain.SquUTXO;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.CoinSelection;

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
-import io.bitsquare.app.Log;
+import io.bitsquare.messages.app.Log;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller.*;
 import org.fxmisc.easybind.EasyBind;

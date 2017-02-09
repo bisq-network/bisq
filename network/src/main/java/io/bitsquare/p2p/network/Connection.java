@@ -3,30 +3,20 @@ package io.bitsquare.p2p.network;
 import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Descriptors;
-import com.google.protobuf.InvalidProtocolBufferException;
-import io.bitsquare.app.Log;
-import io.bitsquare.app.Version;
-import io.bitsquare.common.ByteArrayUtils;
+import io.bitsquare.messages.app.Log;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.crypto.Util;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.io.LookAheadObjectInputStream;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.ProtoBufferMessage;
-import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
-import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.BanList;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataRequest;
 import io.bitsquare.p2p.peers.getdata.messages.GetDataResponse;
-import io.bitsquare.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bitsquare.p2p.peers.keepalive.messages.KeepAliveMessage;
 import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.p2p.peers.keepalive.messages.Pong;
@@ -56,7 +46,6 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bitsquare.p2p.ProtoBufferUtilities.*;
 
 /**
  * Connection is created by the server thread or by sendMessage from NetworkNode.
@@ -204,12 +193,7 @@ public class Connection implements MessageListener {
 
                     lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
-
-                    if (message instanceof ProtoBufferMessage) {
-                        envelope = ((ProtoBufferMessage) message).toProtoBuf();
-                    } else {
-                        log.error("trying to send unknown message {}", message.toString());
-                    }
+                    envelope = message.toProtoBuf();
 
                     if (message instanceof Ping | message instanceof RefreshTTLMessage) {
                         // pings and offer refresh msg we dont want to log in production
@@ -236,7 +220,6 @@ public class Connection implements MessageListener {
                     }
 
                     if (!stopped && envelope != null) {
-
                         protoOutputStreamLock.lock();
                         envelope.writeDelimitedTo(protoOutputStream);
                         protoOutputStream.flush();
@@ -247,6 +230,8 @@ public class Connection implements MessageListener {
                         // We don't want to get the activity ts updated by ping/pong msg
                         if (!(message instanceof KeepAliveMessage))
                             statistic.updateLastActivityTimestamp();
+                    } else {
+                        log.error("Stopped: {} or envelope is null {}", stopped, envelope);
                     }
                 } catch (IOException e) {
                     // an exception lead to a shutdown
@@ -780,9 +765,9 @@ public class Connection implements MessageListener {
                             reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                         }
 
-                        Message  message = null;
+                        Message message = null;
                         Optional<Message> optMessage = ProtoBufferUtilities.fromProtoBuf(envelope);
-                        if(optMessage.isPresent()) {
+                        if (optMessage.isPresent()) {
                             message = optMessage.get();
                         } else {
                             log.warn("Unknown message type received:{}", Utilities.toTruncatedString(envelope));

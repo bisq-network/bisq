@@ -1,8 +1,8 @@
 package io.bitsquare.p2p.storage.messages;
 
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
+import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 
 public final class AddDataMessage extends BroadcastMessage {
@@ -39,7 +39,7 @@ public final class AddDataMessage extends BroadcastMessage {
 
     @Override
     public Messages.Envelope toProtoBuf() {
-        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
         return baseEnvelope.setAddDataMessage(Messages.AddDataMessage.newBuilder()
                 .setProtectedStorageEntry(protectedStorageEntry.toProtoBuf())).build();
     }

@@ -18,9 +18,9 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.messages.app.BitsquareApp;
+import io.bitsquare.messages.app.DevFlags;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;

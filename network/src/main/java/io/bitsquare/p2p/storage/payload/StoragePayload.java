@@ -27,6 +27,6 @@ public interface StoragePayload extends ExpirablePayload {
      */
     PublicKey getOwnerPubKey();
 
-    Messages.StoragePayload toProtoBuf();
+    Messages.ProtectedMailboxStorageEntry toProtoBuf();
 
 }

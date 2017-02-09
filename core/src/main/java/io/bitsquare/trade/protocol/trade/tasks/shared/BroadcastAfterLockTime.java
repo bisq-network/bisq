@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.tasks.shared;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.bitsquare.app.Log;
+import io.bitsquare.messages.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;

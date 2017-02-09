@@ -18,9 +18,9 @@
 package io.bitsquare.monitor;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.app.BitsquareExecutable;
+import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.messages.app.BitsquareEnvironment;
+import io.bitsquare.messages.app.BitsquareExecutable;
 import io.bitsquare.common.UserThread;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -32,8 +32,8 @@ import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_APP_NAME;
-import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
+import static io.bitsquare.messages.app.BitsquareEnvironment.DEFAULT_APP_NAME;
+import static io.bitsquare.messages.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class MonitorMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(MonitorMain.class);
@@ -67,7 +67,7 @@ public class MonitorMain extends BitsquareExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
+        BitsquareEnvironment bitsquareEnvironment = getBitsquareEnvironment(options);
 
         // need to call that before BitsquareAppMain().execute(args)
         BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
@@ -81,7 +81,7 @@ public class MonitorMain extends BitsquareExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        Monitor.setEnvironment(new BitsquareEnvironment(options));
+        Monitor.setEnvironment(getBitsquareEnvironment(options));
         UserThread.execute(() -> monitor = new Monitor());
 
         while (!isStopped) {

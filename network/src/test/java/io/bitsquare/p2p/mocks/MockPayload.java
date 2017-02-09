@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.mocks;
 
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.storage.payload.ExpirablePayload;
@@ -21,7 +21,7 @@ public final class MockPayload implements Message, ExpirablePayload {
     }
 
     @Override
-    public Messages.Envelope toProtoBuf() {
+    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
         throw new NotImplementedException();
     }
 

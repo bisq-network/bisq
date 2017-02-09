@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.peers;
 
-import io.bitsquare.app.Log;
+import io.bitsquare.messages.app.Log;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.NetworkNode;

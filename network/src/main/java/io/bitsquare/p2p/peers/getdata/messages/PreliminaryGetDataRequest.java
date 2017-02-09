@@ -1,8 +1,8 @@
 package io.bitsquare.p2p.peers.getdata.messages;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.app.Capabilities;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Capabilities;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.ProtoBufferMessage;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
@@ -12,7 +12,6 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDataRequest, SupportedCapabilitiesMessage, ProtoBufferMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.

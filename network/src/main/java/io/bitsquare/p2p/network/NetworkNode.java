@@ -2,7 +2,7 @@ package io.bitsquare.p2p.network;
 
 import com.google.common.util.concurrent.*;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import io.bitsquare.app.Log;
+import io.bitsquare.messages.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.p2p.Message;

@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.placeoffer.tasks;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;

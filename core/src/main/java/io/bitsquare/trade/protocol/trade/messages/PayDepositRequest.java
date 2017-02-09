@@ -18,14 +18,15 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.MailboxMessage;
-import io.bitsquare.payment.PaymentAccountContractData;
+import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import org.bitcoinj.core.Coin;
 
 import javax.annotation.concurrent.Immutable;
@@ -161,7 +162,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
 
     @Override
     public Messages.Envelope toProtoBuf() {
-        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
         return baseEnvelope.setPayDepositRequest(Messages.PayDepositRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setTradeAmount(tradeAmount)

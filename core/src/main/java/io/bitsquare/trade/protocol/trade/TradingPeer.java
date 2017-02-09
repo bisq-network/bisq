@@ -17,11 +17,11 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.persistance.Persistable;
-import io.bitsquare.payment.PaymentAccountContractData;
+import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
-import io.bitsquare.app.Log;
+import io.bitsquare.messages.app.Log;
 import io.bitsquare.common.Clock;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -26,11 +26,11 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.payment.PaymentMethod;
-import io.bitsquare.trade.Contract;
+import io.bitsquare.messages.payment.PaymentMethod;
+import io.bitsquare.messages.trade.payload.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.closed.ClosedTradableManager;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;

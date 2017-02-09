@@ -18,10 +18,10 @@
 package io.bitsquare.gui.main.funds.deposit;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.messages.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
@@ -36,7 +36,7 @@ import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;

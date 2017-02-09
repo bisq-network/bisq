@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.messaging;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.crypto.SealedAndSigned;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;

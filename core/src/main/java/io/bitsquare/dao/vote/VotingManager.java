@@ -19,15 +19,15 @@ package io.bitsquare.dao.vote;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import io.bitsquare.app.Version;
-import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.messages.app.Version;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.dao.DaoPeriodService;
 import io.bitsquare.dao.compensation.CompensationRequest;
 import io.bitsquare.dao.compensation.CompensationRequestManager;
-import io.bitsquare.dao.compensation.CompensationRequestPayload;
+import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bitsquare.storage.Storage;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Utils;

@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.account.content.seedwords;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.messages.app.BitsquareApp;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.btc.wallet.WalletsManager;
@@ -29,7 +29,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;

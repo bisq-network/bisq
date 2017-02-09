@@ -17,8 +17,11 @@
 
 package io.bitsquare.payment;
 
-import io.bitsquare.app.Version;
-import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.messages.app.Version;
+import io.bitsquare.messages.locale.CurrencyUtil;
+import io.bitsquare.messages.payment.PaymentMethod;
+import io.bitsquare.messages.payment.payload.OKPayAccountContractData;
+import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.settings.network;
 
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.messages.app.BitsquareApp;
 import io.bitsquare.btc.wallet.WalletsSetup;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.UserThread;
@@ -29,7 +29,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Statistic;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

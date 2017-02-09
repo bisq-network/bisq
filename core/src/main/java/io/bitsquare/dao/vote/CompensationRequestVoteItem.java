@@ -17,7 +17,7 @@
 
 package io.bitsquare.dao.vote;
 
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.dao.compensation.CompensationRequest;
 import org.slf4j.Logger;

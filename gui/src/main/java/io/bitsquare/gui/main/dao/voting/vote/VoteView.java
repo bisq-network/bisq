@@ -21,7 +21,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.btc.InsufficientFundsException;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
-import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.ChangeBelowDustException;
 import io.bitsquare.btc.wallet.SquWalletService;

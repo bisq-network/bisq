@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
-import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;

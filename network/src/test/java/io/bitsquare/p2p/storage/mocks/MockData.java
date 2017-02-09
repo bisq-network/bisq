@@ -50,7 +50,7 @@ public class MockData implements StoragePayload {
     }
 
     @Override
-    public Messages.StoragePayload toProtoBuf() {
+    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
         throw new NotImplementedException();
     }
 }

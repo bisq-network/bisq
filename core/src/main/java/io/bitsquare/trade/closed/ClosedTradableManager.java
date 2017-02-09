@@ -18,12 +18,12 @@
 package io.bitsquare.trade.closed;
 
 import com.google.inject.Inject;
-import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.TradableList;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

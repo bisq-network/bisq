@@ -1,7 +1,7 @@
 package io.bitsquare.gui.main.overlays.notifications;
 
 import com.google.inject.Inject;
-import io.bitsquare.app.Log;
+import io.bitsquare.messages.app.Log;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
@@ -12,7 +12,7 @@ import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.collections.ListChangeListener;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;

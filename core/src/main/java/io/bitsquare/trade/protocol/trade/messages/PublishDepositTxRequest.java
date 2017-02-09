@@ -18,12 +18,13 @@
 package io.bitsquare.trade.protocol.trade.messages;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.btc.data.RawTransactionInput;
+import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.p2p.ProtoBufferUtilities;
-import io.bitsquare.payment.PaymentAccountContractData;
+import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +77,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
 
     @Override
     public Messages.Envelope toProtoBuf() {
-        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
         return baseEnvelope.setPublishDepositTxRequest(baseEnvelope.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)

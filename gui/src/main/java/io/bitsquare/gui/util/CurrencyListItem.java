@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.util;
 
-import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.messages.locale.TradeCurrency;
 
 public class CurrencyListItem {
     public final TradeCurrency tradeCurrency;

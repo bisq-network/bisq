@@ -19,7 +19,7 @@ package io.bitsquare.gui.util.validation;
 
 
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.BankUtil;
+import io.bitsquare.messages.locale.BankUtil;
 
 public final class BankIdValidator extends BankValidator {
     public BankIdValidator(String countryCode) {

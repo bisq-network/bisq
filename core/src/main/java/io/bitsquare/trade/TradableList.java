@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.storage.Storage;
 import javafx.collections.FXCollections;

@@ -28,7 +28,7 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
-import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.tasks.seller.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
 import io.bitsquare.trade.protocol.trade.tasks.taker.*;

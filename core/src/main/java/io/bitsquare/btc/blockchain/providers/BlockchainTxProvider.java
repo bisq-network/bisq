@@ -1,6 +1,6 @@
 package io.bitsquare.btc.blockchain.providers;
 
-import io.bitsquare.btc.provider.HttpClientProvider;
+import io.bitsquare.messages.btc.provider.HttpClientProvider;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
 import org.bitcoinj.core.Coin;

@@ -19,10 +19,12 @@ package io.bitsquare.alert;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.bitsquare.app.AppOptionKeys;
+import io.bitsquare.messages.app.AppOptionKeys;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
+import io.bitsquare.messages.alert.PrivateNotification;
+import io.bitsquare.messages.alert.PrivateNotificationMessage;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;

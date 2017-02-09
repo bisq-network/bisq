@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.arbitratorselection;
 
-import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

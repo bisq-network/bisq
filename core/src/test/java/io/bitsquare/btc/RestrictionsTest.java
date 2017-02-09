@@ -17,6 +17,7 @@
 
 package io.bitsquare.btc;
 
+import io.bitsquare.messages.btc.Restrictions;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.junit.Test;

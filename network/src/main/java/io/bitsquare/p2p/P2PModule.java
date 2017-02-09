@@ -19,7 +19,7 @@ package io.bitsquare.p2p;
 
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
-import io.bitsquare.app.AppModule;
+import io.bitsquare.messages.app.AppModule;
 import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.network.Socks5ProxyProvider;
 import io.bitsquare.p2p.seed.SeedNodesRepository;

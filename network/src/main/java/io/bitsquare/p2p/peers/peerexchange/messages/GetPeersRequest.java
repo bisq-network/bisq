@@ -1,8 +1,7 @@
 package io.bitsquare.p2p.peers.peerexchange.messages;
 
-import com.google.protobuf.ByteString;
-import io.bitsquare.app.Capabilities;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Capabilities;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.ProtoBufferMessage;

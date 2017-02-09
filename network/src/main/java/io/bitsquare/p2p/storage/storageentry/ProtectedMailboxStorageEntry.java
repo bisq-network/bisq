@@ -1,7 +1,9 @@
 package io.bitsquare.p2p.storage.storageentry;
 
-import io.bitsquare.app.Version;
+import com.google.protobuf.ByteString;
 import io.bitsquare.common.crypto.Sig;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.p2p.storage.P2PDataStorage;
 import io.bitsquare.p2p.storage.payload.MailboxStoragePayload;
 import org.slf4j.Logger;
@@ -59,6 +61,11 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
             log.error("Couldn't create the pubkey", e);
         }
+    }
+
+    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+        return Messages.ProtectedMailboxStorageEntry.newBuilder().setEntry(super.toProtoBuf())
+                .setReceiversPubKeyBytes(ByteString.copyFrom(receiversPubKeyBytes)).build();
     }
 
     @Override

@@ -2,8 +2,8 @@ package io.bitsquare.p2p;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
-import io.bitsquare.app.Log;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Log;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;

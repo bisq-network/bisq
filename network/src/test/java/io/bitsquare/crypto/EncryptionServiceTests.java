@@ -18,11 +18,10 @@
 package io.bitsquare.crypto;
 
 
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.ProtoBufferUtilities;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.storage.FileUtil;

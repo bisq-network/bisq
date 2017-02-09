@@ -1,8 +1,8 @@
 package io.bitsquare.p2p.peers.keepalive.messages;
 
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
+import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.p2p.ProtoBufferUtilities;
 
 public final class Pong extends KeepAliveMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -23,7 +23,7 @@ public final class Pong extends KeepAliveMessage {
 
     @Override
     public Messages.Envelope toProtoBuf() {
-        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtilities.getBaseEnvelope();
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
         return baseEnvelope.setPong(Messages.Pong.newBuilder().setRequestNonce(requestNonce)).build();
     }
 }

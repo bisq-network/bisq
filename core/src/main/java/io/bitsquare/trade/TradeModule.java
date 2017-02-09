@@ -18,8 +18,8 @@
 package io.bitsquare.trade;
 
 import com.google.inject.Singleton;
-import io.bitsquare.app.AppModule;
-import io.bitsquare.app.AppOptionKeys;
+import io.bitsquare.messages.app.AppModule;
+import io.bitsquare.messages.app.AppOptionKeys;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
 import io.bitsquare.trade.statistics.TradeStatisticsManager;

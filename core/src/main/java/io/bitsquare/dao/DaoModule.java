@@ -18,8 +18,8 @@
 package io.bitsquare.dao;
 
 import com.google.inject.Singleton;
-import io.bitsquare.app.AppModule;
-import io.bitsquare.dao.blockchain.RpcOptionKeys;
+import io.bitsquare.messages.app.AppModule;
+import io.bitsquare.messages.dao.blockchain.RpcOptionKeys;
 import io.bitsquare.dao.blockchain.SquBlockchainManager;
 import io.bitsquare.dao.blockchain.SquBlockchainRpcService;
 import io.bitsquare.dao.blockchain.SquBlockchainService;

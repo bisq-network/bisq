@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.messages.app.DevFlags;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
@@ -28,8 +28,12 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.payment.*;
+import io.bitsquare.messages.locale.CurrencyUtil;
+import io.bitsquare.messages.payment.PaymentMethod;
+import io.bitsquare.messages.payment.payload.CashDepositAccountContractData;
+import io.bitsquare.messages.payment.payload.CryptoCurrencyAccountContractData;
+import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
+import io.bitsquare.messages.payment.payload.USPostalMoneyOrderAccountContractData;
 import io.bitsquare.trade.Trade;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

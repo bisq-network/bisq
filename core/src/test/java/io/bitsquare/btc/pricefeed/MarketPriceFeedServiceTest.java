@@ -1,6 +1,6 @@
 package io.bitsquare.btc.pricefeed;
 
-import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;

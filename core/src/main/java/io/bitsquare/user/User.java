@@ -17,14 +17,14 @@
 
 package io.bitsquare.user;
 
-import io.bitsquare.alert.Alert;
-import io.bitsquare.app.Version;
-import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.messages.alert.Alert;
+import io.bitsquare.messages.app.Version;
+import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.persistance.Persistable;
-import io.bitsquare.filter.Filter;
-import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.messages.filter.payload.Filter;
+import io.bitsquare.messages.locale.LanguageUtil;
+import io.bitsquare.messages.locale.TradeCurrency;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.storage.Storage;

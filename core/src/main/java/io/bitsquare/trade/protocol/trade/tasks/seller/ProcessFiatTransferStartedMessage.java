@@ -25,8 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bitsquare.util.Validator.checkTradeId;
-import static io.bitsquare.util.Validator.nonEmptyStringOf;
+import static io.bitsquare.messages.util.Validator.checkTradeId;
+import static io.bitsquare.messages.util.Validator.nonEmptyStringOf;
 
 public class ProcessFiatTransferStartedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessFiatTransferStartedMessage.class);

@@ -18,14 +18,14 @@
 package io.bitsquare.gui.main.account.content.arbitratorselection;
 
 import com.google.inject.Inject;
-import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.messages.locale.LanguageUtil;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;

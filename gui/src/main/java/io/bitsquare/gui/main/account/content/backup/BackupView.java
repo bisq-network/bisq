@@ -17,15 +17,15 @@
 
 package io.bitsquare.gui.main.account.content.backup;
 
-import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.app.BitsquareEnvironment;
+import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.messages.app.BitsquareEnvironment;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;

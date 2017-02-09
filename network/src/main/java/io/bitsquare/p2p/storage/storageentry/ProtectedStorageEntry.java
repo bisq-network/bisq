@@ -2,7 +2,7 @@ package io.bitsquare.p2p.storage.storageentry;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.common.wire.proto.Messages;
@@ -102,7 +102,7 @@ public class ProtectedStorageEntry implements Payload {
         return (System.currentTimeMillis() - creationTimeStamp) > storagePayload.getTTL();
     }
 
-    public Messages.ProtectedStorageEntry toProtoBuf() {
+    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
         return Messages.ProtectedStorageEntry.newBuilder().setStoragePayload((Messages.StoragePayload) storagePayload.toProtoBuf())
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes)).setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature)).setCreationTimeStamp(creationTimeStamp).build();

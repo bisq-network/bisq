@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.placeoffer;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.taskrunner.Model;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
 import io.bitsquare.user.User;
 import org.bitcoinj.core.Coin;

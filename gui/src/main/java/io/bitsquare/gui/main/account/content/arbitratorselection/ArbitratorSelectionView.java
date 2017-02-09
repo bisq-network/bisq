@@ -25,7 +25,7 @@ import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.messages.locale.LanguageUtil;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;

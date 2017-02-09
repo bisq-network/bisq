@@ -18,11 +18,11 @@
 package io.bitsquare.gui.main.dao.wallet.send;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.messages.app.DevFlags;
 import io.bitsquare.btc.InsufficientFundsException;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
-import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.util.MathUtils;

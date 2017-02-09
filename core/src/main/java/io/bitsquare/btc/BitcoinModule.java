@@ -18,10 +18,12 @@
 package io.bitsquare.btc;
 
 import com.google.inject.Singleton;
-import io.bitsquare.app.AppModule;
-import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.btc.provider.fee.FeeService;
-import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.messages.app.AppModule;
+import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.messages.btc.BtcOptionKeys;
+import io.bitsquare.messages.btc.UserAgent;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.btc.provider.squ.SquUtxoFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.SquWalletService;

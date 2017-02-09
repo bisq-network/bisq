@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bitsquare.util.Validator.checkTradeId;
+import static io.bitsquare.messages.util.Validator.checkTradeId;
 
 public class ProcessDepositTxPublishedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessDepositTxPublishedMessage.class);

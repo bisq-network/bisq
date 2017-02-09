@@ -18,11 +18,11 @@
 package io.bitsquare.trade;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bitsquare.app.Log;
+import io.bitsquare.messages.app.Log;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
-import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.UserThread;
@@ -42,13 +42,13 @@ import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
 import io.bitsquare.trade.handlers.TradeResultHandler;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.trade.protocol.availability.OfferAvailabilityModel;
+import io.bitsquare.messages.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
-import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
-import io.bitsquare.trade.statistics.TradeStatistics;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
+import io.bitsquare.messages.trade.statistics.payload.TradeStatistics;
 import io.bitsquare.trade.statistics.TradeStatisticsManager;
 import io.bitsquare.user.User;
 import javafx.beans.property.BooleanProperty;
@@ -74,7 +74,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.bitsquare.util.Validator.nonEmptyStringOf;
+import static io.bitsquare.messages.util.Validator.nonEmptyStringOf;
 
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);

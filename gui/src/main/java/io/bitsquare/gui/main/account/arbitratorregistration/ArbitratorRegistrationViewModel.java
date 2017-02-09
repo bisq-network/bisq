@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.arbitratorregistration;
 
 import com.google.inject.Inject;
-import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.wallet.BtcWalletService;
@@ -26,7 +26,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
-import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.messages.locale.LanguageUtil;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.user.User;

@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.arbitration.Dispute;
+import io.bitsquare.messages.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.arbitration.DisputeResult;
+import io.bitsquare.messages.arbitration.DisputeResult;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.wallet.BtcWalletService;
@@ -32,7 +32,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.trade.Contract;
+import io.bitsquare.messages.trade.payload.Contract;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ChangeListener;

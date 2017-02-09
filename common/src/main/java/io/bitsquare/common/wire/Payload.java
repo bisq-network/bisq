@@ -8,5 +8,5 @@ import java.io.Serializable;
  * Marker interface for data which is sent over the wire
  */
 public interface Payload extends Serializable {
-    Object toProtoBuf();
+    Messages.ProtectedMailboxStorageEntry toProtoBuf();
 }

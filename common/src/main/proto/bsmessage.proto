@@ -19,9 +19,7 @@ message Envelope {
         GetUpdatedDataRequest get_updated_data_request = 7;
         GetPeersRequest get_peers_request = 8;
         GetPeersResponse get_peers_response = 9;
-        GetDataRequest get_data_request = 10;
         GetDataResponse get_data_response = 11;
-        SendersNodeAddressMessage senders_node_address_message = 12;
         PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 13;
         OfferAvailabilityResponse offer_availability_response = 14;
         RemoveDataMessage remove_data_message = 15;
@@ -100,10 +98,6 @@ message Peer {
     int64 date = 2;
 }
 
-message GetDataRequest {
-    int32 nonce = 1;
-    repeated bytes excluded_keys = 2;
-}
 
 message GetDataResponse {
     int64 message_version = 1;
@@ -155,7 +149,7 @@ message RefreshTTLMessage {
 }
 
 message RemoveMailboxDataMessage {
-    ProtectedStorageEntry protected_storage_entry = 1;
+    ProtectedMailboxStorageEntry protected_storage_entry = 1;
 }
 // end BroadcastMessage
 
@@ -165,11 +159,10 @@ message StoragePayload {
         Alert alert = 1;
         Arbitrator arbitrator = 2;
         Filter filter = 3;
-        PaymentAccountFilter payment_account_filter = 4;
-        CompensationRequestPayload compensation_request_payload = 5;
-        TradeStatistics trade_statistics = 6;
-        MailboxStoragePayload mailbox_storage_payload = 7;
-        Offer offer = 8;
+        CompensationRequestPayload compensation_request_payload = 4;
+        TradeStatistics trade_statistics = 5;
+        MailboxStoragePayload mailbox_storage_payload = 6;
+        Offer offer = 7;
     }
 }
 

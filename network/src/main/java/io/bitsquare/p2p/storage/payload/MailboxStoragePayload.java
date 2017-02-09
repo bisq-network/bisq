@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.storage.payload;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
@@ -60,13 +60,14 @@ public final class MailboxStoragePayload implements StoragePayload {
     private final byte[] receiverPubKeyForRemoveOperationBytes;
 
     public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage, PublicKey senderPubKeyForAddOperation, PublicKey receiverPubKeyForRemoveOperation) {
+        this(prefixedSealedAndSignedMessage, new X509EncodedKeySpec(senderPubKeyForAddOperation.getEncoded()).getEncoded(),
+                new X509EncodedKeySpec(receiverPubKeyForRemoveOperation.getEncoded()).getEncoded());
+    }
+
+    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage, byte[] senderPubKeyForAddOperationBytes, byte[] receiverPubKeyForRemoveOperationBytes) {
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
-
-        this.senderPubKeyForAddOperation = senderPubKeyForAddOperation;
-        this.senderPubKeyForAddOperationBytes = new X509EncodedKeySpec(this.senderPubKeyForAddOperation.getEncoded()).getEncoded();
-
-        this.receiverPubKeyForRemoveOperation = receiverPubKeyForRemoveOperation;
-        this.receiverPubKeyForRemoveOperationBytes = new X509EncodedKeySpec(this.receiverPubKeyForRemoveOperation.getEncoded()).getEncoded();
+        this.senderPubKeyForAddOperationBytes = senderPubKeyForAddOperationBytes;
+        this.receiverPubKeyForRemoveOperationBytes = receiverPubKeyForRemoveOperationBytes;
         init();
     }
 
@@ -99,7 +100,7 @@ public final class MailboxStoragePayload implements StoragePayload {
     }
 
     @Override
-    public Messages.StoragePayload toProtoBuf() {
+    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
         return Messages.StoragePayload.newBuilder().setMailboxStoragePayload(Messages.MailboxStoragePayload.newBuilder()
                 .setTTL(TTL)
                 .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toProtoBuf().getPrefixedSealedAndSignedMessage())

@@ -18,7 +18,7 @@
 package io.bitsquare.common.crypto;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.app.Version;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
@@ -117,7 +117,7 @@ public final class PubKeyRing implements Payload {
     }
 
     @Override
-    public Messages.PubKeyRing toProtoBuf() {
+    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
         return Messages.PubKeyRing.newBuilder().setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
                 .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes)).build();
 
