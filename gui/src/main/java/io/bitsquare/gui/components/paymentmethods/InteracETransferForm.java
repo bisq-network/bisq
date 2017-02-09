@@ -46,7 +46,7 @@ public class InteracETransferForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", ((InteracETransferAccountContractData) paymentAccountContractData).getHolderName());
-        addLabelTextField(gridPane, ++gridRow, "Email:", ((InteracETransferAccountContractData) paymentAccountContractData).getEmail());
+        addLabelTextField(gridPane, ++gridRow, "Email or mobile nr:", ((InteracETransferAccountContractData) paymentAccountContractData).getEmail());
         addLabelTextField(gridPane, ++gridRow, "Secret question:", ((InteracETransferAccountContractData) paymentAccountContractData).getQuestion());
         addLabelTextField(gridPane, ++gridRow, "Answer:", ((InteracETransferAccountContractData) paymentAccountContractData).getAnswer());
         return gridRow;
@@ -69,7 +69,7 @@ public class InteracETransferForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        mobileNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Email:").second;
+        mobileNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Email or mobile nr:").second;
         mobileNrInputTextField.setValidator(interacETransferValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setEmail(newValue);
@@ -77,14 +77,14 @@ public class InteracETransferForm extends PaymentMethodForm {
         });
 
         questionInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Secret question:").second;
-        questionInputTextField.setValidator(interacETransferValidator);
+        questionInputTextField.setValidator(inputValidator);
         questionInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setQuestion(newValue);
             updateFromInputs();
         });
 
         answerInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Answer:").second;
-        answerInputTextField.setValidator(interacETransferValidator);
+        answerInputTextField.setValidator(inputValidator);
         answerInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setAnswer(newValue);
             updateFromInputs();
