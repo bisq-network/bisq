@@ -59,6 +59,9 @@ public final class EmailValidator extends InputValidator {
         local = subStrings[0];
         domain = subStrings[subStrings.length - 1];
 
+        if (local.isEmpty())
+            return invalidAddress;
+
         // local part cannot begin or end with '.'
         if (local.startsWith(".") || local.endsWith("."))
             return invalidAddress;
