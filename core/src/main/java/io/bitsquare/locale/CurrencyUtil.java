@@ -78,6 +78,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("AIB", "Advanced Internet Blocks"));
         result.add(new CryptoCurrency("ANC", "Anoncoin"));
         result.add(new CryptoCurrency("ANTI", "Anti"));
+        result.add(new CryptoCurrency("ARCO", "AquariusCoin"));
         result.add(new CryptoCurrency("ARG", "Argentum"));
         result.add(new CryptoCurrency("REP", "Augur", true));
         result.add(new CryptoCurrency("BATL", "Battlestars"));
@@ -146,6 +147,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XMY", "Myriadcoin"));
         result.add(new CryptoCurrency("NAV", "Nav Coin"));
         result.add(new CryptoCurrency("XEM", "NEM"));
+        result.add(new CryptoCurrency("NEVA", "Nevacoin"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
@@ -188,6 +190,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("VRC", "VeriCoin"));
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
         result.add(new CryptoCurrency("WAVES", "Waves"));
+        result.add(new CryptoCurrency("XAUR", "Xaurum"));
         result.add(new CryptoCurrency("YACC", "YACCoin"));
         result.add(new CryptoCurrency("YBC", "YbCoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));

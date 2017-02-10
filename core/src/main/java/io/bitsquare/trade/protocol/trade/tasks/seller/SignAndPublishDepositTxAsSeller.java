@@ -60,7 +60,7 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
             sellerMultiSigAddressEntry.setLockedTradeAmount(Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum()).subtract(FeePolicy.getFixedTxFeeForTrades()));
             walletService.saveAddressEntryList();
             TradingPeer tradingPeer = processModel.tradingPeer;
-            processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
+            Transaction depositTx = processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
                     true,
                     contractHash,
                     processModel.getPreparedDepositTx(),
@@ -85,6 +85,7 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
                             failed(t);
                         }
                     });
+            trade.setDepositTx(depositTx);
         } catch (Throwable t) {
             failed(t);
         }
