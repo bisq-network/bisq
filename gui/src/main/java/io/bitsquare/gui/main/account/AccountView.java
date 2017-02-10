@@ -79,7 +79,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         };
 
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN).match(event) &&
+            if (new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN).match(event) &&
                     arbitratorRegistrationTab == null) {
                 arbitratorRegistrationTab = new Tab("Arbitrator registration");
                 arbitratorRegistrationTab.setClosable(false);

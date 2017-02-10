@@ -126,7 +126,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         // we use a hidden emergency shortcut to open support ticket
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event)) {
+            if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event) || new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN).match(event)) {
                 Popup popup = new Popup();
                 popup.headLine("Open support ticket")
                         .message("Please use that only in emergency case if you don't get displayed a \"Open support\" or \"Open dispute\" button.\n\n" +

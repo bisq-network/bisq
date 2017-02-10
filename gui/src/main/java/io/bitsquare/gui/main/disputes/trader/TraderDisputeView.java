@@ -208,7 +208,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         disputeDirectMessageListListener = c -> scrollToBottom();
 
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.L, KeyCombination.SHORTCUT_DOWN).match(event)) {
+            if (new KeyCodeCombination(KeyCode.L, KeyCombination.ALT_DOWN).match(event)) {
                 Map<String, List<Dispute>> map = new HashMap<>();
                 disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> {
                     String tradeId = dispute.getTradeId();
@@ -269,14 +269,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         .actionButtonText("Copy")
                         .onAction(() -> Utilities.copyToClipboard(message))
                         .show();
-            } else if (new KeyCodeCombination(KeyCode.U, KeyCombination.SHORTCUT_DOWN).match(event)) {
+            } else if (new KeyCodeCombination(KeyCode.U, KeyCombination.ALT_DOWN).match(event)) {
                 // Hidden shortcut to re-open a dispute. Allow it also for traders not only arbitrator.
                 if (selectedDispute != null) {
                     if (selectedDisputeClosedPropertyListener != null)
                         selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
                     selectedDispute.setIsClosed(false);
                 }
-            } else if (new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN).match(event)) {
+            } else if (new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN).match(event)) {
                 if (selectedDispute != null) {
                     PubKeyRing pubKeyRing = selectedDispute.getTraderPubKeyRing();
                     NodeAddress nodeAddress;

@@ -78,6 +78,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("AIB", "Advanced Internet Blocks"));
         result.add(new CryptoCurrency("ANC", "Anoncoin"));
         result.add(new CryptoCurrency("ANTI", "Anti"));
+        result.add(new CryptoCurrency("ARCO", "AquariusCoin"));
         result.add(new CryptoCurrency("ARG", "Argentum"));
         result.add(new CryptoCurrency("REP", "Augur", true));
         result.add(new CryptoCurrency("BATL", "Battlestars"));
@@ -91,6 +92,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BITNZD", "BitNZD", true));
         result.add(new CryptoCurrency("BITSEK", "BitSEK", true));
         result.add(new CryptoCurrency("BITSGD", "BitSGD", true));
+        result.add(new CryptoCurrency("GBYTE", "Byte"));
         result.add(new CryptoCurrency("SYNQ", "BitSYNQ"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("BITUSD", "BitUSD", true));
@@ -103,7 +105,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("CRBIT", "Creditbit"));
         result.add(new CryptoCurrency("CRW", "Crown"));
         result.add(new CryptoCurrency("CBX", "Crypto Bullion"));
-        result.add(new CryptoCurrency("DAO", "DAO", true));
         result.add(new CryptoCurrency("DNET", "DarkNet"));
         result.add(new CryptoCurrency("DIBC", "DIBCOIN"));
         result.add(new CryptoCurrency("DASH", "Dash"));
@@ -132,6 +133,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("HODL", "HOdlcoin"));
         result.add(new CryptoCurrency("HNC", "HunCoin"));
         result.add(new CryptoCurrency("IOC", "I/O Coin"));
+        result.add(new CryptoCurrency("IOP", "Fermat"));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
         result.add(new CryptoCurrency("JBS", "Jumbucks"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
@@ -146,6 +148,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XMY", "Myriadcoin"));
         result.add(new CryptoCurrency("NAV", "Nav Coin"));
         result.add(new CryptoCurrency("XEM", "NEM"));
+        result.add(new CryptoCurrency("NEVA", "Nevacoin"));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
@@ -188,6 +191,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("VRC", "VeriCoin"));
         result.add(new CryptoCurrency("WDC", "Worldcoin"));
         result.add(new CryptoCurrency("WAVES", "Waves"));
+        result.add(new CryptoCurrency("XAUR", "Xaurum"));
         result.add(new CryptoCurrency("YACC", "YACCoin"));
         result.add(new CryptoCurrency("YBC", "YbCoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));

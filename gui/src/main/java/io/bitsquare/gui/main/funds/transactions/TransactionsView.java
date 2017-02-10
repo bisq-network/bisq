@@ -184,9 +184,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         };
 
         keyEventEventHandler = event -> {
-            if (new KeyCodeCombination(KeyCode.R, KeyCombination.SHORTCUT_DOWN).match(event))
+            if (new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN).match(event))
                 revertTxColumn.setVisible(!revertTxColumn.isVisible());
-            else if (new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN).match(event))
+            else if (new KeyCodeCombination(KeyCode.A, KeyCombination.ALT_DOWN).match(event))
                 showStatisticsPopup();
         };
 

@@ -23,6 +23,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.arbitration.ArbitratorManager;
+import io.bitsquare.btc.TradeWalletService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.UserThread;
@@ -41,10 +42,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.MainViewModel;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.gui.main.overlays.windows.EmptyWalletWindow;
-import io.bitsquare.gui.main.overlays.windows.FilterWindow;
-import io.bitsquare.gui.main.overlays.windows.SendAlertMessageWindow;
-import io.bitsquare.gui.main.overlays.windows.ShowWalletDataWindow;
+import io.bitsquare.gui.main.overlays.windows.*;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
@@ -197,27 +195,33 @@ public class BitsquareApp extends Application {
                 stop();
             });
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.W, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     stop();
-                } else if (new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     stop();
-                } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     showEmptyWalletPopup();
-                } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showSendAlertMessagePopup();
-                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFilterPopup();
-                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFPSWindow();
-                } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     WalletService walletService = injector.getInstance(WalletService.class);
                     if (walletService.getWallet() != null)
                         new ShowWalletDataWindow(walletService).information("Wallet raw data").show();
                     else
                         new Popup<>().warning("The wallet is not initialized yet").show();
-                } else if (DevFlags.DEV_MODE) {
-                    if (new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
-                        showDebugWindow();
+                } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                    TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
+                    WalletService walletService = injector.getInstance(WalletService.class);
+                    if (walletService.getWallet() != null)
+                        new SpendFromDepositTxWindow(tradeWalletService).information("Emergency wallet tool").show();
+                    else
+                        new Popup<>().warning("The wallet is not initialized yet").show();
+                } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                    showDebugWindow();
                 }
             });
 
@@ -256,9 +260,14 @@ public class BitsquareApp extends Application {
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
 
-        } catch (Throwable throwable) {
+        } catch (
+                Throwable throwable
+                )
+
+        {
             showErrorPopup(throwable, false);
         }
+
     }
 
     private void showSendAlertMessagePopup() {
