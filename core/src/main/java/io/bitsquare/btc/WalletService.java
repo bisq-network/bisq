@@ -144,13 +144,17 @@ public class WalletService {
             switch (socks5DiscoverModes[i]) {
                 case "ADDR":
                     mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_ADDR;
+                    break;
                 case "DNS":
                     mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_DNS;
+                    break;
                 case "ONION":
                     mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_ONION;
+                    break;
                 case "ALL":
                 default:
                     mode |= Socks5MultiDiscovery.SOCKS5_DISCOVER_ALL;
+                    break;
             }
         }
         socks5DiscoverMode = mode;
