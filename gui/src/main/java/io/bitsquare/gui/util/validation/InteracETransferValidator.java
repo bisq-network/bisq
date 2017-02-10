@@ -40,18 +40,21 @@ public final class InteracETransferValidator extends InputValidator {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public InteracETransferValidator() {
-        super();
         emailValidator = new EmailValidator();
     }
 
     @Override
     public ValidationResult validate(String input) {
-        if (input == null)
-            return new ValidationResult(false, "input is null");
-        ValidationResult emailResult = emailValidator.validate(input);
-        if (!emailResult.isValid)
-            return validatePhoneNumber(input);
-        return emailResult;
+        ValidationResult result = validateIfNotEmpty(input);
+        if (!result.isValid) {
+            return result;
+        } else {
+            ValidationResult emailResult = emailValidator.validate(input);
+            if (emailResult.isValid)
+                return emailResult;
+            else
+                return validatePhoneNumber(input);
+        }
     }
 
 
@@ -60,7 +63,6 @@ public final class InteracETransferValidator extends InputValidator {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ValidationResult validatePhoneNumber(String input) {
-
         // check for correct format and strip +, space and -
         if (input.matches("\\+?1[ -]?\\d{3}[ -]?\\d{3}[ -]?\\d{4}")) {
             input = input.replace("+", "");
@@ -73,8 +75,9 @@ public final class InteracETransferValidator extends InputValidator {
                 if (inputAreaCode.compareTo(s) == 0)
                     return new ValidationResult(true);
             }
-        } else
+            return new ValidationResult(false, "Non-Canadian area code");
+        } else {
             return new ValidationResult(false, "Invalid phone number format and not an email address");
-        return new ValidationResult(false, "Non-Canadian area code");
+        }
     }
 }
