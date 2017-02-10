@@ -41,12 +41,18 @@ public final class IBANValidator extends InputValidator {
 	if (isStringInRange(input, 15, 34)) {
 		input = input.toUpperCase(Locale.ROOT); // ensure upper case
 
+		// check if country code is letters and checksum numeric
+		if (!( Character.isLetter(input.charAt(0)) && Character.isLetter(input.charAt(1)) ))
+			return new ValidationResult(false, "Country code invalid");
+		if (!( Character.isDigit(input.charAt(2)) && Character.isDigit(input.charAt(3)) ))
+			return new ValidationResult(false, "Checksum must be numeric");
+
 		// reorder IBAN to format <account number> <country code> <checksum>
 		String input2 = new String(input.substring(4, input.length()) + input.substring(0,4));
-		int charCount = 0;
-		char ch;
 
 		// check if input is alphanumeric and count included letters
+		int charCount = 0;
+		char ch;
 		for (int k=0; k<input2.length(); k++) {
 			ch = input2.charAt(k);
 			if (Character.isLetter(ch))
