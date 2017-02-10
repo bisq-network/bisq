@@ -7,7 +7,7 @@ set -e
 
 version="0.4.9.8"
 
-mvn clean package -DskipTests -Dmaven.javadoc.skip=true
+mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
 cp gui/target/shaded.jar "gui/deploy/Bitsquare-$version.jar"
 cp gui/target/shaded.jar "/Users/dev/vm_shared_ubuntu/Bitsquare-$version.jar"

@@ -89,25 +89,6 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                 <groupId>org.apache.maven.plugins</groupId>
-                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.4.1</version>
-                 <executions>
-                     <execution>
-                         <id>enforce</id>
-                         <configuration>
-                             <rules>
-                                 <DependencyConvergence />
-                             </rules>
-                         </configuration>
-                         <goals>
-                             <goal>enforce</goal>
-                         </goals>
-                     </execution>
-                 </executions>
-            </plugin>
-
             <!-- Verify the dependency chain: see https://github.com/gary-rowe/BitcoinjEnforcerRules for
            more information on this.
         -->
