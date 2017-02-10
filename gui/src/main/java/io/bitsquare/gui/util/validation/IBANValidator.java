@@ -19,7 +19,6 @@ package io.bitsquare.gui.util.validation;
 
 import java.math.BigInteger;
 import java.util.Locale;
-import java.util.Arrays;
 
 
 // TODO Does not yet recognize special letters like ä, ö, ü, å, ... as invalid characters

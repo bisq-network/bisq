@@ -58,7 +58,6 @@ public final class AltCoinAddressValidator extends InputValidator {
             switch (currencyCode) {
                 // Example for BTC, though for BTC we use the BitcoinJ library address check
                 case "BTC":
-                    log.error("" + input.length());
                     // taken form: https://stackoverflow.com/questions/21683680/regex-to-match-bitcoin-addresses
                     if (input.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (verifyChecksum(input))

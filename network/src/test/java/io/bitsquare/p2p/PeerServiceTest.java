@@ -3,6 +3,7 @@ package io.bitsquare.p2p;
 import io.bitsquare.p2p.network.LocalhostNetworkNode;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,9 @@ import java.util.concurrent.CountDownLatch;
 
 // Please Note: You need to edit seed node addresses first before using tor version.
 // Run it once then lookup for onion address at: tor/hiddenservice/hostname and use that for the NodeAddress param.
+
+// TODO deactivated because outdated
+@Ignore
 public class PeerServiceTest {
     private static final Logger log = LoggerFactory.getLogger(PeerServiceTest.class);
     private static final int MAX_CONNECTIONS = 100;
