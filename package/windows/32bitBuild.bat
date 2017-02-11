@@ -12,7 +12,6 @@ SET outdir=\\VBOXSVR\vm_shared_windows_32bit
 :: Others might use the following
 :: SET outdir=.
 
-copy gui\target\shaded.jar Bitsquare-%version%.jar
 call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -BappVersion="%version%" ^
 -native exe ^

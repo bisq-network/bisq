@@ -12,7 +12,6 @@ SET outdir=\\VBOXSVR\vm_shared_windows
 :: Others might use the following
 :: SET outdir=.
 
-
 call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -BappVersion="%version%" ^
 -native exe ^
