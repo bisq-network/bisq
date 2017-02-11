@@ -31,7 +31,6 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles "gui/deploy/Bitsquare-$version.jar" \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare \
-    -BjvmProperties=-Djava.net.preferIPv4Stack=true
 
 rm "gui/deploy/Bitsquare.html"
 rm "gui/deploy/Bitsquare.jnlp"
