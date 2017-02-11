@@ -21,6 +21,7 @@ import com.google.common.io.ByteStreams;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.alert.PrivateNotificationManager;
+import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
@@ -415,8 +416,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onCloseDispute(Dispute dispute) {
-        disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
-                .show(dispute);
+        long protocolVersion = dispute.getContract().offer.getProtocolVersion();
+        if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
+            disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
+                    .show(dispute);
+        } else {
+            new Popup<>()
+                    .warning("The offer in that dispute has been created with an older version of Bitsquare.\n" +
+                            "You cannot close that dispute with your version of the application.\n\n" +
+                            "Please use an older version with protocol version " + protocolVersion)
+                    .show();
+        }
     }
 
     private void onRequestUpload() {
