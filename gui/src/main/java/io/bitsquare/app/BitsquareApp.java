@@ -216,7 +216,7 @@ public class BitsquareApp extends Application {
                         new ShowWalletDataWindow(walletService).information("Wallet raw data").show();
                     else
                         new Popup<>().warning("The wallet is not initialized yet").show();
-                } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
                     WalletService walletService = injector.getInstance(WalletService.class);
                     if (walletService.getWallet() != null)

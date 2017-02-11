@@ -47,7 +47,6 @@ public class WalletAppKitBitSquare extends WalletAppKit {
     }
 
     protected PeerGroup createPeerGroup() throws TimeoutException {
-
         // no proxy case.
         if (socks5Proxy == null || isLocalHostFullNodeRunning()) {
             return super.createPeerGroup();
