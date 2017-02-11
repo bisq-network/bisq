@@ -15,7 +15,7 @@ $JAVA_HOME/bin/javapackager \
     -deploy \
     -Bruntime="$JAVA_HOME/jre" \
     -BappVersion=$version \
-    -Bcategory=Internet \
+    -Bcategory=Network \
     -Bemail=team@bitsquare.io \
     -BlicenseType=GPLv3 \
     -BlicenseFile=LICENSE \
