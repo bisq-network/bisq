@@ -37,7 +37,7 @@ import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
 public abstract class TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);
-    private static final long TIMEOUT_SEC = 60;
+    private static final long TIMEOUT_SEC = 75;
 
     protected final ProcessModel processModel;
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
@@ -110,7 +110,7 @@ public abstract class TradeProtocol {
         stopTimeout();
 
         timeoutTimer = UserThread.runAfter(() -> {
-            log.error("Timeout reached");
+            log.error("Timeout reached. TradeID=" + trade.getId());
             trade.setErrorMessage("A timeout occurred.");
             cleanupTradable();
             cleanup();

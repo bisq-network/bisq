@@ -1,12 +1,18 @@
 #!/bin/bash
 
-version="0.4.9.8"
+version="0.4.9.9"
 
 target_dir="/Users/dev/Documents/__bitsquare/_releases/$version"
 src_dir="/Users/dev/Documents/intellij/bitsquare"
 
+rm -r $target_dir
+
 mkdir -p $target_dir
 
+# new signing key
+#cp "$target_dir/../7D20BB32.asc" "$target_dir/"
+
+#old sig key
 cp "$target_dir/../F379A1C6.asc" "$target_dir/"
 
 mac="Bitsquare-$version.dmg"
@@ -37,6 +43,7 @@ cp "/Users/dev/vm_shared_windows/bundles/$exe" "/Users/dev/vm_shared_win10/$win6
 
 cd "$target_dir"
 
+
 gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $mac.asc --detach-sig --armor $mac
 gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $deb64.asc --detach-sig --armor $deb64
 gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $deb32.asc --detach-sig --armor $deb32
@@ -48,5 +55,6 @@ gpg --digest-algo SHA256 --verify $deb64{.asc*,}
 gpg --digest-algo SHA256 --verify $deb32{.asc*,}
 gpg --digest-algo SHA256 --verify $win64{.asc*,}
 gpg --digest-algo SHA256 --verify $win32{.asc*,}
+
 
 open "$target_dir"

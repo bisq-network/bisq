@@ -6,7 +6,7 @@ mkdir -p gui/deploy
 set -e
 
 # Edit version
-version=0.4.9.8
+version=0.4.9.9
 
 jarFile="/media/sf_vm_shared_ubuntu/Bitsquare-$version.jar"
 
@@ -15,7 +15,7 @@ $JAVA_HOME/bin/javapackager \
     -deploy \
     -Bruntime="$JAVA_HOME/jre" \
     -BappVersion=$version \
-    -Bcategory=Internet \
+    -Bcategory=Network \
     -Bemail=team@bitsquare.io \
     -BlicenseType=GPLv3 \
     -BlicenseFile=LICENSE \
@@ -33,6 +33,7 @@ $JAVA_HOME/bin/javapackager \
 # uncomment because the build VM does not support alien
 #sudo alien -r -c -k gui/deploy/bundles/bitsquare-$version.deb
 
+cp "gui/deploy/bundles/bitsquare-$version.deb" "/home/mk/Desktop/Bitsquare-64bit-$version.deb"
 mv "gui/deploy/bundles/bitsquare-$version.deb" "/media/sf_vm_shared_ubuntu/Bitsquare-64bit-$version.deb"
 #mv "bitsquare-$version-1.x86_64.rpm" "/media/sf_vm_shared_ubuntu/Bitsquare-64bit-$version.rpm"
 rm -r gui/deploy/

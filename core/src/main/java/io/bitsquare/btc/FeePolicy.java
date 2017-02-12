@@ -25,26 +25,27 @@ public class FeePolicy {
     // With block getting filled up the needed fee to get fast into a black has become more expensive and less predictable.
     // To see current fees check out:
     // https://tradeblock.com/blockchain
-    // http://www.cointape.com
+    // https://jochen-hoenicke.de/queue/24h.html
+    // https://bitcoinfees.21.co/
     // http://p2sh.info/dashboard/db/fee-estimation
     // https://bitcoinfees.github.io/#1d
     // Average values are 10-100 satoshis/byte in january 2016
+    // Average values are 60-140 satoshis/byte in february 2017
     // 
     // Our trade transactions have a fixed set of inputs and outputs making the size very predictable 
     // (as long the user does not do multiple funding transactions)
     // 
-    // trade fee tx: 226 bytes          // 88 satoshi/byte
-    // deposit tx: 336 bytes            // 59 satoshi/byte
-    // payout tx: 371 bytes             // 53 satoshi/byte
-    // disputed payout tx: 408 bytes    // 49 satoshi/byte
+    // trade fee tx: 226 bytes          // 221 satoshi/byte
+    // deposit tx: 336 bytes            // 148 satoshi/byte
+    // payout tx: 371 bytes             // 134 satoshi/byte
+    // disputed payout tx: 408 bytes    // 122 satoshi/byte
 
     // We set a fixed fee to make the needed amounts in the trade predictable.
-    // We use 0.0002 BTC (0.08 EUR @ 400 EUR/BTC) which is for our tx sizes about 50-90 satoshi/byte
+    // We use 0.0005 BTC (0.5 EUR @ 1000 EUR/BTC) which is for our tx sizes about 120-220 satoshi/byte
     // We cannot make that user defined as it need to be the same for both users, so we can only change that in 
     // software updates 
-    // TODO before Beta we should get a good future proof guess as a change causes incompatible versions
     public static Coin getFixedTxFeeForTrades() {
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(20_000);
+        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(50_000);
     }
 
     // For non trade transactions (withdrawal) we use the default fee calculation 
@@ -53,7 +54,7 @@ public class FeePolicy {
     // The BitcoinJ fee calculation use kb so a tx size  < 1kb will still pay the fee for a kb tx.
     // Our payout tx has about 370 bytes so we get a fee/kb value of about 90 satoshi/byte making it high priority
     // Other payout transactions (E.g. arbitrators many collected transactions) will go with 30 satoshi/byte if > 1kb
-    private static Coin NON_TRADE_FEE_PER_KB = DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(20_000); // 0.0002 BTC about 0.08 EUR @ 400 EUR/BTC 
+    private static Coin NON_TRADE_FEE_PER_KB = DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(30_000); // 0.0003 BTC about 0.3 EUR @ 1000 EUR/BTC 
 
     public static void setNonTradeFeePerKb(Coin nonTradeFeePerKb) {
         NON_TRADE_FEE_PER_KB = nonTradeFeePerKb;
@@ -63,22 +64,20 @@ public class FeePolicy {
         return NON_TRADE_FEE_PER_KB;
     }
 
-    // 0.0005 BTC  0.05% of 1 BTC about 0.2 EUR @ 400 EUR/BTC
+    // 0.0008 BTC  0.08% of 1 BTC about 0.8 EUR @ 1000 EUR/BTC
     public static Coin getCreateOfferFee() {
-        // We need to pay the quite high miner fee of 30_000 from the trading fee tx so 30_000 us our lower limit
-        // The arbitrator receive only 0.0002 BTC - less than the miners
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(10_000) : Coin.valueOf(50_000);
+        // We need to pay the quite high miner fee of 50_000 from the trading fee tx so 30_000 is what 
+        // the arbitrator receives
+        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(10_000) : Coin.valueOf(80_000);
     }
 
-    // 0.001 BTC  0.1% of 1 BTC about 0.4 EUR @ 400 EUR/BTC
+    // 0.001 BTC  0.1% of 1 BTC about 1 EUR @ 1000 EUR/BTC
     public static Coin getTakeOfferFee() {
         return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(10_000) : Coin.valueOf(100_000);
     }
 
-
-    // TODO will be increased once we get higher limits
-    // 0.01 BTC; about 4 EUR @ 400 EUR/BTC
+    // 0.03 BTC; about 30 EUR @ 1000 EUR/BTC
     public static Coin getSecurityDeposit() {
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(1_000_000);
+        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(3_000_000);
     }
 }

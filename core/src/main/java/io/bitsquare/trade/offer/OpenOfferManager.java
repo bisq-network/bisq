@@ -168,7 +168,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     public void removeAllOpenOffers(@Nullable Runnable completeHandler) {
+        removeOpenOffers(getOpenOffers(), completeHandler);
+    }
+
+    public void removeOpenOffers(List<OpenOffer> openOffers, @Nullable Runnable completeHandler) {
         final int size = openOffers.size();
+        // Copy list as we remove in the loop
         List<OpenOffer> openOffersList = new ArrayList<>(openOffers);
         openOffersList.forEach(openOffer -> removeOpenOffer(openOffer, () -> {
         }, errorMessage -> {
@@ -444,8 +449,20 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 final long maxDelay = (i + 2) * delay;
                 final OpenOffer openOffer = openOffersList.get(i);
                 UserThread.runAfterRandomDelay(() -> {
-                    if (openOffers.contains(openOffer) && openOffer.getId() != null)
-                        republishOffer(openOffer);
+                    if (openOffers.contains(openOffer)) {
+                        // The openOffer.getId().contains("_") check is because there was once a version 
+                        // where we encoded the version nr in the offer id with a "_" as separator.
+                        // That caused several issues and was reverted. So if there are still old offers out with that 
+                        // special offer ID format those must not be published as they cause failed taker attempts 
+                        // with lost taker fee.
+                        String id = openOffer.getId();
+                        if (id != null && !id.contains("_"))
+                            republishOffer(openOffer);
+                        else
+                            log.warn("You have an offer with an invalid offer ID: offerID=" + id);
+                    }
+
+
                 }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
             }
         } else {
