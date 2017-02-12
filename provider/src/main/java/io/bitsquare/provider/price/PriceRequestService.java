@@ -151,6 +151,7 @@ public class PriceRequestService {
                 .filter(e -> poloniexMap == null || !poloniexMap.containsKey(e.getKey()))
                 .forEach(e -> allPricesMap.put(e.getKey(), e.getValue()));
         coinmarketcapTs = Instant.now().getEpochSecond();
+        log.info("Coinmarketcap LTC (last): " + map.get("LTC").l);
         writeToJson();
     }
 
@@ -161,12 +162,14 @@ public class PriceRequestService {
         log.info("requestPoloniexPrices took {} ms.", (System.currentTimeMillis() - ts));
         allPricesMap.putAll(poloniexMap);
         poloniexTs = Instant.now().getEpochSecond();
+        log.info("Poloniex LTC (last): " + poloniexMap.get("LTC").l);
         writeToJson();
     }
 
     private void requestBtcAverageLocalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
         long ts = System.currentTimeMillis();
         btcAverageLocalMap = btcAverageProvider.getLocal();
+        log.info("BTCAverage local USD (last):" + btcAverageLocalMap.get("USD").l);
         log.info("requestBtcAverageLocalPrices took {} ms.", (System.currentTimeMillis() - ts));
         allPricesMap.putAll(btcAverageLocalMap);
         btcAverageTs = Instant.now().getEpochSecond();
@@ -176,6 +179,7 @@ public class PriceRequestService {
     private void requestBtcAverageGlobalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
         long ts = System.currentTimeMillis();
         Map<String, PriceData> map = btcAverageProvider.getGlobal();
+        log.info("BTCAverage global USD (last):" + map.get("USD").l);
         log.info("requestBtcAverageGlobalPrices took {} ms.", (System.currentTimeMillis() - ts));
         // we don't replace prices which we got form the local request, just in case the global data are received 
         // earlier at startup we allow them but the local request will overwrite them.

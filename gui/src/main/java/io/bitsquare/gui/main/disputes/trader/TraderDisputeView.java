@@ -21,6 +21,7 @@ import com.google.common.io.ByteStreams;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.alert.PrivateNotificationManager;
+import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
@@ -34,6 +35,7 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.ContractWindow;
@@ -92,7 +94,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
     private final Stage stage;
-    private final BSFormatter formatter;
+    protected final BSFormatter formatter;
     private final DisputeSummaryWindow disputeSummaryWindow;
     private PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
@@ -124,6 +126,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private Subscription inputTextAreaTextSubscription;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
+    protected FilteredList<Dispute> filteredList;
+    private InputTextField filterTextField;
+    private ChangeListener<String> filterTextFieldListener;
+    protected HBox filterBox;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -148,10 +154,24 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        Label label = new Label("Filter list:");
+        HBox.setMargin(label, new Insets(5, 0, 0, 0));
+        filterTextField = new InputTextField();
+        filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
+
+        filterBox = new HBox();
+        filterBox.setSpacing(5);
+        filterBox.getChildren().addAll(label, filterTextField);
+        VBox.setVgrow(filterBox, Priority.NEVER);
+        filterBox.setVisible(false);
+        filterBox.setManaged(false);
+
         tableView = new TableView<>();
         VBox.setVgrow(tableView, Priority.SOMETIMES);
         tableView.setMinHeight(150);
-        root.getChildren().add(tableView);
+
+        root.getChildren().addAll(filterBox, tableView);
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new Label("There are no open tickets");
         placeholder.setWrapText(true);
@@ -295,10 +315,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        filterTextField.textProperty().addListener(filterTextFieldListener);
         disputeManager.cleanupDisputes();
 
-        FilteredList<Dispute> filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
-        setFilteredListPredicate(filteredList);
+        filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
+        applyFilteredListPredicate(filterTextField.getText());
 
         sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -320,6 +341,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
         sortedList.comparatorProperty().unbind();
         selectedDisputeSubscription.unsubscribe();
         removeListenersOnSelectDispute();
@@ -328,7 +350,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
-    protected void setFilteredListPredicate(FilteredList<Dispute> filteredList) {
+    protected void applyFilteredListPredicate(String filterString) {
+        // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)
         filteredList.setPredicate(dispute -> !dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()));
     }
 
@@ -393,8 +416,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onCloseDispute(Dispute dispute) {
-        disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
-                .show(dispute);
+        long protocolVersion = dispute.getContract().offer.getProtocolVersion();
+        if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
+            disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
+                    .show(dispute);
+        } else {
+            new Popup<>()
+                    .warning("The offer in that dispute has been created with an older version of Bitsquare.\n" +
+                            "You cannot close that dispute with your version of the application.\n\n" +
+                            "Please use an older version with protocol version " + protocolVersion)
+                    .show();
+        }
     }
 
     private void onRequestUpload() {
@@ -489,7 +521,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             messageListView.prefWidthProperty().bind(root.widthProperty());
             messagesAnchorPane.prefWidthProperty().bind(root.widthProperty());
             disputeCommunicationMessages.addListener(disputeDirectMessageListListener);
-            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
+            if (selectedDispute != null)
+                selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
         }
     }
@@ -497,8 +530,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private void onSelectDispute(Dispute dispute) {
         removeListenersOnSelectDispute();
         if (dispute == null) {
-            if (root.getChildren().size() > 1)
-                root.getChildren().remove(1);
+            if (root.getChildren().size() > 2)
+                root.getChildren().remove(2);
 
             selectedDispute = null;
         } else if (selectedDispute != dispute) {
@@ -805,9 +838,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 }
             });
 
-            if (root.getChildren().size() > 1)
-                root.getChildren().remove(1);
-            root.getChildren().add(1, messagesAnchorPane);
+            if (root.getChildren().size() > 2)
+                root.getChildren().remove(2);
+            root.getChildren().add(2, messagesAnchorPane);
 
             scrollToBottom();
         }
@@ -1022,7 +1055,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
 
-    private String getBuyerOnionAddressColumnLabel(Dispute item) {
+    protected String getBuyerOnionAddressColumnLabel(Dispute item) {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress buyerNodeAddress = contract.getBuyerNodeAddress();
@@ -1035,7 +1068,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private String getSellerOnionAddressColumnLabel(Dispute item) {
+    protected String getSellerOnionAddressColumnLabel(Dispute item) {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress sellerNodeAddress = contract.getSellerNodeAddress();

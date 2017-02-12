@@ -15,14 +15,16 @@ public class SpreadItem {
     public final int numberOfOffers;
     @Nullable
     public final Fiat spread;
+    public final String percentage;
     public final Coin totalAmount;
 
-    public SpreadItem(String currencyCode, int numberOfBuyOffers, int numberOfSellOffers, int numberOfOffers, @Nullable Fiat spread, Coin totalAmount) {
+    public SpreadItem(String currencyCode, int numberOfBuyOffers, int numberOfSellOffers, int numberOfOffers, @Nullable Fiat spread, String percentage, Coin totalAmount) {
         this.currencyCode = currencyCode;
         this.numberOfBuyOffers = numberOfBuyOffers;
         this.numberOfSellOffers = numberOfSellOffers;
         this.numberOfOffers = numberOfOffers;
         this.spread = spread;
+        this.percentage = percentage;
         this.totalAmount = totalAmount;
     }
 }

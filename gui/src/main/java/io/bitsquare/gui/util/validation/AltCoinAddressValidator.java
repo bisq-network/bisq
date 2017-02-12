@@ -20,6 +20,7 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bitsquare.gui.util.validation.params.IOPParams;
+import io.bitsquare.gui.util.validation.params.PivxParams;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.params.MainNetParams;
@@ -57,7 +58,6 @@ public final class AltCoinAddressValidator extends InputValidator {
             switch (currencyCode) {
                 // Example for BTC, though for BTC we use the BitcoinJ library address check
                 case "BTC":
-                    log.error("" + input.length());
                     // taken form: https://stackoverflow.com/questions/21683680/regex-to-match-bitcoin-addresses
                     if (input.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (verifyChecksum(input))
@@ -69,6 +69,21 @@ public final class AltCoinAddressValidator extends InputValidator {
                             }
                         else
                             return wrongChecksum;
+                    } else {
+                        return regexTestFailed;
+                    }
+               case "PIVX":
+                if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        if (verifyChecksum(input)) {
+                            try {
+                                new Address(PivxParams.get(), input);
+                                return new ValidationResult(true);
+                            } catch (AddressFormatException e) {
+                                return new ValidationResult(false, getErrorMessage(e));
+                            }
+                        } else {
+                            return wrongChecksum;
+                        }
                     } else {
                         return regexTestFailed;
                     }
@@ -93,6 +108,22 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return validationResult;
                     else
                         return new ValidationResult(false, "ZEC address need to start with t. Addresses starting with z are not supported.");
+
+                    // TODO test not successful
+                /*case "XTO":
+                    if (input.matches("^[T2][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        if (verifyChecksum(input))
+                            try {
+                                new Address(MainNetParams.get(), input);
+                                return new ValidationResult(true);
+                            } catch (AddressFormatException e) {
+                                return new ValidationResult(false, getErrorMessage(e));
+                            }
+                        else
+                            return wrongChecksum;
+                    } else {
+                        return regexTestFailed;
+                    }*/
                 case "GBYTE":
                     return ByteballAddressValidator.validate(input);
                 default:

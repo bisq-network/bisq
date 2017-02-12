@@ -24,24 +24,27 @@ public class FeePolicy {
     // With block getting filled up the needed fee to get fast into a black has become more expensive and less predictable.
     // To see current fees check out:
     // https://tradeblock.com/blockchain
-    // http://www.cointape.com
+    // https://jochen-hoenicke.de/queue/24h.html
+    // https://bitcoinfees.21.co/
     // http://p2sh.info/dashboard/db/fee-estimation
     // https://bitcoinfees.github.io/#1d
     // https://estimatefee.appspot.com/
     // Average values are 10-100 satoshis/byte in january 2016
+    // Average values are 60-140 satoshis/byte in february 2017
     // 
     // Our trade transactions have a fixed set of inputs and outputs making the size very predictable 
     // (as long the user does not do multiple funding transactions)
     // 
-    // trade fee tx: 226 bytes          // 88 satoshi/byte
-    // deposit tx: 336 bytes            // 59 satoshi/byte
-    // payout tx: 371 bytes             // 53 satoshi/byte
-    // disputed payout tx: 408 bytes    // 49 satoshi/byte
+    // trade fee tx: 226 bytes          // 221 satoshi/byte
+    // deposit tx: 336 bytes            // 148 satoshi/byte
+    // payout tx: 371 bytes             // 134 satoshi/byte
+    // disputed payout tx: 408 bytes    // 122 satoshi/byte
 
     // We set a fixed fee to make the needed amounts in the trade predictable.
-    // We use 0.0002 BTC (0.08 EUR @ 400 EUR/BTC) which is for our tx sizes about 50-90 satoshi/byte
+    // We use 0.0005 BTC (0.5 EUR @ 1000 EUR/BTC) which is for our tx sizes about 120-220 satoshi/byte
     // We cannot make that user defined as it need to be the same for both users, so we can only change that in 
     // software updates 
+    // TODO before Beta we should get a good future proof guess as a change causes incompatible versions
 
     // For non trade transactions (withdrawal) we use the default fee calculation 
     // To avoid issues with not getting into full blocks, we increase the fee/kb to 30 satoshi/byte

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.provider;
+package io.bitsquare.pricefeed;
 
 import ch.qos.logback.classic.Level;
 import io.bitsquare.app.Log;

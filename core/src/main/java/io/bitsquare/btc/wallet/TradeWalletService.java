@@ -241,7 +241,7 @@ public class TradeWalletService {
 
         verifyTransaction(dummyTX);
 
-        BtcWalletService.printTx("dummyTX", dummyTX);
+        //BtcWalletService.printTx("dummyTX", dummyTX);
 
         List<RawTransactionInput> rawTransactionInputList = dummyTX.getInputs().stream()
                 .map(e -> {
@@ -409,7 +409,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedDepositTx);
 
-        BtcWalletService.printTx("preparedDepositTx", preparedDepositTx);
+        //BtcWalletService.printTx("preparedDepositTx", preparedDepositTx);
 
         return new PreparedDepositTxAndOffererInputs(offererRawTransactionInputs, preparedDepositTx.bitcoinSerialize());
     }
@@ -495,7 +495,7 @@ public class TradeWalletService {
 
         // Add all outputs from offerersDepositTx to depositTx
         offerersDepositTx.getOutputs().forEach(depositTx::addOutput);
-        BtcWalletService.printTx("offerersDepositTx", offerersDepositTx);
+        //BtcWalletService.printTx("offerersDepositTx", offerersDepositTx);
 
         // Sign inputs 
         int start = takerIsSeller ? buyerInputs.size() : 0;
@@ -579,7 +579,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedPayoutTx);
 
-        BtcWalletService.printTx("preparedPayoutTx", preparedPayoutTx);
+        //BtcWalletService.printTx("preparedPayoutTx", preparedPayoutTx);
 
         return sellerSignature.encodeToDER();
     }
@@ -734,7 +734,7 @@ public class TradeWalletService {
 
         verifyTransaction(preparedPayoutTx);
 
-        BtcWalletService.printTx("preparedPayoutTx", preparedPayoutTx);
+        //BtcWalletService.printTx("preparedPayoutTx", preparedPayoutTx);
 
         return arbitratorSignature.encodeToDER();
     }
@@ -860,9 +860,9 @@ public class TradeWalletService {
         log.info("buyerAddressString " + buyerAddressString);
         log.info("sellerAddressString " + sellerAddressString);
         log.info("arbitratorAddressString " + arbitratorAddressString);
-        log.info("buyerPrivateKeyAsHex " + buyerPrivateKeyAsHex);
-        log.info("sellerPrivateKeyAsHex " + sellerPrivateKeyAsHex);
-        log.info("arbitratorPrivateKeyAsHex " + arbitratorPrivateKeyAsHex);
+        log.info("buyerPrivateKeyAsHex (not displayed for security reasons)");
+        log.info("sellerPrivateKeyAsHex (not displayed for security reasons)");
+        log.info("arbitratorPrivateKeyAsHex (not displayed for security reasons)");
         log.info("buyerPubKeyAsHex " + buyerPubKeyAsHex);
         log.info("sellerPubKeyAsHex " + sellerPubKeyAsHex);
         log.info("arbitratorPubKeyAsHex " + arbitratorPubKeyAsHex);

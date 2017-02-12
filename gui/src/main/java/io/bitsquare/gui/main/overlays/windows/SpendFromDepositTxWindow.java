@@ -112,11 +112,19 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         List<String> buyerPubKeys = !buyerPubKeysInputTextField.getText().isEmpty() ? Arrays.asList(buyerPubKeysInputTextField.getText().split(",")) : new ArrayList<>();
         List<String> sellerPubKeys = !sellerPubKeysInputTextField.getText().isEmpty() ? Arrays.asList(sellerPubKeysInputTextField.getText().split(",")) : new ArrayList<>();
 
-
-        /* 
+        
+        // Notes: 
+        // Open with alt+g and enable DEV mode
+        // Priv key is only visible if pw protection is removed (wallet details data (alt+j))
+        // Take P2SHMultiSigOutputScript from depositTx in blockexplorer 
+        // Take missing buyerPubKeyAsHex and sellerPubKeyAsHex from contract data!
+        // Lookup sellerPrivateKeyAsHex associated with sellerPubKeyAsHex (or buyers) in wallet details data 
+        // sellerPubKeys/buyerPubKeys are auto generated if used the fields below
+        // Never set the priv arbitr. key here!
+        
         depositTxHex.setText("");
 
-        buyerPayoutAmount.setText("0.01");
+        buyerPayoutAmount.setText("0.51");
         sellerPayoutAmount.setText("0.01");
         arbitratorPayoutAmount.setText("0");
 
@@ -141,7 +149,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         sellerPubKeys = Arrays.asList();
                 
         buyerPubKeys = Arrays.asList();
-        */
+
 
         actionButtonText("Sign and publish transaction");
 

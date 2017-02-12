@@ -126,6 +126,9 @@ public class BitsquareApp extends Application {
             if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
                     throwable.getCause().getCause() instanceof BlockStoreException) {
                 log.error(throwable.getMessage());
+            } else if (throwable instanceof ClassCastException &&
+                    "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
+                log.warn(throwable.getMessage());
             } else {
                 log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
                 log.error("throwableMessage= " + throwable.getMessage());
@@ -214,7 +217,7 @@ public class BitsquareApp extends Application {
                         new ShowWalletDataWindow(walletsManager).information("Wallet raw data").show();
                     else
                         new Popup<>().warning("The wallet is not initialized yet").show();
-                } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
                     BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
                     if (walletService.isWalletReady())

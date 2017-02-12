@@ -11,5 +11,6 @@ public class NetworkOptionKeys {
     public static final String BAN_LIST = "banList";
     public static final String SOCKS_5_PROXY_BTC_ADDRESS = "socks5ProxyBtcAddress";
     public static final String SOCKS_5_PROXY_HTTP_ADDRESS = "socks5ProxyHttpAddress";
-
+    public static final String SOCKS5_DISCOVER_MODE = "socks5DiscoverMode";
+    
 }
