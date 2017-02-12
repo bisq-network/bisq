@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.market.spread;
 
 import com.google.inject.Inject;
-import io.bitsquare.btc.pricefeed.MarketPrice;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
+import io.bitsquare.btc.provider.price.MarketPrice;
+import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;

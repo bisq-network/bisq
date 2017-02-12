@@ -422,6 +422,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return pubKeyRing;
     }
 
+    // TODO refactor
     @Nullable
     public Fiat getPrice() {
         if (useMarketBasedPrice) {

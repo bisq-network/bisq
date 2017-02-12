@@ -99,9 +99,21 @@ public class WalletConfig extends AbstractIdleService {
     /**
      * Creates a new WalletAppKitBitSquare, with a newly created {@link Context}. Files will be stored in the given directory.
      */
-    public WalletConfig(NetworkParameters params, Socks5Proxy socks5Proxy, File directory, String btcWalletFilePrefix, String squWalletFilePrefix) {
-        this(new Context(params), directory, btcWalletFilePrefix, squWalletFilePrefix);
+    public WalletConfig(NetworkParameters params, Socks5Proxy socks5Proxy,
+                        File directory, String btcWalletFilePrefix,
+                        String squWalletFilePrefix) {
+        this.context = new Context(params);
+        this.params = checkNotNull(context.getParams());
+        this.directory = checkNotNull(directory);
+        this.btcWalletFilePrefix = checkNotNull(btcWalletFilePrefix);
+        this.squWalletFilePrefix = squWalletFilePrefix;
         this.socks5Proxy = socks5Proxy;
+
+        if (!Utils.isAndroidRuntime()) {
+            InputStream stream = WalletConfig.class.getResourceAsStream("/" + params.getId() + ".checkpoints");
+            if (stream != null)
+                setCheckpoints(stream);
+        }
 
         walletFactory = new BitsquareWalletFactory() {
             @Override
@@ -130,29 +142,6 @@ public class WalletConfig extends AbstractIdleService {
         Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup);
 
         Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isSquWallet);
-    }
-
-    /**
-     * Creates a new WalletAppKitBitSquare, with a newly created {@link Context}. Files will be stored in the given directory.
-     */
-    private WalletConfig(NetworkParameters params, File directory, String btcWalletFilePrefix, String squWalletFilePrefix) {
-        this(new Context(params), directory, btcWalletFilePrefix, squWalletFilePrefix);
-    }
-
-    /**
-     * Creates a new WalletAppKitBitSquare, with the given {@link Context}. Files will be stored in the given directory.
-     */
-    private WalletConfig(Context context, File directory, String btcWalletFilePrefix, String squWalletFilePrefix) {
-        this.context = context;
-        this.params = checkNotNull(context.getParams());
-        this.directory = checkNotNull(directory);
-        this.btcWalletFilePrefix = checkNotNull(btcWalletFilePrefix);
-        this.squWalletFilePrefix = squWalletFilePrefix;
-        if (!Utils.isAndroidRuntime()) {
-            InputStream stream = WalletConfig.class.getResourceAsStream("/" + params.getId() + ".checkpoints");
-            if (stream != null)
-                setCheckpoints(stream);
-        }
     }
 
     public Socks5Proxy getProxy() {
