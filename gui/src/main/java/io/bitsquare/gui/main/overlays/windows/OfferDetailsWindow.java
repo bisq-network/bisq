@@ -264,7 +264,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Offerer's onion address:", offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
-        addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit()));
+        addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit(offer)));
 
         if (paymentMethodCountryCode != null)
             addLabelTextField(gridPane, ++rowIndex, "Offerer's country of bank:",

@@ -268,7 +268,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getSecurityDeposit() {
-        return formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit());
+        return formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit(dataModel.getOffer()));
     }
 
     public boolean isBlockChainMethod() {

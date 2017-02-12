@@ -60,8 +60,7 @@ public abstract class BuyerTrade extends Trade {
     @Override
     public Coin getPayoutAmount() {
         checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
-
-        return FeePolicy.getSecurityDeposit().add(getTradeAmount());
+        return FeePolicy.getSecurityDeposit(getOffer()).add(getTradeAmount());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

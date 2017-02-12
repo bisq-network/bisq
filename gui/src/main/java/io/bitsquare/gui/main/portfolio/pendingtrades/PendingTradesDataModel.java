@@ -215,7 +215,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     Coin getTotalFees() {
-        return FeePolicy.getFixedTxFeeForTrades().add(isOfferer() ? FeePolicy.getCreateOfferFee() : FeePolicy.getTakeOfferFee());
+        return FeePolicy.getFixedTxFeeForTrades(getOffer()).add(isOfferer() ? FeePolicy.getCreateOfferFee() : FeePolicy.getTakeOfferFee());
     }
 
     public String getCurrencyCode() {

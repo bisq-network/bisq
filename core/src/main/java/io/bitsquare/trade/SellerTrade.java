@@ -58,7 +58,7 @@ public abstract class SellerTrade extends Trade {
 
     @Override
     public Coin getPayoutAmount() {
-        return FeePolicy.getSecurityDeposit();
+        return FeePolicy.getSecurityDeposit(getOffer());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

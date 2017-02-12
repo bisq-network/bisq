@@ -24,6 +24,7 @@ import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -43,8 +44,10 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin buyerInputAmount = FeePolicy.getSecurityDeposit().add(FeePolicy.getFixedTxFeeForTrades());
-            Coin msOutputAmount = buyerInputAmount.add(FeePolicy.getSecurityDeposit()).add(trade.getTradeAmount());
+            Offer offer = trade.getOffer();
+            Coin securityDeposit = FeePolicy.getSecurityDeposit(offer);
+            Coin buyerInputAmount = securityDeposit.add(FeePolicy.getFixedTxFeeForTrades(offer));
+            Coin msOutputAmount = buyerInputAmount.add(securityDeposit).add(trade.getTradeAmount());
 
             log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"
@@ -56,7 +59,7 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
             WalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry buyerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            buyerMultiSigAddressEntry.setLockedTradeAmount(buyerInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades()));
+            buyerMultiSigAddressEntry.setLockedTradeAmount(buyerInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades(offer)));
             walletService.saveAddressEntryList();
             PreparedDepositTxAndOffererInputs result = processModel.getTradeWalletService().offererCreatesAndSignsDepositTx(
                     true,

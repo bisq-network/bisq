@@ -17,7 +17,7 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.trade.offer.Offer;
 import org.bitcoinj.core.Coin;
 
 public class FeePolicy {
@@ -44,8 +44,13 @@ public class FeePolicy {
     // We use 0.0005 BTC (0.5 EUR @ 1000 EUR/BTC) which is for our tx sizes about 120-220 satoshi/byte
     // We cannot make that user defined as it need to be the same for both users, so we can only change that in 
     // software updates 
+    // TODO version check can be removed after DAO version
+    public static Coin getFixedTxFeeForTrades(Offer offer) {
+        return offer != null && offer.getProtocolVersion() == 1 ? Coin.valueOf(20_000) : getFixedTxFeeForTrades();
+    }
+
     public static Coin getFixedTxFeeForTrades() {
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(50_000);
+        return Coin.valueOf(50_000);
     }
 
     // For non trade transactions (withdrawal) we use the default fee calculation 
@@ -54,7 +59,7 @@ public class FeePolicy {
     // The BitcoinJ fee calculation use kb so a tx size  < 1kb will still pay the fee for a kb tx.
     // Our payout tx has about 370 bytes so we get a fee/kb value of about 90 satoshi/byte making it high priority
     // Other payout transactions (E.g. arbitrators many collected transactions) will go with 30 satoshi/byte if > 1kb
-    private static Coin NON_TRADE_FEE_PER_KB = DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(30_000); // 0.0003 BTC about 0.3 EUR @ 1000 EUR/BTC 
+    private static Coin NON_TRADE_FEE_PER_KB = Coin.valueOf(30_000); // 0.0003 BTC about 0.3 EUR @ 1000 EUR/BTC 
 
     public static void setNonTradeFeePerKb(Coin nonTradeFeePerKb) {
         NON_TRADE_FEE_PER_KB = nonTradeFeePerKb;
@@ -68,16 +73,23 @@ public class FeePolicy {
     public static Coin getCreateOfferFee() {
         // We need to pay the quite high miner fee of 50_000 from the trading fee tx so 30_000 is what 
         // the arbitrator receives
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(10_000) : Coin.valueOf(80_000);
+        return Coin.valueOf(80_000);
     }
 
     // 0.001 BTC  0.1% of 1 BTC about 1 EUR @ 1000 EUR/BTC
     public static Coin getTakeOfferFee() {
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(10_000) : Coin.valueOf(100_000);
+        return Coin.valueOf(100_000);
     }
 
     // 0.03 BTC; about 30 EUR @ 1000 EUR/BTC
-    public static Coin getSecurityDeposit() {
-        return DevFlags.STRESS_TEST_MODE ? Coin.valueOf(5_000) : Coin.valueOf(3_000_000);
+    // TODO version check can be removed after DAO version
+    public static Coin getSecurityDeposit(Offer offer) {
+        return offer != null && offer.getProtocolVersion() == 1 ? Coin.valueOf(1_000_000) : getSecurityDeposit();
     }
+
+    public static Coin getSecurityDeposit() {
+        return Coin.valueOf(3_000_000);
+    }
+
+
 }
