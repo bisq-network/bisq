@@ -145,20 +145,12 @@ public final class Preferences implements Persistable {
     transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
 
-    // Not used anymore but need to be kept for backward compatibility
-    @Deprecated
-    private boolean useInvertedMarketPrice;
-    @Deprecated
-    private boolean useTorForHttpRequests = true;
-    @Deprecated
-    private List<String> bridgeAddresses;
-    @Deprecated
-    private long nonTradeTxFeePerKB;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment,
                        FeeService feeService,

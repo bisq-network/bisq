@@ -29,6 +29,7 @@
             <version>4.8</version>
         </dependency>
 
+        <!-- TODO host on https or include in project -->
         <dependency>
             <groupId>com.neemre.btcd-cli4j</groupId>
             <artifactId>btcd-cli4j-core</artifactId>
