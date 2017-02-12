@@ -28,3 +28,4 @@ desktop.ini
 !package/windows/*bit*.bat
 */target/*
 *.class
+/gui/deploy/*
