@@ -22,5 +22,4 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -appclass io.bitsquare.app.BitsquareAppMain ^
 -srcfiles %outdir%\Bitsquare-%version%.jar ^
 -outfile Bitsquare ^
--Bruntime="%JAVA_HOME%\jre" ^
--Bicon=package/windows/Bitsquare.ico
+-Bruntime="%JAVA_HOME%\jre"
