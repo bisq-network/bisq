@@ -54,7 +54,7 @@ public final class CryptoCurrencyAccountContractData extends PaymentAccountContr
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.CryptoCurrencyAccountContractData.Builder cryptoCurrencyAccountContractData =
                 Messages.CryptoCurrencyAccountContractData.newBuilder().setAddress(address);
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =

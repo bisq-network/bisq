@@ -628,7 +628,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.StoragePayload toProtoBuf() {
         return Messages.StoragePayload.newBuilder().setOffer(Messages.Offer.newBuilder()
                 .setTTL(TTL)
                 .setDirectionValue(direction.ordinal())

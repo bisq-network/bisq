@@ -115,7 +115,7 @@ public final class PrivateNotification implements Payload {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PrivateNotification toProtoBuf() {
         return Messages.PrivateNotification.newBuilder()
                 .setMessage(message)
                 .setSignatureAsBase64(signatureAsBase64)

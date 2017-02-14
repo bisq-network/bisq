@@ -58,7 +58,7 @@ public final class Attachment implements Payload {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.Attachment toProtoBuf() {
         return Messages.Attachment.newBuilder().setBytes(ByteString.copyFrom(bytes))
                 .setFileName(fileName).build();
     }

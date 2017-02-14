@@ -76,7 +76,7 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.CashDepositAccountContractData.Builder cashDepositAccountContractData =
                 Messages.CashDepositAccountContractData.newBuilder()
                         .setHolderName(holderName)

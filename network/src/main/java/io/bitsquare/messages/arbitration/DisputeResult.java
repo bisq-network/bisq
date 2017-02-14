@@ -38,7 +38,7 @@ public final class DisputeResult implements Payload {
     private static final Logger log = LoggerFactory.getLogger(DisputeResult.class);
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.DisputeResult toProtoBuf() {
         return Messages.DisputeResult.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)

@@ -102,7 +102,7 @@ public class ProtectedStorageEntry implements Payload {
         return (System.currentTimeMillis() - creationTimeStamp) > storagePayload.getTTL();
     }
 
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Object toProtoBuf() {
         return Messages.ProtectedStorageEntry.newBuilder().setStoragePayload((Messages.StoragePayload) storagePayload.toProtoBuf())
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes)).setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature)).setCreationTimeStamp(creationTimeStamp).build();

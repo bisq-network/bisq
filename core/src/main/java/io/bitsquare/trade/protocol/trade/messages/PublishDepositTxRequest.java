@@ -81,7 +81,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
         return baseEnvelope.setPublishDepositTxRequest(baseEnvelope.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)
-                .setOffererPaymentAccountContractData(offererPaymentAccountContractData.toProtoBuf())
+                .setOffererPaymentAccountContractData((Messages.PaymentAccountContractData) offererPaymentAccountContractData.toProtoBuf())
                 .setOffererAccountId(offererAccountId)
                 .setOffererContractAsJson(offererContractAsJson)
                 .setOffererContractSignature(offererContractSignature)

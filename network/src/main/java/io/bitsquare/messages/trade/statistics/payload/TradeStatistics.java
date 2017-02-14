@@ -115,7 +115,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.StoragePayload toProtoBuf() {
         return Messages.StoragePayload.newBuilder().setTradeStatistics(Messages.TradeStatistics.newBuilder()
                 .setTTL(TTL)
                 .setCurrency(currency)

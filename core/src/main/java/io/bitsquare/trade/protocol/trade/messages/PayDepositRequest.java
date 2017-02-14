@@ -175,7 +175,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                 .setChangeOutputAddress(changeOutputAddress)
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoBuf())
-                .setTakerPaymentAccountContractData(takerPaymentAccountContractData.toProtoBuf())
+                .setTakerPaymentAccountContractData((Messages.PaymentAccountContractData) takerPaymentAccountContractData.toProtoBuf())
                 .setTakerAccountId(takerAccountId)
                 .setTakeOfferFeeTxId(takeOfferFeeTxId)
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream().map(nodeAddress -> nodeAddress.toProtoBuf()).collect(Collectors.toList()))

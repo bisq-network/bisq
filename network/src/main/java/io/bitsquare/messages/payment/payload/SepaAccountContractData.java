@@ -100,7 +100,7 @@ public final class SepaAccountContractData extends CountryBasedPaymentAccountCon
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.SepaAccountContractData.Builder sepaAccountContractData =
                 Messages.SepaAccountContractData.newBuilder()
                         .setHolderName(holderName)

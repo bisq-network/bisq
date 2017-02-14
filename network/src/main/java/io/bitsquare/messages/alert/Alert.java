@@ -108,7 +108,7 @@ public final class Alert implements StoragePayload {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.StoragePayload toProtoBuf() {
         return Messages.StoragePayload.newBuilder().setAlert(Messages.Alert.newBuilder().setTTL(TTL)
                 .setMessage(message)
                 .setVersion(version)

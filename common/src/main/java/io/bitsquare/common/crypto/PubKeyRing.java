@@ -117,9 +117,8 @@ public final class PubKeyRing implements Payload {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PubKeyRing toProtoBuf() {
         return Messages.PubKeyRing.newBuilder().setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
                 .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes)).build();
-
     }
 }

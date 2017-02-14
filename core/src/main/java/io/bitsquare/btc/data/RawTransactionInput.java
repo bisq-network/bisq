@@ -69,7 +69,7 @@ public final class RawTransactionInput implements Payload {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.RawTransactionInput toProtoBuf() {
         return Messages.RawTransactionInput.newBuilder().setIndex(index)
                 .setParentTransaction(ByteString.copyFrom(parentTransaction))
                 .setValue(value).build();

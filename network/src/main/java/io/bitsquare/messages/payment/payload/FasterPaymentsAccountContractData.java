@@ -66,7 +66,7 @@ public final class FasterPaymentsAccountContractData extends PaymentAccountContr
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.FasterPaymentsAccountContractData.Builder thisClass =
                 Messages.FasterPaymentsAccountContractData.newBuilder()
                         .setSortCode(sortCode)

@@ -41,6 +41,6 @@ public final class AddDataMessage extends BroadcastMessage {
     public Messages.Envelope toProtoBuf() {
         Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
         return baseEnvelope.setAddDataMessage(Messages.AddDataMessage.newBuilder()
-                .setProtectedStorageEntry(protectedStorageEntry.toProtoBuf())).build();
+                .setProtectedStorageEntry((Messages.ProtectedStorageEntry) protectedStorageEntry.toProtoBuf())).build();
     }
 }

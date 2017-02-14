@@ -208,7 +208,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.StoragePayload toProtoBuf() {
         return Messages.StoragePayload.newBuilder().setCompensationRequestPayload(
                 Messages.CompensationRequestPayload.newBuilder()
                         .setTTL(TTL)

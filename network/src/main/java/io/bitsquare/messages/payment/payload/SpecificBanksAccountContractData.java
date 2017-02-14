@@ -66,7 +66,7 @@ public final class SpecificBanksAccountContractData extends BankAccountContractD
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.SpecificBanksAccountContractData.Builder specificBanksAccountContractData =
                 Messages.SpecificBanksAccountContractData.newBuilder().addAllAcceptedBanks(acceptedBanks);
         Messages.BankAccountContractData.Builder bankAccountContractData =

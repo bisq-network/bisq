@@ -21,7 +21,7 @@ public final class MockPayload implements Message, ExpirablePayload {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.Envelope toProtoBuf() {
         throw new NotImplementedException();
     }
 

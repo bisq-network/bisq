@@ -66,7 +66,7 @@ public final class SwishAccountContractData extends PaymentAccountContractData {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.SwishAccountContractData.Builder thisClass =
                 Messages.SwishAccountContractData.newBuilder()
                         .setMobileNr(mobileNr)

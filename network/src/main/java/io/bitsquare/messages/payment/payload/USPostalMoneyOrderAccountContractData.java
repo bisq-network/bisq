@@ -68,7 +68,7 @@ public final class USPostalMoneyOrderAccountContractData extends PaymentAccountC
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.USPostalMoneyOrderAccountContractData.Builder thisClass =
                 Messages.USPostalMoneyOrderAccountContractData.newBuilder()
                         .setPostalAddress(postalAddress)

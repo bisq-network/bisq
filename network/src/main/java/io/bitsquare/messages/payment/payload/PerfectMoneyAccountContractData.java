@@ -54,7 +54,7 @@ public final class PerfectMoneyAccountContractData extends PaymentAccountContrac
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.PerfectMoneyAccountContractData.Builder thisClass =
                 Messages.PerfectMoneyAccountContractData.newBuilder().setAccountNr(accountNr);
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =

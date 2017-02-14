@@ -26,7 +26,4 @@ public interface StoragePayload extends ExpirablePayload {
      * @see io.bitsquare.p2p.storage.P2PDataStorage#remove(ProtectedStorageEntry, NodeAddress)
      */
     PublicKey getOwnerPubKey();
-
-    Messages.ProtectedMailboxStorageEntry toProtoBuf();
-
 }

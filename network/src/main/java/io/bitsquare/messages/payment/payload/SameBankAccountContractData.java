@@ -39,7 +39,7 @@ public final class SameBankAccountContractData extends BankAccountContractData {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.SameBankAccountContractData sameBankAccountContractData =
                 Messages.SameBankAccountContractData.getDefaultInstance();
         Messages.BankAccountContractData.Builder bankAccountContractData =

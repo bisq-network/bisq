@@ -56,7 +56,7 @@ public final class Peer implements Payload, Persistable {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.Peer toProtoBuf() {
         return Messages.Peer.newBuilder().setNodeAddress(nodeAddress.toProtoBuf())
                 .setDate(date.getTime()).build();
     }

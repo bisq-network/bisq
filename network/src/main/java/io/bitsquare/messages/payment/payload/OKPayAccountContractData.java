@@ -54,7 +54,7 @@ public final class OKPayAccountContractData extends PaymentAccountContractData {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.OKPayAccountContractData.Builder thisClass =
                 Messages.OKPayAccountContractData.newBuilder().setAccountNr(accountNr);
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =

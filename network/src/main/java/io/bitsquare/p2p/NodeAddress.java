@@ -46,7 +46,7 @@ public final class NodeAddress implements Persistable, Payload {
     }
 
 
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.NodeAddress toProtoBuf() {
         return Messages.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();
     }
 

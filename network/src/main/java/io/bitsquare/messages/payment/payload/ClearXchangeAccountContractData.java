@@ -59,7 +59,7 @@ public final class ClearXchangeAccountContractData extends PaymentAccountContrac
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.ClearXchangeAccountContractData.Builder thisClass =
                 Messages.ClearXchangeAccountContractData.newBuilder()
                         .setHolderName(holderName)

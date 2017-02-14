@@ -42,7 +42,7 @@ public final class RemoveDataMessage extends BroadcastMessage {
     public Messages.Envelope toProtoBuf() {
         Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
         return baseEnvelope.setRemoveDataMessage(Messages.RemoveDataMessage.newBuilder()
-                .setProtectedStorageEntry(protectedStorageEntry.toProtoBuf())).build();
+                .setProtectedStorageEntry((Messages.ProtectedStorageEntry) protectedStorageEntry.toProtoBuf())).build();
 
     }
 }

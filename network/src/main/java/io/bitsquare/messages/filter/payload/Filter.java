@@ -97,7 +97,7 @@ public final class Filter implements StoragePayload {
 
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.StoragePayload toProtoBuf() {
         List<Messages.PaymentAccountFilter> paymentAccountFilterList;
         paymentAccountFilterList = bannedPaymentAccounts.stream()
                 .map(paymentAccountFilter -> paymentAccountFilter.toProtoBuf()).collect(Collectors.toList());

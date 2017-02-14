@@ -49,7 +49,7 @@ public final class AliPayAccountContractData extends PaymentAccountContractData 
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.AliPayAccountContractData.Builder thisClass =
                 Messages.AliPayAccountContractData.newBuilder().setAccountNr(accountNr);
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =

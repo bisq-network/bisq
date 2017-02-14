@@ -113,7 +113,7 @@ public final class Arbitrator implements StoragePayload {
 
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.StoragePayload toProtoBuf() {
         return Messages.StoragePayload.newBuilder().setArbitrator(Messages.Arbitrator.newBuilder()
                 .setTTL(TTL)
                 .setBtcPubKey(ByteString.copyFrom(btcPubKey))

@@ -59,7 +59,7 @@ public final class ChaseQuickPayAccountContractData extends PaymentAccountContra
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.ChaseQuickPayAccountContractData.Builder chaseQuickPayAccountContractData =
                 Messages.ChaseQuickPayAccountContractData.newBuilder()
                         .setEmail(email)

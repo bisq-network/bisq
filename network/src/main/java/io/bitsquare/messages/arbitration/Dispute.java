@@ -332,7 +332,7 @@ public final class Dispute implements Payload {
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.Dispute toProtoBuf() {
         return Messages.Dispute.newBuilder().setTradeId(tradeId)
                 .setId(id)
                 .setTraderId(traderId)

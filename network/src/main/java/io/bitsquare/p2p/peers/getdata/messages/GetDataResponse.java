@@ -45,7 +45,9 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage {
         Messages.GetDataResponse.Builder builder = Messages.GetDataResponse.newBuilder();
         builder.addAllDataSet(
                 dataSet.stream()
-                        .map(protectedStorageEntry -> protectedStorageEntry.toProtoBuf()).collect(Collectors.toList()))
+                        .map(protectedStorageEntry ->
+                                ((Messages.ProtectedStorageEntry)protectedStorageEntry.toProtoBuf()))
+                        .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
                 .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
         return Messages.Envelope.newBuilder().setGetDataResponse(builder).build();

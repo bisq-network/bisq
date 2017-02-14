@@ -88,7 +88,7 @@ public final class InteracETransferAccountContractData extends PaymentAccountCon
     }
 
     @Override
-    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+    public Messages.PaymentAccountContractData toProtoBuf() {
         Messages.InteracETransferAccountContractData.Builder interacETransferAccountContractData =
                 Messages.InteracETransferAccountContractData.newBuilder()
                 .setEmail(email)
