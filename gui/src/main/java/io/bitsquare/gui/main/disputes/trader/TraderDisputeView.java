@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.disputes.trader;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -83,6 +84,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -337,6 +341,53 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         scene = root.getScene();
         if (scene != null)
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
+        // If doPrint=true we print out a html page which opens tabs with all deposit txs 
+        // (firefox needs about:config change to allow > 20 tabs)
+        // Useful to check if there any funds in not finished trades (no payout tx done).
+        // Last check 10.02.2017 found 8 trades and we contacted all traders as far as possible (email if available 
+        // otherwise in-app private notification)
+        boolean doPrint = false;
+        if (doPrint) {
+            try {
+                DateFormat formatter = new SimpleDateFormat("dd/MM/yy");
+                Date startDate = formatter.parse("10/02/17");
+                startDate = new Date(0); // print all from start
+
+                HashMap<String, Dispute> map = new HashMap<>();
+                disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> {
+                    map.put(dispute.getDepositTxId(), dispute);
+                });
+
+                final Date finalStartDate = startDate;
+                List<Dispute> disputes = new ArrayList<>(map.values());
+                disputes.sort((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
+                List<List<Dispute>> subLists = Lists.partition(disputes, 1000);
+                StringBuilder sb = new StringBuilder();
+                subLists.stream().forEach(list -> {
+                    StringBuilder sb1 = new StringBuilder("\n<html><head><script type=\"text/javascript\">function load(){\n");
+                    StringBuilder sb2 = new StringBuilder("\n}</script></head><body onload=\"load()\">\n");
+                    list.stream().forEach(dispute -> {
+                        if (dispute.getOpeningDate().after(finalStartDate)) {
+                            String txId = dispute.getDepositTxId();
+                            sb1.append("window.open(\"https://blockchain.info/tx/").append(txId).append("\", '_blank');\n");
+
+                            sb2.append("Dispute ID: ").append(dispute.getId()).
+                                    append(" Tx ID: ").
+                                    append("<a href=\"https://blockchain.info/tx/").append(txId).append("\">").
+                                    append(txId).append("</a> ").
+                                    append("Opening date: ").append(formatter.format(dispute.getOpeningDate())).append("<br/>\n");
+                        }
+                    });
+                    sb2.append("</body></html>");
+                    String res = sb1.toString() + sb2.toString();
+
+                    sb.append(res).append("\n\n\n");
+                });
+                log.info(sb.toString());
+            } catch (ParseException ignore) {
+            }
+        }
     }
 
     @Override
