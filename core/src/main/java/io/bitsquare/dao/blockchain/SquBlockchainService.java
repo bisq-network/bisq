@@ -73,18 +73,18 @@ abstract public class SquBlockchainService {
                                                        String genesisTxId)
             throws SquBlockchainException {
         try {
-            log.info("blockCount=" + chainHeadHeight);
+            //log.info("blockCount=" + chainHeadHeight);
             long startTs = System.currentTimeMillis();
             for (int blockHeight = genesisBlockHeight; blockHeight <= chainHeadHeight; blockHeight++) {
                 Block block = requestBlock(blockHeight);
-                log.info("blockHeight=" + blockHeight);
+                //log.info("blockHeight=" + blockHeight);
                 parseBlock(new SquBlock(block.getTx(), block.getHeight()),
                         genesisBlockHeight,
                         genesisTxId,
                         utxoByTxIdMap);
             }
             printUtxoMap(utxoByTxIdMap);
-            log.info("Took {} ms", System.currentTimeMillis() - startTs);
+            // log.info("Took {} ms", System.currentTimeMillis() - startTs);
         } catch (BitcoindException | CommunicationException e) {
             throw new SquBlockchainException(e.getMessage(), e);
         }
@@ -157,7 +157,7 @@ abstract public class SquBlockchainService {
         for (SquTransaction transaction : connectedTxs) {
             verifyTransaction(transaction, blockHeight, utxoByTxIdMap);
         }
-        log.info("orphanTxs " + orphanTxs);
+        //log.info("orphanTxs " + orphanTxs);
         if (!orphanTxs.isEmpty() && recursions < maxRecursions)
             resolveConnectedTxs(orphanTxs, utxoByTxIdMap, blockHeight, ++recursions, maxRecursions);
     }
@@ -286,6 +286,6 @@ abstract public class SquBlockchainService {
                         .append(a.getValue().toString()).append("}\n");
             });
         });
-        log.info(sb.toString());
+        //log.info(sb.toString());
     }
 }

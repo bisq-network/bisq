@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.deposit.DepositView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
@@ -208,6 +209,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     public void onShowPayFundsScreen() {
+        dataModel.requestTxFee();
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();
     }
@@ -569,21 +571,25 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return amountDescription;
     }
 
-    String getAmount() {
+    String getTradeAmount() {
         return formatter.formatCoinWithCode(dataModel.amountAsCoin.get());
     }
 
-    String getTakerFee() {
-        return formatter.formatCoinWithCode(dataModel.getTakerFeeAsCoin());
-    }
-
-    String getNetworkFee() {
-        return formatter.formatCoinWithCode(dataModel.getTotalTxFeeAsCoin());
-    }
-
     public String getSecurityDeposit() {
-        return formatter.formatCoinWithCode(dataModel.getSecurityDepositAsCoin());
+        return formatter.formatCoinWithCode(dataModel.getSecurityDepositAsCoin()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDepositAsCoin(), dataModel.amountAsCoin.get(), formatter);
     }
+
+    public String getTakerFee() {
+        return formatter.formatCoinWithCode(dataModel.getTakerFeeAsCoin()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getTakerFeeAsCoin(), dataModel.amountAsCoin.get(), formatter);
+    }
+
+    public String getTxFee() {
+        return formatter.formatCoinWithCode(dataModel.getTotalTxFeeAsCoin()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getTotalTxFeeAsCoin(), dataModel.amountAsCoin.get(), formatter);
+    }
+
 
     public PaymentMethod getPaymentMethod() {
         return dataModel.getPaymentMethod();

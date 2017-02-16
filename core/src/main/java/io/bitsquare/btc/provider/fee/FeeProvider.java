@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+//TODO use protobuffer instead of json
 public class FeeProvider extends HttpClientProvider {
     private static final Logger log = LoggerFactory.getLogger(FeeProvider.class);
 
@@ -28,7 +29,7 @@ public class FeeProvider extends HttpClientProvider {
         tsMap.put("bitcoinFeesTs", ((Double) linkedTreeMap.get("bitcoinFeesTs")).longValue());
 
         LinkedTreeMap<String, Double> dataMap = (LinkedTreeMap<String, Double>) linkedTreeMap.get("data");
-        FeeData feeData = new FeeData(dataMap.get("txFee").longValue(), dataMap.get("createOfferFee").longValue(), dataMap.get("takeOfferFee").longValue());
+        FeeData feeData = new FeeData(dataMap.get("txFee").longValue());
         return new Tuple2<>(tsMap, feeData);
     }
 

@@ -174,7 +174,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer 
         // and reserved his funds, so that would not work well with dynamic fees.
-        // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
+        // The mining fee for the takeOfferFee tx is deducted from the takeOfferFee and not visible to the trader
 
         // The taker pays the mining fee for the trade fee tx and the trade txs. 
         // A typical trade fee tx has about 226 bytes (if one input). The trade txs has about 336-414 bytes. 
@@ -190,18 +190,16 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs)   
         // deposit tx: 336 bytes (1 MS output+ OP_RETURN) - 414 bytes (1 MS output + OP_RETURN + change in case of smaller trade amount)          
         // payout tx: 371 bytes            
-        // disputed payout tx: 408 bytes  
-        feeService.requestFees(() -> {
-            //TODO update  doubleTxFeeAsCoin and txFeeAsCoin in view with binding
-            takerFeeAsCoin = feeService.getTakeOfferFee();
-            txFeeAsCoin = feeService.getTxFee(400);
-            totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
-            calculateTotalToPay();
-        }, null);
+        // disputed payout tx: 408 bytes 
 
-        takerFeeAsCoin = feeService.getTakeOfferFee();
+        // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
+        // But the "take offer" happens usually after that so we should have already the value from the estimation service.
+        takerFeeAsCoin = feeService.getTakeOfferFeeInBtc();
         txFeeAsCoin = feeService.getTxFee(400);
         totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
+
+        // We request to get the actual estimated fee
+        requestTxFee();
 
         calculateVolume();
         calculateTotalToPay();
@@ -244,6 +242,15 @@ class TakeOfferDataModel extends ActivatableDataModel {
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
+    void requestTxFee() {
+        feeService.requestFees(() -> {
+            takerFeeAsCoin = feeService.getTakeOfferFeeInBtc();
+            txFeeAsCoin = feeService.getTxFee(400);
+            totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
+            calculateTotalToPay();
+        }, null);
+    }
+
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
         if (!preferences.getUseStickyMarketPrice() && isTabSelected)
@@ -258,11 +265,12 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to 
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
+        Coin fundsNeededForTrade = totalToPayAsCoin.get().subtract(takerFeeAsCoin).subtract(txFeeAsCoin);
         tradeManager.onTakeOffer(amountAsCoin.get(),
                 txFeeAsCoin,
                 takerFeeAsCoin,
                 tradePrice.getValue(),
-                totalToPayAsCoin.get().subtract(takerFeeAsCoin).subtract(txFeeAsCoin),
+                fundsNeededForTrade,
                 offer,
                 paymentAccount.getId(),
                 useSavingsWallet,
@@ -458,6 +466,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     public Coin getTotalTxFeeAsCoin() {
         return totalTxFeeAsCoin;
+    }
+
+    public Coin getTxFeeAsCoin() {
+        return txFeeAsCoin;
     }
 
     public AddressEntry getAddressEntry() {

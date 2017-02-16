@@ -22,6 +22,7 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
@@ -143,8 +144,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         useMarketBasedPrice.set(preferences.getUsePercentageBasedPrice());
 
-        // TODO add ui for editing
-        securityDepositAsCoin = Coin.valueOf(1_000_000);
+        // TODO add ui for editing, use preferences
+        securityDepositAsCoin = FeePolicy.getDefaultSecurityDeposit();
 
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -255,14 +256,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // not too many inputs.
 
         // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs)         
-        feeService.requestFees(() -> {
-            createOfferFeeAsCoin = feeService.getCreateOfferFee();
-            txFeeAsCoin = feeService.getTxFee(400);
-            calculateTotalToPay();
-        }, null);
 
-        createOfferFeeAsCoin = feeService.getCreateOfferFee();
+        // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
+        // But offer creation happens usually after that so we should have already the value from the estimation service.
         txFeeAsCoin = feeService.getTxFee(400);
+        createOfferFeeAsCoin = feeService.getCreateOfferFeeInBtc();
+
+        // We request to get the actual estimated fee
+        requestTxFee();
 
         calculateVolume();
         calculateTotalToPay();
@@ -419,6 +420,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.marketPriceMargin = marketPriceMargin;
     }
 
+    void requestTxFee() {
+        feeService.requestFees(() -> {
+            txFeeAsCoin = feeService.getTxFee(400);
+            createOfferFeeAsCoin = feeService.getCreateOfferFeeInBtc();
+            calculateTotalToPay();
+        }, null);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

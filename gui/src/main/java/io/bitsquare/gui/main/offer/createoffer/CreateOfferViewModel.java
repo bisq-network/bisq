@@ -36,6 +36,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -495,6 +496,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     void onShowPayFundsScreen() {
+        dataModel.requestTxFee();
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();
     }
@@ -659,16 +661,23 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         return dataModel.getTradeCurrency();
     }
 
-    public String getOfferFee() {
-        return formatter.formatCoinWithCode(dataModel.getCreateOfferFeeAsCoin());
-    }
-
-    public String getTxFee() {
-        return formatter.formatCoinWithCode(dataModel.getTxFeeAsCoin());
+    public String getTradeAmount() {
+        return formatter.formatCoinWithCode(dataModel.amount.get());
     }
 
     public String getSecurityDeposit() {
-        return formatter.formatCoinWithCode(dataModel.getSecurityDepositAsCoin());
+        return formatter.formatCoinWithCode(dataModel.getSecurityDepositAsCoin()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDepositAsCoin(), dataModel.amount.get(), formatter);
+    }
+
+    public String getCreateOfferFee() {
+        return formatter.formatCoinWithCode(dataModel.getCreateOfferFeeAsCoin()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getCreateOfferFeeAsCoin(), dataModel.amount.get(), formatter);
+    }
+
+    public String getTxFee() {
+        return formatter.formatCoinWithCode(dataModel.getTxFeeAsCoin()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getTxFeeAsCoin(), dataModel.amount.get(), formatter);
     }
 
     public PaymentAccount getPaymentAccount() {

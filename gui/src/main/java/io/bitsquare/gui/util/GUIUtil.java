@@ -39,6 +39,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -299,5 +300,10 @@ public class GUIUtil {
             log.error("openMail failed " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, BSFormatter formatter) {
+        return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
+                " of trade amount)";
     }
 }
