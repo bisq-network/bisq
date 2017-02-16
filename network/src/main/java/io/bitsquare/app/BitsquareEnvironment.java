@@ -15,13 +15,15 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.messages.app;
+package io.bitsquare.app;
 
 import ch.qos.logback.classic.Level;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.messages.app.Version;
 import io.bitsquare.messages.btc.BitcoinNetwork;
 import io.bitsquare.messages.btc.BtcOptionKeys;
 import io.bitsquare.messages.btc.UserAgent;

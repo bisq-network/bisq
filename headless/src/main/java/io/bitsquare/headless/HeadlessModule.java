@@ -20,7 +20,7 @@ package io.bitsquare.headless;
 import com.google.inject.Singleton;
 import io.bitsquare.alert.AlertModule;
 import io.bitsquare.messages.app.AppModule;
-import io.bitsquare.messages.app.BitsquareEnvironment;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.arbitration.ArbitratorModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.common.Clock;

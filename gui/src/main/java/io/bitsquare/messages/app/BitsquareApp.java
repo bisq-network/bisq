@@ -22,6 +22,7 @@ import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.alert.AlertManager;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.wallet.*;
 import io.bitsquare.common.CommonOptionKeys;

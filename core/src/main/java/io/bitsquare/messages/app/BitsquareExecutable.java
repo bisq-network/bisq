@@ -20,8 +20,7 @@ package io.bitsquare.messages.app;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.RegTestHost;
 import io.bitsquare.common.CommonOptionKeys;
-import io.bitsquare.messages.app.AppOptionKeys;
-import io.bitsquare.messages.app.BitsquareEnvironment;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.messages.btc.BitcoinNetwork;
 import io.bitsquare.messages.btc.BtcOptionKeys;
 import io.bitsquare.messages.dao.blockchain.RpcOptionKeys;
@@ -40,7 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bitsquare.messages.app.BitsquareEnvironment.*;
+import static io.bitsquare.app.BitsquareEnvironment.*;
 import static java.lang.String.format;
 import static java.lang.String.join;
 

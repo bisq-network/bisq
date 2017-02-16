@@ -19,6 +19,7 @@ package io.bitsquare.messages.app;
 
 import com.google.inject.Singleton;
 import io.bitsquare.alert.AlertModule;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.arbitration.ArbitratorModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.common.Clock;

@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.content.backup;
 
 import io.bitsquare.messages.app.AppOptionKeys;
-import io.bitsquare.messages.app.BitsquareEnvironment;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;

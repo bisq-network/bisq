@@ -17,14 +17,15 @@
 
 package io.bitsquare.messages.app;
 
+import io.bitsquare.app.BitsquareEnvironment;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.messages.app.BitsquareEnvironment.DEFAULT_APP_NAME;
-import static io.bitsquare.messages.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
+import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_APP_NAME;
+import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class BitsquareAppMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);

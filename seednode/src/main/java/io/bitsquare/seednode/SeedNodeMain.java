@@ -19,7 +19,7 @@ package io.bitsquare.seednode;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bitsquare.messages.app.AppOptionKeys;
-import io.bitsquare.messages.app.BitsquareEnvironment;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.messages.app.BitsquareExecutable;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Profiler;
@@ -36,8 +36,8 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import static io.bitsquare.messages.app.BitsquareEnvironment.DEFAULT_APP_NAME;
-import static io.bitsquare.messages.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
+import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_APP_NAME;
+import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class SeedNodeMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.messages.app;
+package io.bitsquare.app;
 
 import org.junit.Test;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -23,7 +23,7 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.mock.env.MockPropertySource;
 
-import static io.bitsquare.messages.app.BitsquareEnvironment.*;
+import static io.bitsquare.app.BitsquareEnvironment.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.springframework.core.env.PropertySource.named;

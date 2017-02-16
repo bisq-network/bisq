@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.messages.app.AppOptionKeys;
-import io.bitsquare.messages.app.BitsquareEnvironment;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.messages.app.Log;
 import io.bitsquare.messages.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
