@@ -15,23 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.messages;
+package io.bitsquare.messages.trade.protocol.trade.messages;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.messages.app.Version;
-import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.messages.app.Version;
+import io.bitsquare.messages.btc.data.RawTransactionInput;
+import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.messages.protocol.trade.TradeMessage;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
-import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import org.bitcoinj.core.Coin;
 
 import javax.annotation.concurrent.Immutable;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -45,7 +45,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public final byte[] takerMultiSigPubKey;
     public final Coin txFee;
     public final Coin takeOfferFee;
-    public final ArrayList<RawTransactionInput> rawTransactionInputs;
+    public final List<RawTransactionInput> rawTransactionInputs;
     public final long changeOutputValue;
     public final String changeOutputAddress;
     public final String takerPayoutAddressString;
@@ -53,7 +53,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public final PaymentAccountContractData takerPaymentAccountContractData;
     public final String takerAccountId;
     public final String takeOfferFeeTxId;
-    public final ArrayList<NodeAddress> acceptedArbitratorNodeAddresses;
+    public final List<NodeAddress> acceptedArbitratorNodeAddresses;
     public final NodeAddress arbitratorNodeAddress;
     private final NodeAddress senderNodeAddress;
     private final String uid;
@@ -64,7 +64,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                              long tradePrice,
                              Coin txFee,
                              Coin takeOfferFee, 
-                             ArrayList<RawTransactionInput> rawTransactionInputs,
+                             List<RawTransactionInput> rawTransactionInputs,
                              long changeOutputValue,
                              String changeOutputAddress,
                              byte[] takerMultiSigPubKey,
@@ -73,7 +73,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                              PaymentAccountContractData takerPaymentAccountContractData,
                              String takerAccountId,
                              String takeOfferFeeTxId,
-                             ArrayList<NodeAddress> acceptedArbitratorNodeAddresses,
+                             List<NodeAddress> acceptedArbitratorNodeAddresses,
                              NodeAddress arbitratorNodeAddress) {
         super(tradeId);
         this.senderNodeAddress = senderNodeAddress;

@@ -46,7 +46,7 @@ import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import io.bitsquare.messages.protocol.availability.OfferAvailabilityModel;
-import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
+import io.bitsquare.messages.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.messages.protocol.trade.TradeMessage;
 import io.bitsquare.messages.trade.statistics.payload.TradeStatistics;
 import io.bitsquare.trade.statistics.TradeStatisticsManager;

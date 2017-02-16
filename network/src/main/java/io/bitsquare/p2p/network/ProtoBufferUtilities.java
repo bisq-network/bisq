@@ -5,13 +5,20 @@ import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.crypto.SealedAndSigned;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.messages.alert.Alert;
-import io.bitsquare.messages.arbitration.Arbitrator;
+import io.bitsquare.messages.alert.PrivateNotification;
+import io.bitsquare.messages.alert.PrivateNotificationMessage;
+import io.bitsquare.messages.arbitration.*;
 import io.bitsquare.messages.availability.AvailabilityResult;
 import io.bitsquare.messages.availability.OfferAvailabilityResponse;
+import io.bitsquare.messages.btc.data.RawTransactionInput;
 import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bitsquare.messages.filter.payload.Filter;
 import io.bitsquare.messages.filter.payload.PaymentAccountFilter;
+import io.bitsquare.messages.payment.payload.*;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.messages.trade.offer.payload.Offer;
+import io.bitsquare.messages.trade.payload.Contract;
+import io.bitsquare.messages.trade.protocol.trade.messages.*;
 import io.bitsquare.messages.trade.statistics.payload.TradeStatistics;
 import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
@@ -35,6 +42,7 @@ import io.bitsquare.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -105,46 +113,40 @@ public class ProtoBufferUtilities {
                 result = getRemoveMailBoxDataMessage(envelope.getRemoveMailboxDataMessage());
                 break;
             case DEPOSIT_TX_PUBLISHED_MESSAGE:
-                result = getDepositTxPublishedMessage(envelope.getDepositTxPublishedMessage()); // TODO
+                result = getDepositTxPublishedMessage(envelope.getDepositTxPublishedMessage());
                 break;
             case FINALIZE_PAYOUT_TX_REQUEST:
-
+                result = getFinalizePayoutTxRequest(envelope.getFinalizePayoutTxRequest());
                 break;
             case DISPUTE_COMMUNICATION_MESSAGE:
-
+                result = getDisputeCommunicationMessage(envelope.getDisputeCommunicationMessage());
                 break;
             case OPEN_NEW_DISPUTE_MESSAGE:
-
+                result = getOpenNewDisputeMessage(envelope.getOpenNewDisputeMessage());
                 break;
             case PEER_OPENED_DISPUTE_MESSAGE:
-
+                result = getPeerOpenedDisputeMessage(envelope.getPeerOpenedDisputeMessage());
                 break;
             case DISPUTE_RESULT_MESSAGE:
-
+                result = getDisputeResultMessage(envelope.getDisputeResultMessage());
                 break;
             case PEER_PUBLISHED_PAYOUT_TX_MESSAGE:
-
+                result = getPeerPublishedPayoutTxMessage(envelope.getPeerPublishedPayoutTxMessage());
                 break;
             case PAY_DEPOSIT_REQUEST:
-
+                result = getPayDepositRequest(envelope.getPayDepositRequest());
                 break;
             case PUBLISH_DEPOSIT_TX_REQUEST:
-
+                result = getPublishDepositTxRequest(envelope.getPublishDepositTxRequest());
                 break;
             case FIAT_TRANSFER_STARTED_MESSAGE:
-
+                result = getFiatTransferStartedMessage(envelope.getFiatTransferStartedMessage());
                 break;
             case PAYOUT_TX_FINALIZED_MESSAGE:
-
-                break;
-            case CASH_DEPOSIT_ACCOUNT_CONTRACT_DATA:
-
-                break;
-            case SPECIFIC_BANKS_ACCOUNT_CONTRACT_DATA:
-
+                result = getPayoutTxFinalizedMessage(envelope.getPayoutTxFinalizedMessage());
                 break;
             case PRIVATE_NOTIFICATION_MESSAGE:
-
+                result = getPrivateNotificationMessage(envelope.getPrivateNotificationMessage());
                 break;
             default:
                 log.warn("Unknown message case:{}:{}", envelope.getMessageCase());
@@ -152,8 +154,244 @@ public class ProtoBufferUtilities {
         return Optional.ofNullable(result);
     }
 
+    private static Message getPrivateNotificationMessage(Messages.PrivateNotificationMessage privateNotificationMessage) {
+        return new PrivateNotificationMessage(getPrivateNotification(privateNotificationMessage.getPrivateNotification()),
+                getNodeAddress(privateNotificationMessage.getMyNodeAddress()));
+    }
+
+    private static PrivateNotification getPrivateNotification(Messages.PrivateNotification privateNotification) {
+        return new PrivateNotification(privateNotification.getMessage());
+    }
+
+    private static Message getPayoutTxFinalizedMessage(Messages.PayoutTxFinalizedMessage payoutTxFinalizedMessage) {
+        return new PayoutTxFinalizedMessage(payoutTxFinalizedMessage.getTradeId(), payoutTxFinalizedMessage.getPayoutTx().toByteArray(),
+                getNodeAddress(payoutTxFinalizedMessage.getSenderNodeAddress()));
+    }
+
+    private static Message getFiatTransferStartedMessage(Messages.FiatTransferStartedMessage fiatTransferStartedMessage) {
+        return new FiatTransferStartedMessage(fiatTransferStartedMessage.getTradeId(), fiatTransferStartedMessage.getBuyerPayoutAddress(),
+                getNodeAddress(fiatTransferStartedMessage.getSenderNodeAddress()));
+    }
+
+    private static Message getPublishDepositTxRequest(Messages.PublishDepositTxRequest publishDepositTxRequest) {
+        List<RawTransactionInput> rawTransactionInputs = publishDepositTxRequest.getOffererInputsList().stream()
+                .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
+                        rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
+                .collect(Collectors.toList());
+
+        return new PublishDepositTxRequest(publishDepositTxRequest.getTradeId(),
+                getPaymentAccountContractData(publishDepositTxRequest.getOffererPaymentAccountContractData()),
+                publishDepositTxRequest.getOffererAccountId(),
+                publishDepositTxRequest.getOffererMultiSigPubKey().toByteArray(),
+                publishDepositTxRequest.getOffererContractAsJson(),
+                publishDepositTxRequest.getOffererContractSignature(),
+                publishDepositTxRequest.getOffererPayoutAddressstring(),
+                publishDepositTxRequest.getPreparedDepositTx().toByteArray(), rawTransactionInputs);
+    }
+
+    private static Message getPayDepositRequest(Messages.PayDepositRequest payDepositRequest) {
+        List<RawTransactionInput> rawTransactionInputs = payDepositRequest.getRawTransactionInputsList().stream()
+                .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
+                        rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
+                .collect(Collectors.toList());
+        List<NodeAddress> nodeAddresses = payDepositRequest.getAcceptedArbitratorNodeAddressesList().stream()
+                .map(ProtoBufferUtilities::getNodeAddress).collect(Collectors.toList());
+        return new PayDepositRequest(getNodeAddress(payDepositRequest.getSenderNodeAddress()),
+                payDepositRequest.getTradeId(), payDepositRequest.getTradeAmount(), payDepositRequest.getTradePrice(),
+                Coin.valueOf(payDepositRequest.getTxFee().getValue()), Coin.valueOf(payDepositRequest.getTakeOfferFee().getValue()),
+                rawTransactionInputs, payDepositRequest.getChangeOutputValue(), payDepositRequest.getChangeOutputAddress(),
+                payDepositRequest.getTakerMultiSigPubKey().toByteArray(), payDepositRequest.getTakerPayoutAddressString(),
+                getPubKeyRing(payDepositRequest.getTakerPubKeyRing()), getPaymentAccountContractData(payDepositRequest.getTakerPaymentAccountContractData()),
+                payDepositRequest.getTakerAccountId(), payDepositRequest.getTakeOfferFeeTxId(), nodeAddresses, getNodeAddress(payDepositRequest.getArbitratorNodeAddress()));
+    }
+
+    private static Message getPeerPublishedPayoutTxMessage(Messages.PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
+        return new PeerPublishedPayoutTxMessage(peerPublishedPayoutTxMessage.getTransaction().toByteArray(),
+                peerPublishedPayoutTxMessage.getTradeId(), getNodeAddress(peerPublishedPayoutTxMessage.getMyNodeAddress()));
+    }
+
+    private static Message getDisputeResultMessage(Messages.DisputeResultMessage disputeResultMessage) {
+        DisputeResult disputeResult = new DisputeResult(disputeResultMessage.getDisputeResult().getTradeId(),
+                disputeResultMessage.getDisputeResult().getTraderId());
+        return new DisputeResultMessage(disputeResult, getNodeAddress(disputeResultMessage.getMyNodeAddress()));
+    }
+
+    private static Message getPeerOpenedDisputeMessage(Messages.PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+        return new PeerOpenedDisputeMessage(getDispute(peerOpenedDisputeMessage.getDispute()),
+                getNodeAddress(peerOpenedDisputeMessage.getMyNodeAddress()), peerOpenedDisputeMessage.getUid());
+    }
+
+    private static Message getOpenNewDisputeMessage(Messages.OpenNewDisputeMessage openNewDisputeMessage) {
+        return new OpenNewDisputeMessage(getDispute(openNewDisputeMessage.getDispute()),
+                getNodeAddress(openNewDisputeMessage.getMyNodeAddress()), openNewDisputeMessage.getUid());
+    }
+
+    private static Dispute getDispute(Messages.Dispute dispute) {
+        return new Dispute(dispute.getTradeId(), dispute.getTraderId(),
+                dispute.getDisputeOpenerIsBuyer(), dispute.getDisputeOpenerIsOfferer(),
+                getPubKeyRing(dispute.getTraderPubKeyRing()), new Date(dispute.getTradeDate()), getContract(dispute.getContract()),
+                dispute.getContractHash().toByteArray(), dispute.getDepositTxSerialized().toByteArray(), dispute.getPayoutTxSerialized().toByteArray(),
+                dispute.getDepositTxId(), dispute.getPayoutTxId(), dispute.getContractAsJson(), dispute.getOffererContractSignature(),
+                dispute.getTakerContractSignature(), getPubKeyRing(dispute.getArbitratorPubKeyRing()), dispute.getIsSupportTicket());
+
+    }
+
+    private static Contract getContract(Messages.Contract contract) {
+        return new Contract(getOffer(contract.getOffer()), Coin.valueOf(contract.getTradeAmount()), getFiat(contract.getOffer().getCurrencyCode(), contract.getTradePrice()),
+                contract.getTakeOfferFeeTxId(), getNodeAddress(contract.getBuyerNodeAddress()), getNodeAddress(contract.getSellerNodeAddress()),
+                getNodeAddress(contract.getArbitratorNodeAddress()), contract.getIsBuyerOffererAndSellerTaker(), contract.getOffererAccountId(),
+                contract.getTakerAccountId(), getPaymentAccountContractData(contract.getOffererPaymentAccountContractData()),
+                getPaymentAccountContractData(contract.getTakerPaymentAccountContractData()), getPubKeyRing(contract.getOffererPubKeyRing()),
+                getPubKeyRing(contract.getTakerPubKeyRing()), contract.getOffererPayoutAddressstring(), contract.getTakerPayoutAddressstring(),
+                contract.getOffererBtcPubKey().toByteArray(), contract.getTakerBtcPubKey().toByteArray());
+    }
+
+    private static PaymentAccountContractData getPaymentAccountContractData(Messages.PaymentAccountContractData protoEntry) {
+        PaymentAccountContractData result = null;
+        switch (protoEntry.getMessageCase()) {
+            case ALI_PAY_ACCOUNT_CONTRACT_DATA:
+                result = new AliPayAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        protoEntry.getMaxTradePeriod(), protoEntry.getAliPayAccountContractData().getAccountNr());
+                break;
+            case CHASE_QUICK_PAY_ACCOUNT_CONTRACT_DATA:
+                result = new ChaseQuickPayAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        protoEntry.getMaxTradePeriod(), protoEntry.getChaseQuickPayAccountContractData().getEmail(),
+                        protoEntry.getChaseQuickPayAccountContractData().getHolderName());
+                break;
+            case CLEAR_XCHANGE_ACCOUNT_CONTRACT_DATA:
+                result = new ClearXchangeAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        protoEntry.getMaxTradePeriod(), protoEntry.getClearXchangeAccountContractData().getHolderName(),
+                        protoEntry.getClearXchangeAccountContractDataOrBuilder().getEmailOrMobileNr());
+                break;
+            case COUNTRY_BASED_PAYMENT_ACCOUNT_CONTRACT_DATA:
+                switch (protoEntry.getCountryBasedPaymentAccountContractData().getMessageCase()) {
+                    case BANK_ACCOUNT_CONTRACT_DATA:
+                        switch (protoEntry.getCountryBasedPaymentAccountContractData().getBankAccountContractData().getMessageCase()) {
+                            case NATIONAL_BANK_ACCOUNT_CONTRACT_DATA:
+                                NationalBankAccountContractData nationalBankAccountContractData = new NationalBankAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                                        protoEntry.getMaxTradePeriod());
+                                fillInBankAccountContractData(protoEntry, nationalBankAccountContractData);
+                                fillInCountryBasedPaymentAccountContractData(protoEntry, nationalBankAccountContractData);
+                                result = nationalBankAccountContractData;
+                                break;
+                            case SAME_BANK_ACCONT_CONTRACT_DATA:
+                                SameBankAccountContractData sameBankAccountContractData = new SameBankAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                                        protoEntry.getMaxTradePeriod());
+                                fillInBankAccountContractData(protoEntry, sameBankAccountContractData);
+                                fillInCountryBasedPaymentAccountContractData(protoEntry, sameBankAccountContractData);
+                                result = sameBankAccountContractData;
+                                break;
+                            case SPECIFIC_BANKS_ACCOUNT_CONTRACT_DATA:
+                                SpecificBanksAccountContractData specificBanksAccountContractData = new SpecificBanksAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                                        protoEntry.getMaxTradePeriod());
+                                fillInBankAccountContractData(protoEntry, specificBanksAccountContractData);
+                                fillInCountryBasedPaymentAccountContractData(protoEntry, specificBanksAccountContractData);
+                                result = specificBanksAccountContractData;
+                                break;
+                        }
+                        break;
+                    case CASH_DEPOSIT_ACCOUNT_CONTRACT_DATA:
+                        CashDepositAccountContractData cashDepositAccountContractData = new CashDepositAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                                protoEntry.getMaxTradePeriod());
+                        fillInCountryBasedPaymentAccountContractData(protoEntry, cashDepositAccountContractData);
+                        result = cashDepositAccountContractData;
+                        break;
+                    case SEPA_ACCOUNT_CONTRACT_DATA:
+                        SepaAccountContractData sepaAccountContractData = new SepaAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                                protoEntry.getMaxTradePeriod());
+                        fillInCountryBasedPaymentAccountContractData(protoEntry, sepaAccountContractData);
+                        result = sepaAccountContractData;
+                        break;
+                }
+                break;
+            case CRYPTO_CURRENCY_ACCOUNT_CONTRACT_DATA:
+                result = new CryptoCurrencyAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        protoEntry.getMaxTradePeriod(), protoEntry.getCryptoCurrencyAccountContractData().getAddress());
+                break;
+            case FASTER_PAYMENTS_ACCOUNT_CONTRACT_DATA:
+                result = new FasterPaymentsAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        protoEntry.getMaxTradePeriod(), protoEntry.getFasterPaymentsAccountContractData().getSortCode(),
+                        protoEntry.getFasterPaymentsAccountContractData().getAccountNr());
+                break;
+            case INTERAC_E_TRANSFER_ACCOUNT_CONTRACT_DATA:
+                Messages.InteracETransferAccountContractData interacETransferAccountContractData =
+                        protoEntry.getInteracETransferAccountContractData();
+                result = new InteracETransferAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        protoEntry.getMaxTradePeriod(), interacETransferAccountContractData.getEmail(),
+                        interacETransferAccountContractData.getHolderName(),
+                        interacETransferAccountContractData.getQuestion(),
+                        interacETransferAccountContractData.getAnswer());
+                break;
+            case O_K_PAY_ACCOUNT_CONTRACT_DATA:
+                result = new OKPayAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        protoEntry.getMaxTradePeriod(), protoEntry.getOKPayAccountContractData().getAccountNr());
+                break;
+            case PERFECT_MONEY_ACCOUNT_CONTRACT_DATA:
+                result = new PerfectMoneyAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        protoEntry.getMaxTradePeriod(), protoEntry.getPerfectMoneyAccountContractData().getAccountNr());
+                break;
+            case SWISH_ACCOUNT_CONTRACT_DATA:
+                result = new SwishAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        protoEntry.getMaxTradePeriod(), protoEntry.getSwishAccountContractData().getMobileNr(),
+                        protoEntry.getSwishAccountContractData().getHolderName());
+                break;
+            case U_S_POSTAL_MONEY_ORDER_ACCOUNT_CONTRACT_DATA:
+                result = new USPostalMoneyOrderAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        protoEntry.getMaxTradePeriod(), protoEntry.getUSPostalMoneyOrderAccountContractData().getPostalAddress(),
+                        protoEntry.getUSPostalMoneyOrderAccountContractData().getHolderName());
+                break;
+            default:
+                log.error("Unknown paymentaccountcontractdata:{}", protoEntry.getMessageCase());
+        }
+        return result;
+    }
+
+    private static void fillInBankAccountContractData(Messages.PaymentAccountContractData protoEntry, BankAccountContractData bankAccountContractData) {
+        Messages.BankAccountContractData bankProto = protoEntry.getCountryBasedPaymentAccountContractData().getBankAccountContractData();
+        bankAccountContractData.setHolderName(bankProto.getHolderName());
+        bankAccountContractData.setBankName(bankProto.getBankName());
+        bankAccountContractData.setBankId(bankProto.getBankId());
+        bankAccountContractData.setBranchId(bankProto.getBranchId());
+        bankAccountContractData.setAccountNr(bankProto.getAccountNr());
+        bankAccountContractData.setAccountType(bankProto.getAccountType());
+    }
+
+    private static void fillInCountryBasedPaymentAccountContractData(Messages.PaymentAccountContractData protoEntry,
+                                                      CountryBasedPaymentAccountContractData countryBasedPaymentAccountContractData) {
+        countryBasedPaymentAccountContractData.setCountryCode(protoEntry.getCountryBasedPaymentAccountContractData().getCountryCode());
+    }
+
+    private static Fiat getFiat(String currencyCode, long tradePrice) {
+        return Fiat.valueOf(currencyCode, tradePrice);
+    }
+
+    private static Offer getOffer(Messages.Offer offer) {
+        List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddressesList().stream().map(nodeAddress -> getNodeAddress(nodeAddress)).collect(Collectors.toList());
+        PriceFeedService priceFeedService = null; // TODO refactor Offer, this should not be passed in the constructor, or we need to inject it in ProtoBufferUtilities
+        return new Offer(offer.getId(), getNodeAddress(offer.getOffererNodeAddress()), getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()),
+                offer.getFiatPrice(), offer.getMarketPriceMargin(), offer.getUseMarketBasedPrice(), offer.getAmount(), offer.getMinAmount(), offer.getCurrencyCode(), arbitratorNodeAddresses,
+                offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getCountryCode(), offer.getAcceptedCountryCodesList(), offer.getBankId(), offer.getAcceptedCountryCodesList(), priceFeedService,
+                offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(), offer.getSecurityDeposit(), offer.getMaxTradeLimit(), offer.getMaxTradePeriod(), offer.getUseAutoClose(),
+                offer.getUseReOpenAfterAutoClose(), offer.getLowerClosePrice(), offer.getUpperClosePrice(), offer.getIsPrivateOffer(), offer.getHashOfChallenge(), offer.getExtraDataMapMap());
+    }
+
+    private static Message getDisputeCommunicationMessage(Messages.DisputeCommunicationMessage disputeCommunicationMessage) {
+        return new DisputeCommunicationMessage(disputeCommunicationMessage.getTradeId(), disputeCommunicationMessage.getTraderId(),
+                disputeCommunicationMessage.getSenderIsTrader(), disputeCommunicationMessage.getMessage(),
+                getNodeAddress(disputeCommunicationMessage.getMyNodeAddress()), disputeCommunicationMessage.getDate(),
+                disputeCommunicationMessage.getArrived(), disputeCommunicationMessage.getStoredInMailbox());
+    }
+
+    private static Message getFinalizePayoutTxRequest(Messages.FinalizePayoutTxRequest finalizePayoutTxRequest) {
+        return new FinalizePayoutTxRequest(finalizePayoutTxRequest.getTradeId(), finalizePayoutTxRequest.getSellerSignature().toByteArray(),
+                finalizePayoutTxRequest.getSellerPayoutAddress(), finalizePayoutTxRequest.getLockTimeAsBlockHeight(),
+                getNodeAddress(finalizePayoutTxRequest.getSenderNodeAddress()));
+    }
+
     private static Message getDepositTxPublishedMessage(Messages.DepositTxPublishedMessage depositTxPublishedMessage) {
-        return null;
+        return new DepositTxPublishedMessage(depositTxPublishedMessage.getTradeId(),
+                depositTxPublishedMessage.getDepositTx().toByteArray(),
+                getNodeAddress(depositTxPublishedMessage.getSenderNodeAddress()), depositTxPublishedMessage.getUid());
     }
 
     private static Message getRemoveMailBoxDataMessage(Messages.RemoveMailboxDataMessage msg) {

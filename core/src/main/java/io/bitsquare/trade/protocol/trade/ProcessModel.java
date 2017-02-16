@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.messages.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.data.RawTransactionInput;
+import io.bitsquare.messages.btc.data.RawTransactionInput;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.crypto.KeyRing;

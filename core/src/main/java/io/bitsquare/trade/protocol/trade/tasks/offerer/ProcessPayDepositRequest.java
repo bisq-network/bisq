@@ -22,7 +22,7 @@ import io.bitsquare.messages.filter.payload.PaymentAccountFilter;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.messages.trade.exceptions.TradePriceOutOfToleranceException;
-import io.bitsquare.trade.protocol.trade.messages.PayDepositRequest;
+import io.bitsquare.messages.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;

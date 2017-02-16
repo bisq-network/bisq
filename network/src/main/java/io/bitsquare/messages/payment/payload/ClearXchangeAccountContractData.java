@@ -31,6 +31,13 @@ public final class ClearXchangeAccountContractData extends PaymentAccountContrac
         super(paymentMethod, id, maxTradePeriod);
     }
 
+    public ClearXchangeAccountContractData(String paymentMethod, String id, long maxTradePeriod, String holderName,
+                                           String emailOrMobileNr) {
+        this(paymentMethod, id, maxTradePeriod);
+        setHolderName(holderName);
+        setEmailOrMobileNr(emailOrMobileNr);
+    }
+
     public String getHolderName() {
         return holderName;
     }

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.messages;
+package io.bitsquare.messages.trade.protocol.trade.messages;
 
 import com.google.protobuf.ByteString;
 import io.bitsquare.messages.app.Version;
@@ -30,23 +30,37 @@ import java.util.Arrays;
 import java.util.UUID;
 
 @Immutable
-public final class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage {
+public final class FinalizePayoutTxRequest extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final byte[] depositTx;
+    public final byte[] sellerSignature;
+    public final String sellerPayoutAddress;
+    public final long lockTimeAsBlockHeight;
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
-    public DepositTxPublishedMessage(String tradeId, byte[] depositTx, NodeAddress senderNodeAddress, String uid) {
-        super(tradeId);
-        this.depositTx = depositTx;
-        this.senderNodeAddress = senderNodeAddress;
-        this.uid = uid;
+    public FinalizePayoutTxRequest(String tradeId,
+                                   byte[] sellerSignature,
+                                   String sellerPayoutAddress,
+                                   long lockTimeAsBlockHeight,
+                                   NodeAddress senderNodeAddress) {
+        this(tradeId, sellerSignature, sellerPayoutAddress, lockTimeAsBlockHeight, senderNodeAddress,
+                UUID.randomUUID().toString());
     }
 
-    public DepositTxPublishedMessage(String tradeId, byte[] depositTx, NodeAddress senderNodeAddress) {
-        this(tradeId, depositTx, senderNodeAddress, UUID.randomUUID().toString());
+    public FinalizePayoutTxRequest(String tradeId,
+                                   byte[] sellerSignature,
+                                   String sellerPayoutAddress,
+                                   long lockTimeAsBlockHeight,
+                                   NodeAddress senderNodeAddress,
+                                   String uid) {
+        super(tradeId);
+        this.sellerSignature = sellerSignature;
+        this.sellerPayoutAddress = sellerPayoutAddress;
+        this.lockTimeAsBlockHeight = lockTimeAsBlockHeight;
+        this.senderNodeAddress = senderNodeAddress;
+        this.uid = uid;
     }
 
     @Override
@@ -62,12 +76,15 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DepositTxPublishedMessage)) return false;
+        if (!(o instanceof FinalizePayoutTxRequest)) return false;
         if (!super.equals(o)) return false;
 
-        DepositTxPublishedMessage that = (DepositTxPublishedMessage) o;
+        FinalizePayoutTxRequest that = (FinalizePayoutTxRequest) o;
 
-        if (!Arrays.equals(depositTx, that.depositTx)) return false;
+        if (lockTimeAsBlockHeight != that.lockTimeAsBlockHeight) return false;
+        if (!Arrays.equals(sellerSignature, that.sellerSignature)) return false;
+        if (sellerPayoutAddress != null ? !sellerPayoutAddress.equals(that.sellerPayoutAddress) : that.sellerPayoutAddress != null)
+            return false;
         if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
             return false;
         return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
@@ -77,7 +94,9 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (depositTx != null ? Arrays.hashCode(depositTx) : 0);
+        result = 31 * result + (sellerSignature != null ? Arrays.hashCode(sellerSignature) : 0);
+        result = 31 * result + (sellerPayoutAddress != null ? sellerPayoutAddress.hashCode() : 0);
+        result = 31 * result + (int) (lockTimeAsBlockHeight ^ (lockTimeAsBlockHeight >>> 32));
         result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
@@ -86,10 +105,12 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     @Override
     public Messages.Envelope toProtoBuf() {
         Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
-        return baseEnvelope.setDepositTxPublishedMessage(Messages.DepositTxPublishedMessage.newBuilder()
+        return baseEnvelope.setFinalizePayoutTxRequest(Messages.FinalizePayoutTxRequest.newBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)
-                .setDepositTx(ByteString.copyFrom(depositTx))
+                .setSellerSignature(ByteString.copyFrom(sellerSignature))
+                .setSellerPayoutAddress(sellerPayoutAddress)
+                .setLockTimeAsBlockHeight(lockTimeAsBlockHeight)
                 .setSenderNodeAddress(senderNodeAddress.toProtoBuf())
                 .setUid(uid)).build();
     }

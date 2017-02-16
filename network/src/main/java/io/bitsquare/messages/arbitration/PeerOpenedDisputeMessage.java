@@ -69,6 +69,7 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
         Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
         return baseEnvelope.setPeerOpenedDisputeMessage(Messages.PeerOpenedDisputeMessage.newBuilder()
                 .setDispute(dispute.toProtoBuf())
-                .setMyNodeAddress(myNodeAddress.toProtoBuf())).build();
+                .setMyNodeAddress(myNodeAddress.toProtoBuf())
+                .setUid(getUID())).build();
     }
 }

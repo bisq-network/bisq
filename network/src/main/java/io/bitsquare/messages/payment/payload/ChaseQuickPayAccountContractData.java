@@ -31,6 +31,13 @@ public final class ChaseQuickPayAccountContractData extends PaymentAccountContra
         super(paymentMethod, id, maxTradePeriod);
     }
 
+    public ChaseQuickPayAccountContractData(String paymentMethod, String id, long maxTradePeriod, String email,
+                                            String holderName) {
+        this(paymentMethod, id, maxTradePeriod);
+        setEmail(email);
+        setHolderName(holderName);
+    }
+
     public void setEmail(String email) {
         this.email = email;
     }

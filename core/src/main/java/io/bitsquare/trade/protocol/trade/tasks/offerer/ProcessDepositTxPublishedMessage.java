@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.tasks.offerer;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
+import io.bitsquare.messages.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;

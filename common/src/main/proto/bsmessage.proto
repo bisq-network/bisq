@@ -36,9 +36,7 @@ message Envelope {
         PublishDepositTxRequest publish_deposit_tx_request = 26;
         FiatTransferStartedMessage fiat_transfer_started_message = 27;
         PayoutTxFinalizedMessage payout_tx_finalized_message = 28;
-        CashDepositAccountContractData cash_deposit_account_contract_data = 29;
-        SpecificBanksAccountContractData specific_banks_account_contract_data = 30;
-        PrivateNotificationMessage private_notification_message = 31;
+        PrivateNotificationMessage private_notification_message = 29;
     }
 }
 
@@ -395,6 +393,7 @@ message DisputeResult {
 message OpenNewDisputeMessage {
     Dispute dispute = 1;
     NodeAddress my_node_address = 2;
+    string uid = 3;
 }
 
 message Dispute {
@@ -452,6 +451,7 @@ message Contract {
 message PeerOpenedDisputeMessage {
     Dispute dispute = 1;
     NodeAddress my_node_address = 2;
+    string uid = 3;
 }
 message PeerPublishedPayoutTxMessage {
     bytes transaction = 1;

@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.messages.app.Version;
-import io.bitsquare.btc.data.RawTransactionInput;
+import io.bitsquare.messages.btc.data.RawTransactionInput;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;

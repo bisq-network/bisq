@@ -15,9 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.messages;
+package io.bitsquare.messages.trade.protocol.trade.messages;
 
-import com.google.protobuf.ByteString;
 import io.bitsquare.messages.app.Version;
 import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.wire.proto.Messages;
@@ -26,27 +25,27 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import javax.annotation.concurrent.Immutable;
-import java.util.Arrays;
 import java.util.UUID;
 
 @Immutable
-public final class PayoutTxFinalizedMessage extends TradeMessage implements MailboxMessage {
+public final class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final byte[] payoutTx;
+    public final String buyerPayoutAddress;
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
-    public PayoutTxFinalizedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress) {
-        this(tradeId, payoutTx, senderNodeAddress, UUID.randomUUID().toString());
-    }
-
-    public PayoutTxFinalizedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress, String uid) {
+    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress,
+                                      NodeAddress senderNodeAddress, String uid) {
         super(tradeId);
-        this.payoutTx = payoutTx;
+        this.buyerPayoutAddress = buyerPayoutAddress;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
+    }
+
+    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress, NodeAddress senderNodeAddress) {
+        this(tradeId, buyerPayoutAddress, senderNodeAddress, UUID.randomUUID().toString());
     }
 
     @Override
@@ -62,12 +61,13 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PayoutTxFinalizedMessage)) return false;
+        if (!(o instanceof FiatTransferStartedMessage)) return false;
         if (!super.equals(o)) return false;
 
-        PayoutTxFinalizedMessage that = (PayoutTxFinalizedMessage) o;
+        FiatTransferStartedMessage that = (FiatTransferStartedMessage) o;
 
-        if (!Arrays.equals(payoutTx, that.payoutTx)) return false;
+        if (buyerPayoutAddress != null ? !buyerPayoutAddress.equals(that.buyerPayoutAddress) : that.buyerPayoutAddress != null)
+            return false;
         if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
             return false;
         return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
@@ -77,20 +77,29 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (payoutTx != null ? Arrays.hashCode(payoutTx) : 0);
+        result = 31 * result + (buyerPayoutAddress != null ? buyerPayoutAddress.hashCode() : 0);
         result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
     }
 
     @Override
+    public String toString() {
+        return "FiatTransferStartedMessage{" +
+                "buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
+                ", senderNodeAddress=" + senderNodeAddress +
+                ", uid='" + uid + '\'' +
+                "} " + super.toString();
+    }
+
+    @Override
     public Messages.Envelope toProtoBuf() {
         Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
-        return baseEnvelope.setPayoutTxFinalizedMessage(baseEnvelope.getPayoutTxFinalizedMessageBuilder()
-                .setUid(uid)
+        return baseEnvelope.setFiatTransferStartedMessage(baseEnvelope.getFiatTransferStartedMessageBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)
-                .setPayoutTx(ByteString.copyFrom(payoutTx))
-                .setSenderNodeAddress(senderNodeAddress.toProtoBuf())).build();
+                .setBuyerPayoutAddress(buyerPayoutAddress)
+                .setSenderNodeAddress(senderNodeAddress.toProtoBuf())
+                .setUid(uid)).build();
     }
 }

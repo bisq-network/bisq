@@ -21,7 +21,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.messages.filter.payload.PaymentAccountFilter;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
+import io.bitsquare.messages.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

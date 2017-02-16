@@ -17,6 +17,8 @@
 
 package io.bitsquare.btc.data;
 
+import io.bitsquare.messages.btc.data.RawTransactionInput;
+
 import java.util.ArrayList;
 
 public class PreparedDepositTxAndOffererInputs {

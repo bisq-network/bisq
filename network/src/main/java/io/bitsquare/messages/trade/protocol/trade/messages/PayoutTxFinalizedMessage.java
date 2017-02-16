@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.messages;
+package io.bitsquare.messages.trade.protocol.trade.messages;
 
 import com.google.protobuf.ByteString;
 import io.bitsquare.messages.app.Version;
@@ -30,35 +30,21 @@ import java.util.Arrays;
 import java.util.UUID;
 
 @Immutable
-public final class FinalizePayoutTxRequest extends TradeMessage implements MailboxMessage {
+public final class PayoutTxFinalizedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final byte[] sellerSignature;
-    public final String sellerPayoutAddress;
-    public final long lockTimeAsBlockHeight;
+    public final byte[] payoutTx;
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
-    public FinalizePayoutTxRequest(String tradeId,
-                                   byte[] sellerSignature,
-                                   String sellerPayoutAddress,
-                                   long lockTimeAsBlockHeight,
-                                   NodeAddress senderNodeAddress) {
-        this(tradeId, sellerSignature, sellerPayoutAddress, lockTimeAsBlockHeight, senderNodeAddress,
-                UUID.randomUUID().toString());
+    public PayoutTxFinalizedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress) {
+        this(tradeId, payoutTx, senderNodeAddress, UUID.randomUUID().toString());
     }
 
-    public FinalizePayoutTxRequest(String tradeId,
-                                   byte[] sellerSignature,
-                                   String sellerPayoutAddress,
-                                   long lockTimeAsBlockHeight,
-                                   NodeAddress senderNodeAddress,
-                                   String uid) {
+    public PayoutTxFinalizedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress, String uid) {
         super(tradeId);
-        this.sellerSignature = sellerSignature;
-        this.sellerPayoutAddress = sellerPayoutAddress;
-        this.lockTimeAsBlockHeight = lockTimeAsBlockHeight;
+        this.payoutTx = payoutTx;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
     }
@@ -76,15 +62,12 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof FinalizePayoutTxRequest)) return false;
+        if (!(o instanceof PayoutTxFinalizedMessage)) return false;
         if (!super.equals(o)) return false;
 
-        FinalizePayoutTxRequest that = (FinalizePayoutTxRequest) o;
+        PayoutTxFinalizedMessage that = (PayoutTxFinalizedMessage) o;
 
-        if (lockTimeAsBlockHeight != that.lockTimeAsBlockHeight) return false;
-        if (!Arrays.equals(sellerSignature, that.sellerSignature)) return false;
-        if (sellerPayoutAddress != null ? !sellerPayoutAddress.equals(that.sellerPayoutAddress) : that.sellerPayoutAddress != null)
-            return false;
+        if (!Arrays.equals(payoutTx, that.payoutTx)) return false;
         if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
             return false;
         return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
@@ -94,9 +77,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (sellerSignature != null ? Arrays.hashCode(sellerSignature) : 0);
-        result = 31 * result + (sellerPayoutAddress != null ? sellerPayoutAddress.hashCode() : 0);
-        result = 31 * result + (int) (lockTimeAsBlockHeight ^ (lockTimeAsBlockHeight >>> 32));
+        result = 31 * result + (payoutTx != null ? Arrays.hashCode(payoutTx) : 0);
         result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
@@ -105,13 +86,11 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     @Override
     public Messages.Envelope toProtoBuf() {
         Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
-        return baseEnvelope.setFinalizePayoutTxRequest(Messages.FinalizePayoutTxRequest.newBuilder()
+        return baseEnvelope.setPayoutTxFinalizedMessage(baseEnvelope.getPayoutTxFinalizedMessageBuilder()
+                .setUid(uid)
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)
-                .setSellerSignature(ByteString.copyFrom(sellerSignature))
-                .setSellerPayoutAddress(sellerPayoutAddress)
-                .setLockTimeAsBlockHeight(lockTimeAsBlockHeight)
-                .setSenderNodeAddress(senderNodeAddress.toProtoBuf())
-                .setUid(uid)).build();
+                .setPayoutTx(ByteString.copyFrom(payoutTx))
+                .setSenderNodeAddress(senderNodeAddress.toProtoBuf())).build();
     }
 }

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc.data;
+package io.bitsquare.messages.btc.data;
 
 import com.google.protobuf.ByteString;
 import io.bitsquare.messages.app.Version;

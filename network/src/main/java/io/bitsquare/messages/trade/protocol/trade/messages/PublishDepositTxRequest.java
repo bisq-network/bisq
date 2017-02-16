@@ -15,14 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.messages;
+package io.bitsquare.messages.trade.protocol.trade.messages;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.messages.app.Version;
-import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.messages.app.Version;
+import io.bitsquare.messages.btc.data.RawTransactionInput;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.messages.protocol.trade.TradeMessage;
 import org.slf4j.Logger;
@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Immutable
@@ -47,7 +48,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
     public final String offererContractSignature;
     public final String offererPayoutAddressString;
     public final byte[] preparedDepositTx;
-    public final ArrayList<RawTransactionInput> offererInputs;
+    public final List<RawTransactionInput> offererInputs;
     public final byte[] offererMultiSigPubKey;
 
     public PublishDepositTxRequest(String tradeId,
@@ -58,7 +59,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
                                    String offererContractSignature,
                                    String offererPayoutAddressString,
                                    byte[] preparedDepositTx,
-                                   ArrayList<RawTransactionInput> offererInputs) {
+                                   List<RawTransactionInput> offererInputs) {
         super(tradeId);
         this.offererPaymentAccountContractData = offererPaymentAccountContractData;
         this.offererAccountId = offererAccountId;

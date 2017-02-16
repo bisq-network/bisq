@@ -26,7 +26,7 @@ import io.bitsquare.messages.app.Log;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.data.InputsAndChangeOutput;
 import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
-import io.bitsquare.btc.data.RawTransactionInput;
+import io.bitsquare.messages.btc.data.RawTransactionInput;
 import io.bitsquare.btc.exceptions.SigningException;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;

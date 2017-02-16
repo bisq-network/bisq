@@ -107,7 +107,30 @@ public final class Dispute implements Payload {
                    String takerContractSignature,
                    PubKeyRing arbitratorPubKeyRing,
                    boolean isSupportTicket) {
+        this(tradeId, traderId, disputeOpenerIsBuyer, disputeOpenerIsOfferer, traderPubKeyRing, tradeDate,
+                contract, contractHash, depositTxSerialized, payoutTxSerialized, depositTxId,
+                payoutTxId, contractAsJson, offererContractSignature, takerContractSignature,
+                arbitratorPubKeyRing, isSupportTicket);
         this.storage = storage;
+    }
+
+    public Dispute(String tradeId,
+                   int traderId,
+                   boolean disputeOpenerIsBuyer,
+                   boolean disputeOpenerIsOfferer,
+                   PubKeyRing traderPubKeyRing,
+                   Date tradeDate,
+                   Contract contract,
+                   byte[] contractHash,
+                   @Nullable byte[] depositTxSerialized,
+                   @Nullable byte[] payoutTxSerialized,
+                   @Nullable String depositTxId,
+                   @Nullable String payoutTxId,
+                   String contractAsJson,
+                   String offererContractSignature,
+                   String takerContractSignature,
+                   PubKeyRing arbitratorPubKeyRing,
+                   boolean isSupportTicket) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.disputeOpenerIsBuyer = disputeOpenerIsBuyer;
@@ -142,8 +165,8 @@ public final class Dispute implements Payload {
 
     private void fillInTransients() {
         disputeCommunicationMessagesAsObservableList = FXCollections.observableArrayList(disputeCommunicationMessages);
-        disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
         isClosedProperty = new SimpleBooleanProperty(isClosed);
+        disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
     }
 
     public void addDisputeMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
