@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
-import io.bitsquare.messages.app.Log;
+import io.bitsquare.app.Log;
 import io.bitsquare.messages.arbitration.Dispute;
 import io.bitsquare.common.Clock;
 import io.bitsquare.gui.components.TitledGroupBg;

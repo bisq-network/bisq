@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
-import io.bitsquare.messages.app.DevFlags;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;

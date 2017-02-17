@@ -17,7 +17,7 @@
 
 package io.bitsquare.messages.user;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

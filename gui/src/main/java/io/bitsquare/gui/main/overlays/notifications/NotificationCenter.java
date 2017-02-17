@@ -1,7 +1,7 @@
 package io.bitsquare.gui.main.overlays.notifications;
 
 import com.google.inject.Inject;
-import io.bitsquare.messages.app.Log;
+import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;

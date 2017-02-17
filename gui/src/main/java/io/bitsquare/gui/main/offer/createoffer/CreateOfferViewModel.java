@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.offer.createoffer;
 
-import io.bitsquare.messages.app.DevFlags;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.messages.provider.price.MarketPrice;
 import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.common.Timer;

@@ -18,7 +18,7 @@
 package io.bitsquare.messages.payment.payload;
 
 import com.google.common.base.Joiner;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

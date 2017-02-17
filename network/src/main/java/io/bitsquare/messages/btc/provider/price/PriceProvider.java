@@ -2,7 +2,7 @@ package io.bitsquare.messages.btc.provider.price;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.messages.btc.provider.HttpClientProvider;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.http.HttpClient;

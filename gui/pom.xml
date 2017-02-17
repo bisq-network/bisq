@@ -59,7 +59,7 @@
                     <transformers>
                         <transformer
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bitsquare.messages.app.BitsquareAppMain</mainClass>
+                            <mainClass>io.bitsquare.app.BitsquareAppMain</mainClass>
                         </transformer>
                     </transformers>
                     <filters>

@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.peers.peerexchange.messages;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.p2p.Message;
 
 abstract class PeerExchangeMessage implements Message {

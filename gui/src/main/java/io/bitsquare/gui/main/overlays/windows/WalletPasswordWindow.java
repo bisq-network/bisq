@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Splitter;
-import io.bitsquare.messages.app.BitsquareApp;
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;

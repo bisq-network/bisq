@@ -17,11 +17,11 @@
 
 package io.bitsquare.messages.user;
 
-import io.bitsquare.messages.app.DevFlags;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.messages.btc.BitcoinNetwork;
 import io.bitsquare.messages.btc.provider.fee.FeeService;

@@ -17,7 +17,7 @@
 
 package io.bitsquare.messages.dao.compensation.payload;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.common.wire.proto.Messages;

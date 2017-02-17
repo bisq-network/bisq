@@ -19,8 +19,8 @@ package io.bitsquare.gui;
 
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
-import io.bitsquare.messages.app.AppModule;
-import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.app.AppModule;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.gui.common.fxml.FxmlViewLoader;
 import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.ViewFactory;

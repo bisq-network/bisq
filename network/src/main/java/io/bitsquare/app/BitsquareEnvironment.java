@@ -22,8 +22,6 @@ import io.bitsquare.BitsquareException;
 import io.bitsquare.common.CommonOptionKeys;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.messages.app.AppOptionKeys;
-import io.bitsquare.messages.app.Version;
 import io.bitsquare.messages.btc.BitcoinNetwork;
 import io.bitsquare.messages.btc.BtcOptionKeys;
 import io.bitsquare.messages.btc.UserAgent;
@@ -190,7 +188,18 @@ public class BitsquareEnvironment extends StandardEnvironment {
             propertySources.addLast(homeDirProperties());
             propertySources.addLast(classpathProperties());
 
-            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK, BitcoinNetwork.DEFAULT.name()).toUpperCase());
+            String btcNetwork = BtcOptionKeys.BTC_NETWORK;
+            log.info("btcnetwork = {}", btcNetwork);
+            String name1 = BitcoinNetwork.DEFAULT.name();
+            log.info("name1 = {}", name1);
+            String name = name1;
+            try {
+                name = getProperty(btcNetwork, name1).toUpperCase();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            log.info("name = {}", name);
+            bitcoinNetwork = BitcoinNetwork.valueOf(name);
             btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())

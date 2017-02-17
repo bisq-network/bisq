@@ -18,7 +18,7 @@
 package io.bitsquare.trade.offer;
 
 import com.google.inject.name.Named;
-import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;

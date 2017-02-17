@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.seed;
 
 import com.google.common.collect.Sets;
-import io.bitsquare.messages.app.DevFlags;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

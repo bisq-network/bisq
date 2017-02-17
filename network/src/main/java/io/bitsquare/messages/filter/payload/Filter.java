@@ -18,7 +18,7 @@
 package io.bitsquare.messages.filter.payload;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.storage.payload.StoragePayload;

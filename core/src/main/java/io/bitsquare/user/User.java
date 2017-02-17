@@ -18,7 +18,7 @@
 package io.bitsquare.user;
 
 import io.bitsquare.messages.alert.Alert;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.persistance.Persistable;

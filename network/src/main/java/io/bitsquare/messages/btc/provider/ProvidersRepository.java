@@ -1,7 +1,7 @@
 package io.bitsquare.messages.btc.provider;
 
 import com.google.inject.Inject;
-import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.network.NetworkOptionKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

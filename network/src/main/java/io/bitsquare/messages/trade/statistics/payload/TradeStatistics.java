@@ -1,7 +1,7 @@
 package io.bitsquare.messages.trade.statistics.payload;
 
-import io.bitsquare.messages.app.Capabilities;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Capabilities;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.common.wire.proto.Messages;

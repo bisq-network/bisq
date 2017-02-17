@@ -1,8 +1,8 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.inject.Inject;
-import io.bitsquare.messages.app.BitsquareApp;
-import io.bitsquare.messages.app.DevFlags;
+import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.messages.user.Preferences;
 import org.slf4j.Logger;

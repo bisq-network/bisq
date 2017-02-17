@@ -17,7 +17,7 @@
 
 package io.bitsquare.dao.vote;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

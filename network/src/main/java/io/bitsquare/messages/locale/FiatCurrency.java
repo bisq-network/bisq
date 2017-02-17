@@ -17,7 +17,7 @@
 
 package io.bitsquare.messages.locale;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.messages.user.Preferences;
 
 import java.util.Currency;

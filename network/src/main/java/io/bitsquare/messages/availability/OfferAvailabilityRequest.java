@@ -17,8 +17,8 @@
 
 package io.bitsquare.messages.availability;
 
-import io.bitsquare.messages.app.Capabilities;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Capabilities;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;

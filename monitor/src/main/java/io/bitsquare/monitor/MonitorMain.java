@@ -18,9 +18,9 @@
 package io.bitsquare.monitor;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.messages.app.BitsquareExecutable;
+import io.bitsquare.app.BitsquareExecutable;
 import io.bitsquare.common.UserThread;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;

@@ -2,7 +2,7 @@ package io.bitsquare.trade.statistics;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.locale.CurrencyTuple;
 import io.bitsquare.messages.locale.CurrencyUtil;

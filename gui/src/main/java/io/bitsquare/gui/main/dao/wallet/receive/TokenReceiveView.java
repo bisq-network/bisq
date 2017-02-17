@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.dao.wallet.receive;
 
-import io.bitsquare.messages.app.DevFlags;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableView;

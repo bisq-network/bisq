@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.peers.peerexchange;
 
-import io.bitsquare.messages.app.Log;
+import io.bitsquare.app.Log;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.p2p.Message;

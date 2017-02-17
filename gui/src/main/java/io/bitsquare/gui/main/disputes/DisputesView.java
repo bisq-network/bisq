@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.disputes;
 
-import io.bitsquare.messages.app.DevFlags;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.common.crypto.KeyRing;

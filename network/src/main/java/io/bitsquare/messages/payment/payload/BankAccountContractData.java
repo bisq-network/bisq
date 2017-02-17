@@ -17,7 +17,7 @@
 
 package io.bitsquare.messages.payment.payload;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.messages.locale.BankUtil;
 import io.bitsquare.messages.locale.CountryUtil;
 import org.slf4j.Logger;

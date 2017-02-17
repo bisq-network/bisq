@@ -17,7 +17,7 @@
 
 package io.bitsquare.messages.arbitration;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.messages.arbitration.payload.Attachment;
 import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.wire.proto.Messages;

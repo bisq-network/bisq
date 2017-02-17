@@ -21,7 +21,7 @@ import com.google.protobuf.ByteString;
 import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.messages.btc.data.RawTransactionInput;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.messages.protocol.trade.TradeMessage;

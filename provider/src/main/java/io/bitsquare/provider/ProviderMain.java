@@ -18,7 +18,7 @@
 package io.bitsquare.provider;
 
 import ch.qos.logback.classic.Level;
-import io.bitsquare.messages.app.Log;
+import io.bitsquare.app.Log;
 import io.bitsquare.http.HttpException;
 import io.bitsquare.provider.fee.FeeRequestService;
 import io.bitsquare.provider.price.PriceRequestService;

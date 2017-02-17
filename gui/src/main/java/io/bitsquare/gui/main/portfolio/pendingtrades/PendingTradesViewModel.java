@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
-import io.bitsquare.messages.app.Log;
+import io.bitsquare.app.Log;
 import io.bitsquare.common.Clock;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;

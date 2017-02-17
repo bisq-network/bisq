@@ -17,7 +17,7 @@
 
 package io.bitsquare.messages.locale;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 
 public final class CryptoCurrency extends TradeCurrency {
     // That object is saved to disc. We need to take care of changes to not break deserialization.

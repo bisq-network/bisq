@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.settings.network;
 
-import io.bitsquare.messages.app.BitsquareApp;
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.wallet.WalletsSetup;
 import io.bitsquare.common.Clock;
 import io.bitsquare.common.UserThread;

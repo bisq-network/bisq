@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.account.content.seedwords;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import io.bitsquare.messages.app.BitsquareApp;
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.btc.wallet.WalletsManager;

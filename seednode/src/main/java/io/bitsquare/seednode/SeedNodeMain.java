@@ -18,9 +18,9 @@
 package io.bitsquare.seednode;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.bitsquare.messages.app.AppOptionKeys;
+import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.messages.app.BitsquareExecutable;
+import io.bitsquare.app.BitsquareExecutable;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Profiler;
 import io.bitsquare.common.util.RestartUtil;
@@ -74,7 +74,7 @@ public class SeedNodeMain extends BitsquareExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BitsquareEnvironment bitsquareEnvironment = getBitsquareEnvironment(options);
+        BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
 
         // need to call that before BitsquareAppMain().execute(args)
         BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
@@ -88,7 +88,7 @@ public class SeedNodeMain extends BitsquareExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        final BitsquareEnvironment environment = getBitsquareEnvironment(options);
+        final BitsquareEnvironment environment = new BitsquareEnvironment(options);
         SeedNode.setEnvironment(environment);
 
         UserThread.execute(() -> seedNode = new SeedNode());

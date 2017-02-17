@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.offer.takeoffer;
 
 import com.google.inject.Inject;
-import io.bitsquare.messages.app.DevFlags;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.listeners.BalanceListener;

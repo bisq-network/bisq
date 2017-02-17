@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.offer;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.messages.trade.offer.payload.Offer;

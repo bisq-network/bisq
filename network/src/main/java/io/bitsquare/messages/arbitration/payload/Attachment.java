@@ -1,7 +1,7 @@
 package io.bitsquare.messages.arbitration.payload;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;

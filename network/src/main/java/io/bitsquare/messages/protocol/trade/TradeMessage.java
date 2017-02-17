@@ -17,7 +17,7 @@
 
 package io.bitsquare.messages.protocol.trade;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.p2p.messaging.DirectMessage;
 
 import javax.annotation.concurrent.Immutable;

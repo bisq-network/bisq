@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.offer.offerbook;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.messages.locale.*;
 import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;

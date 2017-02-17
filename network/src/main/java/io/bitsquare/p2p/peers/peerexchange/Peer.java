@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.peers.peerexchange;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.common.wire.proto.Messages;

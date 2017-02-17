@@ -17,7 +17,7 @@
 
 package io.bitsquare.payment;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.messages.locale.FiatCurrency;
 import io.bitsquare.messages.payment.PaymentMethod;
 import io.bitsquare.messages.payment.payload.AliPayAccountContractData;

@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Service;
 import com.google.inject.Inject;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import io.bitsquare.messages.app.Log;
+import io.bitsquare.app.Log;
 import io.bitsquare.btc.*;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;

@@ -1,7 +1,7 @@
 package io.bitsquare.http;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.network.Socks5ProxyProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;

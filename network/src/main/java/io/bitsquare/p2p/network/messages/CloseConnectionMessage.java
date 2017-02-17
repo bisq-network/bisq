@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.network.messages;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.Message;
 

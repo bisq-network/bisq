@@ -18,7 +18,7 @@
 package io.bitsquare.messages.trade.protocol.trade.messages;
 
 import com.google.protobuf.ByteString;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.util.ProtoBufferUtils;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.messages.protocol.trade.TradeMessage;

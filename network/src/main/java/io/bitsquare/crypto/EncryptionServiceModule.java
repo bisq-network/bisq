@@ -18,7 +18,7 @@
 package io.bitsquare.crypto;
 
 import com.google.inject.Singleton;
-import io.bitsquare.messages.app.AppModule;
+import io.bitsquare.app.AppModule;
 import org.springframework.core.env.Environment;
 
 public class EncryptionServiceModule extends AppModule {

@@ -17,7 +17,7 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

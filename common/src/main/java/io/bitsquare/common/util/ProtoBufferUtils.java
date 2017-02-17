@@ -1,6 +1,6 @@
 package io.bitsquare.common.util;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
 
 /**

@@ -18,7 +18,7 @@
 package io.bitsquare.gui;
 
 import com.google.inject.Inject;
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewPath;

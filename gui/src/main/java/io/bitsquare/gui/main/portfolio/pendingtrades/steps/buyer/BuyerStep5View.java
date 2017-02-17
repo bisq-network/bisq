@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import io.bitsquare.messages.app.DevFlags;
-import io.bitsquare.messages.app.Log;
+import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.Log;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.InsufficientFundsException;

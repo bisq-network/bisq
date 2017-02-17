@@ -17,7 +17,7 @@
 
 package io.bitsquare.messages.arbitration;
 
-import io.bitsquare.messages.app.Version;
+import io.bitsquare.app.Version;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import java.util.UUID;

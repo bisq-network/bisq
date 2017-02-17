@@ -18,7 +18,7 @@
 package io.bitsquare.arbitration;
 
 import com.google.inject.Singleton;
-import io.bitsquare.messages.app.AppModule;
+import io.bitsquare.app.AppModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;

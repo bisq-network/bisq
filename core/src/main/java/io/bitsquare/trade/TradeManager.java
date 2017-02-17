@@ -18,7 +18,7 @@
 package io.bitsquare.trade;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bitsquare.messages.app.Log;
+import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;

@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.funds.deposit;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.messages.app.DevFlags;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.messages.btc.provider.fee.FeeService;
