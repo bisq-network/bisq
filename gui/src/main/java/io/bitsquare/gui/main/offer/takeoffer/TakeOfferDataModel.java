@@ -26,6 +26,7 @@ import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.TradeWalletService;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
@@ -194,7 +195,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But the "take offer" happens usually after that so we should have already the value from the estimation service.
-        takerFeeAsCoin = feeService.getTakeOfferFeeInBtc();
         txFeeAsCoin = feeService.getTxFee(400);
         totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
 
@@ -244,7 +244,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void requestTxFee() {
         feeService.requestFees(() -> {
-            takerFeeAsCoin = feeService.getTakeOfferFeeInBtc();
             txFeeAsCoin = feeService.getTxFee(400);
             totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
             calculateTotalToPay();
@@ -265,6 +264,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to 
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
+        checkNotNull(totalTxFeeAsCoin, "totalTxFeeAsCoin must not be null");
         Coin fundsNeededForTrade = totalToPayAsCoin.get().subtract(takerFeeAsCoin).subtract(txFeeAsCoin);
         tradeManager.onTakeOffer(amountAsCoin.get(),
                 txFeeAsCoin,
@@ -351,8 +351,12 @@ class TakeOfferDataModel extends ActivatableDataModel {
         }
     }
 
-    void setAmount(Coin amount) {
+    void applyAmount(Coin amount) {
         amountAsCoin.set(amount);
+
+        takerFeeAsCoin = Utilities.getFeePerBtc(feeService.getTakeOfferFeeInBtcPerBtc(), amount);
+        takerFeeAsCoin = Utilities.maxCoin(takerFeeAsCoin, feeService.getMinTakeOfferFeeInBtc());
+
         calculateTotalToPay();
     }
 
@@ -360,7 +364,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer 
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
-        if (offer != null && amountAsCoin.get() != null) {
+        if (offer != null && amountAsCoin.get() != null && takerFeeAsCoin != null) {
             Coin value = takerFeeAsCoin.add(totalTxFeeAsCoin).add(securityDepositAsCoin);
             if (getDirection() == Offer.Direction.SELL)
                 totalToPayAsCoin.set(value);
@@ -461,6 +465,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     public Coin getTakerFeeAsCoin() {
+        checkNotNull(totalTxFeeAsCoin, "totalTxFeeAsCoin must not be null");
         return takerFeeAsCoin;
     }
 

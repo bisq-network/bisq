@@ -266,7 +266,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                     percentage = dataModel.getDirection() == Offer.Direction.SELL ? 1 - relation : relation - 1;
                                 else
                                     percentage = dataModel.getDirection() == Offer.Direction.BUY ? 1 - relation : relation - 1;
+
                                 percentage = MathUtils.roundDouble(percentage, 4);
+                                dataModel.setMarketPriceMargin(percentage);
+                                dataModel.updateTradeFee();
                                 marketPriceMargin.set(formatter.formatToPercent(percentage));
                             } catch (NumberFormatException t) {
                                 marketPriceMargin.set("");
@@ -294,7 +297,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             if (marketPrice != null) {
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
-
+                                dataModel.updateTradeFee();
+                                
                                 double marketPriceAsDouble = marketPrice.getPrice(getPriceFeedType());
                                 double factor;
                                 if (CurrencyUtil.isCryptoCurrency(currencyCode))
@@ -724,14 +728,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void setAmountToModel() {
         if (amount.get() != null && !amount.get().isEmpty()) {
-            dataModel.amount.set(formatter.parseToCoinWith4Decimals(amount.get()));
+            dataModel.setAmount(formatter.parseToCoinWith4Decimals(amount.get()));
             if (dataModel.minAmount.get() == null || dataModel.minAmount.get().equals(Coin.ZERO)) {
                 minAmount.set(amount.get());
                 setMinAmountToModel();
             }
         } else {
-            dataModel.amount.set(null);
+            dataModel.setAmount(null);
         }
+        dataModel.updateTradeFee();
     }
 
     private void setMinAmountToModel() {

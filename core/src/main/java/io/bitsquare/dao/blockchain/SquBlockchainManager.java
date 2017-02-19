@@ -100,18 +100,20 @@ public class SquBlockchainManager {
                     blockchainService.syncFromGenesisCompete(GENESIS_TX_ID,
                             GENESIS_BLOCK_HEIGHT,
                             block -> {
-                                UserThread.execute(() -> {
-                                    try {
-                                        blockchainService.parseBlock(new SquBlock(block.getTx(), block.getHeight()),
-                                                GENESIS_BLOCK_HEIGHT,
-                                                GENESIS_TX_ID,
-                                                utxoByTxIdMap);
-                                    } catch (SquBlockchainException e) {
-                                        //TODO
-                                        e.printStackTrace();
-                                    }
-                                    blockchainService.printUtxoMap(utxoByTxIdMap);
-                                });
+                                if (block != null) {
+                                    UserThread.execute(() -> {
+                                        try {
+                                            blockchainService.parseBlock(new SquBlock(block.getTx(), block.getHeight()),
+                                                    GENESIS_BLOCK_HEIGHT,
+                                                    GENESIS_TX_ID,
+                                                    utxoByTxIdMap);
+                                        } catch (SquBlockchainException e) {
+                                            //TODO
+                                            e.printStackTrace();
+                                        }
+                                        blockchainService.printUtxoMap(utxoByTxIdMap);
+                                    });
+                                }
                             });
                 });
             }

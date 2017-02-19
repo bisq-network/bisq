@@ -46,11 +46,11 @@ public class FeeService {
 
     public static final long MIN_CREATE_OFFER_FEE_IN_BTC = 10_000;
     public static final long MAX_CREATE_OFFER_FEE_IN_BTC = 500_000;
-    public static final long DEFAULT_CREATE_OFFER_FEE_IN_BTC = 30_000; // excluded mining fee
+    public static final long DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BTC = 30_000; // excluded mining fee
 
     public static final long MIN_TAKE_OFFER_FEE_IN_BTC = 10_000;
     public static final long MAX_TAKE_OFFER_FEE_IN_BTC = 1000_000;
-    public static final long DEFAULT_TAKE_OFFER_FEE_IN_BTC = 30_000; // excluded mining fee
+    public static final long DEFAULT_TAKE_OFFER_FEE_IN_BTC_PER_BTC = 40_000; // excluded mining fee
 
     // 0.00216 btc is for 3 x tx fee for taker -> about 2 EUR!
 
@@ -125,13 +125,21 @@ public class FeeService {
     }
 
     // TODO we will get that from the DAO voting
-    public Coin getCreateOfferFeeInBtc() {
-        return Coin.valueOf(DEFAULT_CREATE_OFFER_FEE_IN_BTC);
+    public Coin getCreateOfferFeeInBtcPerBtc() {
+        return Coin.valueOf(DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BTC);
+    }
+
+    public Coin getMinCreateOfferFeeInBtc() {
+        return Coin.valueOf(MIN_CREATE_OFFER_FEE_IN_BTC);
+    }
+
+    public Coin getMinTakeOfferFeeInBtc() {
+        return Coin.valueOf(MIN_TAKE_OFFER_FEE_IN_BTC);
     }
 
     // TODO we will get that from the DAO voting
-    public Coin getTakeOfferFeeInBtc() {
-        return Coin.valueOf(DEFAULT_TAKE_OFFER_FEE_IN_BTC);
+    public Coin getTakeOfferFeeInBtcPerBtc() {
+        return Coin.valueOf(DEFAULT_TAKE_OFFER_FEE_IN_BTC_PER_BTC);
     }
 
     public Coin getCreateCompensationRequestFee() {

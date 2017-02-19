@@ -527,7 +527,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     private void setAmountToModel() {
-        dataModel.setAmount(formatter.parseToCoinWith4Decimals(amount.get()));
+        dataModel.applyAmount(formatter.parseToCoinWith4Decimals(amount.get()));
     }
 
 

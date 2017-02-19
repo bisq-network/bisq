@@ -260,7 +260,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But offer creation happens usually after that so we should have already the value from the estimation service.
         txFeeAsCoin = feeService.getTxFee(400);
-        createOfferFeeAsCoin = feeService.getCreateOfferFeeInBtc();
 
         // We request to get the actual estimated fee
         requestTxFee();
@@ -314,6 +313,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
+        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
 
         long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimit().value;
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
@@ -363,6 +363,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
+        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
         openOfferManager.placeOffer(offer, totalToPayAsCoin.get().subtract(txFeeAsCoin).subtract(createOfferFeeAsCoin), useSavingsWallet, resultHandler);
     }
 
@@ -423,7 +424,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     void requestTxFee() {
         feeService.requestFees(() -> {
             txFeeAsCoin = feeService.getTxFee(400);
-            createOfferFeeAsCoin = feeService.getCreateOfferFeeInBtc();
             calculateTotalToPay();
         }, null);
     }
@@ -519,7 +519,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // Offerer does not pay the tx fee for the trade txs because the mining fee might be different when offerer 
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
-        if (direction != null && amount.get() != null) {
+        if (direction != null && amount.get() != null && createOfferFeeAsCoin != null) {
             Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(securityDepositAsCoin);
             Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(required);
@@ -568,6 +568,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public Coin getCreateOfferFeeAsCoin() {
+        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
         return createOfferFeeAsCoin;
     }
 
@@ -603,5 +604,23 @@ class CreateOfferDataModel extends ActivatableDataModel {
             return ((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
         else
             return false;
+    }
+
+    void setAmount(Coin amount) {
+        this.amount.set(amount);
+    }
+
+    void updateTradeFee() {
+        createOfferFeeAsCoin = Utilities.getFeePerBtc(feeService.getCreateOfferFeeInBtcPerBtc(), amount.get());
+        log.error("marketPriceMargin " + marketPriceMargin);
+        log.error("createOfferFeeAsCoin pre  " + createOfferFeeAsCoin.toFriendlyString());
+
+        //TODO
+        // We don't want too fractional btc values so we use only a divide by 10 instead of 100
+        createOfferFeeAsCoin = createOfferFeeAsCoin.divide(10).multiply(Math.round(marketPriceMargin * 1_000));
+        log.error("createOfferFeeAsCoin post " + createOfferFeeAsCoin.toFriendlyString());
+
+        createOfferFeeAsCoin = Utilities.maxCoin(createOfferFeeAsCoin, feeService.getMinCreateOfferFeeInBtc());
+        log.error("createOfferFeeAsCoin post2 " + createOfferFeeAsCoin.toFriendlyString());
     }
 }
