@@ -71,7 +71,7 @@ public class LockedListItem {
     }
 
     private void updateBalance() {
-        balance = addressEntry.getLockedTradeAmount();
+        balance = addressEntry.getCoinLockedInMultiSig();
         if (balance != null)
             balanceLabel.setText(formatter.formatCoin(this.balance));
     }

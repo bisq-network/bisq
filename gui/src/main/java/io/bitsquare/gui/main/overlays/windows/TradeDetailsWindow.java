@@ -209,8 +209,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             viewContractButton.setOnAction(e -> {
                 TextArea textArea = new TextArea();
                 String contractAsJson = trade.getContractAsJson();
-                contractAsJson += "\n\nBuyerPubKeyHex: " + Utils.HEX.encode(trade.getContract().getBuyerBtcPubKey());
-                contractAsJson += "\nSellerPubKeyHex: " + Utils.HEX.encode(trade.getContract().getSellerBtcPubKey());
+                contractAsJson += "\n\nBuyerMultiSigPubKeyAsHex: " + Utils.HEX.encode(trade.getContract().getBuyerMultiSigPubKey());
+                contractAsJson += "\nSellerMultiSigPubKeyAsHex: " + Utils.HEX.encode(trade.getContract().getSellerMultiSigPubKey());
                 textArea.setText(contractAsJson);
                 textArea.setPrefHeight(50);
                 textArea.setEditable(false);

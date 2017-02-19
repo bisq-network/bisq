@@ -76,7 +76,7 @@ public final class AddressEntry implements Persistable {
     private final byte[] pubKeyHash;
     private final String paramId;
     @Nullable
-    private Coin lockedTradeAmount;
+    private Coin coinLockedInMultiSig;
     transient private NetworkParameters params;
 
 
@@ -179,13 +179,13 @@ public final class AddressEntry implements Persistable {
         return isOpenOffer() || isTrade();
     }
 
-    public void setLockedTradeAmount(Coin lockedTradeAmount) {
-        this.lockedTradeAmount = lockedTradeAmount;
+    public void setCoinLockedInMultiSig(Coin coinLockedInMultiSig) {
+        this.coinLockedInMultiSig = coinLockedInMultiSig;
     }
 
-    @org.jetbrains.annotations.Nullable
-    public Coin getLockedTradeAmount() {
-        return lockedTradeAmount;
+    @Nullable
+    public Coin getCoinLockedInMultiSig() {
+        return coinLockedInMultiSig;
     }
 
     @Override

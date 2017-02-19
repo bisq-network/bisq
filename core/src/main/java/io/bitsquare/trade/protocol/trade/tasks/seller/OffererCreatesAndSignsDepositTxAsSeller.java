@@ -26,6 +26,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,9 +58,10 @@ public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
             trade.setContractHash(contractHash);
             WalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
+            AddressEntry offererAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
             AddressEntry sellerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            sellerMultiSigAddressEntry.setLockedTradeAmount(sellerInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades(offer)));
-            walletService.saveAddressEntryList();
+            sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades(offer)));
+            Address changeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
             PreparedDepositTxAndOffererInputs result = processModel.getTradeWalletService().offererCreatesAndSignsDepositTx(
                     false,
                     contractHash,
@@ -68,8 +70,8 @@ public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
                     processModel.tradingPeer.getRawTransactionInputs(),
                     processModel.tradingPeer.getChangeOutputValue(),
                     processModel.tradingPeer.getChangeOutputAddress(),
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE),
-                    walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress(),
+                    offererAddressEntry.getAddress(),
+                    changeAddress,
                     processModel.tradingPeer.getMultiSigPubKey(),
                     sellerMultiSigAddressEntry.getPubKey(),
                     trade.getArbitratorPubKey());

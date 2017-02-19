@@ -453,7 +453,6 @@ public class WalletService {
     public void decryptWallet(@NotNull KeyParameter key) {
         wallet.decrypt(key);
         addressEntryList.stream().forEach(e -> {
-
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair != null && keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.decrypt(key));
@@ -519,20 +518,20 @@ public class WalletService {
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
                 .findAny();
-        if (addressEntry.isPresent())
+        if (addressEntry.isPresent()) {
             return addressEntry.get();
-        else
-            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context, offerId));
+        } else {
+            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context, offerId));
+            saveAddressEntryList();
+            return entry;
+        }
     }
 
     public AddressEntry getOrCreateAddressEntry(AddressEntry.Context context) {
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> context == e.getContext())
                 .findAny();
-        if (addressEntry.isPresent())
-            return addressEntry.get();
-        else
-            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+        return getOrCreateAddressEntry(context, addressEntry);
     }
 
     public AddressEntry getOrCreateUnusedAddressEntry(AddressEntry.Context context) {
@@ -540,10 +539,17 @@ public class WalletService {
                 .filter(e -> context == e.getContext())
                 .filter(e -> getNumTxOutputsForAddress(e.getAddress()) == 0)
                 .findAny();
-        if (addressEntry.isPresent())
+        return getOrCreateAddressEntry(context, addressEntry);
+    }
+
+    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
+        if (addressEntry.isPresent()) {
             return addressEntry.get();
-        else
-            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+        } else {
+            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+            saveAddressEntryList();
+            return entry;
+        }
     }
 
     public Optional<AddressEntry> findAddressEntry(String address, AddressEntry.Context context) {
@@ -580,7 +586,10 @@ public class WalletService {
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
                 .findAny();
-        addressEntryOptional.ifPresent(addressEntryList::swapToAvailable);
+        addressEntryOptional.ifPresent(e -> {
+            addressEntryList.swapToAvailable(e);
+            saveAddressEntryList();
+        });
     }
 
     public void swapAnyTradeEntryContextToAvailableEntry(String offerId) {

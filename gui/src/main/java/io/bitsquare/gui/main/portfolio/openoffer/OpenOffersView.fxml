@@ -29,7 +29,7 @@
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn text="Offer ID" fx:id="offerIdColumn" minWidth="120" maxWidth="130"/>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180" maxWidth="190"/>
+            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="200"/>
             <TableColumn text="Market" fx:id="marketColumn" minWidth="100"/>
             <TableColumn text="Price" fx:id="priceColumn" minWidth="160"/>
             <TableColumn text="BTC (min - max)" fx:id="amountColumn" minWidth="160"/>

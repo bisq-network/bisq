@@ -34,9 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
 
@@ -104,11 +101,6 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         InputTextField arbitratorPubKeyAsHex = addLabelInputTextField(gridPane, ++rowIndex, "arbitratorPubKeyAsHex:").second;
 
         InputTextField P2SHMultiSigOutputScript = addLabelInputTextField(gridPane, ++rowIndex, "P2SHMultiSigOutputScript:").second;
-        InputTextField buyerPubKeysInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "buyerPubKeys:").second;
-        InputTextField sellerPubKeysInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "sellerPubKeys:").second;
-
-        List<String> buyerPubKeys = !buyerPubKeysInputTextField.getText().isEmpty() ? Arrays.asList(buyerPubKeysInputTextField.getText().split(",")) : new ArrayList<>();
-        List<String> sellerPubKeys = !sellerPubKeysInputTextField.getText().isEmpty() ? Arrays.asList(sellerPubKeysInputTextField.getText().split(",")) : new ArrayList<>();
 
         
         // Notes: 
@@ -144,15 +136,8 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
 
         P2SHMultiSigOutputScript.setText("");
 
-        sellerPubKeys = Arrays.asList();
-                
-        buyerPubKeys = Arrays.asList();
-
-
         actionButtonText("Sign and publish transaction");
 
-        final List<String> finalSellerPubKeys = sellerPubKeys;
-        final List<String> finalBuyerPubKeys = buyerPubKeys;
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@Nullable Transaction result) {
@@ -188,8 +173,6 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
                         sellerPubKeyAsHex.getText(),
                         arbitratorPubKeyAsHex.getText(),
                         P2SHMultiSigOutputScript.getText(),
-                        finalBuyerPubKeys,
-                        finalSellerPubKeys,
                         callback);
             } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                 log.error(e.toString());
