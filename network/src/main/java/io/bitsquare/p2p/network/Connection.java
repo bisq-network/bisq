@@ -749,11 +749,11 @@ public class Connection implements MessageListener {
                         // Reading the protobuffer message from the inputstream
                         Messages.Envelope envelope = null;
                         try {
-                            if (protoInputStream.available() > 0) {
+//                            if (protoInputStream.available() > 0) {
                                 envelope = Messages.Envelope.parseDelimitedFrom(protoInputStream);
-                            } else {
-                                return;
-                            }
+//                            } else {
+//                                return;
+//                            }
 
                             if (envelope == null) {
                                 log.debug("Envelope is null, available={}", protoInputStream.available());
