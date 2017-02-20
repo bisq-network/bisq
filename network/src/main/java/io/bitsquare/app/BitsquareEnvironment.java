@@ -194,17 +194,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
             propertySources.addLast(classpathProperties());
 
             String btcNetwork = BtcOptionKeys.BTC_NETWORK;
-            log.info("btcnetwork = {}", btcNetwork);
-            String name1 = BitcoinNetwork.DEFAULT.name();
-            log.info("name1 = {}", name1);
-            String name = name1;
-            try {
-                name = getProperty(btcNetwork, name1).toUpperCase();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            log.info("name = {}", name);
-            bitcoinNetwork = BitcoinNetwork.valueOf(name);
+            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(btcNetwork, BitcoinNetwork.DEFAULT.name()).toUpperCase());
             btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())

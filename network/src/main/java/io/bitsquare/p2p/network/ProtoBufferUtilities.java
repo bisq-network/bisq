@@ -66,8 +66,8 @@ public class ProtoBufferUtilities {
 
 
     public static Optional<Message> fromProtoBuf(Messages.Envelope envelope) {
+        log.info("Convert protobuffer envelope: {},{}", envelope.getMessageCase(), envelope.toString());
         Message result = null;
-        NodeAddress nodeAddress;
         switch (envelope.getMessageCase()) {
             case PING:
                 result = getPing(envelope);
