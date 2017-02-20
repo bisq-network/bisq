@@ -74,7 +74,7 @@ For Mac OSX, you will need to set JAVA_HOME as:
     $ . ~/.bashrc
 
 
-Build bitcoinj
+Build bitcoinj and btcd-cli4j fork
 -----------------
 ### 2. Install bitcoinj fork
 > _**NOTE:**
@@ -84,10 +84,19 @@ We removed usage of Cartographer/HttpDiscovery in our [fork of version 0.13.1.7]
 Beside the Java serialisation issues there are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer.
 Here is a Github issue with background and open tasks regarding [Bloom Filters](https://github.com/bitsquare/bitsquare/issues/414)._  Note: use a fresh directory, this should not be done inside the bitsquare folder.
 
+Btcd-cli4j is used for RPC communication to a local Bitcoin Core node.
+TODO: remove if not used in production
+
     $ cd ..
     $ git clone -b FixBloomFilters https://github.com/bitsquare/bitcoinj.git
     $ cd bitcoinj
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+    
+    $ cd ..
+    $ git clone https://github.com/bitsquare/btcd-cli4j.git
+    $ cd btcd-cli4j
+    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+    
 
 Prepare Bitsquare build
 -----------------

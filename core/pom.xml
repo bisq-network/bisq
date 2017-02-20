@@ -29,16 +29,47 @@
             <version>4.8</version>
         </dependency>
 
-        <!-- TODO host on https or include in project -->
+        <!-- We use a local project atm but should be added either as jar or to a https repo. 
+             Default repo for that project is http only, so it is unsafe to use.-->
         <dependency>
             <groupId>com.neemre.btcd-cli4j</groupId>
             <artifactId>btcd-cli4j-core</artifactId>
             <version>0.5.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.neemre.btcd-cli4j</groupId>
             <artifactId>btcd-cli4j-daemon</artifactId>
             <version>0.5.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>

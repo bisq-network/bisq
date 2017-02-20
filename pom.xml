@@ -72,13 +72,6 @@
             <snapshots/>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
-
-        <!-- TODO host on https or include in project -->
-        <repository>
-            <id>mvn-nemp-ftp</id>
-            <name>Nemp's Maven Repository</name>
-            <url>http://mvn.neemre.com/</url>
-        </repository>
     </repositories>
 
     <dependencies>
