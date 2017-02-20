@@ -633,6 +633,30 @@ public class MainViewModel implements ViewModel {
                         .show();
             }
         });
+
+        checkIfOpenOffersMatchTradeProtocolVersion();
+    }
+
+    private void checkIfOpenOffersMatchTradeProtocolVersion() {
+        List<OpenOffer> outDatedOffers = openOfferManager.getOpenOffers()
+                .stream()
+                .filter(e -> e.getOffer().getProtocolVersion() != Version.TRADE_PROTOCOL_VERSION)
+                .collect(Collectors.toList());
+        if (!outDatedOffers.isEmpty()) {
+            new Popup<>()
+                    .warning("You have open offers which have been created with an older version of Bitsquare.\n" +
+                            "Please remove those offers as they are not valid anymore.\n\n" +
+                            "Offers (ID): " +
+                            outDatedOffers.stream()
+                                    .map(e -> e.getId() + "\n")
+                                    .collect(Collectors.toList()).toString()
+                                    .replace("[", "").replace("]", ""))
+                    .actionButtonText("Remove outdated offer(s)")
+                    .onAction(() -> openOfferManager.removeOpenOffers(outDatedOffers, null))
+                    .closeButtonText("Shut down")
+                    .onClose(BitsquareApp.shutDownHandler::run)
+                    .show();
+        }
     }
 
 

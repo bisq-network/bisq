@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.arbitration.DisputeManager;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;

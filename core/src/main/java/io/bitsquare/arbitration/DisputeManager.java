@@ -91,7 +91,7 @@ public class DisputeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private DisputeManager(P2PService p2PService,
+    public DisputeManager(P2PService p2PService,
                            TradeWalletService tradeWalletService,
                            BtcWalletService walletService,
                            TradeManager tradeManager,

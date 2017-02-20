@@ -7,7 +7,7 @@ set -e
 
 version="0.5.0.0"
 
-mvn clean package -DskipTests -Dmaven.javadoc.skip=true
+mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
 cp gui/target/shaded.jar "gui/deploy/Bitsquare-$version.jar"
 cp gui/target/shaded.jar "/Users/dev/vm_shared_ubuntu/Bitsquare-$version.jar"
@@ -32,7 +32,6 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles "core/src/main/resources/bitsquare.policy" \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare \
-    -BjvmOptions=-Djava.net.preferIPv4Stack=true \
     -BjvmOptions=-Djava.security.manager \
     -BjvmOptions=-Djava.security.debug=failure \
     -BjvmOptions=-Djava.security.policy=file:bitsquare.policy

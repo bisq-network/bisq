@@ -92,6 +92,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BITNZD", "BitNZD", true));
         result.add(new CryptoCurrency("BITSEK", "BitSEK", true));
         result.add(new CryptoCurrency("BITSGD", "BitSGD", true));
+        result.add(new CryptoCurrency("GBYTE", "Byte"));
         result.add(new CryptoCurrency("SYNQ", "BitSYNQ"));
         result.add(new CryptoCurrency("BTS", "BitShares"));
         result.add(new CryptoCurrency("BITUSD", "BitUSD", true));
@@ -136,6 +137,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
         result.add(new CryptoCurrency("JBS", "Jumbucks"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
+        result.add(new CryptoCurrency("LTBC", "LTBcoin"));
         result.add(new CryptoCurrency("LSK", "Lisk"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
@@ -158,6 +160,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("PASC", "Pascal Coin"));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("PINK", "Pinkcoin"));
+        result.add(new CryptoCurrency("PIVX", "PIVX"));
         result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
         result.add(new CryptoCurrency("PLU", "Plutons", true));
         result.add(new CryptoCurrency("POST", "PostCoin"));
@@ -180,6 +183,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XLM", "Stellar Lumens"));
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
         result.add(new CryptoCurrency("STRAT", "Stratis"));
+        result.add(new CryptoCurrency("SWT", "Swarm City Token"));
         result.add(new CryptoCurrency("SYNX", "Syndicate"));
         result.add(new CryptoCurrency("AMP", "Synereo", true));
         result.add(new CryptoCurrency("TRI", "Triangles"));
@@ -196,8 +200,19 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("YBC", "YbCoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
-        
+
         result.sort(TradeCurrency::compareTo);
+
+        // Util for printing all altcoins for adding to FAQ page
+        StringBuilder sb = new StringBuilder();
+        result.stream().forEach(e -> sb.append("<li>\"")
+                .append(e.getCode())
+                .append("\", \"")
+                .append(e.getName())
+                .append("\"</li>")
+                .append("\n"));
+        //log.info(sb.toString());
+        
         return result;
     }
 

@@ -168,7 +168,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     public void removeAllOpenOffers(@Nullable Runnable completeHandler) {
+        removeOpenOffers(getOpenOffers(), completeHandler);
+    }
+
+    public void removeOpenOffers(List<OpenOffer> openOffers, @Nullable Runnable completeHandler) {
         final int size = openOffers.size();
+        // Copy list as we remove in the loop
         List<OpenOffer> openOffersList = new ArrayList<>(openOffers);
         openOffersList.forEach(openOffer -> removeOpenOffer(openOffer, () -> {
         }, errorMessage -> {
