@@ -7,12 +7,8 @@ public class FeeData {
     private static final Logger log = LoggerFactory.getLogger(FeeData.class);
 
     public final long txFeePerByte;
-    public final long createOfferFee;
-    public final long takeOfferFee;
 
-    public FeeData(long txFeePerByte, long createOfferFee, long takeOfferFee) {
+    public FeeData(long txFeePerByte) {
         this.txFeePerByte = txFeePerByte;
-        this.createOfferFee = createOfferFee;
-        this.takeOfferFee = takeOfferFee;
     }
 }

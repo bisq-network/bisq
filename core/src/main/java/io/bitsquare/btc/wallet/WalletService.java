@@ -445,7 +445,7 @@ public abstract class WalletService {
         sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        printTx("emptyWallet", sendResult.tx);
+        printTx("empty wallet", sendResult.tx);
         Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(Transaction result) {
@@ -506,8 +506,8 @@ public abstract class WalletService {
         return wallet.freshKey(purpose);
     }
 
-    public DeterministicKey findKeyFromPubHash(byte[] pubkeyHash) {
-        return wallet.getActiveKeychain().findKeyFromPubHash(pubkeyHash);
+    public DeterministicKey findKeyFromPubKeyHash(byte[] pubKeyHash) {
+        return wallet.getActiveKeychain().findKeyFromPubHash(pubKeyHash);
     }
 
     public Address freshReceiveAddress() {

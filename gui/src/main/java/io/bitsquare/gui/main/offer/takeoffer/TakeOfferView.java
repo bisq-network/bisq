@@ -223,7 +223,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             directionLabel.setId("direction-icon-label-buy");
 
             takeOfferButton.setId("buy-button-big");
-            takeOfferButton.setText("Review offer to buy bitcoin");
+            takeOfferButton.setText("Review: Take offer to buy bitcoin");
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
@@ -231,7 +231,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            takeOfferButton.setText("Review offer to sell bitcoin");
+            takeOfferButton.setText("Review: Take offer to sell bitcoin");
         }
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
@@ -340,7 +340,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     .show();
 
             key = "takeOfferFundWalletInfo";
-            String tradeAmountText = model.isSeller() ? "- Trade amount: " + model.getAmount() + "\n" : "";
+            String tradeAmountText = model.isSeller() ? "- Trade amount: " + model.getTradeAmount() + "\n" : "";
             new Popup().headLine("Fund your trade").instruction("You need to deposit " +
                     model.totalToPay.get() + " for taking this offer.\n\n" +
 
@@ -348,7 +348,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     tradeAmountText +
                     "- Security deposit: " + model.getSecurityDeposit() + "\n" +
                     "- Trading fee: " + model.getTakerFee() + "\n" +
-                    "- Bitcoin mining fee: " + model.getNetworkFee() + "\n\n" +
+                    "- Mining fee (3x): " + model.getTxFee() + "\n\n" +
 
                     "You can choose between two options when funding your trade:\n" +
                     "- Use your Bitsquare wallet (convenient, but transactions may be linkable) OR\n" +
@@ -977,11 +977,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         int i = 0;
         if (model.isSeller())
-            addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.tradeAmount"), model.getAmount());
+            addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.tradeAmount"), model.getTradeAmount());
 
         addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.securityDeposit"), model.getSecurityDeposit());
         addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.offerFee"), model.getTakerFee());
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.networkFee"), model.getNetworkFee());
+        addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");
@@ -1002,6 +1002,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
         Label label = new Label(labelText);
         TextField textField = new TextField(value);
+        textField.setMinWidth(300);
         textField.setEditable(false);
         textField.setFocusTraversable(false);
         textField.setId("payment-info");

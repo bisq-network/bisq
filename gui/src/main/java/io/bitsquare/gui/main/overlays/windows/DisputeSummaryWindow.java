@@ -606,9 +606,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             disputeResult.getArbitratorPayoutAmount(),
                             contract.getBuyerPayoutAddressString(),
                             contract.getSellerPayoutAddressString(),
-                            arbitratorAddressEntry,
-                            contract.getBuyerBtcPubKey(),
-                            contract.getSellerBtcPubKey(),
+                            arbitratorAddressEntry.getAddressString(),
+                            arbitratorAddressEntry.getKeyPair(),
+                            contract.getBuyerMultiSigPubKey(),
+                            contract.getSellerMultiSigPubKey(),
                             arbitratorAddressEntry.getPubKey()
                     );
                     disputeResult.setArbitratorSignature(arbitratorSignature);

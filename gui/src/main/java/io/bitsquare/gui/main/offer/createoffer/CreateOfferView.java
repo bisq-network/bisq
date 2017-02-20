@@ -248,7 +248,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             imageView.setId("image-buy-large");
 
             placeOfferButton.setId("buy-button-big");
-            placeOfferButton.setText("Review offer to buy bitcoin");
+            placeOfferButton.setText("Review: Place offer to buy bitcoin");
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
@@ -256,7 +256,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             totalToPayTextField.setPromptText(BSResources.get("createOffer.fundsBox.totalsNeeded.prompt"));
 
             placeOfferButton.setId("sell-button-big");
-            placeOfferButton.setText("Review offer to sell bitcoin");
+            placeOfferButton.setText("Review: Place offer to sell bitcoin");
             nextButton.setId("sell-button");
         }
     }
@@ -334,7 +334,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     .show();
 
             key = "createOfferFundWalletInfo";
-            String tradeAmountText = model.isSellOffer() ? "- Trade amount: " + model.tradeAmount.get() + "\n" : "";
+            String tradeAmountText = model.isSellOffer() ? "- Trade amount: " + model.getTradeAmount() + "\n" : "";
 
             new Popup().headLine("Fund your offer").instruction("You need to deposit " +
                     model.totalToPay.get() + " to this offer.\n\n" +
@@ -345,7 +345,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     "The amount is the sum of:\n" +
                     tradeAmountText +
                     "- Security deposit: " + model.getSecurityDeposit() + "\n" +
-                    "- Trading fee: " + model.getOfferFee() + "\n" +
+                    "- Trading fee: " + model.getCreateOfferFee() + "\n" +
                     "- Mining fee: " + model.getTxFee() + "\n\n" +
 
                     "You can choose between two options when funding your trade:\n" +
@@ -1078,7 +1078,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.tradeAmount"), model.tradeAmount.get());
 
         addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.securityDeposit"), model.getSecurityDeposit());
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.offerFee"), model.getOfferFee());
+        addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.offerFee"), model.getCreateOfferFee());
         addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
@@ -1099,6 +1099,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
         Label label = new Label(labelText);
         TextField textField = new TextField(value);
+        textField.setMinWidth(300);
         textField.setEditable(false);
         textField.setFocusTraversable(false);
         textField.setId("payment-info");

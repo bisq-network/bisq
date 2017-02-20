@@ -134,7 +134,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                     // We use the key of the first SQU input for signing the data
                     TransactionOutput connectedOutput = preparedSendTx.getInputs().get(0).getConnectedOutput();
                     checkNotNull(connectedOutput, "connectedOutput must not be null");
-                    DeterministicKey squKeyPair = squWalletService.findKeyFromPubHash(connectedOutput.getScriptPubKey().getPubKeyHash());
+                    DeterministicKey squKeyPair = squWalletService.findKeyFromPubKeyHash(connectedOutput.getScriptPubKey().getPubKeyHash());
                     checkNotNull(squKeyPair, "squKeyPair must not be null");
 
                     // We get the JSON of the object excluding signature and feeTxId

@@ -19,9 +19,11 @@ package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.data.InputsAndChangeOutput;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +44,14 @@ public class TakerCreatesDepositTxInputsAsBuyer extends TradeTask {
             Coin txFee = trade.getTxFee();
             Coin doubleTxFee = txFee.add(txFee);
             Coin takerInputAmount = trade.getOffer().getSecurityDeposit().add(doubleTxFee);
+            BtcWalletService walletService = processModel.getWalletService();
+            Address takersAddress = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+            Address takersChangeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
             InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(
                     takerInputAmount,
                     txFee,
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE),
-                    processModel.getWalletService().getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress());
+                    takersAddress,
+                    takersChangeAddress);
             processModel.setRawTransactionInputs(result.rawTransactionInputs);
             processModel.setChangeOutputValue(result.changeOutputValue);
             processModel.setChangeOutputAddress(result.changeOutputAddress);

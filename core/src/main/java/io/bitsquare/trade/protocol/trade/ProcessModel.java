@@ -87,6 +87,7 @@ public class ProcessModel implements Model, Serializable {
     private Transaction takeOfferFeeTx;
     private boolean useSavingsWallet;
     private Coin fundsNeededForTrade;
+    private byte[] myMultiSigPubKey;
 
     public ProcessModel() {
         tradingPeer = new TradingPeer();
@@ -159,7 +160,7 @@ public class ProcessModel implements Model, Serializable {
         return user;
     }
 
-    public NodeAddress getMyAddress() {
+    public NodeAddress getMyNodeAddress() {
         return p2PService.getAddress();
     }
 
@@ -283,6 +284,14 @@ public class ProcessModel implements Model, Serializable {
 
     public Transaction getTakeOfferFeeTx() {
         return takeOfferFeeTx;
+    }
+
+    public void setMyMultiSigPubKey(byte[] myMultiSigPubKey) {
+        this.myMultiSigPubKey = myMultiSigPubKey;
+    }
+
+    public byte[] getMyMultiSigPubKey() {
+        return myMultiSigPubKey;
     }
 
     public boolean getUseSavingsWallet() {

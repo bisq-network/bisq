@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.common.util.Utilities;
@@ -31,6 +32,7 @@ import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CreateAndSignContract extends TradeTask {
@@ -53,11 +55,14 @@ public class CreateAndSignContract extends TradeTask {
             PaymentAccountContractData takerPaymentAccountContractData = taker.getPaymentAccountContractData();
             boolean isBuyerOffererAndSellerTaker = trade instanceof BuyerAsOffererTrade;
 
-            NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getMyAddress() : processModel.getTempTradingPeerNodeAddress();
-            NodeAddress sellerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyAddress();
-            log.debug("isBuyerOffererAndSellerTaker " + isBuyerOffererAndSellerTaker);
-            log.debug("buyerAddress " + buyerNodeAddress);
-            log.debug("sellerAddress " + sellerNodeAddress);
+            NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getMyNodeAddress() : processModel.getTempTradingPeerNodeAddress();
+            NodeAddress sellerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyNodeAddress();
+            BtcWalletService walletService = processModel.getWalletService();
+            String id = processModel.getOffer().getId();
+            AddressEntry takerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
+            checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(), "addressEntry must not be set here.");
+            AddressEntry offererAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            byte[] offererMultiSigPubKey = offererAddressEntry.getPubKey();
             Contract contract = new Contract(
                     processModel.getOffer(),
                     trade.getTradeAmount(),
@@ -73,9 +78,9 @@ public class CreateAndSignContract extends TradeTask {
                     takerPaymentAccountContractData,
                     processModel.getPubKeyRing(),
                     taker.getPubKeyRing(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString(),
+                    takerAddressEntry.getAddressString(),
                     taker.getPayoutAddressString(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG).getPubKey(),
+                    offererMultiSigPubKey,
                     taker.getMultiSigPubKey()
             );
             String contractAsJson = Utilities.objectToJson(contract);
@@ -84,6 +89,7 @@ public class CreateAndSignContract extends TradeTask {
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);
             trade.setOffererContractSignature(signature);
+            processModel.setMyMultiSigPubKey(offererMultiSigPubKey);
 
             complete();
         } catch (Throwable t) {

@@ -17,10 +17,12 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.seller;
 
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
+import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,9 @@ public class ProcessPayoutTxFinalizedMessage extends TradeTask {
             checkTradeId(processModel.getId(), message);
             checkNotNull(message);
             checkArgument(message.payoutTx != null);
-            trade.setPayoutTx(processModel.getTradeWalletService().addTransactionToWallet(message.payoutTx));
+            Transaction walletTx = processModel.getTradeWalletService().addTransactionToWallet(message.payoutTx);
+            trade.setPayoutTx(walletTx);
+            BtcWalletService.printTx("payoutTx received from peer", walletTx);
 
 
             // update to the latest peer address of our peer if the message is correct

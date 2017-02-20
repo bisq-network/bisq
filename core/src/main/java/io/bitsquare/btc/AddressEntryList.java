@@ -95,6 +95,6 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
     }
 
     public void queueUpForSave() {
-        storage.queueUpForSave();
+        storage.queueUpForSave(50);
     }
 }
