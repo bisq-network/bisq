@@ -58,6 +58,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+// TODO refactor to remove logic, should be value a object only
 public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -150,11 +151,17 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final long securityDeposit;
     private final long maxTradeLimit;
     private final long maxTradePeriod;
-    private final boolean useAutoClose;
-    private final boolean useReOpenAfterAutoClose;
-    private final long lowerClosePrice;
-    private final long upperClosePrice;
 
+    // reserved for future use cases
+    // Close offer when certain price is reached
+    private final boolean useAutoClose;
+    // If useReOpenAfterAutoClose=true we re-open a new offer with the remaining funds if the trade amount 
+    // was less then the offer's max. trade amount.
+    private final boolean useReOpenAfterAutoClose;
+    // Used when useAutoClose is set for canceling the offer when lowerClosePrice is triggered
+    private final long lowerClosePrice;
+    // Used when useAutoClose is set for canceling the offer when upperClosePrice is triggered
+    private final long upperClosePrice;
     // Reserved for possible future use to support private trades where the taker need to have an accessKey
     private final boolean isPrivateOffer;
     @Nullable
