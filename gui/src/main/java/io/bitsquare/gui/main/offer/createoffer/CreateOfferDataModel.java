@@ -319,8 +319,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         // reserved for future use cases
         boolean isPrivateOffer = false;
-        String hashOfChallenge = null;
-        HashMap<String, String> extraDataMap = null;
+        String hashOfChallenge = "";
+        HashMap<String, String> extraDataMap = new HashMap<>();
         boolean useAutoClose = false;
         boolean useReOpenAfterAutoClose = false;
         long lowerClosePrice = 0;
