@@ -220,18 +220,11 @@ public class BitsquareEnvironment extends StandardEnvironment {
     }
 
     private PropertySource<?> homeDirProperties() throws Exception {
-        String location = String.format("file:%s/.bitsquare/bitsquare.properties", getProperty("user.home"));
-        Resource resource = resourceLoader.getResource(location);
-
-        if (!resource.exists())
-            return new PropertySource.StubPropertySource(BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME);
-
-        return new ResourcePropertySource(BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME, resource);
+        return new PropertySource.StubPropertySource(BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME);
     }
 
     private PropertySource<?> classpathProperties() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:bitsquare.properties");
-        return new ResourcePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, resource);
+        return new PropertySource.StubPropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME);
     }
 
     private PropertySource<?> defaultProperties() {

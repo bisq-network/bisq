@@ -21,6 +21,7 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -outdir %outdir% ^
 -appclass io.bitsquare.app.BitsquareAppMain ^
 -srcfiles %outdir%\Bitsquare-%version%.jar ^
+-srcfiles "core/src/main/resources/bitsquare.policy" ^
 -outfile Bitsquare ^
 -Bruntime="%JAVA_HOME%\jre" ^
 -BjvmProperties=-Djava.net.preferIPv4Stack=true ^

@@ -26,6 +26,7 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bitsquare \
     -outdir gui/deploy \
     -srcfiles $jarFile:$jdkfixFile \
+    -srcfiles "core/src/main/resources/bitsquare.policy" \
     -srcfiles package/linux/LICENSE \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare \

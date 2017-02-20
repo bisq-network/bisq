@@ -1,6 +1,3 @@
-/* AUTOMATICALLY GENERATED ON Mon Jan 16 10:23:35 CET 2017*/
-/* DO NOT EDIT */
-
 grant {
   permission "java.util.PropertyPermission" "idea.launcher.*", "read";
   permission "java.util.PropertyPermission" "slf4j.detectLoggerNameMismatch", "read";
@@ -44,12 +41,15 @@ grant {
   permission "java.util.PropertyPermission" "bitcoinRegtestHost", "read";
   permission "java.util.PropertyPermission" "btcNodes", "read";
   permission "java.util.PropertyPermission" "appName", "read";
-  /* Why ??? */
+  permission "java.util.PropertyPermission" "socks5DiscoverMode", "read";
+  permission "java.util.PropertyPermission" "priceFeedProviders", "read";
+  permission "java.util.PropertyPermission" "maxMemory", "read";
+
+  /* Why ??? no permission exceptions, no dependency in bitsquare nor in bitcoinj. Local problem? */
   permission "java.util.PropertyPermission" "com.google.appengine.runtime.environment", "read";
 
   permission "java.lang.RuntimePermission" "accessDeclaredMembers";
   permission "java.lang.RuntimePermission" "setDefaultUncaughtExceptionHandler";
-  permission "java.lang.RuntimePermission" "getenv.*";
   permission "java.lang.RuntimePermission" "accessClassInPackage.sun.misc";
   permission "java.lang.RuntimePermission" "accessClassInPackage.sun.util.logging.resources";
   permission "java.lang.RuntimePermission" "accessClassInPackage.com.sun.javafx.tk.quantum";
@@ -82,46 +82,41 @@ grant {
   permission "java.lang.RuntimePermission" "getenv.ignoreDevMsg";
   permission "java.lang.RuntimePermission" "getenv.bitcoinNetwork";
   permission "java.lang.RuntimePermission" "getenv.appDataDir";
-  permission "java.lang.RuntimePermission" "getenv.appDataDir";
+  permission "java.lang.RuntimePermission" "getenv.socks5DiscoverMode";
+  permission "java.lang.RuntimePermission" "getenv.priceFeedProviders";
+  permission "java.lang.RuntimePermission" "getenv.seedNodes";
+  permission "java.lang.RuntimePermission" "getenv.bitcoinRegtestHost";
+  permission "java.lang.RuntimePermission" "getenv.btcNodes";
+  permission "java.lang.RuntimePermission" "getenv.maxMemory";
   permission "java.lang.RuntimePermission" "getClassLoader";
   permission "java.lang.RuntimePermission" "accessUserInformation";
   permission "java.lang.RuntimePermission" "loadLibrary.javasecp256k1";
   permission "java.lang.RuntimePermission" "modifyThread";
 
   /* user data dir for Mac, Linux, Windows */
-  permission "java.io.FilePermission" "${user.home}${/}Library${/}Application Support${/}-", "read,write,delete,execute";
-  permission "java.io.FilePermission" "${user.home}${/}.local${/}share${/}-", "read,write,delete,execute";
-  permission "java.io.FilePermission" "${appdata}${/}-", "read,write,delete,execute";
+  permission "java.io.FilePermission" "${user.home}${/}Library${/}Application Support${/}-", "read,write,delete";
+  permission "java.io.FilePermission" "${user.home}${/}.local${/}share${/}Bitsquare-", "read,write,delete";
+  permission "java.io.FilePermission" "${appdata}${/}Bitsquare-", "read,write,delete";
 
   /* temp dir Mac, Linux, Windows TODO */
   permission "java.io.FilePermission" "/var/folders/-", "read,write,delete";
 
-  /* only for dev */
+  /* only for dev
   permission "java.io.FilePermission" "${user.home}${/}.m2${/}-", "read";
+  permission "java.io.FilePermission" "/Users/me/dev/bitcoin_projects/bitsquare/-", "read";
+  permission "java.lang.reflect.ReflectPermission" "suppressAccessChecks";
+*/
 
-  permission "java.net.SocketPermission" "127.0.0.1:*", "listen,connect,resolve";
-  permission "java.net.URLPermission" "http://*:8080/getFees", "GET:User-Agent";
-  permission "java.net.URLPermission" "http://*:8080/getAllMarketPrices", "GET:User-Agent";
+
+  permission "java.net.SocketPermission" "127.0.0.1:*", "listen,connect,resolve, accept";
+  permission "java.net.URLPermission" "http://95.85.11.205:8080/all", "GET:User-Agent";
+  permission "java.net.URLPermission" "http://95.85.11.205:8080/getFees", "GET:User-Agent";
+  permission "java.net.URLPermission" "http://95.85.11.205:8080/getAllMarketPrices", "GET:User-Agent";
   permission "java.net.SocketPermission" "*:8333", "connect,resolve";
   permission "java.net.SocketPermission" "*.onion:80", "connect,resolve";
 
   permission "java.awt.AWTPermission" "accessSystemTray";
   permission "java.awt.AWTPermission" "showWindowWithoutWarningBanner";
   permission "java.security.SecurityPermission" "insertProvider";
-  permission "java.security.SecurityPermission" "getProperty.security.provider.*";
-  permission "java.lang.reflect.ReflectPermission" "suppressAccessChecks";
   permission "java.util.logging.LoggingPermission" "control";
 };
-
-/*
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/gui/target/classes/io/bitsquare/gui/main/MainView.fxml", "read";
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/core/target/classes/bitsquare.properties", "read";
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/gui/target/classes/io/bitsquare/gui/bitsquare.css", "read";
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/gui/target/classes/io/bitsquare/gui/images.css", "read";
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/core/target/classes/logback.xml", "read";
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/common/target/classes/logback.xml", "read";
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/network/target/classes/logback.xml", "read";
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/jtorproxy/target/classes/logback.xml", "read";
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/gui/target/classes/logback.xml", "read";
-  permission "java.io.FilePermission" "/Users/mike/dev/bitcoin_projects/bitsquare/gui/target/classes/i18n/displayStrings.properties", "read";
-  */
