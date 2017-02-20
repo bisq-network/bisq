@@ -22,7 +22,7 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
@@ -55,6 +55,7 @@ import org.bitcoinj.core.Transaction;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -79,7 +80,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final AddressEntry addressEntry;
     private Coin createOfferFeeAsCoin;
     private Coin txFeeAsCoin;
-    private final Coin securityDepositAsCoin;
     private final BalanceListener balanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
@@ -102,6 +102,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // If we would change the price representation in the domain we would not be backward compatible
     final ObjectProperty<Price> price = new SimpleObjectProperty<>();
     final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> securityDeposit = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
     final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
@@ -143,9 +144,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         addressEntry = walletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
         useMarketBasedPrice.set(preferences.getUsePercentageBasedPrice());
-
-        // TODO add ui for editing, use preferences
-        securityDepositAsCoin = FeePolicy.getDefaultSecurityDeposit();
+        securityDeposit.set(preferences.getSecurityDepositAsCoin());
 
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -327,6 +326,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
 
+        Coin securityDepositAsCoin = securityDeposit.get();
+        checkArgument(securityDepositAsCoin.compareTo(Restrictions.MAX_SECURITY_DEPOSIT) <= 0, "securityDeposit must be not exceed " +
+                Restrictions.MAX_SECURITY_DEPOSIT.toFriendlyString());
+        checkArgument(securityDepositAsCoin.compareTo(Restrictions.MIN_SECURITY_DEPOSIT) >= 0, "securityDeposit must be not be less than " +
+                Restrictions.MIN_SECURITY_DEPOSIT.toFriendlyString());
         return new Offer(offerId,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
@@ -520,7 +524,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (direction != null && amount.get() != null && createOfferFeeAsCoin != null) {
-            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(securityDepositAsCoin);
+            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(securityDeposit.get());
             Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(required);
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
@@ -576,8 +580,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return txFeeAsCoin;
     }
 
-    public Coin getSecurityDepositAsCoin() {
-        return securityDepositAsCoin;
+    public Coin getSecurityDeposit() {
+        return securityDeposit.get();
     }
 
     public List<Arbitrator> getArbitrators() {
@@ -608,6 +612,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void setAmount(Coin amount) {
         this.amount.set(amount);
+    }
+
+    void setSecurityDeposit(Coin securityDeposit) {
+        this.securityDeposit.set(securityDeposit);
+        preferences.setSecurityDepositAsLong(securityDeposit.value);
     }
 
     void updateTradeFee() {

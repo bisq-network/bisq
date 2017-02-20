@@ -22,6 +22,7 @@ import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Utilities;
@@ -31,6 +32,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,6 +137,7 @@ public final class Preferences implements Persistable {
 
     private List<String> ignoreTradersList = new ArrayList<>();
     private String defaultPath;
+    private long securityDepositAsLong = Restrictions.DEFAULT_SECURITY_DEPOSIT.value;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -256,6 +259,8 @@ public final class Preferences implements Persistable {
 
             if (persisted.getDefaultPath() != null)
                 defaultPath = persisted.getDefaultPath();
+
+            securityDepositAsLong = persisted.getSecurityDepositAsLong();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
@@ -473,6 +478,12 @@ public final class Preferences implements Persistable {
         withdrawalTxFeeInBytesProperty.set(withdrawalTxFeeInBytes);
     }
 
+    public void setSecurityDepositAsLong(long securityDepositAsLong) {
+        this.securityDepositAsLong = securityDepositAsLong;
+        storage.queueUpForSave();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -638,6 +649,14 @@ public final class Preferences implements Persistable {
 
     public long getWithdrawalTxFeeInBytes() {
         return withdrawalTxFeeInBytesProperty.get();
+    }
+
+    public long getSecurityDepositAsLong() {
+        return securityDepositAsLong;
+    }
+
+    public Coin getSecurityDepositAsCoin() {
+        return Coin.valueOf(securityDepositAsLong);
     }
 
 

@@ -943,7 +943,7 @@ public class FormBuilder {
         descriptionLabel.setPrefWidth(170);
 
         VBox box = new VBox();
-        box.setSpacing(4);
+        box.setSpacing(2);
         box.getChildren().addAll(descriptionLabel, amountValueBox);
         return new Tuple2<>(descriptionLabel, box);
     }

@@ -17,30 +17,21 @@
 
 package io.bitsquare.gui.util.validation;
 
+import io.bitsquare.btc.Restrictions;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 import org.bitcoinj.core.Coin;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.math.BigDecimal;
 
-public class BtcValidator extends NumberValidator {
-
-    protected final BSFormatter formatter;
-
-
-    @Nullable
-    protected Coin maxValueInBitcoin;
+public class SecurityDepositValidator extends BtcValidator {
 
     @Inject
-    public BtcValidator(BSFormatter formatter) {
-        this.formatter = formatter;
+    public SecurityDepositValidator(BSFormatter formatter) {
+        super(formatter);
+        setMaxValueInBitcoin(Restrictions.MAX_SECURITY_DEPOSIT);
     }
 
-    public void setMaxValueInBitcoin(Coin maxValueInBitcoin) {
-        this.maxValueInBitcoin = maxValueInBitcoin;
-    }
 
     @Override
     public ValidationResult validate(String input) {
@@ -53,6 +44,7 @@ public class BtcValidator extends NumberValidator {
         if (result.isValid) {
             result = validateIfNotZero(input)
                     .and(validateIfNotNegative(input))
+                    .and(validateIfNotTooLowBtcValue(input))
                     .and(validateIfNotFractionalBtcValue(input))
                     .and(validateIfNotExceedsMaxBtcValue(input));
         }
@@ -60,20 +52,14 @@ public class BtcValidator extends NumberValidator {
         return result;
     }
 
-    protected ValidationResult validateIfNotFractionalBtcValue(String input) {
-        BigDecimal bd = new BigDecimal(input);
-        final BigDecimal satoshis = bd.movePointRight(8);
-        if (satoshis.scale() > 0)
-            return new ValidationResult(false, BSResources.get("validation.btc.toSmall"));
-        else
-            return new ValidationResult(true);
-    }
 
-    protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
+    protected ValidationResult validateIfNotTooLowBtcValue(String input) {
         try {
             final Coin coin = Coin.parseCoin(input);
-            if (maxValueInBitcoin != null && coin.compareTo(maxValueInBitcoin) > 0)
-                return new ValidationResult(false, BSResources.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxValueInBitcoin)));
+            Coin minSecurityDeposit = Restrictions.MIN_SECURITY_DEPOSIT;
+            if (coin.compareTo(minSecurityDeposit) < 0)
+                return new ValidationResult(false,
+                        BSResources.get("validation.securityDeposit.toSmall", formatter.formatCoinWithCode(minSecurityDeposit)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {

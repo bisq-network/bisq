@@ -24,6 +24,10 @@ public class Restrictions {
 
     public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001"); // 4 cent @ 400 EUR/BTC 
 
+    public static final Coin MAX_SECURITY_DEPOSIT = Coin.parseCoin("0.2");
+    public static final Coin MIN_SECURITY_DEPOSIT = Coin.parseCoin("0.001");
+    public static final Coin DEFAULT_SECURITY_DEPOSIT = Coin.parseCoin("0.03");
+
     public static boolean isAboveDust(Coin amount, Coin txFee) {
         return amount != null && amount.compareTo(txFee.add(Transaction.MIN_NONDUST_OUTPUT)) >= 0;
     }

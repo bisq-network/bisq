@@ -75,37 +75,37 @@ public final class PaymentMethod implements Persistable, Comparable {
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
             // EUR
-            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("1")), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
+            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("0.5")), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
 
             // Global
-            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("1")),
-            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY, Coin.parseCoin("1")),
-            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY, Coin.parseCoin("1")),
-            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 0, 4 * DAY, Coin.parseCoin("1")),
+            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
+            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY, Coin.parseCoin("0.5")),
+            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
+            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
 
             // Trans national
-            OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY, Coin.parseCoin("2")),
+            OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY, Coin.parseCoin("1")),
             PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY, Coin.parseCoin("1")),
 
             // UK
-            FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, 0, DAY, Coin.parseCoin("1")),
+            FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, 0, DAY, Coin.parseCoin("0.5")),
 
             // Canada
-            INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, 0, DAY, Coin.parseCoin("1")),
+            INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, 0, DAY, Coin.parseCoin("0.5")),
 
             // US
-            CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 0, 4 * DAY, Coin.parseCoin("1")),
-            CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, 0, DAY, Coin.parseCoin("1")),
-            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, 8 * DAY, Coin.parseCoin("1")),
+            CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
+            CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, 0, DAY, Coin.parseCoin("0.5")),
+            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, 8 * DAY, Coin.parseCoin("0.5")),
 
             // Sweden
-            SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("2")),
+            SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("1")),
 
             // China
-            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("2")),
+            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("1")),
 
             // Altcoins
-            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("3"))
+            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("1"))
     ));
 
     private final String id;
