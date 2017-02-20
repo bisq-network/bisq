@@ -21,6 +21,11 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -outdir %outdir% ^
 -appclass io.bitsquare.app.BitsquareAppMain ^
 -srcfiles %outdir%\Bitsquare-%version%.jar ^
+-srcfiles "core/src/main/resources/bitsquare.policy" ^
 -outfile Bitsquare ^
 -Bruntime="%JAVA_HOME%\jre" ^
+-BjvmOptions=-Djava.security.manager ^
+-BjvmOptions=-Djava.security.debug=failure ^
+-BjvmOptions=-Djava.security.policy=file:bitsquare.policy ^
 -Bicon=package\windows\Bitsquare.ico
+
