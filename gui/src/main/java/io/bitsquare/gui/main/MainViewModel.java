@@ -982,7 +982,7 @@ public class MainViewModel implements ViewModel {
     private void updateLockedBalance() {
         Coin sum = Coin.valueOf(tradeManager.getLockedTradeStream()
                 .mapToLong(trade -> {
-                    Coin lockedTradeAmount = btcWalletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG).getLockedTradeAmount();
+                    Coin lockedTradeAmount = btcWalletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG).getCoinLockedInMultiSig();
                     return lockedTradeAmount != null ? lockedTradeAmount.getValue() : 0;
                 })
                 .sum());

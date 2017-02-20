@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.messaging.SendDirectMessageListener;
 import io.bitsquare.trade.Trade;
@@ -25,6 +26,11 @@ import io.bitsquare.trade.protocol.trade.messages.PublishDepositTxRequest;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class SendPublishDepositTxRequest extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendPublishDepositTxRequest.class);
@@ -38,14 +44,25 @@ public class SendPublishDepositTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+            BtcWalletService walletService = processModel.getWalletService();
+            String id = processModel.getOffer().getId();
+
+            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            checkArgument(addressEntryOptional.isPresent(), "addressEntry must be set here.");
+            AddressEntry offererPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
+            byte[] offererMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            checkArgument(Arrays.equals(offererMultiSigPubKey,
+                            addressEntryOptional.get().getPubKey()),
+                    "offererMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
+
             PublishDepositTxRequest tradeMessage = new PublishDepositTxRequest(
                     processModel.getId(),
                     processModel.getPaymentAccountContractData(trade),
                     processModel.getAccountId(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG).getPubKey(),
+                    offererMultiSigPubKey,
                     trade.getContractAsJson(),
                     trade.getOffererContractSignature(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString(),
+                    offererPayoutAddressEntry.getAddressString(),
                     processModel.getPreparedDepositTx(),
                     processModel.getRawTransactionInputs()
             );

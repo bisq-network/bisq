@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
+import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.Trade;
@@ -51,8 +52,10 @@ public class ProcessDepositTxPublishedMessage extends TradeTask {
             // To access tx confidence we need to add that tx into our wallet.
             Transaction transactionFromSerializedTx = processModel.getWalletService().getTransactionFromSerializedTx(message.depositTx);
             // update with full tx
-            trade.setDepositTx(processModel.getTradeWalletService().addTransactionToWallet(transactionFromSerializedTx));
-
+            Transaction walletTx = processModel.getTradeWalletService().addTransactionToWallet(transactionFromSerializedTx);
+            trade.setDepositTx(walletTx);
+            BtcWalletService.printTx("depositTx received from peer", walletTx);
+           
             if (trade instanceof OffererTrade)
                 processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
 

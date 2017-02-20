@@ -389,7 +389,6 @@ public class TradeManager {
 
     public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
         String fromAddress = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString();
-
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {

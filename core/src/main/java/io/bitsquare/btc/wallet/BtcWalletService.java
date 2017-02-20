@@ -37,10 +37,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -282,25 +279,33 @@ public class BtcWalletService extends WalletService {
     // AddressEntry
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public Optional<AddressEntry> getAddressEntry(String offerId, AddressEntry.Context context) {
+        Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
+                .filter(e -> offerId.equals(e.getOfferId()))
+                .filter(e -> context == e.getContext())
+                .findAny();
+        return addressEntry;
+    }
+
     public AddressEntry getOrCreateAddressEntry(String offerId, AddressEntry.Context context) {
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
                 .findAny();
-        if (addressEntry.isPresent())
+        if (addressEntry.isPresent()) {
             return addressEntry.get();
-        else
-            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context, offerId));
+        } else {
+            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context, offerId));
+            saveAddressEntryList();
+            return entry;
+        }
     }
 
     public AddressEntry getOrCreateAddressEntry(AddressEntry.Context context) {
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> context == e.getContext())
                 .findAny();
-        if (addressEntry.isPresent())
-            return addressEntry.get();
-        else
-            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+        return getOrCreateAddressEntry(context, addressEntry);
     }
 
     public AddressEntry getOrCreateUnusedAddressEntry(AddressEntry.Context context) {
@@ -308,11 +313,19 @@ public class BtcWalletService extends WalletService {
                 .filter(e -> context == e.getContext())
                 .filter(e -> getNumTxOutputsForAddress(e.getAddress()) == 0)
                 .findAny();
-        if (addressEntry.isPresent())
-            return addressEntry.get();
-        else
-            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+        return getOrCreateAddressEntry(context, addressEntry);
     }
+
+    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
+        if (addressEntry.isPresent()) {
+            return addressEntry.get();
+        } else {
+            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+            saveAddressEntryList();
+            return entry;
+        }
+    }
+
 
     private Optional<AddressEntry> findAddressEntry(String address, AddressEntry.Context context) {
         return getAddressEntryListAsImmutableList().stream()
@@ -348,7 +361,10 @@ public class BtcWalletService extends WalletService {
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
                 .findAny();
-        addressEntryOptional.ifPresent(addressEntryList::swapToAvailable);
+        addressEntryOptional.ifPresent(e -> {
+            addressEntryList.swapToAvailable(e);
+            saveAddressEntryList();
+        });
     }
 
     public void swapAnyTradeEntryContextToAvailableEntry(String offerId) {
@@ -360,6 +376,27 @@ public class BtcWalletService extends WalletService {
 
     public void saveAddressEntryList() {
         addressEntryList.queueUpForSave();
+    }
+
+
+    public DeterministicKey getMultiSigKeyPair(String tradeId, byte[] pubKey) {
+        Optional<AddressEntry> multiSigAddressEntryOptional = getAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG);
+        DeterministicKey multiSigKeyPair;
+        if (multiSigAddressEntryOptional.isPresent()) {
+            AddressEntry multiSigAddressEntry = multiSigAddressEntryOptional.get();
+            multiSigKeyPair = multiSigAddressEntry.getKeyPair();
+            if (!Arrays.equals(pubKey, multiSigAddressEntry.getPubKey())) {
+                log.error("Pub Key from AddressEntry does not match key pair from trade data. Trade ID={}\n" +
+                        "We try to find the keypair in the wallet with the pubKey we found in the trade data.", tradeId);
+                multiSigKeyPair = findKeyFromPubKeyHash(pubKey);
+            }
+        } else {
+            log.error("multiSigAddressEntry not found for trade ID={}.\n" +
+                    "We try to find the keypair in the wallet with the pubKey we found in the trade data.", tradeId);
+            multiSigKeyPair = findKeyFromPubKeyHash(pubKey);
+        }
+
+        return multiSigKeyPair;
     }
 
 
@@ -734,7 +771,6 @@ public class BtcWalletService extends WalletService {
         sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
         return sendRequest;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

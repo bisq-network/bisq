@@ -23,11 +23,17 @@ import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.TradingPeer;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
@@ -56,21 +62,30 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
             trade.setContractHash(contractHash);
             BtcWalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
-            AddressEntry buyerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            buyerMultiSigAddressEntry.setLockedTradeAmount(buyerInputAmount.subtract(trade.getTxFee()));
+
+            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
+            AddressEntry buyerMultiSigAddressEntry = addressEntryOptional.get();
+            buyerMultiSigAddressEntry.setCoinLockedInMultiSig(buyerInputAmount.subtract(trade.getTxFee()));
             walletService.saveAddressEntryList();
+            Address offererAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+            Address offererChangeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+            TradingPeer tradingPeer = processModel.tradingPeer;
+            byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            checkArgument(Arrays.equals(buyerMultiSigPubKey, buyerMultiSigAddressEntry.getPubKey()),
+                    "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
             PreparedDepositTxAndOffererInputs result = processModel.getTradeWalletService().offererCreatesAndSignsDepositTx(
                     true,
                     contractHash,
                     buyerInputAmount,
                     msOutputAmount,
-                    processModel.tradingPeer.getRawTransactionInputs(),
-                    processModel.tradingPeer.getChangeOutputValue(),
-                    processModel.tradingPeer.getChangeOutputAddress(),
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE),
-                    walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress(),
-                    buyerMultiSigAddressEntry.getPubKey(),
-                    processModel.tradingPeer.getMultiSigPubKey(),
+                    tradingPeer.getRawTransactionInputs(),
+                    tradingPeer.getChangeOutputValue(),
+                    tradingPeer.getChangeOutputAddress(),
+                    offererAddress,
+                    offererChangeAddress,
+                    buyerMultiSigPubKey,
+                    tradingPeer.getMultiSigPubKey(),
                     trade.getArbitratorPubKey());
 
             processModel.setPreparedDepositTx(result.depositTransaction);

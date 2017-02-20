@@ -33,6 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class SignAndPublishDepositTxAsSeller extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishDepositTxAsSeller.class);
@@ -56,9 +60,18 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
 
             ArrayList<RawTransactionInput> sellerInputs = processModel.getRawTransactionInputs();
             BtcWalletService walletService = processModel.getWalletService();
-            AddressEntry sellerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG);
-            sellerMultiSigAddressEntry.setLockedTradeAmount(Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum()).subtract(trade.getTxFee()));
-            walletService.saveAddressEntryList();
+            String id = processModel.getOffer().getId();
+
+            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
+            AddressEntry sellerMultiSigAddressEntry = addressEntryOptional.get();
+            byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            checkArgument(Arrays.equals(sellerMultiSigPubKey,
+                            sellerMultiSigAddressEntry.getPubKey()),
+                    "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
+
+            Coin sellerInput = Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum());
+            sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInput.subtract(trade.getTxFee()));
             TradingPeer tradingPeer = processModel.tradingPeer;
             Transaction depositTx = processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
                     true,
@@ -67,7 +80,7 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
                     tradingPeer.getRawTransactionInputs(),
                     sellerInputs,
                     tradingPeer.getMultiSigPubKey(),
-                    sellerMultiSigAddressEntry.getPubKey(),
+                    sellerMultiSigPubKey,
                     trade.getArbitratorPubKey(),
                     new FutureCallback<Transaction>() {
                         @Override
