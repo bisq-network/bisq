@@ -126,10 +126,10 @@ public abstract class BitsquareExecutable {
         parser.accepts(RpcOptionKeys.RPC_WALLET_PORT, description("Bitcoind rpc port for wallet notifications", ""))
                 .withRequiredArg();
 
-        parser.accepts(BtcOptionKeys.BTC_NETWORK, description("Bitcoin network", BitcoinNetwork.DEFAULT))
+        parser.accepts(BtcOptionKeys.BTC_NETWORK, description("Bitcoin network", BitcoinNetwork.DEFAULT.name()))
                 .withRequiredArg()
-                .ofType(BitcoinNetwork.class)
-                .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class));
+                .ofType(String.class);
+                //.withValuesConvertedBy(new EnumValueConverter(String.class));
         parser.accepts(BtcOptionKeys.REG_TEST_HOST, description("", RegTestHost.DEFAULT))
                 .withRequiredArg()
                 .ofType(RegTestHost.class)

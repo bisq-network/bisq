@@ -29,6 +29,11 @@
           <artifactId>httpclient</artifactId>
           <version>4.5</version>
         </dependency>
-        
+        <dependency>
+            <groupId>net.sf.jopt-simple</groupId>
+            <artifactId>jopt-simple</artifactId>
+            <version>4.8</version>
+        </dependency>
+
     </dependencies>
 </project>

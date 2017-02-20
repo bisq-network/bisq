@@ -28,12 +28,10 @@ import io.bitsquare.messages.btc.UserAgent;
 import io.bitsquare.messages.dao.blockchain.RpcOptionKeys;
 import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.storage.Storage;
+import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.env.PropertiesPropertySource;
-import org.springframework.core.env.PropertySource;
-import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.env.*;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -44,6 +42,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Properties;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BitsquareEnvironment extends StandardEnvironment {
     private static final Logger log = LoggerFactory.getLogger(BitsquareEnvironment.class);
@@ -110,6 +110,11 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     public String getAppDataDir() {
         return appDataDir;
+    }
+
+    public BitsquareEnvironment(OptionSet options) {
+        this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
+                options)));
     }
 
     public BitsquareEnvironment(PropertySource commandLineProperties) {
