@@ -612,10 +612,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void updateTradeFee() {
         createOfferFeeAsCoin = Utilities.getFeePerBtc(feeService.getCreateOfferFeeInBtcPerBtc(), amount.get());
-
         // We don't want too fractional btc values so we use only a divide by 10 instead of 100
         createOfferFeeAsCoin = createOfferFeeAsCoin.divide(10).multiply(Math.round(marketPriceMargin * 1_000));
-
         createOfferFeeAsCoin = Utilities.maxCoin(createOfferFeeAsCoin, feeService.getMinCreateOfferFeeInBtc());
     }
 }

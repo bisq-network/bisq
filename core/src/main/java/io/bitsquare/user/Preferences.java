@@ -129,7 +129,7 @@ public final class Preferences implements Persistable {
 
     private boolean useStickyMarketPrice = false;
     private boolean sortMarketCurrenciesNumerically = true;
-    private boolean usePercentageBasedPrice = false;
+    private boolean usePercentageBasedPrice = true;
     private Map<String, String> peerTagMap = new HashMap<>();
     private String bitcoinNodes = "";
 

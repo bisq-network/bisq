@@ -126,6 +126,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private boolean inputIsMarketBasedPrice;
     private ChangeListener<Boolean> useMarketBasedPriceListener;
     private boolean ignorePriceStringListener, ignoreVolumeStringListener, ignoreAmountStringListener;
+    private MarketPrice marketPrice;
+    final IntegerProperty marketPriceAvailableProperty = new SimpleIntegerProperty(-1);
+    private ChangeListener<Number> currenciesUpdateListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +164,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 amount.set("1");
                 minAmount.set(amount.get());
-                price.set("1000");
+                UserThread.runAfter(() -> {
+                    price.set("1000");
+                    onFocusOutPriceAsPercentageTextField(true, false, "");
+                }, 1);
 
                 setAmountToModel();
                 setMinAmountToModel();
@@ -247,6 +253,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             updateButtonDisableState();
         };
         priceStringListener = (ov, oldValue, newValue) -> {
+            final String currencyCode = dataModel.tradeCurrencyCode.get();
+            marketPrice = priceFeedService.getMarketPrice(currencyCode);
+            marketPriceAvailableProperty.set(marketPrice == null ? 0 : 1);
+
             if (!ignorePriceStringListener) {
                 if (isPriceInputValid(newValue).isValid) {
                     setPriceToModel();
@@ -254,8 +264,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     dataModel.calculateTotalToPay();
 
                     if (!inputIsMarketBasedPrice) {
-                        final String currencyCode = dataModel.tradeCurrencyCode.get();
-                        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
                         if (marketPrice != null) {
                             double marketPriceAsDouble = marketPrice.getPrice(getPriceFeedType());
                             try {
@@ -280,8 +288,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         }
                     }
                 }
-                updateButtonDisableState();
             }
+            updateButtonDisableState();
         };
         marketPriceMarginStringListener = (ov, oldValue, newValue) -> {
             if (inputIsMarketBasedPrice) {
@@ -298,7 +306,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
                                 dataModel.updateTradeFee();
-                                
+
                                 double marketPriceAsDouble = marketPrice.getPrice(getPriceFeedType());
                                 double factor;
                                 if (CurrencyUtil.isCryptoCurrency(currencyCode))
@@ -379,6 +387,13 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
        /* feeFromFundingTxListener = (ov, oldValue, newValue) -> {
             updateButtonDisableState();
         };*/
+
+        currenciesUpdateListener = (observable, oldValue, newValue) -> {
+            final String currencyCode = dataModel.tradeCurrencyCode.get();
+            marketPrice = priceFeedService.getMarketPrice(currencyCode);
+            marketPriceAvailableProperty.set(marketPrice == null ? 0 : 1);
+            updateButtonDisableState();
+        };
     }
 
     private void addListeners() {
@@ -399,6 +414,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         // dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
+
+        priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdateListener);
     }
 
     private void removeListeners() {
@@ -420,6 +437,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         if (offer != null && errorMessageListener != null)
             offer.errorMessageProperty().removeListener(errorMessageListener);
+
+        priceFeedService.currenciesUpdateFlagProperty().removeListener(currenciesUpdateListener);
     }
 
 
@@ -497,6 +516,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         dataModel.onCurrencySelected(tradeCurrency);
+
+        marketPrice = priceFeedService.getMarketPrice(dataModel.tradeCurrencyCode.get());
+        marketPriceAvailableProperty.set(marketPrice == null ? 0 : 1);
+        updateButtonDisableState();
     }
 
     void onShowPayFundsScreen() {
