@@ -412,6 +412,13 @@ public class Utilities {
         return a.compareTo(b) >= 0 ? a : b;
     }
 
+    public static void overwriteWithRandomBytes(byte[] bytes) {
+        Random random = new Random();
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte) random.nextInt(Integer.MAX_VALUE);
+        }
+    }
+
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
         @Override
         public boolean shouldSkipField(FieldAttributes f) {

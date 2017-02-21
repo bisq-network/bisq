@@ -27,6 +27,7 @@ import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -95,6 +96,8 @@ public abstract class WalletService {
 
     void decryptWallet(@NotNull KeyParameter key) {
         wallet.decrypt(key);
+        // Overwrite first with random bytes before setting to null
+        Utilities.overwriteWithRandomBytes(key.getKey());
         aesKey = null;
     }
 

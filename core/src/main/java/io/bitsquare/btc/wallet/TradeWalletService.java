@@ -30,6 +30,7 @@ import io.bitsquare.btc.data.RawTransactionInput;
 import io.bitsquare.btc.exceptions.SigningException;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -124,8 +125,12 @@ public class TradeWalletService {
     // AesKey
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void setAesKey(KeyParameter aesKey) {
-        this.aesKey = aesKey;
+    void setAesKey(@Nullable KeyParameter newAesKey) {
+        // Overwrite first with random bytes before setting to null
+        if (newAesKey == null && this.aesKey != null)
+            Utilities.overwriteWithRandomBytes(this.aesKey.getKey());
+        
+        this.aesKey = newAesKey;
     }
 
     @Nullable
@@ -193,9 +198,9 @@ public class TradeWalletService {
      * The taker creates a dummy transaction to get the input(s) and optional change output for the amount and the takersAddress for that trade.
      * That will be used to send to the offerer for creating the deposit transaction.
      *
-     * @param inputAmount        Amount of takers input
-     * @param txFee              Mining fee
-     * @param takersAddress      Address of taker
+     * @param inputAmount   Amount of takers input
+     * @param txFee         Mining fee
+     * @param takersAddress Address of taker
      * @return A data container holding the inputs, the output value and address
      * @throws TransactionVerificationException
      * @throws WalletException
@@ -512,7 +517,7 @@ public class TradeWalletService {
         }
 
         BtcWalletService.printTx("depositTx", depositTx);
-        
+
         verifyTransaction(depositTx);
         checkWalletConsistency();
 
@@ -528,16 +533,16 @@ public class TradeWalletService {
     /**
      * Seller signs payout transaction, buyer has not signed yet.
      *
-     * @param depositTx                Deposit transaction
-     * @param buyerPayoutAmount        Payout amount for buyer
-     * @param sellerPayoutAmount       Payout amount for seller
-     * @param buyerPayoutAddressString Address for buyer
+     * @param depositTx                 Deposit transaction
+     * @param buyerPayoutAmount         Payout amount for buyer
+     * @param sellerPayoutAmount        Payout amount for seller
+     * @param buyerPayoutAddressString  Address for buyer
      * @param sellerPayoutAddressString Address for seller
-     * @param multiSigKeyPair          DeterministicKey for MultiSig from seller
-     * @param lockTime                 Lock time
-     * @param buyerPubKey              The public key of the buyer.
-     * @param sellerPubKey             The public key of the seller.
-     * @param arbitratorPubKey         The public key of the arbitrator.
+     * @param multiSigKeyPair           DeterministicKey for MultiSig from seller
+     * @param lockTime                  Lock time
+     * @param buyerPubKey               The public key of the buyer.
+     * @param sellerPubKey              The public key of the seller.
+     * @param arbitratorPubKey          The public key of the arbitrator.
      * @return DER encoded canonical signature
      * @throws AddressFormatException
      * @throws TransactionVerificationException
@@ -582,7 +587,7 @@ public class TradeWalletService {
         ECKey.ECDSASignature sellerSignature = multiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
 
         BtcWalletService.printTx("prepared payoutTx", preparedPayoutTx);
-        
+
         verifyTransaction(preparedPayoutTx);
 
         return sellerSignature.encodeToDER();
@@ -591,17 +596,17 @@ public class TradeWalletService {
     /**
      * Buyer creates and signs payout transaction and adds signature of seller to complete the transaction
      *
-     * @param depositTx                  Deposit transaction
-     * @param sellerSignature            DER encoded canonical signature of seller
-     * @param buyerPayoutAmount          Payout amount for buyer
-     * @param sellerPayoutAmount         Payout amount for seller
-     * @param buyerPayoutAddressString   Address for buyer
-     * @param sellerPayoutAddressString  Address for seller
-     * @param multiSigKeyPair            Buyer's keypair for MultiSig
-     * @param lockTime                   Lock time
-     * @param buyerPubKey                The public key of the buyer.
-     * @param sellerPubKey               The public key of the seller.
-     * @param arbitratorPubKey           The public key of the arbitrator.
+     * @param depositTx                 Deposit transaction
+     * @param sellerSignature           DER encoded canonical signature of seller
+     * @param buyerPayoutAmount         Payout amount for buyer
+     * @param sellerPayoutAmount        Payout amount for seller
+     * @param buyerPayoutAddressString  Address for buyer
+     * @param sellerPayoutAddressString Address for seller
+     * @param multiSigKeyPair           Buyer's keypair for MultiSig
+     * @param lockTime                  Lock time
+     * @param buyerPubKey               The public key of the buyer.
+     * @param sellerPubKey              The public key of the seller.
+     * @param arbitratorPubKey          The public key of the arbitrator.
      * @return The payout transaction
      * @throws AddressFormatException
      * @throws TransactionVerificationException
@@ -677,17 +682,17 @@ public class TradeWalletService {
     /**
      * That arbitrator signs the payout transaction
      *
-     * @param depositTxSerialized    Serialized deposit tx
-     * @param buyerPayoutAmount      The payout amount of the buyer.
-     * @param sellerPayoutAmount     The payout amount of the seller.
-     * @param arbitratorPayoutAmount The payout amount of the arbitrator.
-     * @param buyerAddressString     The address of the buyer.
-     * @param sellerAddressString    The address of the seller.
+     * @param depositTxSerialized     Serialized deposit tx
+     * @param buyerPayoutAmount       The payout amount of the buyer.
+     * @param sellerPayoutAmount      The payout amount of the seller.
+     * @param arbitratorPayoutAmount  The payout amount of the arbitrator.
+     * @param buyerAddressString      The address of the buyer.
+     * @param sellerAddressString     The address of the seller.
      * @param arbitratorAddressString The address of the arbitrator.
-     * @param arbitratorKeyPair      The keypair of the arbitrator.
-     * @param buyerPubKey            The public key of the buyer.
-     * @param sellerPubKey           The public key of the seller.
-     * @param arbitratorPubKey       The public key of the arbitrator.
+     * @param arbitratorKeyPair       The keypair of the arbitrator.
+     * @param buyerPubKey             The public key of the buyer.
+     * @param sellerPubKey            The public key of the seller.
+     * @param arbitratorPubKey        The public key of the arbitrator.
      * @return DER encoded canonical signature of arbitrator
      * @throws AddressFormatException
      * @throws TransactionVerificationException
@@ -748,18 +753,18 @@ public class TradeWalletService {
     /**
      * A trader who got the signed tx from the arbitrator finalizes the payout tx
      *
-     * @param depositTxSerialized         Serialized deposit tx
-     * @param arbitratorSignature         DER encoded canonical signature of arbitrator
-     * @param buyerPayoutAmount           Payout amount of the buyer
-     * @param sellerPayoutAmount          Payout amount of the seller
-     * @param arbitratorPayoutAmount      Payout amount for arbitrator
-     * @param buyerAddressString          The address of the buyer.
-     * @param sellerAddressString         The address of the seller.
-     * @param arbitratorAddressString     The address of the arbitrator.
-     * @param tradersMultiSigKeyPair      The keypair for the MultiSig of the trader who calls that method
-     * @param buyerPubKey                 The public key of the buyer.
-     * @param sellerPubKey                The public key of the seller.
-     * @param arbitratorPubKey            The public key of the arbitrator.
+     * @param depositTxSerialized     Serialized deposit tx
+     * @param arbitratorSignature     DER encoded canonical signature of arbitrator
+     * @param buyerPayoutAmount       Payout amount of the buyer
+     * @param sellerPayoutAmount      Payout amount of the seller
+     * @param arbitratorPayoutAmount  Payout amount for arbitrator
+     * @param buyerAddressString      The address of the buyer.
+     * @param sellerAddressString     The address of the seller.
+     * @param arbitratorAddressString The address of the arbitrator.
+     * @param tradersMultiSigKeyPair  The keypair for the MultiSig of the trader who calls that method
+     * @param buyerPubKey             The public key of the buyer.
+     * @param sellerPubKey            The public key of the seller.
+     * @param arbitratorPubKey        The public key of the arbitrator.
      * @return The completed payout tx
      * @throws AddressFormatException
      * @throws TransactionVerificationException
