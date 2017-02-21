@@ -68,9 +68,7 @@ public class WalletConfig extends AbstractIdleService {
     private volatile File vBtcWalletFile;
     private volatile File vSquWalletFile;
     @Nullable
-    private DeterministicSeed btcSeed;
-    @Nullable
-    private DeterministicSeed squSeed;
+    private DeterministicSeed seed;
     private int btcWalletLookaheadSize = -1;
     private int squWalletLookaheadSize = -1;
 
@@ -276,13 +274,8 @@ public class WalletConfig extends AbstractIdleService {
      * up the new kit. The next time your app starts it should work as normal (that is, don't keep calling this each
      * time).
      */
-    public WalletConfig setBtcSeed(DeterministicSeed seed) {
-        this.btcSeed = seed;
-        return this;
-    }
-
-    public WalletConfig setSquSeed(DeterministicSeed seed) {
-        this.squSeed = seed;
+    public WalletConfig setSeed(DeterministicSeed seed) {
+        this.seed = seed;
         return this;
     }
 
@@ -379,33 +372,32 @@ public class WalletConfig extends AbstractIdleService {
 
             // BTC wallet
             vBtcWalletFile = new File(directory, btcWalletFilePrefix + ".wallet");
-            boolean shouldReplayBtcWallet = (vBtcWalletFile.exists() && !chainFileExists) || btcSeed != null;
+            boolean shouldReplayWallet = (vBtcWalletFile.exists() && !chainFileExists) || seed != null;
             BitsquareKeyChainGroup keyChainGroup;
-            if (btcSeed != null)
-                keyChainGroup = new BitsquareKeyChainGroup(params, new BtcDeterministicKeyChain(btcSeed), true, btcWalletLookaheadSize);
+            if (seed != null)
+                keyChainGroup = new BitsquareKeyChainGroup(params, new BtcDeterministicKeyChain(seed), true, btcWalletLookaheadSize);
             else
                 keyChainGroup = new BitsquareKeyChainGroup(params, true, btcWalletLookaheadSize);
-            vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayBtcWallet, btcSeed, null, keyChainGroup, false);
+            vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, seed, keyChainGroup, false);
 
             // SQU walelt
             vSquWalletFile = new File(directory, squWalletFilePrefix + ".wallet");
-            boolean shouldReplaySquWallet = (vSquWalletFile.exists() && !chainFileExists) || squSeed != null;
-            if (squSeed != null)
-                keyChainGroup = new BitsquareKeyChainGroup(params, new SquDeterministicKeyChain(squSeed), false, squWalletLookaheadSize);
+            if (seed != null)
+                keyChainGroup = new BitsquareKeyChainGroup(params, new SquDeterministicKeyChain(seed), false, squWalletLookaheadSize);
             else
-                keyChainGroup = new BitsquareKeyChainGroup(params, false, squWalletLookaheadSize);
-            vSquWallet = createOrLoadWallet(vSquWalletFile, shouldReplaySquWallet, null, squSeed, keyChainGroup, true);
+                keyChainGroup = new BitsquareKeyChainGroup(params, new SquDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false, squWalletLookaheadSize);
+            vSquWallet = createOrLoadWallet(vSquWalletFile, shouldReplayWallet, seed, keyChainGroup, true);
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);
-            if (!chainFileExists || btcSeed != null || squSeed != null) {
+            if (!chainFileExists || seed != null) {
                 if (checkpoints != null) {
                     // Initialize the chain file with a checkpoint to speed up first-run sync.
                     long time;
 
-                    if (btcSeed != null || squSeed != null) {
+                    if (seed != null) {
                         // we created both wallets at the same time
-                        time = btcSeed.getCreationTimeSeconds();
+                        time = seed.getCreationTimeSeconds();
                         if (chainFileExists) {
                             log.info("Deleting the chain file in preparation from restore.");
                             vStore.close();
@@ -486,15 +478,13 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
-    private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet, @Nullable DeterministicSeed restoreFromBtcSeed,
-                                      @Nullable DeterministicSeed restoreFromSquSeed, BitsquareKeyChainGroup keyChainGroup, boolean isSquWallet)
+    private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet, @Nullable DeterministicSeed seed,
+                                      BitsquareKeyChainGroup keyChainGroup, boolean isSquWallet)
             throws Exception {
         Wallet wallet;
 
-        if (restoreFromBtcSeed != null)
-            maybeMoveOldWalletOutOfTheWay(walletFile, restoreFromBtcSeed);
-        if (restoreFromSquSeed != null)
-            maybeMoveOldWalletOutOfTheWay(walletFile, restoreFromSquSeed);
+        if (seed != null)
+            maybeMoveOldWalletOutOfTheWay(walletFile, seed);
 
         if (walletFile.exists()) {
             wallet = loadWallet(walletFile, shouldReplayWallet, keyChainGroup.isUseBitcoinDeterministicKeyChain());
@@ -533,14 +523,8 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     private Wallet createWallet(BitsquareKeyChainGroup keyChainGroup, boolean isSquWallet) {
-        if (walletFactory != null) {
-            return walletFactory.create(params, keyChainGroup, isSquWallet);
-        } else {
-            if (isSquWallet)
-                return new SquWallet(params, keyChainGroup);
-            else
-                return new Wallet(params, keyChainGroup);
-        }
+        checkNotNull(walletFactory, "walletFactory must not be null");
+        return walletFactory.create(params, keyChainGroup, isSquWallet);
     }
 
     private void maybeMoveOldWalletOutOfTheWay(File walletFile, DeterministicSeed restoreFromSeed) {

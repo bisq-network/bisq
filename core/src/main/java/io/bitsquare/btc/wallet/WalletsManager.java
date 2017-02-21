@@ -72,8 +72,8 @@ public class WalletsManager {
                 squWalletService.getWalletAsString(includePrivKeys);
     }
 
-    public void restoreSeedWords(@Nullable DeterministicSeed btcSeed, @Nullable DeterministicSeed squSeed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
-        walletsSetup.restoreSeedWords(btcSeed, squSeed, resultHandler, exceptionHandler);
+    public void restoreSeedWords(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+        walletsSetup.restoreSeedWords(seed, resultHandler, exceptionHandler);
     }
 
     public void backupWallets() {

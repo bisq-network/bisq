@@ -60,7 +60,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class WalletsSetup {
     private static final Logger log = LoggerFactory.getLogger(WalletsSetup.class);
@@ -140,7 +140,7 @@ public class WalletsSetup {
         }
     }
 
-    public void initialize(@Nullable DeterministicSeed btcSeed, @Nullable DeterministicSeed squSeed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void initialize(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         Log.traceCall();
 
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
@@ -360,8 +360,7 @@ public class WalletsSetup {
                 .setBlockingStartup(false)
                 .setUserAgent(userAgent.getName(), userAgent.getVersion());
 
-        walletConfig.setBtcSeed(btcSeed);
-        walletConfig.setSquSeed(squSeed);
+        walletConfig.setSeed(seed);
 
         walletConfig.addListener(new Service.Listener() {
             @Override
@@ -478,15 +477,15 @@ public class WalletsSetup {
         }
     }
 
-    public void restoreSeedWords(@Nullable DeterministicSeed btcSeed, @Nullable DeterministicSeed squSeed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
-        checkArgument(btcSeed != null || squSeed != null, "Either btcSeed or squSeed must be set.");
+    public void restoreSeedWords(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+        checkNotNull(seed, "Seed must be not be null.");
         Context ctx = Context.get();
         new Thread(() -> {
             try {
                 Context.propagate(ctx);
                 walletConfig.stopAsync();
                 walletConfig.awaitTerminated();
-                initialize(btcSeed, squSeed, resultHandler, exceptionHandler);
+                initialize(seed, resultHandler, exceptionHandler);
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error("Executing task failed. " + t.getMessage());

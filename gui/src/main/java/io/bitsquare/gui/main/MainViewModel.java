@@ -481,7 +481,7 @@ public class MainViewModel implements ViewModel {
             btcInfo.set(newValue);
         });
 
-        walletsSetup.initialize(null, null,
+        walletsSetup.initialize(null,
                 () -> {
                     numBtcPeers = walletsSetup.numPeersProperty().get();
 
