@@ -20,7 +20,7 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -vendor Bitsquare ^
 -outdir %outdir% ^
 -appclass io.bitsquare.app.BitsquareAppMain ^
--srcfiles %outdir%\Bitsquare-%version%.jar ^
+-srcfiles %outdir%\Bitsquare.jar ^
 -srcfiles "core/src/main/resources/bitsquare.policy" ^
 -outfile Bitsquare ^
 -Bruntime="%JAVA_HOME%\jre" ^

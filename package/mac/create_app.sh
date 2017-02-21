@@ -9,11 +9,12 @@ version="0.5.0.0"
 
 mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
+# At windows we don't add the version nr as it would keep multiple versions of jar files in app dir
 cp gui/target/shaded.jar "gui/deploy/Bitsquare-$version.jar"
 cp gui/target/shaded.jar "/Users/dev/vm_shared_ubuntu/Bitsquare-$version.jar"
-cp gui/target/shaded.jar "/Users/dev/vm_shared_windows/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/dev/vm_shared_windows/Bitsquare.jar"
 cp gui/target/shaded.jar "/Users/dev/vm_shared_ubuntu14_32bit/Bitsquare-$version.jar"
-cp gui/target/shaded.jar "/Users/dev/vm_shared_windows_32bit/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/dev/vm_shared_windows_32bit/Bitsquare.jar"
 
 echo "Using JAVA_HOME: $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
