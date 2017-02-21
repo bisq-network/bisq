@@ -53,6 +53,7 @@ import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -629,15 +630,11 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
     @Override
     public Messages.StoragePayload toProtoBuf() {
-        return Messages.StoragePayload.newBuilder().setOffer(Messages.Offer.newBuilder()
+        Messages.Offer.Builder offerBuilder = Messages.Offer.newBuilder()
                 .setTTL(TTL)
                 .setDirectionValue(direction.ordinal())
                 .setCurrencyCode(currencyCode)
                 .setPaymentMethodName(paymentMethodName)
-                .setCountryCode(countryCode)
-                .addAllAcceptedCountryCodes(acceptedCountryCodes)
-                .setBankId(bankId)
-                .addAllAcceptedBankIds(getAcceptedBankIds())
                 .addAllArbitratorNodeAddresses(arbitratorNodeAddresses.stream()
                         .map(nodeAddress -> nodeAddress.toProtoBuf()).collect(Collectors.toList()))
                 .setId(id)
@@ -663,9 +660,28 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
                 .setUseReOpenAfterAutoClose(useReOpenAfterAutoClose)
                 .setLowerClosePrice(lowerClosePrice)
                 .setUpperClosePrice(upperClosePrice)
-                .setIsPrivateOffer(isPrivateOffer)
-                .setHashOfChallenge(hashOfChallenge)
-                .putAllExtraDataMap(extraDataMap)).build();
+                .setIsPrivateOffer(isPrivateOffer);
+        if (Objects.nonNull(countryCode)) {
+            offerBuilder.setCountryCode(countryCode);
+        }
+        if (Objects.nonNull(bankId)) {
+            offerBuilder.setBankId(bankId);
+        }
+        if (Objects.nonNull(acceptedCountryCodes)) {
+            offerBuilder.addAllAcceptedCountryCodes(acceptedCountryCodes);
+        }
+        if (Objects.nonNull(getAcceptedBankIds())) {
+            offerBuilder.addAllAcceptedBankIds(getAcceptedBankIds());
+        }
+
+        if (Objects.nonNull(hashOfChallenge)) {
+            offerBuilder.setHashOfChallenge(hashOfChallenge);
+        }
+        if (Objects.nonNull(extraDataMap)) {
+            offerBuilder.putAllExtraDataMap(extraDataMap);
+        }
+
+        return Messages.StoragePayload.newBuilder().setOffer(offerBuilder).build();
     }
 
 

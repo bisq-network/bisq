@@ -66,6 +66,10 @@ public class ProtoBufferUtilities {
 
 
     public static Optional<Message> fromProtoBuf(Messages.Envelope envelope) {
+        if(Objects.isNull(envelope)) {
+            log.warn("fromProtoBuf called with empty envelope.");
+            return Optional.empty();
+        }
         log.info("Convert protobuffer envelope: {},{}", envelope.getMessageCase(), envelope.toString());
         Message result = null;
         switch (envelope.getMessageCase()) {
@@ -94,7 +98,6 @@ public class ProtoBufferUtilities {
                 result = getGetPeersResponse(envelope);
                 break;
             case GET_DATA_RESPONSE:
-                // TODO protectedstorageentry is NULL
                 result = getGetDataResponse(envelope);
                 break;
             case PREFIXED_SEALED_AND_SIGNED_MESSAGE:
@@ -550,12 +553,11 @@ public class ProtoBufferUtilities {
 
     @NotNull
     private static Message getGetDataResponse(Messages.Envelope envelope) {
-        // TODO protectedstorageentry is NULL
         HashSet<ProtectedStorageEntry> set = new HashSet<ProtectedStorageEntry>(
                 envelope.getGetDataResponse().getDataSetList()
                         .stream()
                         .map(protectedStorageEntry ->
-                                new ProtectedStorageEntry(null, new byte[]{}, 0, null)).collect(Collectors.toList()));
+                                getProtectedStorageEntry(protectedStorageEntry)).collect(Collectors.toList()));
         return new GetDataResponse(set, envelope.getGetDataResponse().getRequestNonce(), envelope.getGetDataResponse().getIsGetUpdatedDataResponse());
     }
 

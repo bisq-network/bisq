@@ -172,6 +172,10 @@ public class RequestDataHandler implements MessageListener {
                     final HashSet<ProtectedStorageEntry> dataSet = getDataResponse.dataSet;
                     dataSet.stream().forEach(e -> {
                         final StoragePayload storagePayload = e.getStoragePayload();
+                        if(storagePayload == null) {
+                            log.warn("StoragePayload was null: {}", message.toString());
+                            return;
+                        }
                         String className = storagePayload.getClass().getSimpleName();
                         if (!payloadByClassName.containsKey(className))
                             payloadByClassName.put(className, new HashSet<>());
