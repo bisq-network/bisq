@@ -490,16 +490,21 @@ public class ProtoBufferUtilities {
             case OFFER:
                 Messages.Offer offer = protoEntry.getOffer();
                 List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddressesList().stream().map(nodeAddress1 -> getNodeAddress(nodeAddress1)).collect(Collectors.toList());
+                // convert these lists because otherwise when they're empty they are lazyStringArrayList objects and NOT serializable,
+                // which is needed for the P2PStorage getHash() operation
+                List<String> acceptedCountryCodes = offer.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
+                List<String> acceptedBankIds = offer.getAcceptedBankIdsList().stream().collect(Collectors.toList());
+                Map<String, String> extraDataMap = offer.getExtraDataMapMap().entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
                 // TODO PriceFeedService not yet passed in due to not used in the real code.
                 storagePayload = new Offer(offer.getId(), getNodeAddress(offer.getOffererNodeAddress()),
                         getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()), offer.getFiatPrice(),
                         offer.getMarketPriceMargin(), offer.getUseMarketBasedPrice(), offer.getAmount(), offer.getMinAmount(),
                         offer.getCurrencyCode(), arbitratorNodeAddresses, offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(),
-                        offer.getCountryCode(), offer.getAcceptedCountryCodesList(), offer.getBankId(), offer.getAcceptedBankIdsList(),
+                        offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds,
                         null, offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(),
                         offer.getSecurityDeposit(), offer.getMaxTradeLimit(), offer.getMaxTradePeriod(), offer.getUseAutoClose(),
                         offer.getUseReOpenAfterAutoClose(), offer.getLowerClosePrice(), offer.getUpperClosePrice(), offer.getIsPrivateOffer(),
-                        offer.getHashOfChallenge(), offer.getExtraDataMapMap());
+                        offer.getHashOfChallenge(), extraDataMap);
                 break;
             default:
                 log.error("Unknown storagepayload:{}", protoEntry.getMessageCase());
