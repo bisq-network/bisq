@@ -452,11 +452,13 @@ public abstract class WalletService {
         Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(Transaction result) {
+                log.info("emptyWallet onSuccess Transaction=" + result);
                 resultHandler.handleResult();
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
+                log.error("emptyWallet onFailure " + t.toString());
                 errorMessageHandler.handleErrorMessage(t.getMessage());
             }
         });

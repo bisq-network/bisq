@@ -526,7 +526,7 @@ public class BtcWalletService extends WalletService {
                             }
                         }
                         if (sendResult != null) {
-                            log.debug("Broadcasting double spending transaction. " + newTransaction);
+                            log.info("Broadcasting double spending transaction. " + sendResult.tx);
                             Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
                                 @Override
                                 public void onSuccess(Transaction result) {
@@ -536,7 +536,7 @@ public class BtcWalletService extends WalletService {
 
                                 @Override
                                 public void onFailure(@NotNull Throwable t) {
-                                    log.info("Broadcasting double spending transaction failed. " + t.getMessage());
+                                    log.error("Broadcasting double spending transaction failed. " + t.getMessage());
                                     errorMessageHandler.handleErrorMessage(t.getMessage());
                                 }
                             });
@@ -548,6 +548,7 @@ public class BtcWalletService extends WalletService {
                                 "Missing " + (e.missing != null ? e.missing.toFriendlyString() : "null"));
                     }
                 } else {
+                    log.warn("sendResult is null");
                     errorMessageHandler.handleErrorMessage("We could not find inputs we control in the transaction we want to double spend.");
                 }
             } else if (confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
