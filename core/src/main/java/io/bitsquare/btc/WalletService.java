@@ -828,7 +828,7 @@ public class WalletService {
                     }
                 }
                 if (sendResult != null) {
-                    log.debug("Broadcasting double spending transaction. " + newTransaction);
+                    log.info("Broadcasting double spending transaction. " + sendResult.tx);
                     Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction result) {
@@ -844,6 +844,7 @@ public class WalletService {
                     });
                 }
             } else {
+                log.warn("sendResult is null");
                 errorMessageHandler.handleErrorMessage("We could not find inputs we control in the transaction we want to double spend.");
             }
         } else if (confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
@@ -1022,16 +1023,19 @@ public class WalletService {
             throws InsufficientMoneyException, AddressFormatException {
         Wallet.SendRequest sendRequest = Wallet.SendRequest.emptyWallet(new Address(params, toAddress));
         sendRequest.aesKey = aesKey;
-        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         sendRequest.feePerKb = FeePolicy.getNonTradeFeePerKb();
+        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
+        log.info("emptyWallet: " + sendResult.tx);
         Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(Transaction result) {
+                log.info("onSuccess Transaction=" + result);
                 resultHandler.handleResult();
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
+                log.error("onFailure " + t.toString());
                 errorMessageHandler.handleErrorMessage(t.getMessage());
             }
         });
