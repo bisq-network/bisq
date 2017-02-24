@@ -279,14 +279,18 @@ public class SepaForm extends PaymentMethodForm {
     @Override
     protected void autoFillNameTextField() {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String iban = ibanInputTextField.getText();
-            if (iban.length() > 9)
-                iban = StringUtils.abbreviate(iban, 9);
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
-            CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) this.paymentAccount;
-            String country = countryBasedPaymentAccount.getCountry() != null ? countryBasedPaymentAccount.getCountry().code : "?";
-            String currency = this.paymentAccount.getSingleTradeCurrency() != null ? this.paymentAccount.getSingleTradeCurrency().getCode() : "?";
-            accountNameTextField.setText(method.concat(" (").concat(currency).concat("/").concat(country).concat("): ").concat(iban));
+            TradeCurrency singleTradeCurrency = this.paymentAccount.getSingleTradeCurrency();
+            String currency = singleTradeCurrency != null ? singleTradeCurrency.getCode() : null;
+            if (currency != null) {
+                String iban = ibanInputTextField.getText();
+                if (iban.length() > 9)
+                    iban = StringUtils.abbreviate(iban, 9);
+                String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+                CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) this.paymentAccount;
+                String country = countryBasedPaymentAccount.getCountry() != null ? countryBasedPaymentAccount.getCountry().code : null;
+                if (country != null)
+                    accountNameTextField.setText(method.concat(" (").concat(currency).concat("/").concat(country).concat("): ").concat(iban));
+            }
         }
     }
 

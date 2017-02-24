@@ -86,7 +86,10 @@ public class P2pNetworkListItem {
     }
 
     private void onLastActivityChanged(long timeStamp) {
-        lastActivity.set(DurationFormatUtils.formatDuration(System.currentTimeMillis() - timeStamp, "mm:ss.SSS"));
+        // TODO
+        // Got one case where System.currentTimeMillis() - timeStamp resulted in a negative value, 
+        // probably caused by a threading issue. Protect it with Math.abs for a quick fix...
+        lastActivity.set(DurationFormatUtils.formatDuration(Math.abs(System.currentTimeMillis() - timeStamp), "mm:ss.SSS"));
     }
 
     public void cleanup() {

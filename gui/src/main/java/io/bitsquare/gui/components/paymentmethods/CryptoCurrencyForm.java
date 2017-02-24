@@ -96,11 +96,12 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     @Override
     protected void autoFillNameTextField() {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
-            String address = addressInputTextField.getText();
-            address = StringUtils.abbreviate(address, 9);
             String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "?";
-            accountNameTextField.setText(currency.concat(": ").concat(address));
+            if (currency != null) {
+                String address = addressInputTextField.getText();
+                address = StringUtils.abbreviate(address, 9);
+                accountNameTextField.setText(currency.concat(": ").concat(address));
+            }
         }
     }
 

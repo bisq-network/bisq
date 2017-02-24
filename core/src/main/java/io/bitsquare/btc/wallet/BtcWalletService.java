@@ -548,8 +548,9 @@ public class BtcWalletService extends WalletService {
                                 "Missing " + (e.missing != null ? e.missing.toFriendlyString() : "null"));
                     }
                 } else {
-                    log.warn("sendResult is null");
-                    errorMessageHandler.handleErrorMessage("We could not find inputs we control in the transaction we want to double spend.");
+                    String errorMessage = "We could not find inputs we control in the transaction we want to double spend.";
+                    log.warn(errorMessage);
+                    errorMessageHandler.handleErrorMessage(errorMessage);
                 }
             } else if (confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
                 errorMessageHandler.handleErrorMessage("That transaction is already in the blockchain so we cannot double spend it.");
