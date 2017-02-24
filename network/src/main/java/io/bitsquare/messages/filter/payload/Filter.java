@@ -55,6 +55,11 @@ public final class Filter implements StoragePayload {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
+    }
+
+    public Filter(List<String> bannedOfferIds, List<String> bannedNodeAddress, List<PaymentAccountFilter> bannedPaymentAccounts,
+                  String signatureAsBase64, byte[] publicKeyBytes) {
+        this(bannedOfferIds, bannedNodeAddress, bannedPaymentAccounts);
         init();
     }
 

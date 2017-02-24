@@ -52,6 +52,13 @@ public final class Alert implements StoragePayload {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
         this.version = version;
+    }
+
+    public Alert(String message, boolean isUpdateInfo, String version, byte[] storagePublicKeyBytes,
+                 String signatureAsBase64) {
+        this(message, isUpdateInfo, version);
+        this.storagePublicKeyBytes = storagePublicKeyBytes;
+        this.signatureAsBase64 = signatureAsBase64;
         init();
     }
 

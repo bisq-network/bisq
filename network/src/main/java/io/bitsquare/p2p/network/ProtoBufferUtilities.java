@@ -41,11 +41,14 @@ import io.bitsquare.p2p.storage.payload.StoragePayload;
 import io.bitsquare.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.output.WriterOutputStream;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,6 +74,18 @@ public class ProtoBufferUtilities {
             return Optional.empty();
         }
         log.info("Convert protobuffer envelope: {},{}", envelope.getMessageCase(), envelope.toString());
+        StringWriter stringWriter = new StringWriter();
+        WriterOutputStream writerOutputStream = new WriterOutputStream(stringWriter);
+
+        try {
+            envelope.writeTo(writerOutputStream);
+            writerOutputStream.flush();
+            stringWriter.flush();
+            log.info("tostring={}", stringWriter.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         Message result = null;
         switch (envelope.getMessageCase()) {
             case PING:
@@ -409,7 +424,7 @@ public class ProtoBufferUtilities {
         return new RemoveDataMessage(getProtectedStorageEntry(envelope.getRemoveDataMessage().getProtectedStorageEntry()));
     }
 
-    private static ProtectedStorageEntry getProtectedStorageEntry(Messages.ProtectedStorageEntry protoEntry) {
+    public static ProtectedStorageEntry getProtectedStorageEntry(Messages.ProtectedStorageEntry protoEntry) {
         StoragePayload storagePayload = getStoragePayload(protoEntry.getStoragePayload());
         ProtectedStorageEntry storageEntry = new ProtectedStorageEntry(storagePayload,
                 protoEntry.getOwnerPubKeyBytes().toByteArray(), protoEntry.getSequenceNumber(),
@@ -440,7 +455,8 @@ public class ProtoBufferUtilities {
             case ALERT:
                 Messages.Alert protoAlert = protoEntry.getAlert();
                 storagePayload = new Alert(protoAlert.getMessage(), protoAlert.getIsUpdateInfo(),
-                        protoAlert.getVersion());
+                        protoAlert.getVersion(), protoAlert.getStoragePublicKeyBytes().toByteArray(),
+                        protoAlert.getSignatureAsBase64());
                 break;
             case ARBITRATOR:
                 Messages.Arbitrator arbitrator = protoEntry.getArbitrator();
@@ -458,7 +474,8 @@ public class ProtoBufferUtilities {
                 List<PaymentAccountFilter> paymentAccountFilters = filter.getBannedPaymentAccountsList()
                         .stream().map(accountFilter -> getPaymentAccountFilter(accountFilter)).collect(Collectors.toList());
                 storagePayload = new Filter(filter.getBannedOfferIdsList().stream().collect(Collectors.toList()),
-                        filter.getBannedNodeAddressList().stream().collect(Collectors.toList()), paymentAccountFilters);
+                        filter.getBannedNodeAddressList().stream().collect(Collectors.toList()), paymentAccountFilters,
+                        filter.getSignatureAsBase64(), filter.getPublicKeyBytes().toByteArray());
                 break;
             case COMPENSATION_REQUEST_PAYLOAD:
                 Messages.CompensationRequestPayload compensationRequestPayload = protoEntry.getCompensationRequestPayload();
