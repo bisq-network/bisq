@@ -19,8 +19,8 @@ package io.bitsquare.dao.compensation;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
+import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.btc.wallet.BtcWalletService;
-import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.dao.DaoPeriodService;
 import io.bitsquare.dao.vote.VotingDefaultValues;
 import io.bitsquare.p2p.P2PService;
@@ -45,7 +45,7 @@ public class CompensationRequestManager {
     private final P2PService p2PService;
     private final DaoPeriodService daoPeriodService;
     private final BtcWalletService btcWalletService;
-    private final SquWalletService squWalletService;
+    private final BsqWalletService bsqWalletService;
     private final VotingDefaultValues votingDefaultValues;
     private final Storage<ArrayList<CompensationRequest>> compensationRequestsStorage;
 
@@ -61,14 +61,14 @@ public class CompensationRequestManager {
     @Inject
     public CompensationRequestManager(P2PService p2PService,
                                       BtcWalletService btcWalletService,
-                                      SquWalletService squWalletService,
+                                      BsqWalletService bsqWalletService,
                                       DaoPeriodService daoPeriodService,
                                       VotingDefaultValues votingDefaultValues,
                                       Storage<ArrayList<CompensationRequest>> compensationRequestsStorage) {
         this.p2PService = p2PService;
         this.daoPeriodService = daoPeriodService;
         this.btcWalletService = btcWalletService;
-        this.squWalletService = squWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.votingDefaultValues = votingDefaultValues;
         this.compensationRequestsStorage = compensationRequestsStorage;
 
@@ -127,7 +127,7 @@ public class CompensationRequestManager {
     }
 
     public void fundCompensationRequest(CompensationRequest compensationRequest, Coin amount, FutureCallback<Transaction> callback) {
-        btcWalletService.fundCompensationRequest(amount, compensationRequest.getCompensationRequestPayload().btcAddress, squWalletService.getUnusedAddress(), callback);
+        btcWalletService.fundCompensationRequest(amount, compensationRequest.getCompensationRequestPayload().btcAddress, bsqWalletService.getUnusedAddress(), callback);
     }
 
     public void setSelectedCompensationRequest(CompensationRequest selectedCompensationRequest) {

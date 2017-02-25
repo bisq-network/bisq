@@ -34,10 +34,10 @@ public class VotingDefaultValues {
 
     public static final long CREATE_OFFER_FEE_IN_BTC_AT_GENESIS = 30_000;
     public static final long TAKE_OFFER_FEE_IN_BTC_AT_GENESIS = 80_000;
-    public static final long CREATE_OFFER_FEE_IN_SQU_AT_GENESIS = 333;
-    public static final long TAKE_OFFER_FEE_IN_SQU_AT_GENESIS = 444;
-    public static final long CREATE_COMPENSATION_REQUEST_FEE_IN_SQU_AT_GENESIS = 7777;
-    public static final long VOTING_FEE_IN_SQU_AT_GENESIS = 8888;
+    public static final long CREATE_OFFER_FEE_IN_BSQ_AT_GENESIS = 333;
+    public static final long TAKE_OFFER_FEE_IN_BSQ_AT_GENESIS = 444;
+    public static final long CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ_AT_GENESIS = 7777;
+    public static final long VOTING_FEE_IN_BSQ_AT_GENESIS = 8888;
 
     // 144 blocks is 1 day
     public static final long COMPENSATION_REQUEST_PERIOD_IN_BLOCKS_AT_GENESIS = 2880; // 20 days
@@ -61,10 +61,10 @@ public class VotingDefaultValues {
 
     private long createOfferFeeInBtc = CREATE_OFFER_FEE_IN_BTC_AT_GENESIS;
     private long takeOfferFeeInBtc = TAKE_OFFER_FEE_IN_BTC_AT_GENESIS;
-    private long createOfferFeeInSqu = CREATE_OFFER_FEE_IN_SQU_AT_GENESIS;
-    private long takeOfferFeeInSqu = TAKE_OFFER_FEE_IN_SQU_AT_GENESIS;
-    private long createCompensationRequestFeeInSqu = CREATE_COMPENSATION_REQUEST_FEE_IN_SQU_AT_GENESIS;
-    private long votingFeeInSqu = VOTING_FEE_IN_SQU_AT_GENESIS;
+    private long createOfferFeeInBsq = CREATE_OFFER_FEE_IN_BSQ_AT_GENESIS;
+    private long takeOfferFeeInBsq = TAKE_OFFER_FEE_IN_BSQ_AT_GENESIS;
+    private long createCompensationRequestFeeInBsq = CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ_AT_GENESIS;
+    private long votingFeeInBsq = VOTING_FEE_IN_BSQ_AT_GENESIS;
 
     private long compensationRequestPeriodInBlocks = COMPENSATION_REQUEST_PERIOD_IN_BLOCKS_AT_GENESIS;
     private long votingPeriodInBlocks = VOTING_PERIOD_IN_BLOCKS_AT_GENESIS;
@@ -111,14 +111,14 @@ public class VotingDefaultValues {
                 return createOfferFeeInBtc;
             case TAKE_OFFER_FEE_IN_BTC:
                 return takeOfferFeeInBtc;
-            case CREATE_OFFER_FEE_IN_SQU:
-                return createOfferFeeInSqu;
-            case TAKE_OFFER_FEE_IN_SQU:
-                return takeOfferFeeInSqu;
-            case CREATE_COMPENSATION_REQUEST_FEE_IN_SQU:
-                return createCompensationRequestFeeInSqu;
-            case VOTING_FEE_IN_SQU:
-                return votingFeeInSqu;
+            case CREATE_OFFER_FEE_IN_BSQ:
+                return createOfferFeeInBsq;
+            case TAKE_OFFER_FEE_IN_BSQ:
+                return takeOfferFeeInBsq;
+            case CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ:
+                return createCompensationRequestFeeInBsq;
+            case VOTING_FEE_IN_BSQ:
+                return votingFeeInBsq;
 
             case COMPENSATION_REQUEST_PERIOD_IN_BLOCKS:
                 return compensationRequestPeriodInBlocks;
@@ -160,17 +160,17 @@ public class VotingDefaultValues {
             case TAKE_OFFER_FEE_IN_BTC:
                 takeOfferFeeInBtc = value;
                 break;
-            case CREATE_OFFER_FEE_IN_SQU:
-                createOfferFeeInSqu = value;
+            case CREATE_OFFER_FEE_IN_BSQ:
+                createOfferFeeInBsq = value;
                 break;
-            case TAKE_OFFER_FEE_IN_SQU:
-                takeOfferFeeInSqu = value;
+            case TAKE_OFFER_FEE_IN_BSQ:
+                takeOfferFeeInBsq = value;
                 break;
-            case CREATE_COMPENSATION_REQUEST_FEE_IN_SQU:
-                createCompensationRequestFeeInSqu = value;
+            case CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ:
+                createCompensationRequestFeeInBsq = value;
                 break;
-            case VOTING_FEE_IN_SQU:
-                votingFeeInSqu = value;
+            case VOTING_FEE_IN_BSQ:
+                votingFeeInBsq = value;
                 break;
 
             case COMPENSATION_REQUEST_PERIOD_IN_BLOCKS:
@@ -271,20 +271,20 @@ public class VotingDefaultValues {
         this.takeOfferFeeInBtc = takeOfferFeeInBtc;
     }
 
-    public long getCreateCompensationRequestFeeInSqu() {
-        return createCompensationRequestFeeInSqu;
+    public long getCreateCompensationRequestFeeInBsq() {
+        return createCompensationRequestFeeInBsq;
     }
 
-    public void setCreateCompensationRequestFeeInSqu(long createCompensationRequestFeeInSqu) {
-        this.createCompensationRequestFeeInSqu = createCompensationRequestFeeInSqu;
+    public void setCreateCompensationRequestFeeInBsq(long createCompensationRequestFeeInBsq) {
+        this.createCompensationRequestFeeInBsq = createCompensationRequestFeeInBsq;
     }
 
-    public long getVotingFeeInSqu() {
-        return votingFeeInSqu;
+    public long getVotingFeeInBsq() {
+        return votingFeeInBsq;
     }
 
-    public void setVotingFeeInSqu(long votingFeeInSqu) {
-        this.votingFeeInSqu = votingFeeInSqu;
+    public void setVotingFeeInBsq(long votingFeeInBsq) {
+        this.votingFeeInBsq = votingFeeInBsq;
     }
 
     public long getConversionRate() {

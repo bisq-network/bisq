@@ -96,7 +96,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     @Override
     protected void autoFillNameTextField() {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "?";
+            String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "";
             if (currency != null) {
                 String address = addressInputTextField.getText();
                 address = StringUtils.abbreviate(address, 9);
@@ -120,10 +120,13 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
     @Override
     public void updateAllInputsValid() {
-        altCoinAddressValidator.setCurrencyCode(cryptoCurrencyAccount.getSelectedTradeCurrency().getCode());
-        allInputsValid.set(isAccountNameValid()
-                && altCoinAddressValidator.validate(cryptoCurrencyAccount.getAddress()).isValid
-                && cryptoCurrencyAccount.getSingleTradeCurrency() != null);
+        TradeCurrency selectedTradeCurrency = cryptoCurrencyAccount.getSelectedTradeCurrency();
+        if (selectedTradeCurrency != null) {
+            altCoinAddressValidator.setCurrencyCode(selectedTradeCurrency.getCode());
+            allInputsValid.set(isAccountNameValid()
+                    && altCoinAddressValidator.validate(cryptoCurrencyAccount.getAddress()).isValid
+                    && cryptoCurrencyAccount.getSingleTradeCurrency() != null);
+        }
     }
 
     @Override

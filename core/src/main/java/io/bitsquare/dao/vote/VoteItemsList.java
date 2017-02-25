@@ -41,10 +41,10 @@ public final class VoteItemsList extends ArrayList<VoteItem> implements Persista
     public VoteItemsList(VotingDefaultValues votingDefaultValues) {
         add(new VoteItem(CREATE_OFFER_FEE_IN_BTC, "Create offer fee (in BTC Satoshi)", votingDefaultValues));
         add(new VoteItem(TAKE_OFFER_FEE_IN_BTC, "Take offer fee (in BTC Satoshi)", votingDefaultValues));
-        add(new VoteItem(CREATE_OFFER_FEE_IN_SQU, "Create offer fee (in BSQ)", votingDefaultValues));
-        add(new VoteItem(TAKE_OFFER_FEE_IN_SQU, "Take offer fee (in BSQ)", votingDefaultValues));
-        add(new VoteItem(CREATE_COMPENSATION_REQUEST_FEE_IN_SQU, "Compensation request fee (in BSQ)", votingDefaultValues));
-        add(new VoteItem(VOTING_FEE_IN_SQU, "Voting fee (in BSQ)", votingDefaultValues));
+        add(new VoteItem(CREATE_OFFER_FEE_IN_BSQ, "Create offer fee (in BSQ)", votingDefaultValues));
+        add(new VoteItem(TAKE_OFFER_FEE_IN_BSQ, "Take offer fee (in BSQ)", votingDefaultValues));
+        add(new VoteItem(CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ, "Compensation request fee (in BSQ)", votingDefaultValues));
+        add(new VoteItem(VOTING_FEE_IN_BSQ, "Voting fee (in BSQ)", votingDefaultValues));
 
         add(new VoteItem(COMPENSATION_REQUEST_PERIOD_IN_BLOCKS, "Compensation request period (in blocks)", votingDefaultValues));
         add(new VoteItem(VOTING_PERIOD_IN_BLOCKS, "Voting period (in blocks)", votingDefaultValues));

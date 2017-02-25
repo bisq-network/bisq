@@ -77,9 +77,9 @@ public class WalletsSetup {
     private final int socks5DiscoverMode;
     private WalletConfig walletConfig;
     private Wallet btcWallet;
-    private Wallet squWallet;
-    private final String walletFileName = "Bitsquare";
-    private final String tokenWalletFileName = "BSQ";
+    private Wallet bsqWallet;
+    private final String walletFileName = "Bitsquare_BTC";
+    private final String bsqWalletFileName = "Bitsquare_BSQ";
     private final Long bloomFilterTweak;
     private KeyParameter aesKey;
     private final Storage<Long> storage;
@@ -160,16 +160,16 @@ public class WalletsSetup {
         log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
 
         // If seed is non-null it means we are restoring from backup.
-        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, walletFileName, tokenWalletFileName) {
+        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, walletFileName, bsqWalletFileName) {
             @Override
             protected void onSetupCompleted() {
                 btcWallet = walletConfig.getBtcWallet();
-                squWallet = walletConfig.getSquWallet();
+                bsqWallet = walletConfig.getBsqWallet();
 
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
                 // their own money!
                 btcWallet.allowSpendingUnconfirmedTransactions();
-                squWallet.allowSpendingUnconfirmedTransactions();
+                bsqWallet.allowSpendingUnconfirmedTransactions();
 
                 if (params != RegTestParams.get())
                     walletConfig.peerGroup().setMaxConnections(11);
@@ -246,7 +246,7 @@ public class WalletsSetup {
         // never need to update a bloom filter, which would weaken privacy.
         // As we use 2 wallets (BTC, BSQ) we generate 1333 + 266 keys in total.
         walletConfig.setBtcWalletLookaheadSize(500);
-        walletConfig.setSquWalletLookaheadSize(100);
+        walletConfig.setBsqWalletLookaheadSize(100);
 
         // Calculation is derived from: https://www.reddit.com/r/Bitcoin/comments/2vrx6n/privacy_in_bitcoinj_android_wallet_multibit_hive/coknjuz
         // No. of false positives (56M keys in the blockchain): 
@@ -388,7 +388,7 @@ public class WalletsSetup {
 
     void backupWallets() {
         FileUtil.rollingBackup(walletDir, walletFileName + ".wallet", 20);
-        FileUtil.rollingBackup(walletDir, tokenWalletFileName + ".wallet", 20);
+        FileUtil.rollingBackup(walletDir, bsqWalletFileName + ".wallet", 20);
     }
 
     void clearBackups() {
@@ -408,8 +408,8 @@ public class WalletsSetup {
         return btcWallet;
     }
 
-    public Wallet getSquWallet() {
-        return squWallet;
+    public Wallet getBsqWallet() {
+        return bsqWallet;
     }
 
     public NetworkParameters getParams() {

@@ -22,9 +22,9 @@ import io.bitsquare.app.AppModule;
 import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
-import io.bitsquare.btc.provider.squ.SquUtxoFeedService;
+import io.bitsquare.btc.provider.squ.BsqUtxoFeedService;
+import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.btc.wallet.BtcWalletService;
-import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.btc.wallet.WalletsSetup;
 import io.bitsquare.http.HttpClient;
@@ -61,11 +61,11 @@ public class BitcoinModule extends AppModule {
         bind(AddressEntryList.class).in(Singleton.class);
         bind(WalletsSetup.class).in(Singleton.class);
         bind(BtcWalletService.class).in(Singleton.class);
-        bind(SquWalletService.class).in(Singleton.class);
+        bind(BsqWalletService.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);
 
         bind(HttpClient.class).in(Singleton.class);
-        bind(SquUtxoFeedService.class).in(Singleton.class);
+        bind(BsqUtxoFeedService.class).in(Singleton.class);
         bind(PriceFeedService.class).in(Singleton.class);
         bind(FeeService.class).in(Singleton.class);
     }

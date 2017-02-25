@@ -17,15 +17,16 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.layout.AnchorPane?>
-<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.dao.DaoView"
-         AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
-         AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
-         xmlns:fx="http://javafx.com/fxml">
+<?import javafx.scene.layout.*?>
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.dao.wallet.dashboard.BsqDashboardView"
+          hgap="5.0" vgap="5.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-10.0"
+          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="bsqWalletTab" text="BSQ wallet" closable="false"/>
-    <Tab fx:id="CompensationTab" text="Compensation" closable="false"/>
-    <Tab fx:id="votingTab" text="Voting" closable="false"/>
-</TabPane>
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
+    </columnConstraints>
+
+</GridPane>

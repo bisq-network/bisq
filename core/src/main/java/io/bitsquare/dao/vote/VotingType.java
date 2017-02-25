@@ -20,10 +20,10 @@ package io.bitsquare.dao.vote;
 public enum VotingType {
     CREATE_OFFER_FEE_IN_BTC((byte) 0x01),
     TAKE_OFFER_FEE_IN_BTC((byte) 0x02),
-    CREATE_OFFER_FEE_IN_SQU((byte) 0x03),
-    TAKE_OFFER_FEE_IN_SQU((byte) 0x04),
-    CREATE_COMPENSATION_REQUEST_FEE_IN_SQU((byte) 0x05),
-    VOTING_FEE_IN_SQU((byte) 0x06),
+    CREATE_OFFER_FEE_IN_BSQ((byte) 0x03),
+    TAKE_OFFER_FEE_IN_BSQ((byte) 0x04),
+    CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ((byte) 0x05),
+    VOTING_FEE_IN_BSQ((byte) 0x06),
 
     COMPENSATION_REQUEST_PERIOD_IN_BLOCKS((byte) 0x10),
     VOTING_PERIOD_IN_BLOCKS((byte) 0x11),

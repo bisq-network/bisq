@@ -17,46 +17,47 @@
 
 package io.bitsquare.btc.wallet;
 
-import com.google.common.collect.Sets;
-import org.bitcoinj.core.*;
+import io.bitsquare.dao.blockchain.BsqUTXO;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.script.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
- * We lookup for spendable outputs which matches any of our addresses.
+ * We lookup for spendable outputs which matches our address of our address.
  */
-class BtcCoinSelector extends BitsquareDefaultCoinSelector {
-    private static final Logger log = LoggerFactory.getLogger(BtcCoinSelector.class);
+class BsqCoinSelector extends BitsquareDefaultCoinSelector {
+    private static final Logger log = LoggerFactory.getLogger(BsqCoinSelector.class);
 
-    private NetworkParameters params;
-    private final Set<Address> addresses;
     private final boolean permitForeignPendingTx;
 
+    private Map<Script, Set<BsqUTXO>> utxoSetByScriptMap = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    BtcCoinSelector(NetworkParameters params, Set<Address> addresses, boolean permitForeignPendingTx) {
-        this.params = params;
-        this.addresses = addresses;
+    public BsqCoinSelector(boolean permitForeignPendingTx) {
         this.permitForeignPendingTx = permitForeignPendingTx;
     }
 
-    BtcCoinSelector(NetworkParameters params, Set<Address> addresses) {
-        this(params, addresses, true);
-    }
+    public void setUtxoSet(Set<BsqUTXO> utxoSet) {
+        utxoSet.stream().forEach(utxo -> {
+            Script script = utxo.getScript();
+            if (!utxoSetByScriptMap.containsKey(script))
+                utxoSetByScriptMap.put(script, new HashSet<>());
 
-    BtcCoinSelector(NetworkParameters params, Address address, boolean permitForeignPendingTx) {
-        this(params, Sets.newHashSet(address), permitForeignPendingTx);
-    }
-
-    BtcCoinSelector(NetworkParameters params, Address address) {
-        this(params, Sets.newHashSet(address), true);
+            utxoSetByScriptMap.get(script).add(utxo);
+        });
     }
 
     @Override
@@ -76,16 +77,9 @@ class BtcCoinSelector extends BitsquareDefaultCoinSelector {
 
     @Override
     protected boolean selectOutput(TransactionOutput transactionOutput) {
-        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-            Address address = transactionOutput.getScriptPubKey().getToAddress(params);
-            log.trace(address.toString());
-
-            boolean matchesAddress = addresses.contains(address);
-            if (!matchesAddress)
-                log.trace("No match found at matchesRequiredAddress address / addressEntry " +
-                        address.toString() + " / " + address.toString());
-
-            return matchesAddress;
+        Script scriptPubKey = transactionOutput.getScriptPubKey();
+        if (scriptPubKey.isSentToAddress() || scriptPubKey.isPayToScriptHash()) {
+            return utxoSetByScriptMap.containsKey(scriptPubKey);
         } else {
             log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
             return false;

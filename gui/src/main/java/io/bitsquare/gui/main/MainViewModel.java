@@ -42,7 +42,7 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.dao.DaoManager;
-import io.bitsquare.dao.blockchain.SquBlockchainException;
+import io.bitsquare.dao.blockchain.BsqBlockchainException;
 import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -551,7 +551,7 @@ public class MainViewModel implements ViewModel {
 
         try {
             daoManager.onAllServicesInitialized();
-        } catch (SquBlockchainException e) {
+        } catch (BsqBlockchainException e) {
             new Popup<>().error(e.toString()).show();
         }
 

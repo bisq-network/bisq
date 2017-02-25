@@ -19,10 +19,10 @@ package io.bitsquare.dao;
 
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
+import io.bitsquare.dao.blockchain.BsqBlockchainManager;
+import io.bitsquare.dao.blockchain.BsqBlockchainRpcService;
+import io.bitsquare.dao.blockchain.BsqBlockchainService;
 import io.bitsquare.dao.blockchain.RpcOptionKeys;
-import io.bitsquare.dao.blockchain.SquBlockchainManager;
-import io.bitsquare.dao.blockchain.SquBlockchainRpcService;
-import io.bitsquare.dao.blockchain.SquBlockchainService;
 import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.dao.vote.VotingDefaultValues;
 import io.bitsquare.dao.vote.VotingManager;
@@ -43,8 +43,8 @@ public class DaoModule extends AppModule {
     @Override
     protected void configure() {
         bind(DaoManager.class).in(Singleton.class);
-        bind(SquBlockchainManager.class).in(Singleton.class);
-        bind(SquBlockchainService.class).to(SquBlockchainRpcService.class).in(Singleton.class);
+        bind(BsqBlockchainManager.class).in(Singleton.class);
+        bind(BsqBlockchainService.class).to(BsqBlockchainRpcService.class).in(Singleton.class);
         bind(DaoPeriodService.class).in(Singleton.class);
         bind(VotingService.class).in(Singleton.class);
         

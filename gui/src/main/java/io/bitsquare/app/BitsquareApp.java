@@ -205,7 +205,7 @@ public class BitsquareApp extends Application {
                     showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
                 } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     // BSQ empty wallet not public yet
-                    showEmptyWalletPopup(injector.getInstance(SquWalletService.class));
+                    showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
                 } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showSendAlertMessagePopup();
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
@@ -416,7 +416,7 @@ public class BitsquareApp extends Application {
                         });
                         injector.getInstance(WalletsSetup.class).shutDown();
                         injector.getInstance(BtcWalletService.class).shutDown();
-                        injector.getInstance(SquWalletService.class).shutDown();
+                        injector.getInstance(BsqWalletService.class).shutDown();
                     });
                 });
                 // we wait max 20 sec.

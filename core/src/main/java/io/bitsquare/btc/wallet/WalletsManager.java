@@ -36,7 +36,7 @@ public class WalletsManager {
 
     private final BtcWalletService btcWalletService;
     private final TradeWalletService tradeWalletService;
-    private final SquWalletService squWalletService;
+    private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -44,21 +44,21 @@ public class WalletsManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletsManager(BtcWalletService btcWalletService, TradeWalletService tradeWalletService, SquWalletService squWalletService, WalletsSetup walletsSetup) {
+    public WalletsManager(BtcWalletService btcWalletService, TradeWalletService tradeWalletService, BsqWalletService bsqWalletService, WalletsSetup walletsSetup) {
         this.btcWalletService = btcWalletService;
         this.tradeWalletService = tradeWalletService;
-        this.squWalletService = squWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
     }
 
     public void decryptWallets(KeyParameter aesKey) {
         btcWalletService.decryptWallet(aesKey);
-        squWalletService.decryptWallet(aesKey);
+        bsqWalletService.decryptWallet(aesKey);
         tradeWalletService.setAesKey(null);
     }
 
     public void encryptWallets(KeyCrypterScrypt keyCrypterScrypt, KeyParameter aesKey) {
-        squWalletService.encryptWallet(keyCrypterScrypt, aesKey);
+        bsqWalletService.encryptWallet(keyCrypterScrypt, aesKey);
         btcWalletService.encryptWallet(keyCrypterScrypt, aesKey);
 
         // we save the key for the trade wallet as we don't require passwords here
@@ -69,7 +69,7 @@ public class WalletsManager {
         return "BTC Wallet:\n" +
                 btcWalletService.getWalletAsString(includePrivKeys) +
                 "\n\nBSQ Wallet:\n" +
-                squWalletService.getWalletAsString(includePrivKeys);
+                bsqWalletService.getWalletAsString(includePrivKeys);
     }
 
     public void restoreSeedWords(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
@@ -85,11 +85,11 @@ public class WalletsManager {
     }
 
     public boolean areWalletsEncrypted() {
-        return btcWalletService.isEncrypted() && squWalletService.isEncrypted();
+        return btcWalletService.isEncrypted() && bsqWalletService.isEncrypted();
     }
 
     public boolean areWalletsAvailable() {
-        return btcWalletService.isWalletReady() && squWalletService.isWalletReady();
+        return btcWalletService.isWalletReady() && bsqWalletService.isWalletReady();
     }
 
 
@@ -110,13 +110,13 @@ public class WalletsManager {
 
     public boolean hasPositiveBalance() {
         return btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE)
-                .add(squWalletService.getBalance(Wallet.BalanceType.AVAILABLE))
+                .add(bsqWalletService.getBalance(Wallet.BalanceType.AVAILABLE))
                 .isPositive();
     }
 
     public void setAesKey(KeyParameter aesKey) {
         btcWalletService.setAesKey(aesKey);
-        squWalletService.setAesKey(aesKey);
+        bsqWalletService.setAesKey(aesKey);
         tradeWalletService.setAesKey(aesKey);
     }
 

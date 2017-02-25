@@ -126,9 +126,9 @@ public class BtcWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public Transaction completePreparedSendSquTx(Transaction preparedSquTx, boolean isSendTx) throws
+    public Transaction completePreparedSendBsqTx(Transaction preparedBsqTx, boolean isSendTx) throws
             TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
-        // preparedSquTx has following structure:
+        // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
         // outputs [0-1] BSQ receivers output
         // outputs [0-1] BSQ change output
@@ -140,13 +140,13 @@ public class BtcWalletService extends WalletService {
         // outputs [0-1] BSQ change output
         // outputs [0-1] BTC change output
         // mining fee: BTC mining fee
-        return completePreparedSquTx(preparedSquTx, isSendTx, null);
+        return completePreparedBsqTx(preparedBsqTx, isSendTx, null);
     }
 
-    public Transaction completePreparedSquTx(Transaction preparedSquTx, boolean isSendTx, @Nullable byte[] opReturnData) throws
+    public Transaction completePreparedBsqTx(Transaction preparedBsqTx, boolean isSendTx, @Nullable byte[] opReturnData) throws
             TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
 
-        // preparedSquTx has following structure:
+        // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
         // outputs [0-1] BSQ receivers output
         // outputs [0-1] BSQ change output
@@ -181,9 +181,9 @@ public class BtcWalletService extends WalletService {
         checkNotNull(changeAddress, "changeAddress must not be null");
 
         final BtcCoinSelector coinSelector = new BtcCoinSelector(params, walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
-        final List<TransactionInput> preparedSquTxInputs = preparedSquTx.getInputs();
-        final List<TransactionOutput> preparedSquTxOutputs = preparedSquTx.getOutputs();
-        int numInputs = preparedSquTxInputs.size() + 1; // We add 1 for the BTC fee input
+        final List<TransactionInput> preparedBsqTxInputs = preparedBsqTx.getInputs();
+        final List<TransactionOutput> preparedBsqTxOutputs = preparedBsqTx.getOutputs();
+        int numInputs = preparedBsqTxInputs.size() + 1; // We add 1 for the BTC fee input
         Transaction resultTx = null;
         boolean isFeeInTolerance;
         do {
@@ -195,13 +195,13 @@ public class BtcWalletService extends WalletService {
             }
 
             Transaction tx = new Transaction(params);
-            preparedSquTxInputs.stream().forEach(tx::addInput);
+            preparedBsqTxInputs.stream().forEach(tx::addInput);
 
             if (forcedChangeValue.isZero()) {
-                preparedSquTxOutputs.stream().forEach(tx::addOutput);
+                preparedBsqTxOutputs.stream().forEach(tx::addOutput);
             } else {
                 //TODO test that case
-                checkArgument(preparedSquTxOutputs.size() == 0, "preparedSquTxOutputs.size must be null in that code branch");
+                checkArgument(preparedBsqTxOutputs.size() == 0, "preparedBsqTxOutputs.size must be null in that code branch");
                 tx.addOutput(forcedChangeValue, changeAddress);
             }
 
@@ -237,7 +237,7 @@ public class BtcWalletService extends WalletService {
         while (forcedChangeValue.isPositive() || isFeeInTolerance);
 
         // Sign all BTC inputs
-        for (int i = preparedSquTxInputs.size(); i < resultTx.getInputs().size(); i++) {
+        for (int i = preparedBsqTxInputs.size(); i < resultTx.getInputs().size(); i++) {
             TransactionInput txIn = resultTx.getInputs().get(i);
             checkArgument(txIn.getConnectedOutput() != null && txIn.getConnectedOutput().isMine(wallet),
                     "txIn.getConnectedOutput() is not in our wallet. That must not happen.");

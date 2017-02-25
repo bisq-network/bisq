@@ -17,15 +17,15 @@
 
 package io.bitsquare.gui.main.dao;
 
-import io.bitsquare.btc.wallet.SquWalletService;
+import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.dao.compensation.CompensationView;
 import io.bitsquare.gui.main.dao.voting.VotingView;
-import io.bitsquare.gui.main.dao.wallet.TokenWalletView;
-import io.bitsquare.gui.main.dao.wallet.dashboard.TokenDashboardView;
+import io.bitsquare.gui.main.dao.wallet.BsqWalletView;
+import io.bitsquare.gui.main.dao.wallet.dashboard.BsqDashboardView;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -38,7 +38,7 @@ import javax.inject.Inject;
 public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
-    Tab tokenWalletTab, CompensationTab, votingTab;
+    Tab bsqWalletTab, CompensationTab, votingTab;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -46,17 +46,17 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Preferences preferences;
-    private SquWalletService squWalletService;
+    private BsqWalletService bsqWalletService;
     private Tab selectedTab;
-    private TokenWalletView tokenWalletView;
+    private BsqWalletView bsqWalletView;
 
 
     @Inject
-    private DaoView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences, SquWalletService squWalletService) {
+    private DaoView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences, BsqWalletService bsqWalletService) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
-        this.squWalletService = squWalletService;
+        this.bsqWalletService = bsqWalletService;
     }
 
     @Override
@@ -64,19 +64,19 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {
                 if (CompensationTab == null && viewPath.get(2).equals(CompensationView.class))
-                    navigation.navigateTo(MainView.class, DaoView.class, TokenWalletView.class, TokenDashboardView.class);
+                    navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
                 else
                     loadView(viewPath.tip());
             }
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == tokenWalletTab) {
-                Class<? extends View> selectedViewClass = tokenWalletView.getSelectedViewClass();
+            if (newValue == bsqWalletTab) {
+                Class<? extends View> selectedViewClass = bsqWalletView.getSelectedViewClass();
                 if (selectedViewClass == null)
-                    navigation.navigateTo(MainView.class, DaoView.class, TokenWalletView.class, TokenDashboardView.class);
+                    navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
                 else
-                    navigation.navigateTo(MainView.class, DaoView.class, TokenWalletView.class, selectedViewClass);
+                    navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, selectedViewClass);
             } else if (newValue == CompensationTab) {
                 navigation.navigateTo(MainView.class, DaoView.class, CompensationView.class);
             } else if (newValue == votingTab) {
@@ -92,8 +92,8 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
             Tab selectedItem = root.getSelectionModel().getSelectedItem();
-            if (selectedItem == tokenWalletTab)
-                navigation.navigateTo(MainView.class, DaoView.class, TokenWalletView.class);
+            if (selectedItem == bsqWalletTab)
+                navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
             else if (selectedItem == CompensationTab)
                 navigation.navigateTo(MainView.class, DaoView.class, CompensationView.class);
             else if (selectedItem == votingTab)
@@ -109,9 +109,9 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     private void loadView(Class<? extends View> viewClass) {
         View view = viewLoader.load(viewClass);
-        if (view instanceof TokenWalletView) {
-            selectedTab = tokenWalletTab;
-            tokenWalletView = (TokenWalletView) view;
+        if (view instanceof BsqWalletView) {
+            selectedTab = bsqWalletTab;
+            bsqWalletView = (BsqWalletView) view;
         } else if (view instanceof CompensationView) {
             selectedTab = CompensationTab;
         } else if (view instanceof VotingView) {
