@@ -135,9 +135,9 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg()
                 .ofType(RegTestHost.class)
                 .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
-        parser.accepts(AppOptionKeys.BTC_NODES, description("Custom nodes used for BitcoinJ as comma separated IP addresses.", ""))
+        parser.accepts(BtcOptionKeys.BTC_NODES, description("Custom nodes used for BitcoinJ as comma separated IP addresses.", ""))
                 .withRequiredArg();
-        parser.accepts(AppOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over tor (socks 5 proxy).", ""))
+        parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over tor (socks 5 proxy).", ""))
                 .withRequiredArg();
     }
 

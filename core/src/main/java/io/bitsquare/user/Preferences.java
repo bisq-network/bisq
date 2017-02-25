@@ -17,11 +17,11 @@
 
 package io.bitsquare.user;
 
-import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.btc.BtcOptionKeys;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.common.persistance.Persistable;
@@ -157,8 +157,8 @@ public final class Preferences implements Persistable {
     @Inject
     public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment,
                        FeeService feeService,
-                       @Named(AppOptionKeys.BTC_NODES) String btcNodesFromOptions,
-                       @Named(AppOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
+                       @Named(BtcOptionKeys.BTC_NODES) String btcNodesFromOptions,
+                       @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
         INSTANCE = this;
         this.storage = storage;
         this.bitsquareEnvironment = bitsquareEnvironment;
