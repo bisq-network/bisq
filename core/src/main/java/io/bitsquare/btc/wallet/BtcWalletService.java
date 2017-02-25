@@ -122,22 +122,22 @@ public class BtcWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Add fee input to prepared SQU send tx
+    // Add fee input to prepared BSQ send tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
     public Transaction completePreparedSendSquTx(Transaction preparedSquTx, boolean isSendTx) throws
             TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
         // preparedSquTx has following structure:
-        // inputs [1-n] SQU inputs
-        // outputs [0-1] SQU receivers output
-        // outputs [0-1] SQU change output
+        // inputs [1-n] BSQ inputs
+        // outputs [0-1] BSQ receivers output
+        // outputs [0-1] BSQ change output
 
         // We add BTC mining fee. Result tx looks like:
-        // inputs [1-n] SQU inputs
+        // inputs [1-n] BSQ inputs
         // inputs [1-n] BTC inputs
-        // outputs [0-1] SQU receivers output
-        // outputs [0-1] SQU change output
+        // outputs [0-1] BSQ receivers output
+        // outputs [0-1] BSQ change output
         // outputs [0-1] BTC change output
         // mining fee: BTC mining fee
         return completePreparedSquTx(preparedSquTx, isSendTx, null);
@@ -147,21 +147,21 @@ public class BtcWalletService extends WalletService {
             TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
 
         // preparedSquTx has following structure:
-        // inputs [1-n] SQU inputs
-        // outputs [0-1] SQU receivers output
-        // outputs [0-1] SQU change output
-        // mining fee: optional burned SQU fee (only if opReturnData != null)
+        // inputs [1-n] BSQ inputs
+        // outputs [0-1] BSQ receivers output
+        // outputs [0-1] BSQ change output
+        // mining fee: optional burned BSQ fee (only if opReturnData != null)
 
         // We add BTC mining fee. Result tx looks like:
-        // inputs [1-n] SQU inputs
+        // inputs [1-n] BSQ inputs
         // inputs [1-n] BTC inputs
-        // outputs [0-1] SQU receivers output
-        // outputs [0-1] SQU change output
+        // outputs [0-1] BSQ receivers output
+        // outputs [0-1] BSQ change output
         // outputs [0-1] BTC change output
         // outputs [0-1] OP_RETURN with opReturnData (only if opReturnData != null)
-        // mining fee: BTC mining fee + optional burned SQU fee (only if opReturnData != null)
+        // mining fee: BTC mining fee + optional burned BSQ fee (only if opReturnData != null)
 
-        // In case of txs for burned SQU fees we have no receiver output and it might be that there is no change outputs
+        // In case of txs for burned BSQ fees we have no receiver output and it might be that there is no change outputs
         // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input 
         // for BTC to force an additional change output.
 
@@ -208,7 +208,7 @@ public class BtcWalletService extends WalletService {
             Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
             sendRequest.shuffleOutputs = false;
             sendRequest.aesKey = aesKey;
-            // signInputs needs to be false as it would try to sign all inputs (SQU inputs are not in this wallet)
+            // signInputs needs to be false as it would try to sign all inputs (BSQ inputs are not in this wallet)
             sendRequest.signInputs = false;
             sendRequest.ensureMinRequiredFee = false;
             sendRequest.feePerKb = Coin.ZERO;

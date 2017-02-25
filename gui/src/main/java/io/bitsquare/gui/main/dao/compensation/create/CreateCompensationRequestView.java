@@ -131,7 +131,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
                     checkArgument(!preparedSendTx.getInputs().isEmpty(), "preparedSendTx inputs must not be empty");
 
-                    // We use the key of the first SQU input for signing the data
+                    // We use the key of the first BSQ input for signing the data
                     TransactionOutput connectedOutput = preparedSendTx.getInputs().get(0).getConnectedOutput();
                     checkNotNull(connectedOutput, "connectedOutput must not be null");
                     DeterministicKey squKeyPair = squWalletService.findKeyFromPubKeyHash(connectedOutput.getScriptPubKey().getPubKeyHash());

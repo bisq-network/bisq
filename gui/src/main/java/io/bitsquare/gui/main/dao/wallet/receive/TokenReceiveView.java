@@ -80,7 +80,7 @@ public class TokenReceiveView extends ActivatableView<GridPane, Void> {
     @Override
     public void initialize() {
         addTitledGroupBg(root, gridRow, 1, "Balance");
-        balanceTextField = addLabelTextField(root, gridRow, "SQU balance:", Layout.FIRST_ROW_DISTANCE).second;
+        balanceTextField = addLabelTextField(root, gridRow, "BSQ balance:", Layout.FIRST_ROW_DISTANCE).second;
         balanceUtil.setBalanceTextField(balanceTextField);
         balanceUtil.initialize();
 

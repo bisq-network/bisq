@@ -153,7 +153,7 @@ abstract public class SquBlockchainService {
                 connectedTxs.add(transaction);
         }
 
-        // Now we check if our connected txs are valid SQU transactions
+        // Now we check if our connected txs are valid BSQ transactions
         for (SquTransaction transaction : connectedTxs) {
             verifyTransaction(transaction, blockHeight, utxoByTxIdMap);
         }
@@ -210,7 +210,7 @@ abstract public class SquBlockchainService {
                 SquTxOutput squOutput = outputs.get(i);
                 List<String> addresses = squOutput.addresses;
                 // Only at raw MS outputs addresses have more then 1 entry 
-                // We do not support raw MS for SQU
+                // We do not support raw MS for BSQ
                 if (addresses.size() == 1) {
                     String address = addresses.get(0);
                     availableValue = availableValue.subtract(squOutput.value);
@@ -225,7 +225,7 @@ abstract public class SquBlockchainService {
                                 address);
                         utxoByIndexMap.put(i, utxo);
                     } else {
-                        log.warn("We tried to spend more SQU as we have in our inputs");
+                        log.warn("We tried to spend more BSQ as we have in our inputs");
                         break;
                     }
                 } else {
@@ -235,7 +235,7 @@ abstract public class SquBlockchainService {
 
             //TODO write that warning to a handler
             if (availableValue.isPositive()) {
-                log.warn("SQU have been left which was not spent. Burned SQU amount={}, tx={}",
+                log.warn("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
                         availableValue.value,
                         squTransaction.toString());
             }
@@ -252,13 +252,13 @@ abstract public class SquBlockchainService {
         String txId = squTransaction.txId;
         List<SquTxOutput> outputs = squTransaction.outputs;
 
-        // Genesis tx uses all outputs as SQU outputs
+        // Genesis tx uses all outputs as BSQ outputs
         Map<Integer, SquUTXO> utxoByIndexMap = new HashMap<>();
         for (int i = 0; i < outputs.size(); i++) {
             SquTxOutput output = outputs.get(i);
             List<String> addresses = output.addresses;
             // Only at raw MS outputs addresses have more then 1 entry 
-            // We do not support raw MS for SQU
+            // We do not support raw MS for BSQ
             if (addresses.size() == 1) {
                 String address = addresses.get(0);
                 //TODO set coinbase to true after testing

@@ -84,18 +84,18 @@ public class TokenSendView extends ActivatableView<GridPane, Void> {
     @Override
     public void initialize() {
         addTitledGroupBg(root, gridRow, 1, "Balance");
-        balanceTextField = addLabelTextField(root, gridRow, "SQU balance:", Layout.FIRST_ROW_DISTANCE).second;
+        balanceTextField = addLabelTextField(root, gridRow, "BSQ balance:", Layout.FIRST_ROW_DISTANCE).second;
         balanceUtil.setBalanceTextField(balanceTextField);
         balanceUtil.initialize();
 
         addTitledGroupBg(root, ++gridRow, 3, "Send funds", Layout.GROUP_DISTANCE);
-        amountInputTextField = addLabelInputTextField(root, gridRow, "Amount in SQU:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        amountInputTextField = addLabelInputTextField(root, gridRow, "Amount in BSQ:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         amountInputTextField.setPromptText("Set amount to withdraw (min. amount is 547");
 
         receiversAddressInputTextField = addLabelInputTextField(root, ++gridRow, "Receiver's address:").second;
         receiversAddressInputTextField.setPromptText("Fill in your destination address");
 
-        sendButton = addButtonAfterGroup(root, ++gridRow, "Send SQU funds");
+        sendButton = addButtonAfterGroup(root, ++gridRow, "Send BSQ funds");
 
         if (DevFlags.DEV_MODE) {
             amountInputTextField.setText("0.546"); // 546 is dust limit

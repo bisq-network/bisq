@@ -185,7 +185,7 @@ public class SquWalletService extends WalletService {
 
         checkWalletConsistency();
         verifyTransaction(tx);
-        // printTx("SQU wallet: Signed Tx", tx);
+        // printTx("BSQ wallet: Signed Tx", tx);
         return tx;
     }
 
@@ -196,7 +196,7 @@ public class SquWalletService extends WalletService {
 
     public void commitTx(Transaction tx) {
         wallet.commitTx(tx);
-        //printTx("SQU commit Tx", tx);
+        //printTx("BSQ commit Tx", tx);
     }
 
 
@@ -206,12 +206,12 @@ public class SquWalletService extends WalletService {
 
     public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
         Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(tx).future(), callback);
-        printTx("SQU broadcast Tx", tx);
+        printTx("BSQ broadcast Tx", tx);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Send SQU with BTC fee
+    // Send BSQ with BTC fee
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedSendTx(String receiverAddress,

@@ -106,7 +106,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
         addMultilineLabel(root, gridRow, "Please write down both wallet seed words and the date! " +
                         "You can recover your wallet any time with those seed words and the date.\n" +
-                        "The seed words are used for both the bitcoin and teh SQU wallet.",
+                        "The seed words are used for both the bitcoin and teh BSQ wallet.",
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {

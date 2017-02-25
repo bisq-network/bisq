@@ -380,7 +380,7 @@ public class WalletConfig extends AbstractIdleService {
                 keyChainGroup = new BitsquareKeyChainGroup(params, true, btcWalletLookaheadSize);
             vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, seed, keyChainGroup, false);
 
-            // SQU walelt
+            // BSQ walelt
             vSquWalletFile = new File(directory, squWalletFilePrefix + ".wallet");
             if (seed != null)
                 keyChainGroup = new BitsquareKeyChainGroup(params, new SquDeterministicKeyChain(seed), false, squWalletLookaheadSize);

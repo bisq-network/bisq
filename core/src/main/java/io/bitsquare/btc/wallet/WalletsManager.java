@@ -68,7 +68,7 @@ public class WalletsManager {
     public String getWalletsAsString(boolean includePrivKeys) {
         return "BTC Wallet:\n" +
                 btcWalletService.getWalletAsString(includePrivKeys) +
-                "\n\nSQU Wallet:\n" +
+                "\n\nBSQ Wallet:\n" +
                 squWalletService.getWalletAsString(includePrivKeys);
     }
 

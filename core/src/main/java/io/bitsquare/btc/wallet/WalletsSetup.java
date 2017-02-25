@@ -79,7 +79,7 @@ public class WalletsSetup {
     private Wallet btcWallet;
     private Wallet squWallet;
     private final String walletFileName = "Bitsquare";
-    private final String tokenWalletFileName = "SQU";
+    private final String tokenWalletFileName = "BSQ";
     private final Long bloomFilterTweak;
     private KeyParameter aesKey;
     private final Storage<Long> storage;
@@ -244,7 +244,7 @@ public class WalletsSetup {
         // the threshold. To avoid reaching the threshold we create much more keys which are unlikely to cause update of the
         // filter for most users. With lookaheadSize of 500 we get 1333 keys (500*1.3=666 666 external and 666 internal keys) which should be enough for most users to 
         // never need to update a bloom filter, which would weaken privacy.
-        // As we use 2 wallets (BTC, SQU) we generate 1333 + 266 keys in total.
+        // As we use 2 wallets (BTC, BSQ) we generate 1333 + 266 keys in total.
         walletConfig.setBtcWalletLookaheadSize(500);
         walletConfig.setSquWalletLookaheadSize(100);
 
