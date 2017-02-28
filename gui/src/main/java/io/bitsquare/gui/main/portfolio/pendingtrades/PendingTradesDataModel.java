@@ -374,7 +374,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             }
 
             final Arbitrator acceptedArbitratorByAddress = user.getAcceptedArbitratorByAddress(trade.getArbitratorNodeAddress());
-            checkNotNull(acceptedArbitratorByAddress);
+            checkNotNull(acceptedArbitratorByAddress, "acceptedArbitratorByAddress must no tbe null");
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
