@@ -785,7 +785,7 @@ public class Connection implements MessageListener {
 
                         // First we check the size
                         boolean exceeds;
-                        if (rawInputObject instanceof GetDataResponse) {
+                        if (rawInputObject instanceof GetDataResponse || rawInputObject instanceof GetDataRequest) {
                             exceeds = size > MAX_MSG_SIZE_GET_DATA;
                             log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
                         } else {
