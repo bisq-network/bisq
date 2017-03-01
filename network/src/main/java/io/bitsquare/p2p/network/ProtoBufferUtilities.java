@@ -54,6 +54,10 @@ import java.io.StringWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.bitsquare.common.wire.proto.Messages.Envelope.MessageCase.PING;
+import static io.bitsquare.common.wire.proto.Messages.Envelope.MessageCase.PONG;
+import static io.bitsquare.common.wire.proto.Messages.Envelope.MessageCase.REFRESH_TTL_MESSAGE;
+
 /**
  * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,
  * idea.properties, to something bigger like 12500:
@@ -75,7 +79,12 @@ public class ProtoBufferUtilities {
             log.warn("fromProtoBuf called with empty envelope.");
             return Optional.empty();
         }
-        log.info("Convert protobuffer envelope: {},{}", envelope.getMessageCase(), envelope.toString());
+        if(envelope.getMessageCase() != PING && envelope.getMessageCase() != PONG && envelope.getMessageCase() != REFRESH_TTL_MESSAGE) {
+            log.info("Convert protobuffer envelope: {}, {}", envelope.getMessageCase(), envelope.toString());
+        } else {
+            log.info("Convert protobuffer envelope: {}", envelope.getMessageCase());
+            log.trace("Convert protobuffer envelope: {}", envelope.toString());
+        }
         StringWriter stringWriter = new StringWriter();
         WriterOutputStream writerOutputStream = new WriterOutputStream(stringWriter);
 
@@ -83,7 +92,6 @@ public class ProtoBufferUtilities {
             envelope.writeTo(writerOutputStream);
             writerOutputStream.flush();
             stringWriter.flush();
-            log.info("tostring={}", stringWriter.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
