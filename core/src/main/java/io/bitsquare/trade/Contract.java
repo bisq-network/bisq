@@ -25,6 +25,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.offer.Offer;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Utils;
 import org.bitcoinj.utils.Fiat;
 
 import javax.annotation.concurrent.Immutable;
@@ -253,8 +254,10 @@ public final class Contract implements Payload {
                 "\n\tsellerAddress=" + sellerNodeAddress +
                 "\n\toffererPayoutAddressString='" + offererPayoutAddressString + '\'' +
                 "\n\ttakerPayoutAddressString='" + takerPayoutAddressString + '\'' +
-                "\n\toffererBtcPubKey=" + Arrays.toString(offererMultiSigPubKey) +
-                "\n\ttakerBtcPubKey=" + Arrays.toString(takerMultiSigPubKey) +
+                "\n\toffererMultiSigPubKey=" + Utils.HEX.encode(offererMultiSigPubKey) +
+                "\n\ttakerMultiSigPubKey=" + Utils.HEX.encode(takerMultiSigPubKey) +
+                "\n\tBuyerMultiSigPubKey=" + Utils.HEX.encode(getBuyerMultiSigPubKey()) +
+                "\n\tSellerMultiSigPubKey=" + Utils.HEX.encode(getSellerMultiSigPubKey()) +
                 '}';
     }
 }
