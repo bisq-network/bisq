@@ -37,7 +37,7 @@ class BsqDeterministicKeyChain extends DeterministicKeyChain {
     // TODO register
     public static final ImmutableList<ChildNumber> BIP44_BSQ_ACCOUNT_PATH = ImmutableList.of(
             new ChildNumber(44, true),
-            new ChildNumber(139, true),
+            new ChildNumber(142, true),
             ChildNumber.ZERO_HARDENED);
 
     public BsqDeterministicKeyChain(SecureRandom random) {
