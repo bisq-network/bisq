@@ -12,6 +12,7 @@ import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.BanList;
@@ -193,7 +194,9 @@ public class Connection implements MessageListener {
 
                     lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
+
                     envelope = message.toProtoBuf();
+                    log.info("Sending message: {}", Utilities.toTruncatedString(envelope.toString(), 10000));
 
                     if (message instanceof Ping | message instanceof RefreshTTLMessage) {
                         // pings and offer refresh msg we dont want to log in production
@@ -314,10 +317,10 @@ public class Connection implements MessageListener {
     }
 
     // TODO either use the argument or delete it
-    private boolean violatesThrottleLimit(Serializable serializable) {
+    private boolean violatesThrottleLimit(Message message) {
         long now = System.currentTimeMillis();
         boolean violated = false;
-        //TODO remove serializable storage after network is tested stable
+        //TODO remove message storage after network is tested stable
         if (messageTimeStamps.size() >= MSG_THROTTLE_PER_SEC) {
             // check if we got more than 70 (MSG_THROTTLE_PER_SEC) msg per sec.
             long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC).first;
@@ -351,7 +354,7 @@ public class Connection implements MessageListener {
             messageTimeStamps.remove(0);
         }
 
-        messageTimeStamps.add(new Tuple2<>(now, serializable));
+        messageTimeStamps.add(new Tuple2<>(now, message));
         return violated;
     }
 
@@ -776,25 +779,16 @@ public class Connection implements MessageListener {
                         lastReadTimeStamp = now;
                         int size = envelope.getSerializedSize();
 
-                        if (message instanceof Pong) {
+                        if (message instanceof Pong || message instanceof RefreshTTLMessage) {
                             // We only log Pong and RefreshTTLMessage when in dev environment (trace)
                             log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
                                             "Received object (truncated)={} / size={}"
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                     connection,
-                                    envelope.toString(),
+                                    Utilities.toTruncatedString(envelope.toString()),
                                     size);
-                        } else if (message instanceof RefreshTTLMessage) {
-                            // We only log Pong and RefreshTTLMessage when in dev environment (trace)
-                            log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
-                                            "New data arrived at inputHandler of connection {}.\n" +
-                                            "Received object (truncated)={} / size={}"
-                                            + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
-                                    connection,
-                                    envelope.toString(),
-                                    size);
-                        } else {
+                        }  else if (message instanceof Message) {
                             // We want to log all incoming messages (except Pong and RefreshTTLMessage)
                             // so we log before the data type checks
                             //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
@@ -803,32 +797,26 @@ public class Connection implements MessageListener {
                                             "Received object (truncated)={} / size={}"
                                             + "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",
                                     connection,
-                                    envelope.toString(),
+                                    Utilities.toTruncatedString(envelope.toString()),
                                     size);
-
-                            // We want to track the messages also before the checks, so do it early...
-                            // TODO track protobuffer message received or add enum with type
-                            // connection.statistic.addReceivedMessage((Message) rawInputObject);
+                        } else {
+                            log.error("Invalid data arrived at inputHandler of connection {} Size={}", connection, size);
+                            try {
+                                // Don't call toString on rawInputObject
+                                log.error("rawInputObject.className=" + message.getClass().getName());
+                            } catch (Throwable ignore) {
+                            }
                         }
 
                         // We want to track the size of each object even if it is invalid data
                         connection.statistic.addReceivedBytes(size);
 
-                        /*
-                        // First we check the size
-                        boolean exceeds;
-                        if (envelope.getSerializedSize() > MAX_MSG_SIZE_GET_DATA) { // TODO should be datamessage
-                            envelope.getSerializedSize()
-                            exceeds = true;
-                            log.info("size={}; object={}", size, envelope.toString());
-                        } else {
-                            exceeds = size > MAX_MSG_SIZE;
+                        // We want to track the messages also before the checks, so do it early...
+                        if (message instanceof Message) {
+                            connection.statistic.addReceivedMessage(message);
                         }
-                        if (exceeds)
-                            log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, envelope.toString());
-*/
 
-                        // First we check the size
+                        // First we check thel size
                         boolean exceeds;
                         if (message instanceof GetDataResponse) {
                             exceeds = size > MAX_MSG_SIZE_GET_DATA;
@@ -844,29 +832,27 @@ public class Connection implements MessageListener {
 
                         // Then check data throttle limit. Do that for non-message type objects as well,
                         // so that's why we use serializable here.
-                        if (connection.violatesThrottleLimit(null)
+                        if (connection.violatesThrottleLimit(message)
                                 && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
                             return;
 
                         // Check P2P network ID
                         int messageVersion = (int) envelope.getP2PNetworkVersion();
-                        int p2PMessageVersion = Version.getP2PMessageVersion();
-                        if (messageVersion != p2PMessageVersion) {
+                        // TODO this was Version.getP2PMessageVersion();
+                        int p2PMessageVersion = Version.P2P_NETWORK_VERSION;
+                        // TODO this does nothing anymore
+                        if (messageVersion != messageVersion) {
                             log.warn("message.getMessageVersion()=" + messageVersion);
                             log.warn("Version.getP2PMessageVersion()=" + p2PMessageVersion);
                             log.warn("message=" + envelope.toString());
-                            /* TODO
                             reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
                             // We return anyway here independent of the return value of reportInvalidRequest
                             return;
-                            */
                         }
 
                         // TODO no inheritance & is this even needed? We can send unsupported stuff to old nodes
-                        /*
                         if (sharedModel.getSupportedCapabilities() == null && message instanceof SupportedCapabilitiesMessage)
                             sharedModel.setSupportedCapabilities(((SupportedCapabilitiesMessage) message).getSupportedCapabilities());
-                        */
 
                         if (message instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down
