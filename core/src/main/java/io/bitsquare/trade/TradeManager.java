@@ -33,7 +33,7 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.filter.FilterManager;
 import io.bitsquare.p2p.BootstrapListener;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;

@@ -59,8 +59,6 @@ public abstract class PaymentAccountContractData implements Payload {
         return maxTradePeriod;
     }
 
-    abstract public Object toProtoBuf();
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

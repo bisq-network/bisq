@@ -21,22 +21,23 @@ message Envelope {
         GetPeersResponse get_peers_response = 9;
         GetDataResponse get_data_response = 11;
         PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 13;
-        OfferAvailabilityResponse offer_availability_response = 14;
-        RemoveDataMessage remove_data_message = 15;
-        AddDataMessage add_data_message = 16;
-        RemoveMailboxDataMessage remove_mailbox_data_message = 17;
-        DepositTxPublishedMessage deposit_tx_published_message = 18;
-        FinalizePayoutTxRequest finalize_payout_tx_request = 19;
-        DisputeCommunicationMessage dispute_communication_message = 20;
-        OpenNewDisputeMessage open_new_dispute_message = 21;
-        PeerOpenedDisputeMessage peer_opened_dispute_message = 22;
-        DisputeResultMessage dispute_result_message = 23;
-        PeerPublishedPayoutTxMessage peer_published_payout_tx_message = 24;
-        PayDepositRequest pay_deposit_request = 25;
-        PublishDepositTxRequest publish_deposit_tx_request = 26;
-        FiatTransferStartedMessage fiat_transfer_started_message = 27;
-        PayoutTxFinalizedMessage payout_tx_finalized_message = 28;
-        PrivateNotificationMessage private_notification_message = 29;
+        OfferAvailabilityRequest offer_availability_request = 14;
+        OfferAvailabilityResponse offer_availability_response = 15;
+        RemoveDataMessage remove_data_message = 16;
+        AddDataMessage add_data_message = 17;
+        RemoveMailboxDataMessage remove_mailbox_data_message = 18;
+        DepositTxPublishedMessage deposit_tx_published_message = 19;
+        FinalizePayoutTxRequest finalize_payout_tx_request = 20;
+        DisputeCommunicationMessage dispute_communication_message = 21;
+        OpenNewDisputeMessage open_new_dispute_message = 22;
+        PeerOpenedDisputeMessage peer_opened_dispute_message = 23;
+        DisputeResultMessage dispute_result_message = 24;
+        PeerPublishedPayoutTxMessage peer_published_payout_tx_message = 25;
+        PayDepositRequest pay_deposit_request = 26;
+        PublishDepositTxRequest publish_deposit_tx_request = 27;
+        FiatTransferStartedMessage fiat_transfer_started_message = 28;
+        PayoutTxFinalizedMessage payout_tx_finalized_message = 29;
+        PrivateNotificationMessage private_notification_message = 30;
     }
 }
 
@@ -151,6 +152,33 @@ message RemoveMailboxDataMessage {
 }
 // end BroadcastMessage
 
+// Payload interface - not used at the moment! Planned to use in DataSeqAndNumber which is not sent over the wire
+message Payload {
+    oneof message {
+        Attachment attachment = 1;
+        TradeStatistics trade_statistics = 2;
+        Contract contract = 3;
+        Dispute dispute = 4;
+        DisputeResult dispute_result = 5;
+        StoragePayload storage_payload = 6;
+        NodeAddress node_address = 7;
+        PaymentAccountContractData payment_account_contract_data = 8;
+        Peer peer = 9;
+        PrivateNotification private_notification = 10;
+        ProtectedStorageEntry protected_storage_entry = 11;
+        ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 12;
+        PubKeyRing pub_key_ring = 13;
+        RawTransactionInput raw_transaction_input = 14;
+        Offer offer = 15;
+        SealedAndSigned SealedAndSigned = 16;
+    }
+}
+
+message DataAndSeqNrPair {
+    StoragePayload payload = 1;
+    int32 sequence_number =2;
+}
+
 // start storagepayloads
 message StoragePayload {
     oneof message {
@@ -262,39 +290,39 @@ message Offer {
 
     int64 TTL = 1;
     Direction direction = 2;
-    string currencyCode = 3;
-    string paymentMethodName = 4;
-    string countryCode = 5;
-    repeated string acceptedCountryCodes = 6;
-    string bankId = 7;
-    repeated string acceptedBankIds = 8;
-    repeated NodeAddress arbitratorNodeAddresses = 9;
+    string currency_code = 3;
+    string payment_method_name = 4;
+    string country_code = 5;
+    repeated string accepted_country_codes = 6;
+    string bank_id = 7;
+    repeated string accepted_bank_ids = 8;
+    repeated NodeAddress arbitrator_node_addresses = 9;
     string id = 10;
     int64 date = 11;
-    int64 protocolVersion = 12;
-    bool useMarketBasedPrice = 13;
-    int64 fiatPrice = 14;
-    double marketPriceMargin = 15;
+    int64 protocol_version = 12;
+    bool use_market_based_price = 13;
+    int64 fiat_price = 14;
+    double market_price_margin = 15;
     int64 amount = 16;
-    int64 minAmount = 17;
-    NodeAddress offererNodeAddress = 18;
-    PubKeyRing pubKeyRing = 19;
-    string offererPaymentAccountId = 20;
-    string offerFeePaymentTxID = 21;
-    string versionNr = 22;
-    int64 blockHeightAtOfferCreation = 23;
-    int64 txFee = 24;
-    int64 createOfferFee = 25;
-    int64 securityDeposit = 26;
-    int64 maxTradeLimit = 27;
-    int64 maxTradePeriod = 28;
-    bool useAutoClose = 29;
-    bool useReOpenAfterAutoClose = 30;
-    int64 lowerClosePrice = 31;
-    int64 upperClosePrice = 32;
-    bool isPrivateOffer = 33;
-    string hashOfChallenge = 34;
-    map<string, string> extraDataMap = 35;
+    int64 min_amount = 17;
+    NodeAddress offerer_node_address = 18;
+    PubKeyRing pub_key_ring = 19;
+    string offerer_payment_account_id = 20;
+    string offer_fee_payment_tx_i_d = 21;
+    string version_nr = 22;
+    int64 block_height_at_offer_creation = 23;
+    int64 tx_fee = 24;
+    int64 create_offer_fee = 25;
+    int64 security_deposit = 26;
+    int64 max_trade_limit = 27;
+    int64 max_trade_period = 28;
+    bool use_auto_close = 29;
+    bool use_re_open_after_auto_close = 30;
+    int64 lower_close_price = 31;
+    int64 upper_close_price = 32;
+    bool is_private_offer = 33;
+    string hash_of_challenge = 34;
+    map<string, string> extra_data_map = 35;
 }
 
 // stop storagepayloads

@@ -17,7 +17,7 @@
 
 package io.bitsquare.common.crypto;
 
-import io.bitsquare.common.util.Utilities;
+import io.bitsquare.messages.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -28,7 +28,6 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.security.*;
 import java.util.Arrays;
 
@@ -141,15 +140,15 @@ public class Encryption {
     // Symmetric with Hmac
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static byte[] encryptPayloadWithHmac(Serializable object, SecretKey secretKey) throws CryptoException {
-        return encryptPayloadWithHmac(Utilities.serialize(object), secretKey);
+    private static byte[] encryptPayloadWithHmac(Message object, SecretKey secretKey) throws CryptoException {
+        return encryptPayloadWithHmac(object.toProtoBuf().toByteArray(), secretKey);
     }
 
     private static byte[] encryptPayloadWithHmac(byte[] payload, SecretKey secretKey) throws CryptoException {
         return encrypt(getPayloadWithHmac(payload, secretKey), secretKey);
     }
 
-    private static byte[] decryptPayloadWithHmac(byte[] encryptedPayloadWithHmac, SecretKey secretKey) throws CryptoException {
+    public static byte[] decryptPayloadWithHmac(byte[] encryptedPayloadWithHmac, SecretKey secretKey) throws CryptoException {
         byte[] payloadWithHmac = decrypt(encryptedPayloadWithHmac, secretKey);
         String payloadWithHmacAsHex = Hex.toHexString(payloadWithHmac);
         // first part is raw message
@@ -181,7 +180,7 @@ public class Encryption {
         }
     }
 
-    private static SecretKey decryptSecretKey(byte[] encryptedSecretKey, PrivateKey privateKey) throws CryptoException {
+    public static SecretKey decryptSecretKey(byte[] encryptedSecretKey, PrivateKey privateKey) throws CryptoException {
         try {
             Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
             cipher.init(Cipher.UNWRAP_MODE, privateKey);
@@ -204,7 +203,7 @@ public class Encryption {
      * @return A SealedAndSigned object.
      * @throws CryptoException
      */
-    public static SealedAndSigned encryptHybridWithSignature(Serializable payload, KeyPair signatureKeyPair,
+    public static SealedAndSigned encryptHybridWithSignature(Message payload, KeyPair signatureKeyPair,
                                                              PublicKey encryptionPublicKey)
             throws CryptoException {
         // Create a symmetric key
@@ -222,24 +221,6 @@ public class Encryption {
 
         // Pack all together
         return new SealedAndSigned(encryptedSecretKey, encryptedPayloadWithHmac, signature, signatureKeyPair.getPublic());
-    }
-
-    /**
-     * @param sealedAndSigned The sealedAndSigned object.
-     * @param privateKey      The private key for decryption
-     * @return A DecryptedPayloadWithPubKey object.
-     * @throws CryptoException
-     */
-    public static DecryptedDataTuple decryptHybridWithSignature(SealedAndSigned sealedAndSigned, PrivateKey privateKey) throws CryptoException {
-        SecretKey secretKey = decryptSecretKey(sealedAndSigned.encryptedSecretKey, privateKey);
-        boolean isValid = Sig.verify(sealedAndSigned.sigPublicKey,
-                Hash.getHash(sealedAndSigned.encryptedPayloadWithHmac),
-                sealedAndSigned.signature);
-        if (!isValid)
-            throw new CryptoException("Signature verification failed.");
-
-        Serializable decryptedPayload = Utilities.deserialize(decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey));
-        return new DecryptedDataTuple(decryptedPayload, sealedAndSigned.sigPublicKey);
     }
 
 

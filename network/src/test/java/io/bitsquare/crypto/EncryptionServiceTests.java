@@ -24,6 +24,7 @@ import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bitsquare.p2p.peers.keepalive.messages.Ping;
 import io.bitsquare.storage.FileUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
@@ -41,9 +42,12 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.security.cert.CertificateException;
+import java.util.Random;
 import java.util.UUID;
 
+import static io.bitsquare.crypto.EncryptionService.decryptHybridWithSignature;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class EncryptionServiceTests {
     private static final Logger log = LoggerFactory.getLogger(EncryptionServiceTests.class);
@@ -82,6 +86,51 @@ public class EncryptionServiceTests {
         assertEquals(data.data, ((TestMessage) decrypted.message).data);
     }
 
+
+    @Test
+    public void testDecryptHybridWithSignature() {
+        long ts = System.currentTimeMillis();
+        log.trace("start ");
+        for (int i = 0; i < 100; i++) {
+            Ping payload = new Ping(new Random().nextInt(), 10);
+            SealedAndSigned sealedAndSigned = null;
+            try {
+                sealedAndSigned = Encryption.encryptHybridWithSignature(payload,
+                        keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
+            } catch (CryptoException e) {
+                log.error("encryptHybridWithSignature failed");
+                e.printStackTrace();
+                assertTrue(false);
+            }
+            try {
+                DecryptedDataTuple tuple = decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
+                assertEquals(((Ping) tuple.payload).nonce, payload.nonce);
+            } catch (CryptoException e) {
+                log.error("decryptHybridWithSignature failed");
+                e.printStackTrace();
+                assertTrue(false);
+            }
+        }
+        log.trace("took " + (System.currentTimeMillis() - ts) + " ms.");
+    }
+
+    private static class MockMessage implements io.bitsquare.messages.Message {
+        public int nonce;
+
+        public MockMessage(int nonce) {
+            this.nonce = nonce;
+        }
+
+        @Override
+        public int getMessageVersion() {
+            return 0;
+        }
+
+        @Override
+        public Messages.Envelope toProtoBuf() {
+            return Messages.Envelope.newBuilder().setPing(Messages.Ping.newBuilder().setNonce(nonce)).build();
+        }
+    }
 }
 
 final class TestMessage implements MailboxMessage {

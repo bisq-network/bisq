@@ -9,7 +9,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;

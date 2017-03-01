@@ -2,7 +2,7 @@ package io.bitsquare.p2p.network.messages;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 
 public final class CloseConnectionMessage implements Message {
     // That object is sent over the wire, so we need to take care of version compatibility.

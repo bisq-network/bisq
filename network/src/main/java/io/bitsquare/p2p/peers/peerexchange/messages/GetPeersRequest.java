@@ -4,7 +4,7 @@ import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.ProtoBufferMessage;
+import io.bitsquare.messages.ToProtoBuffer;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 import io.bitsquare.p2p.peers.peerexchange.Peer;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class GetPeersRequest extends PeerExchangeMessage implements SendersNodeAddressMessage, SupportedCapabilitiesMessage, ProtoBufferMessage {
+public final class GetPeersRequest extends PeerExchangeMessage implements SendersNodeAddressMessage, SupportedCapabilitiesMessage, ToProtoBuffer {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

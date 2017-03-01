@@ -326,7 +326,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
 
-        return new Offer(offerId,
+        return new Offer(offerId, null,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,
@@ -339,6 +339,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 new ArrayList<>(user.getAcceptedArbitratorAddresses()),
                 paymentAccount.getPaymentMethod().getId(),
                 paymentAccount.getId(),
+                null,
                 countryCode,
                 acceptedCountryCodes,
                 bankId,

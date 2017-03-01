@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.network;
 
 import io.bitsquare.common.UserThread;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleIntegerProperty;

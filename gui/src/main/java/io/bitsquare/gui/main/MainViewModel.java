@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main;
 
 import com.google.inject.Inject;
+import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.messages.alert.Alert;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.messages.alert.PrivateNotification;
@@ -585,7 +586,7 @@ public class MainViewModel implements ViewModel {
                     io.bitsquare.p2p.peers.keepalive.messages.Ping payload = new Ping(1, 1);
                     SealedAndSigned sealedAndSigned = Encryption.encryptHybridWithSignature(payload,
                             keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
-                    DecryptedDataTuple tuple = Encryption.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
+                    DecryptedDataTuple tuple = EncryptionService.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
                     if (tuple.payload instanceof Ping &&
                             ((Ping) tuple.payload).nonce == payload.nonce &&
                             ((Ping) tuple.payload).lastRoundTripTime == payload.lastRoundTripTime)

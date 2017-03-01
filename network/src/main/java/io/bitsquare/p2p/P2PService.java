@@ -15,6 +15,7 @@ import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
+import io.bitsquare.messages.Message;
 import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.network.Socks5ProxyProvider;
 import io.bitsquare.p2p.messaging.*;

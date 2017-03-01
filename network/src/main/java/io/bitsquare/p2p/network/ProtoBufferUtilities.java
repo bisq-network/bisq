@@ -4,11 +4,13 @@ import com.google.protobuf.ByteString;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.crypto.SealedAndSigned;
 import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.messages.Message;
 import io.bitsquare.messages.alert.Alert;
 import io.bitsquare.messages.alert.PrivateNotification;
 import io.bitsquare.messages.alert.PrivateNotificationMessage;
 import io.bitsquare.messages.arbitration.*;
 import io.bitsquare.messages.availability.AvailabilityResult;
+import io.bitsquare.messages.availability.OfferAvailabilityRequest;
 import io.bitsquare.messages.availability.OfferAvailabilityResponse;
 import io.bitsquare.messages.btc.data.RawTransactionInput;
 import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
@@ -20,7 +22,6 @@ import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.trade.payload.Contract;
 import io.bitsquare.messages.trade.protocol.trade.messages.*;
 import io.bitsquare.messages.trade.statistics.payload.TradeStatistics;
-import io.bitsquare.p2p.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.network.messages.CloseConnectionMessage;
@@ -46,6 +47,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -121,6 +123,9 @@ public class ProtoBufferUtilities {
             case OFFER_AVAILABILITY_RESPONSE:
                 result = getOfferAvailabilityResponse(envelope);
                 break;
+            case OFFER_AVAILABILITY_REQUEST:
+                result = getOfferAvailabilityRequest(envelope);
+                break;
             case REMOVE_DATA_MESSAGE:
                 result = getRemoveDataMessage(envelope);
                 break;
@@ -170,6 +175,12 @@ public class ProtoBufferUtilities {
                 log.warn("Unknown message case:{}:{}", envelope.getMessageCase());
         }
         return Optional.ofNullable(result);
+    }
+
+    private static Message getOfferAvailabilityRequest(Messages.Envelope envelope) {
+        Messages.OfferAvailabilityRequest msg = envelope.getOfferAvailabilityRequest();
+        return new OfferAvailabilityRequest(msg.getOfferId(), getPubKeyRing(msg.getPubKeyRing()), msg.getTakersTradePrice());
+
     }
 
     private static Message getPrivateNotificationMessage(Messages.PrivateNotificationMessage privateNotificationMessage) {
@@ -264,7 +275,7 @@ public class ProtoBufferUtilities {
                 contract.getOffererBtcPubKey().toByteArray(), contract.getTakerBtcPubKey().toByteArray());
     }
 
-    private static PaymentAccountContractData getPaymentAccountContractData(Messages.PaymentAccountContractData protoEntry) {
+    public static PaymentAccountContractData getPaymentAccountContractData(Messages.PaymentAccountContractData protoEntry) {
         PaymentAccountContractData result = null;
         switch (protoEntry.getMessageCase()) {
             case ALI_PAY_ACCOUNT_CONTRACT_DATA:
@@ -341,8 +352,7 @@ public class ProtoBufferUtilities {
                         interacETransferAccountContractData.getAnswer());
                 break;
             case O_K_PAY_ACCOUNT_CONTRACT_DATA:
-                result = new OKPayAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
-                        protoEntry.getMaxTradePeriod(), protoEntry.getOKPayAccountContractData().getAccountNr());
+                result = getOkPayAccountContractData(protoEntry);
                 break;
             case PERFECT_MONEY_ACCOUNT_CONTRACT_DATA:
                 result = new PerfectMoneyAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
@@ -364,6 +374,12 @@ public class ProtoBufferUtilities {
         return result;
     }
 
+    @NotNull
+    public static OKPayAccountContractData getOkPayAccountContractData(Messages.PaymentAccountContractData protoEntry) {
+        return new OKPayAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                protoEntry.getMaxTradePeriod(), protoEntry.getOKPayAccountContractData().getAccountNr());
+    }
+
     private static void fillInBankAccountContractData(Messages.PaymentAccountContractData protoEntry, BankAccountContractData bankAccountContractData) {
         Messages.BankAccountContractData bankProto = protoEntry.getCountryBasedPaymentAccountContractData().getBankAccountContractData();
         bankAccountContractData.setHolderName(bankProto.getHolderName());
@@ -383,14 +399,25 @@ public class ProtoBufferUtilities {
         return Fiat.valueOf(currencyCode, tradePrice);
     }
 
-    private static Offer getOffer(Messages.Offer offer) {
+    public static Offer getOffer(Messages.Offer offer) {
         List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddressesList().stream().map(nodeAddress -> getNodeAddress(nodeAddress)).collect(Collectors.toList());
         PriceFeedService priceFeedService = null; // TODO refactor Offer, this should not be passed in the constructor, or we need to inject it in ProtoBufferUtilities
-        return new Offer(offer.getId(), getNodeAddress(offer.getOffererNodeAddress()), getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()),
+        // convert these lists because otherwise when they're empty they are lazyStringArrayList objects and NOT serializable,
+        // which is needed for the P2PStorage getHash() operation
+        List<String> acceptedCountryCodes = offer.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
+        List<String> acceptedBankIds = offer.getAcceptedBankIdsList().stream().collect(Collectors.toList());
+        // TODO PriceFeedService not yet passed in due to not used in the real code.
+        Map<String, String> extraDataMapMap;
+        if(CollectionUtils.isEmpty(offer.getExtraDataMapMap())) {
+            extraDataMapMap = null;
+        } else {
+            extraDataMapMap = offer.getExtraDataMapMap();
+        }
+        return new Offer(offer.getId(), offer.getDate(), getNodeAddress(offer.getOffererNodeAddress()), getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()),
                 offer.getFiatPrice(), offer.getMarketPriceMargin(), offer.getUseMarketBasedPrice(), offer.getAmount(), offer.getMinAmount(), offer.getCurrencyCode(), arbitratorNodeAddresses,
-                offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getCountryCode(), offer.getAcceptedCountryCodesList(), offer.getBankId(), offer.getAcceptedCountryCodesList(), priceFeedService,
+                offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(),offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds, priceFeedService,
                 offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(), offer.getSecurityDeposit(), offer.getMaxTradeLimit(), offer.getMaxTradePeriod(), offer.getUseAutoClose(),
-                offer.getUseReOpenAfterAutoClose(), offer.getLowerClosePrice(), offer.getUpperClosePrice(), offer.getIsPrivateOffer(), offer.getHashOfChallenge(), offer.getExtraDataMapMap());
+                offer.getUseReOpenAfterAutoClose(), offer.getLowerClosePrice(), offer.getUpperClosePrice(), offer.getIsPrivateOffer(), offer.getHashOfChallenge(), extraDataMapMap);
     }
 
     private static Message getDisputeCommunicationMessage(Messages.DisputeCommunicationMessage disputeCommunicationMessage) {
@@ -426,7 +453,7 @@ public class ProtoBufferUtilities {
 
     public static ProtectedStorageEntry getProtectedStorageEntry(Messages.ProtectedStorageEntry protoEntry) {
         StoragePayload storagePayload = getStoragePayload(protoEntry.getStoragePayload());
-        ProtectedStorageEntry storageEntry = new ProtectedStorageEntry(storagePayload,
+        ProtectedStorageEntry storageEntry = new ProtectedStorageEntry(protoEntry.getCreationTimeStamp(), storagePayload,
                 protoEntry.getOwnerPubKeyBytes().toByteArray(), protoEntry.getSequenceNumber(),
                 protoEntry.getSignature().toByteArray());
         return storageEntry;
@@ -505,23 +532,7 @@ public class ProtoBufferUtilities {
                         mbox.getReceiverPubKeyForRemoveOperationBytes().toByteArray());
                 break;
             case OFFER:
-                Messages.Offer offer = protoEntry.getOffer();
-                List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddressesList().stream().map(nodeAddress1 -> getNodeAddress(nodeAddress1)).collect(Collectors.toList());
-                // convert these lists because otherwise when they're empty they are lazyStringArrayList objects and NOT serializable,
-                // which is needed for the P2PStorage getHash() operation
-                List<String> acceptedCountryCodes = offer.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
-                List<String> acceptedBankIds = offer.getAcceptedBankIdsList().stream().collect(Collectors.toList());
-                Map<String, String> extraDataMap = offer.getExtraDataMapMap().entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-                // TODO PriceFeedService not yet passed in due to not used in the real code.
-                storagePayload = new Offer(offer.getId(), getNodeAddress(offer.getOffererNodeAddress()),
-                        getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()), offer.getFiatPrice(),
-                        offer.getMarketPriceMargin(), offer.getUseMarketBasedPrice(), offer.getAmount(), offer.getMinAmount(),
-                        offer.getCurrencyCode(), arbitratorNodeAddresses, offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(),
-                        offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds,
-                        null, offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(),
-                        offer.getSecurityDeposit(), offer.getMaxTradeLimit(), offer.getMaxTradePeriod(), offer.getUseAutoClose(),
-                        offer.getUseReOpenAfterAutoClose(), offer.getLowerClosePrice(), offer.getUpperClosePrice(), offer.getIsPrivateOffer(),
-                        offer.getHashOfChallenge(), extraDataMap);
+                storagePayload = getOffer(protoEntry.getOffer());
                 break;
             default:
                 log.error("Unknown storagepayload:{}", protoEntry.getMessageCase());

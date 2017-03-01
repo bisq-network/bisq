@@ -25,7 +25,7 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.messages.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bitsquare.messages.protocol.availability.tasks.SendOfferAvailabilityRequest;
 import io.bitsquare.messages.util.Validator;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.availability.OfferAvailabilityResponse;

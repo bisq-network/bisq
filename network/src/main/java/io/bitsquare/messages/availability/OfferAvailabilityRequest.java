@@ -62,6 +62,10 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
 
     @Override
     public Messages.Envelope toProtoBuf() {
-        return null;
+        return Messages.Envelope.newBuilder()
+                .setOfferAvailabilityRequest(Messages.OfferAvailabilityRequest.newBuilder()
+                        .setPubKeyRing(pubKeyRing.toProtoBuf())
+                        .setTakersTradePrice(takersTradePrice)
+                        .addAllSupportedCapabilities(supportedCapabilities)).build();
     }
 }

@@ -2,7 +2,7 @@ package io.bitsquare.p2p.mocks;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.storage.payload.ExpirablePayload;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 

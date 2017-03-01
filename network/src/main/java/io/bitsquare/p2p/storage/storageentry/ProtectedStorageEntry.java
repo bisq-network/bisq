@@ -2,11 +2,13 @@ package io.bitsquare.p2p.storage.storageentry;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
+import lombok.EqualsAndHashCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +21,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
+@EqualsAndHashCode
 public class ProtectedStorageEntry implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -42,13 +45,14 @@ public class ProtectedStorageEntry implements Payload {
         this.ownerPubKeyBytes = new X509EncodedKeySpec(this.ownerPubKey.getEncoded()).getEncoded();
     }
 
-    public ProtectedStorageEntry(StoragePayload storagePayload, byte[] ownerPubKeyBytes,
+    public ProtectedStorageEntry(long creationTimeStamp, StoragePayload storagePayload, byte[] ownerPubKeyBytes,
                                  int sequenceNumber, byte[] signature) {
         this.storagePayload = storagePayload;
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
         this.creationTimeStamp = System.currentTimeMillis();
         this.ownerPubKeyBytes = ownerPubKeyBytes;
+        this.creationTimeStamp = creationTimeStamp;
         init();
     }
 
@@ -102,7 +106,7 @@ public class ProtectedStorageEntry implements Payload {
         return (System.currentTimeMillis() - creationTimeStamp) > storagePayload.getTTL();
     }
 
-    public Object toProtoBuf() {
+    public Message toProtoBuf() {
         return Messages.ProtectedStorageEntry.newBuilder().setStoragePayload((Messages.StoragePayload) storagePayload.toProtoBuf())
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes)).setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature)).setCreationTimeStamp(creationTimeStamp).build();
