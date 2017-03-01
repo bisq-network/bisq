@@ -137,7 +137,7 @@ public class Headless {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletsSetup.class).shutDownDone.addListener((ov, o, n) -> {
+                        injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
                             headlessModule.close(injector);
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
