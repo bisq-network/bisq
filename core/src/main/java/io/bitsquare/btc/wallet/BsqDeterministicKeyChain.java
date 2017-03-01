@@ -33,7 +33,7 @@ class BsqDeterministicKeyChain extends DeterministicKeyChain {
 
     // See https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
     // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-    // We use 139 (0x80000000) as coin_type for BSQ 
+    // We use 142 (0x8000008E) as coin_type for BSQ 
     // TODO register
     public static final ImmutableList<ChildNumber> BIP44_BSQ_ACCOUNT_PATH = ImmutableList.of(
             new ChildNumber(44, true),
