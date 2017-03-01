@@ -26,7 +26,7 @@ import javax.annotation.concurrent.Immutable;
 public abstract class OfferMessage implements DirectMessage {
     //TODO add serialVersionUID also in superclasses as changes would break compatibility
     // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
+    private static final long serialVersionUID = Version.getP2PMessageVersion();
 
     private final int messageVersion = Version.getP2PMessageVersion();
     public final String offerId;

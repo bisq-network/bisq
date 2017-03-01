@@ -29,9 +29,11 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import org.bitcoinj.core.Coin;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -47,6 +49,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public final Coin takeOfferFee;
     public final List<RawTransactionInput> rawTransactionInputs;
     public final long changeOutputValue;
+    @Nullable
     public final String changeOutputAddress;
     public final String takerPayoutAddressString;
     public final PubKeyRing takerPubKeyRing;
@@ -63,7 +66,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                              long tradeAmount,
                              long tradePrice,
                              Coin txFee,
-                             Coin takeOfferFee, 
+                             Coin takeOfferFee,
                              List<RawTransactionInput> rawTransactionInputs,
                              long changeOutputValue,
                              String changeOutputAddress,
@@ -163,7 +166,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     @Override
     public Messages.Envelope toProtoBuf() {
         Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
-        return baseEnvelope.setPayDepositRequest(Messages.PayDepositRequest.newBuilder()
+        Messages.PayDepositRequest.Builder builderForValue = Messages.PayDepositRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
@@ -172,7 +175,6 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                 .setTakeOfferFee(Messages.Coin.newBuilder().setValue(takeOfferFee.getValue()))
                 .addAllRawTransactionInputs(rawTransactionInputs.stream().map(rawTransactionInput -> rawTransactionInput.toProtoBuf()).collect(Collectors.toList()))
                 .setChangeOutputValue(changeOutputValue)
-                .setChangeOutputAddress(changeOutputAddress)
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoBuf())
                 .setTakerPaymentAccountContractData((Messages.PaymentAccountContractData) takerPaymentAccountContractData.toProtoBuf())
@@ -181,6 +183,10 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream().map(nodeAddress -> nodeAddress.toProtoBuf()).collect(Collectors.toList()))
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoBuf())
                 .setSenderNodeAddress(senderNodeAddress.toProtoBuf())
-                .setUid(uid)).build();
+                .setUid(uid);
+        if (Objects.nonNull(changeOutputAddress)) {
+            builderForValue.setChangeOutputAddress(changeOutputAddress);
+        }
+        return baseEnvelope.setPayDepositRequest(builderForValue).build();
     }
 }

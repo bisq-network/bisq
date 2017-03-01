@@ -70,7 +70,8 @@ public final class RawTransactionInput implements Payload {
 
     @Override
     public Messages.RawTransactionInput toProtoBuf() {
-        return Messages.RawTransactionInput.newBuilder().setIndex(index)
+        return Messages.RawTransactionInput.newBuilder()
+                .setIndex(index)
                 .setParentTransaction(ByteString.copyFrom(parentTransaction))
                 .setValue(value).build();
     }

@@ -37,6 +37,7 @@ import java.net.URI;
 import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.*;
 
@@ -415,7 +416,10 @@ public class Utilities {
     }
 
     public static String toTruncatedString(Object message, int maxLength) {
-        return StringUtils.abbreviate(message.toString(), maxLength).replace("\n", "");
+        if(Objects.nonNull(message)) {
+            return StringUtils.abbreviate(message.toString(), maxLength).replace("\n", "");
+        }
+        return "NULL";
     }
 
     public static String toTruncatedString(Object message) {

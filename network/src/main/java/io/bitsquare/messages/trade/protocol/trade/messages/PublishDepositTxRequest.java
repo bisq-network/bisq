@@ -84,6 +84,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
                 .setTradeId(tradeId)
                 .setOffererPaymentAccountContractData((Messages.PaymentAccountContractData) offererPaymentAccountContractData.toProtoBuf())
                 .setOffererAccountId(offererAccountId)
+                .setOffererMultiSigPubKey(ByteString.copyFrom(offererMultiSigPubKey))
                 .setOffererContractAsJson(offererContractAsJson)
                 .setOffererContractSignature(offererContractSignature)
                 .setOffererPayoutAddressstring(offererPayoutAddressString)
