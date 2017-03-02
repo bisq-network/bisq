@@ -18,6 +18,8 @@
 package io.bitsquare.messages.trade.offer.payload;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.KeyRing;
@@ -52,10 +54,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.text.DecimalFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -192,9 +191,11 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
+     * no nulls are allowed because protobuffer replaces them with "" on the other side,
+     * meaning it's null here and "" there => not good
      *
      * @param id
-     * @param creationDate date of Offer creation, can be null in which case the current date/time will be used.
+     * @param creationDate               date of Offer creation, can be null in which case the current date/time will be used.
      * @param offererNodeAddress
      * @param pubKeyRing
      * @param direction
@@ -276,11 +277,11 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.arbitratorNodeAddresses = arbitratorNodeAddresses;
         this.paymentMethodName = paymentMethodName;
         this.offererPaymentAccountId = offererPaymentAccountId;
-        this.offerFeePaymentTxID = offerFeePaymentTxID;
-        this.countryCode = countryCode;
-        this.acceptedCountryCodes = acceptedCountryCodes;
-        this.bankId = bankId;
-        this.acceptedBankIds = acceptedBankIds;
+        this.offerFeePaymentTxID = Optional.ofNullable(offerFeePaymentTxID).orElse("");
+        this.countryCode = Optional.ofNullable(countryCode).orElse("");
+        this.acceptedCountryCodes = Optional.ofNullable(acceptedCountryCodes).orElse(Lists.newArrayList());
+        this.bankId = Optional.ofNullable(bankId).orElse("");
+        this.acceptedBankIds = Optional.ofNullable(acceptedBankIds).orElse(Lists.newArrayList());
         this.priceFeedService = priceFeedService;
         this.versionNr = versionNr;
         this.blockHeightAtOfferCreation = blockHeightAtOfferCreation;
@@ -294,16 +295,10 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         this.lowerClosePrice = lowerClosePrice;
         this.upperClosePrice = upperClosePrice;
         this.isPrivateOffer = isPrivateOffer;
-        this.hashOfChallenge = hashOfChallenge;
-        this.extraDataMap = extraDataMap;
-
-        protocolVersion = Version.TRADE_PROTOCOL_VERSION;
-
-        if(creationDate == null) {
-            this.date = new Date().getTime();
-        } else {
-            this.date = creationDate;
-        }
+        this.hashOfChallenge = Optional.ofNullable(hashOfChallenge).orElse("");
+        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
+        this.date = Optional.ofNullable(creationDate).orElse(new Date().getTime());
+        this.protocolVersion = Version.TRADE_PROTOCOL_VERSION;
 
         setState(State.UNDEFINED);
         init();
@@ -716,25 +711,12 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         } else {
             throw new RuntimeException("Offer is in invalid state: offerFeePaymentTxID is not set when adding to P2P network.");
         }
-        if (Objects.nonNull(countryCode)) {
-            offerBuilder.setCountryCode(countryCode);
-        }
-        if (Objects.nonNull(bankId)) {
-            offerBuilder.setBankId(bankId);
-        }
-        if (Objects.nonNull(acceptedCountryCodes)) {
-            offerBuilder.addAllAcceptedCountryCodes(acceptedCountryCodes);
-        }
-        if (Objects.nonNull(getAcceptedBankIds())) {
-            offerBuilder.addAllAcceptedBankIds(getAcceptedBankIds());
-        }
-
-        if (Objects.nonNull(hashOfChallenge)) {
-            offerBuilder.setHashOfChallenge(hashOfChallenge);
-        }
-        if (Objects.nonNull(extraDataMap)) {
-            offerBuilder.putAllExtraDataMap(extraDataMap);
-        }
+        Optional.ofNullable(countryCode).ifPresent(offerBuilder::setCountryCode);
+        Optional.ofNullable(bankId).ifPresent(offerBuilder::setBankId);
+        Optional.ofNullable(acceptedCountryCodes).ifPresent(offerBuilder::addAllAcceptedCountryCodes);
+        Optional.ofNullable(getAcceptedBankIds()).ifPresent(offerBuilder::addAllAcceptedBankIds);
+        Optional.ofNullable(hashOfChallenge).ifPresent(offerBuilder::setHashOfChallenge);
+        Optional.ofNullable(extraDataMap).ifPresent(offerBuilder::putAllExtraDataMap);
 
         return Messages.StoragePayload.newBuilder().setOffer(offerBuilder).build();
     }
