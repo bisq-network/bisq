@@ -90,7 +90,7 @@ public class GUIUtil {
 
     public static void exportAccounts(ArrayList<PaymentAccount> accounts, String fileName, Preferences preferences, Stage stage) {
         if (!accounts.isEmpty()) {
-            String directory = getDirectoryFormChooser(preferences, stage);
+            String directory = getDirectoryFromChooser(preferences, stage);
             Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
             paymentAccountsStorage.initAndGetPersisted(accounts, fileName);
             paymentAccountsStorage.queueUpForSave();
@@ -102,14 +102,14 @@ public class GUIUtil {
 
     public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setInitialDirectory(new File(preferences.getDefaultPath()));
+        fileChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
         fileChooser.setTitle("Select path to " + fileName);
         File file = fileChooser.showOpenDialog(stage.getOwner());
         if (file != null) {
             String path = file.getAbsolutePath();
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
-                preferences.setDefaultPath(directory);
+                preferences.setDirectoryChooserPath(directory);
                 Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
                 ArrayList<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
                 if (persisted != null) {
@@ -162,14 +162,14 @@ public class GUIUtil {
         }
     }
 
-    public static String getDirectoryFormChooser(Preferences preferences, Stage stage) {
+    public static String getDirectoryFromChooser(Preferences preferences, Stage stage) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setInitialDirectory(new File(preferences.getDefaultPath()));
+        directoryChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
         directoryChooser.setTitle("Select export path");
         File dir = directoryChooser.showDialog(stage);
         if (dir != null) {
             String directory = dir.getAbsolutePath();
-            preferences.setDefaultPath(directory);
+            preferences.setDirectoryChooserPath(directory);
             return directory;
         } else {
             return "";

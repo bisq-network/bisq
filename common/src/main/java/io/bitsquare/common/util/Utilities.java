@@ -419,6 +419,14 @@ public class Utilities {
         }
     }
 
+    public static boolean isDirectory(String path) {
+        return new File(path).isDirectory();
+    }
+
+    public static String getSystemHomeDirectory() {
+        return Utilities.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home");
+    }
+
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
         @Override
         public boolean shouldSkipField(FieldAttributes f) {

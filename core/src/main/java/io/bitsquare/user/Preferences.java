@@ -136,7 +136,7 @@ public final class Preferences implements Persistable {
     private String bitcoinNodes = "";
 
     private List<String> ignoreTradersList = new ArrayList<>();
-    private String defaultPath;
+    private String directoryChooserPath;
     private long securityDepositAsLong = Restrictions.DEFAULT_SECURITY_DEPOSIT.value;
 
     // Observable wrappers
@@ -163,10 +163,7 @@ public final class Preferences implements Persistable {
         this.storage = storage;
         this.bitsquareEnvironment = bitsquareEnvironment;
 
-        if (Utilities.isWindows())
-            defaultPath = System.getenv("USERPROFILE");
-        else
-            defaultPath = System.getProperty("user.home");
+        directoryChooserPath = Utilities.getSystemHomeDirectory();
 
         fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
         cryptoCurrencies = new ArrayList<>(cryptoCurrenciesAsObservable);
@@ -257,8 +254,8 @@ public final class Preferences implements Persistable {
             if (persisted.getIgnoreTradersList() != null)
                 ignoreTradersList = persisted.getIgnoreTradersList();
 
-            if (persisted.getDefaultPath() != null)
-                defaultPath = persisted.getDefaultPath();
+            if (persisted.getDirectoryChooserPath() != null)
+                directoryChooserPath = persisted.getDirectoryChooserPath();
 
             securityDepositAsLong = persisted.getSecurityDepositAsLong();
         } else {
@@ -445,8 +442,8 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
-    public void setDefaultPath(String defaultPath) {
-        this.defaultPath = defaultPath;
+    public void setDirectoryChooserPath(String directoryChooserPath) {
+        this.directoryChooserPath = directoryChooserPath;
         storage.queueUpForSave();
     }
 
@@ -550,7 +547,6 @@ public final class Preferences implements Persistable {
         return backupDirectory;
     }
 
-
     public boolean getAutoSelectArbitrators() {
         return autoSelectArbitrators;
     }
@@ -615,8 +611,8 @@ public final class Preferences implements Persistable {
         return ignoreTradersList;
     }
 
-    public String getDefaultPath() {
-        return defaultPath;
+    public String getDirectoryChooserPath() {
+        return directoryChooserPath;
     }
 
     public String getTradeChartsScreenCurrencyCode() {
