@@ -43,10 +43,6 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * WalletService handles all non trade specific wallet and bitcoin related services.
- * It startup the wallet app kit and initialized the wallet.
- */
 public class BtcWalletService extends WalletService {
     private static final Logger log = LoggerFactory.getLogger(BtcWalletService.class);
 
@@ -107,7 +103,7 @@ public class BtcWalletService extends WalletService {
     String getWalletAsString(boolean includePrivKeys) {
         StringBuilder sb = new StringBuilder();
         getAddressEntryListAsImmutableList().stream().forEach(e -> sb.append(e.toString()).append("\n"));
-        return "BitcoinJ wallet:\n" +
+        return "BTC wallet:\n" +
                 wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
                 "Bitsquare address entry list:\n" +
                 sb.toString() +
@@ -325,7 +321,6 @@ public class BtcWalletService extends WalletService {
             return entry;
         }
     }
-
 
     private Optional<AddressEntry> findAddressEntry(String address, AddressEntry.Context context) {
         return getAddressEntryListAsImmutableList().stream()
@@ -773,13 +768,4 @@ public class BtcWalletService extends WalletService {
         sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
         return sendRequest;
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Util
-    ///////////////////////////////////////////////////////////////////////////////////////////
 }

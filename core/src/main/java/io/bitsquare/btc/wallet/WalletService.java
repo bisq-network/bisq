@@ -55,24 +55,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * WalletService handles all non trade specific wallet and bitcoin related services.
- * It startup the wallet app kit and initialized the wallet.
+ * Abstract base class for BTC and BSQ wallet. Provides all non-trade specific functionality.
  */
 public abstract class WalletService {
     private static final Logger log = LoggerFactory.getLogger(WalletService.class);
 
-    protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
-    protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
-    protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
-
     protected final WalletsSetup walletsSetup;
     protected final Preferences preferences;
     protected final FeeService feeService;
-
-    protected final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
     protected final NetworkParameters params;
+    protected final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
+    protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
+    protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
+    protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
     protected Wallet wallet;
     protected KeyParameter aesKey;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -91,7 +89,17 @@ public abstract class WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected Methods
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void shutDown() {
+        if (wallet != null)
+            wallet.removeEventListener(walletEventListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Package scope Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void decryptWallet(@NotNull KeyParameter key) {
@@ -118,19 +126,6 @@ public abstract class WalletService {
 
     abstract String getWalletAsString(boolean includePrivKeys);
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void shutDown() {
-        if (wallet != null)
-            wallet.removeEventListener(walletEventListener);
-    }
-
-    public int getBestChainHeight() {
-        return walletsSetup.getChain().getBestChainHeight();
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -320,6 +315,7 @@ public abstract class WalletService {
         return getMostRecentConfidence(transactionConfidenceList);
     }
 
+    @Nullable
     public TransactionConfidence getConfidenceForTxId(String txId) {
         if (wallet != null) {
             Set<Transaction> transactions = wallet.getTransactions(true);
@@ -433,14 +429,8 @@ public abstract class WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Withdrawal Fee calculation
+    // Empty complete Wallet
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Withdrawal Send
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     public void emptyWallet(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {
@@ -475,6 +465,10 @@ public abstract class WalletService {
 
     public NetworkParameters getParams() {
         return params;
+    }
+
+    public int getBestChainHeight() {
+        return walletsSetup.getChain().getBestChainHeight();
     }
 
 
@@ -561,19 +555,16 @@ public abstract class WalletService {
     // Util
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public static void printTx(String tracePrefix, Transaction tx) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n").append(tracePrefix).append(":").append("\n").append(tx.toString()).append("\n");
-        sb.append("Size: ").append(tx.bitcoinSerialize().length);
-        log.info(sb.toString());
+        log.info("\n" + tracePrefix + ":\n" +
+                tx.toString() + "\n" +
+                "Size: " + tx.bitcoinSerialize().length);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Inner classes
+    // BitsquareWalletEventListener
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     public class BitsquareWalletEventListener extends AbstractWalletEventListener {
         @Override

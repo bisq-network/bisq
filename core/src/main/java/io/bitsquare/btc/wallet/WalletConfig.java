@@ -22,13 +22,14 @@ import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import com.subgraph.orchid.TorClient;
 import io.bitsquare.btc.ProxySocketFactory;
 import org.bitcoinj.core.*;
 import org.bitcoinj.net.BlockingClientManager;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.net.discovery.PeerDiscovery;
+import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.SPVBlockStore;
@@ -50,19 +51,39 @@ import java.net.UnknownHostException;
 import java.nio.channels.FileLock;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 // Derived from WalletAppKit
-// TODO use same seed for both wallets. 
-// TODo add rolling backup for both wallets
+// Does the basic wiring
 public class WalletConfig extends AbstractIdleService {
     private static final Logger log = LoggerFactory.getLogger(WalletConfig.class);
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // WalletFactory
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public interface BitsquareWalletFactory extends WalletProtobufSerializer.WalletFactory {
+        Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup);
+
+        Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isBsqWallet);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private final Context context;
+    private final NetworkParameters params;
+    private final File directory;
     private final String btcWalletFilePrefix;
     private final String bsqWalletFilePrefix;
+    private final Socks5Proxy socks5Proxy;
+    private final BitsquareWalletFactory walletFactory;
+
     private volatile Wallet vBtcWallet;
     private volatile Wallet vBsqWallet;
     private volatile File vBtcWalletFile;
@@ -72,27 +93,27 @@ public class WalletConfig extends AbstractIdleService {
     private int btcWalletLookaheadSize = -1;
     private int bsqWalletLookaheadSize = -1;
 
-    private final NetworkParameters params;
     private volatile BlockChain vChain;
     private volatile BlockStore vStore;
     private volatile PeerGroup vPeerGroup;
-    private final File directory;
     private boolean useAutoSave = true;
     private PeerAddress[] peerAddresses;
     private PeerEventListener downloadListener;
     private boolean autoStop = true;
     private InputStream checkpoints;
     private boolean blockingStartup = true;
-    private boolean useTor = false;
+
     private String userAgent;
     private String version;
-    private BitsquareWalletFactory walletFactory;
     @Nullable
     private PeerDiscovery discovery;
-    private final Context context;
     private long bloomFilterTweak = 0;
     private double bloomFilterFPRate = -1;
-    private Socks5Proxy socks5Proxy;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public WalletConfig(NetworkParameters params, Socks5Proxy socks5Proxy,
                         File directory, String btcWalletFilePrefix,
@@ -104,17 +125,12 @@ public class WalletConfig extends AbstractIdleService {
         this.bsqWalletFilePrefix = bsqWalletFilePrefix;
         this.socks5Proxy = socks5Proxy;
 
-        if (!Utils.isAndroidRuntime()) {
-            InputStream stream = WalletConfig.class.getResourceAsStream("/" + params.getId() + ".checkpoints");
-            if (stream != null)
-                setCheckpoints(stream);
-        }
-
         walletFactory = new BitsquareWalletFactory() {
             @Override
             public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup) {
                 // This is called when we load an existing wallet
                 // We have already the chain here so we can use this to distinguish.
+                //TODO refactor, make it more explicit
                 List<DeterministicKeyChain> deterministicKeyChains = keyChainGroup.getDeterministicKeyChains();
                 if (!deterministicKeyChains.isEmpty() && deterministicKeyChains.get(0) instanceof BsqDeterministicKeyChain)
                     return new BsqWallet(params, keyChainGroup);
@@ -131,43 +147,47 @@ public class WalletConfig extends AbstractIdleService {
                     return new Wallet(params, keyChainGroup);
             }
         };
+
+        String path = null;
+        if (params.equals(MainNetParams.get())) {
+            // Checkpoints are block headers that ship inside our app: for a new user, we pick the last header
+            // in the checkpoints file and then download the rest from the network. It makes things much faster.
+            // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
+            // last months worth or more (takes a few seconds).
+            path = "/wallet/checkpoints";
+        } else if (params.equals(TestNet3Params.get())) {
+            path = "/wallet/checkpoints.testnet";
+        }
+        if (path != null) {
+            try {
+                setCheckpoints(getClass().getResourceAsStream(path));
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.error(e.toString());
+            }
+        }
     }
 
-    public interface BitsquareWalletFactory extends WalletProtobufSerializer.WalletFactory {
-        Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup);
-
-        Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isBsqWallet);
-    }
-
-    public Socks5Proxy getProxy() {
-        return socks5Proxy;
-    }
-
-    private PeerGroup createPeerGroup() throws TimeoutException {
+    private PeerGroup createPeerGroup() {
         // no proxy case.
         if (socks5Proxy == null) {
-            if (useTor) {
-                TorClient torClient = new TorClient();
-                torClient.getConfig().setDataDirectory(directory);
-                return PeerGroup.newWithTor(params, vChain, torClient);
-            } else
-                return new PeerGroup(params, vChain);
+            return new PeerGroup(params, vChain);
+        } else {
+            // proxy case (tor).
+            Proxy proxy = new Proxy(Proxy.Type.SOCKS,
+                    new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
+                            socks5Proxy.getPort()));
+
+            int CONNECT_TIMEOUT_MSEC = 60 * 1000;  // same value used in bitcoinj.
+            ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
+            BlockingClientManager mgr = new BlockingClientManager(proxySocketFactory);
+            PeerGroup peerGroup = new PeerGroup(params, vChain, mgr);
+
+            mgr.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
+            peerGroup.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
+
+            return peerGroup;
         }
-
-        // proxy case.
-        Proxy proxy = new Proxy(Proxy.Type.SOCKS,
-                new InetSocketAddress(socks5Proxy.getInetAddress().getHostName(),
-                        socks5Proxy.getPort()));
-
-        int CONNECT_TIMEOUT_MSEC = 60 * 1000;  // same value used in bitcoinj.
-        ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
-        BlockingClientManager mgr = new BlockingClientManager(proxySocketFactory);
-        PeerGroup peerGroup = new PeerGroup(params, vChain, mgr);
-
-        mgr.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
-        peerGroup.setConnectTimeoutMillis(CONNECT_TIMEOUT_MSEC);
-
-        return peerGroup;
     }
 
 
@@ -224,11 +244,10 @@ public class WalletConfig extends AbstractIdleService {
      * If set, the file is expected to contain a checkpoints file calculated with BuildCheckpoints. It makes initial
      * block sync faster for new users - please refer to the documentation on the bitcoinj website for further details.
      */
-    public WalletConfig setCheckpoints(InputStream checkpoints) {
+    private void setCheckpoints(InputStream checkpoints) {
         if (this.checkpoints != null)
             Utils.closeUnchecked(this.checkpoints);
         this.checkpoints = checkNotNull(checkpoints);
-        return this;
     }
 
     /**
@@ -255,15 +274,6 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     /**
-     * If called, then an embedded Tor client library will be used to connect to the P2P network. The user does not need
-     * any additional software for this: it's all pure Java. As of April 2014 <b>this mode is experimental</b>.
-     */
-    public WalletConfig useTor() {
-        this.useTor = true;
-        return this;
-    }
-
-    /**
      * If a seed is set here then any existing wallet that matches the file name will be renamed to a backup name,
      * the chain file will be deleted, and the wallet object will be instantiated with the given seed instead of
      * a fresh one being created. This is intended for restoring a wallet from the original seed. To implement restore
@@ -271,7 +281,7 @@ public class WalletConfig extends AbstractIdleService {
      * up the new kit. The next time your app starts it should work as normal (that is, don't keep calling this each
      * time).
      */
-    public WalletConfig setSeed(DeterministicSeed seed) {
+    public WalletConfig setSeed(@Nullable DeterministicSeed seed) {
         this.seed = seed;
         return this;
     }
@@ -326,6 +336,13 @@ public class WalletConfig extends AbstractIdleService {
      * or block chain download is started. You can tweak the objects configuration here.
      */
     void onSetupCompleted() {
+        vBtcWallet.allowSpendingUnconfirmedTransactions();
+
+        // TODO do we want that here?
+        vBsqWallet.allowSpendingUnconfirmedTransactions();
+
+        if (params != RegTestParams.get())
+            peerGroup().setMaxConnections(11);
     }
 
     /**
@@ -437,7 +454,7 @@ public class WalletConfig extends AbstractIdleService {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
                 vPeerGroup.setMaxConnections(peerAddresses.length);
                 peerAddresses = null;
-            } else if (params != RegTestParams.get() && !useTor) {
+            } else if (params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
             }
             vChain.addWallet(vBtcWallet);

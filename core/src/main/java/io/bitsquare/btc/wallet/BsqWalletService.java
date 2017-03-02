@@ -44,10 +44,6 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-/**
- * WalletService handles all non trade specific wallet and bitcoin related services.
- * It startup the wallet app kit and initialized the wallet.
- */
 public class BsqWalletService extends WalletService {
     private static final Logger log = LoggerFactory.getLogger(BsqWalletService.class);
 
@@ -67,6 +63,7 @@ public class BsqWalletService extends WalletService {
         super(walletsSetup,
                 preferences,
                 feeService);
+
         this.bsqBlockchainManager = bsqBlockchainManager;
         this.bsqCoinSelector = new BsqCoinSelector(true);
 
@@ -74,7 +71,7 @@ public class BsqWalletService extends WalletService {
             wallet = walletsSetup.getBsqWallet();
             wallet.setCoinSelector(bsqCoinSelector);
 
-            wallet.addEventListener(new BitsquareWalletEventListener());
+            wallet.addEventListener(walletEventListener);
             wallet.addEventListener(new AbstractWalletEventListener() {
                 @Override
                 public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
@@ -125,7 +122,7 @@ public class BsqWalletService extends WalletService {
 
     @Override
     String getWalletAsString(boolean includePrivKeys) {
-        return "BitcoinJ wallet:\n" +
+        return "BSQ wallet:\n" +
                 wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
                 "All pubkeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();

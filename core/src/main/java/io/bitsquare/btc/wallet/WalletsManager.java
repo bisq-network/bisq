@@ -31,6 +31,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 
+// Convenience class to handle methods applied to several wallets
 public class WalletsManager {
     private static final Logger log = LoggerFactory.getLogger(WalletsManager.class);
 
@@ -91,7 +92,6 @@ public class WalletsManager {
     public boolean areWalletsAvailable() {
         return btcWalletService.isWalletReady() && bsqWalletService.isWalletReady();
     }
-
 
     public KeyCrypterScrypt getKeyCrypterScrypt() {
         if (areWalletsEncrypted() && btcWalletService.getKeyCrypter() != null)
