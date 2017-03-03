@@ -24,6 +24,8 @@ public class Version {
     private static final Logger log = LoggerFactory.getLogger(Version.class);
 
     // The application versions
+    // VERSION = 0.5.0.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
+    // Therefore all sub versions start again with 1
     public static final String VERSION = "0.5.0.0";  
 
     // The version no. for the objects sent over the network. A change will break the serialization of old objects.
