@@ -18,6 +18,7 @@
 package io.bitsquare.arbitration.messages;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 
 import java.util.UUID;
@@ -32,6 +33,10 @@ public abstract class DisputeMessage implements MailboxMessage {
         return messageVersion;
     }
 
+    public void dispatch(DisputeManager disputeManager) {
+    	DisputeManager.log.warn("Unsupported message at dispatchMessage.\nmessage=" + toString());	
+    }
+    
     @Override
     public String getUID() {
         return uid;
