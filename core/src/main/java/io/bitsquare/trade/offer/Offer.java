@@ -96,7 +96,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     // Fields for filtering offers
     private final Direction direction;
     private final String currencyCode;
@@ -106,12 +105,10 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final String countryCode;
     @Nullable
     private final ArrayList<String> acceptedCountryCodes;
-
     @Nullable
     private final String bankId;
     @Nullable
     private final ArrayList<String> acceptedBankIds;
-
     private final ArrayList<NodeAddress> arbitratorNodeAddresses;
 
 
@@ -171,6 +168,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     @Nullable
     private HashMap<String, String> extraDataMap;
 
+    // TODO refactor those out of Offer, offer should be pure value object
     @JsonExclude
     transient private State state = State.UNDEFINED;
     // Those state properties are transient and only used at runtime! 
@@ -351,6 +349,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     // Availability
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO refactor those out of Offer, offer should be pure value object
     public void checkOfferAvailability(OfferAvailabilityModel model, ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
         availabilityProtocol = new OfferAvailabilityProtocol(model,
@@ -367,7 +366,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         availabilityProtocol.sendOfferAvailabilityRequest();
     }
 
-
+    // TODO refactor those out of Offer, offer should be pure value object
     public void cancelAvailabilityRequest() {
         if (availabilityProtocol != null)
             availabilityProtocol.cancel();
@@ -376,6 +375,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     public void setPriceFeedService(PriceFeedService priceFeedService) {
         this.priceFeedService = priceFeedService;
@@ -429,7 +429,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return pubKeyRing;
     }
 
-    // TODO refactor
+    // TODO refactor those out of Offer, offer should be pure value object
     @Nullable
     public Fiat getPrice() {
         if (useMarketBasedPrice) {
@@ -467,6 +467,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         }
     }
 
+    // TODO refactor those out of Offer, offer should be pure value object
     public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException, MarketPriceNotAvailableException, IllegalArgumentException {
         checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
         Fiat tradePriceAsFiat = Fiat.valueOf(getCurrencyCode(), takersTradePrice);
