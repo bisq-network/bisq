@@ -11,7 +11,7 @@ apt-get update
 apt-get -y install oracle-java8-installer git maven unzip
 
 # Alternatively you can download the latest jdk and extract it to $JAVA_HOME
-# wget http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.tar.gz --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
+# wget http://download.oracle.com/otn-pub/java/jdk/8u121-b15/jdk-8u121-linux-x64.tar.gz --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
 # If you had an older java version installed set the new java version as default by those commands:
 apt-get install update-alternatives
 # update-alternatives --install /usr/bin/java java $JAVA_HOME/bin/java 2000
