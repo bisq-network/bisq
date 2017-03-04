@@ -222,6 +222,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BSQ", "bisq Token"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
+        result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
@@ -230,7 +231,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("REP", "Augur", true));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
 
         result.sort(TradeCurrency::compareTo);
