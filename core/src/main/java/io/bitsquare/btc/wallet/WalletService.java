@@ -556,9 +556,11 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static void printTx(String tracePrefix, Transaction tx) {
+        int size = tx.bitcoinSerialize().length;
         log.info("\n" + tracePrefix + ":\n" +
-                tx.toString() + "\n" +
-                "Size: " + tx.bitcoinSerialize().length);
+                tx.toString() +
+                "Satoshi/byte: " + tx.getFee().value / size +
+                " (size: " + size + ")");
     }
 
 
