@@ -98,7 +98,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         sendButton = addButtonAfterGroup(root, ++gridRow, "Send BSQ funds");
 
         if (DevFlags.DEV_MODE) {
-            amountInputTextField.setText("0.546"); // 546 is dust limit
+            amountInputTextField.setText("2.730"); // 2730 is dust limit
             receiversAddressInputTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
         }
 
