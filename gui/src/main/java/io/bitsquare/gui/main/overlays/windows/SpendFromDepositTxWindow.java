@@ -54,7 +54,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
 
     public void show() {
         if (headLine == null)
-            headLine = "Emergency MS payout tool";
+            headLine = "Emergency MultiSig payout tool";
 
         width = 1000;
         createGridPane();

@@ -10,6 +10,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.http.HttpClient;
+import io.bitsquare.locale.BSResources;
 import javafx.beans.property.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +37,9 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum Type {
-        ASK("Ask"),
-        BID("Bid"),
-        LAST("Last");
+        ASK(BSResources.get("marketPrice.ask")),
+        BID(BSResources.get("marketPrice.bid")),
+        LAST(BSResources.get("marketPrice.last"));
 
         public final String name;
 

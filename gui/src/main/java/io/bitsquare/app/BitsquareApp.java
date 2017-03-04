@@ -43,6 +43,7 @@ import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.*;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradeManager;
@@ -215,16 +216,16 @@ public class BitsquareApp extends Application {
                 } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
                     if (walletsManager.areWalletsAvailable())
-                        new ShowWalletDataWindow(walletsManager).information("Wallet raw data").show();
+                        new ShowWalletDataWindow(walletsManager).show();
                     else
-                        new Popup<>().warning("The wallet is not initialized yet").show();
+                        new Popup<>().warning(BSResources.get("popup.warning.walletNotInitialized")).show();
                 } else if (new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
                     BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
                     if (walletService.isWalletReady())
-                        new SpendFromDepositTxWindow(tradeWalletService).information("Emergency wallet tool").show();
+                        new SpendFromDepositTxWindow(tradeWalletService).show();
                     else
-                        new Popup<>().warning("The wallet is not initialized yet").show();
+                        new Popup<>().warning(BSResources.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showDebugWindow();
                 }
@@ -256,10 +257,7 @@ public class BitsquareApp extends Application {
                 String osArchitecture = Utilities.getOSArchitecture();
                 // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
                 // Needs at least more testing on different machines...
-                new Popup<>().warning("You probably have the wrong Bitsquare version for this computer.\n" +
-                        "Your computer's architecture is: " + osArchitecture + ".\n" +
-                        "The Bitsquare binary you installed is: " + Utilities.getJVMArchitecture() + ".\n" +
-                        "Please shut down and re-install the correct version (" + osArchitecture + ").")
+                new Popup<>().warning(BSResources.get("popup.warning.wrongVersion"))
                         .show();
             }
 
@@ -326,11 +324,12 @@ public class BitsquareApp extends Application {
                     stop();
             } catch (Throwable throwable2) {
                 // If printStackTrace cause a further exception we don't pass the throwable to the Popup.
+                //TODO check if Dialogs is still wanted?
                 Dialogs.create()
                         .owner(primaryStage)
-                        .title("Error")
+                        .title(BSResources.get("popup.error.title"))
                         .message(throwable.toString())
-                        .masthead("A fatal exception occurred at startup.")
+                        .masthead(BSResources.get("popup.error.fatalStartupException"))
                         .showError();
                 if (doShutDown)
                     stop();
@@ -345,7 +344,7 @@ public class BitsquareApp extends Application {
         Parent parent = (Parent) debugView.getRoot();
         Stage stage = new Stage();
         stage.setScene(new Scene(parent));
-        stage.setTitle("Debug window");
+        stage.setTitle("Debug window"); // Don't translate, just for dev
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(scene.getWindow());
@@ -353,7 +352,6 @@ public class BitsquareApp extends Application {
         stage.setY(primaryStage.getY());
         stage.show();
     }
-
 
     private void showFPSWindow() {
         Label label = new Label();
@@ -363,14 +361,14 @@ public class BitsquareApp extends Application {
                     int n = ticks.size() - 1;
                     return n * 1_000_000_000.0 / (ticks.get(n) - ticks.get(0));
                 })
-                .map(d -> String.format("FPS: %.3f", d))
+                .map(d -> String.format("FPS: %.3f", d)) // Don't translate, just for dev
                 .feedTo(label.textProperty());
 
         Pane root = new StackPane();
         root.getChildren().add(label);
         Stage stage = new Stage();
         stage.setScene(new Scene(root));
-        stage.setTitle("FPS");
+        stage.setTitle("FPS"); // Don't translate, just for dev
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(scene.getWindow());
@@ -384,9 +382,8 @@ public class BitsquareApp extends Application {
     @Override
     public void stop() {
         if (!shutDownRequested) {
-            new Popup().headLine("Shut down in progress")
-                    .backgroundInfo("Shutting down application can take a few seconds.\n" +
-                            "Please don't interrupt this process.")
+            new Popup().headLine(BSResources.get("popup.shutDownInProgress.headline"))
+                    .backgroundInfo(BSResources.get("popup.shutDownInProgress.message"))
                     .hideCloseButton()
                     .useAnimation(false)
                     .show();

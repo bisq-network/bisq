@@ -40,6 +40,7 @@ import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Transitions;
+import io.bitsquare.locale.BSResources;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -126,15 +127,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     protected void initialize() {
         MainView.rootContainer = this.root;
 
-        ToggleButton marketButton = new NavButton(MarketView.class, "Market");
-        ToggleButton buyButton = new NavButton(BuyOfferView.class, "Buy BTC");
-        ToggleButton sellButton = new NavButton(SellOfferView.class, "Sell BTC");
-        ToggleButton portfolioButton = new NavButton(PortfolioView.class, "Portfolio");
-        ToggleButton fundsButton = new NavButton(FundsView.class, "Funds");
-        ToggleButton disputesButton = new NavButton(DisputesView.class, "Support");
-        ToggleButton settingsButton = new NavButton(SettingsView.class, "Settings");
-        ToggleButton accountButton = new NavButton(AccountView.class, "Account");
-        ToggleButton daoButton = new NavButton(DaoView.class, "DAO");
+        ToggleButton marketButton = new NavButton(MarketView.class, BSResources.get("mainView.menu.market"));
+        ToggleButton buyButton = new NavButton(BuyOfferView.class, BSResources.get("mainView.menu.buyBtc"));
+        ToggleButton sellButton = new NavButton(SellOfferView.class, BSResources.get("mainView.menu.sellBtc"));
+        ToggleButton portfolioButton = new NavButton(PortfolioView.class, BSResources.get("mainView.menu.portfolio"));
+        ToggleButton fundsButton = new NavButton(FundsView.class, BSResources.get("mainView.menu.funds"));
+        ToggleButton disputesButton = new NavButton(DisputesView.class, BSResources.get("mainView.menu.support"));
+        ToggleButton settingsButton = new NavButton(SettingsView.class, BSResources.get("mainView.menu.settings"));
+        ToggleButton accountButton = new NavButton(AccountView.class, BSResources.get("mainView.menu.account"));
+        ToggleButton daoButton = new NavButton(DaoView.class, BSResources.get("mainView.menu.dao"));
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane disputesButtonHolder = new Pane(disputesButton);
 
@@ -144,7 +145,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         }};
 
 
-        Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> marketPriceBox = getMarketPriceBox("Market price");
+        Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> marketPriceBox = getMarketPriceBox();
         ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
 
         priceComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -161,19 +162,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         marketPriceBox.second.textProperty().bind(createStringBinding(
                 () -> {
                     PriceFeedService.Type type = model.typeProperty.get();
-                    return type != null ? "Market price (" + type.name + ")" : "";
+                    return type != null ? BSResources.get("mainView.marketPrice", type.name) : "";
                 },
                 model.marketPriceCurrencyCode, model.typeProperty));
         HBox.setMargin(marketPriceBox.third, new Insets(0, 0, 0, 0));
 
 
-        Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox("Available balance");
+        Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox(BSResources.get("mainView.balance.available"));
         availableBalanceBox.first.textProperty().bind(model.availableBalance);
 
-        Tuple2<TextField, VBox> reservedBalanceBox = getBalanceBox("Reserved in offers");
+        Tuple2<TextField, VBox> reservedBalanceBox = getBalanceBox(BSResources.get("mainView.balance.reserved"));
         reservedBalanceBox.first.textProperty().bind(model.reservedBalance);
 
-        Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox("Locked in trades");
+        Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox(BSResources.get("mainView.balance.locked"));
         lockedBalanceBox.first.textProperty().bind(model.lockedBalance);
 
         HBox rightNavPane = new HBox(marketPriceBox.third, availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,
@@ -247,7 +248,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                                 "Please check if you have the latest version of Bitsquare installed.\n" +
                                 "You can download it at:\nhttps://github.com/bitsquare/bitsquare/releases\n\n" +
                                 "Please restart the application.")
-                                .closeButtonText("Shut down")
+                                .closeButtonText(BSResources.get("shared.shutDown"))
                                 .onClose(BitsquareApp.shutDownHandler::run)
                                 .show();
                     } else {
@@ -298,7 +299,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
     }
 
-    private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox(String text) {
+    private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox() {
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
         priceComboBox.setVisibleRowCount(20);
         priceComboBox.setMaxWidth(220);
@@ -310,7 +311,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
 
-        Label label = new Label(text);
+        Label label = new Label();
         label.setId("nav-balance-label");
         label.setPadding(new Insets(0, 0, 0, 2));
 
