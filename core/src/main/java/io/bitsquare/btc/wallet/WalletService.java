@@ -559,7 +559,7 @@ public abstract class WalletService {
         int size = tx.bitcoinSerialize().length;
         log.info("\n" + tracePrefix + ":\n" +
                 tx.toString() +
-                "Satoshi/byte: " + tx.getFee().value / size +
+                "Satoshi/byte: " + (tx.getFee() != null ? tx.getFee().value / size : "No fee set yet") +
                 " (size: " + size + ")");
     }
 
