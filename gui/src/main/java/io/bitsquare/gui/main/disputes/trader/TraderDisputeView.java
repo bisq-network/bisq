@@ -38,6 +38,7 @@ import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.TableGroupHeadline;
+import io.bitsquare.gui.main.disputes.arbitrator.ArbitratorDisputeView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.ContractWindow;
 import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
@@ -615,6 +616,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             inputTextArea = new TextArea();
             inputTextArea.setPrefHeight(70);
             inputTextArea.setWrapText(true);
+            if (!(this instanceof ArbitratorDisputeView))
+                inputTextArea.setPromptText("Please enter here your message to the arbitrator");
 
             sendButton = new Button("Send");
             sendButton.setDefaultButton(true);
