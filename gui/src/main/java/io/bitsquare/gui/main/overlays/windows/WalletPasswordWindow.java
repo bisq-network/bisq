@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Splitter;
-import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
@@ -376,8 +375,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
                     new Popup()
                             .feedback("Wallet restored successfully with the new seed words.\n\n" +
                                     "You need to shut down and restart the application.")
-                            .closeButtonText("Shut down")
-                            .onClose(BitsquareApp.shutDownHandler::run)
+                            .useShutDownButton()
                             .show();
                 }),
                 throwable -> UserThread.execute(() -> {

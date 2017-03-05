@@ -26,7 +26,6 @@ import io.bitsquare.gui.common.view.CachingViewLoader;
 import io.bitsquare.gui.common.view.ViewFactory;
 import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
-import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BsqFormatter;
@@ -71,6 +70,6 @@ public class GuiModule extends AppModule {
 
         bind(Stage.class).toInstance(primaryStage);
 
-        bindConstant().annotatedWith(Names.named(MainView.TITLE_KEY)).to(env.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+        bindConstant().annotatedWith(Names.named(AppOptionKeys.APP_NAME_KEY)).to(env.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
     }
 }

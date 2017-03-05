@@ -30,6 +30,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.offer.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -318,7 +319,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                     if (offerListItem.offer.getPrice() == null) {
                                         this.offer = offerListItem.offer;
                                         model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
-                                        setText("N/A");
+                                        setText(Res.get("shared.na"));
                                     } else {
                                         setText(formatter.formatPrice(offerListItem.offer.getPrice()));
                                     }
@@ -363,7 +364,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                     if (offer.getPrice() == null) {
                                         this.offer = offerListItem.offer;
                                         model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
-                                        setText("N/A");
+                                        setText(Res.get("shared.na"));
                                     } else {
                                         setText(formatter.formatVolume(offer.getOfferVolume()));
                                     }

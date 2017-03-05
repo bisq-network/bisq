@@ -339,7 +339,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     "It will be refunded to you after the trade has successfully completed.")
                     .actionButtonText("Visit FAQ web page")
                     .onAction(() -> GUIUtil.openWebPage("https://bitsquare.io/faq#6"))
-                    .closeButtonText("I understand")
+                    .useIUnderstandButton()
                     .dontShowAgainId(key, preferences)
                     .show();
 

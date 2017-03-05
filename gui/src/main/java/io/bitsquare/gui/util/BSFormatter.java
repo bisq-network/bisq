@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.util;
 
-import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
@@ -201,7 +201,7 @@ public class BSFormatter {
                 return "N/A " + fiat.getCurrencyCode();
             }
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
@@ -214,7 +214,7 @@ public class BSFormatter {
                 return "N/A " + fiat.getCurrencyCode();
             }
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
@@ -312,7 +312,7 @@ public class BSFormatter {
             } else
                 return formatFiat(fiat);
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
@@ -513,20 +513,7 @@ public class BSFormatter {
 
 
     public String booleanToYesNo(boolean value) {
-        return value ? "Yes" : "No";
-    }
-
-    public String formatBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
-        switch (bitcoinNetwork) {
-            case MAINNET:
-                return "Mainnet";
-            case TESTNET:
-                return "Testnet";
-            case REGTEST:
-                return "Regtest";
-            default:
-                return "";
-        }
+        return value ? Res.get("shared.yes") : Res.get("shared.no");
     }
 
     public String getDirectionBothSides(Offer.Direction direction, String currencyCode) {

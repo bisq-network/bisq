@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.account.content.seedwords;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.common.UserThread;
@@ -260,8 +259,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                     new Popup()
                             .feedback("Wallets restored successfully with the new seed words.\n\n" +
                                     "You need to shut down and restart the application.")
-                            .closeButtonText("Shut down")
-                            .onClose(BitsquareApp.shutDownHandler::run).show();
+                            .useShutDownButton();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());

@@ -38,7 +38,6 @@ import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.MainViewModel;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.*;
@@ -257,20 +256,13 @@ public class BitsquareApp extends Application {
                 String osArchitecture = Utilities.getOSArchitecture();
                 // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
                 // Needs at least more testing on different machines...
-                new Popup<>().warning(Res.get("popup.warning.wrongVersion"))
+                new Popup<>().warning(Res.get("popup.warning.wrongVersion", osArchitecture, Utilities.getJVMArchitecture(), osArchitecture))
                         .show();
             }
-
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
-
-        } catch (
-                Throwable throwable
-                )
-
-        {
+        } catch (Throwable throwable) {
             showErrorPopup(throwable, false);
         }
-
     }
 
     private void showSendAlertMessagePopup() {
@@ -327,7 +319,7 @@ public class BitsquareApp extends Application {
                 //TODO check if Dialogs is still wanted?
                 Dialogs.create()
                         .owner(primaryStage)
-                        .title(Res.get("popup.error.title"))
+                        .title(Res.get("shared.error"))
                         .message(throwable.toString())
                         .masthead(Res.get("popup.error.fatalStartupException"))
                         .showError();
@@ -379,14 +371,16 @@ public class BitsquareApp extends Application {
         stage.show();
     }
 
+    @SuppressWarnings("CodeBlock2Expr")
     @Override
     public void stop() {
         if (!shutDownRequested) {
             new Popup().headLine(Res.get("popup.shutDownInProgress.headline"))
-                    .backgroundInfo(Res.get("popup.shutDownInProgress.message"))
+                    .backgroundInfo(Res.get("popup.shutDownInProgress.msg"))
                     .hideCloseButton()
                     .useAnimation(false)
                     .show();
+            //noinspection CodeBlock2Expr
             UserThread.runAfter(() -> {
                 gracefulShutDown(() -> {
                     log.debug("App shutdown complete");
@@ -402,8 +396,8 @@ public class BitsquareApp extends Application {
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
-                injector.getInstance(MainViewModel.class).shutDown();
                 injector.getInstance(TradeManager.class).shutDown();
+                //noinspection CodeBlock2Expr
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {

@@ -18,8 +18,10 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.AppOptionKeys;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.Version;
 import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
@@ -54,7 +56,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -63,8 +64,6 @@ import static javafx.scene.layout.AnchorPane.*;
 @FxmlView
 public class MainView extends InitializableView<StackPane, MainViewModel> {
     private static final Logger log = LoggerFactory.getLogger(MainView.class);
-
-    public static final String TITLE_KEY = "viewTitle";
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -99,7 +98,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private static Transitions transitions;
-    private BSFormatter formatter;
+    private final BitsquareEnvironment environment;
+    private final BSFormatter formatter;
     private ChangeListener<String> walletServiceErrorMsgListener;
     private ChangeListener<String> btcSyncIconIdListener;
     private ChangeListener<String> splashP2PNetworkErrorMsgListener;
@@ -113,12 +113,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
     private static StackPane rootContainer;
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
-                    BSFormatter formatter, @Named(MainView.TITLE_KEY) String title) {
+                    BitsquareEnvironment environment, BSFormatter formatter) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.environment = environment;
         this.formatter = formatter;
         MainView.transitions = transitions;
     }
@@ -151,12 +153,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         priceComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             model.setPriceFeedComboBoxItem(newValue);
         });
-        ChangeListener<PriceFeedComboBoxItem> selectedPriceFeedItemListender = (observable, oldValue, newValue) -> {
+        ChangeListener<PriceFeedComboBoxItem> selectedPriceFeedItemListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
                 priceComboBox.getSelectionModel().select(newValue);
 
         };
-        model.selectedPriceFeedComboBoxItemProperty.addListener(selectedPriceFeedItemListender);
+        model.selectedPriceFeedComboBoxItemProperty.addListener(selectedPriceFeedItemListener);
         priceComboBox.setItems(model.priceFeedComboBoxItems);
 
         marketPriceBox.second.textProperty().bind(createStringBinding(
@@ -239,17 +241,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 if (!persistedFilesCorrupted.isEmpty()) {
                     if (persistedFilesCorrupted.size() > 1 || !persistedFilesCorrupted.get(0).equals("Navigation")) {
                         // show warning that some files has been corrupted
-                        new Popup().warning("We detected incompatible data base files!\n\n" +
-                                "Those database file(s) are not compatible with our current code base:" +
-                                "\n" + persistedFilesCorrupted.toString() +
-                                "\n\nWe made a backup of the corrupted file(s) and applied the default values to a new " +
-                                "database version." +
-                                "\n\nThe backup is located at:\n[you local app data directory]/db/backup_of_corrupted_data.\n\n" +
-                                "Please check if you have the latest version of Bitsquare installed.\n" +
-                                "You can download it at:\nhttps://github.com/bitsquare/bitsquare/releases\n\n" +
-                                "Please restart the application.")
-                                .closeButtonText(Res.get("shared.shutDown"))
-                                .onClose(BitsquareApp.shutDownHandler::run)
+                        new Popup()
+                                .warning(Res.get("popup.warning.incompatibleDB",
+                                        persistedFilesCorrupted.toString(),
+                                        environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
+                                .useShutDownButton()
                                 .show();
                     } else {
                         log.debug("We detected incompatible data base file for Navigation. That is a minor issue happening with refactoring of UI classes " +
@@ -328,9 +324,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.setOnMouseEntered(e -> {
-            btcAverageIconButton.setTooltip(new Tooltip("Market price is provided by https://bitcoinaverage.com\n" +
-                    "Last update: " + formatter.formatTime(model.priceFeedService.getLastRequestTimeStampBtcAverage())));
-        });
+                    String res = Res.get("mainView.marketPrice.tooltip",
+                            "https://bitcoinaverage.com",
+                            "",
+                            formatter.formatTime(model.priceFeedService.getLastRequestTimeStampBtcAverage()));
+                    btcAverageIconButton.setTooltip(
+                            new Tooltip(res)
+                    );
+                }
+        );
 
         final ImageView poloniexIcon = new ImageView();
         poloniexIcon.setId("poloniex");
@@ -345,9 +347,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.setOnMouseEntered(e -> {
-            poloniexIconButton.setTooltip(new Tooltip("Market price is provided by https://poloniex.com.\n" +
-                    "If the altcoin is not available at Poloniex we use https://coinmarketcap.com\n" +
-                    "Last update: " + formatter.formatTime(model.priceFeedService.getLastRequestTimeStampPoloniex())));
+            String altcoinExtra = Res.get("mainView.marketPrice.tooltip.altcoinExtra");
+            String res = Res.get("mainView.marketPrice.tooltip",
+                    "https://poloniex.com",
+                    altcoinExtra,
+                    formatter.formatTime(model.priceFeedService.getLastRequestTimeStampPoloniex()));
+            poloniexIconButton.setTooltip(
+                    new Tooltip(res)
+            );
         });
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -379,9 +386,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         // createBitcoinInfoBox
         btcSplashInfo = new Label();
         btcSplashInfo.textProperty().bind(model.btcInfo);
-        walletServiceErrorMsgListener = (ov, oldValue, newValue) -> {
-            btcSplashInfo.setId("splash-error-state-msg");
-        };
+        walletServiceErrorMsgListener = (ov, oldValue, newValue) -> btcSplashInfo.setId("splash-error-state-msg");
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
 
         btcSyncIndicator = new ProgressBar();
@@ -526,7 +531,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         versionLabel.setId("footer-pane");
         versionLabel.setTextAlignment(TextAlignment.CENTER);
         versionLabel.setAlignment(Pos.BASELINE_CENTER);
-        versionLabel.setText(model.version);
+        versionLabel.setText("v" + Version.VERSION);
         root.widthProperty().addListener((ov, oldValue, newValue) -> {
             versionLabel.setLayoutX(((double) newValue - versionLabel.getWidth()) / 2);
         });

@@ -40,9 +40,6 @@ public class Res {
     }
 
     public static String get(String key) {
-        if (key == null)
-            return "";
-
         try {
             return Res.getResourceBundle().getString(key);
         } catch (MissingResourceException e) {

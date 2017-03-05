@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.overlays;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
@@ -221,7 +222,7 @@ public abstract class Overlay<T extends Overlay> {
     public T notification(String message) {
         type = Type.Notification;
         if (headLine == null)
-            this.headLine = "Notification";
+            this.headLine = Res.get("popup.headline.notification");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -230,7 +231,7 @@ public abstract class Overlay<T extends Overlay> {
     public T instruction(String message) {
         type = Type.Instruction;
         if (headLine == null)
-            this.headLine = "Please note:";
+            this.headLine = Res.get("popup.headline.instruction");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -239,7 +240,7 @@ public abstract class Overlay<T extends Overlay> {
     public T attention(String message) {
         type = Type.Attention;
         if (headLine == null)
-            this.headLine = "Attention";
+            this.headLine = Res.get("popup.headline.attention");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -248,7 +249,7 @@ public abstract class Overlay<T extends Overlay> {
     public T backgroundInfo(String message) {
         type = Type.BackgroundInfo;
         if (headLine == null)
-            this.headLine = "Background information";
+            this.headLine = Res.get("popup.headline.backgroundInfo");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -257,7 +258,7 @@ public abstract class Overlay<T extends Overlay> {
     public T feedback(String message) {
         type = Type.Feedback;
         if (headLine == null)
-            this.headLine = "Completed";
+            this.headLine = Res.get("popup.headline.feedback");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -266,7 +267,7 @@ public abstract class Overlay<T extends Overlay> {
     public T confirmation(String message) {
         type = Type.Confirmation;
         if (headLine == null)
-            this.headLine = "Confirmation";
+            this.headLine = Res.get("popup.headline.confirmation");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -275,7 +276,7 @@ public abstract class Overlay<T extends Overlay> {
     public T information(String message) {
         type = Type.Information;
         if (headLine == null)
-            this.headLine = "Information";
+            this.headLine = Res.get("popup.headline.information");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -285,7 +286,7 @@ public abstract class Overlay<T extends Overlay> {
         type = Type.Warning;
 
         if (headLine == null)
-            this.headLine = "Warning";
+            this.headLine = Res.get("popup.headline.warning");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -295,7 +296,7 @@ public abstract class Overlay<T extends Overlay> {
         type = Type.Error;
         showReportErrorButtons();
         if (headLine == null)
-            this.headLine = "Error";
+            this.headLine = Res.get("popup.headline.error");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -317,8 +318,26 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
+    public T useReportBugButton() {
+        this.closeButtonText = Res.get("shared.reportBug");
+        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"));
+        return (T) this;
+    }
+
+    public T useIUnderstandButton() {
+        this.closeButtonText = Res.get("shared.iUnderstand");
+        return (T) this;
+    }
+
+
     public T actionButtonText(String actionButtonText) {
         this.actionButtonText = actionButtonText;
+        return (T) this;
+    }
+
+    public T useShutDownButton() {
+        this.actionButtonText = Res.get("shared.shutDown");
+        this.actionHandlerOptional = Optional.of(BitsquareApp.shutDownHandler::run);
         return (T) this;
     }
 

@@ -340,7 +340,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     "Be sure that you have standby mode deactivated as that would disconnect your client from the network (standby of the monitor is not a problem).")
                     .actionButtonText("Visit FAQ web page")
                     .onAction(() -> GUIUtil.openWebPage("https://bitsquare.io/faq#6"))
-                    .closeButtonText("I understand")
+                    .useIUnderstandButton()
                     .dontShowAgainId(key, preferences)
                     .show();
 

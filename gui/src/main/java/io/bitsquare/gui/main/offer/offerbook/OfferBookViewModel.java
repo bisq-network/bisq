@@ -275,7 +275,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             else
                 return formatter.formatPrice(price) + postFix;
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
@@ -290,7 +290,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             else
                 return formatter.formatMinVolumeAndVolume(offer) + postFix;
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 

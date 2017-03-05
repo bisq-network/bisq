@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.TradeSubView;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
@@ -251,7 +252,7 @@ public abstract class TradeStepView extends AnchorPane {
 
     protected void setWarningHeadline() {
         if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText("Warning");
+            notificationGroup.titledGroupBg.setText(Res.get("shared.warning"));
         }
     }
 

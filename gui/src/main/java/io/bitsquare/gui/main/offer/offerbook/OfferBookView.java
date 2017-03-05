@@ -533,7 +533,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (item.getOffer().getPrice() == null) {
                                         this.offerBookListItem = item;
                                         model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
-                                        setText("N/A");
+                                        setText(Res.get("shared.na"));
                                     } else {
                                         setText(model.getPrice(item));
                                     }
@@ -582,7 +582,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (item.getOffer().getPrice() == null) {
                                         this.offerBookListItem = item;
                                         model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
-                                        setText("N/A");
+                                        setText(Res.get("shared.na"));
                                     } else {
                                         setText(model.getVolume(item));
                                     }

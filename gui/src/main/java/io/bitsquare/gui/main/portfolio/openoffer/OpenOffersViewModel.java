@@ -23,6 +23,7 @@ import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -70,7 +71,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
                 postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
             return formatter.formatPrice(price) + postFix;
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 

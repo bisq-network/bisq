@@ -81,7 +81,7 @@ public class GUIUtil {
                     "You can check out the currently recommended fees at: https://bitcoinfees.21.co")
                     .dontShowAgainId(key, Preferences.INSTANCE)
                     .onClose(runnable::run)
-                    .closeButtonText("I understand")
+                    .useIUnderstandButton()
                     .show();
         } else {
             runnable.run();

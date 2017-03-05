@@ -46,6 +46,7 @@ import io.bitsquare.gui.main.overlays.windows.SendPrivateNotificationWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Connection;
@@ -1116,9 +1117,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (buyerNodeAddress != null)
                 return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + disputeManager.getNrOfDisputes(true, contract) + ")";
             else
-                return "N/A";
+                return Res.get("shared.na");
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
@@ -1129,9 +1130,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (sellerNodeAddress != null)
                 return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + disputeManager.getNrOfDisputes(false, contract) + ")";
             else
-                return "N/A";
+                return Res.get("shared.na");
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
