@@ -26,6 +26,7 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.storage.Storage;
@@ -183,9 +184,9 @@ public class GUIUtil {
                 TradeCurrency tradeCurrency = item.tradeCurrency;
                 String code = tradeCurrency.getCode();
                 if (code.equals(GUIUtil.SHOW_ALL_FLAG))
-                    return "▶ Show all";
+                    return "▶ " + Res.get("list.currency.showAll");
                 else if (code.equals(GUIUtil.EDIT_FLAG))
-                    return "▼ Edit currency list";
+                    return "▼ " + Res.get("list.currency.editList");
                 else {
                     String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
                     if (preferences.getSortMarketCurrenciesNumerically())

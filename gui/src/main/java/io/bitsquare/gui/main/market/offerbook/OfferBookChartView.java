@@ -90,6 +90,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, BSFormatter formatter) {
         super(model);
@@ -107,10 +108,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         };
 
         currencyComboBox = new ComboBox<>();
-        currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("offers", model.preferences));
+        currencyComboBox.setPromptText(Res.get("list.currency.select"));
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.offers"), model.preferences));
 
-        Label currencyLabel = new Label("Currency:");
+        Label currencyLabel = new Label(Res.get("label.currency"));
         HBox currencyHBox = new HBox();
         currencyHBox.setSpacing(5);
         currencyHBox.setPadding(new Insets(5, -20, -5, 20));
@@ -135,8 +136,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         bottomHBox.setAlignment(Pos.CENTER);
         HBox.setHgrow(tupleBuy.second, Priority.ALWAYS);
         HBox.setHgrow(tupleSell.second, Priority.ALWAYS);
-        tupleBuy.second.setUserData("BUY");
-        tupleSell.second.setUserData("SELL");
+        tupleBuy.second.setUserData(Offer.Direction.BUY.name());
+        tupleSell.second.setUserData(Offer.Direction.SELL.name());
         bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
         root.getChildren().addAll(currencyHBox, areaChart, bottomHBox);
@@ -171,8 +172,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tradeCurrencySubscriber = EasyBind.subscribe(model.selectedTradeCurrencyProperty,
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
-                    areaChart.setTitle("Offer book for " + formatter.getCurrencyNameAndCurrencyPair(code));
-                    volumeColumnLabel.set("Amount in " + code);
+                    areaChart.setTitle(Res.get("market.offerBook.chart.title", formatter.getCurrencyNameAndCurrencyPair(code)));
+                    volumeColumnLabel.set(Res.get("table.column.amount.header", code));
                     xAxis.setTickLabelFormatter(new StringConverter<Number>() {
                         @Override
                         public String toString(Number object) {
@@ -195,30 +196,31 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     });
 
                     if (CurrencyUtil.isCryptoCurrency(code)) {
-                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals("BUY")) {
+                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(Offer.Direction.BUY.name())) {
                             bottomHBox.getChildren().get(0).toFront();
                             reverseTableColumns();
                         }
 
-                        buyOfferHeaderLabel.setText("Offers to sell " + code + " for BTC");
-                        buyOfferButton.setText("I want to buy " + code + " (sell BTC)");
+                        buyOfferHeaderLabel.setText(Res.get("market.offerBook.buyOfferHeaderLabel", code, "BTC"));
+                        buyOfferButton.setText(Res.get("market.offerBook.buyOfferButton", code, "BTC"));
 
-                        sellOfferHeaderLabel.setText("Offers to buy " + code + " with BTC");
-                        sellOfferButton.setText("I want to sell " + code + " (buy BTC)");
+                        sellOfferHeaderLabel.setText(Res.get("market.offerBook.sellOfferHeaderLabel", code, "BTC"));
+                        sellOfferButton.setText(Res.get("market.offerBook.sellOfferButton", code, "BTC"));
 
-                        priceColumnLabel.set("Price in BTC");
+                        priceColumnLabel.set(Res.get("table.column.price.header", "BTC"));
                     } else {
-                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals("SELL")) {
+                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(Offer.Direction.SELL.name())) {
                             bottomHBox.getChildren().get(0).toFront();
                             reverseTableColumns();
                         }
-                        buyOfferHeaderLabel.setText("Offers to buy BTC with " + code);
-                        buyOfferButton.setText("I want to sell BTC for " + code);
 
-                        sellOfferHeaderLabel.setText("Offers to sell BTC for " + code);
-                        sellOfferButton.setText("I want to buy BTC with " + code);
+                        buyOfferHeaderLabel.setText(Res.get("market.offerBook.buyOfferHeaderLabel", "BTC", code));
+                        buyOfferButton.setText(Res.get("market.offerBook.buyOfferButton", "BTC", code));
 
-                        priceColumnLabel.set("Price in " + code);
+                        sellOfferHeaderLabel.setText(Res.get("market.offerBook.sellOfferHeaderLabel", "BTC", code));
+                        sellOfferButton.setText(Res.get("market.offerBook.sellOfferButton", "BTC", code));
+
+                        priceColumnLabel.set(Res.get("table.column.price.header", code));
                     }
                     xAxis.setLabel(formatter.getPriceWithCurrencyCode(code));
 
@@ -261,7 +263,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(false);
         yAxis.setAutoRanging(true);
-        yAxis.setLabel("Amount in BTC");
+        yAxis.setLabel(Res.get("chart.yAxis.amount.label", "BTC"));
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));
 
         seriesBuy = new XYChart.Series<>();
@@ -287,13 +289,13 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(Offer.Direction direction) {
         TableView<OfferListItem> tableView = new TableView<>();
         tableView.setMinHeight(109);
-        tableView.setMinWidth(480); //530
+        tableView.setMinWidth(480);
 
         // price
         TableColumn<OfferListItem, OfferListItem> priceColumn = new TableColumn<>();
         priceColumn.textProperty().bind(priceColumnLabel);
-        priceColumn.setMinWidth(115); //130
-        priceColumn.setMaxWidth(115); //130
+        priceColumn.setMinWidth(115);
+        priceColumn.setMaxWidth(115);
         priceColumn.setSortable(false);
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
@@ -302,7 +304,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<OfferListItem, OfferListItem>() {
                             private Offer offer;
-                            ChangeListener<Number> listener = new ChangeListener<Number>() {
+                            final ChangeListener<Number> listener = new ChangeListener<Number>() {
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
@@ -336,7 +338,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         // volume
         TableColumn<OfferListItem, OfferListItem> volumeColumn = new TableColumn<>();
-        volumeColumn.setMinWidth(115); //125
+        volumeColumn.setMinWidth(115);
         volumeColumn.setSortable(false);
         volumeColumn.textProperty().bind(volumeColumnLabel);
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -346,7 +348,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem, OfferListItem> column) {
                         return new TableCell<OfferListItem, OfferListItem>() {
                             private Offer offer;
-                            ChangeListener<Number> listener = new ChangeListener<Number>() {
+                            final ChangeListener<Number> listener = new ChangeListener<Number>() {
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
@@ -380,8 +382,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 });
 
         // amount
-        TableColumn<OfferListItem, OfferListItem> amountColumn = new TableColumn<>("Amount in BTC");
-        amountColumn.setMinWidth(115); //125
+        TableColumn<OfferListItem, OfferListItem> amountColumn = new TableColumn<>(Res.get("table.column.amount.header", "BTC"));
+        amountColumn.setMinWidth(115);
         amountColumn.setSortable(false);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
@@ -402,8 +404,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 });
 
         // accumulated
-        TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new TableColumn<>("Sum in BTC");
-        accumulatedColumn.setMinWidth(100);//130
+        TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new TableColumn<>(Res.get("table.column.sum.header", "BTC"));
+        accumulatedColumn.setMinWidth(100);
         accumulatedColumn.setSortable(false);
         accumulatedColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         accumulatedColumn.setCellFactory(
@@ -436,7 +438,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         }
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label("Currently there are no offers available");
+        Label placeholder = new Label(Res.get("table.placeholder", Res.get("shared.offers")));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
@@ -450,7 +452,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
         button.setGraphic(iconView);
         button.setGraphicTextGap(10);
-        button.setText(isSellOffer ? "I want to buy bitcoin" : "I want to sell bitcoin");
+        button.setText(isSellOffer ? Res.get("button.buy") : Res.get("button.sell"));
         button.setMinHeight(40);
         button.setId(isSellOffer ? "buy-button-big" : "sell-button-big");
         button.setOnAction(e -> {

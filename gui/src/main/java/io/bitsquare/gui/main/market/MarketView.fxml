@@ -25,7 +25,7 @@
          AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="chartsTab" text="Offer book" closable="false"/>
-    <Tab fx:id="statisticsTab" text="Spreads" closable="false"/>
-    <Tab fx:id="tradesTab" text="Trades" closable="false"/>
+    <Tab fx:id="offerBookTab" closable="false"/>
+    <Tab fx:id="spreadTab" closable="false"/>
+    <Tab fx:id="tradesTab" closable="false"/>
 </TabPane>
