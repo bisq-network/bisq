@@ -32,7 +32,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BsqFormatter;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.gui.util.validation.*;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import javafx.stage.Stage;
 import org.springframework.core.env.Environment;
 
@@ -52,7 +52,7 @@ public class GuiModule extends AppModule {
         bind(InjectorViewFactory.class).in(Singleton.class);
         bind(ViewFactory.class).to(InjectorViewFactory.class);
 
-        bind(ResourceBundle.class).toInstance(BSResources.getResourceBundle());
+        bind(ResourceBundle.class).toInstance(Res.getResourceBundle());
         bind(ViewLoader.class).to(FxmlViewLoader.class).in(Singleton.class);
         bind(CachingViewLoader.class).in(Singleton.class);
 

@@ -22,8 +22,8 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.OKPayValidator;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.OKPayAccount;
 import io.bitsquare.payment.OKPayAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
@@ -118,7 +118,7 @@ public class OKPayForm extends PaymentMethodForm {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String accountNr = accountNrInputTextField.getText();
             accountNr = StringUtils.abbreviate(accountNr, 9);
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(accountNr));
         }
     }
@@ -127,7 +127,7 @@ public class OKPayForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", okPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(okPayAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(okPayAccount.getPaymentMethod().getId()));
         TextField field = addLabelTextField(gridPane, ++gridRow, "Wallet ID:", okPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
         addAllowedPeriod();

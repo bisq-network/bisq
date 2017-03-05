@@ -26,11 +26,9 @@ import io.bitsquare.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.statistics.TradeStatistics;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -49,7 +47,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import javax.inject.Inject;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.fxmisc.easybind.EasyBind;
@@ -58,6 +55,10 @@ import org.fxmisc.easybind.monadic.MonadicBinding;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
@@ -623,6 +624,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @NotNull
     private String getPaymentMethodLabel(TradeStatistics item) {
-        return BSResources.get(item.paymentMethod);
+        return Res.get(item.paymentMethod);
     }
 }

@@ -22,7 +22,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.ChaseQuickPayValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.ChaseQuickPayAccount;
 import io.bitsquare.payment.ChaseQuickPayAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
@@ -83,7 +83,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String mobileNr = mobileNrInputTextField.getText();
             mobileNr = StringUtils.abbreviate(mobileNr, 9);
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(mobileNr));
         }
     }
@@ -92,7 +92,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", chaseQuickPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(chaseQuickPayAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(chaseQuickPayAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", chaseQuickPayAccount.getHolderName());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Email:", chaseQuickPayAccount.getEmail()).second;
         field.setMouseTransparent(false);

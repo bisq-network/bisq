@@ -215,7 +215,7 @@ public class CashDepositForm extends PaymentMethodForm {
         String countryCode = cashDepositAccountContractData.getCountryCode();
 
         addLabelTextField(gridPane, gridRow, "Account name:", paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(paymentAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(paymentAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Country:", getCountryBasedPaymentAccount().getCountry() != null ? getCountryBasedPaymentAccount().getCountry().name : "");
         addLabelTextField(gridPane, ++gridRow, "Currency:", paymentAccount.getSingleTradeCurrency().getNameAndCode());
         addAcceptedBanksForDisplayAccount();
@@ -563,7 +563,7 @@ public class CashDepositForm extends PaymentMethodForm {
             if (accountNr.length() > 9)
                 accountNr = StringUtils.abbreviate(accountNr, 9);
 
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
             if (bankId != null && !bankId.isEmpty())
                 accountNameTextField.setText(method.concat(": ").concat(bankId).concat(", ").concat(accountNr));
             else

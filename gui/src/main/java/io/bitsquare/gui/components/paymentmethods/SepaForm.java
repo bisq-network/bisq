@@ -285,7 +285,7 @@ public class SepaForm extends PaymentMethodForm {
                 String iban = ibanInputTextField.getText();
                 if (iban.length() > 9)
                     iban = StringUtils.abbreviate(iban, 9);
-                String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+                String method = Res.get(paymentAccount.getPaymentMethod().getId());
                 CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) this.paymentAccount;
                 String country = countryBasedPaymentAccount.getCountry() != null ? countryBasedPaymentAccount.getCountry().code : null;
                 if (country != null)
@@ -309,7 +309,7 @@ public class SepaForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", sepaAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(sepaAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(sepaAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", sepaAccount.getHolderName());
         addLabelTextField(gridPane, ++gridRow, "IBAN:", sepaAccount.getIban()).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "BIC:", sepaAccount.getBic()).second.setMouseTransparent(false);

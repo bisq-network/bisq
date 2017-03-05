@@ -22,7 +22,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.USPostalMoneyOrderValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.USPostalMoneyOrderAccount;
@@ -88,7 +88,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String postalAddress = postalAddressTextArea.getText();
             postalAddress = StringUtils.abbreviate(postalAddress, 9);
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(postalAddress));
         }
     }
@@ -97,7 +97,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", usPostalMoneyOrderAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(usPostalMoneyOrderAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(usPostalMoneyOrderAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", usPostalMoneyOrderAccount.getHolderName());
         TextArea textArea = addLabelTextArea(gridPane, ++gridRow, "Postal address:", "").second;
         textArea.setText(usPostalMoneyOrderAccount.getPostalAddress());

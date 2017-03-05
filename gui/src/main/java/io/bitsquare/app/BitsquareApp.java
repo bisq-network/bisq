@@ -43,7 +43,7 @@ import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.*;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradeManager;
@@ -218,14 +218,14 @@ public class BitsquareApp extends Application {
                     if (walletsManager.areWalletsAvailable())
                         new ShowWalletDataWindow(walletsManager).show();
                     else
-                        new Popup<>().warning(BSResources.get("popup.warning.walletNotInitialized")).show();
+                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
                     BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
                     if (walletService.isWalletReady())
                         new SpendFromDepositTxWindow(tradeWalletService).show();
                     else
-                        new Popup<>().warning(BSResources.get("popup.warning.walletNotInitialized")).show();
+                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showDebugWindow();
                 }
@@ -257,7 +257,7 @@ public class BitsquareApp extends Application {
                 String osArchitecture = Utilities.getOSArchitecture();
                 // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
                 // Needs at least more testing on different machines...
-                new Popup<>().warning(BSResources.get("popup.warning.wrongVersion"))
+                new Popup<>().warning(Res.get("popup.warning.wrongVersion"))
                         .show();
             }
 
@@ -327,9 +327,9 @@ public class BitsquareApp extends Application {
                 //TODO check if Dialogs is still wanted?
                 Dialogs.create()
                         .owner(primaryStage)
-                        .title(BSResources.get("popup.error.title"))
+                        .title(Res.get("popup.error.title"))
                         .message(throwable.toString())
-                        .masthead(BSResources.get("popup.error.fatalStartupException"))
+                        .masthead(Res.get("popup.error.fatalStartupException"))
                         .showError();
                 if (doShutDown)
                     stop();
@@ -382,8 +382,8 @@ public class BitsquareApp extends Application {
     @Override
     public void stop() {
         if (!shutDownRequested) {
-            new Popup().headLine(BSResources.get("popup.shutDownInProgress.headline"))
-                    .backgroundInfo(BSResources.get("popup.shutDownInProgress.message"))
+            new Popup().headLine(Res.get("popup.shutDownInProgress.headline"))
+                    .backgroundInfo(Res.get("popup.shutDownInProgress.message"))
                     .hideCloseButton()
                     .useAnimation(false)
                     .show();

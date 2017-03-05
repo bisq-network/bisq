@@ -44,7 +44,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.offer.Offer;
@@ -173,7 +173,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             @Override
             public String toString(PaymentAccount paymentAccount) {
                 return paymentAccount.getAccountName() + " (" + paymentAccount.getSingleTradeCurrency().getCode() + ", " +
-                        BSResources.get(paymentAccount.getPaymentMethod().getId()) + ")";
+                        Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
             }
 
             @Override
@@ -264,7 +264,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         } else {
             imageView.setId("image-sell-large");
             // only needed for sell
-            totalToPayTextField.setPromptText(BSResources.get("createOffer.fundsBox.totalsNeeded.prompt"));
+            totalToPayTextField.setPromptText(Res.get("createOffer.fundsBox.totalsNeeded.prompt"));
 
             placeOfferButton.setId("sell-button-big");
             placeOfferButton.setText("Review: Place offer to sell bitcoin");
@@ -599,7 +599,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         };
         errorMessageListener = (o, oldValue, newValue) -> {
             if (newValue != null)
-                UserThread.runAfter(() -> new Popup().error(BSResources.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()) +
+                UserThread.runAfter(() -> new Popup().error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()) +
                         "\n\nNo funds have left your wallet yet.\n" +
                         "Please try to restart you application and check your network connection to see if you can resolve the issue.")
                         .show(), 100, TimeUnit.MILLISECONDS);
@@ -644,8 +644,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups
                 String key = "createOfferSuccessInfo";
                 if (preferences.showAgain(key)) {
-                    UserThread.runAfter(() -> new Popup().headLine(BSResources.get("createOffer.success.headline"))
-                                    .feedback(BSResources.get("createOffer.success.info"))
+                    UserThread.runAfter(() -> new Popup().headLine(Res.get("createOffer.success.headline"))
+                                    .feedback(Res.get("createOffer.success.info"))
                                     .dontShowAgainId(key, preferences)
                                     .actionButtonText("Go to \"My open offers\"")
                                     .onAction(() -> {
@@ -823,7 +823,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         addThirdRow();
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow,
-                BSResources.get("createOffer.amountPriceBox.next"), BSResources.get("shared.cancel"));
+                Res.get("createOffer.amountPriceBox.next"), Res.get("shared.cancel"));
         nextButton = tuple.first;
         editOfferElements.add(nextButton);
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
@@ -846,11 +846,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addFundingGroup() {
         // don't increase gridRow as we removed button when this gets visible
-        payFundsPane = addTitledGroupBg(gridPane, gridRow, 3, BSResources.get("createOffer.fundsBox.title"), Layout.GROUP_DISTANCE);
+        payFundsPane = addTitledGroupBg(gridPane, gridRow, 3, Res.get("createOffer.fundsBox.title"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(payFundsPane, 3);
         payFundsPane.setVisible(false);
 
-        totalToPayLabel = new Label(BSResources.get("createOffer.fundsBox.totalsNeeded"));
+        totalToPayLabel = new Label(Res.get("createOffer.fundsBox.totalsNeeded"));
         totalToPayLabel.setVisible(false);
         totalToPayInfoIconLabel = new Label();
         totalToPayInfoIconLabel.setVisible(false);
@@ -885,13 +885,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE - 9, 0, 0, 5));
         gridPane.getChildren().add(qrCodeImageView);
 
-        Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, BSResources.get("createOffer.fundsBox.address"));
+        Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, Res.get("createOffer.fundsBox.address"));
         addressLabel = addressTuple.first;
         addressLabel.setVisible(false);
         addressTextField = addressTuple.second;
         addressTextField.setVisible(false);
 
-        Tuple2<Label, BalanceTextField> balanceTuple = addLabelBalanceTextField(gridPane, ++gridRow, BSResources.get("createOffer.fundsBox.balance"));
+        Tuple2<Label, BalanceTextField> balanceTuple = addLabelBalanceTextField(gridPane, ++gridRow, Res.get("createOffer.fundsBox.balance"));
         balanceLabel = balanceTuple.first;
         balanceLabel.setVisible(false);
         balanceTextField = balanceTuple.second;
@@ -926,7 +926,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         placeOfferButton.setMinHeight(40);
         placeOfferButton.setPadding(new Insets(0, 20, 0, 20));
 
-        cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
+        cancelButton2 = addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.isWalletFunded.get()) {
                 new Popup().warning("You have already funded that offer.\n" +
@@ -967,7 +967,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addAmountPriceFields() {
         // amountBox
-        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.amount.prompt"));
+        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(Res.get("createOffer.amount.prompt"));
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountTextField = amountValueCurrencyBoxTuple.second;
         editOfferElements.add(amountTextField);
@@ -986,7 +986,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         xLabel.setMaxWidth(14);
 
         // price as percent
-        Tuple3<HBox, InputTextField, Label> priceAsPercentageTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.price.prompt"));
+        Tuple3<HBox, InputTextField, Label> priceAsPercentageTuple = FormBuilder.getValueCurrencyBox(Res.get("createOffer.price.prompt"));
         HBox priceAsPercentageValueCurrencyBox = priceAsPercentageTuple.first;
         marketBasedPriceTextField = priceAsPercentageTuple.second;
         editOfferElements.add(marketBasedPriceTextField);
@@ -1024,7 +1024,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         resultLabel.setPadding(new Insets(14, 2, 0, 2));
 
         // volume
-        Tuple3<HBox, InputTextField, Label> volumeValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.volume.prompt"));
+        Tuple3<HBox, InputTextField, Label> volumeValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(Res.get("createOffer.volume.prompt"));
         HBox volumeValueCurrencyBox = volumeValueCurrencyBoxTuple.first;
         volumeTextField = volumeValueCurrencyBoxTuple.second;
         editOfferElements.add(volumeTextField);
@@ -1089,7 +1089,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addSecondRow() {
         // price as fiat
-        Tuple3<HBox, InputTextField, Label> priceValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(BSResources.get("createOffer.price.prompt"));
+        Tuple3<HBox, InputTextField, Label> priceValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(Res.get("createOffer.price.prompt"));
         HBox priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
         fixedPriceTextField = priceValueCurrencyBoxTuple.second;
         editOfferElements.add(fixedPriceTextField);
@@ -1104,14 +1104,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         marketBasedPriceLabel.setText("%");
         marketBasedPriceLabel.setStyle("-fx-alignment: center;");
 
-        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getValueCurrencyBox(BSResources.get("createOffer.amount.prompt"));
+        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getValueCurrencyBox(Res.get("createOffer.amount.prompt"));
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         minAmountTextField = amountValueCurrencyBoxTuple.second;
         editOfferElements.add(minAmountTextField);
         minAmountBtcLabel = amountValueCurrencyBoxTuple.third;
         editOfferElements.add(minAmountBtcLabel);
 
-        Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, BSResources.get("createOffer.amountPriceBox" +
+        Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, Res.get("createOffer.amountPriceBox" +
                 ".minAmountDescription"));
 
         Label xLabel = new Label("x");
@@ -1133,14 +1133,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void addThirdRow() {
         // security deposit
         Tuple3<HBox, InputTextField, Label> securityDepositTuple = FormBuilder.getValueCurrencyBox(
-                BSResources.get("createOffer.securityDeposit.prompt"));
+                Res.get("createOffer.securityDeposit.prompt"));
         HBox securityDepositValueCurrencyBox = securityDepositTuple.first;
         securityDepositTextField = securityDepositTuple.second;
         editOfferElements.add(securityDepositTextField);
         securityDepositBtcLabel = securityDepositTuple.third;
         editOfferElements.add(securityDepositBtcLabel);
         Tuple2<Label, VBox> securityDepositInputBoxTuple = getTradeInputBox(securityDepositValueCurrencyBox,
-                BSResources.get("createOffer.securityDepositBox.description"));
+                Res.get("createOffer.securityDepositBox.description"));
         securityDepositDescriptionLabel = securityDepositInputBoxTuple.first;
         editOfferElements.add(securityDepositDescriptionLabel);
         VBox securityDepositBox = securityDepositInputBoxTuple.second;
@@ -1181,17 +1181,17 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         int i = 0;
         if (model.isSellOffer())
-            addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.tradeAmount"), model.tradeAmount.get());
+            addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.tradeAmount"), model.tradeAmount.get());
 
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.securityDeposit"), model.getSecurityDepositInfo());
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.offerFee"), model.getCreateOfferFee());
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("createOffer.fundsBox.networkFee"), model.getTxFee());
+        addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.securityDeposit"), model.getSecurityDepositInfo());
+        addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.offerFee"), model.getCreateOfferFee());
+        addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");
         GridPane.setConstraints(separator, 1, i++);
         infoGridPane.getChildren().add(separator);
-        addPayInfoEntry(infoGridPane, i, BSResources.get("createOffer.fundsBox.total"), model.totalToPay.get());
+        addPayInfoEntry(infoGridPane, i, Res.get("createOffer.fundsBox.total"), model.totalToPay.get());
         totalToPayInfoPopover = new PopOver(infoGridPane);
         if (totalToPayInfoIconLabel.getScene() != null) {
             totalToPayInfoPopover.setDetachable(false);

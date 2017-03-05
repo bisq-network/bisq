@@ -22,7 +22,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.ClearXchangeValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.ClearXchangeAccount;
 import io.bitsquare.payment.ClearXchangeAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
@@ -82,7 +82,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String mobileNr = mobileNrInputTextField.getText();
             mobileNr = StringUtils.abbreviate(mobileNr, 9);
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(mobileNr));
         }
     }
@@ -91,7 +91,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", clearXchangeAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(clearXchangeAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(clearXchangeAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", clearXchangeAccount.getHolderName());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Email or mobile no.:", clearXchangeAccount.getEmailOrMobileNr()).second;
         field.setMouseTransparent(false);

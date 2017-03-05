@@ -29,7 +29,7 @@ import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.gui.util.validation.PasswordValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
@@ -252,7 +252,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void showRestoreScreen() {
-        Label headLine2Label = new Label(BSResources.get("Restore wallet from seed words"));
+        Label headLine2Label = new Label(Res.get("Restore wallet from seed words"));
         headLine2Label.setId("popup-headline");
         headLine2Label.setMouseTransparent(true);
         GridPane.setHalignment(headLine2Label, HPos.LEFT);

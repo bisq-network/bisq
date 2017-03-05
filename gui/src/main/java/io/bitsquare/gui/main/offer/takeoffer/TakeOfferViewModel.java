@@ -30,7 +30,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
@@ -156,17 +156,17 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         this.offer = offer;
 
         if (offer.getDirection() == Offer.Direction.BUY) {
-            directionLabel = BSResources.get("shared.sellBitcoin");
-            amountDescription = BSResources.get("takeOffer.amountPriceBox.buy.amountDescription");
+            directionLabel = Res.get("shared.sellBitcoin");
+            amountDescription = Res.get("takeOffer.amountPriceBox.buy.amountDescription");
         } else {
-            directionLabel = BSResources.get("shared.buyBitcoin");
-            amountDescription = BSResources.get("takeOffer.amountPriceBox.sell.amountDescription");
+            directionLabel = Res.get("shared.buyBitcoin");
+            amountDescription = Res.get("takeOffer.amountPriceBox.sell.amountDescription");
         }
 
         amountRange = formatter.formatCoin(offer.getMinAmount()) + " - " + formatter.formatCoin(offer.getAmount());
         price = formatter.formatPrice(dataModel.tradePrice);
         marketPriceMargin = formatter.formatPercentagePrice(offer.getMarketPriceMargin());
-        paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
+        paymentLabel = Res.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");
 
@@ -254,15 +254,15 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
                 if (!dataModel.isMinAmountLessOrEqualAmount())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            BSResources.get("takeOffer.validation.amountSmallerThanMinAmount")));
+                            Res.get("takeOffer.validation.amountSmallerThanMinAmount")));
 
                 if (dataModel.isAmountLargerThanOfferAmount())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            BSResources.get("takeOffer.validation.amountLargerThanOfferAmount")));
+                            Res.get("takeOffer.validation.amountLargerThanOfferAmount")));
 
                 if (dataModel.wouldCreateDustForOfferer())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            BSResources.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
+                            Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
             }
         }
     }
@@ -404,9 +404,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         volume.bind(createStringBinding(() -> formatter.formatVolume(dataModel.volumeAsFiat.get()), dataModel.volumeAsFiat));
 
         if (dataModel.getDirection() == Offer.Direction.SELL) {
-            volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
+            volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
         } else {
-            volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
+            volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
         }
         totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()), dataModel.totalToPayAsCoin));
         btcCode.bind(dataModel.btcCode);

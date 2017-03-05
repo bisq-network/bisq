@@ -16,7 +16,7 @@
     <logger name="io.bitsquare.btc.AddressBasedCoinSelector" level="OFF"/>
 
     <logger name="io.bitsquare.gui.util.Profiler" level="ERROR"/>
-    <logger name="io.bitsquare.locale.BSResources" level="ERROR"/>
+    <logger name="io.bitsquare.locale.Res" level="ERROR"/>
     <logger name="io.bitsquare.temp.storage.RemoteStorage" level="WARN"/>
     <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
 

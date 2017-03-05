@@ -23,8 +23,8 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.AltCoinAddressValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.CryptoCurrencyAccount;
 import io.bitsquare.payment.CryptoCurrencyAccountContractData;
@@ -109,7 +109,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", cryptoCurrencyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
         Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow, "Altcoin address:", cryptoCurrencyAccount.getAddress());
         addressLabel = tuple2.first;
         TextField field = tuple2.second;

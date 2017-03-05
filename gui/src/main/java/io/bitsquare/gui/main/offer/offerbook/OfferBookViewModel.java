@@ -298,7 +298,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         String result = "";
         if (item != null) {
             Offer offer = item.getOffer();
-            String method = BSResources.get(offer.getPaymentMethod().getId() + "_SHORT");
+            String method = Res.get(offer.getPaymentMethod().getId() + "_SHORT");
             String methodCountryCode = offer.getCountryCode();
 
             if (methodCountryCode != null)
@@ -313,7 +313,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         String result = "";
         if (item != null) {
             Offer offer = item.getOffer();
-            result = "Payment method: " + BSResources.get(offer.getPaymentMethod().getId());
+            result = "Payment method: " + Res.get(offer.getPaymentMethod().getId());
             result += "\nCurrency: " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
 
             String methodCountryCode = offer.getCountryCode();

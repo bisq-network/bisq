@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.util.validation;
 
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 
 /**
  * NumberValidator for validating basic number values.
@@ -37,20 +37,20 @@ public abstract class NumberValidator extends InputValidator {
             Double.parseDouble(input);
             return new ValidationResult(true);
         } catch (Exception e) {
-            return new ValidationResult(false, BSResources.get("validation.NaN"));
+            return new ValidationResult(false, Res.get("validation.NaN"));
         }
     }
 
     protected ValidationResult validateIfNotZero(String input) {
         if (Double.parseDouble(input) == 0)
-            return new ValidationResult(false, BSResources.get("validation.zero"));
+            return new ValidationResult(false, Res.get("validation.zero"));
         else
             return new ValidationResult(true);
     }
 
     protected ValidationResult validateIfNotNegative(String input) {
         if (Double.parseDouble(input) < 0)
-            return new ValidationResult(false, BSResources.get("validation.negative"));
+            return new ValidationResult(false, Res.get("validation.negative"));
         else
             return new ValidationResult(true);
     }

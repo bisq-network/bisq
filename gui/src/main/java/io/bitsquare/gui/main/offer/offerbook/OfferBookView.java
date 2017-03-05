@@ -37,8 +37,8 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.FiatCurrency;
+import io.bitsquare.locale.Res;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
@@ -123,9 +123,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 if (id.equals(GUIUtil.SHOW_ALL_FLAG))
                     return "▶ Show all";
                 else if (paymentMethod.equals(PaymentMethod.BLOCK_CHAINS))
-                    return "✦ " + BSResources.get(id);
+                    return "✦ " + Res.get(id);
                 else
-                    return "★ " + BSResources.get(id);
+                    return "★ " + Res.get(id);
             }
 
             @Override

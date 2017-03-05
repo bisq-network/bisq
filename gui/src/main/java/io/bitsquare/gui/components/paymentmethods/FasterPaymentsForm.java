@@ -23,7 +23,7 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.AccountNrValidator;
 import io.bitsquare.gui.util.validation.BranchIdValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.FasterPaymentsAccount;
 import io.bitsquare.payment.FasterPaymentsAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
@@ -85,7 +85,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String accountNr = accountNrInputTextField.getText();
             accountNr = StringUtils.abbreviate(accountNr, 9);
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(accountNr));
         }
     }
@@ -94,7 +94,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", fasterPaymentsAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(fasterPaymentsAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "UK Sort code:", fasterPaymentsAccount.getSortCode());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Account number:", fasterPaymentsAccount.getAccountNr()).second;
         field.setMouseTransparent(false);

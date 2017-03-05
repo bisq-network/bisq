@@ -30,7 +30,7 @@ import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountFactory;
 import io.bitsquare.payment.PaymentMethod;
@@ -244,7 +244,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
-                return paymentMethod != null ? BSResources.get(paymentMethod.getId()) : "";
+                return paymentMethod != null ? Res.get(paymentMethod.getId()) : "";
             }
 
             @Override

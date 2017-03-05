@@ -27,8 +27,8 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.*;
 import io.bitsquare.trade.Trade;
 import javafx.scene.control.Button;
@@ -155,7 +155,7 @@ public class BuyerStep2View extends TradeStepView {
         PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
         String paymentMethodName = paymentAccountContractData != null ? paymentAccountContractData.getPaymentMethodName() : "";
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
-                "Start payment using " + BSResources.get(paymentMethodName),
+                "Start payment using " + Res.get(paymentMethodName),
                 Layout.GROUP_DISTANCE);
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to transfer:",
                 model.getFiatVolume(),

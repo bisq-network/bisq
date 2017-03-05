@@ -42,8 +42,8 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.SecurityDepositValidator;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccount;
@@ -161,7 +161,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         this.navigation = navigation;
         this.formatter = formatter;
 
-        paymentLabel = BSResources.get("createOffer.fundsBox.paymentLabel", dataModel.shortOfferId);
+        paymentLabel = Res.get("createOffer.fundsBox.paymentLabel", dataModel.shortOfferId);
 
         if (dataModel.getAddressEntry() != null) {
             addressAsString = dataModel.getAddressEntry().getAddressString();
@@ -198,11 +198,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         updateButtonDisableState();
 
         if (dataModel.getDirection() == Offer.Direction.BUY) {
-            directionLabel = BSResources.get("shared.buyBitcoin");
-            amountDescription = BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.buy"));
+            directionLabel = Res.get("shared.buyBitcoin");
+            amountDescription = Res.get("createOffer.amountPriceBox.amountDescription", Res.get("shared.buy"));
         } else {
-            directionLabel = BSResources.get("shared.sellBitcoin");
-            amountDescription = BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.sell"));
+            directionLabel = Res.get("shared.sellBitcoin");
+            amountDescription = Res.get("createOffer.amountPriceBox.amountDescription", Res.get("shared.sell"));
         }
 
         securityDeposit.set(formatter.formatCoin(dataModel.securityDeposit.get()));
@@ -220,15 +220,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private void addBindings() {
         if (dataModel.getDirection() == Offer.Direction.BUY) {
             volumeDescriptionLabel.bind(createStringBinding(
-                    () -> BSResources.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.tradeCurrencyCode.get()),
+                    () -> Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.tradeCurrencyCode.get()),
                     dataModel.tradeCurrencyCode));
         } else {
             volumeDescriptionLabel.bind(createStringBinding(
-                    () -> BSResources.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.tradeCurrencyCode.get()),
+                    () -> Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.tradeCurrencyCode.get()),
                     dataModel.tradeCurrencyCode));
         }
         volumePromptLabel.bind(createStringBinding(
-                () -> BSResources.get("createOffer.volume.prompt", dataModel.tradeCurrencyCode.get()),
+                () -> Res.get("createOffer.volume.prompt", dataModel.tradeCurrencyCode.get()),
                 dataModel.tradeCurrencyCode));
 
         totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),

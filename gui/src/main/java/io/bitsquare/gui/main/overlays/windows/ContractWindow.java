@@ -24,8 +24,8 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.Contract;
@@ -131,9 +131,9 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "No. of disputes BTC buyer / BTC seller:", disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC buyer payment details:",
-                BSResources.get(contract.getBuyerPaymentAccountContractData().getPaymentDetails())).second.setMouseTransparent(false);
+                Res.get(contract.getBuyerPaymentAccountContractData().getPaymentDetails())).second.setMouseTransparent(false);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "BTC seller payment details:",
-                BSResources.get(sellerPaymentAccountContractData.getPaymentDetails())).second.setMouseTransparent(false);
+                Res.get(sellerPaymentAccountContractData.getPaymentDetails())).second.setMouseTransparent(false);
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Selected arbitrator:", contract.arbitratorNodeAddress.getFullAddress());
 

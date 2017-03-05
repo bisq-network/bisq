@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.util.validation;
 
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 
 public class InputValidator {
 
@@ -27,7 +27,7 @@ public class InputValidator {
 
     protected ValidationResult validateIfNotEmpty(String input) {
         if (input == null || input.length() == 0)
-            return new ValidationResult(false, BSResources.get("validation.empty"));
+            return new ValidationResult(false, Res.get("validation.empty"));
         else
             return new ValidationResult(true);
     }

@@ -30,9 +30,9 @@ import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.BankUtil;
 import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
@@ -209,7 +209,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (offer.isMyOffer(keyRing) && offererPaymentAccountId != null && paymentAccount != null) {
             addLabelTextField(gridPane, ++rowIndex, "My trading account:", paymentAccount.getAccountName());
         } else {
-            final String method = BSResources.get(paymentMethod.getId());
+            final String method = Res.get(paymentMethod.getId());
             if (isNationalBanks || isSpecificBanks || isSepa) {
                 if (BankUtil.isBankIdRequired(offer.getCountryCode()))
                     addLabelTextField(gridPane, ++rowIndex, "Payment method (offerer's bank ID):", method + bankId);
@@ -315,7 +315,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         busyAnimation = placeOfferTuple.second;
         Label spinnerInfoLabel = placeOfferTuple.third;
 
-        Button cancelButton = addButton(gridPane, ++rowIndex, BSResources.get("shared.cancel"));
+        Button cancelButton = addButton(gridPane, ++rowIndex, Res.get("shared.cancel"));
         cancelButton.setDefaultButton(false);
         cancelButton.setId("cancel-button");
         cancelButton.setOnAction(e -> {
@@ -329,10 +329,10 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                 cancelButton.setDisable(true);
                 busyAnimation.play();
                 if (isPlaceOffer) {
-                    spinnerInfoLabel.setText(BSResources.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
+                    spinnerInfoLabel.setText(Res.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
                     placeOfferHandlerOptional.get().run();
                 } else {
-                    spinnerInfoLabel.setText(BSResources.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
+                    spinnerInfoLabel.setText(Res.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
                     takeOfferHandlerOptional.get().run();
                 }
             } else {

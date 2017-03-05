@@ -19,7 +19,7 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -59,7 +59,7 @@ public class SecurityDepositValidator extends BtcValidator {
             Coin minSecurityDeposit = Restrictions.MIN_SECURITY_DEPOSIT;
             if (coin.compareTo(minSecurityDeposit) < 0)
                 return new ValidationResult(false,
-                        BSResources.get("validation.securityDeposit.toSmall", formatter.formatCoinWithCode(minSecurityDeposit)));
+                        Res.get("validation.securityDeposit.toSmall", formatter.formatCoinWithCode(minSecurityDeposit)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {

@@ -24,7 +24,7 @@ import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.user.Preferences;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -624,7 +624,7 @@ public abstract class Overlay<T extends Overlay> {
         if (headLine != null) {
             ++rowIndex;
 
-            headLineLabel = new Label(BSResources.get(headLine));
+            headLineLabel = new Label(Res.get(headLine));
             headLineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)

@@ -32,8 +32,8 @@ import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
-public class BSResources {
-    private static final Logger log = LoggerFactory.getLogger(BSResources.class);
+public class Res {
+    private static final Logger log = LoggerFactory.getLogger(Res.class);
 
     public static ResourceBundle getResourceBundle() {
         return ResourceBundle.getBundle("i18n.displayStrings", new UTF8Control());
@@ -44,7 +44,7 @@ public class BSResources {
             return "";
 
         try {
-            return BSResources.getResourceBundle().getString(key);
+            return Res.getResourceBundle().getString(key);
         } catch (MissingResourceException e) {
             log.trace("Missing resource for key: " + key);
             return key;
@@ -52,7 +52,7 @@ public class BSResources {
     }
 
     public static String get(String key, Object... arguments) {
-        return MessageFormat.format(BSResources.get(key), arguments);
+        return MessageFormat.format(Res.get(key), arguments);
     }
 }
 
