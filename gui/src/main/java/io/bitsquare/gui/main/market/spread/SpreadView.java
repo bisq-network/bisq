@@ -19,9 +19,9 @@ package io.bitsquare.gui.main.market.spread;
 
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
-import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
@@ -59,18 +59,13 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
 
     @Override
     public void initialize() {
-        TableGroupHeadline header = new TableGroupHeadline("Statistics");
-        GridPane.setRowIndex(header, gridRow);
-        GridPane.setMargin(header, new Insets(0, -10, -10, -10));
-        root.getChildren().add(header);
-
         tableView = new TableView<>();
         GridPane.setRowIndex(tableView, gridRow);
-        GridPane.setMargin(tableView, new Insets(20, -10, -10, -10));
+        GridPane.setMargin(tableView, new Insets(-10, -15, -10, -15));
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
-        Label placeholder = new Label("Currently there is no data available");
+        Label placeholder = new Label(Res.get("table.placeholder.noData"));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
@@ -116,10 +111,15 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private void updateHeaders() {
-        numberOfOffersColumn.setText("All offers (" + sortedList.stream().mapToInt(item -> item.numberOfOffers).sum() + ")");
-        numberOfBuyOffersColumn.setText("Buy BTC (" + sortedList.stream().mapToInt(item -> item.numberOfBuyOffers).sum() + ")");
-        numberOfSellOffersColumn.setText("Sell BTC (" + sortedList.stream().mapToInt(item -> item.numberOfSellOffers).sum() + ")");
-        totalAmountColumn.setText("Total BTC (" + formatter.formatCoin(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum())) + ")");
+        int numberOfOffers = sortedList.stream().mapToInt(item -> item.numberOfOffers).sum();
+        int numberOfBuyOffers = sortedList.stream().mapToInt(item -> item.numberOfBuyOffers).sum();
+        int numberOfSellOffers = sortedList.stream().mapToInt(item -> item.numberOfSellOffers).sum();
+        String total = formatter.formatCoin(Coin.valueOf(sortedList.stream().mapToLong(item -> item.totalAmount.value).sum()));
+
+        numberOfOffersColumn.setText(Res.get("market.spread.numberOfOffersColumn", numberOfOffers));
+        numberOfBuyOffersColumn.setText(Res.get("market.spread.numberOfBuyOffersColumn", numberOfBuyOffers));
+        numberOfSellOffersColumn.setText(Res.get("market.spread.numberOfSellOffersColumn", numberOfSellOffers));
+        totalAmountColumn.setText(Res.get("market.spread.totalAmountColumn", total));
     }
 
 
@@ -128,9 +128,9 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<SpreadItem, SpreadItem> getCurrencyColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Currency") {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>(Res.get("table.column.currency.header")) {
             {
-                setMinWidth(160); //110
+                setMinWidth(160);
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -184,7 +184,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getNumberOfBuyOffersColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Buy offers") {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
             {
                 setMinWidth(100);
             }
@@ -212,7 +212,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getNumberOfSellOffersColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Sell offers") {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
             {
                 setMinWidth(100);
             }
@@ -240,9 +240,9 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getTotalAmountColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Total amount") {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
             {
-                setMinWidth(140); //170
+                setMinWidth(140);
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -268,9 +268,9 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getSpreadColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>("Spread") {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>(Res.get("market.spread.spreadColumn")) {
             {
-                setMinWidth(110); //130
+                setMinWidth(110);
             }
         };
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));

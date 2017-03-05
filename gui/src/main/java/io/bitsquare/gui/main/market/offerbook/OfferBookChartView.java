@@ -438,7 +438,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         }
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label(Res.get("table.placeholder", Res.get("shared.offers")));
+        Label placeholder = new Label(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
