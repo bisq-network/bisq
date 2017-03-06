@@ -24,7 +24,6 @@ import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;

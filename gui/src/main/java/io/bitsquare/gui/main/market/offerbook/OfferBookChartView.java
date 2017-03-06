@@ -468,7 +468,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         vBox.setSpacing(10);
         vBox.setFillWidth(true);
         vBox.setMinHeight(190);
-//        vBox.setPrefHeight(190);
         vBox.getChildren().addAll(titleLabel, tableView, button);
 
         button.prefWidthProperty().bind(vBox.widthProperty());
