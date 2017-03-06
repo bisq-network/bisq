@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import io.bitsquare.app.Log;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.arbitration.Dispute;
+import io.bitsquare.arbitration.DisputeAlreadyOpenException;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
@@ -397,9 +398,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
             if (p2PService.isBootstrapped()) {
-                disputeManager.sendOpenNewDisputeMessage(dispute,
-                        () -> navigation.navigateTo(MainView.class, DisputesView.class),
-                        errorMessage -> new Popup().warning(errorMessage).show());
+                sendOpenNewDisputeMessage(dispute, false);
             } else {
                 new Popup().information("You need to wait until you are fully connected to the network.\n" +
                         "That might take up to about 2 minutes at startup.").show();
@@ -407,6 +406,26 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         } else {
             log.warn("trade is null at doOpenDispute");
         }
+    }
+
+    private void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen) {
+        disputeManager.sendOpenNewDisputeMessage(dispute,
+                reOpen,
+                () -> navigation.navigateTo(MainView.class, DisputesView.class),
+                (errorMessage, throwable) -> {
+                    if ((throwable instanceof DisputeAlreadyOpenException)) {
+                        errorMessage += "\n\n" +
+                                "If you are not sure that the message to the arbitrator arrived (e.g. if you did not got " +
+                                "a response after 1 day) feel free to open a dispute again.";
+                        new Popup().warning(errorMessage)
+                                .actionButtonText("Open dispute again")
+                                .onAction(() -> sendOpenNewDisputeMessage(dispute, true))
+                                .closeButtonText("Cancel")
+                                .show();
+                    } else {
+                        new Popup().warning(errorMessage).show();
+                    }
+                });
     }
 }
 
