@@ -24,6 +24,7 @@ import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
@@ -300,4 +301,19 @@ public class GUIUtil {
             e.printStackTrace();
         }
     }
+    
+    public static <T> T getParentOfType(Node node, Class<T> t) {
+        Node parent = node.getParent();
+
+        while (parent != null) {
+            if (parent.getClass().isAssignableFrom(t)) {
+                break;
+            } else {
+                parent = parent.getParent();
+            }
+        }
+
+        return parent != null ? (T) parent : null;
+    }
+    
 }
