@@ -93,7 +93,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         TextField field = addLabelTextField(gridPane, ++gridRow, "Account no.:", perfectMoneyAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", perfectMoneyAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), perfectMoneyAccount.getSingleTradeCurrency().getNameAndCode());
 
         addAllowedPeriod();
     }

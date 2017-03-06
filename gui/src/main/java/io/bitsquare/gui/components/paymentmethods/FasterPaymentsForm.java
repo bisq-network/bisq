@@ -75,7 +75,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", fasterPaymentsAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), fasterPaymentsAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -98,7 +98,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "UK Sort code:", fasterPaymentsAccount.getSortCode());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Account number:", fasterPaymentsAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", fasterPaymentsAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), fasterPaymentsAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 

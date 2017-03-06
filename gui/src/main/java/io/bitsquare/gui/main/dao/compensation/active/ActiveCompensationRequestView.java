@@ -34,6 +34,7 @@ import io.bitsquare.gui.main.dao.voting.vote.VoteView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.HPos;
@@ -218,7 +219,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     }
 
     private void setColumns() {
-        TableColumn<CompensationRequest, CompensationRequest> dateColumn = new TableColumn<CompensationRequest, CompensationRequest>("Date/Time") {
+        TableColumn<CompensationRequest, CompensationRequest> dateColumn = new TableColumn<CompensationRequest, CompensationRequest>(Res.get("table.column.dateTime.header")) {
             {
                 setMinWidth(190);
                 setMaxWidth(190);

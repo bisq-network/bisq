@@ -130,7 +130,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             volumeAxisYWidth = (double) newValue;
             layoutChart();
         };
-        tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText("Trades: " + model.tradeStatisticsByCurrency.size());
+        tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
     }
 
     @Override
@@ -175,15 +175,15 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     priceColumn.setSortable(!showAll);
 
                     if (showAll) {
-                        volumeColumn.setText("Amount");
-                        priceColumnLabel.set("Price");
+                        volumeColumn.setText(Res.get("table.column.amount.header"));
+                        priceColumnLabel.set(Res.get("table.column.price.header"));
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(1, marketColumn);
                     } else {
                         priceSeries.setName(selectedTradeCurrency.getName());
 
                         String code = selectedTradeCurrency.getCode();
-                        volumeColumn.setText("Amount in " + code);
+                        volumeColumn.setText(Res.get("table.column.amountWithCur.header", "BTC"));
                         priceColumnLabel.set(formatter.getPriceWithCurrencyCode(code));
 
                         if (tableView.getColumns().contains(marketColumn))
@@ -204,7 +204,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
-        nrOfTradeStatisticsLabel.setText("Trades: " + model.tradeStatisticsByCurrency.size());
+        nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
 
         UserThread.runAfter(this::updateChartData, 100, TimeUnit.MILLISECONDS);
     }
@@ -297,7 +297,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisY = new NumberAxis();
         volumeAxisY.setForceZeroInRange(true);
         volumeAxisY.setAutoRanging(true);
-        volumeAxisY.setLabel("Volume in BTC");
+        volumeAxisY.setLabel(Res.get("table.column.volumeWithCur.header", "BTC"));
         volumeAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
@@ -377,12 +377,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private HBox getToolBox() {
-        Label currencyLabel = new Label("Currency:");
+        Label currencyLabel = new Label(Res.get("label.currency"));
         currencyLabel.setPadding(new Insets(0, 4, 0, 0));
 
         currencyComboBox = new ComboBox<>();
-        currencyComboBox.setPromptText("Select currency");
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter("trades", model.preferences));
+        currencyComboBox.setPromptText(Res.get("list.currency.select"));
+        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.trades"), model.preferences));
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -391,12 +391,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         label.setPadding(new Insets(0, 4, 0, 0));
 
         toggleGroup = new ToggleGroup();
-        ToggleButton year = getToggleButton("Year", TradesChartsViewModel.TickUnit.YEAR, toggleGroup, "toggle-left");
-        ToggleButton month = getToggleButton("Month", TradesChartsViewModel.TickUnit.MONTH, toggleGroup, "toggle-left");
-        ToggleButton week = getToggleButton("Week", TradesChartsViewModel.TickUnit.WEEK, toggleGroup, "toggle-center");
-        ToggleButton day = getToggleButton("Day", TradesChartsViewModel.TickUnit.DAY, toggleGroup, "toggle-center");
-        ToggleButton hour = getToggleButton("Hour", TradesChartsViewModel.TickUnit.HOUR, toggleGroup, "toggle-center");
-        ToggleButton minute10 = getToggleButton("10 Minutes", TradesChartsViewModel.TickUnit.MINUTE_10, toggleGroup, "toggle-center");
+        ToggleButton year = getToggleButton(Res.get("time.year"), TradesChartsViewModel.TickUnit.YEAR, toggleGroup, "toggle-left");
+        ToggleButton month = getToggleButton(Res.get("time.month"), TradesChartsViewModel.TickUnit.MONTH, toggleGroup, "toggle-left");
+        ToggleButton week = getToggleButton(Res.get("time.week"), TradesChartsViewModel.TickUnit.WEEK, toggleGroup, "toggle-center");
+        ToggleButton day = getToggleButton(Res.get("time.day"), TradesChartsViewModel.TickUnit.DAY, toggleGroup, "toggle-center");
+        ToggleButton hour = getToggleButton(Res.get("time.hour"), TradesChartsViewModel.TickUnit.HOUR, toggleGroup, "toggle-center");
+        ToggleButton minute10 = getToggleButton(Res.get("time.minute10"), TradesChartsViewModel.TickUnit.MINUTE_10, toggleGroup, "toggle-center");
 
         HBox hBox = new HBox();
         hBox.setSpacing(0);
@@ -422,11 +422,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private void createTable() {
         tableView = new TableView<>();
-        tableView.setMinHeight(140);
+        tableView.setMinHeight(130);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
         // date
-        TableColumn<TradeStatistics, TradeStatistics> dateColumn = new TableColumn<TradeStatistics, TradeStatistics>("Date/Time") {
+        TableColumn<TradeStatistics, TradeStatistics> dateColumn = new TableColumn<TradeStatistics, TradeStatistics>(Res.get("table.column.dateTime.header")) {
             {
                 setMinWidth(190);
                 setMaxWidth(190);
@@ -455,7 +455,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(dateColumn);
 
         // market
-        marketColumn = new TableColumn<TradeStatistics, TradeStatistics>("Market") {
+        marketColumn = new TableColumn<TradeStatistics, TradeStatistics>(Res.get("table.column.market.header")) {
             {
                 setMinWidth(130);
                 setMaxWidth(130);
@@ -508,7 +508,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(priceColumn);
 
         // amount
-        TableColumn<TradeStatistics, TradeStatistics> amountColumn = new TableColumn<>("Amount in BTC");
+        TableColumn<TradeStatistics, TradeStatistics> amountColumn = new TableColumn<>(Res.get("table.column.amountWithCur.header", "BTC"));
         amountColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         amountColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
@@ -562,7 +562,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(volumeColumn);
 
         // paymentMethod
-        TableColumn<TradeStatistics, TradeStatistics> paymentMethodColumn = new TableColumn<>("Payment method");
+        TableColumn<TradeStatistics, TradeStatistics> paymentMethodColumn = new TableColumn<>(Res.get("table.column.paymentMethod.header"));
         paymentMethodColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         paymentMethodColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
@@ -586,7 +586,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(paymentMethodColumn);
 
         // direction
-        TableColumn<TradeStatistics, TradeStatistics> directionColumn = new TableColumn<>("Trade type");
+        TableColumn<TradeStatistics, TradeStatistics> directionColumn = new TableColumn<>(Res.get("table.column.tradeType.header"));
         directionColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         directionColumn.setCellFactory(
                 new Callback<TableColumn<TradeStatistics, TradeStatistics>, TableCell<TradeStatistics,
@@ -610,7 +610,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(directionColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label("There is no data available");
+        Label placeholder = new Label(Res.get("table.placeholder.noData"));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);

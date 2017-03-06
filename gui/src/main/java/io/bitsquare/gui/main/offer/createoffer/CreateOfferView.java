@@ -774,12 +774,12 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         editOfferElements.add(paymentAccountsComboBox);
 
         // we display either currencyComboBox (multi currency account) or currencyTextField (single)
-        Tuple2<Label, ComboBox> currencyComboBoxTuple = addLabelComboBox(gridPane, ++gridRow, "Currency:");
+        Tuple2<Label, ComboBox> currencyComboBoxTuple = addLabelComboBox(gridPane, ++gridRow, Res.get("label.currency"));
         currencyComboBoxLabel = currencyComboBoxTuple.first;
         editOfferElements.add(currencyComboBoxLabel);
         currencyComboBox = currencyComboBoxTuple.second;
         editOfferElements.add(currencyComboBox);
-        currencyComboBox.setPromptText("Select currency");
+        currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
@@ -792,7 +792,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             }
         });
 
-        Tuple2<Label, TextField> currencyTextFieldTuple = addLabelTextField(gridPane, gridRow, "Currency:", "", 5);
+        Tuple2<Label, TextField> currencyTextFieldTuple = addLabelTextField(gridPane, gridRow, Res.get("label.currency"), "", 5);
         currencyTextFieldLabel = currencyTextFieldTuple.first;
         editOfferElements.add(currencyTextFieldLabel);
         currencyTextField = currencyTextFieldTuple.second;

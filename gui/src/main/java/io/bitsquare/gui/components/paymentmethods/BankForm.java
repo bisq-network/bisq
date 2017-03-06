@@ -205,7 +205,7 @@ abstract class BankForm extends PaymentMethodForm {
         addLabelTextField(gridPane, gridRow, "Account name:", paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(paymentAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Country:", getCountryBasedPaymentAccount().getCountry() != null ? getCountryBasedPaymentAccount().getCountry().name : "");
-        addLabelTextField(gridPane, ++gridRow, "Currency:", paymentAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), paymentAccount.getSingleTradeCurrency().getNameAndCode());
         addAcceptedBanksForDisplayAccount();
         addHolderNameAndIdForDisplayAccount();
 
@@ -382,8 +382,8 @@ abstract class BankForm extends PaymentMethodForm {
             }
         });
 
-        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, "Currency:").second;
-        currencyComboBox.setPromptText("Select currency");
+        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, Res.get("label.currency")).second;
+        currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
         currencyComboBox.setOnAction(e -> {
             TradeCurrency selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();

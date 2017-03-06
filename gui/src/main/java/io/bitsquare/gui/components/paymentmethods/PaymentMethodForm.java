@@ -22,6 +22,7 @@ import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
@@ -64,8 +65,8 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, "Currency:").second;
-        currencyComboBox.setPromptText("Select currency");
+        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, Res.get("label.currency")).second;
+        currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllMainFiatCurrencies()));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override

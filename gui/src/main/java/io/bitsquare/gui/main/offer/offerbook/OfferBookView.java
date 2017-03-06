@@ -110,7 +110,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         offerBookTitle = addTitledGroupBg(root, gridRow, 3, "Available offers");
 
         currencyComboBox = addLabelComboBox(root, gridRow, "Filter by currency:", Layout.FIRST_ROW_DISTANCE).second;
-        currencyComboBox.setPromptText("Select currency");
+        currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(GUIUtil.getTradeCurrencyConverter());
 
         paymentMethodComboBox = addLabelComboBox(root, ++gridRow, "Filter by payment method:").second;

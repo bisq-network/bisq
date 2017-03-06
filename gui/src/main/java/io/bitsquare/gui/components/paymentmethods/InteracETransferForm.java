@@ -90,7 +90,7 @@ public class InteracETransferForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", interacETransferAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), interacETransferAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -114,7 +114,7 @@ public class InteracETransferForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Email:", interacETransferAccount.getEmail()).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Secret question:", interacETransferAccount.getQuestion()).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Answer:", interacETransferAccount.getAnswer()).second.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", interacETransferAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), interacETransferAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 

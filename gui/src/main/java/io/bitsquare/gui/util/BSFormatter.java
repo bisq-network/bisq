@@ -619,8 +619,8 @@ public class BSFormatter {
 
     public String getPriceWithCurrencyCode(String currencyCode) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode))
-            return "Price in BTC for 1 " + currencyCode;
+            return Res.get("table.column.priceInCurPerCur.header", "BTC", currencyCode);
         else
-            return "Price in " + currencyCode + " for 1 BTC";
+            return Res.get("table.column.priceInCurPerCur.header", currencyCode, "BTC");
     }
 }

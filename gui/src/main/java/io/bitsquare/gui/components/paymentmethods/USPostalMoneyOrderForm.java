@@ -78,7 +78,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         });
 
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", usPostalMoneyOrderAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), usPostalMoneyOrderAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -103,7 +103,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         textArea.setText(usPostalMoneyOrderAccount.getPostalAddress());
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", usPostalMoneyOrderAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), usPostalMoneyOrderAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 

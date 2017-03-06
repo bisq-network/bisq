@@ -315,7 +315,7 @@ public class SepaForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "BIC:", sepaAccount.getBic()).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Country of Bank:",
                 sepaAccount.getCountry() != null ? sepaAccount.getCountry().name : "");
-        addLabelTextField(gridPane, ++gridRow, "Currency:", sepaAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), sepaAccount.getSingleTradeCurrency().getNameAndCode());
         String countries;
         Tooltip tooltip = null;
         if (CountryUtil.containsAllSepaEuroCountries(sepaAccount.getAcceptedCountryCodes())) {
