@@ -73,7 +73,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), chaseQuickPayAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), chaseQuickPayAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -96,7 +96,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", chaseQuickPayAccount.getHolderName());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Email:", chaseQuickPayAccount.getEmail()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), chaseQuickPayAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), chaseQuickPayAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 

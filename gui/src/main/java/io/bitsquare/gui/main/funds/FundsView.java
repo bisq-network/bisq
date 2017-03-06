@@ -26,6 +26,7 @@ import io.bitsquare.gui.main.funds.locked.LockedView;
 import io.bitsquare.gui.main.funds.reserved.ReservedView;
 import io.bitsquare.gui.main.funds.transactions.TransactionsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
@@ -54,6 +55,12 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
+        depositTab.setText(Res.get("funds.tab.deposit"));
+        withdrawalTab.setText(Res.get("funds.tab.withdrawal"));
+        reservedTab.setText(Res.get("funds.tab.reserved"));
+        lockedTab.setText(Res.get("funds.tab.locked"));
+        transactionsTab.setText(Res.get("funds.tab.transactions"));
+
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(FundsView.class) == 1)
                 loadView(viewPath.tip());

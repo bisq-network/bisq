@@ -219,7 +219,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     }
 
     private void setColumns() {
-        TableColumn<CompensationRequest, CompensationRequest> dateColumn = new TableColumn<CompensationRequest, CompensationRequest>(Res.get("table.column.dateTime.header")) {
+        TableColumn<CompensationRequest, CompensationRequest> dateColumn = new TableColumn<CompensationRequest, CompensationRequest>(Res.get("shared.dateTime")) {
             {
                 setMinWidth(190);
                 setMaxWidth(190);

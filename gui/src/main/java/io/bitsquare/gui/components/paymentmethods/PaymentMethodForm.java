@@ -65,7 +65,7 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, Res.get("label.currency")).second;
+        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency")).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllMainFiatCurrencies()));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {

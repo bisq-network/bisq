@@ -24,6 +24,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.settings.about.AboutView;
 import io.bitsquare.gui.main.settings.network.NetworkSettingsView;
 import io.bitsquare.gui.main.settings.preferences.PreferencesView;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.ScrollPane;
@@ -35,7 +36,7 @@ import javax.inject.Inject;
 @FxmlView
 public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
     @FXML
-    Tab preferencesTab, networkSettingsTab, aboutTab;
+    Tab settingsTab, networkTab, aboutTab;
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Navigation.Listener navigationListener;
@@ -49,15 +50,19 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     @Override
     public void initialize() {
+        settingsTab.setText(Res.get("settings.tab.settings"));
+        networkTab.setText(Res.get("settings.tab.network"));
+        aboutTab.setText(Res.get("settings.tab.aboutTab"));
+                
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(SettingsView.class) == 1)
                 loadView(viewPath.tip());
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == preferencesTab)
+            if (newValue == settingsTab)
                 navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
-            else if (newValue == networkSettingsTab)
+            else if (newValue == networkTab)
                 navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
             else if (newValue == aboutTab)
                 navigation.navigateTo(MainView.class, SettingsView.class, AboutView.class);
@@ -70,9 +75,9 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         navigation.addListener(navigationListener);
 
         Tab selectedItem = root.getSelectionModel().getSelectedItem();
-        if (selectedItem == preferencesTab)
+        if (selectedItem == settingsTab)
             navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
-        else if (selectedItem == networkSettingsTab)
+        else if (selectedItem == networkTab)
             navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
         else if (selectedItem == aboutTab)
             navigation.navigateTo(MainView.class, SettingsView.class, AboutView.class);
@@ -88,8 +93,8 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         final Tab tab;
         View view = viewLoader.load(viewClass);
 
-        if (view instanceof PreferencesView) tab = preferencesTab;
-        else if (view instanceof NetworkSettingsView) tab = networkSettingsTab;
+        if (view instanceof PreferencesView) tab = settingsTab;
+        else if (view instanceof NetworkSettingsView) tab = networkTab;
         else if (view instanceof AboutView) tab = aboutTab;
         else throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");
 

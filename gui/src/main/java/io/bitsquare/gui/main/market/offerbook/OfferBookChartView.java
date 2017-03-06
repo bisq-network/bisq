@@ -111,7 +111,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.offers"), model.preferences));
 
-        Label currencyLabel = new Label(Res.get("label.currency"));
+        Label currencyLabel = new Label(Res.getWithCol("shared.currency"));
         HBox currencyHBox = new HBox();
         currencyHBox.setSpacing(5);
         currencyHBox.setPadding(new Insets(5, -20, -5, 20));
@@ -173,7 +173,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
                     areaChart.setTitle(Res.get("market.offerBook.chart.title", formatter.getCurrencyNameAndCurrencyPair(code)));
-                    volumeColumnLabel.set(Res.get("table.column.amountWithCur.header", code));
+                    volumeColumnLabel.set(Res.get("shared.amountWithCur", code));
                     xAxis.setTickLabelFormatter(new StringConverter<Number>() {
                         @Override
                         public String toString(Number object) {
@@ -207,7 +207,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         sellOfferHeaderLabel.setText(Res.get("market.offerBook.sellOfferHeaderLabel", code, "BTC"));
                         sellOfferButton.setText(Res.get("market.offerBook.sellOfferButton", code, "BTC"));
 
-                        priceColumnLabel.set(Res.get("table.column.priceWithCur.header", "BTC"));
+                        priceColumnLabel.set(Res.get("shared.priceWithCur", "BTC"));
                     } else {
                         if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(Offer.Direction.SELL.name())) {
                             bottomHBox.getChildren().get(0).toFront();
@@ -220,7 +220,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         sellOfferHeaderLabel.setText(Res.get("market.offerBook.sellOfferHeaderLabel", "BTC", code));
                         sellOfferButton.setText(Res.get("market.offerBook.sellOfferButton", "BTC", code));
 
-                        priceColumnLabel.set(Res.get("table.column.priceWithCur.header", code));
+                        priceColumnLabel.set(Res.get("shared.priceWithCur", code));
                     }
                     xAxis.setLabel(formatter.getPriceWithCurrencyCode(code));
 
@@ -263,7 +263,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(false);
         yAxis.setAutoRanging(true);
-        yAxis.setLabel(Res.get("table.column.amountWithCur.header", "BTC"));
+        yAxis.setLabel(Res.get("shared.amountWithCur", "BTC"));
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));
 
         seriesBuy = new XYChart.Series<>();
@@ -382,7 +382,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 });
 
         // amount
-        TableColumn<OfferListItem, OfferListItem> amountColumn = new TableColumn<>(Res.get("table.column.amountWithCur.header", "BTC"));
+        TableColumn<OfferListItem, OfferListItem> amountColumn = new TableColumn<>(Res.get("shared.amountWithCur", "BTC"));
         amountColumn.setMinWidth(115);
         amountColumn.setSortable(false);
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -404,7 +404,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 });
 
         // accumulated
-        TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new TableColumn<>(Res.get("table.column.sumWithCur.header", "BTC"));
+        TableColumn<OfferListItem, OfferListItem> accumulatedColumn = new TableColumn<>(Res.get("shared.sumWithCur", "BTC"));
         accumulatedColumn.setMinWidth(100);
         accumulatedColumn.setSortable(false);
         accumulatedColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));

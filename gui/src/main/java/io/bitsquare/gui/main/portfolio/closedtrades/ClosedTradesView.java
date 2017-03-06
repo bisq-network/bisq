@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
@@ -76,6 +77,16 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     @Override
     public void initialize() {
+        priceColumn.setText(Res.get("shared.price"));
+        amountColumn.setText(Res.get("shared.amountWithCur", "BTC"));
+        volumeColumn.setText(Res.get("shared.volume"));
+        marketColumn.setText(Res.get("shared.market"));
+        directionColumn.setText(Res.get("shared.tradeType"));
+        dateColumn.setText(Res.get("shared.dateTime"));
+        tradeIdColumn.setText(Res.get("shared.tradeId"));
+        stateColumn.setText(Res.get("shared.state"));
+        avatarColumn.setText(Res.get(""));
+        
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No closed trades available"));
 

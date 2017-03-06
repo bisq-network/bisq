@@ -36,6 +36,7 @@ import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -74,7 +75,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<DepositListItem> tableView;
     @FXML
-    TableColumn<DepositListItem, DepositListItem> selectColumn, addressColumn, balanceColumn, confidenceColumn, usageColumn;
+    TableColumn<DepositListItem, DepositListItem> selectColumn, addressColumn, balanceColumn, confirmationsColumn, usageColumn;
     private ImageView qrCodeImageView;
     private AddressTextField addressTextField;
     private Button generateNewAddressButton;
@@ -113,6 +114,12 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        selectColumn.setText(Res.get("shared.select"));
+        addressColumn.setText(Res.get("shared.address"));
+        balanceColumn.setText(Res.get("shared.balanceWithCur"));
+        confirmationsColumn.setText(Res.get("shared.confirmations"));
+        usageColumn.setText(Res.get("shared.usage"));
+
         // trigger creation of at least 1 savings address
         walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
 
@@ -131,7 +138,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
         addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
         balanceColumn.setComparator((o1, o2) -> o1.getBalanceAsCoin().compareTo(o2.getBalanceAsCoin()));
-        confidenceColumn.setComparator((o1, o2) -> Double.valueOf(o1.getTxConfidenceIndicator().getProgress())
+        confirmationsColumn.setComparator((o1, o2) -> Double.valueOf(o1.getTxConfidenceIndicator().getProgress())
                 .compareTo(o2.getTxConfidenceIndicator().getProgress()));
         usageColumn.setComparator((a, b) -> (a.getNumTxOutputs() < b.getNumTxOutputs()) ? -1 : ((a.getNumTxOutputs() == b.getNumTxOutputs()) ? 0 : 1));
         tableView.getSortOrder().add(usageColumn);
@@ -431,9 +438,9 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
 
     private void setConfidenceColumnCellFactory() {
-        confidenceColumn.setCellValueFactory((addressListItem) ->
+        confirmationsColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        confidenceColumn.setCellFactory(
+        confirmationsColumn.setCellFactory(
                 new Callback<TableColumn<DepositListItem, DepositListItem>, TableCell<DepositListItem,
                         DepositListItem>>() {
 

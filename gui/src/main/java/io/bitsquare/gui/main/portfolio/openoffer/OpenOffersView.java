@@ -26,6 +26,7 @@ import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -62,6 +63,15 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     @Override
     public void initialize() {
+        priceColumn.setText(Res.get("shared.price"));
+        amountColumn.setText(Res.get("portfolio.openOffer.amountMinMax"));
+        volumeColumn.setText(Res.get("portfolio.openOffer.volumeMinMax"));
+        marketColumn.setText(Res.get("shared.market"));
+        directionColumn.setText(Res.get("shared.tradeType"));
+        dateColumn.setText(Res.get("shared.dateTime"));
+        offerIdColumn.setText(Res.get("shared.offerId"));
+        removeItemColumn.setText("");
+
         setOfferIdColumnCellFactory();
         setDirectionColumnCellFactory();
         setMarketColumnCellFactory();

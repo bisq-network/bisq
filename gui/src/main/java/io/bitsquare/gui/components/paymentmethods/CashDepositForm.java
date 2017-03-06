@@ -217,7 +217,7 @@ public class CashDepositForm extends PaymentMethodForm {
         addLabelTextField(gridPane, gridRow, "Account name:", paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(paymentAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Country:", getCountryBasedPaymentAccount().getCountry() != null ? getCountryBasedPaymentAccount().getCountry().name : "");
-        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), paymentAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), paymentAccount.getSingleTradeCurrency().getNameAndCode());
         addAcceptedBanksForDisplayAccount();
         addHolderNameAndIdForDisplayAccount();
         addLabelTextField(gridPane, ++gridRow, "Account holder email:", cashDepositAccountContractData.getHolderEmail());
@@ -399,7 +399,7 @@ public class CashDepositForm extends PaymentMethodForm {
             }
         });
 
-        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, Res.get("label.currency")).second;
+        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency")).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
         currencyComboBox.setOnAction(e -> {

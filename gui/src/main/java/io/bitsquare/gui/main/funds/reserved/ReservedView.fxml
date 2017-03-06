@@ -28,10 +28,10 @@
 
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180" maxWidth="180"/>
-            <TableColumn text="Details" fx:id="detailsColumn" minWidth="320"/>
-            <TableColumn text="Address" fx:id="addressColumn" minWidth="320"/>
-            <TableColumn text="Balance in BTC" fx:id="balanceColumn" minWidth="110"/>
+            <TableColumn fx:id="dateColumn" minWidth="180" maxWidth="180"/>
+            <TableColumn fx:id="detailsColumn" minWidth="320"/>
+            <TableColumn fx:id="addressColumn" minWidth="320"/>
+            <TableColumn fx:id="balanceColumn" minWidth="110"/>
         </columns>
     </TableView>
 

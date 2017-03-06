@@ -21,6 +21,7 @@ import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
@@ -49,6 +50,15 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
     @Override
     public void initialize() {
+        priceColumn.setText(Res.get("shared.price"));
+        amountColumn.setText(Res.get("shared.amountWithCur", "BTC"));
+        volumeColumn.setText(Res.get("shared.volume"));
+        marketColumn.setText(Res.get("shared.market"));
+        directionColumn.setText(Res.get("shared.tradeType"));
+        dateColumn.setText(Res.get("shared.dateTime"));
+        tradeIdColumn.setText(Res.get("shared.tradeId"));
+        stateColumn.setText(Res.get("shared.state"));
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No closed trades available"));
 

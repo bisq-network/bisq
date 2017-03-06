@@ -36,6 +36,7 @@ import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -66,6 +67,8 @@ import java.util.stream.Collectors;
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
 
+    @FXML
+    Label amountLabel, fromLabel, toLabel;
     @FXML
     Button withdrawButton;
     @FXML
@@ -119,6 +122,15 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        amountLabel.setText(Res.getWithCol("shared.amountWithCur", "BTC"));
+        fromLabel.setText(Res.getWithCol("funds.withdrawal.fromLabel", "BTC"));
+        toLabel.setText(Res.getWithCol("funds.withdrawal.toLabel", "BTC"));
+        withdrawButton.setText(Res.get("funds.withdrawal.withdrawButton"));
+
+        addressColumn.setText(Res.get("shared.address"));
+        balanceColumn.setText(Res.get("shared.balanceWithCur", "BTC"));
+        selectColumn.setText(Res.get("shared.select"));
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No funds are available for withdrawal"));
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);

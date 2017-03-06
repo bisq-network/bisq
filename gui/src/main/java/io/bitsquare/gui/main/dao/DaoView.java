@@ -26,6 +26,7 @@ import io.bitsquare.gui.main.dao.compensation.CompensationView;
 import io.bitsquare.gui.main.dao.voting.VotingView;
 import io.bitsquare.gui.main.dao.wallet.BsqWalletView;
 import io.bitsquare.gui.main.dao.wallet.dashboard.BsqDashboardView;
+import io.bitsquare.locale.Res;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -38,7 +39,7 @@ import javax.inject.Inject;
 public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
-    Tab bsqWalletTab, CompensationTab, votingTab;
+    Tab bsqWalletTab, compensationTab, votingTab;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -61,9 +62,13 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
+        bsqWalletTab.setText(Res.get("daoView.tab.bsqWallet"));
+        compensationTab.setText(Res.get("daoView.tab.compensation"));
+        votingTab.setText(Res.get("daoView.tab.voting"));
+        
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {
-                if (CompensationTab == null && viewPath.get(2).equals(CompensationView.class))
+                if (compensationTab == null && viewPath.get(2).equals(CompensationView.class))
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
                 else
                     loadView(viewPath.tip());
@@ -77,7 +82,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
                 else
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, selectedViewClass);
-            } else if (newValue == CompensationTab) {
+            } else if (newValue == compensationTab) {
                 navigation.navigateTo(MainView.class, DaoView.class, CompensationView.class);
             } else if (newValue == votingTab) {
                 navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
@@ -94,7 +99,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             Tab selectedItem = root.getSelectionModel().getSelectedItem();
             if (selectedItem == bsqWalletTab)
                 navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
-            else if (selectedItem == CompensationTab)
+            else if (selectedItem == compensationTab)
                 navigation.navigateTo(MainView.class, DaoView.class, CompensationView.class);
             else if (selectedItem == votingTab)
                 navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
@@ -113,7 +118,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             selectedTab = bsqWalletTab;
             bsqWalletView = (BsqWalletView) view;
         } else if (view instanceof CompensationView) {
-            selectedTab = CompensationTab;
+            selectedTab = compensationTab;
         } else if (view instanceof VotingView) {
             selectedTab = votingTab;
         }

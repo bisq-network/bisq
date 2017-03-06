@@ -128,7 +128,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<SpreadItem, SpreadItem> getCurrencyColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>(Res.get("table.column.currency.header")) {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>(Res.get("shared.currency")) {
             {
                 setMinWidth(160);
             }

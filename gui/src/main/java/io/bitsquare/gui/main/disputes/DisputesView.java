@@ -31,6 +31,7 @@ import io.bitsquare.gui.main.disputes.trader.TraderDisputeView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
@@ -71,14 +72,13 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         this.arbitratorManager = arbitratorManager;
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
-
-
         this.preferences = preferences;
     }
 
     @Override
     public void initialize() {
         log.debug("initialize ");
+        tradersDisputesTab.setText(Res.get("disputesView.tab.support"));
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DisputesView.class) == 1)
                 loadView(viewPath.tip());

@@ -774,7 +774,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         editOfferElements.add(paymentAccountsComboBox);
 
         // we display either currencyComboBox (multi currency account) or currencyTextField (single)
-        Tuple2<Label, ComboBox> currencyComboBoxTuple = addLabelComboBox(gridPane, ++gridRow, Res.get("label.currency"));
+        Tuple2<Label, ComboBox> currencyComboBoxTuple = addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency"));
         currencyComboBoxLabel = currencyComboBoxTuple.first;
         editOfferElements.add(currencyComboBoxLabel);
         currencyComboBox = currencyComboBoxTuple.second;
@@ -792,7 +792,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             }
         });
 
-        Tuple2<Label, TextField> currencyTextFieldTuple = addLabelTextField(gridPane, gridRow, Res.get("label.currency"), "", 5);
+        Tuple2<Label, TextField> currencyTextFieldTuple = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.currency"), "", 5);
         currencyTextFieldLabel = currencyTextFieldTuple.first;
         editOfferElements.add(currencyTextFieldLabel);
         currencyTextField = currencyTextFieldTuple.second;

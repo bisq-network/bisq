@@ -39,6 +39,14 @@ public class Res {
         return ResourceBundle.getBundle("i18n.displayStrings", new UTF8Control());
     }
 
+    public static String getWithCol(String key) {
+        return get(key) + ":";
+    }
+
+    public static String getWithCol(String key, Object... arguments) {
+        return get(key, arguments) + ":";
+    }
+
     public static String get(String key) {
         // TODO remove once translation done
         // for testing missing translation strings

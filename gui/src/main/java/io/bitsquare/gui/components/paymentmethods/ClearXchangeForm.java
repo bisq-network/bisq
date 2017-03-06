@@ -72,7 +72,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -95,7 +95,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", clearXchangeAccount.getHolderName());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Email or mobile no.:", clearXchangeAccount.getEmailOrMobileNr()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, Res.get("label.currency"), clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 

@@ -29,6 +29,7 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -56,7 +57,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<ReservedListItem> tableView;
     @FXML
-    TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn, confidenceColumn;
+    TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn;
 
     private final BtcWalletService walletService;
     private final TradeManager tradeManager;
@@ -90,6 +91,11 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        dateColumn.setText(Res.get("shared.dateTime"));
+        detailsColumn.setText(Res.get("shared.details"));
+        addressColumn.setText(Res.get("shared.address"));
+        balanceColumn.setText(Res.get("shared.balanceWithCur", "BTC"));
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No funds are reserved in open offers"));
 

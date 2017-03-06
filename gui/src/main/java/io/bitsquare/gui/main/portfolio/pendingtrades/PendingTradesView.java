@@ -26,6 +26,7 @@ import io.bitsquare.gui.components.PeerInfoIcon;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
@@ -55,7 +56,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, tradeVolumeColumn, tradeAmountColumn, avatarColumn, marketColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
+    TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, volumeColumn, amountColumn, avatarColumn, marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn;
     @FXML
 
     private SortedList<PendingTradesListItem> sortedList;
@@ -81,6 +82,16 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     public void initialize() {
+        priceColumn.setText(Res.get("shared.price"));
+        amountColumn.setText(Res.get("shared.amountWithCur", "BTC"));
+        volumeColumn.setText(Res.get("shared.volume"));
+        marketColumn.setText(Res.get("shared.market"));
+        roleColumn.setText(Res.get("portfolio.pending.role"));
+        dateColumn.setText(Res.get("shared.dateTime"));
+        tradeIdColumn.setText(Res.get("shared.tradeId"));
+        paymentMethodColumn.setText(Res.get("shared.paymentMethod"));
+        avatarColumn.setText(Res.get(""));
+        
         setTradeIdColumnCellFactory();
         setDateColumnCellFactory();
         setAmountColumnCellFactory();
@@ -95,15 +106,15 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         tableView.setPlaceholder(new Label("No pending trades available"));
         tableView.setMinHeight(100);
 
-        idColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
+        tradeIdColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
         dateColumn.setComparator((o1, o2) -> o1.getTrade().getDate().compareTo(o2.getTrade().getDate()));
-        tradeVolumeColumn.setComparator((o1, o2) -> {
+        volumeColumn.setComparator((o1, o2) -> {
             if (o1.getTrade().getTradeVolume() != null && o2.getTrade().getTradeVolume() != null)
                 return o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume());
             else
                 return 0;
         });
-        tradeAmountColumn.setComparator((o1, o2) -> {
+        amountColumn.setComparator((o1, o2) -> {
             if (o1.getTrade().getTradeAmount() != null && o2.getTrade().getTradeAmount() != null)
                 return o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount());
             else
@@ -250,8 +261,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setTradeIdColumnCellFactory() {
-        idColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
-        idColumn.setCellFactory(
+        tradeIdColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
+        tradeIdColumn.setCellFactory(
                 new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem, PendingTradesListItem>>() {
 
                     @Override
@@ -311,8 +322,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setAmountColumnCellFactory() {
-        tradeAmountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        tradeAmountColumn.setCellFactory(
+        amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        amountColumn.setCellFactory(
                 new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
                         PendingTradesListItem>>() {
                     @Override
@@ -355,8 +366,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setVolumeColumnCellFactory() {
-        tradeVolumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        tradeVolumeColumn.setCellFactory(
+        volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        volumeColumn.setCellFactory(
                 new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
                         PendingTradesListItem>>() {
                     @Override

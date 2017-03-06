@@ -33,6 +33,7 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -119,9 +120,16 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        dateColumn.setText(Res.get("shared.dateTime"));
+        detailsColumn.setText(Res.get("shared.details"));
+        addressColumn.setText(Res.get("shared.address"));
+        transactionColumn.setText(Res.get("shared.txId", "BTC"));
+        amountColumn.setText(Res.get("shared.amountWithCur", "BTC"));
+        confidenceColumn.setText(Res.get("shared.confirmations", "BTC"));
+        revertTxColumn.setText(Res.get("shared.revert", "BTC"));
+                
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No transactions available"));
-
 
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
