@@ -38,9 +38,10 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         this.receiversPubKeyBytes = new X509EncodedKeySpec(this.receiversPubKey.getEncoded()).getEncoded();
     }
 
-    public ProtectedMailboxStorageEntry(MailboxStoragePayload mailboxStoragePayload, PublicKey ownerStoragePubKey,
-                                        int sequenceNumber, byte[] signature, byte[] receiversPubKeyBytes) {
-        super(mailboxStoragePayload, ownerStoragePubKey, sequenceNumber, signature);
+    public ProtectedMailboxStorageEntry(long creationTimeStamp, MailboxStoragePayload mailboxStoragePayload,
+                                        byte[] ownerStoragePubKey, int sequenceNumber, byte[] signature,
+                                        byte[] receiversPubKeyBytes) {
+        super(creationTimeStamp, mailboxStoragePayload, ownerStoragePubKey, sequenceNumber, signature);
         this.receiversPubKeyBytes = receiversPubKeyBytes;
         init();
     }

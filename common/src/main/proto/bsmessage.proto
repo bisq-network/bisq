@@ -102,7 +102,7 @@ message GetDataResponse {
     int64 message_version = 1;
     int32 request_nonce = 2;
     bool is_get_updated_data_response = 3;
-    repeated ProtectedStorageEntry data_set = 4;
+    repeated ProtectedStorageEntryOrProtectedMailboxStorageEntry data_set = 4;
     repeated int32 supported_capabilities = 5;
 }
 
@@ -137,7 +137,14 @@ message RemoveDataMessage {
 }
 
 message AddDataMessage {
-    ProtectedStorageEntry protected_storage_entry = 1;
+    ProtectedStorageEntryOrProtectedMailboxStorageEntry entry = 1;
+}
+
+message ProtectedStorageEntryOrProtectedMailboxStorageEntry {
+    oneof message {
+        ProtectedStorageEntry protected_storage_entry = 1;
+        ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 2;
+    }
 }
 
 message RefreshTTLMessage {

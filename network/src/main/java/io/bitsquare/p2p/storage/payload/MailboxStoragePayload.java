@@ -104,7 +104,8 @@ public final class MailboxStoragePayload implements StoragePayload {
         return Messages.StoragePayload.newBuilder().setMailboxStoragePayload(Messages.MailboxStoragePayload.newBuilder()
                 .setTTL(TTL)
                 .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toProtoBuf().getPrefixedSealedAndSignedMessage())
-                .setSenderPubKeyForAddOperationBytes(ByteString.copyFrom(senderPubKeyForAddOperationBytes))).build();
+                .setSenderPubKeyForAddOperationBytes(ByteString.copyFrom(senderPubKeyForAddOperationBytes))
+                .setReceiverPubKeyForRemoveOperationBytes(ByteString.copyFrom(receiverPubKeyForRemoveOperationBytes))).build();
     }
 
 

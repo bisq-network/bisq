@@ -54,9 +54,7 @@ import java.io.StringWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.bitsquare.common.wire.proto.Messages.Envelope.MessageCase.PING;
-import static io.bitsquare.common.wire.proto.Messages.Envelope.MessageCase.PONG;
-import static io.bitsquare.common.wire.proto.Messages.Envelope.MessageCase.REFRESH_TTL_MESSAGE;
+import static io.bitsquare.common.wire.proto.Messages.Envelope.MessageCase.*;
 
 /**
  * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,
@@ -451,8 +449,16 @@ public class ProtoBufferUtilities {
         return new RemoveMailboxDataMessage(getProtectedMailBoxStorageEntry(msg.getProtectedStorageEntry()));
     }
 
-    private static Message getAddDataMessage(Messages.Envelope envelope) {
-        return new AddDataMessage(getProtectedStorageEntry(envelope.getAddDataMessage().getProtectedStorageEntry()));
+    public static Message getAddDataMessage(Messages.Envelope envelope) {
+        return new AddDataMessage(getProtectedOrMailboxStorageEntry(envelope.getAddDataMessage().getEntry()));
+    }
+
+    public static ProtectedStorageEntry getProtectedOrMailboxStorageEntry(Messages.ProtectedStorageEntryOrProtectedMailboxStorageEntry entry) {
+        if(entry.getMessageCase() == Messages.ProtectedStorageEntryOrProtectedMailboxStorageEntry.MessageCase.PROTECTED_MAILBOX_STORAGE_ENTRY) {
+            return getProtectedMailBoxStorageEntry(entry.getProtectedMailboxStorageEntry());
+        } else {
+            return getProtectedStorageEntry(entry.getProtectedStorageEntry());
+        }
     }
 
     private static Message getRemoveDataMessage(Messages.Envelope envelope) {
@@ -477,8 +483,9 @@ public class ProtoBufferUtilities {
         }
 
         ProtectedMailboxStorageEntry storageEntry = new ProtectedMailboxStorageEntry(
+                entry.creationTimeStamp,
                 (MailboxStoragePayload) entry.getStoragePayload(),
-                entry.getStoragePayload().getOwnerPubKey(), entry.sequenceNumber,
+                entry.ownerPubKey.getEncoded(), entry.sequenceNumber,
                 entry.signature, protoEntry.getReceiversPubKeyBytes().toByteArray());
         return storageEntry;
     }
@@ -589,7 +596,7 @@ public class ProtoBufferUtilities {
         SealedAndSigned sealedAndSigned = new SealedAndSigned(msg.getSealedAndSigned().getEncryptedSecretKey().toByteArray(),
                 msg.getSealedAndSigned().getEncryptedPayloadWithHmac().toByteArray(),
                 msg.getSealedAndSigned().getSignature().toByteArray(), msg.getSealedAndSigned().getSigPublicKeyBytes().toByteArray());
-        return new PrefixedSealedAndSignedMessage(nodeAddress, sealedAndSigned, msg.getAddressPrefixHash().toByteArray());
+        return new PrefixedSealedAndSignedMessage(nodeAddress, sealedAndSigned, msg.getAddressPrefixHash().toByteArray(), msg.getUid());
     }
 
     @NotNull
@@ -598,7 +605,7 @@ public class ProtoBufferUtilities {
                 envelope.getGetDataResponse().getDataSetList()
                         .stream()
                         .map(protectedStorageEntry ->
-                                getProtectedStorageEntry(protectedStorageEntry)).collect(Collectors.toList()));
+                                getProtectedOrMailboxStorageEntry(protectedStorageEntry)).collect(Collectors.toList()));
         return new GetDataResponse(set, envelope.getGetDataResponse().getRequestNonce(), envelope.getGetDataResponse().getIsGetUpdatedDataResponse());
     }
 

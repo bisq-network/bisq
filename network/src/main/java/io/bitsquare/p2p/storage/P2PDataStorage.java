@@ -418,7 +418,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (sequenceNumberMap.containsKey(hashOfPayload))
             sequenceNumber = sequenceNumberMap.get(hashOfPayload).sequenceNr + 1;
         else
-            sequenceNumber = 0;
+            sequenceNumber = 1;
 
         byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
@@ -433,7 +433,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (sequenceNumberMap.containsKey(hashOfData))
             sequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr + 1;
         else
-            sequenceNumber = 0;
+            sequenceNumber = 1;
 
         byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(expirableMailboxStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);

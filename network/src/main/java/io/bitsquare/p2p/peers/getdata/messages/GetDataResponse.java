@@ -4,6 +4,7 @@ import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
+import io.bitsquare.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 
 import javax.annotation.Nullable;
@@ -45,13 +46,22 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage {
         Messages.GetDataResponse.Builder builder = Messages.GetDataResponse.newBuilder();
         builder.addAllDataSet(
                 dataSet.stream()
-                        .map(protectedStorageEntry ->
-                                ((Messages.ProtectedStorageEntry)protectedStorageEntry.toProtoBuf()))
+                        .map(protectedStorageEntry ->  {
+                            Messages.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder builder1 =
+                                    Messages.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
+                            if(protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
+                                builder1.setProtectedMailboxStorageEntry((Messages.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoBuf());
+                            } else {
+                                builder1.setProtectedStorageEntry((Messages.ProtectedStorageEntry) protectedStorageEntry.toProtoBuf());
+                            }
+                            return builder1.build();
+                        })
                         .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
                 .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
         return Messages.Envelope.newBuilder().setGetDataResponse(builder).build();
     }
+
 
     @Override
     public String toString() {
