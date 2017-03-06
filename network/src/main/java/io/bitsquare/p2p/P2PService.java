@@ -700,6 +700,17 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void removeEntryFromMailbox(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
+        // We need to delay a bit to avoid that we remove our msg then get it from other peers again and reapply it again.
+        // If we delay the removal we have better chances that repeated messages we got from other peers are already filtered
+        // at the P2PService layer.
+        // Though we have to check in the client classes to not apply the same message again as there is no guarantee 
+        // when we would get a message again from the network.
+        UserThread.runAfter(() -> {
+            delayedRemoveEntryFromMailbox(decryptedMsgWithPubKey);
+        }, 2);
+    }
+
+    private void delayedRemoveEntryFromMailbox(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {

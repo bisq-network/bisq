@@ -31,7 +31,7 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
-import io.bitsquare.common.handlers.ErrorMessageHandler;
+import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.p2p.BootstrapListener;
@@ -183,6 +183,7 @@ public class DisputeManager {
     private void applyMessages() {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             Message message = decryptedMessageWithPubKey.message;
+            log.debug("decryptedDirectMessageWithPubKeys.message " + message);
             if (message instanceof DisputeMessage)
                 dispatchMessage((DisputeMessage) message);
         });
@@ -214,10 +215,10 @@ public class DisputeManager {
             log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
     }
 
-    public void sendOpenNewDisputeMessage(Dispute dispute, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
         if (!disputes.contains(dispute)) {
             final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
-            if (!storedDisputeOptional.isPresent()) {
+            if (!storedDisputeOptional.isPresent() || reOpen) {
                 DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
                         keyRing.getPubKeyRing().hashCode(),
                         true,
@@ -227,8 +228,10 @@ public class DisputeManager {
                         p2PService.getAddress());
                 disputeCommunicationMessage.setIsSystemMessage(true);
                 dispute.addDisputeMessage(disputeCommunicationMessage);
-                disputes.add(dispute);
-                disputesObservableList.add(dispute);
+                if (!reOpen) {
+                    disputes.add(dispute);
+                    disputesObservableList.add(dispute);
+                }
 
                 p2PService.sendEncryptedMailboxMessage(dispute.getContract().arbitratorNodeAddress,
                         dispute.getArbitratorPubKeyRing(),
@@ -249,7 +252,7 @@ public class DisputeManager {
                             @Override
                             public void onFault(String errorMessage) {
                                 log.error("sendEncryptedMessage failed");
-                                errorMessageHandler.handleErrorMessage("Sending dispute message failed: " + errorMessage);
+                                faultHandler.handleFault("Sending dispute message failed: " + errorMessage, new MessageDeliveryFailedException());
                             }
                         }
                 );
@@ -257,12 +260,12 @@ public class DisputeManager {
                 final String msg = "We got a dispute already open for that trade and trading peer.\n" +
                         "TradeId = " + dispute.getTradeId();
                 log.warn(msg);
-                errorMessageHandler.handleErrorMessage(msg);
+                faultHandler.handleFault(msg, new DisputeAlreadyOpenException());
             }
         } else {
             final String msg = "We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId();
             log.warn(msg);
-            errorMessageHandler.handleErrorMessage(msg);
+            faultHandler.handleFault(msg, new DisputeAlreadyOpenException());
         }
     }
 
