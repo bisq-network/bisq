@@ -135,7 +135,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     @Override
     protected void activate() {
         // root.getParent() is null at initialize
-        tabPaneSelectionModel = ((TabPane) root.getParent().getParent()).getSelectionModel();
+        tabPaneSelectionModel = GUIUtil.getParentOfType(root, TabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
@@ -279,7 +279,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
-        priceChart.setMinHeight(200);
+        priceChart.setMinHeight(198);
+        priceChart.setPrefHeight(198);
         priceChart.setMaxHeight(300);
         priceChart.setLegendVisible(false);
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
@@ -321,7 +322,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
         volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
-        volumeChart.setMinHeight(150);
+        volumeChart.setMinHeight(148);
+        volumeChart.setPrefHeight(148);
         volumeChart.setMaxHeight(200);
         volumeChart.setLegendVisible(false);
     }
@@ -422,6 +424,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private void createTable() {
         tableView = new TableView<>();
         tableView.setMinHeight(140);
+        tableView.setPrefHeight(140);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
         // date

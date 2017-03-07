@@ -144,7 +144,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     @Override
     protected void activate() {
         // root.getParent() is null at initialize
-        tabPaneSelectionModel = ((TabPane) root.getParent().getParent()).getSelectionModel();
+        tabPaneSelectionModel = GUIUtil.getParentOfType(root, TabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
 
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
@@ -271,6 +271,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         areaChart.setAnimated(false);
         areaChart.setId("charts");
         areaChart.setMinHeight(300);
+        areaChart.setPrefHeight(300);
         areaChart.setPadding(new Insets(0, 30, 0, 0));
         areaChart.getData().addAll(seriesBuy, seriesSell);
     }
@@ -286,6 +287,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(Offer.Direction direction) {
         TableView<OfferListItem> tableView = new TableView<>();
         tableView.setMinHeight(109);
+        tableView.setPrefHeight(121);
         tableView.setMinWidth(480); //530
 
         // price
