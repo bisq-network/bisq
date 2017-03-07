@@ -31,15 +31,5 @@ public class SellOfferView extends OfferView {
     public SellOfferView(ViewLoader viewLoader, Navigation navigation, Preferences preferences) {
         super(viewLoader, navigation, preferences);
     }
-
-    @Override
-    protected String getCreateOfferTabName() {
-        return "Create offer";
-    }
-
-    @Override
-    protected String getTakeOfferTabName() {
-        return "Take offer";
-    }
 }
 

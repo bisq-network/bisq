@@ -23,7 +23,6 @@ import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.PeerInfoIcon;
-import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
@@ -82,7 +81,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private OfferView.OfferActionHandler offerActionHandler;
     private int gridRow = 0;
-    private TitledGroupBg offerBookTitle;
     private Label nrOfOffersLabel;
     private ListChangeListener<OfferBookListItem> offerListListener;
     private MonadicBinding<Void> currencySelectionBinding;
@@ -107,21 +105,21 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     public void initialize() {
         root.setPadding(new Insets(20, 25, 5, 25));
 
-        offerBookTitle = addTitledGroupBg(root, gridRow, 3, "Available offers");
+        addTitledGroupBg(root, gridRow, 3, Res.get("offerbook.availableOffers"));
 
-        currencyComboBox = addLabelComboBox(root, gridRow, "Filter by currency:", Layout.FIRST_ROW_DISTANCE).second;
+        currencyComboBox = addLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(GUIUtil.getTradeCurrencyConverter());
 
-        paymentMethodComboBox = addLabelComboBox(root, ++gridRow, "Filter by payment method:").second;
-        paymentMethodComboBox.setPromptText("Select payment method");
+        paymentMethodComboBox = addLabelComboBox(root, ++gridRow, Res.get("offerbook.filterByPaymentMethod")).second;
+        paymentMethodComboBox.setPromptText(Res.get("offerbook.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(20);
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
                 String id = paymentMethod.getId();
                 if (id.equals(GUIUtil.SHOW_ALL_FLAG))
-                    return "▶ Show all";
+                    return "▶ " + Res.get("list.currency.showAll");
                 else if (paymentMethod.equals(PaymentMethod.BLOCK_CHAINS))
                     return "✦ " + Res.get(id);
                 else
@@ -159,7 +157,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         tableView.getSortOrder().add(priceColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label("Currently there are no offers available");
+        Label placeholder = new Label(Res.get("table.placeholder.noItems", Res.get("shared.offers")));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
@@ -195,7 +193,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setHalignment(createOfferButton, HPos.RIGHT);
         GridPane.setVgrow(createOfferButton, Priority.NEVER);
         GridPane.setValignment(createOfferButton, VPos.TOP);
-        offerListListener = c -> nrOfOffersLabel.setText("No. of offers: " + model.getOfferList().size());
+        offerListListener = c -> nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));
     }
 
     @Override
@@ -226,13 +224,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 (showAll, code) -> {
                     setDirectionTitles();
                     if (showAll) {
-                        volumeColumn.setText("Amount (min - max)");
-                        priceColumn.setText("Price");
+                        volumeColumn.setText(Res.get("shared.amountMinMax"));
+                        priceColumn.setText(Res.get("shared.price"));
 
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(0, marketColumn);
                     } else {
-                        volumeColumn.setText(code + " (min - max)");
+                        volumeColumn.setText(Res.get("offerbook.volume", code));
                         priceColumn.setText(formatter.getPriceWithCurrencyCode(code));
 
                         if (tableView.getColumns().contains(marketColumn))
@@ -251,7 +249,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
 
         model.getOfferList().addListener(offerListListener);
-        nrOfOffersLabel.setText("No. of offers: " + model.getOfferList().size());
+        nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));
     }
 
     @Override
@@ -292,16 +290,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
             Offer.Direction direction = model.getDirection();
-            String preFix = "Create new offer to ";
-            String directionText = direction == Offer.Direction.BUY ? "buy" : "sell";
-            String mirroredDirectionText = direction == Offer.Direction.SELL ? "buy" : "sell";
+            String preFix = Res.get("offerbook.createOfferTo") + " ";
+            String directionText = direction == Offer.Direction.BUY ? Res.get("shared.buy") : Res.get("shared.sell");
+            String mirroredDirectionText = direction == Offer.Direction.SELL ? Res.get("shared.buy") : Res.get("shared.sell");
             String code = selectedTradeCurrency.getCode();
             if (model.showAllTradeCurrenciesProperty.get())
-                createOfferButton.setText(preFix + directionText + " BTC");
+                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC"));
             else if (selectedTradeCurrency instanceof FiatCurrency)
-                createOfferButton.setText(preFix + directionText + " BTC" + (direction == Offer.Direction.BUY ? " with " : " for ") + code);
+                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC") +
+                        (direction == Offer.Direction.BUY ?
+                                Res.get("offerbook.buyWithOtherCurrency", code) :
+                                Res.get("offerbook.sellForOtherCurrency", code)));
             else
-                createOfferButton.setText(preFix + mirroredDirectionText + " " + code + " (" + directionText + " BTC)");
+                createOfferButton.setText(Res.get("offerbook.createOfferTo", mirroredDirectionText, code) + " (" + directionText + " BTC)");
         }
     }
 
@@ -320,28 +321,29 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onCreateOffer() {
         if (!model.hasPaymentAccount()) {
-            openPopupForMissingAccountSetup("You have not setup a trading account",
-                    "You need to setup a national currency or altcoin account before you can create an offer.\n" +
-                            "Do you want to setup an account?", FiatAccountsView.class, "\"Account\"");
+            openPopupForMissingAccountSetup(Res.get("offerbook.warning.noTradingAccountSetup.headline"),
+                    Res.get("offerbook.warning.noTradingAccountSetup.msg"),
+                    FiatAccountsView.class,
+                    Res.get("navigation.account"));
         } else if (!model.hasPaymentAccountForCurrency()) {
-            new Popup().headLine("No trading account for selected currency")
-                    .instruction("You don't have a trading account for the selected currency.\n" +
-                            "Do you want to create an offer with one of your existing trading accounts?")
-                    .actionButtonText("Yes, create offer")
+            new Popup().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
+                    .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
+                    .actionButtonText(Res.get("offerbook.yesCreateOffer"))
                     .onAction(() -> {
                         createOfferButton.setDisable(true);
                         offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
                     })
-                    .closeButtonText("Set up a new trading account")
+                    .closeButtonText(Res.get("offerbook.setupNewAccount"))
                     .onClose(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
                         navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
                     })
                     .show();
         } else if (!model.hasAcceptedArbitrators()) {
-            openPopupForMissingAccountSetup("You don't have an arbitrator selected.",
-                    "You need to setup at least one arbitrator to be able to trade.\n" +
-                            "Do you want to do this now?", ArbitratorSelectionView.class, "\"Arbitrator selection\"");
+            openPopupForMissingAccountSetup(Res.get("offerbook.warning.noArbitratorSelected.headline"),
+                    Res.get("offerbook.warning.noArbitratorSelected.msg"),
+                    ArbitratorSelectionView.class,
+                    Res.get("navigation.arbitratorSelection"));
         } else {
             createOfferButton.setDisable(true);
             offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
@@ -352,32 +354,23 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             boolean hasSameProtocolVersion, boolean isIgnored,
                             boolean isOfferBanned, boolean isNodeBanned) {
         if (!hasMatchingArbitrator) {
-            openPopupForMissingAccountSetup("You don't have an arbitrator selected.",
-                    "You need to setup at least one arbitrator to be able to trade.\n" +
-                            "Do you want to do this now?", ArbitratorSelectionView.class, "\"Arbitrator selection\"");
+            openPopupForMissingAccountSetup(Res.get("offerbook.warning.noArbitratorSelected.headline"),
+                    Res.get("offerbook.warning.noArbitratorSelected.msg"),
+                    ArbitratorSelectionView.class,
+                    Res.get("navigation.arbitratorSelection"));
         } else if (!isPaymentAccountValidForOffer) {
-            openPopupForMissingAccountSetup("No matching trading account.",
-                    "You don't have a trading account with the payment method required for that offer.\n" +
-                            "You need to setup a trading account with that payment method if you want to take this offer.\n" +
-                            "Do you want to do this now?", FiatAccountsView.class, "\"Account\"");
+            openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
+                    Res.get("offerbook.warning.noMatchingAccount.msg"),
+                    FiatAccountsView.class,
+                    Res.get("navigation.account"));
         } else if (!hasSameProtocolVersion) {
-            new Popup().warning("That offer requires a different protocol version as the one used in your " +
-                    "version of the software.\n\n" +
-                    "Please check if you have the latest version installed, otherwise the user " +
-                    "who created the offer has used an older version.\n\n" +
-                    "Users cannot trade with an incompatible trade protocol version.")
-                    .show();
+            new Popup().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
         } else if (isIgnored) {
-            new Popup().warning("You have added that user's onion address to your ignore list.")
-                    .show();
+            new Popup().warning(Res.get("offerbook.warning.userIgnored")).show();
         } else if (isOfferBanned) {
-            new Popup().warning("That offer was blocked by the Bitsquare developers.\n" +
-                    "Probably there is an unhandled bug causing issues when taking that offer.")
-                    .show();
+            new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
         } else if (isNodeBanned) {
-            new Popup().warning("The onion address of that trader was blocked by the Bitsquare developers.\n" +
-                    "Probably there is an unhandled bug causing issues when taking offers from that trader.")
-                    .show();
+            new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         }
     }
 
@@ -385,27 +378,23 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.isBootstrapped())
             offerActionHandler.onTakeOffer(offer);
         else
-            new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                    "That might take up to about 2 minutes at startup.").show();
+            new Popup().information(Res.get("offerbook.warning.notFullyConnected")).show();
     }
 
     private void onRemoveOpenOffer(Offer offer) {
         if (model.isBootstrapped()) {
             String key = "RemoveOfferWarning";
             if (model.preferences.showAgain(key))
-                new Popup().warning("Are you sure you want to remove that offer?\n" +
-                        "The offer fee of " + model.formatter.formatCoinWithCode(offer.getCreateOfferFee()) +
-                                " will be lost if you remove that offer.")
-                        .actionButtonText("Remove offer")
+                new Popup().warning(Res.get("offerbook.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getCreateOfferFee())))
+                        .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
-                        .closeButtonText("Don't remove offer")
+                        .closeButtonText(Res.get("shared.dontRemoveOffer"))
                         .dontShowAgainId(key, model.preferences)
                         .show();
             else
                 doRemoveOffer(offer);
         } else {
-            new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                    "That might take up to about 2 minutes at startup.").show();
+            new Popup().information(Res.get("offerbook.warning.notFullyConnected")).show();
         }
     }
 
@@ -413,24 +402,24 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         String key = "WithdrawFundsAfterRemoveOfferInfo";
         model.onRemoveOpenOffer(offer,
                 () -> {
-                    log.debug("Remove offer was successful.");
+                    log.debug(Res.get("offerbook.removeOffer.success"));
                     if (model.preferences.showAgain(key))
-                        new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
-                                .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+                        new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
+                                .actionButtonText(Res.get("shared.goTo", Res.get("navigation.funds.availableForWithdrawal")))
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key, model.preferences)
                                 .show();
                 },
                 (message) -> {
                     log.error(message);
-                    new Popup().warning("Remove offer failed:\n" + message).show();
+                    new Popup().warning(Res.get("offerbook.removeOffer.failed", message)).show();
                 });
     }
 
     private void openPopupForMissingAccountSetup(String headLine, String message, Class target, String targetAsString) {
         new Popup().headLine(headLine)
                 .instruction(message)
-                .actionButtonText("Go to " + targetAsString)
+                .actionButtonText(Res.get("shared.goTo", targetAsString))
                 .onAction(() -> {
                     navigation.setReturnPath(navigation.getCurrentPath());
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, target);
@@ -442,7 +431,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAmountColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("BTC (min - max)") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.BTCMinMax")) {
             {
                 setMinWidth(150);
             }
@@ -470,7 +459,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Market") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.market")) {
             {
                 setMinWidth(120);
                 // setMaxWidth(130);
@@ -600,7 +589,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("Payment method") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.paymentMethod")) {
             {
                 setMinWidth(125);
             }
@@ -635,7 +624,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>("I want to:") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new TableColumn<OfferBookListItem, OfferBookListItem>(Res.get("offerbook.wantTo")) {
             {
                 setMinWidth(80);
                 setSortable(false);
@@ -705,7 +694,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     String title;
                                     if (myOffer) {
                                         iconView.setId("image-remove");
-                                        title = "Remove";
+                                        title = Res.get("shared.remove");
                                         button.setId("cancel-button");
                                         button.setStyle("-fx-text-fill: #444;"); // does not take the font colors sometimes from the style
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
@@ -715,7 +704,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         button.setStyle("-fx-text-fill: white;"); // does not take the font colors sometimes from the style
                                         title = model.getDirectionLabel(offer);
-                                        button.setTooltip(new Tooltip("Take offer for " + model.getDirectionLabelTooltip(offer)));
+                                        button.setTooltip(new Tooltip(Res.get("offerbook.takeOfferButton.tooltip", model.getDirectionLabelTooltip(offer))));
                                         button.setOnAction(e -> onTakeOffer(offer));
                                     }
 
@@ -766,12 +755,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     String hostName = newItem.getOffer().getOwnerNodeAddress().hostName;
                                     int numPastTrades = model.getNumPastTrades(newItem.getOffer());
                                     boolean hasTraded = numPastTrades > 0;
-                                    String tooltipText = hasTraded ? "Offerer's onion address: " + hostName + "\n" +
-                                            "You have already traded " + numPastTrades + " times with that offerer." : "Offerer's onion address: " + hostName;
-                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getOffer());
+                                    String tooltipText = hasTraded ?
+                                            Res.get("peerInfoIcon.tooltip.traded", hostName, numPastTrades) :
+                                            Res.get("peerInfoIcon.tooltip.notTraded", hostName);
+                                    Node peerInfoIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
-                                    if (identIcon != null)
-                                        setGraphic(identIcon);
+                                    setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);
                                 }

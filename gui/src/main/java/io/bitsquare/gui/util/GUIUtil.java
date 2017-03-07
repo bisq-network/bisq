@@ -210,9 +210,9 @@ public class GUIUtil {
                 final String displayString = CurrencyUtil.getNameAndCode(code);
                 // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
                 if (code.equals(GUIUtil.SHOW_ALL_FLAG))
-                    return "▶ Show all";
+                    return "▶ " + Res.get("list.currency.showAll");
                 else if (code.equals(GUIUtil.EDIT_FLAG))
-                    return "▼ Edit currency list";
+                    return "▼ " + Res.get("list.currency.editList");
                 return tradeCurrency.getDisplayPrefix() + displayString;
             }
 

@@ -27,7 +27,6 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookView;
 import io.bitsquare.gui.main.offer.takeoffer.TakeOfferView;
-import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Res;
 import io.bitsquare.locale.TradeCurrency;
@@ -133,6 +132,14 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         root.getTabs().removeListener(tabListChangeListener);
     }
 
+    private String getCreateOfferTabName() {
+        return Res.get("offerbook.createOffer");
+    }
+
+    private String getTakeOfferTabName() {
+        return Res.get("offerbook.takeOffer");
+    }
+
     private void loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
         View view;
@@ -157,7 +164,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
                                 CreateOfferView.class);
                     } else {
-                        new Popup().information(Res.get("popup.createOfferTabOpen")).show();
+                        log.error("You have already a \\\"Create offer\\\" tab open.");
                     }
                 }
 
@@ -169,7 +176,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
                                 TakeOfferView.class);
                     } else {
-                        new Popup().information(Res.get("popup.takeOfferTabOpen")).show();
+                        log.error("You have already a \\\"Take offer\\\" tab open.");
                     }
                 }
             };
@@ -203,11 +210,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             tabPane.getSelectionModel().select(takeOfferTab);
         }
     }
-
-    protected abstract String getCreateOfferTabName();
-
-    protected abstract String getTakeOfferTabName();
-
 
     private void onCreateOfferViewRemoved() {
         createOfferViewOpen = false;

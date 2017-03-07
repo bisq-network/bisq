@@ -135,7 +135,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream().map(e -> e.getCode()).collect(Collectors.toSet());
 
         String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
-        if (code != null && !code.equals("SHOW_ALL_FLAG") && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
+        if (code != null && !code.equals(GUIUtil.SHOW_ALL_FLAG) && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
             selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
         } else {
@@ -313,35 +313,35 @@ class OfferBookViewModel extends ActivatableViewModel {
         String result = "";
         if (item != null) {
             Offer offer = item.getOffer();
-            result = "Payment method: " + Res.get(offer.getPaymentMethod().getId());
-            result += "\nCurrency: " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
+            result = Res.getWithCol("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
+            result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
 
             String methodCountryCode = offer.getCountryCode();
             if (methodCountryCode != null) {
                 String bankId = offer.getBankId();
                 if (bankId != null && !bankId.equals("null")) {
                     if (BankUtil.isBankIdRequired(methodCountryCode))
-                        result += "\nOfferer's bank ID: " + bankId;
+                        result += "\n" + Res.get("offerbook.offerersBankId", bankId);
                     else if (BankUtil.isBankNameRequired(methodCountryCode))
-                        result += "\nOfferer's bank name: " + bankId;
+                        result += "\n" + Res.get("offerbook.offerersBankName", bankId);
                 }
             }
 
             if (methodCountryCode != null)
-                result += "\nOfferer's seat of bank country: " + CountryUtil.getNameByCode(methodCountryCode);
+                result += "\n" + Res.get("offerbook.offerersBankSeat", CountryUtil.getNameByCode(methodCountryCode));
 
             List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
             List<String> acceptedBanks = offer.getAcceptedBankIds();
             if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
                 if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
-                    result += "\nAccepted seat of bank countries (taker): All Euro countries";
+                    result += Res.get("offerbook.offerersAcceptedBankSeatsEuro");
                 else
-                    result += "\nAccepted seat of bank countries (taker):\n" + CountryUtil.getNamesByCodesString(acceptedCountryCodes);
+                    result += Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes));
             } else if (acceptedBanks != null && !acceptedBanks.isEmpty()) {
                 if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK))
-                    result += "\nBank name: " + acceptedBanks.get(0);
+                    result += "\n" + Res.getWithCol("shared.bankName") + " " + acceptedBanks.get(0);
                 else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS))
-                    result += "\nAccepted banks: " + Joiner.on(", ").join(acceptedBanks);
+                    result += "\n" + Res.getWithCol("shared.acceptedBanks") + " " + Joiner.on(", ").join(acceptedBanks);
             }
         }
         return result;
