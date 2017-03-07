@@ -36,6 +36,7 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -356,7 +357,7 @@ public final class Dispute implements Payload {
 
     @Override
     public Messages.Dispute toProtoBuf() {
-        return Messages.Dispute.newBuilder().setTradeId(tradeId)
+        Messages.Dispute.Builder builder = Messages.Dispute.newBuilder().setTradeId(tradeId)
                 .setId(id)
                 .setTraderId(traderId)
                 .setDisputeOpenerIsBuyer(disputeOpenerIsBuyer)
@@ -366,18 +367,21 @@ public final class Dispute implements Payload {
                 .setTradeDate(tradeDate)
                 .setContract(contract.toProtoBuf())
                 .setContractHash(ByteString.copyFrom(contractHash))
-                .setDepositTxSerialized(ByteString.copyFrom(depositTxSerialized))
-                .setPayoutTxId(payoutTxId)
-                .setDepositTxId(depositTxId)
-                .setPayoutTxId(payoutTxId)
                 .setContractAsJson(contractAsJson)
                 .setOffererContractSignature(offererContractSignature)
                 .setTakerContractSignature(takerContractSignature)
                 .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoBuf())
                 .setIsSupportTicket(isSupportTicket)
-                .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream().map(disputeCommunicationMessage -> disputeCommunicationMessage.toProtoBuf().getDisputeCommunicationMessage()).collect(Collectors.toList()))
+                .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream().map(
+                        disputeCommunicationMessage -> disputeCommunicationMessage.toProtoBuf().getDisputeCommunicationMessage()).collect(Collectors.toList()))
                 .setIsClosed(isClosed)
-                .setDisputeResult((Messages.DisputeResult) disputeResult.toProtoBuf())
-                .setDisputePayoutTxId(disputePayoutTxId).build();
+                .setDisputeResult(disputeResult.toProtoBuf());
+
+        Optional.ofNullable(depositTxSerialized).ifPresent(tx -> builder.setDepositTxSerialized(ByteString.copyFrom(tx)));
+        Optional.ofNullable(payoutTxSerialized).ifPresent(tx -> builder.setPayoutTxSerialized(ByteString.copyFrom(tx)));
+        Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
+        Optional.ofNullable(payoutTxId).ifPresent(builder::setPayoutTxId);
+        Optional.ofNullable(disputePayoutTxId).ifPresent(builder::setDisputePayoutTxId);
+        return builder.build();
     }
 }

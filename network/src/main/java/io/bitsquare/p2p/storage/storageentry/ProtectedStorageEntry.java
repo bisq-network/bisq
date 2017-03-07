@@ -42,7 +42,6 @@ public class ProtectedStorageEntry implements Payload {
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
         this.creationTimeStamp = System.currentTimeMillis();
-        System.out.println("currenttime = " + this.creationTimeStamp);
         this.ownerPubKeyBytes = new X509EncodedKeySpec(this.ownerPubKey.getEncoded()).getEncoded();
     }
 
@@ -53,7 +52,6 @@ public class ProtectedStorageEntry implements Payload {
         this.signature = signature;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.creationTimeStamp = creationTimeStamp;
-        System.out.println("creationtime = " + this.creationTimeStamp);
         init();
     }
 
