@@ -17,7 +17,6 @@
 
 package io.bitsquare.messages.alert;
 
-import io.bitsquare.messages.alert.Alert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

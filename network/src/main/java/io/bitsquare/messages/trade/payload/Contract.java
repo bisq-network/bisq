@@ -277,7 +277,7 @@ public final class Contract implements Payload {
                 .setSellerNodeAddress(sellerNodeAddress.toProtoBuf())
                 .setOffererPayoutAddressstring(offererPayoutAddressString)
                 .setTakerPayoutAddressstring(takerPayoutAddressString)
-                .setOffererBtcPubKey(ByteString.copyFrom(offererBtcPubKey))
-                .setTakerBtcPubKey(ByteString.copyFrom(takerBtcPubKey)).build();
+                .setOffererBtcPubKey(ByteString.copyFrom(offererMultiSigPubKey))
+                .setTakerBtcPubKey(ByteString.copyFrom(takerMultiSigPubKey)).build();
     }
 }
