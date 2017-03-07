@@ -34,6 +34,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,6 +104,8 @@ public final class Preferences implements Persistable {
     transient private BitcoinNetwork bitcoinNetwork;
 
     // Persisted fields
+    private String userLanguage = LanguageUtil.getDefaultLanguage();
+    private Country userCountry = CountryUtil.getDefaultCountry();
     private String btcDenomination = MonetaryFormat.CODE_BTC;
     private boolean useAnimations = DevFlags.STRESS_TEST_MODE ? false : true;
     private final ArrayList<FiatCurrency> fiatCurrencies;
@@ -225,8 +228,13 @@ public final class Preferences implements Persistable {
             dontShowAgainMap = persisted.getDontShowAgainMap();
             tacAccepted = persisted.getTacAccepted();
 
-            preferredLocale = persisted.getPreferredLocale();
-            defaultLocale = preferredLocale;
+            userLanguage = persisted.getUserLanguage();
+            if (userLanguage == null)
+                userLanguage = LanguageUtil.getDefaultLanguage();
+            userCountry = persisted.getUserCountry();
+            if (userCountry == null)
+                userCountry = CountryUtil.getDefaultCountry();
+            updateDefaultLocale();
             preferredTradeCurrency = persisted.getPreferredTradeCurrency();
             defaultTradeCurrency = preferredTradeCurrency;
             useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
@@ -373,9 +381,15 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
-    public void setPreferredLocale(Locale preferredLocale) {
-        this.preferredLocale = preferredLocale;
-        defaultLocale = preferredLocale;
+    public void setUserLanguage(@NotNull String userLanguageCode) {
+        this.userLanguage = userLanguageCode;
+        updateDefaultLocale();
+        storage.queueUpForSave();
+    }
+
+    public void setUserCountry(@NotNull Country userCountry) {
+        this.userCountry = userCountry;
+        updateDefaultLocale();
         storage.queueUpForSave();
     }
 
@@ -563,8 +577,8 @@ public final class Preferences implements Persistable {
         return tacAccepted;
     }
 
-    public Locale getPreferredLocale() {
-        return preferredLocale;
+    public String getUserLanguage() {
+        return userLanguage;
     }
 
     public TradeCurrency getPreferredTradeCurrency() {
@@ -655,6 +669,10 @@ public final class Preferences implements Persistable {
         return Coin.valueOf(securityDepositAsLong);
     }
 
+    public Country getUserCountry() {
+        return userCountry;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -684,5 +702,10 @@ public final class Preferences implements Persistable {
     private void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
         this.blockChainExplorerMainNet = blockChainExplorerMainNet;
         storage.queueUpForSave();
+    }
+
+    private void updateDefaultLocale() {
+        defaultLocale = new Locale(userLanguage, userCountry.code);
+        Res.applyLocaleToResourceBundle(defaultLocale);
     }
 }

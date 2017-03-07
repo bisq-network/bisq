@@ -17,6 +17,7 @@
 
 package io.bitsquare.locale;
 
+import io.bitsquare.user.Preferences;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +36,14 @@ import java.util.ResourceBundle;
 public class Res {
     private static final Logger log = LoggerFactory.getLogger(Res.class);
 
-    public static ResourceBundle getResourceBundle() {
-        return ResourceBundle.getBundle("i18n.displayStrings", new UTF8Control());
+    private static ResourceBundle resourceBundle;
+
+    static {
+        applyLocaleToResourceBundle(Preferences.getDefaultLocale());
+    }
+
+    public static void applyLocaleToResourceBundle(Locale locale) {
+        resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", locale, new UTF8Control());
     }
 
     public static String getWithCol(String key) {
@@ -52,7 +59,7 @@ public class Res {
         // for testing missing translation strings
         // if (true) return "#";
         try {
-            return Res.getResourceBundle().getString(key);
+            return resourceBundle.getString(key);
         } catch (MissingResourceException e) {
             log.trace("Missing resource for key: " + key);
             return key;
@@ -61,6 +68,10 @@ public class Res {
 
     public static String get(String key, Object... arguments) {
         return MessageFormat.format(Res.get(key), arguments);
+    }
+
+    public static ResourceBundle getResourceBundle() {
+        return resourceBundle;
     }
 }
 

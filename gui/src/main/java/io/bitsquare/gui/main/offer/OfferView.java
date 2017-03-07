@@ -164,7 +164,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
                                 CreateOfferView.class);
                     } else {
-                        log.error("You have already a \\\"Create offer\\\" tab open.");
+                        log.error("You have already a \"Create offer\" tab open.");
                     }
                 }
 
@@ -176,7 +176,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
                                 TakeOfferView.class);
                     } else {
-                        log.error("You have already a \\\"Take offer\\\" tab open.");
+                        log.error("You have already a \"Take offer\" tab open.");
                     }
                 }
             };

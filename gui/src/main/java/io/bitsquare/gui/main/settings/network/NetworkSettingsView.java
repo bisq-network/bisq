@@ -28,6 +28,7 @@ import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Statistic;
 import io.bitsquare.user.Preferences;
@@ -97,21 +98,21 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     }
 
     public void initialize() {
-        btcHeader.setText("settings.net.btcHeader");
-        p2pHeader.setText("settings.net.p2pHeader");
-        onionAddressLabel.setText("settings.net.onionAddressLabel");
-        btcNodesLabel.setText("settings.net.btcNodesLabel");
-        bitcoinPeersLabel.setText("settings.net.bitcoinPeersLabel");
-        useTorForBtcJLabel.setText("settings.net.useTorForBtcJLabel");
-        p2PPeersLabel.setText("settings.net.p2PPeersLabel");
-        onionAddressColumn.setText("settings.net.onionAddressColumn");
-        creationDateColumn.setText("settings.net.creationDateColumn");
-        connectionTypeColumn.setText("settings.net.connectionTypeColumn");
-        totalTrafficLabel.setText("settings.net.totalTrafficLabel");
-        roundTripTimeColumn.setText("settings.net.roundTripTimeColumn");
-        sentBytesColumn.setText("settings.net.sentBytesColumn");
-        receivedBytesColumn.setText("settings.net.receivedBytesColumn");
-        peerTypeColumn.setText("settings.net.peerTypeColumn"); 
+        btcHeader.setText(Res.get("settings.net.btcHeader"));
+        p2pHeader.setText(Res.get("settings.net.p2pHeader"));
+        onionAddressLabel.setText(Res.get("settings.net.onionAddressLabel"));
+        btcNodesLabel.setText(Res.get("settings.net.btcNodesLabel"));
+        bitcoinPeersLabel.setText(Res.get("settings.net.bitcoinPeersLabel"));
+        useTorForBtcJLabel.setText(Res.get("settings.net.useTorForBtcJLabel"));
+        p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
+        onionAddressColumn.setText(Res.get("settings.net.onionAddressColumn"));
+        creationDateColumn.setText(Res.get("settings.net.creationDateColumn"));
+        connectionTypeColumn.setText(Res.get("settings.net.connectionTypeColumn"));
+        totalTrafficLabel.setText(Res.get("settings.net.totalTrafficLabel"));
+        roundTripTimeColumn.setText(Res.get("settings.net.roundTripTimeColumn"));
+        sentBytesColumn.setText(Res.get("settings.net.sentBytesColumn"));
+        receivedBytesColumn.setText(Res.get("settings.net.receivedBytesColumn"));
+        peerTypeColumn.setText(Res.get("settings.net.peerTypeColumn")); 
 
         GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);
