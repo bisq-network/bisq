@@ -96,7 +96,6 @@ public class Account {
     @JsonProperty
     List<String> accepted_country_codes;
 
-
     public Account(PaymentAccount bitsquarePaymentAccount) {
         this.payment_account_id = bitsquarePaymentAccount.getId();
         this.created = bitsquarePaymentAccount.getCreationDate().toInstant().toEpochMilli();
@@ -108,6 +107,5 @@ public class Account {
         }
         this.contract_data = new ContractData(bitsquarePaymentAccount);
         this.bank_id = contract_data.getBank_id();
-
     }
 }
