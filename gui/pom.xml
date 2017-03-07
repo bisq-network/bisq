@@ -330,7 +330,7 @@
         <dependency>
             <groupId>io.bitsquare</groupId>
             <artifactId>api</artifactId>
-            <version>0.4.9.8</version>
+            <version>${project.parent.version}</version>
         </dependency>
 
     </dependencies>
