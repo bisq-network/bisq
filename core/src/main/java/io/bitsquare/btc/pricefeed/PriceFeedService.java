@@ -110,15 +110,12 @@ public class PriceFeedService {
             long delay = Math.max(40, Math.min(90, PERIOD_SEC - (Instant.now().getEpochSecond() - epochInSecondAtLastRequest) + 2 + new Random().nextInt(5)));
             UserThread.runAfter(this::request, delay);
         }, (errorMessage, throwable) -> {
-
             // Try other provider if more then 1 is available
             if (priceFeedProviderArray.length > 1) {
                 String newBaseUrl;
                 do {
                     int index = new Random().nextInt(priceFeedProviderArray.length);
-                    log.error(index + "");
                     newBaseUrl = priceFeedProviderArray[index];
-                    log.error(newBaseUrl);
                 }
                 while (baseUrl.equals(newBaseUrl));
                 baseUrl = newBaseUrl;
