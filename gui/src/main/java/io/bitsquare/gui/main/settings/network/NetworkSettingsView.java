@@ -25,6 +25,7 @@ import io.bitsquare.gui.common.model.Activatable;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
@@ -52,9 +53,13 @@ import java.util.stream.Collectors;
 public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
 
     @FXML
+    TitledGroupBg p2pHeader, btcHeader;
+    @FXML
+    Label onionAddressLabel, btcNodesLabel, useTorForBtcJLabel, totalTrafficLabel;
+    @FXML
     InputTextField btcNodes;
     @FXML
-    TextField onionAddress, totalTraffic;
+    TextField onionAddress, totalTrafficTextField;
     @FXML
     TextArea bitcoinPeersTextArea;
     @FXML
@@ -92,6 +97,22 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     }
 
     public void initialize() {
+        btcHeader.setText("settings.net.btcHeader");
+        p2pHeader.setText("settings.net.p2pHeader");
+        onionAddressLabel.setText("settings.net.onionAddressLabel");
+        btcNodesLabel.setText("settings.net.btcNodesLabel");
+        bitcoinPeersLabel.setText("settings.net.bitcoinPeersLabel");
+        useTorForBtcJLabel.setText("settings.net.useTorForBtcJLabel");
+        p2PPeersLabel.setText("settings.net.p2PPeersLabel");
+        onionAddressColumn.setText("settings.net.onionAddressColumn");
+        creationDateColumn.setText("settings.net.creationDateColumn");
+        connectionTypeColumn.setText("settings.net.connectionTypeColumn");
+        totalTrafficLabel.setText("settings.net.totalTrafficLabel");
+        roundTripTimeColumn.setText("settings.net.roundTripTimeColumn");
+        sentBytesColumn.setText("settings.net.sentBytesColumn");
+        receivedBytesColumn.setText("settings.net.receivedBytesColumn");
+        peerTypeColumn.setText("settings.net.peerTypeColumn"); 
+
         GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);
         GridPane.setMargin(p2PPeersLabel, new Insets(4, 0, 0, 0));
@@ -139,7 +160,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         nodeAddressSubscription = EasyBind.subscribe(p2PService.getNetworkNode().nodeAddressProperty(),
                 nodeAddress -> onionAddress.setText(nodeAddress == null ? "Not known yet..." : p2PService.getAddress().getFullAddress()));
         numP2PPeersSubscription = EasyBind.subscribe(p2PService.getNumConnectedPeers(), numPeers -> updateP2PTable());
-        totalTraffic.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(), Statistic.totalReceivedBytesProperty(),
+        totalTrafficTextField.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(), Statistic.totalReceivedBytesProperty(),
                 (sent, received) -> "Sent: " + formatter.formatBytes((long) sent) + ", received: " + formatter.formatBytes((long) received)));
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -184,7 +205,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         if (numP2PPeersSubscription != null)
             numP2PPeersSubscription.unsubscribe();
 
-        totalTraffic.textProperty().unbind();
+        totalTrafficTextField.textProperty().unbind();
 
         sortedList.comparatorProperty().unbind();
         tableView.getItems().forEach(P2pNetworkListItem::cleanup);
