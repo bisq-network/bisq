@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.market.trades.TradesChartsView;
 import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
@@ -96,7 +97,11 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
         else if (view instanceof SpreadView) tab = spreadTab;
         else throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");
 
-        tab.setContent(view.getRoot());
+        if (tab.getContent() != null && tab.getContent() instanceof ScrollPane) {
+            ((ScrollPane) tab.getContent()).setContent(view.getRoot());
+        } else {
+            tab.setContent(view.getRoot());
+        }
         root.getSelectionModel().select(tab);
     }
 

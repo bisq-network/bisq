@@ -307,4 +307,19 @@ public class GUIUtil {
         return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
                 " of trade amount)";
     }
+    
+    public static <T> T getParentOfType(Node node, Class<T> t) {
+        Node parent = node.getParent();
+
+        while (parent != null) {
+            if (parent.getClass().isAssignableFrom(t)) {
+                break;
+            } else {
+                parent = parent.getParent();
+            }
+        }
+
+        return parent != null ? (T) parent : null;
+    }
+    
 }
