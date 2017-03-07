@@ -26,7 +26,9 @@ import com.google.gson.*;
 import io.bitsquare.io.LookAheadObjectInputStream;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -396,6 +398,36 @@ public class Utilities {
         Thread.currentThread().setName(name + "-" + new Random().nextInt(10000));
     }
 
+    public static Coin getFeePerBtc(Coin feePerBtc, Coin amount) {
+        double feePerBtcAsDouble = (double) feePerBtc.value;
+        double amountAsDouble = (double) amount.value;
+        double btcAsDouble = (double) Coin.COIN.value;
+        return Coin.valueOf(Math.round(feePerBtcAsDouble * (amountAsDouble / btcAsDouble)));
+    }
+
+    public static Coin minCoin(Coin a, Coin b) {
+        return a.compareTo(b) <= 0 ? a : b;
+    }
+
+    public static Coin maxCoin(Coin a, Coin b) {
+        return a.compareTo(b) >= 0 ? a : b;
+    }
+
+    public static void overwriteWithRandomBytes(byte[] bytes) {
+        Random random = new Random();
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte) random.nextInt(Integer.MAX_VALUE);
+        }
+    }
+
+    public static boolean isDirectory(String path) {
+        return new File(path).isDirectory();
+    }
+
+    public static String getSystemHomeDirectory() {
+        return Utilities.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home");
+    }
+
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
         @Override
         public boolean shouldSkipField(FieldAttributes f) {
@@ -424,5 +456,46 @@ public class Utilities {
 
     public static String toTruncatedString(Object message) {
         return toTruncatedString(message, 200);
+    }
+
+    public static String getRandomPrefix(int minLength, int maxLength) {
+        int length = minLength + new Random().nextInt(maxLength - minLength + 1);
+        String result;
+        switch (new Random().nextInt(3)) {
+            case 0:
+                result = RandomStringUtils.randomAlphabetic(length);
+                break;
+            case 1:
+                result = RandomStringUtils.randomNumeric(length);
+                break;
+            case 2:
+            default:
+                result = RandomStringUtils.randomAlphanumeric(length);
+        }
+
+        switch (new Random().nextInt(3)) {
+            case 0:
+                result = result.toUpperCase();
+                break;
+            case 1:
+                result = result.toLowerCase();
+                break;
+            case 2:
+            default:
+        }
+
+        return result;
+    }
+
+    public static String getShortId(String id) {
+        return getShortId(id, "-");
+    }
+
+    public static String getShortId(String id, String sep) {
+        String[] chunks = id.split(sep);
+        if (chunks.length > 0)
+            return chunks[0];
+        else
+            return id.substring(0, Math.min(8, id.length()));
     }
 }

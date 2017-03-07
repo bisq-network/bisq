@@ -17,13 +17,14 @@
 
 package io.bitsquare.messages.user;
 
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.messages.btc.BitcoinNetwork;
+import io.bitsquare.messages.btc.BtcOptionKeys;
+import io.bitsquare.messages.btc.Restrictions;
 import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.messages.locale.*;
 import io.bitsquare.storage.Storage;
@@ -31,6 +32,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,12 +131,13 @@ public final class Preferences implements Persistable {
 
     private boolean useStickyMarketPrice = false;
     private boolean sortMarketCurrenciesNumerically = true;
-    private boolean usePercentageBasedPrice = false;
+    private boolean usePercentageBasedPrice = true;
     private Map<String, String> peerTagMap = new HashMap<>();
     private String bitcoinNodes = "";
 
     private List<String> ignoreTradersList = new ArrayList<>();
-    private String defaultPath;
+    private String directoryChooserPath;
+    private long securityDepositAsLong = Restrictions.DEFAULT_SECURITY_DEPOSIT.value;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -145,33 +148,22 @@ public final class Preferences implements Persistable {
     transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
 
-    // Not used anymore but need to be kept for backward compatibility
-    @Deprecated
-    private boolean useInvertedMarketPrice;
-    @Deprecated
-    private boolean useTorForHttpRequests = true;
-    @Deprecated
-    private List<String> bridgeAddresses;
-    @Deprecated
-    private long nonTradeTxFeePerKB;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment,
                        FeeService feeService,
-                       @Named(AppOptionKeys.BTC_NODES) String btcNodesFromOptions,
-                       @Named(AppOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
+                       @Named(BtcOptionKeys.BTC_NODES) String btcNodesFromOptions,
+                       @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
         INSTANCE = this;
         this.storage = storage;
         this.bitsquareEnvironment = bitsquareEnvironment;
 
-        if (Utilities.isWindows())
-            defaultPath = System.getenv("USERPROFILE");
-        else
-            defaultPath = System.getProperty("user.home");
+        directoryChooserPath = Utilities.getSystemHomeDirectory();
 
         fiatCurrencies = new ArrayList<>(fiatCurrenciesAsObservable);
         cryptoCurrencies = new ArrayList<>(cryptoCurrenciesAsObservable);
@@ -262,8 +254,10 @@ public final class Preferences implements Persistable {
             if (persisted.getIgnoreTradersList() != null)
                 ignoreTradersList = persisted.getIgnoreTradersList();
 
-            if (persisted.getDefaultPath() != null)
-                defaultPath = persisted.getDefaultPath();
+            if (persisted.getDirectoryChooserPath() != null)
+                directoryChooserPath = persisted.getDirectoryChooserPath();
+
+            securityDepositAsLong = persisted.getSecurityDepositAsLong();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
@@ -448,8 +442,8 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
-    public void setDefaultPath(String defaultPath) {
-        this.defaultPath = defaultPath;
+    public void setDirectoryChooserPath(String directoryChooserPath) {
+        this.directoryChooserPath = directoryChooserPath;
         storage.queueUpForSave();
     }
 
@@ -480,6 +474,12 @@ public final class Preferences implements Persistable {
     public void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes) {
         withdrawalTxFeeInBytesProperty.set(withdrawalTxFeeInBytes);
     }
+
+    public void setSecurityDepositAsLong(long securityDepositAsLong) {
+        this.securityDepositAsLong = securityDepositAsLong;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -547,7 +547,6 @@ public final class Preferences implements Persistable {
         return backupDirectory;
     }
 
-
     public boolean getAutoSelectArbitrators() {
         return autoSelectArbitrators;
     }
@@ -612,8 +611,8 @@ public final class Preferences implements Persistable {
         return ignoreTradersList;
     }
 
-    public String getDefaultPath() {
-        return defaultPath;
+    public String getDirectoryChooserPath() {
+        return directoryChooserPath;
     }
 
     public String getTradeChartsScreenCurrencyCode() {
@@ -646,6 +645,14 @@ public final class Preferences implements Persistable {
 
     public long getWithdrawalTxFeeInBytes() {
         return withdrawalTxFeeInBytesProperty.get();
+    }
+
+    public long getSecurityDepositAsLong() {
+        return securityDepositAsLong;
+    }
+
+    public Coin getSecurityDepositAsCoin() {
+        return Coin.valueOf(securityDepositAsLong);
     }
 
 

@@ -531,17 +531,20 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                             public void updateItem(final TransactionsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    if (walletService.getConfidenceForTxId(item.getTxId()).getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
-                                        if (button == null) {
-                                            button = new Button("Revert");
-                                            button.setOnAction(e -> revertTransaction(item.getTxId(), item.getTradable()));
-                                            setGraphic(button);
-                                        }
-                                    } else {
-                                        if (button != null) {
-                                            button.setOnAction(null);
-                                            button = null;
-                                            setGraphic(null);
+                                    TransactionConfidence confidence = walletService.getConfidenceForTxId(item.getTxId());
+                                    if (confidence != null) {
+                                        if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
+                                            if (button == null) {
+                                                button = new Button("Revert");
+                                                button.setOnAction(e -> revertTransaction(item.getTxId(), item.getTradable()));
+                                                setGraphic(button);
+                                            }
+                                        } else {
+                                            if (button != null) {
+                                                button.setOnAction(null);
+                                                button = null;
+                                                setGraphic(null);
+                                            }
                                         }
                                     }
                                 } else {

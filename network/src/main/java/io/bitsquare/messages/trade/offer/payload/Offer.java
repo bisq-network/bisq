@@ -28,6 +28,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.common.util.MathUtils;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.messages.btc.Restrictions;
 import io.bitsquare.messages.locale.CurrencyUtil;
@@ -63,6 +64,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @ToString
 @EqualsAndHashCode
+// TODO refactor to remove logic, should be value a object only
 public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +102,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     // Fields for filtering offers
     private final Direction direction;
     private final String currencyCode;
@@ -117,7 +118,6 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final List<String> acceptedBankIds;
 
     private final List<NodeAddress> arbitratorNodeAddresses;
-
 
     private final String id;
     private final long date;
@@ -155,11 +155,17 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private final long securityDeposit;
     private final long maxTradeLimit;
     private final long maxTradePeriod;
-    private final boolean useAutoClose;
-    private final boolean useReOpenAfterAutoClose;
-    private final long lowerClosePrice;
-    private final long upperClosePrice;
 
+    // reserved for future use cases
+    // Close offer when certain price is reached
+    private final boolean useAutoClose;
+    // If useReOpenAfterAutoClose=true we re-open a new offer with the remaining funds if the trade amount 
+    // was less then the offer's max. trade amount.
+    private final boolean useReOpenAfterAutoClose;
+    // Used when useAutoClose is set for canceling the offer when lowerClosePrice is triggered
+    private final long lowerClosePrice;
+    // Used when useAutoClose is set for canceling the offer when upperClosePrice is triggered
+    private final long upperClosePrice;
     // Reserved for possible future use to support private trades where the taker need to have an accessKey
     private final boolean isPrivateOffer;
     @Nullable
@@ -169,6 +175,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     @Nullable
     private Map<String, String> extraDataMap;
 
+    // TODO refactor those out of Offer, offer should be pure value object
     @JsonExclude
     transient private State state = State.UNDEFINED;
     // Those state properties are transient and only used at runtime!
@@ -388,15 +395,12 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return getVolumeByAmount(getMinAmount());
     }
 
-    public String getReferenceText() {
-        return getId().substring(0, Math.min(8, getId().length()));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Availability
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO refactor those out of Offer, offer should be pure value object
     public void checkOfferAvailability(OfferAvailabilityModel model, ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
         availabilityProtocol = new OfferAvailabilityProtocol(model,
@@ -413,7 +417,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         availabilityProtocol.sendOfferAvailabilityRequest();
     }
 
-
+    // TODO refactor those out of Offer, offer should be pure value object
     public void cancelAvailabilityRequest() {
         if (availabilityProtocol != null)
             availabilityProtocol.cancel();
@@ -422,6 +426,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     public void setPriceFeedService(PriceFeedService priceFeedService) {
         this.priceFeedService = priceFeedService;
@@ -464,7 +469,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     }
 
     public String getShortId() {
-        return getId().substring(0, Math.min(8, getId().length()));
+        return Utilities.getShortId(id);
     }
 
     public NodeAddress getOffererNodeAddress() {
@@ -475,6 +480,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         return pubKeyRing;
     }
 
+    // TODO refactor those out of Offer, offer should be pure value object
     @Nullable
     public Fiat getPrice() {
         if (useMarketBasedPrice) {
@@ -512,6 +518,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         }
     }
 
+    // TODO refactor those out of Offer, offer should be pure value object
     public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException, MarketPriceNotAvailableException, IllegalArgumentException {
         checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
         Fiat tradePriceAsFiat = Fiat.valueOf(getCurrencyCode(), takersTradePrice);

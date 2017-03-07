@@ -38,19 +38,12 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * WalletService handles all non trade specific wallet and bitcoin related services.
- * It startup the wallet app kit and initialized the wallet.
- */
 public class BtcWalletService extends WalletService {
     private static final Logger log = LoggerFactory.getLogger(BtcWalletService.class);
 
@@ -111,7 +104,7 @@ public class BtcWalletService extends WalletService {
     String getWalletAsString(boolean includePrivKeys) {
         StringBuilder sb = new StringBuilder();
         getAddressEntryListAsImmutableList().stream().forEach(e -> sb.append(e.toString()).append("\n"));
-        return "BitcoinJ wallet:\n" +
+        return "BTC wallet:\n" +
                 wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
                 "Bitsquare address entry list:\n" +
                 sb.toString() +
@@ -126,46 +119,46 @@ public class BtcWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Add fee input to prepared SQU send tx
+    // Add fee input to prepared BSQ send tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public Transaction completePreparedSendSquTx(Transaction preparedSquTx, boolean isSendTx) throws
+    public Transaction completePreparedSendBsqTx(Transaction preparedBsqTx, boolean isSendTx) throws
             TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
-        // preparedSquTx has following structure:
-        // inputs [1-n] SQU inputs
-        // outputs [0-1] SQU receivers output
-        // outputs [0-1] SQU change output
+        // preparedBsqTx has following structure:
+        // inputs [1-n] BSQ inputs
+        // outputs [0-1] BSQ receivers output
+        // outputs [0-1] BSQ change output
 
         // We add BTC mining fee. Result tx looks like:
-        // inputs [1-n] SQU inputs
+        // inputs [1-n] BSQ inputs
         // inputs [1-n] BTC inputs
-        // outputs [0-1] SQU receivers output
-        // outputs [0-1] SQU change output
+        // outputs [0-1] BSQ receivers output
+        // outputs [0-1] BSQ change output
         // outputs [0-1] BTC change output
         // mining fee: BTC mining fee
-        return completePreparedSquTx(preparedSquTx, isSendTx, null);
+        return completePreparedBsqTx(preparedBsqTx, isSendTx, null);
     }
 
-    public Transaction completePreparedSquTx(Transaction preparedSquTx, boolean isSendTx, @Nullable byte[] opReturnData) throws
+    public Transaction completePreparedBsqTx(Transaction preparedBsqTx, boolean isSendTx, @Nullable byte[] opReturnData) throws
             TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
 
-        // preparedSquTx has following structure:
-        // inputs [1-n] SQU inputs
-        // outputs [0-1] SQU receivers output
-        // outputs [0-1] SQU change output
-        // mining fee: optional burned SQU fee (only if opReturnData != null)
+        // preparedBsqTx has following structure:
+        // inputs [1-n] BSQ inputs
+        // outputs [0-1] BSQ receivers output
+        // outputs [0-1] BSQ change output
+        // mining fee: optional burned BSQ fee (only if opReturnData != null)
 
         // We add BTC mining fee. Result tx looks like:
-        // inputs [1-n] SQU inputs
+        // inputs [1-n] BSQ inputs
         // inputs [1-n] BTC inputs
-        // outputs [0-1] SQU receivers output
-        // outputs [0-1] SQU change output
+        // outputs [0-1] BSQ receivers output
+        // outputs [0-1] BSQ change output
         // outputs [0-1] BTC change output
         // outputs [0-1] OP_RETURN with opReturnData (only if opReturnData != null)
-        // mining fee: BTC mining fee + optional burned SQU fee (only if opReturnData != null)
+        // mining fee: BTC mining fee + optional burned BSQ fee (only if opReturnData != null)
 
-        // In case of txs for burned SQU fees we have no receiver output and it might be that there is no change outputs
+        // In case of txs for burned BSQ fees we have no receiver output and it might be that there is no change outputs
         // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input 
         // for BTC to force an additional change output.
 
@@ -185,9 +178,9 @@ public class BtcWalletService extends WalletService {
         checkNotNull(changeAddress, "changeAddress must not be null");
 
         final BtcCoinSelector coinSelector = new BtcCoinSelector(params, walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
-        final List<TransactionInput> preparedSquTxInputs = preparedSquTx.getInputs();
-        final List<TransactionOutput> preparedSquTxOutputs = preparedSquTx.getOutputs();
-        int numInputs = preparedSquTxInputs.size() + 1; // We add 1 for the BTC fee input
+        final List<TransactionInput> preparedBsqTxInputs = preparedBsqTx.getInputs();
+        final List<TransactionOutput> preparedBsqTxOutputs = preparedBsqTx.getOutputs();
+        int numInputs = preparedBsqTxInputs.size() + 1; // We add 1 for the BTC fee input
         Transaction resultTx = null;
         boolean isFeeInTolerance;
         do {
@@ -199,20 +192,20 @@ public class BtcWalletService extends WalletService {
             }
 
             Transaction tx = new Transaction(params);
-            preparedSquTxInputs.stream().forEach(tx::addInput);
+            preparedBsqTxInputs.stream().forEach(tx::addInput);
 
             if (forcedChangeValue.isZero()) {
-                preparedSquTxOutputs.stream().forEach(tx::addOutput);
+                preparedBsqTxOutputs.stream().forEach(tx::addOutput);
             } else {
                 //TODO test that case
-                checkArgument(preparedSquTxOutputs.size() == 0, "preparedSquTxOutputs.size must be null in that code branch");
+                checkArgument(preparedBsqTxOutputs.size() == 0, "preparedBsqTxOutputs.size must be null in that code branch");
                 tx.addOutput(forcedChangeValue, changeAddress);
             }
 
             Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
             sendRequest.shuffleOutputs = false;
             sendRequest.aesKey = aesKey;
-            // signInputs needs to be false as it would try to sign all inputs (SQU inputs are not in this wallet)
+            // signInputs needs to be false as it would try to sign all inputs (BSQ inputs are not in this wallet)
             sendRequest.signInputs = false;
             sendRequest.ensureMinRequiredFee = false;
             sendRequest.feePerKb = Coin.ZERO;
@@ -241,7 +234,7 @@ public class BtcWalletService extends WalletService {
         while (forcedChangeValue.isPositive() || isFeeInTolerance);
 
         // Sign all BTC inputs
-        for (int i = preparedSquTxInputs.size(); i < resultTx.getInputs().size(); i++) {
+        for (int i = preparedBsqTxInputs.size(); i < resultTx.getInputs().size(); i++) {
             TransactionInput txIn = resultTx.getInputs().get(i);
             checkArgument(txIn.getConnectedOutput() != null && txIn.getConnectedOutput().isMine(wallet),
                     "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
@@ -283,25 +276,33 @@ public class BtcWalletService extends WalletService {
     // AddressEntry
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public Optional<AddressEntry> getAddressEntry(String offerId, AddressEntry.Context context) {
+        Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
+                .filter(e -> offerId.equals(e.getOfferId()))
+                .filter(e -> context == e.getContext())
+                .findAny();
+        return addressEntry;
+    }
+
     public AddressEntry getOrCreateAddressEntry(String offerId, AddressEntry.Context context) {
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
                 .findAny();
-        if (addressEntry.isPresent())
+        if (addressEntry.isPresent()) {
             return addressEntry.get();
-        else
-            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context, offerId));
+        } else {
+            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context, offerId));
+            saveAddressEntryList();
+            return entry;
+        }
     }
 
     public AddressEntry getOrCreateAddressEntry(AddressEntry.Context context) {
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> context == e.getContext())
                 .findAny();
-        if (addressEntry.isPresent())
-            return addressEntry.get();
-        else
-            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+        return getOrCreateAddressEntry(context, addressEntry);
     }
 
     public AddressEntry getOrCreateUnusedAddressEntry(AddressEntry.Context context) {
@@ -309,10 +310,17 @@ public class BtcWalletService extends WalletService {
                 .filter(e -> context == e.getContext())
                 .filter(e -> getNumTxOutputsForAddress(e.getAddress()) == 0)
                 .findAny();
-        if (addressEntry.isPresent())
+        return getOrCreateAddressEntry(context, addressEntry);
+    }
+
+    private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
+        if (addressEntry.isPresent()) {
             return addressEntry.get();
-        else
-            return addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+        } else {
+            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+            saveAddressEntryList();
+            return entry;
+        }
     }
 
     private Optional<AddressEntry> findAddressEntry(String address, AddressEntry.Context context) {
@@ -349,7 +357,10 @@ public class BtcWalletService extends WalletService {
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
                 .findAny();
-        addressEntryOptional.ifPresent(addressEntryList::swapToAvailable);
+        addressEntryOptional.ifPresent(e -> {
+            addressEntryList.swapToAvailable(e);
+            saveAddressEntryList();
+        });
     }
 
     public void swapAnyTradeEntryContextToAvailableEntry(String offerId) {
@@ -361,6 +372,27 @@ public class BtcWalletService extends WalletService {
 
     public void saveAddressEntryList() {
         addressEntryList.queueUpForSave();
+    }
+
+
+    public DeterministicKey getMultiSigKeyPair(String tradeId, byte[] pubKey) {
+        Optional<AddressEntry> multiSigAddressEntryOptional = getAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG);
+        DeterministicKey multiSigKeyPair;
+        if (multiSigAddressEntryOptional.isPresent()) {
+            AddressEntry multiSigAddressEntry = multiSigAddressEntryOptional.get();
+            multiSigKeyPair = multiSigAddressEntry.getKeyPair();
+            if (!Arrays.equals(pubKey, multiSigAddressEntry.getPubKey())) {
+                log.error("Pub Key from AddressEntry does not match key pair from trade data. Trade ID={}\n" +
+                        "We try to find the keypair in the wallet with the pubKey we found in the trade data.", tradeId);
+                multiSigKeyPair = findKeyFromPubKeyHash(pubKey);
+            }
+        } else {
+            log.error("multiSigAddressEntry not found for trade ID={}.\n" +
+                    "We try to find the keypair in the wallet with the pubKey we found in the trade data.", tradeId);
+            multiSigKeyPair = findKeyFromPubKeyHash(pubKey);
+        }
+
+        return multiSigKeyPair;
     }
 
 
@@ -490,7 +522,7 @@ public class BtcWalletService extends WalletService {
                             }
                         }
                         if (sendResult != null) {
-                            log.debug("Broadcasting double spending transaction. " + newTransaction);
+                            log.info("Broadcasting double spending transaction. " + sendResult.tx);
                             Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
                                 @Override
                                 public void onSuccess(Transaction result) {
@@ -500,7 +532,7 @@ public class BtcWalletService extends WalletService {
 
                                 @Override
                                 public void onFailure(@NotNull Throwable t) {
-                                    log.info("Broadcasting double spending transaction failed. " + t.getMessage());
+                                    log.error("Broadcasting double spending transaction failed. " + t.getMessage());
                                     errorMessageHandler.handleErrorMessage(t.getMessage());
                                 }
                             });
@@ -512,7 +544,9 @@ public class BtcWalletService extends WalletService {
                                 "Missing " + (e.missing != null ? e.missing.toFriendlyString() : "null"));
                     }
                 } else {
-                    errorMessageHandler.handleErrorMessage("We could not find inputs we control in the transaction we want to double spend.");
+                    String errorMessage = "We could not find inputs we control in the transaction we want to double spend.";
+                    log.warn(errorMessage);
+                    errorMessageHandler.handleErrorMessage(errorMessage);
                 }
             } else if (confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
                 errorMessageHandler.handleErrorMessage("That transaction is already in the blockchain so we cannot double spend it.");
@@ -735,14 +769,4 @@ public class BtcWalletService extends WalletService {
         sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
         return sendRequest;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Util
-    ///////////////////////////////////////////////////////////////////////////////////////////
 }

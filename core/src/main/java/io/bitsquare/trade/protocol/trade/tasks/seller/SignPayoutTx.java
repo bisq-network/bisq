@@ -23,9 +23,13 @@ import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.crypto.DeterministicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SignPayoutTx extends TradeTask {
@@ -58,16 +62,23 @@ public class SignPayoutTx extends TradeTask {
 
             BtcWalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
+            String sellerPayoutAddressString = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).getAddressString();
+            DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(id, processModel.getMyMultiSigPubKey());
+            byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            checkArgument(Arrays.equals(sellerMultiSigPubKey,
+                            walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey()),
+                    "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
+
             byte[] payoutTxSignature = processModel.getTradeWalletService().sellerSignsPayoutTx(
                     trade.getDepositTx(),
                     buyerPayoutAmount,
                     sellerPayoutAmount,
                     processModel.tradingPeer.getPayoutAddressString(),
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT),
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG),
+                    sellerPayoutAddressString,
+                    multiSigKeyPair,
                     lockTimeAsBlockHeight,
                     processModel.tradingPeer.getMultiSigPubKey(),
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey(),
+                    sellerMultiSigPubKey,
                     trade.getArbitratorPubKey());
 
             processModel.setPayoutTxSignature(payoutTxSignature);

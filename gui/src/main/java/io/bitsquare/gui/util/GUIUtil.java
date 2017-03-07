@@ -39,6 +39,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,8 +77,8 @@ public class GUIUtil {
             new Popup<>().information("Please be sure that the mining fee used at your external wallet is " +
                     "sufficiently high so that the funding transaction will be accepted by the miners.\n" +
                     "Otherwise the trade transactions cannot be confirmed and a trade would end up in a dispute.\n\n" +
-                    "The recommended fee is about 50 Satoshi/Byte which is for an average transaction about 0.0002 BTC.\n\n" +
-                    "You can view typically used fees at: https://tradeblock.com/blockchain")
+                    "The recommended fee is about 120 Satoshi/Byte which is for an average transaction about 0.0005 BTC.\n\n" +
+                    "You can check out the currently recommended fees at: https://bitcoinfees.21.co")
                     .dontShowAgainId(key, Preferences.INSTANCE)
                     .onClose(runnable::run)
                     .closeButtonText("I understand")
@@ -87,10 +88,9 @@ public class GUIUtil {
         }
     }
 
-
     public static void exportAccounts(ArrayList<PaymentAccount> accounts, String fileName, Preferences preferences, Stage stage) {
         if (!accounts.isEmpty()) {
-            String directory = getDirectoryFormChooser(preferences, stage);
+            String directory = getDirectoryFromChooser(preferences, stage);
             Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
             paymentAccountsStorage.initAndGetPersisted(accounts, fileName);
             paymentAccountsStorage.queueUpForSave();
@@ -102,14 +102,14 @@ public class GUIUtil {
 
     public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setInitialDirectory(new File(preferences.getDefaultPath()));
+        fileChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
         fileChooser.setTitle("Select path to " + fileName);
         File file = fileChooser.showOpenDialog(stage.getOwner());
         if (file != null) {
             String path = file.getAbsolutePath();
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
-                preferences.setDefaultPath(directory);
+                preferences.setDirectoryChooserPath(directory);
                 Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
                 ArrayList<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
                 if (persisted != null) {
@@ -162,14 +162,14 @@ public class GUIUtil {
         }
     }
 
-    public static String getDirectoryFormChooser(Preferences preferences, Stage stage) {
+    public static String getDirectoryFromChooser(Preferences preferences, Stage stage) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setInitialDirectory(new File(preferences.getDefaultPath()));
+        directoryChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
         directoryChooser.setTitle("Select export path");
         File dir = directoryChooser.showDialog(stage);
         if (dir != null) {
             String directory = dir.getAbsolutePath();
-            preferences.setDefaultPath(directory);
+            preferences.setDirectoryChooserPath(directory);
             return directory;
         } else {
             return "";
@@ -300,5 +300,10 @@ public class GUIUtil {
             log.error("openMail failed " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, BSFormatter formatter) {
+        return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
+                " of trade amount)";
     }
 }

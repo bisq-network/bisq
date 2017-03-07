@@ -41,10 +41,10 @@ public final class VoteItemsList extends ArrayList<VoteItem> implements Persista
     public VoteItemsList(VotingDefaultValues votingDefaultValues) {
         add(new VoteItem(CREATE_OFFER_FEE_IN_BTC, "Create offer fee (in BTC Satoshi)", votingDefaultValues));
         add(new VoteItem(TAKE_OFFER_FEE_IN_BTC, "Take offer fee (in BTC Satoshi)", votingDefaultValues));
-        add(new VoteItem(CREATE_OFFER_FEE_IN_SQU, "Create offer fee (in SQU)", votingDefaultValues));
-        add(new VoteItem(TAKE_OFFER_FEE_IN_SQU, "Take offer fee (in SQU)", votingDefaultValues));
-        add(new VoteItem(CREATE_COMPENSATION_REQUEST_FEE_IN_SQU, "Compensation request fee (in SQU)", votingDefaultValues));
-        add(new VoteItem(VOTING_FEE_IN_SQU, "Voting fee (in SQU)", votingDefaultValues));
+        add(new VoteItem(CREATE_OFFER_FEE_IN_BSQ, "Create offer fee (in BSQ)", votingDefaultValues));
+        add(new VoteItem(TAKE_OFFER_FEE_IN_BSQ, "Take offer fee (in BSQ)", votingDefaultValues));
+        add(new VoteItem(CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ, "Compensation request fee (in BSQ)", votingDefaultValues));
+        add(new VoteItem(VOTING_FEE_IN_BSQ, "Voting fee (in BSQ)", votingDefaultValues));
 
         add(new VoteItem(COMPENSATION_REQUEST_PERIOD_IN_BLOCKS, "Compensation request period (in blocks)", votingDefaultValues));
         add(new VoteItem(VOTING_PERIOD_IN_BLOCKS, "Voting period (in blocks)", votingDefaultValues));
@@ -57,7 +57,7 @@ public final class VoteItemsList extends ArrayList<VoteItem> implements Persista
         add(new VoteItem(MIN_BTC_AMOUNT_COMPENSATION_REQUEST, "Min. amount for compensation request (in BTC)", votingDefaultValues));
         add(new VoteItem(MAX_BTC_AMOUNT_COMPENSATION_REQUEST, "Max. amount for compensation request (in BTC)", votingDefaultValues));
 
-        add(new VoteItem(CONVERSION_RATE, "SQU/BTC conversion rate", votingDefaultValues));
+        add(new VoteItem(CONVERSION_RATE, "BSQ/BTC conversion rate", votingDefaultValues));
 
         compensationRequest = new CompensationRequestVoteItemCollection(COMP_REQUEST_MAPS);
         add(compensationRequest);

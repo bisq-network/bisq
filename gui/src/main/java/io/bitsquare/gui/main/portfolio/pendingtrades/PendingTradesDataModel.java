@@ -266,7 +266,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public String getReference() {
-        return getOffer() != null ? getOffer().getReferenceText() : "";
+        return getOffer() != null ? getOffer().getShortId() : "";
     }
 
 
@@ -374,7 +374,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             }
 
             final Arbitrator acceptedArbitratorByAddress = user.getAcceptedArbitratorByAddress(trade.getArbitratorNodeAddress());
-            checkNotNull(acceptedArbitratorByAddress);
+            checkNotNull(acceptedArbitratorByAddress, "acceptedArbitratorByAddress must no tbe null");
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId

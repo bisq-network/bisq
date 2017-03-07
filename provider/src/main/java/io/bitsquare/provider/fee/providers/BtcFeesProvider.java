@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+//TODO use protobuffer instead of json
 public class BtcFeesProvider {
     private static final Logger log = LoggerFactory.getLogger(BtcFeesProvider.class);
 
@@ -23,7 +24,7 @@ public class BtcFeesProvider {
 
     public Long getFee() throws IOException, HttpException {
         String response = httpClient.requestWithGET("recommended", "User-Agent", "");
-        log.debug("Get recommended fee response:  " + response);
+        log.info("Get recommended fee response:  " + response);
         Map<String, Long> map = new HashMap<>();
         LinkedTreeMap<String, Double> treeMap = new Gson().fromJson(response, LinkedTreeMap.class);
         treeMap.entrySet().stream().forEach(e -> map.put(e.getKey(), e.getValue().longValue()));

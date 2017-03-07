@@ -124,6 +124,9 @@ public class BitsquareApp extends Application {
             if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
                     throwable.getCause().getCause() instanceof BlockStoreException) {
                 log.error(throwable.getMessage());
+            } else if (throwable instanceof ClassCastException &&
+                    "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
+                log.warn(throwable.getMessage());
             } else {
                 log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
                 log.error("throwableMessage= " + throwable.getMessage());
@@ -199,7 +202,8 @@ public class BitsquareApp extends Application {
                 } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
                 } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
-                    showEmptyWalletPopup(injector.getInstance(SquWalletService.class));
+                    // BSQ empty wallet not public yet
+                    showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
                 } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showSendAlertMessagePopup();
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
@@ -212,7 +216,7 @@ public class BitsquareApp extends Application {
                         new ShowWalletDataWindow(walletsManager).information("Wallet raw data").show();
                     else
                         new Popup<>().warning("The wallet is not initialized yet").show();
-                } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
                     BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
                     if (walletService.isWalletReady())
@@ -403,14 +407,14 @@ public class BitsquareApp extends Application {
                 injector.getInstance(TradeManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletsSetup.class).shutDownDone.addListener((ov, o, n) -> {
+                        injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
                             bitsquareAppModule.close(injector);
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });
                         injector.getInstance(WalletsSetup.class).shutDown();
                         injector.getInstance(BtcWalletService.class).shutDown();
-                        injector.getInstance(SquWalletService.class).shutDown();
+                        injector.getInstance(BsqWalletService.class).shutDown();
                     });
                 });
                 // we wait max 20 sec.

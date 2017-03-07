@@ -21,8 +21,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bitsquare.app.Version;
 import io.bitsquare.messages.btc.provider.fee.FeeService;
+import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.btc.wallet.BtcWalletService;
-import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.dao.DaoPeriodService;
 import io.bitsquare.dao.compensation.CompensationRequest;
@@ -50,7 +50,7 @@ public class VotingManager {
     public static final String ERROR_MSG_INVALID_COMP_REQ_VAL = "We found an accepted vote at a not voted request.";
 
     private final BtcWalletService btcWalletService;
-    private final SquWalletService squWalletService;
+    private final BsqWalletService bsqWalletService;
     private FeeService feeService;
     private final Storage<ArrayList<VoteItemsList>> voteItemCollectionsStorage;
     private CompensationRequestManager compensationRequestManager;
@@ -61,14 +61,14 @@ public class VotingManager {
 
     @Inject
     public VotingManager(BtcWalletService btcWalletService,
-                         SquWalletService squWalletService,
+                         BsqWalletService bsqWalletService,
                          FeeService feeService,
                          Storage<ArrayList<VoteItemsList>> voteItemCollectionsStorage,
                          CompensationRequestManager compensationRequestManager,
                          DaoPeriodService daoPeriodService,
                          VotingDefaultValues votingDefaultValues) {
         this.btcWalletService = btcWalletService;
-        this.squWalletService = squWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.feeService = feeService;
         this.voteItemCollectionsStorage = voteItemCollectionsStorage;
         this.compensationRequestManager = compensationRequestManager;
@@ -83,7 +83,7 @@ public class VotingManager {
     @VisibleForTesting
     VotingManager(VotingDefaultValues votingDefaultValues) {
         this.btcWalletService = null;
-        this.squWalletService = null;
+        this.bsqWalletService = null;
         this.feeService = null;
         this.voteItemCollectionsStorage = null;
         this.compensationRequestManager = null;

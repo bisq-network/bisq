@@ -26,6 +26,7 @@ import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.trade.ArbitrationSelectionRule;
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,10 +53,13 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
             checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateOfferFeeTx");
             BtcWalletService walletService = model.walletService;
             String id = offer.getId();
+            Address fundingAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress();
+            Address reservedForTradeAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+            Address changeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
             Transaction transaction = model.tradeWalletService.createTradingFeeTx(
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress(),
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress(),
-                    walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress(),
+                    fundingAddress,
+                    reservedForTradeAddress,
+                    changeAddress,
                     model.reservedFundsForOffer,
                     model.useSavingsWallet,
                     offer.getCreateOfferFee(),

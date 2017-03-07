@@ -21,6 +21,10 @@ import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
+import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.messages.locale.CurrencyUtil;
+import io.bitsquare.messages.provider.price.MarketPrice;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -37,6 +41,8 @@ import java.util.stream.Collectors;
 class SpreadViewModel extends ActivatableViewModel {
 
     private final OfferBook offerBook;
+    private PriceFeedService priceFeedService;
+    private BSFormatter formatter;
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     final ObservableList<SpreadItem> spreadItems = FXCollections.observableArrayList();
@@ -47,8 +53,10 @@ class SpreadViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SpreadViewModel(OfferBook offerBook) {
+    public SpreadViewModel(OfferBook offerBook, PriceFeedService priceFeedService, BSFormatter formatter) {
         this.offerBook = offerBook;
+        this.priceFeedService = priceFeedService;
+        this.formatter = formatter;
 
         offerBookListItems = offerBook.getOfferBookListItems();
         listChangeListener = c -> update(offerBookListItems);
@@ -103,13 +111,27 @@ class SpreadViewModel extends ActivatableViewModel {
                     .collect(Collectors.toList());
 
             Fiat spread = null;
+            String percentage = "";
             Fiat bestSellOfferPrice = sellOffers.isEmpty() ? null : sellOffers.get(0).getPrice();
             Fiat bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
-            if (bestBuyOfferPrice != null && bestSellOfferPrice != null)
+            if (bestBuyOfferPrice != null && bestSellOfferPrice != null) {
+                MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
                 spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
+                if (spread != null && marketPrice != null) {
+                    double marketPriceAsDouble = marketPrice.getPrice(PriceFeedService.Type.LAST);
+                    if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+                        double result = ((double) spread.value / 10000D) / marketPriceAsDouble;
+                        percentage = " (" + formatter.formatPercentagePrice(result) + ")";
+                    } else {
+                        final double spreadAsDouble = spread.value != 0 ? 10000D / spread.value : 0;
+                        double result = marketPriceAsDouble / spreadAsDouble;
+                        percentage = " (" + formatter.formatPercentagePrice(result) + ")";
+                    }
+                }
+            }
 
             Coin totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
-            spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(), offers.size(), spread, totalAmount));
+            spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(), offers.size(), spread, percentage, totalAmount));
         }
     }
 }

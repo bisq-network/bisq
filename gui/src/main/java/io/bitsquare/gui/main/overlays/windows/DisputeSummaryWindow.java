@@ -93,7 +93,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private DisputeSummaryWindow(BSFormatter formatter, DisputeManager disputeManager, BtcWalletService walletService, TradeWalletService tradeWalletService) {
+    public DisputeSummaryWindow(BSFormatter formatter, DisputeManager disputeManager, BtcWalletService walletService, TradeWalletService tradeWalletService) {
         this.formatter = formatter;
         this.disputeManager = disputeManager;
         this.walletService = walletService;
@@ -606,9 +606,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             disputeResult.getArbitratorPayoutAmount(),
                             contract.getBuyerPayoutAddressString(),
                             contract.getSellerPayoutAddressString(),
-                            arbitratorAddressEntry,
-                            contract.getBuyerBtcPubKey(),
-                            contract.getSellerBtcPubKey(),
+                            arbitratorAddressEntry.getAddressString(),
+                            arbitratorAddressEntry.getKeyPair(),
+                            contract.getBuyerMultiSigPubKey(),
+                            contract.getSellerMultiSigPubKey(),
                             arbitratorAddressEntry.getPubKey()
                     );
                     disputeResult.setArbitratorSignature(arbitratorSignature);

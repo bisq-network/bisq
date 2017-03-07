@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.dao.wallet;
 
-import io.bitsquare.btc.wallet.SquWalletService;
+import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.gui.util.SQUFormatter;
+import io.bitsquare.gui.util.BsqFormatter;
 import javafx.scene.control.TextField;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
@@ -32,8 +32,8 @@ import java.util.List;
 public class BalanceUtil {
     private static final Logger log = LoggerFactory.getLogger(BalanceUtil.class);
 
-    private final SquWalletService squWalletService;
-    private final SQUFormatter formatter;
+    private final BsqWalletService bsqWalletService;
+    private final BsqFormatter formatter;
     private TextField balanceTextField;
     private WalletEventListener walletEventListener;
 
@@ -42,8 +42,8 @@ public class BalanceUtil {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BalanceUtil(SquWalletService squWalletService, SQUFormatter formatter) {
-        this.squWalletService = squWalletService;
+    private BalanceUtil(BsqWalletService bsqWalletService, BsqFormatter formatter) {
+        this.bsqWalletService = bsqWalletService;
         this.formatter = formatter;
     }
 
@@ -91,8 +91,8 @@ public class BalanceUtil {
     }
 
     private void requestUtxo() {
-        squWalletService.requestSquUtxo(() -> {
-            balanceTextField.setText(formatter.formatCoinWithCode(squWalletService.getAvailableBalance()));
+        bsqWalletService.requestBsqUtxo(() -> {
+            balanceTextField.setText(formatter.formatCoinWithCode(bsqWalletService.getAvailableBalance()));
         }, errorMessage -> {
             new Popup<>().warning(errorMessage);
         });
@@ -100,11 +100,11 @@ public class BalanceUtil {
 
     public void activate() {
         requestUtxo();
-        squWalletService.addEventListener(walletEventListener);
+        bsqWalletService.addEventListener(walletEventListener);
     }
 
     public void deactivate() {
-        squWalletService.removeEventListener(walletEventListener);
+        bsqWalletService.removeEventListener(walletEventListener);
     }
 
 }

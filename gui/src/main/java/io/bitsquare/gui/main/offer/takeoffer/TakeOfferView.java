@@ -90,12 +90,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private BalanceTextField balanceTextField;
     private BusyAnimation waitingForFundsBusyAnimation, offerAvailabilityBusyAnimation;
     private TitledGroupBg payFundsPane;
-    private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, takeOfferButton;
+    private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton,
+            fundFromExternalWalletButton, takeOfferButton;
     private InputTextField amountTextField;
-    private TextField paymentMethodTextField, currencyTextField, priceTextField, priceAsPercentageTextField, volumeTextField, amountRangeTextField;
+    private TextField paymentMethodTextField, currencyTextField, priceTextField, priceAsPercentageTextField,
+            volumeTextField, amountRangeTextField, securityDepositTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
-            amountBtcLabel, priceCurrencyLabel, priceAsPercentageLabel,
-            volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, waitingForFundsLabel, offerAvailabilityLabel;
+            amountBtcLabel, priceCurrencyLabel, priceAsPercentageLabel, securityDepositBtcLabel,
+            volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel,
+            waitingForFundsLabel, offerAvailabilityLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
     private PopOver totalToPayInfoPopover;
     private OfferView.CloseHandler closeHandler;
@@ -223,7 +226,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             directionLabel.setId("direction-icon-label-buy");
 
             takeOfferButton.setId("buy-button-big");
-            takeOfferButton.setText("Review offer to buy bitcoin");
+            takeOfferButton.setText("Review: Take offer to buy bitcoin");
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
@@ -231,7 +234,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            takeOfferButton.setText("Review offer to sell bitcoin");
+            takeOfferButton.setText("Review: Take offer to sell bitcoin");
         }
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
@@ -249,6 +252,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         directionLabel.setText(model.getDirectionLabel());
         amountDescriptionLabel.setText(model.getAmountDescription());
         amountRangeTextField.setText(model.getAmountRange());
+        securityDepositTextField.setText(model.getSecurityDeposit());
         priceTextField.setText(model.getPrice());
         priceAsPercentageTextField.setText(model.marketPriceMargin);
         addressTextField.setPaymentLabel(model.getPaymentLabel());
@@ -340,15 +344,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     .show();
 
             key = "takeOfferFundWalletInfo";
-            String tradeAmountText = model.isSeller() ? "- Trade amount: " + model.getAmount() + "\n" : "";
+            String tradeAmountText = model.isSeller() ? "- Trade amount: " + model.getTradeAmount() + "\n" : "";
             new Popup().headLine("Fund your trade").instruction("You need to deposit " +
                     model.totalToPay.get() + " for taking this offer.\n\n" +
 
                     "The amount is the sum of:\n" +
                     tradeAmountText +
-                    "- Security deposit: " + model.getSecurityDeposit() + "\n" +
+                    "- Security deposit: " + model.getSecurityDepositInfo() + "\n" +
                     "- Trading fee: " + model.getTakerFee() + "\n" +
-                    "- Bitcoin mining fee: " + model.getNetworkFee() + "\n\n" +
+                    "- Mining fee (3x): " + model.getTxFee() + "\n\n" +
 
                     "You can choose between two options when funding your trade:\n" +
                     "- Use your Bitsquare wallet (convenient, but transactions may be linkable) OR\n" +
@@ -424,6 +428,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> model.dataModel.getCurrencyCode() + "/" + model.btcCode.get(), model.btcCode));
         priceAsPercentageLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         amountRangeBtcLabel.textProperty().bind(model.btcCode);
+        securityDepositBtcLabel.textProperty().bind(model.btcCode);
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
 
 
@@ -446,6 +451,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceCurrencyLabel.textProperty().unbind();
         priceAsPercentageLabel.prefWidthProperty().unbind();
         amountRangeBtcLabel.textProperty().unbind();
+        securityDepositBtcLabel.textProperty().unbind();
         nextButton.disableProperty().unbind();
 
         // funding
@@ -897,10 +903,23 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         xLabel.setPadding(new Insets(14, 3, 0, 3));
         xLabel.setVisible(false); // we just use it to get the same layout as the upper row
 
+        // security deposit
+        Tuple3<HBox, TextField, Label> securityDepositValueCurrencyBoxTuple = getValueCurrencyBox();
+        HBox securityDepositValueCurrencyBox = securityDepositValueCurrencyBoxTuple.first;
+        securityDepositTextField = securityDepositValueCurrencyBoxTuple.second;
+        securityDepositBtcLabel = securityDepositValueCurrencyBoxTuple.third;
+        Tuple2<Label, VBox> securityDepositInputBoxTuple = getTradeInputBox(securityDepositValueCurrencyBox,
+                BSResources.get("takeOffer.securityDepositBox.description"));
+
+        Label resultLabel = new Label("=");
+        resultLabel.setFont(Font.font("Helvetica-Bold", 20));
+        resultLabel.setPadding(new Insets(14, 2, 0, 2));
+        resultLabel.setVisible(false); // we just use it to get the same layout as the upper row
+
         HBox hBox = new HBox();
         hBox.setSpacing(5);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, priceAsPercentageInputBox);
+        hBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, priceAsPercentageInputBox, resultLabel, securityDepositInputBoxTuple.second);
 
         GridPane.setRowIndex(hBox, ++gridRow);
         GridPane.setColumnIndex(hBox, 1);
@@ -977,11 +996,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         int i = 0;
         if (model.isSeller())
-            addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.tradeAmount"), model.getAmount());
+            addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.tradeAmount"), model.getTradeAmount());
 
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.securityDeposit"), model.getSecurityDeposit());
+        addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.securityDeposit"), model.getSecurityDepositInfo());
         addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.offerFee"), model.getTakerFee());
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.networkFee"), model.getNetworkFee());
+        addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");
@@ -1002,6 +1021,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
         Label label = new Label(labelText);
         TextField textField = new TextField(value);
+        textField.setMinWidth(300);
         textField.setEditable(false);
         textField.setFocusTraversable(false);
         textField.setId("payment-info");

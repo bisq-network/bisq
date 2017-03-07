@@ -7,13 +7,14 @@ set -e
 
 version="0.5.0.0"
 
-mvn clean package -DskipTests -Dmaven.javadoc.skip=true
+mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
+# At windows we don't add the version nr as it would keep multiple versions of jar files in app dir
 cp gui/target/shaded.jar "gui/deploy/Bitsquare-$version.jar"
 cp gui/target/shaded.jar "/Users/dev/vm_shared_ubuntu/Bitsquare-$version.jar"
-cp gui/target/shaded.jar "/Users/dev/vm_shared_windows/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/dev/vm_shared_windows/Bitsquare.jar"
 cp gui/target/shaded.jar "/Users/dev/vm_shared_ubuntu14_32bit/Bitsquare-$version.jar"
-cp gui/target/shaded.jar "/Users/dev/vm_shared_windows_32bit/Bitsquare-$version.jar"
+cp gui/target/shaded.jar "/Users/dev/vm_shared_windows_32bit/Bitsquare.jar"
 
 echo "Using JAVA_HOME: $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
@@ -29,9 +30,12 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bitsquare \
     -outdir gui/deploy \
     -srcfiles "gui/deploy/Bitsquare-$version.jar" \
+    -srcfiles "core/src/main/resources/bitsquare.policy" \
     -appclass io.bitsquare.app.BitsquareAppMain \
     -outfile Bitsquare \
-    -BjvmProperties=-Djava.net.preferIPv4Stack=true
+    -BjvmOptions=-Djava.security.manager \
+    -BjvmOptions=-Djava.security.debug=failure \
+    -BjvmOptions=-Djava.security.policy=file:bitsquare.policy
 
 rm "gui/deploy/Bitsquare.html"
 rm "gui/deploy/Bitsquare.jnlp"

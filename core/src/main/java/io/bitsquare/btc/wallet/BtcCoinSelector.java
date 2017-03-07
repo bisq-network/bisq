@@ -29,7 +29,7 @@ import java.util.Set;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches any of our addresses.
  */
-class BtcCoinSelector extends BsDefaultCoinSelector {
+class BtcCoinSelector extends BitsquareDefaultCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(BtcCoinSelector.class);
 
     private NetworkParameters params;

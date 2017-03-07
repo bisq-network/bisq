@@ -10,14 +10,16 @@ There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, Bitsq
 System requirements
 -------------
 
-The prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u112 or better (as well as maven and git).
+The prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u121 or better (as well as maven and git).
 In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
+
+    $ sudo apt-get install openjdk-8-jdk maven libopenjfx-java
 
 ### 1. Check the version of Java you currently have installed
 
     $ java -version
 
-If `java` is not found, or your version is anything less than `1.8.0_112`, then follow the next steps, otherwise you can skip to step 2:
+If `java` is not found, or your version is anything less than `1.8.0_121`, then follow the next steps, otherwise you can skip to step 2:
 
 #### 1.1 Debian based systems (Ubuntu)
 
@@ -72,7 +74,7 @@ For Mac OSX, you will need to set JAVA_HOME as:
     $ . ~/.bashrc
 
 
-Build bitcoinj
+Build bitcoinj and btcd-cli4j fork
 -----------------
 ### 2. Install bitcoinj fork
 > _**NOTE:**
@@ -82,10 +84,19 @@ We removed usage of Cartographer/HttpDiscovery in our [fork of version 0.13.1.7]
 Beside the Java serialisation issues there are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer.
 Here is a Github issue with background and open tasks regarding [Bloom Filters](https://github.com/bitsquare/bitsquare/issues/414)._  Note: use a fresh directory, this should not be done inside the bitsquare folder.
 
+Btcd-cli4j is used for RPC communication to a local Bitcoin Core node.
+TODO: remove if not used in production
+
     $ cd ..
     $ git clone -b FixBloomFilters https://github.com/bitsquare/bitcoinj.git
     $ cd bitcoinj
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+    
+    $ cd ..
+    $ git clone https://github.com/bitsquare/btcd-cli4j.git
+    $ cd btcd-cli4j
+    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+    
 
 Prepare Bitsquare build
 -----------------

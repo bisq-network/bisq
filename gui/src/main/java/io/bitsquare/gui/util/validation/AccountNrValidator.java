@@ -19,7 +19,8 @@ package io.bitsquare.gui.util.validation;
 
 
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.messages.locale.BankUtil;
+import io.bitsquare.locale.BankUtil;
+import org.apache.commons.lang3.StringUtils;
 
 public final class AccountNrValidator extends BankValidator {
     public AccountNrValidator(String countryCode) {
@@ -75,12 +76,58 @@ public final class AccountNrValidator extends BankValidator {
                     return super.validate(input);
                 else
                     return new ValidationResult(false, "Account number must be of format: 005-231289-112");
+            case "NO":
+                if (input != null) {
+                    length = 11;
+                    // Provided by sturles:
+                    // https://github.com/bitsquare/bitsquare/pull/707
+
+                    // https://no.wikipedia.org/wiki/MOD11#Implementasjoner_i_forskjellige_programmeringspr.C3.A5k
+                    // https://en.wikipedia.org/wiki/International_Bank_Account_Number#Generating_IBAN_check_digits6
+
+                    // 11 digits, last digit is checksum.  Checksum algoritm is 
+                    // MOD11 with weights 2,3,4,5,6,7,2,3,4,5 right to left.
+                    // First remove whitespace and periods.  Normal formatting is: 
+                    // 1234.56.78903
+                    input2 = StringUtils.remove(input, " ");
+                    input2 = StringUtils.remove(input2, ".");
+                    // 11 digits, numbers only
+                    if (input2.length() != length || !StringUtils.isNumeric(input2))
+                        return new ValidationResult(false, BSResources.get("validation.sortCodeNumber", getLabel(), length));
+                    int lastDigit = Character.getNumericValue(input2.charAt(input2.length() - 1));
+                    if (getMod11ControlDigit(input2) != lastDigit)
+                        return new ValidationResult(false, "Kontonummer har feil sjekksum");
+                    else
+                        return super.validate(input);
+                } else {
+                    return super.validate(input);
+                }
             default:
                 return super.validate(input);
         }
 
     }
 
+    private int getMod11ControlDigit(String accountNrString) {
+        int sumForMod = 0;
+        int controlNumber = 2;
+        char[] accountNr = accountNrString.toCharArray();
+
+        for (int i = accountNr.length - 2; i >= 0; i--) {
+            sumForMod += (Character.getNumericValue(accountNr[i]) * controlNumber);
+            controlNumber++;
+
+            if (controlNumber > 7) {
+                controlNumber = 2;
+            }
+        }
+        int calculus = (11 - sumForMod % 11);
+        if (calculus == 11) {
+            return 0;
+        } else {
+            return calculus;
+        }
+    }
 
     private String getLabel() {
         String label = BankUtil.getAccountNrLabel(countryCode);

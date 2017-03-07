@@ -83,6 +83,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("REP", "Augur", true));
         result.add(new CryptoCurrency("BATL", "Battlestars"));
         result.add(new CryptoCurrency("BIGUP", "BigUp"));
+        result.add(new CryptoCurrency("BSQ", "bisq Token"));
         result.add(new CryptoCurrency("BITAUD", "BitAUD", true));
         result.add(new CryptoCurrency("BITCHF", "BitCHF", true));
         result.add(new CryptoCurrency("BITCNY", "BitCNY", true));
@@ -97,6 +98,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("BITUSD", "BitUSD", true));
         result.add(new CryptoCurrency("BLK", "Blackcoin"));
         result.add(new CryptoCurrency("BURST", "Burstcoin"));
+        result.add(new CryptoCurrency("GBYTE", "Byte"));
         result.add(new CryptoCurrency("CLAM", "Clams"));
         result.add(new CryptoCurrency("CLOAK", "CloakCoin"));
         result.add(new CryptoCurrency("CMT", "Comet"));
@@ -136,6 +138,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
         result.add(new CryptoCurrency("JBS", "Jumbucks"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
+        result.add(new CryptoCurrency("LTBC", "LTBcoin"));
         result.add(new CryptoCurrency("LSK", "Lisk"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("MAID", "MaidSafeCoin"));
@@ -158,6 +161,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("PASC", "Pascal Coin"));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
         result.add(new CryptoCurrency("PINK", "Pinkcoin"));
+        result.add(new CryptoCurrency("PIVX", "PIVX"));
         result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
         result.add(new CryptoCurrency("PLU", "Plutons", true));
         result.add(new CryptoCurrency("POST", "PostCoin"));
@@ -180,6 +184,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XLM", "Stellar Lumens"));
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
         result.add(new CryptoCurrency("STRAT", "Stratis"));
+        result.add(new CryptoCurrency("SWT", "Swarm City Token"));
         result.add(new CryptoCurrency("SYNX", "Syndicate"));
         result.add(new CryptoCurrency("AMP", "Synereo", true));
         result.add(new CryptoCurrency("TRI", "Triangles"));
@@ -196,29 +201,37 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("YBC", "YbCoin"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.add(new CryptoCurrency("XZC", "Zcoin"));
-        
+
         result.sort(TradeCurrency::compareTo);
+
+        // Util for printing all altcoins for adding to FAQ page
+        StringBuilder sb = new StringBuilder();
+        result.stream().forEach(e -> sb.append("<li>\"")
+                .append(e.getCode())
+                .append("\", \"")
+                .append(e.getName())
+                .append("\"</li>")
+                .append("\n"));
+        //log.info(sb.toString());
+
         return result;
     }
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
+        result.add(new CryptoCurrency("BSQ", "bisq Token"));
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
+        result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("ETH", "Ether"));
         result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("STEEM", "STEEM"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("REP", "Augur", true));
-        result.add(new CryptoCurrency("FLO", "FlorinCoin"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("DASH", "Dash"));
-        result.add(new CryptoCurrency("NMC", "Namecoin"));
-        result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("DOGE", "Dogecoin"));
-        result.add(new CryptoCurrency("NXT", "Nxt"));
-        result.add(new CryptoCurrency("BTS", "BitShares"));
 
         result.sort(TradeCurrency::compareTo);
         return result;

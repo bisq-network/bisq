@@ -17,11 +17,13 @@
 
 package io.bitsquare.gui.main.disputes.trader;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.messages.arbitration.Dispute;
+import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.messages.arbitration.DisputeCommunicationMessage;
 import io.bitsquare.messages.arbitration.payload.Attachment;
@@ -34,7 +36,9 @@ import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.TableGroupHeadline;
+import io.bitsquare.gui.main.disputes.arbitrator.ArbitratorDisputeView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.ContractWindow;
 import io.bitsquare.gui.main.overlays.windows.DisputeSummaryWindow;
@@ -81,6 +85,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -92,7 +99,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
     private final Stage stage;
-    private final BSFormatter formatter;
+    protected final BSFormatter formatter;
     private final DisputeSummaryWindow disputeSummaryWindow;
     private PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
@@ -124,6 +131,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private Subscription inputTextAreaTextSubscription;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
+    protected FilteredList<Dispute> filteredList;
+    private InputTextField filterTextField;
+    private ChangeListener<String> filterTextFieldListener;
+    protected HBox filterBox;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -148,10 +159,24 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        Label label = new Label("Filter list:");
+        HBox.setMargin(label, new Insets(5, 0, 0, 0));
+        filterTextField = new InputTextField();
+        filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
+
+        filterBox = new HBox();
+        filterBox.setSpacing(5);
+        filterBox.getChildren().addAll(label, filterTextField);
+        VBox.setVgrow(filterBox, Priority.NEVER);
+        filterBox.setVisible(false);
+        filterBox.setManaged(false);
+
         tableView = new TableView<>();
         VBox.setVgrow(tableView, Priority.SOMETIMES);
         tableView.setMinHeight(150);
-        root.getChildren().add(tableView);
+
+        root.getChildren().addAll(filterBox, tableView);
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new Label("There are no open tickets");
         placeholder.setWrapText(true);
@@ -295,10 +320,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        filterTextField.textProperty().addListener(filterTextFieldListener);
         disputeManager.cleanupDisputes();
 
-        FilteredList<Dispute> filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
-        setFilteredListPredicate(filteredList);
+        filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
+        applyFilteredListPredicate(filterTextField.getText());
 
         sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -316,10 +342,58 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         scene = root.getScene();
         if (scene != null)
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
+        // If doPrint=true we print out a html page which opens tabs with all deposit txs 
+        // (firefox needs about:config change to allow > 20 tabs)
+        // Useful to check if there any funds in not finished trades (no payout tx done).
+        // Last check 10.02.2017 found 8 trades and we contacted all traders as far as possible (email if available 
+        // otherwise in-app private notification)
+        boolean doPrint = false;
+        if (doPrint) {
+            try {
+                DateFormat formatter = new SimpleDateFormat("dd/MM/yy");
+                Date startDate = formatter.parse("10/02/17");
+                startDate = new Date(0); // print all from start
+
+                HashMap<String, Dispute> map = new HashMap<>();
+                disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> {
+                    map.put(dispute.getDepositTxId(), dispute);
+                });
+
+                final Date finalStartDate = startDate;
+                List<Dispute> disputes = new ArrayList<>(map.values());
+                disputes.sort((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
+                List<List<Dispute>> subLists = Lists.partition(disputes, 1000);
+                StringBuilder sb = new StringBuilder();
+                subLists.stream().forEach(list -> {
+                    StringBuilder sb1 = new StringBuilder("\n<html><head><script type=\"text/javascript\">function load(){\n");
+                    StringBuilder sb2 = new StringBuilder("\n}</script></head><body onload=\"load()\">\n");
+                    list.stream().forEach(dispute -> {
+                        if (dispute.getOpeningDate().after(finalStartDate)) {
+                            String txId = dispute.getDepositTxId();
+                            sb1.append("window.open(\"https://blockchain.info/tx/").append(txId).append("\", '_blank');\n");
+
+                            sb2.append("Dispute ID: ").append(dispute.getId()).
+                                    append(" Tx ID: ").
+                                    append("<a href=\"https://blockchain.info/tx/").append(txId).append("\">").
+                                    append(txId).append("</a> ").
+                                    append("Opening date: ").append(formatter.format(dispute.getOpeningDate())).append("<br/>\n");
+                        }
+                    });
+                    sb2.append("</body></html>");
+                    String res = sb1.toString() + sb2.toString();
+
+                    sb.append(res).append("\n\n\n");
+                });
+                log.info(sb.toString());
+            } catch (ParseException ignore) {
+            }
+        }
     }
 
     @Override
     protected void deactivate() {
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
         sortedList.comparatorProperty().unbind();
         selectedDisputeSubscription.unsubscribe();
         removeListenersOnSelectDispute();
@@ -328,7 +402,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
-    protected void setFilteredListPredicate(FilteredList<Dispute> filteredList) {
+    protected void applyFilteredListPredicate(String filterString) {
+        // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)
         filteredList.setPredicate(dispute -> !dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()));
     }
 
@@ -393,8 +468,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onCloseDispute(Dispute dispute) {
-        disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
-                .show(dispute);
+        long protocolVersion = dispute.getContract().offer.getProtocolVersion();
+        if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
+            disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
+                    .show(dispute);
+        } else {
+            new Popup<>()
+                    .warning("The offer in that dispute has been created with an older version of Bitsquare.\n" +
+                            "You cannot close that dispute with your version of the application.\n\n" +
+                            "Please use an older version with protocol version " + protocolVersion)
+                    .show();
+        }
     }
 
     private void onRequestUpload() {
@@ -489,7 +573,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             messageListView.prefWidthProperty().bind(root.widthProperty());
             messagesAnchorPane.prefWidthProperty().bind(root.widthProperty());
             disputeCommunicationMessages.addListener(disputeDirectMessageListListener);
-            selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
+            if (selectedDispute != null)
+                selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
         }
     }
@@ -497,8 +582,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private void onSelectDispute(Dispute dispute) {
         removeListenersOnSelectDispute();
         if (dispute == null) {
-            if (root.getChildren().size() > 1)
-                root.getChildren().remove(1);
+            if (root.getChildren().size() > 2)
+                root.getChildren().remove(2);
 
             selectedDispute = null;
         } else if (selectedDispute != dispute) {
@@ -531,6 +616,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             inputTextArea = new TextArea();
             inputTextArea.setPrefHeight(70);
             inputTextArea.setWrapText(true);
+            if (!(this instanceof ArbitratorDisputeView))
+                inputTextArea.setPromptText("Please enter here your message to the arbitrator");
 
             sendButton = new Button("Send");
             sendButton.setDefaultButton(true);
@@ -805,9 +892,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 }
             });
 
-            if (root.getChildren().size() > 1)
-                root.getChildren().remove(1);
-            root.getChildren().add(1, messagesAnchorPane);
+            if (root.getChildren().size() > 2)
+                root.getChildren().remove(2);
+            root.getChildren().add(2, messagesAnchorPane);
 
             scrollToBottom();
         }
@@ -1022,7 +1109,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
 
-    private String getBuyerOnionAddressColumnLabel(Dispute item) {
+    protected String getBuyerOnionAddressColumnLabel(Dispute item) {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress buyerNodeAddress = contract.getBuyerNodeAddress();
@@ -1035,7 +1122,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private String getSellerOnionAddressColumnLabel(Dispute item) {
+    protected String getSellerOnionAddressColumnLabel(Dispute item) {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress sellerNodeAddress = contract.getSellerNodeAddress();

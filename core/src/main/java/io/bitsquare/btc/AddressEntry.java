@@ -19,6 +19,7 @@ package io.bitsquare.btc;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
+import io.bitsquare.common.util.Utilities;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
@@ -72,7 +73,7 @@ public final class AddressEntry implements Persistable {
     private final byte[] pubKeyHash;
     private final String paramId;
     @Nullable
-    private Coin lockedTradeAmount;
+    private Coin coinLockedInMultiSig;
     transient private NetworkParameters params;
 
 
@@ -133,7 +134,7 @@ public final class AddressEntry implements Persistable {
     // For display we usually only display the first 8 characters.
     @Nullable
     public String getShortOfferId() {
-        return getOfferId() != null ? getOfferId().substring(0, Math.min(8, getOfferId().length())) : null;
+        return offerId != null ? Utilities.getShortId(offerId) : null;
     }
 
     public Context getContext() {
@@ -175,13 +176,13 @@ public final class AddressEntry implements Persistable {
         return isOpenOffer() || isTrade();
     }
 
-    public void setLockedTradeAmount(Coin lockedTradeAmount) {
-        this.lockedTradeAmount = lockedTradeAmount;
+    public void setCoinLockedInMultiSig(Coin coinLockedInMultiSig) {
+        this.coinLockedInMultiSig = coinLockedInMultiSig;
     }
 
-    @org.jetbrains.annotations.Nullable
-    public Coin getLockedTradeAmount() {
-        return lockedTradeAmount;
+    @Nullable
+    public Coin getCoinLockedInMultiSig() {
+        return coinLockedInMultiSig;
     }
 
     @Override

@@ -21,18 +21,18 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
-import io.bitsquare.app.Log;
-import io.bitsquare.messages.btc.provider.ProvidersRepository;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.http.HttpClient;
+import io.bitsquare.messages.btc.provider.ProvidersRepository;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.time.Instant;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -40,22 +40,28 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FeeService {
     private static final Logger log = LoggerFactory.getLogger(FeeService.class);
 
-    public static final long MIN_TX_FEE = 40; // satoshi/byte
-    public static final long MAX_TX_FEE = 200;
-    public static final long DEFAULT_TX_FEE = 100;
+    public static final long MIN_TX_FEE = 60; // satoshi/byte
+    public static final long MAX_TX_FEE = 300;
+    public static final long DEFAULT_TX_FEE = 150;
 
-    public static final long MIN_CREATE_OFFER_FEE = 10_000;
-    public static final long MAX_CREATE_OFFER_FEE = 500_000;
-    public static final long DEFAULT_CREATE_OFFER_FEE = 30_000;
+    public static final long MIN_CREATE_OFFER_FEE_IN_BTC = 10_000;
+    public static final long MAX_CREATE_OFFER_FEE_IN_BTC = 500_000;
+    public static final long DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BTC = 30_000; // excluded mining fee
 
-    public static final long MIN_TAKE_OFFER_FEE = 10_000;
-    public static final long MAX_TAKE_OFFER_FEE = 1000_000;
-    public static final long DEFAULT_TAKE_OFFER_FEE = 80_000;
+    public static final long MIN_TAKE_OFFER_FEE_IN_BTC = 10_000;
+    public static final long MAX_TAKE_OFFER_FEE_IN_BTC = 1000_000;
+    public static final long DEFAULT_TAKE_OFFER_FEE_IN_BTC_PER_BTC = 40_000; // excluded mining fee
+
+    // 0.00216 btc is for 3 x tx fee for taker -> about 2 EUR!
+
+    public static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 10;
 
     private final FeeProvider feeProvider;
+    @Nullable
     private FeeData feeData;
     private Map<String, Long> timeStampMap;
     private long epochInSecondAtLastRequest;
+    private long lastRequest;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -65,7 +71,6 @@ public class FeeService {
     public FeeService(HttpClient httpClient,
                       ProvidersRepository providersRepository) {
         this.feeProvider = new FeeProvider(httpClient, providersRepository.getBaseUrl());
-        feeData = new FeeData(DEFAULT_TX_FEE, DEFAULT_CREATE_OFFER_FEE, DEFAULT_TAKE_OFFER_FEE);
     }
 
     public void onAllServicesInitialized() {
@@ -73,30 +78,39 @@ public class FeeService {
     }
 
     public void requestFees(@Nullable Runnable resultHandler, @Nullable FaultHandler faultHandler) {
-        //TODO add throttle
-        Log.traceCall();
-        FeeRequest feeRequest = new FeeRequest();
-        SettableFuture<Tuple2<Map<String, Long>, FeeData>> future = feeRequest.getFees(feeProvider);
-        Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, FeeData>>() {
-            @Override
-            public void onSuccess(@Nullable Tuple2<Map<String, Long>, FeeData> result) {
-                UserThread.execute(() -> {
-                    checkNotNull(result, "Result must not be null at getFees");
-                    timeStampMap = result.first;
-                    epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
-                    feeData = result.second;
-                    if (resultHandler != null)
-                        resultHandler.run();
-                });
-            }
+        long now = Instant.now().getEpochSecond();
+        if (feeData == null || now - lastRequest > MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN * 60) {
+            lastRequest = now;
+            FeeRequest feeRequest = new FeeRequest();
+            SettableFuture<Tuple2<Map<String, Long>, FeeData>> future = feeRequest.getFees(feeProvider);
+            Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, FeeData>>() {
+                @Override
+                public void onSuccess(@Nullable Tuple2<Map<String, Long>, FeeData> result) {
+                    UserThread.execute(() -> {
+                        checkNotNull(result, "Result must not be null at getFees");
+                        timeStampMap = result.first;
+                        epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
+                        feeData = result.second;
+                        log.info("Tx fee: txFeePerByte=" + feeData.txFeePerByte);
+                        if (resultHandler != null)
+                            resultHandler.run();
+                    });
+                }
 
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                log.warn("Could not load fees. " + throwable.toString());
-                if (faultHandler != null)
-                    UserThread.execute(() -> faultHandler.handleFault("Could not load fees", throwable));
-            }
-        });
+                @Override
+                public void onFailure(@NotNull Throwable throwable) {
+                    log.warn("Could not load fees. " + throwable.toString());
+                    if (faultHandler != null)
+                        UserThread.execute(() -> faultHandler.handleFault("Could not load fees", throwable));
+                }
+            });
+        } else {
+            log.debug("We got a requestFees called again before min pause of {} minutes has passed.", MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN);
+            UserThread.execute(() -> {
+                if (resultHandler != null)
+                    resultHandler.run();
+            });
+        }
     }
 
     public Coin getTxFee(int sizeInBytes) {
@@ -104,16 +118,28 @@ public class FeeService {
     }
 
     public Coin getTxFeePerByte() {
-        log.info("txFeePerByte = " + feeData.txFeePerByte);
-        return Coin.valueOf(feeData.txFeePerByte);
+        if (feeData != null)
+            return Coin.valueOf(feeData.txFeePerByte);
+        else
+            return Coin.valueOf(DEFAULT_TX_FEE);
     }
 
-    public Coin getCreateOfferFee() {
-        return Coin.valueOf(feeData.createOfferFee);
+    // TODO we will get that from the DAO voting
+    public Coin getCreateOfferFeeInBtcPerBtc() {
+        return Coin.valueOf(DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BTC);
     }
 
-    public Coin getTakeOfferFee() {
-        return Coin.valueOf(feeData.takeOfferFee);
+    public Coin getMinCreateOfferFeeInBtc() {
+        return Coin.valueOf(MIN_CREATE_OFFER_FEE_IN_BTC);
+    }
+
+    public Coin getMinTakeOfferFeeInBtc() {
+        return Coin.valueOf(MIN_TAKE_OFFER_FEE_IN_BTC);
+    }
+
+    // TODO we will get that from the DAO voting
+    public Coin getTakeOfferFeeInBtcPerBtc() {
+        return Coin.valueOf(DEFAULT_TAKE_OFFER_FEE_IN_BTC_PER_BTC);
     }
 
     public Coin getCreateCompensationRequestFee() {

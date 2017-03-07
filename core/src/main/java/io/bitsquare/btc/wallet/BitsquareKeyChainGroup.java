@@ -51,7 +51,7 @@ class BitsquareKeyChainGroup extends KeyChainGroup {
 
     @Override
     public void createAndActivateNewHDChain() {
-        DeterministicKeyChain chain = useBitcoinDeterministicKeyChain ? new BtcDeterministicKeyChain(new SecureRandom()) : new SquDeterministicKeyChain(new SecureRandom());
+        DeterministicKeyChain chain = useBitcoinDeterministicKeyChain ? new BtcDeterministicKeyChain(new SecureRandom()) : new BsqDeterministicKeyChain(new SecureRandom());
         chain.setLookaheadSize(lookaheadSize);
         addAndActivateHDChain(chain);
     }

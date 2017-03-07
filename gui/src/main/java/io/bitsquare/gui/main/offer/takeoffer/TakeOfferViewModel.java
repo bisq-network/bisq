@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.deposit.DepositView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
@@ -176,7 +177,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         offer.errorMessageProperty().addListener(offerErrorListener);
         errorMessage.set(offer.errorMessageProperty().get());
 
-        btcValidator.setMaxTradeLimitInBitcoin(offer.getAmount());
+        btcValidator.setMaxValueInBitcoin(offer.getAmount());
     }
 
 
@@ -204,10 +205,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         dataModel.onPaymentAccountSelected(paymentAccount);
         if (offer != null)
-            btcValidator.setMaxTradeLimitInBitcoin(offer.getAmount());
+            btcValidator.setMaxValueInBitcoin(offer.getAmount());
     }
 
     public void onShowPayFundsScreen() {
+        dataModel.requestTxFee();
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();
     }
@@ -525,7 +527,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     private void setAmountToModel() {
-        dataModel.setAmount(formatter.parseToCoinWith4Decimals(amount.get()));
+        dataModel.applyAmount(formatter.parseToCoinWith4Decimals(amount.get()));
     }
 
 
@@ -569,21 +571,29 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return amountDescription;
     }
 
-    String getAmount() {
+    String getTradeAmount() {
         return formatter.formatCoinWithCode(dataModel.amountAsCoin.get());
     }
 
-    String getTakerFee() {
-        return formatter.formatCoinWithCode(dataModel.getTakerFeeAsCoin());
-    }
-
-    String getNetworkFee() {
-        return formatter.formatCoinWithCode(dataModel.getTotalTxFeeAsCoin());
+    public String getSecurityDepositInfo() {
+        return formatter.formatCoinWithCode(dataModel.getSecurityDepositAsCoin()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDepositAsCoin(), dataModel.amountAsCoin.get(), formatter);
     }
 
     public String getSecurityDeposit() {
-        return formatter.formatCoinWithCode(dataModel.getSecurityDepositAsCoin());
+        return formatter.formatCoin(dataModel.getSecurityDepositAsCoin());
     }
+
+    public String getTakerFee() {
+        return formatter.formatCoinWithCode(dataModel.getTakerFeeAsCoin()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getTakerFeeAsCoin(), dataModel.amountAsCoin.get(), formatter);
+    }
+
+    public String getTxFee() {
+        return formatter.formatCoinWithCode(dataModel.getTotalTxFeeAsCoin()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getTotalTxFeeAsCoin(), dataModel.amountAsCoin.get(), formatter);
+    }
+
 
     public PaymentMethod getPaymentMethod() {
         return dataModel.getPaymentMethod();

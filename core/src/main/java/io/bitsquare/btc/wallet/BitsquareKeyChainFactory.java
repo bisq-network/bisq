@@ -37,16 +37,16 @@ class BitsquareKeyChainFactory implements KeyChainFactory {
 
     @Override
     public DeterministicKeyChain makeKeyChain(Protos.Key key, Protos.Key firstSubKey, DeterministicSeed seed, KeyCrypter crypter, boolean isMarried) {
-        return useBitcoinDeterministicKeyChain ? new BtcDeterministicKeyChain(seed, crypter) : new SquDeterministicKeyChain(seed, crypter);
+        return useBitcoinDeterministicKeyChain ? new BtcDeterministicKeyChain(seed, crypter) : new BsqDeterministicKeyChain(seed, crypter);
     }
 
     @Override
     public DeterministicKeyChain makeWatchingKeyChain(Protos.Key key, Protos.Key firstSubKey, DeterministicKey accountKey,
                                                       boolean isFollowingKey, boolean isMarried) throws UnreadableWalletException {
-        ImmutableList<ChildNumber> accountPath = useBitcoinDeterministicKeyChain ? BtcDeterministicKeyChain.BIP44_BTC_ACCOUNT_PATH : SquDeterministicKeyChain.BIP44_SQU_ACCOUNT_PATH;
+        ImmutableList<ChildNumber> accountPath = useBitcoinDeterministicKeyChain ? BtcDeterministicKeyChain.BIP44_BTC_ACCOUNT_PATH : BsqDeterministicKeyChain.BIP44_BSQ_ACCOUNT_PATH;
         if (!accountKey.getPath().equals(accountPath))
             throw new UnreadableWalletException("Expecting account key but found key with path: " +
                     HDUtils.formatPath(accountKey.getPath()));
-        return useBitcoinDeterministicKeyChain ? new BtcDeterministicKeyChain(accountKey, isFollowingKey) : new SquDeterministicKeyChain(accountKey, isFollowingKey);
+        return useBitcoinDeterministicKeyChain ? new BtcDeterministicKeyChain(accountKey, isFollowingKey) : new BsqDeterministicKeyChain(accountKey, isFollowingKey);
     }
 }

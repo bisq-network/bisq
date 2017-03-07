@@ -20,16 +20,16 @@ package io.bitsquare.btc;
 import com.google.inject.Singleton;
 import io.bitsquare.app.AppModule;
 import io.bitsquare.app.AppOptionKeys;
+import io.bitsquare.btc.provider.squ.BsqUtxoFeedService;
+import io.bitsquare.btc.wallet.BsqWalletService;
+import io.bitsquare.btc.wallet.BtcWalletService;
+import io.bitsquare.btc.wallet.TradeWalletService;
+import io.bitsquare.btc.wallet.WalletsSetup;
+import io.bitsquare.http.HttpClient;
 import io.bitsquare.messages.btc.BtcOptionKeys;
 import io.bitsquare.messages.btc.UserAgent;
 import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.messages.provider.price.PriceFeedService;
-import io.bitsquare.btc.provider.squ.SquUtxoFeedService;
-import io.bitsquare.btc.wallet.BtcWalletService;
-import io.bitsquare.btc.wallet.SquWalletService;
-import io.bitsquare.btc.wallet.TradeWalletService;
-import io.bitsquare.btc.wallet.WalletsSetup;
-import io.bitsquare.http.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -48,7 +48,6 @@ public class BitcoinModule extends AppModule {
     @Override
     protected void configure() {
         bind(RegTestHost.class).toInstance(env.getProperty(BtcOptionKeys.REG_TEST_HOST, RegTestHost.class, RegTestHost.DEFAULT));
-        bind(FeePolicy.class).in(Singleton.class);
 
         bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(env.getRequiredProperty(UserAgent.NAME_KEY));
         bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(env.getRequiredProperty(UserAgent.VERSION_KEY));
@@ -57,18 +56,18 @@ public class BitcoinModule extends AppModule {
         File walletDir = new File(env.getRequiredProperty(BtcOptionKeys.WALLET_DIR));
         bind(File.class).annotatedWith(named(BtcOptionKeys.WALLET_DIR)).toInstance(walletDir);
 
-        bindConstant().annotatedWith(named(AppOptionKeys.BTC_NODES)).to(env.getRequiredProperty(AppOptionKeys.BTC_NODES));
-        bindConstant().annotatedWith(named(AppOptionKeys.USE_TOR_FOR_BTC)).to(env.getRequiredProperty(AppOptionKeys.USE_TOR_FOR_BTC));
+        bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(env.getRequiredProperty(BtcOptionKeys.BTC_NODES));
+        bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(env.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
         bindConstant().annotatedWith(named(AppOptionKeys.PROVIDERS)).to(env.getRequiredProperty(AppOptionKeys.PROVIDERS));
 
         bind(AddressEntryList.class).in(Singleton.class);
         bind(WalletsSetup.class).in(Singleton.class);
         bind(BtcWalletService.class).in(Singleton.class);
-        bind(SquWalletService.class).in(Singleton.class);
+        bind(BsqWalletService.class).in(Singleton.class);
         bind(TradeWalletService.class).in(Singleton.class);
 
         bind(HttpClient.class).in(Singleton.class);
-        bind(SquUtxoFeedService.class).in(Singleton.class);
+        bind(BsqUtxoFeedService.class).in(Singleton.class);
         bind(PriceFeedService.class).in(Singleton.class);
         bind(FeeService.class).in(Singleton.class);
     }

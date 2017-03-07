@@ -27,19 +27,19 @@ import java.math.BigDecimal;
 
 public class BtcValidator extends NumberValidator {
 
-    private final BSFormatter formatter;
+    protected final BSFormatter formatter;
 
 
     @Nullable
-    private Coin maxTradeLimitInBitcoin;
+    protected Coin maxValueInBitcoin;
 
     @Inject
     public BtcValidator(BSFormatter formatter) {
         this.formatter = formatter;
     }
 
-    public void setMaxTradeLimitInBitcoin(Coin maxTradeLimitInBitcoin) {
-        this.maxTradeLimitInBitcoin = maxTradeLimitInBitcoin;
+    public void setMaxValueInBitcoin(Coin maxValueInBitcoin) {
+        this.maxValueInBitcoin = maxValueInBitcoin;
     }
 
     @Override
@@ -72,8 +72,8 @@ public class BtcValidator extends NumberValidator {
     protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
         try {
             final Coin coin = Coin.parseCoin(input);
-            if (maxTradeLimitInBitcoin != null && coin.compareTo(maxTradeLimitInBitcoin) > 0)
-                return new ValidationResult(false, BSResources.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxTradeLimitInBitcoin)));
+            if (maxValueInBitcoin != null && coin.compareTo(maxValueInBitcoin) > 0)
+                return new ValidationResult(false, BSResources.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxValueInBitcoin)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {

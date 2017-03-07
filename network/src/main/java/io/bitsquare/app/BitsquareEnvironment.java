@@ -59,7 +59,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
     public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
 
-    //public static final String LOG_LEVEL_DEFAULT = (DevFlags.STRESS_TEST_MODE || DevFlags.DEV_MODE) ? Level.TRACE.levelStr : Level.INFO.levelStr;
     public static final String LOG_LEVEL_DEFAULT = Level.INFO.levelStr;
 
     public static final String BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME = "bitsquareCommandLineProperties";
@@ -178,23 +177,18 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
                 "";
 
-        btcNodes = commandLineProperties.containsProperty(AppOptionKeys.BTC_NODES) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.BTC_NODES) :
+        btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
+                (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
                 "";
 
-        useTorForBtc = commandLineProperties.containsProperty(AppOptionKeys.USE_TOR_FOR_BTC) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.USE_TOR_FOR_BTC) :
+        useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
+                (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
                 "";
 
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
-            propertySources.addLast(appDirProperties());
-            propertySources.addLast(homeDirProperties());
-            propertySources.addLast(classpathProperties());
-
-            String btcNetwork = BtcOptionKeys.BTC_NETWORK;
-            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(btcNetwork, BitcoinNetwork.DEFAULT.name()).toUpperCase());
+            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK, BitcoinNetwork.DEFAULT.name()).toUpperCase());
             btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())
@@ -222,18 +216,11 @@ public class BitsquareEnvironment extends StandardEnvironment {
     }
 
     private PropertySource<?> homeDirProperties() throws Exception {
-        String location = String.format("file:%s/.bitsquare/bitsquare.properties", getProperty("user.home"));
-        Resource resource = resourceLoader.getResource(location);
-
-        if (!resource.exists())
-            return new PropertySource.StubPropertySource(BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME);
-
-        return new ResourcePropertySource(BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME, resource);
+        return new PropertySource.StubPropertySource(BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME);
     }
 
     private PropertySource<?> classpathProperties() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:bitsquare.properties");
-        return new ResourcePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, resource);
+        return new PropertySource.StubPropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME);
     }
 
     private PropertySource<?> defaultProperties() {
@@ -265,8 +252,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 setProperty(RpcOptionKeys.RPC_BLOCK_PORT, rpcBlockPort);
                 setProperty(RpcOptionKeys.RPC_WALLET_PORT, rpcWalletPort);
 
-                setProperty(AppOptionKeys.BTC_NODES, btcNodes);
-                setProperty(AppOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
+                setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
+                setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);

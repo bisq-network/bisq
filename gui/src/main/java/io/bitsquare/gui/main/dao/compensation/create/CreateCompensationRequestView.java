@@ -22,20 +22,20 @@ import io.bitsquare.app.Version;
 import io.bitsquare.btc.InsufficientFundsException;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
-import io.bitsquare.messages.btc.provider.fee.FeeService;
+import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.ChangeBelowDustException;
-import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.dao.compensation.CompensationRequestManager;
-import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
+import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import javafx.scene.control.Button;
@@ -64,7 +64,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     private Button createButton;
 
     private final PublicKey p2pStorageSignaturePubKey;
-    private final SquWalletService squWalletService;
+    private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
     private final FeeService feeService;
     private final CompensationRequestManager compensationRequestManager;
@@ -79,9 +79,9 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateCompensationRequestView(SquWalletService squWalletService, BtcWalletService btcWalletService, FeeService feeService,
+    private CreateCompensationRequestView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService, FeeService feeService,
                                           CompensationRequestManager compensationRequestManager, P2PService p2PService, KeyRing keyRing, BSFormatter btcFormatter) {
-        this.squWalletService = squWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
         this.compensationRequestManager = compensationRequestManager;
@@ -127,22 +127,22 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
                 try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                     Coin createCompensationRequestFee = feeService.getCreateCompensationRequestFee();
-                    Transaction preparedSendTx = squWalletService.getPreparedBurnFeeTx(createCompensationRequestFee);
+                    Transaction preparedSendTx = bsqWalletService.getPreparedBurnFeeTx(createCompensationRequestFee);
 
                     checkArgument(!preparedSendTx.getInputs().isEmpty(), "preparedSendTx inputs must not be empty");
 
-                    // We use the key of the first SQU input for signing the data
+                    // We use the key of the first BSQ input for signing the data
                     TransactionOutput connectedOutput = preparedSendTx.getInputs().get(0).getConnectedOutput();
                     checkNotNull(connectedOutput, "connectedOutput must not be null");
-                    DeterministicKey squKeyPair = squWalletService.findKeyFromPubHash(connectedOutput.getScriptPubKey().getPubKeyHash());
-                    checkNotNull(squKeyPair, "squKeyPair must not be null");
+                    DeterministicKey bsqKeyPair = bsqWalletService.findKeyFromPubKeyHash(connectedOutput.getScriptPubKey().getPubKeyHash());
+                    checkNotNull(bsqKeyPair, "bsqKeyPair must not be null");
 
                     // We get the JSON of the object excluding signature and feeTxId
                     String payloadAsJson = StringUtils.deleteWhitespace(Utilities.objectToJson(compensationRequestPayload));
                     log.error(payloadAsJson);
                     // Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
                     // encoded string.
-                    String signature = squKeyPair.signMessage(payloadAsJson);
+                    String signature = bsqKeyPair.signMessage(payloadAsJson);
                     compensationRequestPayload.setSignature(signature);
                     
                     String dataAndSig = payloadAsJson + signature;
@@ -154,8 +154,8 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
 
                     //TODO 1 Btc output (small payment to own compensation receiving address)
-                    Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedSendTx, false, hash);
-                    Transaction signedTx = squWalletService.signTx(txWithBtcFee);
+                    Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedSendTx, false, hash);
+                    Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                     Coin miningFee = signedTx.getFee();
                     int txSize = signedTx.bitcoinSerialize().length;
                     new Popup().headLine("Confirm compensation request fee payment transaction")
@@ -168,11 +168,11 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                             .actionButtonText("Yes")
                             .onAction(() -> {
                                 try {
-                                    squWalletService.commitTx(txWithBtcFee);
+                                    bsqWalletService.commitTx(txWithBtcFee);
                                     // We need to create another instance, otherwise the tx would trigger an invalid state exception 
                                     // if it gets committed 2 times 
                                     btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-                                    squWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                    bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                                         @Override
                                         public void onSuccess(@Nullable Transaction transaction) {
                                             checkNotNull(transaction, "Transaction must not be null at broadcastTx callback.");

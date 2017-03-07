@@ -19,13 +19,15 @@ package io.bitsquare.gui.main.account.content.backup;
 
 import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.messages.user.Preferences;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -34,6 +36,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +55,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     private Button selectBackupDir, backupNow;
     private TextField backUpLocationTextField;
     private Button openDataDir;
+    private ChangeListener<Boolean> backUpLocationTextFieldFocusListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,46 +72,60 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 2, "Backup wallet and data directory");
-        Tuple3<Label, TextField, Button> tuple = addLabelTextFieldButton(root, gridRow, "Backup location:", "Select backup location", Layout.FIRST_ROW_DISTANCE);
-
+        addTitledGroupBg(root, gridRow, 1, "Backup wallet and data directory");
+        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(root, gridRow, "Backup location:", Layout.FIRST_ROW_DISTANCE);
         backUpLocationTextField = tuple.second;
-        if (preferences.getBackupDirectory() != null)
-            backUpLocationTextField.setText(preferences.getBackupDirectory());
-        selectBackupDir = tuple.third;
-        openDataDir = addLabelButton(root, ++gridRow, "Application data directory:", "Open directory").second;
+        String backupDirectory = preferences.getBackupDirectory();
+        if (backupDirectory != null)
+            backUpLocationTextField.setText(backupDirectory);
+
+        backUpLocationTextFieldFocusListener = (observable, oldValue, newValue) -> {
+            if (oldValue && !newValue)
+                applyBackupDirectory(backUpLocationTextField.getText());
+        };
+
+        Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, "Select backup location", "Backup now (backup is not encrypted!)");
+        selectBackupDir = tuple2.first;
+        backupNow = tuple2.second;
+        updateButtons();
+
+        addTitledGroupBg(root, ++gridRow, 1, "Open data directory", Layout.GROUP_DISTANCE);
+        openDataDir = addLabelButton(root, gridRow, "Application data directory:", "Open directory", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         openDataDir.setDefaultButton(false);
-        backupNow = addButtonAfterGroup(root, ++gridRow, "Backup now (backup is not encrypted!)");
-        backupNow.setDisable(preferences.getBackupDirectory() == null || preferences.getBackupDirectory().length() == 0);
-        backupNow.setDefaultButton(preferences.getBackupDirectory() != null);
     }
 
     @Override
     protected void activate() {
+        backUpLocationTextField.focusedProperty().addListener(backUpLocationTextFieldFocusListener);
         selectBackupDir.setOnAction(e -> {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setInitialDirectory(new File(preferences.getDefaultPath()));
-            directoryChooser.setTitle("Select backup location");
-            File dir = directoryChooser.showDialog(stage);
-            if (dir != null) {
-                String backupDirectory = dir.getAbsolutePath();
-                preferences.setDefaultPath(backupDirectory);
-                backUpLocationTextField.setText(backupDirectory);
-                preferences.setBackupDirectory(backupDirectory);
-                backupNow.setDisable(false);
-                backupNow.setDefaultButton(true);
-                selectBackupDir.setDefaultButton(false);
+            String path = preferences.getDirectoryChooserPath();
+            if (!Utilities.isDirectory(path)) {
+                path = Utilities.getSystemHomeDirectory();
+                backUpLocationTextField.setText(path);
             }
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setInitialDirectory(new File(path));
+            directoryChooser.setTitle("Select backup location");
+            try {
+                File dir = directoryChooser.showDialog(stage);
+                if (dir != null) {
+                    applyBackupDirectory(dir.getAbsolutePath());
+                }
+            } catch (Throwable t) {
+                showWrongPathWarningAndReset(t);
+            }
+
         });
-        openDataDir.setOnAction(e -> {
+        openDataDir.setOnAction(event -> {
             try {
                 Utilities.openDirectory(dataDir);
-            } catch (IOException e1) {
-                log.error(e1.getMessage());
-                new Popup().warning("Cannot open directory.\nError =" + e1.getMessage()).show();
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                showWrongPathWarningAndReset(e);
             }
         });
-        backupNow.setOnAction(e -> {
+        backupNow.setOnAction(event -> {
             String backupDirectory = preferences.getBackupDirectory();
             if (backupDirectory.length() > 0) {
                 try {
@@ -116,10 +134,10 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                     FileUtils.copyDirectory(dataDir,
                             new File(destination));
                     new Popup().feedback("Backup successfully saved at:\n" + destination).show();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                    log.error(e1.getMessage());
-                    new Popup().error("Backup could not be saved.\nError message: " + e1.getMessage()).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    log.error(e.getMessage());
+                    showWrongPathWarningAndReset(e);
                 }
             }
         });
@@ -127,9 +145,38 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void deactivate() {
+        backUpLocationTextField.focusedProperty().removeListener(backUpLocationTextFieldFocusListener);
         selectBackupDir.setOnAction(null);
         openDataDir.setOnAction(null);
         backupNow.setOnAction(null);
+    }
+
+    private void updateButtons() {
+        boolean noBackupSet = backUpLocationTextField.getText() == null || backUpLocationTextField.getText().length() == 0;
+        selectBackupDir.setDefaultButton(noBackupSet);
+        backupNow.setDefaultButton(!noBackupSet);
+        backupNow.setDisable(noBackupSet);
+    }
+
+    private void showWrongPathWarningAndReset(@Nullable Throwable t) {
+        String error = t != null ? "\nError message: " + t.getMessage() : "";
+        new Popup<>().warning("The directory you have chosen is not accessible." + error).show();
+        applyBackupDirectory(Utilities.getSystemHomeDirectory());
+    }
+
+    private void applyBackupDirectory(String path) {
+        if (isPathValid(path)) {
+            preferences.setDirectoryChooserPath(path);
+            backUpLocationTextField.setText(path);
+            preferences.setBackupDirectory(path);
+            updateButtons();
+        } else {
+            showWrongPathWarningAndReset(null);
+        }
+    }
+
+    private boolean isPathValid(String path) {
+        return path == null || path.isEmpty() || Utilities.isDirectory(path);
     }
 }
 

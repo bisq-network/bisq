@@ -22,9 +22,9 @@ import io.bitsquare.btc.InsufficientFundsException;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.messages.btc.provider.fee.FeeService;
+import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.ChangeBelowDustException;
-import io.bitsquare.btc.wallet.SquWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.dao.compensation.CompensationRequest;
@@ -35,8 +35,8 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.BsqFormatter;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.gui.util.SQUFormatter;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -71,10 +71,10 @@ public class VoteView extends ActivatableView<GridPane, Void> {
 
     private int gridRow = 0;
     private CompensationRequestManager compensationRequestManager;
-    private SquWalletService squWalletService;
+    private BsqWalletService bsqWalletService;
     private BtcWalletService btcWalletService;
     private FeeService feeService;
-    private SQUFormatter squFormatter;
+    private BsqFormatter bsqFormatter;
     private BSFormatter btcFormatter;
     private VotingManager voteManager;
     private Button voteButton;
@@ -92,14 +92,14 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private VoteView(CompensationRequestManager compensationRequestManager, SquWalletService squWalletService,
-                     BtcWalletService btcWalletService, FeeService feeService, SQUFormatter squFormatter,
+    private VoteView(CompensationRequestManager compensationRequestManager, BsqWalletService bsqWalletService,
+                     BtcWalletService btcWalletService, FeeService feeService, BsqFormatter bsqFormatter,
                      BSFormatter btcFormatter, VotingManager voteManager) {
         this.compensationRequestManager = compensationRequestManager;
-        this.squWalletService = squWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
-        this.squFormatter = squFormatter;
+        this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
         this.voteManager = voteManager;
     }
@@ -212,9 +212,9 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                     byte[] opReturnData = voteManager.calculateOpReturnData(voteItemsList);
                     try {
                         Coin votingTxFee = feeService.getVotingTxFee();
-                        Transaction preparedVotingTx = squWalletService.getPreparedBurnFeeTx(votingTxFee);
-                        Transaction txWithBtcFee = btcWalletService.completePreparedSquTx(preparedVotingTx, false, opReturnData);
-                        Transaction signedTx = squWalletService.signTx(txWithBtcFee);
+                        Transaction preparedVotingTx = bsqWalletService.getPreparedBurnFeeTx(votingTxFee);
+                        Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedVotingTx, false, opReturnData);
+                        Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                         Coin miningFee = signedTx.getFee();
                         int txSize = signedTx.bitcoinSerialize().length;
                         new Popup().headLine("Confirm voting fee payment transaction")
@@ -227,11 +227,11 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                 .actionButtonText("Yes")
                                 .onAction(() -> {
                                     try {
-                                        squWalletService.commitTx(txWithBtcFee);
+                                        bsqWalletService.commitTx(txWithBtcFee);
                                         // We need to create another instance, otherwise the tx would trigger an invalid state exception 
                                         // if it gets committed 2 times 
                                         btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-                                        squWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                        bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                                             @Override
                                             public void onSuccess(@Nullable Transaction transaction) {
                                                 checkNotNull(transaction, "Transaction must not be null at doSend callback.");

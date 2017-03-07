@@ -32,6 +32,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
+//TODO use protobuffer instead of json
 public class FeeRequestService {
     private static final Logger log = LoggerFactory.getLogger(FeeRequestService.class);
 
@@ -47,10 +48,7 @@ public class FeeRequestService {
     public FeeRequestService() throws IOException {
         btcFeesProvider = new BtcFeesProvider();
 
-        allFeesMap.put("txFee", FeeService.DEFAULT_TX_FEE);
-        allFeesMap.put("createOfferFee", FeeService.DEFAULT_CREATE_OFFER_FEE);
-        allFeesMap.put("takeOfferFee", FeeService.DEFAULT_TAKE_OFFER_FEE);
-
+        writeToJson();
         startRequests();
     }
 
@@ -101,5 +99,4 @@ public class FeeRequestService {
     public String getJson() {
         return json;
     }
-
 }

@@ -25,6 +25,7 @@ import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -82,6 +83,7 @@ public abstract class PaymentAccount implements Persistable {
         setSelectedTradeCurrency(tradeCurrency);
     }
 
+    @Nullable
     public TradeCurrency getSingleTradeCurrency() {
         if (!tradeCurrencies.isEmpty())
             return tradeCurrencies.get(0);

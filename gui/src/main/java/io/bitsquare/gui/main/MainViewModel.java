@@ -43,7 +43,7 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
 import io.bitsquare.dao.DaoManager;
-import io.bitsquare.dao.blockchain.SquBlockchainException;
+import io.bitsquare.dao.blockchain.BsqBlockchainException;
 import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -482,7 +482,7 @@ public class MainViewModel implements ViewModel {
             btcInfo.set(newValue);
         });
 
-        walletsSetup.initialize(null, null,
+        walletsSetup.initialize(null,
                 () -> {
                     numBtcPeers = walletsSetup.numPeersProperty().get();
 
@@ -552,7 +552,7 @@ public class MainViewModel implements ViewModel {
 
         try {
             daoManager.onAllServicesInitialized();
-        } catch (SquBlockchainException e) {
+        } catch (BsqBlockchainException e) {
             new Popup<>().error(e.toString()).show();
         }
 
@@ -634,6 +634,30 @@ public class MainViewModel implements ViewModel {
                         .show();
             }
         });
+
+        checkIfOpenOffersMatchTradeProtocolVersion();
+    }
+
+    private void checkIfOpenOffersMatchTradeProtocolVersion() {
+        List<OpenOffer> outDatedOffers = openOfferManager.getOpenOffers()
+                .stream()
+                .filter(e -> e.getOffer().getProtocolVersion() != Version.TRADE_PROTOCOL_VERSION)
+                .collect(Collectors.toList());
+        if (!outDatedOffers.isEmpty()) {
+            new Popup<>()
+                    .warning("You have open offers which have been created with an older version of Bitsquare.\n" +
+                            "Please remove those offers as they are not valid anymore.\n\n" +
+                            "Offers (ID): " +
+                            outDatedOffers.stream()
+                                    .map(e -> e.getId() + "\n")
+                                    .collect(Collectors.toList()).toString()
+                                    .replace("[", "").replace("]", ""))
+                    .actionButtonText("Remove outdated offer(s)")
+                    .onAction(() -> openOfferManager.removeOpenOffers(outDatedOffers, null))
+                    .closeButtonText("Shut down")
+                    .onClose(BitsquareApp.shutDownHandler::run)
+                    .show();
+        }
     }
 
 
@@ -959,7 +983,7 @@ public class MainViewModel implements ViewModel {
     private void updateLockedBalance() {
         Coin sum = Coin.valueOf(tradeManager.getLockedTradeStream()
                 .mapToLong(trade -> {
-                    Coin lockedTradeAmount = btcWalletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG).getLockedTradeAmount();
+                    Coin lockedTradeAmount = btcWalletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG).getCoinLockedInMultiSig();
                     return lockedTradeAmount != null ? lockedTradeAmount.getValue() : 0;
                 })
                 .sum());

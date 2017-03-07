@@ -130,7 +130,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addLabelTextField(gridPane, ++rowIndex, "Payment method:", BSResources.get(offer.getPaymentMethod().getId()));
 
         // second group
-        rows = 5;
+        rows = 6;
         PaymentAccountContractData buyerPaymentAccountContractData = null;
         PaymentAccountContractData sellerPaymentAccountContractData = null;
 
@@ -172,6 +172,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Trade ID:", trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(trade.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(offer.getSecurityDeposit()));
+        addLabelTextField(gridPane, ++rowIndex, "Tx fee:", formatter.formatCoinWithCode(trade.getTxFee()));
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Selected arbitrator:", trade.getArbitratorNodeAddress().getFullAddress());
 
         if (trade.getTradingPeerNodeAddress() != null)

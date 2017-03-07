@@ -20,29 +20,31 @@ package io.bitsquare.gui.main.offer.createoffer;
 import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
-import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.messages.btc.provider.fee.FeeService;
-import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Price;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Volume;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.messages.arbitration.Arbitrator;
+import io.bitsquare.messages.btc.Restrictions;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.locale.TradeCurrency;
 import io.bitsquare.messages.payment.payload.BankAccountContractData;
+import io.bitsquare.messages.provider.price.PriceFeedService;
+import io.bitsquare.messages.trade.offer.payload.Offer;
+import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.*;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -54,6 +56,7 @@ import org.bitcoinj.core.Transaction;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -78,7 +81,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final AddressEntry addressEntry;
     private Coin createOfferFeeAsCoin;
     private Coin txFeeAsCoin;
-    private final Coin securityDepositAsCoin;
     private final BalanceListener balanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
@@ -101,6 +103,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // If we would change the price representation in the domain we would not be backward compatible
     final ObjectProperty<Price> price = new SimpleObjectProperty<>();
     final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> securityDeposit = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
     final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
@@ -135,16 +138,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.navigation = navigation;
         this.formatter = formatter;
 
-        // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
-
-        offerId = UUID.randomUUID().toString();
-        shortOfferId = offerId.substring(0, Math.min(8, offerId.length()));
+        offerId = Utilities.getRandomPrefix(5, 8) + "-" +
+                UUID.randomUUID().toString() + "-" +
+                Version.VERSION.replace(".", "");
+        shortOfferId = Utilities.getShortId(offerId);
         addressEntry = walletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
         useMarketBasedPrice.set(preferences.getUsePercentageBasedPrice());
-
-        // TODO add ui for editing
-        securityDepositAsCoin = Coin.valueOf(1_000_000);
+        securityDeposit.set(preferences.getSecurityDepositAsCoin());
 
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -255,14 +256,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // not too many inputs.
 
         // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs)         
-        feeService.requestFees(() -> {
-            createOfferFeeAsCoin = feeService.getCreateOfferFee();
-            txFeeAsCoin = feeService.getTxFee(400);
-            calculateTotalToPay();
-        }, null);
 
-        createOfferFeeAsCoin = feeService.getCreateOfferFee();
+        // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
+        // But offer creation happens usually after that so we should have already the value from the estimation service.
         txFeeAsCoin = feeService.getTxFee(400);
+
+        // We request to get the actual estimated fee
+        requestTxFee();
 
         calculateVolume();
         calculateTotalToPay();
@@ -313,20 +313,27 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
+        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
 
         long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimit().value;
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
 
         // reserved for future use cases
         boolean isPrivateOffer = false;
-        String hashOfChallenge = null;
-        HashMap<String, String> extraDataMap = null;
+        String hashOfChallenge = "";
+        HashMap<String, String> extraDataMap = new HashMap<>();
         boolean useAutoClose = false;
         boolean useReOpenAfterAutoClose = false;
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
 
-        return new Offer(offerId, null,
+        Coin securityDepositAsCoin = securityDeposit.get();
+        checkArgument(securityDepositAsCoin.compareTo(Restrictions.MAX_SECURITY_DEPOSIT) <= 0, "securityDeposit must be not exceed " +
+                Restrictions.MAX_SECURITY_DEPOSIT.toFriendlyString());
+        checkArgument(securityDepositAsCoin.compareTo(Restrictions.MIN_SECURITY_DEPOSIT) >= 0, "securityDeposit must be not be less than " +
+                Restrictions.MIN_SECURITY_DEPOSIT.toFriendlyString());
+        return new Offer(offerId,
+                null,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,
@@ -363,6 +370,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
+        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
         openOfferManager.placeOffer(offer, totalToPayAsCoin.get().subtract(txFeeAsCoin).subtract(createOfferFeeAsCoin), useSavingsWallet, resultHandler);
     }
 
@@ -420,6 +428,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.marketPriceMargin = marketPriceMargin;
     }
 
+    void requestTxFee() {
+        feeService.requestFees(() -> {
+            txFeeAsCoin = feeService.getTxFee(400);
+            calculateTotalToPay();
+        }, null);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -512,8 +526,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // Offerer does not pay the tx fee for the trade txs because the mining fee might be different when offerer 
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
-        if (direction != null && amount.get() != null) {
-            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(securityDepositAsCoin);
+        if (direction != null && amount.get() != null && createOfferFeeAsCoin != null) {
+            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(securityDeposit.get());
             Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(required);
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
@@ -561,6 +575,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public Coin getCreateOfferFeeAsCoin() {
+        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
         return createOfferFeeAsCoin;
     }
 
@@ -568,8 +583,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return txFeeAsCoin;
     }
 
-    public Coin getSecurityDepositAsCoin() {
-        return securityDepositAsCoin;
+    public Coin getSecurityDeposit() {
+        return securityDeposit.get();
     }
 
     public List<Arbitrator> getArbitrators() {
@@ -596,5 +611,21 @@ class CreateOfferDataModel extends ActivatableDataModel {
             return ((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
         else
             return false;
+    }
+
+    void setAmount(Coin amount) {
+        this.amount.set(amount);
+    }
+
+    void setSecurityDeposit(Coin securityDeposit) {
+        this.securityDeposit.set(securityDeposit);
+        preferences.setSecurityDepositAsLong(securityDeposit.value);
+    }
+
+    void updateTradeFee() {
+        createOfferFeeAsCoin = Utilities.getFeePerBtc(feeService.getCreateOfferFeeInBtcPerBtc(), amount.get());
+        // We don't want too fractional btc values so we use only a divide by 10 instead of 100
+        createOfferFeeAsCoin = createOfferFeeAsCoin.divide(10).multiply(Math.round(marketPriceMargin * 1_000));
+        createOfferFeeAsCoin = Utilities.maxCoin(createOfferFeeAsCoin, feeService.getMinCreateOfferFeeInBtc());
     }
 }

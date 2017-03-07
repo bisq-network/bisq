@@ -51,6 +51,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.crypto.DeterministicKey;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,14 +92,14 @@ public class DisputeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private DisputeManager(P2PService p2PService,
-                           TradeWalletService tradeWalletService,
-                           BtcWalletService walletService,
-                           TradeManager tradeManager,
-                           ClosedTradableManager closedTradableManager,
-                           OpenOfferManager openOfferManager,
-                           KeyRing keyRing,
-                           @Named(Storage.DIR_KEY) File storageDir) {
+    public DisputeManager(P2PService p2PService,
+                          TradeWalletService tradeWalletService,
+                          BtcWalletService walletService,
+                          TradeManager tradeManager,
+                          ClosedTradableManager closedTradableManager,
+                          OpenOfferManager openOfferManager,
+                          KeyRing keyRing,
+                          @Named(Storage.DIR_KEY) File storageDir) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
@@ -597,7 +598,8 @@ public class DisputeManager {
                         if (dispute.getDepositTxSerialized() != null) {
                             try {
                                 log.debug("do payout Transaction ");
-
+                                byte[] multiSigPubKey = isBuyer ? contract.getBuyerMultiSigPubKey() : contract.getSellerMultiSigPubKey();
+                                DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(dispute.getTradeId(), multiSigPubKey);
                                 Transaction signedDisputedPayoutTx = tradeWalletService.traderSignAndFinalizeDisputedPayoutTx(
                                         dispute.getDepositTxSerialized(),
                                         disputeResult.getArbitratorSignature(),
@@ -607,9 +609,9 @@ public class DisputeManager {
                                         contract.getBuyerPayoutAddressString(),
                                         contract.getSellerPayoutAddressString(),
                                         disputeResult.getArbitratorAddressAsString(),
-                                        walletService.getOrCreateAddressEntry(dispute.getTradeId(), AddressEntry.Context.MULTI_SIG),
-                                        contract.getBuyerBtcPubKey(),
-                                        contract.getSellerBtcPubKey(),
+                                        multiSigKeyPair,
+                                        contract.getBuyerMultiSigPubKey(),
+                                        contract.getSellerMultiSigPubKey(),
                                         disputeResult.getArbitratorPubKey()
                                 );
                                 Transaction committedDisputedPayoutTx = tradeWalletService.addTransactionToWallet(signedDisputedPayoutTx);
@@ -686,8 +688,9 @@ public class DisputeManager {
         if (disputeOptional.isPresent()) {
             cleanupRetryMap(uid);
 
-            Transaction transaction = tradeWalletService.addTransactionToWallet(peerPublishedPayoutTxMessage.transaction);
-            disputeOptional.get().setDisputePayoutTxId(transaction.getHashAsString());
+            Transaction walletTx = tradeWalletService.addTransactionToWallet(peerPublishedPayoutTxMessage.transaction);
+            disputeOptional.get().setDisputePayoutTxId(walletTx.getHashAsString());
+            BtcWalletService.printTx("Disputed payoutTx received from peer", walletTx);
             tradeManager.closeDisputedTrade(tradeId);
         } else {
             log.debug("We got a peerPublishedPayoutTxMessage but we don't have a matching dispute. TradeId = " + tradeId);

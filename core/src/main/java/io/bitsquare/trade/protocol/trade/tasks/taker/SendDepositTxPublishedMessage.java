@@ -40,7 +40,7 @@ public class SendDepositTxPublishedMessage extends TradeTask {
             if (trade.getDepositTx() != null) {
                 DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(processModel.getId(),
                         trade.getDepositTx().bitcoinSerialize(),
-                        processModel.getMyAddress());
+                        processModel.getMyNodeAddress());
 
                 processModel.getP2PService().sendEncryptedMailboxMessage(
                         trade.getTradingPeerNodeAddress(),

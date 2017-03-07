@@ -96,6 +96,9 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, description("A proxy address to be used for Http requests (should be non-Tor). [host:port]", ""))
                 .withRequiredArg();
+        parser.accepts(NetworkOptionKeys.SOCKS5_DISCOVER_MODE, description("Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
+                " (comma separated, they get OR'd together). Default value is ALL", "ALL"))
+                .withRequiredArg();
 
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
@@ -134,9 +137,9 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg()
                 .ofType(RegTestHost.class)
                 .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
-        parser.accepts(AppOptionKeys.BTC_NODES, description("Custom nodes used for BitcoinJ as comma separated IP addresses.", ""))
+        parser.accepts(BtcOptionKeys.BTC_NODES, description("Custom nodes used for BitcoinJ as comma separated IP addresses.", ""))
                 .withRequiredArg();
-        parser.accepts(AppOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over tor (socks 5 proxy).", ""))
+        parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over tor (socks 5 proxy).", ""))
                 .withRequiredArg();
     }
 
