@@ -50,7 +50,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         if (headLine == null)
             headLine = "Wallet data";
 
-        width = 1000;
+        width = 1200;
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -82,6 +82,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         Label label = labelTextAreaTuple2.first;
         label.setMinWidth(150);
         textArea.setPrefHeight(500);
+        textArea.setStyle("-fx-font-size: 10;");
         CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Include private keys:", "").second;
         isUpdateCheckBox.setSelected(false);
 

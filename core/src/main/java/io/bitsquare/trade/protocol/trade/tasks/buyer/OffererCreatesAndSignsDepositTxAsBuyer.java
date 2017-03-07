@@ -24,7 +24,9 @@ import io.bitsquare.btc.data.PreparedDepositTxAndOffererInputs;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +45,10 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin buyerInputAmount = FeePolicy.getSecurityDeposit().add(FeePolicy.getFixedTxFeeForTrades());
-            Coin msOutputAmount = buyerInputAmount.add(FeePolicy.getSecurityDeposit()).add(trade.getTradeAmount());
+            Offer offer = trade.getOffer();
+            Coin securityDeposit = FeePolicy.getSecurityDeposit(offer);
+            Coin buyerInputAmount = securityDeposit.add(FeePolicy.getFixedTxFeeForTrades(offer));
+            Coin msOutputAmount = buyerInputAmount.add(securityDeposit).add(trade.getTradeAmount());
 
             log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"
@@ -55,9 +59,10 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
             trade.setContractHash(contractHash);
             WalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
+            AddressEntry offererAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
             AddressEntry buyerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            buyerMultiSigAddressEntry.setLockedTradeAmount(buyerInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades()));
-            walletService.saveAddressEntryList();
+            buyerMultiSigAddressEntry.setCoinLockedInMultiSig(buyerInputAmount.subtract(FeePolicy.getFixedTxFeeForTrades(offer)));
+            Address changeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
             PreparedDepositTxAndOffererInputs result = processModel.getTradeWalletService().offererCreatesAndSignsDepositTx(
                     true,
                     contractHash,
@@ -66,8 +71,8 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
                     processModel.tradingPeer.getRawTransactionInputs(),
                     processModel.tradingPeer.getChangeOutputValue(),
                     processModel.tradingPeer.getChangeOutputAddress(),
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE),
-                    walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress(),
+                    offererAddressEntry.getAddress(),
+                    changeAddress,
                     buyerMultiSigAddressEntry.getPubKey(),
                     processModel.tradingPeer.getMultiSigPubKey(),
                     trade.getArbitratorPubKey());

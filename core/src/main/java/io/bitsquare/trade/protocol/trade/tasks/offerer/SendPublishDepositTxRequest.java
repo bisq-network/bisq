@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.offerer;
 
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.messaging.SendDirectMessageListener;
 import io.bitsquare.trade.Trade;
@@ -37,14 +38,17 @@ public class SendPublishDepositTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+            WalletService walletService = processModel.getWalletService();
+            AddressEntry offererMultiSigAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG);
+            AddressEntry offererPayoutAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT);
             PublishDepositTxRequest tradeMessage = new PublishDepositTxRequest(
                     processModel.getId(),
                     processModel.getPaymentAccountContractData(trade),
                     processModel.getAccountId(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG).getPubKey(),
+                    offererMultiSigAddressEntry.getPubKey(),
                     trade.getContractAsJson(),
                     trade.getOffererContractSignature(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString(),
+                    offererPayoutAddressEntry.getAddressString(),
                     processModel.getPreparedDepositTx(),
                     processModel.getRawTransactionInputs()
             );

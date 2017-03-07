@@ -43,6 +43,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -172,7 +173,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Trade ID:", trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(trade.getDate()));
-        addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit()));
+        addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit(offer)));
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Selected arbitrator:", trade.getArbitratorNodeAddress().getFullAddress());
 
         if (trade.getTradingPeerNodeAddress() != null)
@@ -207,7 +208,10 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             viewContractButton.setDefaultButton(false);
             viewContractButton.setOnAction(e -> {
                 TextArea textArea = new TextArea();
-                textArea.setText(trade.getContractAsJson());
+                String contractAsJson = trade.getContractAsJson();
+                contractAsJson += "\n\nBuyerMultiSigPubKeyAsHex: " + Utils.HEX.encode(trade.getContract().getBuyerMultiSigPubKey());
+                contractAsJson += "\nSellerMultiSigPubKeyAsHex: " + Utils.HEX.encode(trade.getContract().getSellerMultiSigPubKey());
+                textArea.setText(contractAsJson);
                 textArea.setPrefHeight(50);
                 textArea.setEditable(false);
                 textArea.setWrapText(true);

@@ -19,6 +19,7 @@ package io.bitsquare.trade.protocol.trade.tasks.buyer;
 
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
@@ -41,19 +42,23 @@ public class SignAndFinalizePayoutTx extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin sellerPayoutAmount = FeePolicy.getSecurityDeposit();
+
+            Coin sellerPayoutAmount = FeePolicy.getSecurityDeposit(trade.getOffer());
             Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
 
+            WalletService walletService = processModel.getWalletService();
+            AddressEntry buyerAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT);
+            AddressEntry multiSigAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG);
             Transaction transaction = processModel.getTradeWalletService().buyerSignsAndFinalizesPayoutTx(
                     trade.getDepositTx(),
                     processModel.tradingPeer.getSignature(),
                     buyerPayoutAmount,
                     sellerPayoutAmount,
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG),
+                    buyerAddressEntry.getAddressString(),
                     processModel.tradingPeer.getPayoutAddressString(),
+                    multiSigAddressEntry.getKeyPair(),
                     trade.getLockTimeAsBlockHeight(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG).getPubKey(),
+                    multiSigAddressEntry.getPubKey(),
                     processModel.tradingPeer.getMultiSigPubKey(),
                     trade.getArbitratorPubKey()
             );

@@ -597,7 +597,7 @@ public class DisputeManager {
                         if (dispute.getDepositTxSerialized() != null) {
                             try {
                                 log.debug("do payout Transaction ");
-
+                                AddressEntry multiSigAddressEntry = walletService.getOrCreateAddressEntry(dispute.getTradeId(), AddressEntry.Context.MULTI_SIG);
                                 Transaction signedDisputedPayoutTx = tradeWalletService.traderSignAndFinalizeDisputedPayoutTx(
                                         dispute.getDepositTxSerialized(),
                                         disputeResult.getArbitratorSignature(),
@@ -607,9 +607,9 @@ public class DisputeManager {
                                         contract.getBuyerPayoutAddressString(),
                                         contract.getSellerPayoutAddressString(),
                                         disputeResult.getArbitratorAddressAsString(),
-                                        walletService.getOrCreateAddressEntry(dispute.getTradeId(), AddressEntry.Context.MULTI_SIG),
-                                        contract.getBuyerBtcPubKey(),
-                                        contract.getSellerBtcPubKey(),
+                                        multiSigAddressEntry.getKeyPair(),
+                                        contract.getBuyerMultiSigPubKey(),
+                                        contract.getSellerMultiSigPubKey(),
                                         disputeResult.getArbitratorPubKey()
                                 );
                                 Transaction committedDisputedPayoutTx = tradeWalletService.addTransactionToWallet(signedDisputedPayoutTx);

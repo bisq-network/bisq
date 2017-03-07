@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.Trade;
@@ -45,16 +46,21 @@ public class SendPayDepositRequest extends TradeTask {
             checkNotNull(trade.getTradeAmount(), "TradeAmount must not be null");
             checkNotNull(trade.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
 
+            WalletService walletService = processModel.getWalletService();
+            AddressEntry takerMultiSigPubKeyAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG);
+            AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT);
+            byte[] takerMultiSigPubKey = takerMultiSigPubKeyAddressEntry.getPubKey();
+            String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
             PayDepositRequest payDepositRequest = new PayDepositRequest(
-                    processModel.getMyAddress(),
+                    processModel.getMyNodeAddress(),
                     processModel.getId(),
                     trade.getTradeAmount().value,
                     trade.getTradePrice().value,
                     processModel.getRawTransactionInputs(),
                     processModel.getChangeOutputValue(),
                     processModel.getChangeOutputAddress(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG).getPubKey(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString(),
+                    takerMultiSigPubKey,
+                    takerPayoutAddressString,
                     processModel.getPubKeyRing(),
                     processModel.getPaymentAccountContractData(trade),
                     processModel.getAccountId(),

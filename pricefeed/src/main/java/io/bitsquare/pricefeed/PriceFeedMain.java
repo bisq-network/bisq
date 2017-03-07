@@ -17,10 +17,13 @@
 
 package io.bitsquare.pricefeed;
 
+import ch.qos.logback.classic.Level;
+import io.bitsquare.app.Log;
 import io.bitsquare.http.HttpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -34,6 +37,8 @@ public class PriceFeedMain {
     private static final Logger log = LoggerFactory.getLogger(PriceFeedMain.class);
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, InvalidKeyException, HttpException {
+        Log.setup(System.getProperty("user.home") + File.separator + "priceFeedProvider");
+        Log.setLevel(Level.INFO);
         if (args.length == 2) {
             String bitcoinAveragePrivKey = args[0];
             String bitcoinAveragePubKey = args[1];

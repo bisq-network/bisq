@@ -57,8 +57,7 @@ public class SignAndPublishDepositTxAsSeller extends TradeTask {
             ArrayList<RawTransactionInput> sellerInputs = processModel.getRawTransactionInputs();
             WalletService walletService = processModel.getWalletService();
             AddressEntry sellerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG);
-            sellerMultiSigAddressEntry.setLockedTradeAmount(Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum()).subtract(FeePolicy.getFixedTxFeeForTrades()));
-            walletService.saveAddressEntryList();
+            sellerMultiSigAddressEntry.setCoinLockedInMultiSig(Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum()).subtract(FeePolicy.getFixedTxFeeForTrades(trade.getOffer())));
             TradingPeer tradingPeer = processModel.tradingPeer;
             Transaction depositTx = processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
                     true,

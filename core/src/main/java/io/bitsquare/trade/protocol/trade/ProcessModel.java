@@ -159,7 +159,7 @@ public class ProcessModel implements Model, Serializable {
         return user;
     }
 
-    public NodeAddress getMyAddress() {
+    public NodeAddress getMyNodeAddress() {
         return p2PService.getAddress();
     }
 

@@ -18,6 +18,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
@@ -45,6 +46,9 @@ import java.util.concurrent.TimeUnit;
  * customize the execution of tests.
  * See the {@code *_ENVVAR} constants for the names of these variables.
  */
+
+// TODO deactivated because outdated
+@Ignore
 public class NetworkStressTest {
     // Test parameters
 

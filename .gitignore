@@ -26,3 +26,6 @@ build
 desktop.ini
 *.bat
 !package/windows/*bit*.bat
+*/target/*
+*.class
+/gui/deploy/*

@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.disputes.arbitrator;
 
 import io.bitsquare.alert.PrivateNotificationManager;
-import io.bitsquare.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.gui.common.view.FxmlView;
@@ -29,7 +28,6 @@ import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.trade.TradeManager;
-import javafx.collections.transformation.FilteredList;
 import javafx.stage.Stage;
 
 import javax.inject.Inject;
@@ -47,9 +45,27 @@ public class ArbitratorDisputeView extends TraderDisputeView {
     }
 
     @Override
-    protected void setFilteredListPredicate(FilteredList<Dispute> filteredList) {
-        filteredList.setPredicate(dispute -> dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()));
+    public void initialize() {
+        super.initialize();
+
+        filterBox.setVisible(true);
+        filterBox.setManaged(true);
     }
+
+    @Override
+    protected void applyFilteredListPredicate(String filterString) {
+        // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
+        filteredList.setPredicate(dispute ->
+                dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()) &&
+                        (filterString.isEmpty() ||
+                                (dispute.getId().contains(filterString) ||
+                                        formatter.formatDate(dispute.getOpeningDate()).contains(filterString)) ||
+                                getBuyerOnionAddressColumnLabel(dispute).contains(filterString) ||
+                                getSellerOnionAddressColumnLabel(dispute).contains(filterString)
+
+                        ));
+    }
+
 }
 
 

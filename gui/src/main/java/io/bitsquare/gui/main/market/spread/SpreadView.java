@@ -286,7 +286,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (item.spread != null)
-                                        setText(formatter.formatVolumeWithCode(item.spread));
+                                        setText(formatter.formatVolumeWithCode(item.spread) + item.percentage);
                                     else
                                         setText("-");
                                 } else {

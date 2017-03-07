@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
 import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.common.util.Utilities;
@@ -52,12 +53,17 @@ public class VerifyAndSignContract extends TradeTask {
             PaymentAccountContractData takerPaymentAccountContractData = processModel.getPaymentAccountContractData(trade);
 
             boolean isBuyerOffererAndSellerTaker = trade instanceof SellerAsTakerTrade;
-            NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyAddress();
-            NodeAddress sellerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getMyAddress() : processModel.getTempTradingPeerNodeAddress();
+            NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyNodeAddress();
+            NodeAddress sellerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getMyNodeAddress() : processModel.getTempTradingPeerNodeAddress();
             log.debug("isBuyerOffererAndSellerTaker " + isBuyerOffererAndSellerTaker);
             log.debug("buyerAddress " + buyerNodeAddress);
             log.debug("sellerAddress " + sellerNodeAddress);
 
+            WalletService walletService = processModel.getWalletService();
+            AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT);
+            String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
+            AddressEntry takerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG);
+            byte[] takerMultiSigPubKey = takerMultiSigAddressEntry.getPubKey();
             Contract contract = new Contract(
                     processModel.getOffer(),
                     trade.getTradeAmount(),
@@ -74,9 +80,9 @@ public class VerifyAndSignContract extends TradeTask {
                     offerer.getPubKeyRing(),
                     processModel.getPubKeyRing(),
                     offerer.getPayoutAddressString(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString(),
+                    takerPayoutAddressString,
                     offerer.getMultiSigPubKey(),
-                    processModel.getWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.MULTI_SIG).getPubKey()
+                    takerMultiSigPubKey
             );
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);

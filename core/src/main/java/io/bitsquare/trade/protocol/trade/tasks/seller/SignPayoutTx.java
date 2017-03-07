@@ -42,7 +42,7 @@ public class SignPayoutTx extends TradeTask {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
             checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
-            Coin sellerPayoutAmount = FeePolicy.getSecurityDeposit();
+            Coin sellerPayoutAmount = FeePolicy.getSecurityDeposit(trade.getOffer());
             Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
 
             // We use the sellers LastBlockSeenHeight, which might be different to the buyers one.
@@ -55,18 +55,20 @@ public class SignPayoutTx extends TradeTask {
                 lockTimeAsBlockHeight = processModel.getTradeWalletService().getLastBlockSeenHeight() + lockTime;
             trade.setLockTimeAsBlockHeight(lockTimeAsBlockHeight);
 
-            WalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
+            WalletService walletService = processModel.getWalletService();
+            AddressEntry sellerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
+            AddressEntry multiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] payoutTxSignature = processModel.getTradeWalletService().sellerSignsPayoutTx(
                     trade.getDepositTx(),
                     buyerPayoutAmount,
                     sellerPayoutAmount,
                     processModel.tradingPeer.getPayoutAddressString(),
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT),
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG),
+                    sellerPayoutAddressEntry.getAddressString(),
+                    multiSigAddressEntry.getKeyPair(),
                     lockTimeAsBlockHeight,
                     processModel.tradingPeer.getMultiSigPubKey(),
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey(),
+                    multiSigAddressEntry.getPubKey(),
                     trade.getArbitratorPubKey());
 
             processModel.setPayoutTxSignature(payoutTxSignature);

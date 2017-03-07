@@ -43,7 +43,7 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
                         new PayoutTxFinalizedMessage(
                                 processModel.getId(),
                                 trade.getPayoutTx().bitcoinSerialize(),
-                                processModel.getMyAddress()
+                                processModel.getMyNodeAddress()
                         ),
                         new SendMailboxMessageListener() {
                             @Override

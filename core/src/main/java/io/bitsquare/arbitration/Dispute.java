@@ -20,6 +20,7 @@ package io.bitsquare.arbitration;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.messages.DisputeCommunicationMessage;
 import io.bitsquare.common.crypto.PubKeyRing;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Contract;
@@ -195,7 +196,7 @@ public final class Dispute implements Payload {
     }
 
     public String getShortTradeId() {
-        return tradeId.substring(0, 8);
+        return Utilities.getShortId(tradeId);
     }
 
     public int getTraderId() {

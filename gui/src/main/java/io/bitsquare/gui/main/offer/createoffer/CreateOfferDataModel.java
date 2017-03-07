@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.offer.createoffer;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
@@ -28,6 +29,7 @@ import io.bitsquare.btc.blockchain.BlockchainService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.common.crypto.KeyRing;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Price;
@@ -137,10 +139,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.blockchainService = blockchainService;
         this.formatter = formatter;
 
-        // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
-
-        offerId = UUID.randomUUID().toString();
-        shortOfferId = offerId.substring(0, Math.min(8, offerId.length()));
+        offerId = Utilities.getRandomPrefix(5, 8) + "-" +
+                UUID.randomUUID().toString() + "-" +
+                Version.VERSION.replace(".", "");
+        shortOfferId = Utilities.getShortId(offerId);
         addressEntry = walletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
         offerFeeAsCoin = FeePolicy.getCreateOfferFee();
         networkFeeAsCoin = FeePolicy.getFixedTxFeeForTrades();

@@ -370,7 +370,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
         Coin arbitratorAmount = formatter.parseToCoin(arbitratorPayoutAmountInputTextField.getText());
-        Coin securityDeposit = FeePolicy.getSecurityDeposit();
+        Coin securityDeposit = FeePolicy.getSecurityDeposit(dispute.getContract().offer);
         Coin tradeAmount = dispute.getContract().getTradeAmount();
         Coin available = tradeAmount.add(securityDeposit).add(securityDeposit);
         Coin totalAmount = buyerAmount.add(sellerAmount).add(arbitratorAmount);
@@ -378,7 +378,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void applyCustomAmounts(InputTextField inputTextField) {
-        Coin securityDeposit = FeePolicy.getSecurityDeposit();
+        Coin securityDeposit = FeePolicy.getSecurityDeposit(dispute.getContract().offer);
         Coin tradeAmount = dispute.getContract().getTradeAmount();
 
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
@@ -605,9 +605,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             disputeResult.getArbitratorPayoutAmount(),
                             contract.getBuyerPayoutAddressString(),
                             contract.getSellerPayoutAddressString(),
-                            arbitratorAddressEntry,
-                            contract.getBuyerBtcPubKey(),
-                            contract.getSellerBtcPubKey(),
+                            arbitratorAddressEntry.getAddressString(),
+                            arbitratorAddressEntry.getKeyPair(),
+                            contract.getBuyerMultiSigPubKey(),
+                            contract.getSellerMultiSigPubKey(),
                             arbitratorAddressEntry.getPubKey()
                     );
                     disputeResult.setArbitratorSignature(arbitratorSignature);
@@ -669,7 +670,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void calculatePayoutAmounts(DisputeResult.DisputeFeePolicy feePayment) {
         Contract contract = dispute.getContract();
-        Coin refund = FeePolicy.getSecurityDeposit();
+        Coin refund = FeePolicy.getSecurityDeposit(dispute.getContract().offer);
         Coin winnerRefund;
         Coin loserRefund;
         switch (feePayment) {

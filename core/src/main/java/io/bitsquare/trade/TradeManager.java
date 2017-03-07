@@ -195,8 +195,8 @@ public class TradeManager {
     private void initPendingTrades() {
         Log.traceCall();
 
-        List<Trade> toAdd = new ArrayList<>();
-        List<Trade> toRemove = new ArrayList<>();
+        List<Trade> addTradeToFailedTradesList = new ArrayList<>();
+        List<Trade> removePreparedTradeList = new ArrayList<>();
         tradesForStatistics = new ArrayList<>();
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
@@ -206,16 +206,16 @@ public class TradeManager {
                 trade.updateDepositTxFromWallet();
                 tradesForStatistics.add(trade);
             } else if (trade.isTakerFeePaid()) {
-                toAdd.add(trade);
+                addTradeToFailedTradesList.add(trade);
             } else {
-                toRemove.add(trade);
+                removePreparedTradeList.add(trade);
             }
         }
 
-        for (Trade trade : toAdd)
+        for (Trade trade : addTradeToFailedTradesList)
             addTradeToFailedTrades(trade);
 
-        for (Trade trade : toRemove)
+        for (Trade trade : removePreparedTradeList)
             removePreparedTrade(trade);
 
         for (Tradable tradable : closedTradableManager.getClosedTrades()) {
@@ -382,7 +382,6 @@ public class TradeManager {
 
     public void onWithdrawRequest(String toAddress, Coin receiverAmount, KeyParameter aesKey, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
         String fromAddress = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString();
-
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
